@@ -71,7 +71,7 @@ DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=DEFAULT_PROCES
 
 # Specifies subclass used to instantiate a ControlMechanism if it is not specified for a System being instantiated
 # Note: must be a class
-# SystemDefaultControlMechanism = EVCMechanism
+# SystemDefaultControlMechanism = EVCControlMechanism
 SystemDefaultControlMechanism = DefaultControlMechanism
 
 

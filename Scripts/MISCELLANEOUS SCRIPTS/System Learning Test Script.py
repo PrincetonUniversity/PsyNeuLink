@@ -76,7 +76,7 @@ p = process(default_variable=[0, 0],
                    REPORT_OUTPUT_PREF: True})
 
 s = system(processes=[p],
-           # controller=EVCMechanism,
+           # controller=EVCControlMechanism,
            # enable_controller=True,
            # monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],
            # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],

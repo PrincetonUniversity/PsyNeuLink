@@ -6,83 +6,83 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# **************************************  ITCMechanism ************************************************
+# **************************************  AGTControlMechanism ************************************************
 
 """
 
 Overview
 --------
 
-An ITCMechanism is a `ControlMechanism <ControlMechanism>` that uses an ObjectiveMechanism with a `UtilityIntegrator`
-Function to regulate its `allocation_policy <ControlMechanism.allocation_policy>`.  When used with an `LCMechanism`
+An AGTControlMechanism is a `ControlMechanism <ControlMechanism>` that uses an ObjectiveMechanism with a `AGTUtilityIntegrator`
+Function to regulate its `allocation_policy <ControlMechanism.allocation_policy>`.  When used with an `LCControlMechanism`
 to regulate the `mode <FHNIntegrator.mode>` parameter of its `FHNIntegrator` Function, it implements a form of the 
 `Adaptive Gain Theory <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus 
 coeruleus-norepinephrine (LC-NE) system.
 
-.. _ITCMechanism_Creation:
+.. _AGTControlMechanism_Creation:
 
-Creating an ITCMechanism
+Creating an AGTControlMechanism
 -----------------------
 
-An ITCMechanism can be created in any of the ways used to `create a ControlMechanism <ControlMechanism_Creation>`.
+An AGTControlMechanism can be created in any of the ways used to `create a ControlMechanism <ControlMechanism_Creation>`.
 
-Like all ControlMechanisms, an ITCMechanism it receives its `input <ITCMechanism_Input>` from an `ObjectiveMechanism`.
-However, unlike standard ControlMechanism, an ITCMechanism does not have an **objective_mechanism** argument in its
-constructor.  When an ITCMechanism is created, it automatically creates an ObjectiveMechanism and assigns a
-`UtilityIntegrator` Function as its `function <ObjectiveMechanism.function>`.
+Like all ControlMechanisms, an AGTControlMechanism it receives its `input <AGTControlMechanism_Input>` from an `ObjectiveMechanism`.
+However, unlike standard ControlMechanism, an AGTControlMechanism does not have an **objective_mechanism** argument in its
+constructor.  When an AGTControlMechanism is created, it automatically creates an ObjectiveMechanism and assigns a
+`AGTUtilityIntegrator` Function as its `function <ObjectiveMechanism.function>`.
 
-The OutputStates to be monitored by the ITCMechanism's `objective_mechanism <ITCMechanism.objective_mechanism>` are
-specified using the **monitored_output_states** argument of the ITCMechanism's constructor, using any of the ways to
+The OutputStates to be monitored by the AGTControlMechanism's `objective_mechanism <AGTControlMechanism.objective_mechanism>` are
+specified using the **monitored_output_states** argument of the AGTControlMechanism's constructor, using any of the ways to
 `specify the OutputStates monitored by ObjectiveMechanism <ObjectiveMechanism_Monitored_Output_States>`.  The
-monitored OutputStates are listed in the LCMechanism's `monitored_output_states <ITCMechanism.monitored_output_states>`
-attribute,  as well as that of its `objective_mechanism <ITCMechanism.objective_mechanism>`.
+monitored OutputStates are listed in the LCControlMechanism's `monitored_output_states <AGTControlMechanism.monitored_output_states>`
+attribute,  as well as that of its `objective_mechanism <AGTControlMechanism.objective_mechanism>`.
 
-The parameter(s) controlled by an ITCMechanism are specified in the **control_signals** argument of its constructor,
+The parameter(s) controlled by an AGTControlMechanism are specified in the **control_signals** argument of its constructor,
 in the `standard way for a ControlMechanism <ControlMechanism_Control_Signals>`.
 
-.. _ITCMechanism_Structure:
+.. _AGTControlMechanism_Structure:
 
 Structure
 ---------
 
-.. _ITCMechanism_Input:
+.. _AGTControlMechanism_Input:
 
 Input: ObjectiveMechanism and Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An ITCMechanism has a single (primary) `InputState <InputState_Primary>` that receives its input via a
+An AGTControlMechanism has a single (primary) `InputState <InputState_Primary>` that receives its input via a
 `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`.
-The ObjectiveMechanism is created automatically when the ITCMechanism is created, using a `UtilityIntegrator` as its
-`function <ObjectiveMechanism.function>`, and is listed in the ITCMechanism's `objective_mechanism
-<ITCMechanism.objective_mechanism>` attribute.  The ObjectiveMechanism aggregates the `value <OutputState.value>`\\s
+The ObjectiveMechanism is created automatically when the AGTControlMechanism is created, using a `AGTUtilityIntegrator` as its
+`function <ObjectiveMechanism.function>`, and is listed in the AGTControlMechanism's `objective_mechanism
+<AGTControlMechanism.objective_mechanism>` attribute.  The ObjectiveMechanism aggregates the `value <OutputState.value>`\\s
 of the OutputStates that it monitors, integrates their aggregated value at two different rates, and combines those to
-generate the its output, which is used by the ITCMechanism as its input. The OutputStates monitored by the
+generate the its output, which is used by the AGTControlMechanism as its input. The OutputStates monitored by the
 ObjectiveMechanism, listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
-attribute, are also listed in the ITCMechanism's `monitored_output_states <ITCMechanism_Base.monitored_output_states>`
-attribute.  They can be displayed using the ITCMechanism's `show <ITCMechanism.show>` method.
+attribute, are also listed in the AGTControlMechanism's `monitored_output_states <AGTControlMechanism_Base.monitored_output_states>`
+attribute.  They can be displayed using the AGTControlMechanism's `show <AGTControlMechanism.show>` method.
 
-.. _ITCMechanism_Function:
+.. _AGTControlMechanism_Function:
 
 Function
 ~~~~~~~~
 
-An ITCMechanism uses the default function for a `ControlMechanism` (a default `Linear` Function), that simply passes
-its input to its output.  Thus, it is the output of the ITCMechanism's `objective_mechanism
-<ITCMechanism.objective_mechanism>` that determines its `allocation_policy <ControlMechanism.allocation_policy>`
+An AGTControlMechanism uses the default function for a `ControlMechanism` (a default `Linear` Function), that simply passes
+its input to its output.  Thus, it is the output of the AGTControlMechanism's `objective_mechanism
+<AGTControlMechanism.objective_mechanism>` that determines its `allocation_policy <ControlMechanism.allocation_policy>`
 and the `allocation <ControlSignal.allocation>` of its `ControlSignal(s) <ControlSignal>`.
 
-.. _ITCMechanism_Output:
+.. _AGTControlMechanism_Output:
 
 Output
 ~~~~~~
 
-An ITCMechanism has a `ControlSignal` for each parameter specified in its `control_signals
+An AGTControlMechanism has a `ControlSignal` for each parameter specified in its `control_signals
 <ControlMechanism.control_signals>` attribute, that sends a `ControlProjection` to the `ParameterState` for the
 corresponding parameter. ControlSignals are a type of `OutputState`, and so they are also listed in the
-ITCMechanism's `output_states <ITCMechanism_Base.output_states>` attribute. The parameters modulated by an
-ITCMechanism's ControlSignals can be displayed using its `show <ITCMechanism_Base.show>` method. By default,
-all of its ControlSignals are assigned the result of the ITCMechanism's `function <ITCMechanism.function>`, which is
-the `input <ITCMechanism_Input>` it receives from its `objective_mechanism <ITCMechanism.objective_mechanism>`.
+AGTControlMechanism's `output_states <AGTControlMechanism_Base.output_states>` attribute. The parameters modulated by an
+AGTControlMechanism's ControlSignals can be displayed using its `show <AGTControlMechanism_Base.show>` method. By default,
+all of its ControlSignals are assigned the result of the AGTControlMechanism's `function <AGTControlMechanism.function>`, which is
+the `input <AGTControlMechanism_Input>` it receives from its `objective_mechanism <AGTControlMechanism.objective_mechanism>`.
 above).  The `allocation <ControlSignal.allocation>` is used by the ControlSignal(s) to determine
 their `intensity <ControlSignal.intensity>`, which is then assigned as the `value <ControlProjection.value>` of the
 ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of the ControlProjection is used by the
@@ -90,16 +90,16 @@ ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of 
 `ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter).
 
 
-.. _ITCMechanism_Execution:
+.. _AGTControlMechanism_Execution:
 
 Execution
 ---------
 
-An ITCMechanism's `function <ITCMechanism_Base.function>` takes as its input the `value <InputState.value>` of
+An AGTControlMechanism's `function <AGTControlMechanism_Base.function>` takes as its input the `value <InputState.value>` of
 its *ERROR_SIGNAL* `input_state <Mechanism_Base.input_state>`, and uses that to determine its `allocation_policy
 <ITC.allocation_policy>` which specifies the value assigned to the `allocation <ControlSignal.allocation>` of each of
-its `ControlSignals <ControlSignal>`.  An ITCMechanism assigns the same value (the `input <ITCMechanism_Input>` it
-receives from its `objective_mechanism <ITCMechanism.objective_mechanism>` to all of its ControlSignals.  Each
+its `ControlSignals <ControlSignal>`.  An AGTControlMechanism assigns the same value (the `input <AGTControlMechanism_Input>` it
+receives from its `objective_mechanism <AGTControlMechanism.objective_mechanism>` to all of its ControlSignals.  Each
 ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, which is used by its
 `ControlProjection(s) <ControlProjection>` to modulate the value of the ParameterState(s) for the parameter(s) it
 controls, which are then used in the subsequent `TRIAL` of execution.
@@ -111,7 +111,7 @@ controls, which are then used in the subsequent `TRIAL` of execution.
    to which it belongs has executed.
 
 
-.. _ITCMechanism_Class_Reference:
+.. _AGTControlMechanism_Class_Reference:
 
 Class Reference
 ---------------
@@ -121,7 +121,7 @@ import typecheck as tc
 import warnings
 
 from PsyNeuLink.Components.Functions.Function \
-    import ModulationParam, _is_modulation_param, UtilityIntegrator
+    import ModulationParam, _is_modulation_param, AGTUtilityIntegrator
 from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
     import ObjectiveMechanism, _parse_monitored_output_states, MonitoredOutputStatesOption
@@ -130,8 +130,8 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.Contro
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import INIT__EXECUTE__METHOD_ONLY, MECHANISM,\
-                                        OBJECTIVE_MECHANISM, CONTROL_PROJECTIONS, CONTROL_SIGNALS
+from PsyNeuLink.Globals.Keywords import INIT__EXECUTE__METHOD_ONLY, MECHANISM, \
+                                        OBJECTIVE_MECHANISM, CONTROL_PROJECTIONS, CONTROL_SIGNALS, CONTROL
 
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -142,14 +142,14 @@ MONITORED_OUTPUT_STATE_NAME_SUFFIX = '_Monitor'
 
 ControlMechanismRegistry = {}
 
-class ITCMechanismError(Exception):
+class AGTControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
 
-class ITCMechanism(ControlMechanism):
+class AGTControlMechanism(ControlMechanism):
     """
-    ITCMechanism(                       \
+    AGTControlMechanism(                       \
         system=None,                    \
         monitored_output_states=None,   \
         function=Linear,                \
@@ -165,22 +165,22 @@ class ITCMechanism(ControlMechanism):
     ---------
 
     system : System : default None
-        specifies the `System` for which the ITCMechanism should serve as a `controller <System_Base.controller>`;
-        the ITCMechanism will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
-        argument of the `system <EVCMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
+        specifies the `System` for which the AGTControlMechanism should serve as a `controller <System_Base.controller>`;
+        the AGTControlMechanism will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
+        argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
     monitored_output_states : List[`OutputState`, `Mechanism`, str, value, dict, `MonitoredOutputStatesOption`] or Dict
-        specifies the OutputStates to be monitored by the `objective_mechanism <ITCMechanism.objective_mechanism>`
+        specifies the OutputStates to be monitored by the `objective_mechanism <AGTControlMechanism.objective_mechanism>`
         (see `monitored_output_states <ObjectiveMechanism.monitored_output_states>` for details of specification).
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
-        specifies the Function used to convert the ITCMechanism's `input <ITCMechanism_Input>` into its
-        `allocation_policy <ITCMechanism.allocation_policy>`, that is used to assign the `allocation
+        specifies the Function used to convert the AGTControlMechanism's `input <AGTControlMechanism_Input>` into its
+        `allocation_policy <AGTControlMechanism.allocation_policy>`, that is used to assign the `allocation
         <ControlSignal.allocation>` of its `ControlSignal(s) <ControlSignal>`.
 
     control_signals : List[ParameterState, tuple[str, Mechanism] or dict]
-        specifies the parameters to be controlled by the ITCMechanism; a `ControlSignal` is created for each
+        specifies the parameters to be controlled by the AGTControlMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
 
     params : Optional[Dict[param keyword, param value]]
@@ -189,7 +189,7 @@ class ITCMechanism(ControlMechanism):
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name : str : default ITCMechanism-<index>
+    name : str : default AGTControlMechanism-<index>
         a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
@@ -204,46 +204,46 @@ class ITCMechanism(ControlMechanism):
     ----------
 
     system : System
-        the `System` for which ITCMechanism is the `controller <System_Base.controller>`;
-        the ITCMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
-        argument of the `system <EVCMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
+        the `System` for which AGTControlMechanism is the `controller <System_Base.controller>`;
+        the AGTControlMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
+        argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
     objective_mechanism : ObjectiveMechanism
         `ObjectiveMechanism` that monitors and evaluates the values specified in the ControlMechanism's
-        **objective_mechanism** argument, the output of which is used as `input <ITCMechanism_Input>` to the
-        ITCMechanism. It is created automatically when ITCMechanism is created, and uses as a `UtilityIntegrator` as
+        **objective_mechanism** argument, the output of which is used as `input <AGTControlMechanism_Input>` to the
+        AGTControlMechanism. It is created automatically when AGTControlMechanism is created, and uses as a `AGTUtilityIntegrator` as
         is `function <ObjectiveMechanism.function>`.
 
     monitored_output_states : List[OutputState]
-        each item is an `OutputState` monitored by the `objective_mechanism <ITCMechanism.objective_mechanism>`; it is
+        each item is an `OutputState` monitored by the `objective_mechanism <AGTControlMechanism.objective_mechanism>`; it is
         the same as the ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
         attribute. The `value <OutputState.value>` of the OutputStates listed are used by the ObjectiveMechanism to
-        generate the ITCMechanism's `input <ITCMechanism_Input>`.
+        generate the AGTControlMechanism's `input <AGTControlMechanism_Input>`.
 
     monitored_output_states_weights_and_exponents : List[Tuple(float, float)]
         each tuple in the list contains the weight and exponent associated with a corresponding item of
-        `monitored_output_states <ITCMechanism.monitored_output_states>`;  these are the same as those in
+        `monitored_output_states <AGTControlMechanism.monitored_output_states>`;  these are the same as those in
         the `monitored_output_states_weights_and_exponents
         <ObjectiveMechanism.monitored_output_states_weights_and_exponents>` attribute of the `objective_mechanism
-        <ITCMechanism.objective_mechanism>`, and are used by the ObjectiveMechanism's `function
+        <AGTControlMechanism.objective_mechanism>`, and are used by the ObjectiveMechanism's `function
         <ObjectiveMechanism.function>` to parametrize the contribution made to its output by each of the values that
         it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
-        determines the Function used to convert the ITCMechanism's `input <ITCMechanism_Input>` into its
-        `allocation_policy <ITCMechanism.allocation_policy>`, that is used to assign the
+        determines the Function used to convert the AGTControlMechanism's `input <AGTControlMechanism_Input>` into its
+        `allocation_policy <AGTControlMechanism.allocation_policy>`, that is used to assign the
         `allocation <ControlSignal.allocation>` for its `ControlSignal(s) <ControlSignal>`.
 
     allocation_policy : 2d np.array
         contains the value(s) assigned as the `allocation <ControlSignal.allocation>` for the `ControlSignal(s)
-        <ControlSignal>` listed in the `control_signals` attribute;  if the default `function <ITCMechanism.function>`
+        <ControlSignal>` listed in the `control_signals` attribute;  if the default `function <AGTControlMechanism.function>`
         is used, it contains a single value that is assigned as the `allocation <ControlSignal.allocation>` for
-        all of the ITCMechanism's `control_signals <ITCMechanism.control_signals>`. The ITCMechanism's allocation_policy
+        all of the AGTControlMechanism's `control_signals <AGTControlMechanism.control_signals>`. The AGTControlMechanism's allocation_policy
         is the same as its `value <Mechanism_Base.value>` attribute).
 
     control_signals : List[ControlSignal]
-        list of the ITCMechanism's `ControlSignals <ControlSignals>` , including any inherited from a `system
+        list of the AGTControlMechanism's `ControlSignals <ControlSignals>` , including any inherited from a `system
         <ControlMechanism.system>` for which it is a `controller <System_Base.controller>` (same as
         ControlMechanism's `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`
         to the `ParameterState` for the parameter it controls
@@ -256,7 +256,7 @@ class ITCMechanism(ControlMechanism):
         unless they are `individually specified <ControlSignal_Specification>`.
    """
 
-    componentName = "ITCMechanism"
+    componentName = "AGTControlMechanism"
 
     initMethod = INIT__EXECUTE__METHOD_ONLY
 
@@ -297,7 +297,7 @@ class ITCMechanism(ControlMechanism):
 
         super().__init__(system=system,
                          objective_mechanism=ObjectiveMechanism(monitored_output_states=monitored_output_states,
-                                                                function=UtilityIntegrator),
+                                                                function=AGTUtilityIntegrator),
                          control_signals=control_signals,
                          modulation=modulation,
                          params=params,
@@ -306,12 +306,13 @@ class ITCMechanism(ControlMechanism):
                          context=self)
 
         self.objective_mechanism.name = self.name+'_ObjectiveMechanism'
+        self.objective_mechanism._role = CONTROL
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
 
         Check that all items in MONITOR_FOR_CONTROL are Mechanisms or OutputStates for Mechanisms in self.system
-        Check that every item in `modulated_mechanisms <ITCMechanism.modulated_mechanisms>` is a Mechanism
+        Check that every item in `modulated_mechanisms <AGTControlMechanism.modulated_mechanisms>` is a Mechanism
             and that its function has a multiplicative_param
         """
 
@@ -337,7 +338,7 @@ class ITCMechanism(ControlMechanism):
                     if isinstance(item, (OutputState, Mechanism)):
                         item = item.name
                     if not isinstance(item, str):
-                        raise ITCMechanismError("Specification of {} arg for {} appears to be a list of "
+                        raise AGTControlMechanismError("Specification of {} arg for {} appears to be a list of "
                                                     "Mechanisms and/or OutputStates to be monitored, but one"
                                                     "of the items ({}) is invalid".
                                                     format(OBJECTIVE_MECHANISM, self.name, item))
@@ -350,7 +351,7 @@ class ITCMechanism(ControlMechanism):
                     clock=CentralClock,
                     time_scale=TimeScale.TRIAL,
                     context=None):
-        """Updates ITCMechanism's ControlSignal based on input and mode parameter value
+        """Updates AGTControlMechanism's ControlSignal based on input and mode parameter value
         """
         return self.function(variable=variable,
                              params=runtime_params,
@@ -432,8 +433,8 @@ class ITCMechanism(ControlMechanism):
 
 
     def show(self):
-        """Display the `OutputStates <OutputState>` monitored by the ITCMechanism's `objective_mechanism`
-        and the `multiplicative_params <Function_Modulatory_Params>` modulated by the ITCMechanism.
+        """Display the `OutputStates <OutputState>` monitored by the AGTControlMechanism's `objective_mechanism`
+        and the `multiplicative_params <Function_Modulatory_Params>` modulated by the AGTControlMechanism.
         """
 
         print ("\n---------------------------------------------------------")

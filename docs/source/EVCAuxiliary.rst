@@ -4,6 +4,6 @@ EVCAuxiliary
 .. toctree::
    :maxdepth: 1
 
-.. automodule:: AdaptiveMechanisms.ControlMechanisms.EVCAuxiliary
+.. automodule:: Library.Subsystems.EVC.EVCAuxiliary
    :members:
    :exclude-members: random, LinearCombination, EVCAuxiliaryFunction

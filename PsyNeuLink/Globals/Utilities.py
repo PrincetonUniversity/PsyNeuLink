@@ -404,13 +404,8 @@ def iscompatible(candidate, reference=None, **kargs):
         if isinstance(candidate, numbers.Number):
             return True
         if number_only:
-            if not isinstance(candidate, (list, tuple, np.ndarray)):
+            if not isinstance(candidate, (list, tuple, np.ndarray, np.matrix)):
                 return False
-            # # MODIFIED 9/16/17 OLD:
-            # if (not all(isinstance(elem, numbers.Number) for elem in candidate) or
-            #         not all(isinstance(elem, numbers.Number) for elem in candidate)):
-            #     return False
-            # MODIFIED 9/16/17 NEW:
             def recursively_check_elements_for_numeric(value):
                 # Matrices can't be checked recursively, so convert to array
                 if isinstance(value, np.matrix):
@@ -429,7 +424,7 @@ def iscompatible(candidate, reference=None, **kargs):
             # Test copy since may need to convert matrix to array (see above)
             if not recursively_check_elements_for_numeric(candidate.copy()):
                 return False
-            # MODIFIED 9/16/17 END
+
         if isinstance(candidate, (list, tuple, dict, np.ndarray)):
             if not match_length:
                 return True

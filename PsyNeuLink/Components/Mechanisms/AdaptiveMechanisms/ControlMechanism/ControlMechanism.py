@@ -28,15 +28,15 @@ parameters controlled by the ControlMechanism can be listed using its `show <Con
 
 COMMENT:
     ALTERNATE VERSION
-    and has a `ControlSignal` for each parameter of the Components in the `system <EVCMechanism.system>` that it
+    and has a `ControlSignal` for each parameter of the Components in the `system <EVCControlMechanism.system>` that it
     controls.  Each ControlSignal is associated with a `ControlProjection` that regulates the value of the parameter it
     controls, with the magnitude of that regulation determined by the ControlSignal's `intensity`.  A particular
     combination of ControlSignal `intensity` values is called an `allocation_policy`. When a `System` is executed that
-    uses an EVCMechanism as its `controller <System_Base.controller>`, it concludes by executing the EVCMechanism, which
+    uses an EVCControlMechanism as its `controller <System_Base.controller>`, it concludes by executing the EVCControlMechanism, which
     determines its `allocation_policy` for the next `TRIAL`.  That, in turn, determines the `intensity` for each of the
     ControlSignals, and therefore the values of the parameters they control on the next `TRIAL`. The OutputStates used
-    to determine an EVCMechanism's `allocation_policy <EVCMechanism.allocation_policy>` and the parameters it
-    controls can be listed using its `show <EVCMechanism.show>` method.
+    to determine an EVCControlMechanism's `allocation_policy <EVCControlMechanism.allocation_policy>` and the parameters it
+    controls can be listed using its `show <EVCControlMechanism.show>` method.
 COMMENT
 
 .. _ControlMechanism_System_Controller:
@@ -92,7 +92,7 @@ can be specified in the **objective_mechanism** argument of its constructor, usi
     <ObjectiveMechanism_Monitored_Output_States>` (see `ControlMechanism_Examples`); note that, in this case, the
     default values for the attributes of the ObjectiveMechanism override any that ControlMechanism uses for its
     default `objective_mechanism <ControlMechanism.objective_mechanism>`, including those of its `function
-    <ObjectiveMechanism.function>` (see `note <EVCMechanism_Objective_Mechanism_Function_Note>` in EVCMechanism for
+    <ObjectiveMechanism.function>` (see `note <EVCControlMechanism_Objective_Mechanism_Function_Note>` in EVCControlMechanism for
     an example);
   ..
   * a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>`;  in this case, a default
@@ -168,7 +168,7 @@ input to the ControlMechanism's `function <ControlMechanism.function>`, that det
 `allocation_policy <ControlMechanism.allocation_policy>`. The *ERROR_SIGNAL* InputState receives its input
 via a `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`.
 The Objective Mechanism is specified in the **objective_mechanism** argument of its constructor, and listed in its
-`objective_mechanism <EVCMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the
+`objective_mechanism <EVCControlMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the
 ObjectiveMechanism (listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
 attribute) are also listed in the `monitored_output_states <ControlMechanism.monitored_output_states>`
 of the ControlMechanism (see `ControlMechanism_ObjectiveMechanism` for how the ObjectiveMechanism and the
@@ -188,7 +188,7 @@ A ControlMechanism's `function <ControlMechanism.function>` uses the `value <Inp
 default, each item of the `allocation_policy <ControlMechanism.allocation_policy>` is assigned as the
 `allocation <ControlSignal.allocation>` of the corresponding `ControlSignal` in `control_signals
 <ControlMechanism.control_signals>`;  however, subtypes of ControlMechanism may assign values differently
-(for example, an `LCMechanism` assigns a single value to all of its ControlSignals).
+(for example, an `LCControlMechanism` assigns a single value to all of its ControlSignals).
 
 
 .. _ControlMechanism_Output:
@@ -252,7 +252,7 @@ that specifies the OutputStates to be monitored by its `objective_mechanism <Con
                                           (GAIN, my_transfer_mech_B)])
 
 This creates an ObjectiveMechanism for the ControlMechanism that monitors the `primary OutputState
-<Primary_OutputState>` of ``my_Transfer_mech_A`` and the *RESPONSE_TIME* OutputState of ``my_DDM``;  its function
+<OutputState_Primary>` of ``my_Transfer_mech_A`` and the *RESPONSE_TIME* OutputState of ``my_DDM``;  its function
 first multiplies the former by 2 before, then takes product of ther values and passes the result as the input to the
 ControlMechanism.  The ControlMechanism's `function <ControlMechanism.function>` uses this value to determine
 the allocation for its ControlSignals, that control the value of the `threshold <DDM.threshold>` parameter of
@@ -316,7 +316,7 @@ from PsyNeuLink.Globals.Keywords import NAME, PARAMS, OWNER, INIT__EXECUTE__METH
                                         PARAMETER_STATE, OBJECTIVE_MECHANISM, \
                                         PRODUCT, AUTO_ASSIGN_MATRIX, REFERENCE_VALUE, \
                                         CONTROLLED_PARAM, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, \
-                                        CONTROL_SIGNALS
+                                        CONTROL_SIGNALS, CONTROL
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
@@ -659,9 +659,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
             # Create specification for ObjectiveMechanism InputStates corresponding to
             #    monitored_output_states and their exponents and weights
             self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
-                                                          function=LinearCombination(operation=PRODUCT),
-                                                          name=self.name + '_ObjectiveMechanism')
-
+                                                           function=LinearCombination(operation=PRODUCT),
+                                                           name=self.name + '_ObjectiveMechanism')
+        # Print monitored_output_states
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
             for state in self.monitored_output_states:
@@ -670,6 +670,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 exponent = self.monitored_output_states_weights_and_exponents[
                                                                 self.monitored_output_states.index(state)][1]
                 print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
+
+        # Assign ObjetiveMechanism's role as CONTROL
+        self.objective_mechanism._role = CONTROL
 
         # If ControlMechanism is a System controller, name Projection from ObjectiveMechanism based on the System
         if self.system is not None:
@@ -684,6 +687,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)
+
+        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         self._instantiate_objective_mechanism(context=context)
 
     def _instantiate_output_states(self, context=None):
@@ -836,6 +841,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # VALIDATE OR INSTANTIATE ControlProjection(s) TO ControlSignal  -------------------------------------------
 
         # Validate control_projection (if specified) and get receiver's name
+        control_projection_name = parameter_state.name + ' ' + 'control signal'
         if control_projection:
             _validate_receiver(self, control_projection, Mechanism, CONTROL_SIGNAL, context=context)
 
@@ -848,8 +854,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 control_projection.init_args['sender']=control_signal
                 if control_projection.init_args['name'] is None:
                     # FIX 5/23/17: CLEAN UP NAME STUFF BELOW:
-                    control_projection.init_args['name'] = CONTROL_PROJECTION + \
-                                                   ' for ' + parameter_state.owner.name + ' ' + parameter_state.name
+                    control_projection.init_args['name'] = control_projection_name
+                        # CONTROL_PROJECTION + ' for ' + parameter_state.owner.name + ' ' + parameter_state.name
                 control_projection._deferred_init()
             else:
                 control_projection.sender = control_signal
@@ -860,7 +866,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
             from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
             control_projection = ControlProjection(sender=control_signal,
                                                    receiver=parameter_state,
-                                                   name=CONTROL_PROJECTION + control_signal_name)
+                                                   # name=CONTROL_PROJECTION + control_signal_name)
+                                                   name=control_projection_name)
 
         # Add ControlProjection to list of OutputState's outgoing Projections
         # (note: if it was deferred, it just added itself, skip)
@@ -942,11 +949,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
         print ("\n---------------------------------------------------------")
 
     def add_monitored_output_states(self, monitored_output_states, context=None):
-        """Instantiate OutputStates to be monitored by ControlMechanism's objective_mechanism
+        """Instantiate OutputStates to be monitored by ControlMechanism's `objective_mechanism
+        <ControlMechanism.objective_mechanism>`.
 
-        monitored_output_states can be a Mechanism, OutputState, monitored_output_state tuple, or list with any of these
-        If item is a Mechanism, its primary OutputState is used.
-        OutputStates must belong to Mechanisms in the same System as the ControlMechanism
+        **monitored_output_states** can be a `Mechanism`, `OutputState`, `monitored_output_states tuple
+        <ObjectiveMechanism_OutputState_Tuple>`, or list with any of these. If item is a Mechanism, its `primary
+        OutputState <OutputState_Primary>` is used. OutputStates must belong to Mechanisms in the same `System` as
+        the ControlMechanism.
         """
         output_states = self.objective_mechanism.add_monitored_output_states(
                                                                  monitored_output_states_specs=monitored_output_states,
@@ -977,7 +986,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                     `controller <System_Base.controller>`;]
 
                                   - any class-specific actions that must be taken to instantiate the ControlMechanism
-                                    can be handled by subclasses of ControlMechanism (e.g., an EVCMechanism must
+                                    can be handled by subclasses of ControlMechanism (e.g., an EVCControlMechanism must
                                     instantiate its Prediction Mechanisms). However, the actual assignment of the
                                     ControlMechanism the System's `controller <System_Base.controller>` attribute must
                                     be left to the System to avoid recursion, since it is a property, the setter of
@@ -1018,6 +1027,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Assign assign the current System to the ControlMechanism's system attribute
         #    (needed for it to validate and instantiate monitored_output_states and control_signals)
         self.system = system
+
+        # Flag ObjectiveMechanism as associated with a ControlMechanism that is a controller for the System
+        self._objective_mechanism.controller = True
+
 
     @property
     def monitored_output_states(self):

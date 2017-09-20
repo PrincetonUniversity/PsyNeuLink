@@ -455,6 +455,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.Learn
     import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, \
     _is_learning_spec
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
@@ -465,6 +466,7 @@ from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _instantiate_state, _instantiate_state_list
 from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, COMPONENT_INIT, ENABLED, EXECUTING, FUNCTION, \
     FUNCTION_PARAMS, HARD_CLAMP, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, \
+    OBJECTIVE_MECHANISM,\
     MAPPING_PROJECTION, MATRIX, NAME, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SEPARATOR_BAR, \
     SINGLETON, SOFT_CLAMP, TARGET, TERMINAL, TIME_SCALE, kwProcessComponentCategory, kwReceiverArg, kwSeparator
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
@@ -825,7 +827,7 @@ class Process_Base(Process):
          of {argument keyword: argument values} entries and phase is an int.
          Note:  the list includes ComparatorMechanisms and LearningMechanism.
 
-    .. _allMechanisms : MechanismList
+    .. _all_mechanisms : MechanismList
          Contains all Mechanisms in the System (based on _mechs).
 
     .. _origin_mechs : List[MechanismTuple]
@@ -841,18 +843,18 @@ class Process_Base(Process):
          (Note:  the use of a list is for compatibility with the MechanismList object)
 
     .. _learning_mechs : List[MechanismTuple]
-         `MechanismTuples <Mechanism.MechanismTuples>` for all `LearningMechanism <LearningMechanism>` in the
+         `MechanismTuple
          Process (used for learning).
 
     .. mechanisms : List[Mechanism]
          List of all Mechanisms in the Process.
-         property that points to _allMechanisms.mechanisms (see below).
+         property that points to _all_mechanisms.mechanisms (see below).
     COMMENT
 
     mechanism_names : List[str]
         the names of the Mechanisms listed in the `Mechanisms <Process_Base.mechanisms>` attribute.
 
-        .. property that points to _allMechanisms.names (see below).
+        .. property that points to _all_mechanisms.names (see below).
 
     mechanisms : List[Mechanism]
         *all* of the Mechanisms in the Process, including those in the `pathway <Process_Base.pathway>`
@@ -1213,7 +1215,7 @@ class Process_Base(Process):
         else:
             self._learning_enabled = False
 
-        self._allMechanisms = MechanismList(self, self._mechs)
+        self._all_mechanisms = MechanismList(self, self._mechs)
         self.learning_mechanisms = MechanismList(self, self._learning_mechs)
         self.target_mechanisms = MechanismList(self, self._target_mechs)
 
@@ -1540,9 +1542,42 @@ class Process_Base(Process):
 
                     if not projection_found:
                         # No Projection found, so instantiate MappingProjection from preceding mech to current one;
-                        # Note:  If self.learning arg is specified, it has already been added to projection_params above
+                        # Note: if self.learning arg is specified, it has already been added to projection_params above
+
+                        # MODIFIED 9/19/17 NEW:
+                        #     [ALLOWS ControlMechanism AND ASSOCIATED ObjectiveMechanism TO BE ADDED TO PATHWAY)
+                        # If it is a ControlMechanism with an associated ObjectiveMechanism, try projecting to that
+                        if isinstance(item, ControlMechanism) and item.objective_mechanism is not None:
+                            # If it already has an associated ObjectiveMechanism, make sure it has been implemented
+                            if not isinstance(item.objective_mechanism, Mechanism):
+                                raise ProcessError("{} included in {} for {} ({})"
+                                                   "has an {} arugment, but it is not an {}".
+                                                   format(ControlMechanism.__name__,
+                                                          PATHWAY,
+                                                          self.name,
+                                                          item.objective_mechanism,
+                                                          OBJECTIVE_MECHANISM,
+                                                          ObjectiveMechanism.name))
+                            # Check whether ObjectiveMechanism already receives a projection
+                            #     from the preceding Mechanism in the pathway
+                            # if not any(projection.sender.owner is preceding_item
+                            #            for projection in item.objective_mechanism.input_state.path_afferents):
+                            if not any(
+                                    any(projection.sender.owner is preceding_item
+                                        for projection in input_state.path_afferents)
+                                    for input_state in item.objective_mechanism.input_states):
+                                # Assign projection from preceding Mechanism in pathway to ObjectiveMechanism
+                                receiver = item.objective_mechanism
+
+                            else:
+                                # Ignore (ObjectiveMechanism already as a projection from the Mechanism)
+                                continue
+                        else:
+                            receiver = item
+                        # MODIFIED 9/19/17 END
+
                         MappingProjection(sender=preceding_item,
-                                          receiver=item,
+                                          receiver=receiver,
                                           params=projection_params,
                                           name='{} from {} to {}'.
                                           format(MAPPING_PROJECTION, preceding_item.name, item.name)
@@ -2621,11 +2656,11 @@ class Process_Base(Process):
 
     @property
     def mechanisms(self):
-        return self._allMechanisms.mechanisms
+        return self._all_mechanisms.mechanisms
 
     @property
     def mechanism_names(self):
-        return self._allMechanisms.names
+        return self._all_mechanisms.names
 
     @property
     def output_state(self):

@@ -31,13 +31,13 @@ EVC Test System-1 execution list:
 	Phase 2:
 		StimPrediction-1
 		Decision
-		EVCMechanism-1
+		EVCControlMechanism-1
 
-EVCMechanism-1 is monitoring the following mechanism outputStates:
+EVCControlMechanism-1 is monitoring the following mechanism outputStates:
 	RewardPrediction: RewardPrediction_Output
 	Decision: DDM_DecisionVariable
 
-EVCMechanism-1 is controlling the following mechanism parameters:
+EVCControlMechanism-1 is controlling the following mechanism parameters:
 	Decision: DDM_DriftRate
 	Decision: DDM_Threshold
 
@@ -115,7 +115,7 @@ EVC Test System-1 COMPLETED (time_step 1) *******
 
 EVC Test System-1 BEGUN EXECUTION (time_step 2) **********
 
-EVCMechanism-1 evaluating EVC for EVC Test System-1 (one dot for each of 121 samples):
+EVCControlMechanism-1 evaluating EVC for EVC Test System-1 (one dot for each of 121 samples):
 .........................................................................................................................
 EVC simulation completed
 
@@ -124,7 +124,7 @@ ControlSignal allocations for maximum EVC:
 	DDM_DriftRate_ControlSignal_Output: 0.0
 	DDM_Threshold_ControlSignal_Output: 0.0
 
-EVC Test System-1: EVCMechanism-1 executed
+EVC Test System-1: EVCControlMechanism-1 executed
 
 StimPrediction-1 Mechanism executed:
 - output: 0

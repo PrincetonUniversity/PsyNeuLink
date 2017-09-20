@@ -178,7 +178,7 @@ Function
 
 The core of every Mechanism is its function, which transforms its input to generate its output.  The function is
 specified by the Mechanism's `function <Mechanism_Base.function>` attribute.  Every type of Mechanism has at least one
-(primary) function, and some have additional (auxiliary) ones (for example, `TransferMechanism` and `EVCMechanism`).
+(primary) function, and some have additional (auxiliary) ones (for example, `TransferMechanism` and `EVCControlMechanism`).
 Mechanism functions are generally from the PsyNeuLink `Function` class.  Most Mechanisms allow their function to be
 specified, using the `function` argument of the Mechanism's constructor.  The function can be specified using the
 name of `Function <Function>` class, or its constructor (including arguments that specify its parameters).  For
@@ -267,7 +267,7 @@ COMMENT:
             then the function should be provided as an argument but not they parameters; they should be specified
             as arguments in the specification of the function
         each parameter is instantiated as a ParameterState
-        that will be placed in <Mechanism>._parameter_states;  each parameter is also referenced in
+        that will be placed in <Mechanism_Base>._parameter_states;  each parameter is also referenced in
         the <Mechanism>.function_params dict, and assigned its own attribute (<Mechanism>.<param>).
 COMMENT
 
@@ -280,7 +280,7 @@ Custom Functions
 A Mechanism's `function <Mechanism_Base.function>` can be customized by assigning a user-defined function (e.g.,
 a lambda function), so long as it takes arguments and returns values that are compatible with those of the
 Mechanism's default for that function.  This is also true for auxiliary functions that appear as arguments in a
-Mechanism's constructor (e.g., the `EVCMechanism`). A user-defined function can be assigned using the Mechanism's
+Mechanism's constructor (e.g., the `EVCControlMechanism`). A user-defined function can be assigned using the Mechanism's
 `assign_params` method (the safest means) or by assigning it directly to the corresponding attribute of the Mechanism
 (for its primary function, its `function <Mechanism_Base.function>` attribute). It is *strongly advised* that
 auxiliary functions that are inherent to a Mechanism (i.e., ones that do *not* appear as an argument in the
@@ -421,7 +421,8 @@ result to the ParameterState's `value <ParameterState.value>`.  This is the valu
 `function <Mechanism_Base.function>` when the Mechanism `executes <Mechanism_Execution>`.  Accordingly, when the value
 of a parameter is accessed (e.g., using "dot" notation, such as ``my_mech.my_param``), it is actually the
 *ParameterState's* `value <ParameterState.value>` that is returned (thereby accurately reflecting the value used
-during the last execution of the Mechanism or its `function <Mechanism_Base.function>`).
+during the last execution of the Mechanism or its `function <Mechanism_Base.function>`).  The ParameterStates for a
+Mechanism are listed in its `parameter_states <Mechanism_Base.parameter_states>` attribute.
 
 .. _Mechanism_Parameter_Value_Specification:
 
@@ -758,7 +759,7 @@ class Mechanism_Base(Mechanism):
                 if both methods are used, they must generate the same sized variable for the mechanims
                 ?? WHERE IS THIS CHECKED?  WHICH TAKES PRECEDENCE: InputState SPECIFICATION (IN _instantiate_state)??
             - an execute method:
-                coordinates updating of input_states, _parameter_states (and params), execution of the function method
+                coordinates updating of input_states, parameter_states (and params), execution of the function method
                 implemented by the subclass, (by calling its _execute method), and updating of the OutputStates
             - one or more parameters, each of which must be (or resolve to) a reference to a ParameterState
                 these determine the operation of the function of the Mechanism subclass being instantiated
@@ -850,13 +851,12 @@ class Mechanism_Base(Mechanism):
         attribute.  The latter is a 2d np.array; the `input_values <Mechanism_Base.input_values>` attribute provides
         this information in a simpler list format.
 
-    _parameter_states : ContentAddressableList[str, ParameterState]
-        a list of the Mechanism's `ParameterStates <Mechanism_ParameterStates>`, one for each of its specifiable
-        parameters and those of its `function <Mechanism_Base.function>` (i.e., the ones for which there are
-        arguments in their constructors).  The value of the parameters of the Mechanism are also accessible as
-        attributes of the Mechanism (using the name of the parameter); the function parameters are listed in the
-        Mechanism's `function_params <Mechanism_Base.function_params>` attribute, and as attributes of the `Function`
-        assigned to its `function_object <Component.function_object>` attribute.
+    parameter_states : ContentAddressableList[str, ParameterState]
+        a read-only list of the Mechanism's `ParameterStates <Mechanism_ParameterStates>`, one for each of its
+        `configurable parameters <ParameterState_Configurable_Parameters>`, including those of its `function
+        <Mechanism_Base.function>`.  The value of the parameters of the Mechanism and its `function
+        <Mechanism_Base.function>` are also accessible as (and can be modified using) attributes of the Mechanism
+        (see `Mechanism_ParameterStates`).
 
     COMMENT:
        MOVE function and function_params (and add user_params) to Component docstring
@@ -1021,7 +1021,7 @@ class Mechanism_Base(Mechanism):
         MONITOR_FOR_CONTROL: NotImplemented,  # This has to be here to "register" it as a valid param for the class
                                               # but is set to NotImplemented so that it is ignored if it is not
                                               # assigned;  setting it to None actively disallows assignment
-                                              # (see EVCMechanism_instantiate_input_states for more details)
+                                              # (see EVCControlMechanism_instantiate_input_states for more details)
         MONITOR_FOR_LEARNING: None,
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Components.States.InputState.InputState,
@@ -2211,6 +2211,16 @@ class Mechanism_Base(Mechanism):
             return self.input_states.values
         except (TypeError, AttributeError):
             return None
+
+    @property
+    def parameter_states(self):
+        return self._parameter_states
+
+    @parameter_states.setter
+    def parameter_states(self, value):
+        # This keeps parameter_states property readonly,
+        #    but averts exception when setting paramsCurrent in Component (around line 850)
+        pass
 
     @property
     def output_state(self):
