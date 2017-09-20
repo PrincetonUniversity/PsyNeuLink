@@ -6,20 +6,9 @@
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA, LCA_OUTPUT
 
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
-from PsyNeuLink.Library.EVC.EVCControlMechanism import EVCControlMechanism
-from PsyNeuLink.Components.Functions.Function import Logistic, Linear, LinearCombination
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, DDM_OUTPUT, \
-    DECISION_VARIABLE,RESPONSE_TIME, PROBABILITY_UPPER_THRESHOLD
-from PsyNeuLink.Globals.Keywords import GAIN, THRESHOLD, SUM, PRODUCT, CONTROL, IDENTITY_MATRIX, RESULT, MEAN, VARIANCE
-
 # COMPOSITIONS:
-from PsyNeuLink.Components.Process import process
 
 # FUNCTIONS:
-from PsyNeuLink.Components.Functions.Function import CombineMeans
 
 # STATES:
 # from PsyNeuLink.Components.States.OutputState import OutputState
@@ -30,7 +19,6 @@ from PsyNeuLink.Components.Functions.Function import CombineMeans
 # from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControldProjection
 # from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
-from PsyNeuLink.Components.Functions.Function import BogaczEtAl
 
 
 class ScratchPadError(Exception):
@@ -42,7 +30,6 @@ class ScratchPadError(Exception):
 
 #region USER GUIDE
 # from PsyNeuLink.Components.Process import process, Process_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 
 #region SIMPLE NN EXAMPLE:
 

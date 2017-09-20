@@ -316,14 +316,12 @@ Class Reference
 ---------------
 
 """
-import numbers
 
 import numpy as np
 import typecheck as tc
 
 from PsyNeuLink.Components.Component import function_type
-from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param, LinearCombination
-from PsyNeuLink.Components.System import System
+from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
     import ControlMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
@@ -331,17 +329,19 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms import IntegratorMech
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.ShellClasses import Function
+from PsyNeuLink.Components.System import System
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import FUNCTION, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, \
-                                        PARAMETER_STATES, SUM, EVC_MECHANISM, CONTROL, COST_FUNCTION, \
-                                        PREDICTION_MECHANISM, PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE
+    PARAMETER_STATES, SUM, EVC_MECHANISM, CONTROL, COST_FUNCTION, \
+    PREDICTION_MECHANISM, PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
-from PsyNeuLink.Library.EVC.EVCAuxiliary import \
+from PsyNeuLink.Library.Subsystems.EVC.EVCAuxiliary import \
     ControlSignalGridSearch, \
     ValueFunction
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, Clock, TimeScale
+
 
 class EVCError(Exception):
     def __init__(self, error_value):

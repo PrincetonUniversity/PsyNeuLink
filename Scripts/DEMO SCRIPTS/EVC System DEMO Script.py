@@ -7,7 +7,7 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Library.EVC import EVCControlMechanism
+from PsyNeuLink.Library.Subsystems.EVC import EVCControlMechanism
 
 random.seed(0)
 np.random.seed(0)

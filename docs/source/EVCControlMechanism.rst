@@ -1,6 +1,6 @@
 EVCControlMechanism
 ===================
 
-.. automodule:: Library.EVC.EVCControlMechanism
+.. automodule:: Library.Subsystems.EVC.EVCControlMechanism
    :members:
    :exclude-members: random, LinearCombination, Linear
