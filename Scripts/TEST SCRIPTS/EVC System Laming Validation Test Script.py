@@ -147,6 +147,7 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
 mySystem.show()
 mySystem.controller.show()
 mySystem.show_graph(show_control=True)
+# mySystem.show_graph()
 
 # Specify stimuli for run:
 # #   two ways to do so:
