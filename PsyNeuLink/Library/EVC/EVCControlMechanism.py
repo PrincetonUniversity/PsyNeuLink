@@ -338,7 +338,7 @@ from PsyNeuLink.Globals.Keywords import FUNCTION, INITIALIZING, INIT_FUNCTION_ME
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCAuxiliary import \
+from PsyNeuLink.Library.EVC.EVCAuxiliary import \
     ControlSignalGridSearch, \
     ValueFunction
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, Clock, TimeScale

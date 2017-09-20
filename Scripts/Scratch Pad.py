@@ -9,7 +9,7 @@
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCControlMechanism import EVCControlMechanism
+from PsyNeuLink.Library.EVC.EVCControlMechanism import EVCControlMechanism
 from PsyNeuLink.Components.Functions.Function import Logistic, Linear, LinearCombination
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, DDM_OUTPUT, \
     DECISION_VARIABLE,RESPONSE_TIME, PROBABILITY_UPPER_THRESHOLD
