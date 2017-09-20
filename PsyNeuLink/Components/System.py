@@ -436,7 +436,7 @@ import typecheck as tc
 from toposort import toposort, toposort_flatten
 
 from PsyNeuLink.Components.Component import Component, ExecutionStatus, function_type, InitStatus
-from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
+from PsyNeuLink.Components.Process import Process_Base, ProcessList, ProcessTuple
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
     import ControlMechanism, OBJECTIVE_MECHANISM
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
@@ -444,7 +444,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.Learn
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MonitoredOutputStatesOption
 from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import _parse_control_signal_spec
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
-from PsyNeuLink.Globals.Keywords import SYSTEM, EXECUTING, FUNCTION, COMPONENT_INIT, SYSTEM_INIT, TIME_SCALE, \
+from PsyNeuLink.Globals.Keywords import SYSTEM, EXECUTING, FUNCTION, COMPONENT_INIT, SYSTEM_INIT, TIME_SCALE, ALL,\
                                         MECHANISM, NAME, \
                                         ORIGIN, INTERNAL, TERMINAL, TARGET, SINGLETON, CONTROL_SIGNAL_SPECS,\
                                         SAMPLE, MATRIX, IDENTITY_MATRIX, kwSeparator, kwSystemComponentCategory, \
@@ -3414,6 +3414,18 @@ class System_Base(System):
                                 if show_learning is True:
                                     continue
                             G.edge(sndr.name, rcvr.name, color=learning_color, label=proj.name)
+
+                            # Get Projections to ComparatorMechanism as well
+                            if isinstance(sndr, ObjectiveMechanism) and sndr._role is LEARNING and show_learning is ALL:
+                                for input_state in sndr.input_states:
+                                    for proj in input_state.path_afferents:
+                                        # Skip any Projections from ProcesInputStates
+                                        if isinstance(proj.sender.owner, Process_Base):
+                                            continue
+                                        output_mech = proj.sender.owner
+                                        G.edge(output_mech.name, sndr.name, color=learning_color, label=proj.name)
+
+
 
 
         # add control graph if show_control
