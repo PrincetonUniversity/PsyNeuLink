@@ -2214,6 +2214,16 @@ class Mechanism_Base(Mechanism):
             return None
 
     @property
+    def parameter_states(self):
+        return self._parameter_states
+
+    @parameter_states.setter
+    def parameter_states(self, value):
+        # This keeps parameter_states property readonly,
+        #    but averts exception when setting paramsCurrent in Component (around line 850)
+        pass
+
+    @property
     def output_state(self):
         return self.output_states[0]
 
@@ -2355,7 +2365,3 @@ class MechanismList(UserList):
             for output_state in item.output_states:
                 values.append(output_state.value)
         return values
-
-    @property
-    def parameter_states(self):
-        return self._parameter_states

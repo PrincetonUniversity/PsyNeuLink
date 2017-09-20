@@ -846,9 +846,16 @@ class Projection_Base(Projection):
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
-    # @property
-    # def parameter_states(self):
-    #     return self._parameter_states
+    @property
+    def parameter_states(self):
+        return self._parameter_states
+
+    @parameter_states.setter
+    def parameter_states(self, value):
+        # IMPLEMENTATION NOTE:
+        # This keeps parameter_states property readonly,
+        #    but averts exception when setting paramsCurrent in Component (around line 850)
+        pass
 
 def _is_projection_spec(spec, include_matrix_keywords=True):
     """Evaluate whether spec is a valid Projection specification

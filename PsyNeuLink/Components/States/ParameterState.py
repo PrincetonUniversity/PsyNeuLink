@@ -13,7 +13,7 @@
 Overview
 --------
 
-ParameterStates belong to either a `Mechanism <Mechanism>` or a `MappingProjection` and are used to represent, and
+ParameterStates belong to either a `Mechanism <Mechanism>` or a `Projection` and are used to represent, and
 possibly modify the, values of all of the configurable parameters of the `Component <Component>` or its `function
 <Component.function>`. A ParameterState can receive one or more `ControlProjections <ControlProjection>` and/or
 `LearningProjections <LearningProjection>` that modify the value of the parameter. The Projections received by a
@@ -29,7 +29,7 @@ Creating a ParameterState
 -------------------------
 
 ParameterStates are created automatically when the `Mechanism <Mechanism>` or `Projection <Projection>` to which they
-belong is created.  The `owner <ParamaterState.owner>` of a ParameterState must be a `Mechanism or `MappingProjection`.
+belong is created.  The `owner <ParameterState.owner>` of a ParameterState must be a `Mechanism or `MappingProjection`.
 One ParameterState is created for each configurable parameter of its owner, as well as for each configurable parameter
 of the owner's `function <Component.function>` (the `configurable parameters <ParameterState_Configurable_Parameters>`
 of a Component are listed in its `user_params <Component.user_params>` and function_params <Component.function_params>`
