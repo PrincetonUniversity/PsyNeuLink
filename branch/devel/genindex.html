@@ -93,9 +93,7 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -240,7 +238,7 @@
 </li>
       <li><a href="Composition.html#Composition.Composition.add_mechanism">add_mechanism() (Composition.Composition method)</a>
 </li>
-      <li><a href="LCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism.add_modulated_mechanisms">add_modulated_mechanisms() (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism method)</a>
+      <li><a href="LCControlMechanism.html#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.add_modulated_mechanisms">add_modulated_mechanisms() (Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism method)</a>
 </li>
       <li><a href="ControlMechanism.html#ControlMechanism.ControlMechanism.add_monitored_output_states">add_monitored_output_states() (ControlMechanism.ControlMechanism method)</a>
 
@@ -266,15 +264,19 @@
 </li>
       <li><a href="Condition.html#Scheduling.Condition.AfterNCallsCombined">AfterNCallsCombined (class in Scheduling.Condition)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Condition.html#Scheduling.Condition.AfterNPasses">AfterNPasses (class in Scheduling.Condition)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Condition.html#Scheduling.Condition.AfterNTrials">AfterNTrials (class in Scheduling.Condition)</a>
 </li>
       <li><a href="Condition.html#Scheduling.Condition.AfterPass">AfterPass (class in Scheduling.Condition)</a>
 </li>
       <li><a href="Condition.html#Scheduling.Condition.AfterTrial">AfterTrial (class in Scheduling.Condition)</a>
+</li>
+      <li><a href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism">AGTControlMechanism (class in Library.Subsystems.AGT.AGTControlMechanism)</a>
+</li>
+      <li><a href="Function.html#Function.AGTUtilityIntegrator">AGTUtilityIntegrator (class in Function)</a>
 </li>
       <li><a href="Condition.html#Scheduling.Condition.All">All (class in Scheduling.Condition)</a>
 </li>
@@ -291,9 +293,9 @@
       <li><a href="ControlMechanism.html#ControlMechanism.ControlMechanism.allocation_policy">allocation_policy (ControlMechanism.ControlMechanism attribute)</a>
 
       <ul>
-        <li><a href="ITCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism.allocation_policy">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism attribute)</a>
+        <li><a href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.allocation_policy">(Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism attribute)</a>
 </li>
-        <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.allocation_policy">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+        <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.allocation_policy">(Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
       </ul></li>
       <li><a href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.allocation_samples">allocation_samples (ModulatorySignals.ControlSignal.ControlSignal attribute)</a>
@@ -390,7 +392,7 @@
 </li>
       <li><a href="TimeScale.html#Scheduling.TimeScale.Clock">Clock (class in Scheduling.TimeScale)</a>
 </li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.combine_outcome_and_cost_function">combine_outcome_and_cost_function (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.combine_outcome_and_cost_function">combine_outcome_and_cost_function (Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
       <li><a href="Composition.html#Composition.Graph.comp_to_vertex">comp_to_vertex (Composition.Graph attribute)</a>
 </li>
@@ -449,9 +451,9 @@
       <li><a href="ControlMechanism.html#ControlMechanism.ControlMechanism.control_projections">control_projections (ControlMechanism.ControlMechanism attribute)</a>
 
       <ul>
-        <li><a href="ITCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism.control_projections">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism attribute)</a>
+        <li><a href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.control_projections">(Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism attribute)</a>
 </li>
-        <li><a href="LCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism.control_projections">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism attribute)</a>
+        <li><a href="LCControlMechanism.html#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.control_projections">(Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism attribute)</a>
 </li>
       </ul></li>
       <li><a href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.control_signal">control_signal (ModulatoryProjections.ControlProjection.ControlProjection attribute)</a>
@@ -460,16 +462,16 @@
         <li><a href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.control_signal">(ModulatorySignals.ControlSignal.ControlSignal attribute)</a>
 </li>
       </ul></li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.control_signal_search_space">control_signal_search_space (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.control_signal_search_space">control_signal_search_space (Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
       <li><a href="ControlMechanism.html#ControlMechanism.ControlMechanism.control_signals">control_signals (ControlMechanism.ControlMechanism attribute)</a>
 
       <ul>
-        <li><a href="ITCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism.control_signals">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism attribute)</a>
+        <li><a href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.control_signals">(Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism attribute)</a>
 </li>
-        <li><a href="LCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism.control_signals">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism attribute)</a>
+        <li><a href="LCControlMechanism.html#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.control_signals">(Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism attribute)</a>
 </li>
-        <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.control_signals">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+        <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.control_signals">(Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
       </ul></li>
       <li><a href="System.html#System.System_Base.controller">controller (System.System_Base attribute)</a>
@@ -486,6 +488,8 @@
 </li>
       <li><a href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignalCosts">ControlSignalCosts (class in ModulatorySignals.ControlSignal)</a>
 </li>
+      <li><a href="EVCAuxiliary.html#Library.Subsystems.EVC.EVCAuxiliary.ControlSignalGridSearch">ControlSignalGridSearch (class in Library.Subsystems.EVC.EVCAuxiliary)</a>
+</li>
       <li><a href="Utilities.html#Utilities.convert_to_np_array">convert_to_np_array() (in module Utilities)</a>
 </li>
       <li><a href="Composition.html#Composition.Graph.copy">copy() (Composition.Graph method)</a>
@@ -494,7 +498,7 @@
 </li>
       <li><a href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.cost_combination_function">cost_combination_function (ModulatorySignals.ControlSignal.ControlSignal attribute)</a>
 </li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.cost_function">cost_function (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.cost_function">cost_function (Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
       <li><a href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.cost_options">cost_options (ModulatorySignals.ControlSignal.ControlSignal attribute)</a>
 </li>
@@ -624,19 +628,19 @@
       </ul></li>
       <li><a href="LearningMechanism.html#LearningMechanism.LearningMechanism.error_source">error_source (LearningMechanism.LearningMechanism attribute)</a>
 </li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.EVC_max">EVC_max (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_max">EVC_max (Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.EVC_max_policy">EVC_max_policy (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_max_policy">EVC_max_policy (Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.EVC_max_state_values">EVC_max_state_values (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_max_state_values">EVC_max_state_values (Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.EVC_policies">EVC_policies (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_policies">EVC_policies (Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.EVC_values">EVC_values (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_values">EVC_values (Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism">EVCMechanism (class in Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism">EVCControlMechanism (class in Library.Subsystems.EVC.EVCControlMechanism)</a>
 </li>
       <li><a href="Condition.html#Scheduling.Condition.EveryNCalls">EveryNCalls (class in Scheduling.Condition)</a>
 </li>
@@ -705,12 +709,6 @@
 </li>
         <li><a href="LearningMechanism.html#LearningMechanism.LearningMechanism.function">(LearningMechanism.LearningMechanism attribute)</a>
 </li>
-        <li><a href="ITCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism.function">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism attribute)</a>
-</li>
-        <li><a href="LCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism.function">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism attribute)</a>
-</li>
-        <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.function">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
-</li>
         <li><a href="DDM.html#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function">(Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM attribute)</a>
 </li>
         <li><a href="ComparatorMechanism.html#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function">(Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism attribute)</a>
@@ -720,6 +718,12 @@
         <li><a href="LCA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA.LCA.function">(Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA.LCA attribute)</a>
 </li>
         <li><a href="RecurrentTransferMechanism.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function">(Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism attribute)</a>
+</li>
+        <li><a href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function">(Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism attribute)</a>
+</li>
+        <li><a href="LCControlMechanism.html#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.function">(Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism attribute)</a>
+</li>
+        <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.function">(Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
         <li><a href="Mechanism.html#Mechanism.Mechanism_Base.function">(Mechanism.Mechanism_Base attribute)</a>
 </li>
@@ -757,6 +761,8 @@
       <li><a href="Function.html#Function.AccumulatorIntegrator.function">function() (Function.AccumulatorIntegrator method)</a>
 
       <ul>
+        <li><a href="Function.html#Function.AGTUtilityIntegrator.function">(Function.AGTUtilityIntegrator method)</a>
+</li>
         <li><a href="Function.html#Function.AdaptiveIntegrator.function">(Function.AdaptiveIntegrator method)</a>
 </li>
         <li><a href="Function.html#Function.ArgumentTherapy.function">(Function.ArgumentTherapy method)</a>
@@ -797,9 +803,11 @@
 </li>
         <li><a href="Function.html#Function.Stability.function">(Function.Stability method)</a>
 </li>
-        <li><a href="Function.html#Function.UtilityIntegrator.function">(Function.UtilityIntegrator method)</a>
-</li>
         <li><a href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function">(IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator method)</a>
+</li>
+        <li><a href="EVCAuxiliary.html#Library.Subsystems.EVC.EVCAuxiliary.ControlSignalGridSearch.function">(Library.Subsystems.EVC.EVCAuxiliary.ControlSignalGridSearch method)</a>
+</li>
+        <li><a href="EVCAuxiliary.html#Library.Subsystems.EVC.EVCAuxiliary.ValueFunction.function">(Library.Subsystems.EVC.EVCAuxiliary.ValueFunction method)</a>
 </li>
       </ul></li>
       <li><a href="Function.html#Function.Function_Base">Function_Base (class in Function)</a>
@@ -910,9 +918,9 @@
 </li>
       <li><a href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.inhibition_only">inhibition_only (Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA attribute)</a>
 </li>
-      <li><a href="Function.html#Function.UtilityIntegrator.initial_long_term_utility">initial_long_term_utility (Function.UtilityIntegrator attribute)</a>
+      <li><a href="Function.html#Function.AGTUtilityIntegrator.initial_long_term_utility">initial_long_term_utility (Function.AGTUtilityIntegrator attribute)</a>
 </li>
-      <li><a href="Function.html#Function.UtilityIntegrator.initial_short_term_utility">initial_short_term_utility (Function.UtilityIntegrator attribute)</a>
+      <li><a href="Function.html#Function.AGTUtilityIntegrator.initial_short_term_utility">initial_short_term_utility (Function.AGTUtilityIntegrator attribute)</a>
 </li>
       <li><a href="Function.html#Function.FHNIntegrator.initial_v">initial_v (Function.FHNIntegrator attribute)</a>
 </li>
@@ -958,10 +966,10 @@
       </ul></li>
       <li><a href="Component.html#Component.InitStatus">InitStatus (class in Component)</a>
 </li>
-      <li><a href="Process.html#Process.Process_Base.input">input (Process.Process_Base attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="Process.html#Process.Process_Base.input">input (Process.Process_Base attribute)</a>
+</li>
       <li><a href="LearningMechanism.html#LearningMechanism.LearningMechanism.input_source">input_source (LearningMechanism.LearningMechanism attribute)</a>
 </li>
       <li><a href="Mechanism.html#Mechanism.Mechanism_Base.input_state">input_state (Mechanism.Mechanism_Base attribute)</a>
@@ -1022,8 +1030,6 @@
 </li>
       <li><a href="Utilities.html#Utilities.iscompatible">iscompatible() (in module Utilities)</a>
 </li>
-      <li><a href="ITCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism">ITCMechanism (class in Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -1064,7 +1070,7 @@
 </li>
       <li><a href="LCA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA.LCA_OUTPUT">LCA_OUTPUT (class in Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA)</a>
 </li>
-      <li><a href="LCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism">LCMechanism (class in Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism)</a>
+      <li><a href="LCControlMechanism.html#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism">LCControlMechanism (class in Library.Subsystems.AGT.LCControlMechanism)</a>
 </li>
       <li><a href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.learned_projection">learned_projection (ModulatoryProjections.LearningProjection.LearningProjection attribute)</a>
 </li>
@@ -1118,10 +1124,10 @@
       </ul></li>
       <li><a href="LearningMechanism.html#LearningMechanism.LearningMechanism.learning_signals">learning_signals (LearningMechanism.LearningMechanism attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Function.html#Function.LearningFunction">LearningFunction (class in Function)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="LearningMechanism.html#LearningMechanism.LearningMechanism">LearningMechanism (class in LearningMechanism)</a>
 
       <ul>
@@ -1131,12 +1137,6 @@
       <li><a href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection">LearningProjection (class in ModulatoryProjections.LearningProjection)</a>
 </li>
       <li><a href="LearningSignal.html#ModulatorySignals.LearningSignal.LearningSignal">LearningSignal (class in ModulatorySignals.LearningSignal)</a>
-</li>
-      <li><a href="ITCMechanism.html#module-Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism">Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism (module)</a>
-</li>
-      <li><a href="LCMechanism.html#module-Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism">Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism (module)</a>
-</li>
-      <li><a href="EVCMechanism.html#module-Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism">Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism (module)</a>
 </li>
       <li><a href="DDM.html#module-Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM">Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM (module)</a>
 </li>
@@ -1149,6 +1149,14 @@
       <li><a href="RecurrentTransferMechanism.html#module-Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism">Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism (module)</a>
 </li>
       <li><a href="AutoAssociativeProjection.html#module-Library.Projections.PathwayProjections.AutoAssociativeProjection">Library.Projections.PathwayProjections.AutoAssociativeProjection (module)</a>
+</li>
+      <li><a href="AGTControlMechanism.html#module-Library.Subsystems.AGT.AGTControlMechanism">Library.Subsystems.AGT.AGTControlMechanism (module)</a>
+</li>
+      <li><a href="LCControlMechanism.html#module-Library.Subsystems.AGT.LCControlMechanism">Library.Subsystems.AGT.LCControlMechanism (module)</a>
+</li>
+      <li><a href="EVCAuxiliary.html#module-Library.Subsystems.EVC.EVCAuxiliary">Library.Subsystems.EVC.EVCAuxiliary (module)</a>
+</li>
+      <li><a href="EVCControlMechanism.html#module-Library.Subsystems.EVC.EVCControlMechanism">Library.Subsystems.EVC.EVCControlMechanism (module)</a>
 </li>
       <li><a href="TimeScale.html#Scheduling.TimeScale.TimeScale.LIFE">LIFE (Scheduling.TimeScale.TimeScale attribute)</a>
 </li>
@@ -1170,11 +1178,11 @@
 </li>
       <li><a href="Log.html#Log.LogLevel">LogLevel (class in Log)</a>
 </li>
-      <li><a href="Function.html#Function.UtilityIntegrator.long_term_bias">long_term_bias (Function.UtilityIntegrator attribute)</a>
+      <li><a href="Function.html#Function.AGTUtilityIntegrator.long_term_bias">long_term_bias (Function.AGTUtilityIntegrator attribute)</a>
 </li>
-      <li><a href="Function.html#Function.UtilityIntegrator.long_term_gain">long_term_gain (Function.UtilityIntegrator attribute)</a>
+      <li><a href="Function.html#Function.AGTUtilityIntegrator.long_term_gain">long_term_gain (Function.AGTUtilityIntegrator attribute)</a>
 </li>
-      <li><a href="Function.html#Function.UtilityIntegrator.long_term_rate">long_term_rate (Function.UtilityIntegrator attribute)</a>
+      <li><a href="Function.html#Function.AGTUtilityIntegrator.long_term_rate">long_term_rate (Function.AGTUtilityIntegrator attribute)</a>
 </li>
       <li><a href="Function.html#Function.UniformDist.low">low (Function.UniformDist attribute)</a>
 </li>
@@ -1260,7 +1268,7 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="LCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism.modulated_mechanisms">modulated_mechanisms (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism attribute)</a>
+      <li><a href="LCControlMechanism.html#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.modulated_mechanisms">modulated_mechanisms (Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism attribute)</a>
 </li>
       <li><a href="AdaptiveMechanism.html#AdaptiveMechanism.AdaptiveMechanism_Base.modulation">modulation (AdaptiveMechanism.AdaptiveMechanism_Base attribute)</a>
 </li>
@@ -1271,9 +1279,9 @@
       <ul>
         <li><a href="LearningMechanism.html#LearningMechanism.LearningMechanism.modulation">(LearningMechanism.LearningMechanism attribute)</a>
 </li>
-        <li><a href="ITCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism.modulation">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism attribute)</a>
+        <li><a href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.modulation">(Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism attribute)</a>
 </li>
-        <li><a href="LCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism.modulation">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism attribute)</a>
+        <li><a href="LCControlMechanism.html#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.modulation">(Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism attribute)</a>
 </li>
         <li><a href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.modulation">(ModulatorySignals.ControlSignal.ControlSignal attribute)</a>
 </li>
@@ -1305,11 +1313,11 @@
       <li><a href="ControlMechanism.html#ControlMechanism.ControlMechanism.monitored_output_states">monitored_output_states (ControlMechanism.ControlMechanism attribute)</a>
 
       <ul>
-        <li><a href="ITCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism.monitored_output_states">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism attribute)</a>
+        <li><a href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.monitored_output_states">(Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism attribute)</a>
 </li>
-        <li><a href="LCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism.monitored_output_states">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism attribute)</a>
+        <li><a href="LCControlMechanism.html#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.monitored_output_states">(Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism attribute)</a>
 </li>
-        <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.monitored_output_states">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+        <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.monitored_output_states">(Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
         <li><a href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_output_states">(ObjectiveMechanism.ObjectiveMechanism attribute)</a>
 </li>
@@ -1317,11 +1325,11 @@
       <li><a href="ControlMechanism.html#ControlMechanism.ControlMechanism.monitored_output_states_weights_and_exponents">monitored_output_states_weights_and_exponents (ControlMechanism.ControlMechanism attribute)</a>
 
       <ul>
-        <li><a href="ITCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism.monitored_output_states_weights_and_exponents">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism attribute)</a>
+        <li><a href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.monitored_output_states_weights_and_exponents">(Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism attribute)</a>
 </li>
-        <li><a href="LCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism.monitored_output_states_weights_and_exponents">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism attribute)</a>
+        <li><a href="LCControlMechanism.html#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.monitored_output_states_weights_and_exponents">(Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism attribute)</a>
 </li>
-        <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.monitored_output_states_weights_and_exponents">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+        <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.monitored_output_states_weights_and_exponents">(Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
         <li><a href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_output_states_weights_and_exponents">(ObjectiveMechanism.ObjectiveMechanism attribute)</a>
 </li>
@@ -1403,6 +1411,8 @@
       <li><a href="Function.html#Function.AccumulatorIntegrator.noise">noise (Function.AccumulatorIntegrator attribute)</a>
 
       <ul>
+        <li><a href="Function.html#Function.AGTUtilityIntegrator.noise">(Function.AGTUtilityIntegrator attribute)</a>
+</li>
         <li><a href="Function.html#Function.AdaptiveIntegrator.noise">(Function.AdaptiveIntegrator attribute)</a>
 </li>
         <li><a href="Function.html#Function.BogaczEtAl.noise">(Function.BogaczEtAl attribute)</a>
@@ -1418,8 +1428,6 @@
         <li><a href="Function.html#Function.OrnsteinUhlenbeckIntegrator.noise">(Function.OrnsteinUhlenbeckIntegrator attribute)</a>
 </li>
         <li><a href="Function.html#Function.SimpleIntegrator.noise">(Function.SimpleIntegrator attribute)</a>
-</li>
-        <li><a href="Function.html#Function.UtilityIntegrator.noise">(Function.UtilityIntegrator attribute)</a>
 </li>
         <li><a href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.noise">(IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator attribute)</a>
 </li>
@@ -1457,11 +1465,11 @@
       <li><a href="ControlMechanism.html#ControlMechanism.ControlMechanism.objective_mechanism">objective_mechanism (ControlMechanism.ControlMechanism attribute)</a>
 
       <ul>
-        <li><a href="ITCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism.objective_mechanism">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism attribute)</a>
+        <li><a href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism">(Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism attribute)</a>
 </li>
-        <li><a href="LCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism.objective_mechanism">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism attribute)</a>
+        <li><a href="LCControlMechanism.html#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.objective_mechanism">(Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism attribute)</a>
 </li>
-        <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.objective_mechanism">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+        <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.objective_mechanism">(Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
       </ul></li>
       <li><a href="ObjectiveMechanism.html#ObjectiveMechanism.OBJECTIVE_OUTPUT">OBJECTIVE_OUTPUT (class in ObjectiveMechanism)</a>
@@ -1494,7 +1502,7 @@
 </li>
       <li><a href="System.html#System.System_Base.origin_mechanisms">origin_mechanisms (System.System_Base attribute)</a>
 </li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.origin_prediction_mechanisms">origin_prediction_mechanisms (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.origin_prediction_mechanisms">origin_prediction_mechanisms (Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
       <li><a href="Function.html#Function.OrnsteinUhlenbeckIntegrator">OrnsteinUhlenbeckIntegrator (class in Function)</a>
 </li>
@@ -1571,6 +1579,8 @@
       <li><a href="Function.html#Function.AccumulatorIntegrator.owner">owner (Function.AccumulatorIntegrator attribute)</a>
 
       <ul>
+        <li><a href="Function.html#Function.AGTUtilityIntegrator.owner">(Function.AGTUtilityIntegrator attribute)</a>
+</li>
         <li><a href="Function.html#Function.AdaptiveIntegrator.owner">(Function.AdaptiveIntegrator attribute)</a>
 </li>
         <li><a href="Function.html#Function.ArgumentTherapy.owner">(Function.ArgumentTherapy attribute)</a>
@@ -1622,8 +1632,6 @@
         <li><a href="Function.html#Function.UniformDist.owner">(Function.UniformDist attribute)</a>
 </li>
         <li><a href="Function.html#Function.UserDefinedFunction.owner">(Function.UserDefinedFunction attribute)</a>
-</li>
-        <li><a href="Function.html#Function.UtilityIntegrator.owner">(Function.UtilityIntegrator attribute)</a>
 </li>
         <li><a href="Function.html#Function.WaldDist.owner">(Function.WaldDist attribute)</a>
 </li>
@@ -1702,19 +1710,21 @@
         <li><a href="Mechanism.html#Mechanism.Mechanism_Base.plot">(Mechanism.Mechanism_Base method)</a>
 </li>
       </ul></li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.predicted_input">predicted_input (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.predicted_input">predicted_input (Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.prediction_mechanism_params">prediction_mechanism_params (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.prediction_mechanism_params">prediction_mechanism_params (Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.prediction_mechanism_type">prediction_mechanism_type (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.prediction_mechanism_type">prediction_mechanism_type (Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.prediction_mechanisms">prediction_mechanisms (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.prediction_mechanisms">prediction_mechanisms (Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
       <li><a href="Preferences.html#module-Preferences">Preferences (module)</a>
 </li>
       <li><a href="Component.html#Component.Component.prefs">prefs (Component.Component attribute)</a>
 
       <ul>
+        <li><a href="Function.html#Function.AGTUtilityIntegrator.prefs">(Function.AGTUtilityIntegrator attribute)</a>
+</li>
         <li><a href="Function.html#Function.AccumulatorIntegrator.prefs">(Function.AccumulatorIntegrator attribute)</a>
 </li>
         <li><a href="Function.html#Function.AdaptiveIntegrator.prefs">(Function.AdaptiveIntegrator attribute)</a>
@@ -1768,8 +1778,6 @@
         <li><a href="Function.html#Function.UniformDist.prefs">(Function.UniformDist attribute)</a>
 </li>
         <li><a href="Function.html#Function.UserDefinedFunction.prefs">(Function.UserDefinedFunction attribute)</a>
-</li>
-        <li><a href="Function.html#Function.UtilityIntegrator.prefs">(Function.UtilityIntegrator attribute)</a>
 </li>
         <li><a href="Function.html#Function.WaldDist.prefs">(Function.WaldDist attribute)</a>
 </li>
@@ -1832,9 +1840,9 @@
         <li><a href="RecurrentTransferMechanism.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.previous_input">(Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism attribute)</a>
 </li>
       </ul></li>
-      <li><a href="Function.html#Function.UtilityIntegrator.previous_long_term_utility">previous_long_term_utility (Function.UtilityIntegrator attribute)</a>
+      <li><a href="Function.html#Function.AGTUtilityIntegrator.previous_long_term_utility">previous_long_term_utility (Function.AGTUtilityIntegrator attribute)</a>
 </li>
-      <li><a href="Function.html#Function.UtilityIntegrator.previous_short_term_utility">previous_short_term_utility (Function.UtilityIntegrator attribute)</a>
+      <li><a href="Function.html#Function.AGTUtilityIntegrator.previous_short_term_utility">previous_short_term_utility (Function.AGTUtilityIntegrator attribute)</a>
 </li>
       <li><a href="Function.html#Function.FHNIntegrator.previous_t">previous_t (Function.FHNIntegrator attribute)</a>
 </li>
@@ -1966,7 +1974,7 @@
 </li>
       <li><a href="Function.html#Function.Reinforcement">Reinforcement (class in Function)</a>
 </li>
-      <li><a href="LCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism.remove_modulated_mechanisms">remove_modulated_mechanisms() (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism method)</a>
+      <li><a href="LCControlMechanism.html#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.remove_modulated_mechanisms">remove_modulated_mechanisms() (Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism method)</a>
 </li>
       <li><a href="Log.html#Log.Log.reset_entries">reset_entries() (Log.Log method)</a>
 </li>
@@ -1996,7 +2004,7 @@
         <li><a href="Run.html#Run.run">(in module Run)</a>
 </li>
       </ul></li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.run_simulation">run_simulation() (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism method)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.run_simulation">run_simulation() (Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -2006,7 +2014,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="ComparatorMechanism.html#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample">sample (Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism attribute)</a>
 </li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.save_all_values_and_policies">save_all_values_and_policies (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.save_all_values_and_policies">save_all_values_and_policies (Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
       <li><a href="Function.html#Function.Exponential.scale">scale (Function.Exponential attribute)</a>
 
@@ -2050,20 +2058,20 @@
         <li><a href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.sender">(PathwayProjections.MappingProjection.MappingProjection attribute)</a>
 </li>
       </ul></li>
-      <li><a href="Function.html#Function.UtilityIntegrator.short_term_bias">short_term_bias (Function.UtilityIntegrator attribute)</a>
+      <li><a href="Function.html#Function.AGTUtilityIntegrator.short_term_bias">short_term_bias (Function.AGTUtilityIntegrator attribute)</a>
 </li>
-      <li><a href="Function.html#Function.UtilityIntegrator.short_term_gain">short_term_gain (Function.UtilityIntegrator attribute)</a>
+      <li><a href="Function.html#Function.AGTUtilityIntegrator.short_term_gain">short_term_gain (Function.AGTUtilityIntegrator attribute)</a>
 </li>
-      <li><a href="Function.html#Function.UtilityIntegrator.short_term_rate">short_term_rate (Function.UtilityIntegrator attribute)</a>
+      <li><a href="Function.html#Function.AGTUtilityIntegrator.short_term_rate">short_term_rate (Function.AGTUtilityIntegrator attribute)</a>
 </li>
       <li><a href="ControlMechanism.html#ControlMechanism.ControlMechanism.show">show() (ControlMechanism.ControlMechanism method)</a>
 
       <ul>
         <li><a href="GatingMechanism.html#GatingMechanism.GatingMechanism.show">(GatingMechanism.GatingMechanism method)</a>
 </li>
-        <li><a href="ITCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism.show">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism method)</a>
+        <li><a href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.show">(Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism method)</a>
 </li>
-        <li><a href="LCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism.show">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism method)</a>
+        <li><a href="LCControlMechanism.html#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.show">(Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism method)</a>
 </li>
         <li><a href="Process.html#Process.Process_Base.show">(Process.Process_Base method)</a>
 </li>
@@ -2109,11 +2117,11 @@
       <li><a href="ControlMechanism.html#ControlMechanism.ControlMechanism.system">system (ControlMechanism.ControlMechanism attribute)</a>
 
       <ul>
-        <li><a href="ITCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism.system">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism.ITCMechanism attribute)</a>
+        <li><a href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.system">(Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism attribute)</a>
 </li>
-        <li><a href="LCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism.system">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism.LCMechanism attribute)</a>
+        <li><a href="LCControlMechanism.html#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.system">(Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism attribute)</a>
 </li>
-        <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.system">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+        <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system">(Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
 </li>
       </ul></li>
       <li><a href="System.html#module-System">System (module)</a>
@@ -2250,8 +2258,6 @@
 </li>
       <li><a href="Utilities.html#module-Utilities">Utilities (module)</a>
 </li>
-      <li><a href="Function.html#Function.UtilityIntegrator">UtilityIntegrator (class in Function)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -2314,7 +2320,9 @@
       </ul></li>
       <li><a href="Log.html#Log.LogLevel.VALUE_ASSIGNMENT">VALUE_ASSIGNMENT (Log.LogLevel attribute)</a>
 </li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.value_function">value_function (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+      <li><a href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.value_function">value_function (Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism attribute)</a>
+</li>
+      <li><a href="EVCAuxiliary.html#Library.Subsystems.EVC.EVCAuxiliary.ValueFunction">ValueFunction (class in Library.Subsystems.EVC.EVCAuxiliary)</a>
 </li>
       <li><a href="Utilities.html#Utilities.ContentAddressableList.values">values (Utilities.ContentAddressableList attribute)</a>, <a href="Utilities.html#Utilities.ContentAddressableList.values">[1]</a>
 </li>
@@ -2323,6 +2331,8 @@
       <li><a href="Component.html#Component.Component.variable">variable (Component.Component attribute)</a>
 
       <ul>
+        <li><a href="Function.html#Function.AGTUtilityIntegrator.variable">(Function.AGTUtilityIntegrator attribute)</a>
+</li>
         <li><a href="Function.html#Function.AccumulatorIntegrator.variable">(Function.AccumulatorIntegrator attribute)</a>
 </li>
         <li><a href="Function.html#Function.AdaptiveIntegrator.variable">(Function.AdaptiveIntegrator attribute)</a>
@@ -2368,8 +2378,6 @@
         <li><a href="Function.html#Function.Stability.variable">(Function.Stability attribute)</a>
 </li>
         <li><a href="Function.html#Function.UserDefinedFunction.variable">(Function.UserDefinedFunction attribute)</a>
-</li>
-        <li><a href="Function.html#Function.UtilityIntegrator.variable">(Function.UtilityIntegrator attribute)</a>
 </li>
         <li><a href="GatingMechanism.html#GatingMechanism.GatingMechanism.variable">(GatingMechanism.GatingMechanism attribute)</a>
 </li>

@@ -95,24 +95,27 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html">ProcessingMechanisms</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="AdaptiveMechanism.html">AdaptiveMechanisms</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="LearningMechanism.html">Learning Mechanism</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">Control Mechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="GatingMechanism.html">Gating Mechanism</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="ProcessingMechanism.html">ProcessingMechanisms</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="AdaptiveMechanism.html">AdaptiveMechanisms</a><ul class="current">
+<li class="toctree-l5"><a class="reference internal" href="LearningMechanism.html">Learning Mechanism</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">Control Mechanism</a></li>
+<li class="toctree-l5"><a class="reference internal" href="GatingMechanism.html">Gating Mechanism</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projections</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -157,6 +160,8 @@
   <ul class="wy-breadcrumbs">
     
       <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Core.html">Core</a> &raquo;</li>
         
           <li><a href="Component.html">Components</a> &raquo;</li>
         
@@ -236,7 +241,7 @@ can be specified in the <strong>objective_mechanism</strong> argument of its con
 <li>an existing <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, or a constructor for one;  in this case the <strong>monitored_output_states</strong> argument
 of the ObjectiveMechanism’s constructor is used to specify the OutputStates to be <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitored-output-states"><span class="std std-ref">monitored and evaluated</span></a> (see <a class="reference internal" href="#controlmechanism-examples"><span class="std std-ref">Examples</span></a>); note that, in this case, the
 default values for the attributes of the ObjectiveMechanism override any that ControlMechanism uses for its
-default <a class="reference internal" href="#ControlMechanism.ControlMechanism.objective_mechanism" title="ControlMechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, including those of its <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see <a class="reference internal" href="EVCMechanism.html#evcmechanism-objective-mechanism-function-note"><span class="std std-ref">note</span></a> in EVCMechanism for
+default <a class="reference internal" href="#ControlMechanism.ControlMechanism.objective_mechanism" title="ControlMechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, including those of its <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-objective-mechanism-function-note"><span class="std std-ref">note</span></a> in EVCControlMechanism for
 an example);</li>
 </ul>
 <ul class="simple">
@@ -296,7 +301,7 @@ input to the ControlMechanism’s <a class="reference internal" href="#ControlMe
 <a class="reference internal" href="#ControlMechanism.ControlMechanism.allocation_policy" title="ControlMechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>. The <em>ERROR_SIGNAL</em> InputState receives its input
 via a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the <em>OUTCOME</em> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-output"><span class="std std-ref">OutputState</span></a> of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>.
 The Objective Mechanism is specified in the <strong>objective_mechanism</strong> argument of its constructor, and listed in its
-<a class="reference internal" href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.objective_mechanism" title="Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> attribute.  The OutputStates monitored by the
+<a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.objective_mechanism" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> attribute.  The OutputStates monitored by the
 ObjectiveMechanism (listed in its <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_output_states" title="ObjectiveMechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>
 attribute) are also listed in the <a class="reference internal" href="#ControlMechanism.ControlMechanism.monitored_output_states" title="ControlMechanism.ControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>
 of the ControlMechanism (see <a class="reference internal" href="#controlmechanism-objectivemechanism"><span class="std std-ref">ObjectiveMechanism and Monitored OutputStates</span></a> for how the ObjectiveMechanism and the
@@ -310,7 +315,7 @@ conveyed as the input to the ControlMechanism.</p>
 <em>ERROR_SIGNAL</em> <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> to generate an <a class="reference internal" href="#ControlMechanism.ControlMechanism.allocation_policy" title="ControlMechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>.  By
 default, each item of the <a class="reference internal" href="#ControlMechanism.ControlMechanism.allocation_policy" title="ControlMechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> is assigned as the
 <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of the corresponding <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> in <a class="reference internal" href="#ControlMechanism.ControlMechanism.control_signals" title="ControlMechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>;  however, subtypes of ControlMechanism may assign values differently
-(for example, an <a class="reference internal" href="LCMechanism.html"><span class="doc">LCMechanism</span></a> assigns a single value to all of its ControlSignals).</p>
+(for example, an <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a> assigns a single value to all of its ControlSignals).</p>
 </div>
 <div class="section" id="output">
 <span id="controlmechanism-output"></span><h3>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>

@@ -95,24 +95,27 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html">ProcessingMechanisms</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="AdaptiveMechanism.html">AdaptiveMechanisms</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="LearningMechanism.html">Learning Mechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ControlMechanism.html">Control Mechanism</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">Gating Mechanism</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="ProcessingMechanism.html">ProcessingMechanisms</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="AdaptiveMechanism.html">AdaptiveMechanisms</a><ul class="current">
+<li class="toctree-l5"><a class="reference internal" href="LearningMechanism.html">Learning Mechanism</a></li>
+<li class="toctree-l5"><a class="reference internal" href="ControlMechanism.html">Control Mechanism</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">Gating Mechanism</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projections</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -157,6 +160,8 @@
   <ul class="wy-breadcrumbs">
     
       <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Core.html">Core</a> &raquo;</li>
         
           <li><a href="Component.html">Components</a> &raquo;</li>
         
@@ -288,7 +293,7 @@ its length must equal the number of items specified in the <strong>gating_signal
 argument;  if <strong>default_gating_policy</strong> is specified, it takes precedence over the specification of <strong>size</strong>.</li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear</em><em>(</em><em>slope=1</em><em>, </em><em>intercept=0</em><em>)</em>) – specifies the function used to transform the GatingMechanism’s <a class="reference internal" href="#GatingMechanism.GatingMechanism.variable" title="GatingMechanism.GatingMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 to a <a class="reference internal" href="#GatingMechanism.GatingMechanism.gating_policy" title="GatingMechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a>.</li>
-<li><strong>gating_signals</strong> (<em>List</em><em>[</em><a class="reference internal" href="GatingSignal.html#module-ModulatorySignals.GatingSignal" title="ModulatorySignals.GatingSignal"><em>GatingSignal</em></a><em>, </em><a class="reference internal" href="InputState.html#module-InputState" title="InputState"><em>InputState</em></a><em>, </em><a class="reference internal" href="OutputState.html#module-OutputState" title="OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>, </em><em>tuple</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>]</em><em>, or </em><em>dict</em><em>]</em>) – specifies the <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> and/or <code class="xref any docutils literal"><span class="pre">OutputStates</span></code>
+<li><strong>gating_signals</strong> (<em>List</em><em>[</em><a class="reference internal" href="GatingSignal.html#ModulatorySignals.GatingSignal.GatingSignal" title="ModulatorySignals.GatingSignal.GatingSignal"><em>GatingSignal</em></a><em>, </em><a class="reference internal" href="InputState.html#module-InputState" title="InputState"><em>InputState</em></a><em>, </em><a class="reference internal" href="OutputState.html#module-OutputState" title="OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>, </em><em>tuple</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>]</em><em>, or </em><em>dict</em><em>]</em>) – specifies the <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> and/or <code class="xref any docutils literal"><span class="pre">OutputStates</span></code>
 to be gated by the GatingMechanism; the number of items must equal the length of the <strong>default_gating_policy</strong>
 argument; if a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is specified, its <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> is used
 (see <a href="#id1"><span class="problematic" id="id2">`</span></a>GatingMechanism_GatingSignals for details).</li>

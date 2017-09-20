@@ -95,13 +95,16 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Composition.html">Compositions</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Process.html">Process</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Component.html">Components</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Composition.html">Compositions</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Process.html">Process</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -146,6 +149,8 @@
   <ul class="wy-breadcrumbs">
     
       <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Core.html">Core</a> &raquo;</li>
         
           <li><a href="Composition.html">Compositions</a> &raquo;</li>
         
@@ -224,7 +229,7 @@ monitored, whereas <em>ALL_OUTPUT_STATES</em> specifies that <em>every</em> Outp
 <p>The default for the <strong>monitor_for_control</strong> argument is <em>MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES</em>.
 The OutputStates specified in the <strong>monitor_for_control</strong> argument are added to any already specified for the
 ControlMechanism’s <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.objective_mechanism" title="ControlMechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, and the full set is listed in
-the ControlMechanism’s <a class="reference internal" href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.monitored_output_states" title="Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute, and its
+the ControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.monitored_output_states" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute, and its
 ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_output_states" title="ObjectiveMechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute).</p>
 </li>
 <li><p class="first"><strong>control_signals</strong> argument – used to specify the parameters of Components in the System to be controlled. These
@@ -309,7 +314,7 @@ specifications made for the System as follows:</p>
 <blockquote>
 <div><ul class="simple">
 <li>the OutputStates specified to be monitored in the System’s <strong>monitor_for_control</strong> argument are added to those
-that may have already been specified for the ControlMechanism’s <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.objective_mechanism" title="ControlMechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> (the full set is listed in the ControlMechanism’s <a class="reference internal" href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.monitored_output_states" title="Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute, and its ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_output_states" title="ObjectiveMechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute); see <a class="reference internal" href="#system-control-specification"><span class="std std-ref">Specifying Control</span></a> for additional details of how
+that may have already been specified for the ControlMechanism’s <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.objective_mechanism" title="ControlMechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> (the full set is listed in the ControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.monitored_output_states" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute, and its ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_output_states" title="ObjectiveMechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute); see <a class="reference internal" href="#system-control-specification"><span class="std std-ref">Specifying Control</span></a> for additional details of how
 to specify OutputStates to be monitored.</li>
 <li>a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> and <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> is assigned to the ControlMechanism for every parameter that has been
 <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">specified for control</span></a> in the System;  these are added to any that the
@@ -404,13 +409,13 @@ additional information about control). The control Components of a System can be
 </div>
 <div class="section" id="specifying-control-for-a-system">
 <span id="system-control-examples"></span><h3>Specifying Control for a System<a class="headerlink" href="#specifying-control-for-a-system" title="Permalink to this headline">¶</a></h3>
-<p>The following example specifies an <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a> as the controller for a System with two <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a>
+<p>The following example specifies an <a class="reference internal" href="EVCControlMechanism.html"><span class="doc">EVCControlMechanism</span></a> as the controller for a System with two <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a>
 that include two <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> (not shown):</p>
 <blockquote>
 <div><dl class="docutils">
 <dt>my_system = system(processes=[TaskExecutionProcess, RewardProcess],</dt>
 <dd><dl class="first last docutils">
-<dt>controller=EVCMechanism(objective_mechanism=</dt>
+<dt>controller=EVCControlMechanism(objective_mechanism=</dt>
 <dd><dl class="first last docutils">
 <dt>ObjectiveMechanism(</dt>
 <dd><dl class="first docutils">
@@ -427,43 +432,43 @@ Decision.output_states[PROBABILITY_UPPER_THRESHOLD],
 </dd>
 </dl>
 </div></blockquote>
-<p>A constructor is used to specify the EVCMechanism that includes a constructor specifying its <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.objective_mechanism" title="ControlMechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>;  the <strong>monitored_output_states</strong> argument of the ObjectiveMechanism’s constructor
+<p>A constructor is used to specify the EVCControlMechanism that includes a constructor specifying its <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.objective_mechanism" title="ControlMechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>;  the <strong>monitored_output_states</strong> argument of the ObjectiveMechanism’s constructor
 is used to specify that it should monitor the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> of the Reward Mechanism
 and the <em>PROBABILITY_UPPER_THRESHOLD</em> and <em>RESPONSE_TIME</em> and, specifying how it should combine them (see the <a class="reference internal" href="ControlMechanism.html#controlmechanism-examples"><span class="std std-ref">example</span></a> under ControlMechanism for an explanation). Note that the <strong>function</strong> argument for the
 ObjectiveMechanism’s constructor is also specified;  this is because an ObjectiveMechanism uses <em>SUM</em> as the default
-for the <a class="reference internal" href="Function.html#Function.LinearCombination.operation" title="Function.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> of its <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function, whereas as the EVCMechanism
+for the <a class="reference internal" href="Function.html#Function.LinearCombination.operation" title="Function.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> of its <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function, whereas as the EVCControlMechanism
 requires <em>PRODUCT</em> – in this case, to properly use the weight and exponents specified for the RESPONSE_TIME
-OutputState of Decision (see <a class="reference internal" href="EVCMechanism.html#evcmechanism-objective-mechanism-function-note"><span class="std std-ref">note</span></a> in EVCMechanism for
-a more complete explanation).  Note that both the EVCMechanism and/or the ObjectiveMechanism could have been
+OutputState of Decision (see <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-objective-mechanism-function-note"><span class="std std-ref">note</span></a> in EVCControlMechanism for
+a more complete explanation).  Note that both the EVCControlMechanism and/or the ObjectiveMechanism could have been
 constructed separately, and then referenced in the <strong>controller</strong> argument of <code class="docutils literal"><span class="pre">my_system</span></code> and <strong>objective_mechanism</strong>
-argument of the EVCMechanism, respectively.</p>
+argument of the EVCControlMechanism, respectively.</p>
 <p>The same configuration can be specified in a more concise, though less “transparent” form, as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_system</span> <span class="o">=</span> <span class="n">system</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">TaskExecutionProcess</span><span class="p">,</span> <span class="n">RewardProcess</span><span class="p">],</span>
-                   <span class="n">controller</span><span class="o">=</span><span class="n">EVCMechanism</span><span class="p">(</span><span class="n">objective_mechanism</span><span class="o">=</span><span class="p">[</span>
+                   <span class="n">controller</span><span class="o">=</span><span class="n">EVCControlMechanism</span><span class="p">(</span><span class="n">objective_mechanism</span><span class="o">=</span><span class="p">[</span>
                                                          <span class="n">Reward</span><span class="p">,</span>
                                                          <span class="n">Decision</span><span class="o">.</span><span class="n">output_states</span><span class="p">[</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">],</span>
                                                          <span class="p">(</span><span class="n">Decision</span><span class="o">.</span><span class="n">output_states</span><span class="p">[</span><span class="n">RESPONSE_TIME</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])))</span>
 </pre></div>
 </div>
 <p>Here, the constructor for the ObjectiveMechanism is elided, and the <strong>objective_mechanism</strong> argument for the
-EVCMechanism is specified as a list of OutputStates (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">ObjectiveMechanism and Monitored OutputStates</span></a>).</p>
+EVCControlMechanism is specified as a list of OutputStates (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">ObjectiveMechanism and Monitored OutputStates</span></a>).</p>
 <p>The specification can be made even simpler, but with some additional considerations that must be kept in mind,
 as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_system</span> <span class="o">=</span> <span class="n">system</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">TaskExecutionProcess</span><span class="p">,</span> <span class="n">RewardProcess</span><span class="p">],</span>
-                   <span class="n">controller</span><span class="o">=</span><span class="n">EVCMechanism</span><span class="p">,</span>
+                   <span class="n">controller</span><span class="o">=</span><span class="n">EVCControlMechanism</span><span class="p">,</span>
                    <span class="n">monitor_for_control</span><span class="o">=</span><span class="p">[</span><span class="n">Reward</span><span class="p">,</span>
                                         <span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">,</span>
                                         <span class="n">RESPONSE_TIME</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)],</span>
 </pre></div>
 </div>
-<p>Here, the <em>controller*</em> for <code class="docutils literal"><span class="pre">my_system</span></code> is specified as the EVCMechanism, which will created a default EVCMechanism.
+<p>Here, the <em>controller*</em> for <code class="docutils literal"><span class="pre">my_system</span></code> is specified as the EVCControlMechanism, which will created a default EVCControlMechanism.
 The OutputStates to be monitored are specified in the <strong>monitor_for_control</strong> argument for <code class="docutils literal"><span class="pre">my_system</span></code>.  Note that
 here they can be referenced simply by name; when <code class="docutils literal"><span class="pre">my_system</span></code> is created, it will search all of its
 Mechanisms for OutputStates with those names, and assign them to the <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">monitored_output_states</span></a>
-attribute of the EVCMechanism’s <a class="reference internal" href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.objective_mechanism" title="Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> (see
+attribute of the EVCControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.objective_mechanism" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> (see
 <a class="reference internal" href="#system-control-specification"><span class="std std-ref">Specifying Control</span></a> for a more detailed explanation of how OutputStates are assigned to be monitored by a
 System’s <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>).  While this form of the specification is much simpler,
-it less flexible (i.e., it can’t be used to customize the ObjectiveMechanism used by the EVCMechanism or its
+it less flexible (i.e., it can’t be used to customize the ObjectiveMechanism used by the EVCControlMechanism or its
 <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
 </div>
 </div>
@@ -873,11 +878,11 @@ Projections that receive a <a class="reference internal" href="LearningProjectio
 they will all be displayed in the color specified for <strong>control_color</strong>.</li>
 <li><strong>learning_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">green</span></code>) – determines the color in which the learning components are displayed</li>
 <li><strong>control_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">blue</span></code>) – determines the color in which the learning components are displayed (note: if the System’s
-<a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>) is an <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a>, then a link is shown in red from the
-<a class="reference internal" href="EVCMechanism.html#evcmechanism-prediction-mechanisms"><span class="std std-ref">prediction Mechanisms</span></a> it creates to the corresponding
+<a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>) is an <a class="reference internal" href="EVCControlMechanism.html"><span class="doc">EVCControlMechanism</span></a>, then a link is shown in red from the
+<a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-prediction-mechanisms"><span class="std std-ref">prediction Mechanisms</span></a> it creates to the corresponding
 <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.ORIGIN" title="Keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms of the System, to indicate that although no projection are created for these,
-the prediction Mechanisms determine the input to the <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.ORIGIN" title="Keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms when the EVCMechanism
-<a class="reference internal" href="EVCMechanism.html#evcmechanism-execution"><span class="std std-ref">simulates execution</span></a> of the System.</li>
+the prediction Mechanisms determine the input to the <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.ORIGIN" title="Keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms when the EVCControlMechanism
+<a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-execution"><span class="std std-ref">simulates execution</span></a> of the System.</li>
 <li><strong>output_fmt</strong> (<em>keyword : default 'pdf'</em>) – ‘pdf’: generate and open a pdf with the visualization;
 ‘jupyter’: return the object (ideal for working in jupyter/ipython notebooks).</li>
 </ul>

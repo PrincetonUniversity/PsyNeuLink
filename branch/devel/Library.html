@@ -36,7 +36,7 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
-        <link rel="next" title="Mechanisms" href="Mechanisms.html"/>
+        <link rel="next" title="Subsystems" href="Subsystems.html"/>
         <link rel="prev" title="Run" href="Run.html"/> 
 
   
@@ -94,10 +94,9 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Library</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Subsystems.html">Subsystems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanisms.html">Mechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Projections.html">Projections</a></li>
 </ul>
@@ -169,17 +168,49 @@
 <h1>Library<a class="headerlink" href="#library" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="Subsystems.html">Subsystems</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="AGT.html">AGT</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="AGTControlMechanism.html">AGTControlMechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LCControlMechanism.html">LCControlMechanism</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="EVC.html">EVC</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="EVCControlMechanism.html">EVCControlMechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="EVCAuxiliary.html">EVCAuxiliary</a><ul class="simple">
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Mechanisms.html">Mechanisms</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="ProcessingMechanisms.html">Processing Mechanisms</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="TransferMechanisms.html">TransferMechanisms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="IntegratorMechanisms.html">IntegratorMechanisms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ObjectiveMechanisms.html">ObjectiveMechanisms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TransferMechanisms.html">TransferMechanisms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="RecurrentTransferMechanism.html">RecurrentTransferMechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="LCA.html">LCA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="KWTA.html">KWTA</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="IntegratorMechanisms.html">IntegratorMechanisms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="DDM.html">DDM</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ObjectiveMechanisms.html">ObjectiveMechanisms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ComparatorMechanism.html">ComparatorMechanism</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="AdaptiveMechanisms.html">AdaptiveMechanisms</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="LearningMechanisms.html">LearningMechanisms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ControlMechanisms.html">ControlMechanisms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="GatingMechanisms.html">GatingMechanisms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LearningMechanisms.html">LearningMechanisms</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ControlMechanisms.html">ControlMechanisms</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="GatingMechanisms.html">GatingMechanisms</a><ul class="simple">
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -191,9 +222,15 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="ModulatoryProjections.html">ModulatoryProjections</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="LearningProjections.html">LearningProjections</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ControlProjections.html">ControlProjections</a></li>
-<li class="toctree-l3"><a class="reference internal" href="GatingProjections.html">GatingProjections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LearningProjections.html">LearningProjections</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ControlProjections.html">ControlProjections</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="GatingProjections.html">GatingProjections</a><ul class="simple">
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -212,7 +249,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Mechanisms.html" class="btn btn-neutral float-right" title="Mechanisms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Subsystems.html" class="btn btn-neutral float-right" title="Subsystems" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="Run.html" class="btn btn-neutral" title="Run" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

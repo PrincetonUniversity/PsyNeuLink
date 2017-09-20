@@ -24,7 +24,7 @@ Functions
              DriftDiffusionIntegrator,
              OrnsteinUhlenbeckIntegrator,
              FHNIntegrator,
-             UtilityIntegrator,
+             AGTUtilityIntegrator,
              AccumulatorIntegrator,
              BogaczEtAl,
              NavarroAndFuss,
