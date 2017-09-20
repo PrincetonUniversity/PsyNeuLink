@@ -335,7 +335,7 @@ def test_EVC_gratton():
         enable_controller=True,
         monitor_for_control=[
             Reward,
-            Decision.PROBABILITY_UPPER_THRESHOLD
+            (Decision.PROBABILITY_UPPER_THRESHOLD, 1, -1)
         ],
         # monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],
         name='EVC Gratton System'
