@@ -1,11 +1,9 @@
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Components.System import System_Base, system
-from PsyNeuLink.Components.Process import Process_Base, process
+from PsyNeuLink.Components.Functions.Function import FHNIntegrator
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCControlMechanism import LCControlMechanism
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.AGTControlMechanism import AGTControlMechanism
-from PsyNeuLink.Components.Functions.Function import FHNIntegrator, AGTUtilityIntegrator
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.System import system
+from PsyNeuLink.Library.Subsystems.AGT.AGTControlMechanism import AGTControlMechanism
+from PsyNeuLink.Library.Subsystems.AGT.LCControlMechanism import LCControlMechanism
 
 my_mech_1 = TransferMechanism(name='Processing_Mech')
 
