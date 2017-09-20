@@ -100,7 +100,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  ComparatorMechanism
              ControlMechanism
                  DefaultControlMechanism
-                 EVCMechanism
+                 EVCControlMechanism
          State_Base(owner, [value, params, name, prefs, context, **kargs])
              InputState(owner, [reference_value, value, params, name, prefs])
                         # input to mechanism execute method
@@ -169,7 +169,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
              ControlMechanisms
                  ControlMechanism(
                  DefaultControlMechanism
-                 EVCMechanism
+                 EVCControlMechanism
              MonitoringMechanisms
                  MonitoringMechanism
                  DefaultMonitoringMechanism

@@ -28,15 +28,15 @@ parameters controlled by the ControlMechanism can be listed using its `show <Con
 
 COMMENT:
     ALTERNATE VERSION
-    and has a `ControlSignal` for each parameter of the Components in the `system <EVCMechanism.system>` that it
+    and has a `ControlSignal` for each parameter of the Components in the `system <EVCControlMechanism.system>` that it
     controls.  Each ControlSignal is associated with a `ControlProjection` that regulates the value of the parameter it
     controls, with the magnitude of that regulation determined by the ControlSignal's `intensity`.  A particular
     combination of ControlSignal `intensity` values is called an `allocation_policy`. When a `System` is executed that
-    uses an EVCMechanism as its `controller <System_Base.controller>`, it concludes by executing the EVCMechanism, which
+    uses an EVCControlMechanism as its `controller <System_Base.controller>`, it concludes by executing the EVCControlMechanism, which
     determines its `allocation_policy` for the next `TRIAL`.  That, in turn, determines the `intensity` for each of the
     ControlSignals, and therefore the values of the parameters they control on the next `TRIAL`. The OutputStates used
-    to determine an EVCMechanism's `allocation_policy <EVCMechanism.allocation_policy>` and the parameters it
-    controls can be listed using its `show <EVCMechanism.show>` method.
+    to determine an EVCControlMechanism's `allocation_policy <EVCControlMechanism.allocation_policy>` and the parameters it
+    controls can be listed using its `show <EVCControlMechanism.show>` method.
 COMMENT
 
 .. _ControlMechanism_System_Controller:
@@ -92,7 +92,7 @@ can be specified in the **objective_mechanism** argument of its constructor, usi
     <ObjectiveMechanism_Monitored_Output_States>` (see `ControlMechanism_Examples`); note that, in this case, the
     default values for the attributes of the ObjectiveMechanism override any that ControlMechanism uses for its
     default `objective_mechanism <ControlMechanism.objective_mechanism>`, including those of its `function
-    <ObjectiveMechanism.function>` (see `note <EVCMechanism_Objective_Mechanism_Function_Note>` in EVCMechanism for
+    <ObjectiveMechanism.function>` (see `note <EVCControlMechanism_Objective_Mechanism_Function_Note>` in EVCControlMechanism for
     an example);
   ..
   * a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>`;  in this case, a default
@@ -168,7 +168,7 @@ input to the ControlMechanism's `function <ControlMechanism.function>`, that det
 `allocation_policy <ControlMechanism.allocation_policy>`. The *ERROR_SIGNAL* InputState receives its input
 via a `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`.
 The Objective Mechanism is specified in the **objective_mechanism** argument of its constructor, and listed in its
-`objective_mechanism <EVCMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the
+`objective_mechanism <EVCControlMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the
 ObjectiveMechanism (listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
 attribute) are also listed in the `monitored_output_states <ControlMechanism.monitored_output_states>`
 of the ControlMechanism (see `ControlMechanism_ObjectiveMechanism` for how the ObjectiveMechanism and the
@@ -188,7 +188,7 @@ A ControlMechanism's `function <ControlMechanism.function>` uses the `value <Inp
 default, each item of the `allocation_policy <ControlMechanism.allocation_policy>` is assigned as the
 `allocation <ControlSignal.allocation>` of the corresponding `ControlSignal` in `control_signals
 <ControlMechanism.control_signals>`;  however, subtypes of ControlMechanism may assign values differently
-(for example, an `LCMechanism` assigns a single value to all of its ControlSignals).
+(for example, an `LCControlMechanism` assigns a single value to all of its ControlSignals).
 
 
 .. _ControlMechanism_Output:
@@ -986,7 +986,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                     `controller <System_Base.controller>`;]
 
                                   - any class-specific actions that must be taken to instantiate the ControlMechanism
-                                    can be handled by subclasses of ControlMechanism (e.g., an EVCMechanism must
+                                    can be handled by subclasses of ControlMechanism (e.g., an EVCControlMechanism must
                                     instantiate its Prediction Mechanisms). However, the actual assignment of the
                                     ControlMechanism the System's `controller <System_Base.controller>` attribute must
                                     be left to the System to avoid recursion, since it is a property, the setter of

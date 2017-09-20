@@ -7,8 +7,8 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
+from PsyNeuLink.Library.Subsystems.EVC.EVCControlMechanism import EVCControlMechanism
 from PsyNeuLink.Scheduling.Condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
@@ -70,7 +70,7 @@ class TestInit:
         # System:
         mySystem = system(
             processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
-            controller=EVCMechanism,
+            controller=EVCControlMechanism,
             enable_controller=True,
             # monitor_for_control=[Reward, (PROBABILITY_UPPER_THRESHOLD, 1, -1)],
             name='EVC Gratton System',

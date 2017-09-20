@@ -92,7 +92,7 @@ arguments of the `system` command, as described below.
   The default for the **monitor_for_control** argument is *MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES*.
   The OutputStates specified in the **monitor_for_control** argument are added to any already specified for the
   ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>`, and the full set is listed in
-  the ControlMechanism's `monitored_output_states <EVCMechanism.monitored_output_states>` attribute, and its
+  the ControlMechanism's `monitored_output_states <EVCControlMechanism.monitored_output_states>` attribute, and its
   ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute).
 
 * **control_signals** argument -- used to specify the parameters of Components in the System to be controlled. These
@@ -218,7 +218,7 @@ specifications made for the System as follows:
   * the OutputStates specified to be monitored in the System's **monitor_for_control** argument are added to those
     that may have already been specified for the ControlMechanism's `objective_mechanism
     <ControlMechanism.objective_mechanism>` (the full set is listed in the ControlMechanism's `monitored_output_states
-    <EVCMechanism.monitored_output_states>` attribute, and its ObjectiveMechanism's `monitored_output_states
+    <EVCControlMechanism.monitored_output_states>` attribute, and its ObjectiveMechanism's `monitored_output_states
     <ObjectiveMechanism.monitored_output_states>` attribute); see `System_Control_Specification` for additional details of how
     to specify OutputStates to be monitored.
 
@@ -361,11 +361,11 @@ COMMENT
 Specifying Control for a System
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The following example specifies an `EVCMechanism` as the controller for a System with two `Processes <Process>`
+The following example specifies an `EVCControlMechanism` as the controller for a System with two `Processes <Process>`
 that include two `Mechanisms <Mechanism>` (not shown):
 
     my_system = system(processes=[TaskExecutionProcess, RewardProcess],
-                       controller=EVCMechanism(objective_mechanism=
+                       controller=EVCControlMechanism(objective_mechanism=
                                                    ObjectiveMechanism(
                                                        monitored_output_states=[
                                                            Reward,
@@ -373,47 +373,47 @@ that include two `Mechanisms <Mechanism>` (not shown):
                                                            (Decision.output_states[RESPONSE_TIME], -1, 1)]))
                                                        function=LinearCombination(operation=PRODUCT))
 
-A constructor is used to specify the EVCMechanism that includes a constructor specifying its `objective_mechanism
+A constructor is used to specify the EVCControlMechanism that includes a constructor specifying its `objective_mechanism
 <ControlMechanism.objective_mechanism>`;  the **monitored_output_states** argument of the ObjectiveMechanism's constructor
 is used to specify that it should monitor the `primary OutputState <OutputState_Primary>` of the Reward Mechanism
 and the *PROBABILITY_UPPER_THRESHOLD* and *RESPONSE_TIME* and, specifying how it should combine them (see the `example
 <ControlMechanism_Examples>` under ControlMechanism for an explanation). Note that the **function** argument for the
 ObjectiveMechanism's constructor is also specified;  this is because an ObjectiveMechanism uses *SUM* as the default
-for the `operation <LinearCombination.operation>` of its `LinearCombination` function, whereas as the EVCMechanism
+for the `operation <LinearCombination.operation>` of its `LinearCombination` function, whereas as the EVCControlMechanism
 requires *PRODUCT* -- in this case, to properly use the weight and exponents specified for the RESPONSE_TIME
-OutputState of Decision (see `note <EVCMechanism_Objective_Mechanism_Function_Note>` in EVCMechanism for
-a more complete explanation).  Note that both the EVCMechanism and/or the ObjectiveMechanism could have been
+OutputState of Decision (see `note <EVCControlMechanism_Objective_Mechanism_Function_Note>` in EVCControlMechanism for
+a more complete explanation).  Note that both the EVCControlMechanism and/or the ObjectiveMechanism could have been
 constructed separately, and then referenced in the **controller** argument of ``my_system`` and **objective_mechanism**
-argument of the EVCMechanism, respectively.
+argument of the EVCControlMechanism, respectively.
 
 The same configuration can be specified in a more concise, though less "transparent" form, as follows::
 
     my_system = system(processes=[TaskExecutionProcess, RewardProcess],
-                       controller=EVCMechanism(objective_mechanism=[
+                       controller=EVCControlMechanism(objective_mechanism=[
                                                              Reward,
                                                              Decision.output_states[PROBABILITY_UPPER_THRESHOLD],
                                                              (Decision.output_states[RESPONSE_TIME], -1, 1)])))
 
 Here, the constructor for the ObjectiveMechanism is elided, and the **objective_mechanism** argument for the
-EVCMechanism is specified as a list of OutputStates (see `ControlMechanism_ObjectiveMechanism`).
+EVCControlMechanism is specified as a list of OutputStates (see `ControlMechanism_ObjectiveMechanism`).
 
 The specification can be made even simpler, but with some additional considerations that must be kept in mind,
 as follows::
 
     my_system = system(processes=[TaskExecutionProcess, RewardProcess],
-                       controller=EVCMechanism,
+                       controller=EVCControlMechanism,
                        monitor_for_control=[Reward,
                                             PROBABILITY_UPPER_THRESHOLD,
                                             RESPONSE_TIME, 1, -1)],
 
-Here, the *controller** for ``my_system`` is specified as the EVCMechanism, which will created a default EVCMechanism.
+Here, the *controller** for ``my_system`` is specified as the EVCControlMechanism, which will created a default EVCControlMechanism.
 The OutputStates to be monitored are specified in the **monitor_for_control** argument for ``my_system``.  Note that
 here they can be referenced simply by name; when ``my_system`` is created, it will search all of its
 Mechanisms for OutputStates with those names, and assign them to the `monitored_output_states <ObjectiveMechanism>`
-attribute of the EVCMechanism's `objective_mechanism <EVCMechanism.objective_mechanism>` (see
+attribute of the EVCControlMechanism's `objective_mechanism <EVCControlMechanism.objective_mechanism>` (see
 `System_Control_Specification` for a more detailed explanation of how OutputStates are assigned to be monitored by a
 System's `controller <System_Base.controller>`).  While this form of the specification is much simpler,
-it less flexible (i.e., it can't be used to customize the ObjectiveMechanism used by the EVCMechanism or its
+it less flexible (i.e., it can't be used to customize the ObjectiveMechanism used by the EVCControlMechanism or its
 `function <ObjectiveMechanism.function>`.
 
 .. _System_Class_Reference:
@@ -726,7 +726,7 @@ class System_Base(System):
     processes : list of Process objects
         list of `Processes <Process>` in the System specified by the **processes** argument of the constructor.
 
-        .. can be appended with prediction Processes by EVCMechanism
+        .. can be appended with prediction Processes by EVCControlMechanism
            used with self.input to constsruct self.process_tuples
 
         .. _processList : ProcessList
@@ -1093,7 +1093,7 @@ class System_Base(System):
         self._all_mechs = []
         self._allMechanisms = MechanismList(self, self._all_mechs)
 
-        # Get list of processes specified in arg to init, possibly appended by EVCMechanism (with prediction processes)
+        # Get list of processes specified in arg to init, possibly appended by EVCControlMechanism (with prediction processes)
         processes_spec = self.processes
 
         # Assign default Process if PROCESS is empty, or invalid
@@ -1136,7 +1136,7 @@ class System_Base(System):
             # Input was provided on command line, so assign that to input item of tuple
             else:
                 # Assign None as input to processes implemented by controller (controller provides their input)
-                #    (e.g., prediction processes implemented by EVCMechanism)
+                #    (e.g., prediction processes implemented by EVCControlMechanism)
                 if processes_spec[i].process._isControllerProcess:
                     processes_spec[i] = ProcessTuple(processes_spec[i].process, None)
                 else:
@@ -1563,7 +1563,7 @@ class System_Base(System):
                         print("\t\t\'{}\'".format(sender_object_item.name))
 
         # For each mechanism (represented by its tuple) in the graph, add entry to relevant list(s)
-        # Note: ignore mechanisms belonging to controllerProcesses (e.g., instantiated by EVCMechanism)
+        # Note: ignore mechanisms belonging to controllerProcesses (e.g., instantiated by EVCControlMechanism)
         #       as they are for internal use only;
         #       this also ignored learning-related mechanisms (they are handled below)
         self._origin_mechs = []
@@ -3269,11 +3269,11 @@ class System_Base(System):
 
         control_color : keyword : default `blue`
             determines the color in which the learning components are displayed (note: if the System's
-            `controller <System_Base.controller>`) is an `EVCMechanism`, then a link is shown in red from the
-            `prediction Mechanisms <EVCMechanism_Prediction_Mechanisms>` it creates to the corresponding
+            `controller <System_Base.controller>`) is an `EVCControlMechanism`, then a link is shown in red from the
+            `prediction Mechanisms <EVCControlMechanism_Prediction_Mechanisms>` it creates to the corresponding
             `ORIGIN` Mechanisms of the System, to indicate that although no projection are created for these,
-            the prediction Mechanisms determine the input to the `ORIGIN` Mechanisms when the EVCMechanism
-            `simulates execution <EVCMechanism_Execution>` of the System.
+            the prediction Mechanisms determine the input to the `ORIGIN` Mechanisms when the EVCControlMechanism
+            `simulates execution <EVCControlMechanism_Execution>` of the System.
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;
