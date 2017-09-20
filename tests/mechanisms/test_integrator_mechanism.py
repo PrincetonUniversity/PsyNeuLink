@@ -4,7 +4,7 @@ import pytest
 from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, ConstantIntegrator, NormalDist, \
     SimpleIntegrator, FHNIntegrator
 from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, \
-    OrnsteinUhlenbeckIntegrator, UtilityIntegrator
+    OrnsteinUhlenbeckIntegrator, AGTUtilityIntegrator
 from PsyNeuLink.Components.Functions.Function import FunctionError
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism \
@@ -714,7 +714,7 @@ class TestFHN:
                                                      1.6793901854329185, 1.7583410650743645, 1.7981128658110572,
                                                      1.7817328532815251])
 
-class TestUtilityIntegrator:
+class TestAGTUtilityIntegrator:
 
     def test_utility_integrator_default(self):
         # default params:
@@ -724,8 +724,8 @@ class TestUtilityIntegrator:
         # long_term_rate = 1.0
 
         U = IntegratorMechanism(
-            name = "UtilityIntegrator",
-            function=UtilityIntegrator(
+            name = "AGTUtilityIntegrator",
+            function=AGTUtilityIntegrator(
             )
 
         )
@@ -749,8 +749,8 @@ class TestUtilityIntegrator:
         # long_term_rate = 1.0
 
         U = IntegratorMechanism(
-            name = "UtilityIntegrator",
-            function=UtilityIntegrator(
+            name = "AGTUtilityIntegrator",
+            function=AGTUtilityIntegrator(
                 operation="s-l"
             )
 
@@ -775,8 +775,8 @@ class TestUtilityIntegrator:
         # long_term_rate = 1.0
 
         U = IntegratorMechanism(
-            name = "UtilityIntegrator",
-            function=UtilityIntegrator(
+            name = "AGTUtilityIntegrator",
+            function=AGTUtilityIntegrator(
                 operation="s+l"
             )
 

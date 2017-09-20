@@ -13,7 +13,7 @@
 Overview
 --------
 
-An ITCMechanism is a `ControlMechanism <ControlMechanism>` that uses an ObjectiveMechanism with a `UtilityIntegrator`
+An ITCMechanism is a `ControlMechanism <ControlMechanism>` that uses an ObjectiveMechanism with a `AGTUtilityIntegrator`
 Function to regulate its `allocation_policy <ControlMechanism.allocation_policy>`.  When used with an `LCMechanism`
 to regulate the `mode <FHNIntegrator.mode>` parameter of its `FHNIntegrator` Function, it implements a form of the 
 `Adaptive Gain Theory <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus 
@@ -29,7 +29,7 @@ An ITCMechanism can be created in any of the ways used to `create a ControlMecha
 Like all ControlMechanisms, an ITCMechanism it receives its `input <ITCMechanism_Input>` from an `ObjectiveMechanism`.
 However, unlike standard ControlMechanism, an ITCMechanism does not have an **objective_mechanism** argument in its
 constructor.  When an ITCMechanism is created, it automatically creates an ObjectiveMechanism and assigns a
-`UtilityIntegrator` Function as its `function <ObjectiveMechanism.function>`.
+`AGTUtilityIntegrator` Function as its `function <ObjectiveMechanism.function>`.
 
 The OutputStates to be monitored by the ITCMechanism's `objective_mechanism <ITCMechanism.objective_mechanism>` are
 specified using the **monitored_output_states** argument of the ITCMechanism's constructor, using any of the ways to
@@ -52,7 +52,7 @@ Input: ObjectiveMechanism and Monitored OutputStates
 
 An ITCMechanism has a single (primary) `InputState <InputState_Primary>` that receives its input via a
 `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`.
-The ObjectiveMechanism is created automatically when the ITCMechanism is created, using a `UtilityIntegrator` as its
+The ObjectiveMechanism is created automatically when the ITCMechanism is created, using a `AGTUtilityIntegrator` as its
 `function <ObjectiveMechanism.function>`, and is listed in the ITCMechanism's `objective_mechanism
 <ITCMechanism.objective_mechanism>` attribute.  The ObjectiveMechanism aggregates the `value <OutputState.value>`\\s
 of the OutputStates that it monitors, integrates their aggregated value at two different rates, and combines those to
@@ -121,7 +121,7 @@ import typecheck as tc
 import warnings
 
 from PsyNeuLink.Components.Functions.Function \
-    import ModulationParam, _is_modulation_param, UtilityIntegrator
+    import ModulationParam, _is_modulation_param, AGTUtilityIntegrator
 from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
     import ObjectiveMechanism, _parse_monitored_output_states, MonitoredOutputStatesOption
@@ -212,7 +212,7 @@ class ITCMechanism(ControlMechanism):
     objective_mechanism : ObjectiveMechanism
         `ObjectiveMechanism` that monitors and evaluates the values specified in the ControlMechanism's
         **objective_mechanism** argument, the output of which is used as `input <ITCMechanism_Input>` to the
-        ITCMechanism. It is created automatically when ITCMechanism is created, and uses as a `UtilityIntegrator` as
+        ITCMechanism. It is created automatically when ITCMechanism is created, and uses as a `AGTUtilityIntegrator` as
         is `function <ObjectiveMechanism.function>`.
 
     monitored_output_states : List[OutputState]
@@ -297,7 +297,7 @@ class ITCMechanism(ControlMechanism):
 
         super().__init__(system=system,
                          objective_mechanism=ObjectiveMechanism(monitored_output_states=monitored_output_states,
-                                                                function=UtilityIntegrator),
+                                                                function=AGTUtilityIntegrator),
                          control_signals=control_signals,
                          modulation=modulation,
                          params=params,

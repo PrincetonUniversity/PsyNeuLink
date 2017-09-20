@@ -915,12 +915,12 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 
 #endregion
 
-#region TEST UtilityIntegrator FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST AGTUtilityIntegrator FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-from PsyNeuLink.Components.Functions.Function import UtilityIntegrator
-print("TEST UtilityIntegrator FUNCTION")
+from PsyNeuLink.Components.Functions.Function import AGTUtilityIntegrator
+print("TEST AGTUtilityIntegrator FUNCTION")
 
-x = UtilityIntegrator(initial_long_term_utility=0.1,
+x = AGTUtilityIntegrator(initial_long_term_utility=0.1,
                       long_term_rate=.1,
                       short_term_rate=.6,
                       initial_short_term_utility=0.1)

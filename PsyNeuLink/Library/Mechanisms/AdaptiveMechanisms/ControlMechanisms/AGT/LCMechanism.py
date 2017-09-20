@@ -211,22 +211,22 @@ MOVE TO LCController
 If the **mode** argument of the LCMechanism's constructor is specified, the following Components are also
 automatically created and assigned to the LCMechanism when it is created:
 
-    * an `LCController` -- takes the output of the UtilityIntegratorMechanism (see below) and uses this to
+    * an `LCController` -- takes the output of the AGTUtilityIntegratorMechanism (see below) and uses this to
       control the value of the LCMechanism's `mode <FHNIntegrator.mode>` attribute.  It is assigned a single
       `ControlSignal` that projects to the `ParameterState` for the LCMechanism's `mode <FHNIntegrator.mode>` attribute.
     ..
-    * a `UtilityIntegratorMechanism` -- monitors the `value <OutputState.value>` of any `OutputStates <OutputState>`
+    * a `AGTUtilityIntegratorMechanism` -- monitors the `value <OutputState.value>` of any `OutputStates <OutputState>`
       specified in the **mode** argument of the LCMechanism's constructor;  these are listed in the LCMechanism's
       `monitored_output_states <LCMechanism.monitored_output_states>` attribute, as well as that attribute of the
-      UtilityIntegratorMechanism and LCController.  They are evaluated by the UtilityIntegratorMechanism's
-      `UtilityIntegrator` Function, the result of whch is used by the LCControl to control the value of the
+      AGTUtilityIntegratorMechanism and LCController.  They are evaluated by the AGTUtilityIntegratorMechanism's
+      `AGTUtilityIntegrator` Function, the result of whch is used by the LCControl to control the value of the
       LCMechanism's `mode <FHNIntegrator.mode>` attribute.
     ..
     * `MappingProjections <MappingProjection>` from Mechanisms or OutputStates specified in **monitor_for_control** to
-      the UtilityIntegratorMechanism's `primary InputState <InputState_Primary>`.
+      the AGTUtilityIntegratorMechanism's `primary InputState <InputState_Primary>`.
     ..
-    * a `MappingProjection` from the UtilityIntegratorMechanism's *UTILITY_SIGNAL* `OutputState
-      <UtilityIntegratorMechanism_Structure>` to the LCMechanism's *MODE* <InputState_Primary>`.
+    * a `MappingProjection` from the AGTUtilityIntegratorMechanism's *UTILITY_SIGNAL* `OutputState
+      <AGTUtilityIntegratorMechanism_Structure>` to the LCMechanism's *MODE* <InputState_Primary>`.
     ..
     * a `ControlProjection` from the LCController's ControlSignal to the `ParameterState` for the LCMechanism's
       `mode <FHNIntegrator.mode>` attribute.

@@ -5,7 +5,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
 from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism import LCMechanism
 from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism import ITCMechanism
-from PsyNeuLink.Components.Functions.Function import FHNIntegrator, UtilityIntegrator
+from PsyNeuLink.Components.Functions.Function import FHNIntegrator, AGTUtilityIntegrator
 
 my_mech_1 = TransferMechanism(name='Processing_Mech')
 
