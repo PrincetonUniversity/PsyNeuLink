@@ -150,7 +150,7 @@ Each of these is assigned the name of one of the function's parameters. These ar
 <ModulatorySignal>` to modulate the output of the function (see `figure <ModulatorySignal_Detail_Figure>`).  For
 example, they are used by `GatingSignals <GatingSignal>` to modulate the `function <State_Base.function>` of an
 `InputState` or `OutputState`, and thereby its `value <State_Base.value>`; and by the `ControlSignal(s) <ControlSignal>`
-of an `LCMechanism` to modulate the `multiplicative_param` of the `function <TransferMechanism.function>` of a
+of an `LCControlMechanism` to modulate the `multiplicative_param` of the `function <TransferMechanism.function>` of a
 `TransferMechanism`.
 
 

@@ -13,5 +13,5 @@ ControlMechanisms
    :maxdepth: 1
 
    EVCControlMechanism
-   LCMechanism
-   ITCMechanism
+   LCControlMechanism
+   AGTControlMechanism

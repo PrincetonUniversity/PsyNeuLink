@@ -188,7 +188,7 @@ A ControlMechanism's `function <ControlMechanism.function>` uses the `value <Inp
 default, each item of the `allocation_policy <ControlMechanism.allocation_policy>` is assigned as the
 `allocation <ControlSignal.allocation>` of the corresponding `ControlSignal` in `control_signals
 <ControlMechanism.control_signals>`;  however, subtypes of ControlMechanism may assign values differently
-(for example, an `LCMechanism` assigns a single value to all of its ControlSignals).
+(for example, an `LCControlMechanism` assigns a single value to all of its ControlSignals).
 
 
 .. _ControlMechanism_Output:
