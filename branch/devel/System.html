@@ -855,29 +855,35 @@ projections;</p>
 
 <dl class="method">
 <dt id="System.System_Base.show_graph">
-<code class="descname">show_graph</code><span class="sig-paren">(</span><em>direction='BT'</em>, <em>show_learning=False</em>, <em>show_control=False</em>, <em>learning_color='green'</em>, <em>control_color='blue'</em>, <em>output_fmt='pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph" title="Permalink to this definition">¶</a></dt>
+<code class="descname">show_graph</code><span class="sig-paren">(</span><em>direction='BT'</em>, <em>show_learning=False</em>, <em>show_control=False</em>, <em>origin_color='green'</em>, <em>terminal_color='red'</em>, <em>origin_and_terminal_color='brown'</em>, <em>learning_color='orange'</em>, <em>control_color='blue'</em>, <em>output_fmt='pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a display of the graph structure of mechanisms and projections in the system.</p>
-<p>By default, only the <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> and <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>
-in the <a class="reference internal" href="#System.System_Base.graph" title="System.System_Base.graph"><code class="xref any py py-attr docutils literal"><span class="pre">System's</span> <span class="pre">graph</span></code></a> are displayed.  However, the <strong>show_learning</strong> and
-<strong>show_control</strong> arguments can be used to also show the <a class="reference internal" href="LearningMechanism.html"><span class="doc">learning</span></a> and
-<a class="reference internal" href="ControlMechanism.html"><span class="doc">control</span></a> components of the system, respectively.  <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> are always
-displayed as (oval) nodes.  <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> are displayed as labelled arrows, unless
-<strong>show_learning</strong> is assigned <strong>True</strong>, in which case MappingProjections that receive a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>
-are displayed as diamond-shaped nodes. The numbers in parentheses within a Mechanism node indicate its
-dimensionality.</p>
+<p>Displays a graph showing the structure of the System (based on the <a class="reference internal" href="#System.System_Base.graph" title="System.System_Base.graph"><code class="xref any py py-attr docutils literal"><span class="pre">System's</span> <span class="pre">graph</span></code></a>).
+By default, only the primary processing Components are shown.  However,the <strong>show_learning</strong> and
+<strong>show_control</strong> arguments can be used to also show the Components associated with <a class="reference internal" href="LearningMechanism.html"><span class="doc">learning</span></a> and those associated with the System’s <a class="reference internal" href="#system-control"><span class="std std-ref">controller</span></a>. <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> are always displayed as (oval) nodes. <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.ORIGIN" title="Keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.TERMINAL" title="Keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms of the System are
+displayed with bold ovals in specified colors.  <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> are displayed as labelled
+arrows, unless <strong>show_learning</strong> is assigned <strong>True</strong>, in which case MappingProjections that receive a
+<a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> are displayed as diamond-shaped nodes. The numbers in parentheses within a Mechanism
+node indicate its dimensionality.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>direction</strong> (<em>keyword : default 'BT'</em>) – ‘BT’: bottom to top; ‘TB’: top to bottom; ‘LR’: left to right; and ‘RL`: right to left.</li>
-<li><strong>show_learning</strong> (<em>bool : default False</em>) – determines whether or not to show the learning components of the system;
+<li><strong>show_learning</strong> (<em>bool</em><em> or </em><em>ALL : default False</em>) – specifies whether or not to show the learning components of the system;
 they will all be displayed in the color specified for <strong>learning_color</strong>.
-Projections that receive a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> will be shown as a diamond-shaped node.</li>
-<li><strong>show_control</strong> (<em>bool : default False</em>) – determines whether or not to show the control components of the system;
+Projections that receive a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> will be shown as a diamond-shaped node.
+if set to <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignalCosts.ALL" title="ModulatorySignals.ControlSignal.ControlSignalCosts.ALL"><code class="xref any py py-attr docutils literal"><span class="pre">ALL</span></code></a>, all Projections associated with learning will be shown:  the LearningProjections
+as well as from <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> to <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a>
+that convey error and activation information;  if set to <code class="xref any docutils literal"><span class="pre">True</span></code>, only the LearningPojections are shown.</li>
+<li><strong>show_control</strong> (<em>bool : default False</em>) – specifies whether or not to show the control components of the system;
 they will all be displayed in the color specified for <strong>control_color</strong>.</li>
-<li><strong>learning_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">green</span></code>) – determines the color in which the learning components are displayed</li>
-<li><strong>control_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">blue</span></code>) – determines the color in which the learning components are displayed (note: if the System’s
+<li><strong>origin_color</strong> (<em>keyword : default 'green'</em><em>,</em>) – specifies the color in which the <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.ORIGIN" title="Keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms of the System are displayed.</li>
+<li><strong>terminal_color</strong> (<em>keyword : default 'red'</em><em>,</em>) – specifies the color in which the <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.TERMINAL" title="Keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms of the System are displayed.</li>
+<li><strong>origin_and_terminal_color</strong> (<em>keyword : default 'brown'</em>) – specifies the color in which Mechanisms that are both
+an <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.ORIGIN" title="Keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and a <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.TERMINAL" title="Keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> of the System are displayed.</li>
+<li><strong>learning_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">green</span></code>) – specifies the color in which the learning components are displayed.</li>
+<li><strong>control_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">blue</span></code>) – specifies the color in which the learning components are displayed (note: if the System’s
 <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>) is an <a class="reference internal" href="EVCControlMechanism.html"><span class="doc">EVCControlMechanism</span></a>, then a link is shown in red from the
 <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-prediction-mechanisms"><span class="std std-ref">prediction Mechanisms</span></a> it creates to the corresponding
 <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.ORIGIN" title="Keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms of the System, to indicate that although no projection are created for these,
