@@ -8,7 +8,7 @@ Created on Mon Feb  6 13:47:38 2017
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import *
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
+from PsyNeuLink.Library.Subsystems.EVC.EVCControlMechanism import EVCControlMechanism
 
 #helpful commands! .show()   .excute()
 color_word_combine = TransferMechanism(name='color_word_combine', function = Linear()) #default_variable = [1], #JON HOW TO MAKE THIS A SUBTRACTION?
@@ -32,7 +32,7 @@ word_process = process(pathway=[word_input_linear_transfer_mechanism, word_logis
 Reward = TransferMechanism(name='Reward')
 RewardProcess = process(default_variable=[1], pathway=[(Reward, 1)], name = 'RewardProcess')
 #mySystem = system(processes = [color_process, word_process])
-mySystem = system(processes = [color_process, word_process, RewardProcess], controller = EVCMechanism, enable_controller = True, monitor_for_control=[Reward, (DDM_DECISION_VARIABLE,1,1), (DDM_RESPONSE_TIME, -1, 1)], name='Stroop Model') #output, difference between color / word unit activation  #output_values attribute?
+mySystem = system(processes = [color_process, word_process, RewardProcess], controller = EVCControlMechanism, enable_controller = True, monitor_for_control=[Reward, (DDM_DECISION_VARIABLE,1,1), (DDM_RESPONSE_TIME, -1, 1)], name='Stroop Model') #output, difference between color / word unit activation  #output_values attribute?
 mySystem.execute(input=[[1],[-1],[1]])
 
 mySystem.controller.show()
@@ -53,7 +53,7 @@ mySystem.show()
 #   ControlSignal
 #   ControlProjection
 
-#EVC.EVCMechanism.EVCMechanism(prediction_mechanism_type = IntegratorMechanism, prediction_mechanism_params = *, monitor_for_control = (color['bias'],word['bias'],DDM['threshold']))**  (objectiv function)
+#EVC.EVCControlMechanism.EVCControlMechanism(prediction_mechanism_type = IntegratorMechanism, prediction_mechanism_params = *, monitor_for_control = (color['bias'],word['bias'],DDM['threshold']))**  (objectiv function)
 # function=ControlSignalGridSearch, value_function = error / RT *** or value_function, outcome_function = ***, cost_function = ***, combine_outcome_and_cost_function = ***
 #  * want it to look only 1 step back
 #  ** does monitor_for_control care only about what you need value for, or is this setting the mapping projections for EVC? 
@@ -64,7 +64,7 @@ mySystem.show()
 #EVC comments on documentation
 #how do I import what is required for EVC? in general in documentation how do I know which pieces of PsyNeuLink to import? #copy from other scripts, if not recognized 
 #not clear to me syntax: monitor_for_control (List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d np.array]] : default MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES)
-# class EVC.EVCMechanism.ControlSignalCosts; "An enumeration" what does this mean? a number?
+# class EVC.EVCControlMechanism.ControlSignalCosts; "An enumeration" what does this mean? a number?
 #when EVC appears in a yellow box but is also part of an example command it isn't clear if there should or shouldn't be a space in that command, noticed this in code
 #for example this line looks like: my_linear_ transfer _mechanism =  Transfer Mechanism (function=Linear), then when I copy and paste its my_linear_transfer_mechanism = TransferMechanism(function=Linear)
 
@@ -96,7 +96,7 @@ mySystem.show()
 #   ControlSignal
 #   ControlProjection
 
-#EVC.EVCMechanism.EVCMechanism(prediction_mechanism_type = IntegratorMechanism, prediction_mechanism_params = *, monitor_for_control = (color['bias'],word['bias'],DDM['threshold']))**  (objectiv function)
+#EVC.EVCControlMechanism.EVCControlMechanism(prediction_mechanism_type = IntegratorMechanism, prediction_mechanism_params = *, monitor_for_control = (color['bias'],word['bias'],DDM['threshold']))**  (objectiv function)
 # function=ControlSignalGridSearch, value_function = error / RT *** or value_function, outcome_function = ***, cost_function = ***, combine_outcome_and_cost_function = ***
 #  * want it to look only 1 step back
 #  ** does monitor_for_control care only about what you need value for, or is this setting the mapping projections for EVC? 
@@ -107,7 +107,7 @@ mySystem.show()
 #EVC comments on documentation
 #how do I import what is required for EVC? in general in documentation how do I know which pieces of PsyNeuLink to import? #copy from other scripts, if not recognized 
 #not clear to me syntax: monitor_for_control (List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d np.array]] : default MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES)
-# class EVC.EVCMechanism.ControlSignalCosts; "An enumeration" what does this mean? a number?
+# class EVC.EVCControlMechanism.ControlSignalCosts; "An enumeration" what does this mean? a number?
 #when EVC appears in a yellow box but is also part of an example command it isn't clear if there should or shouldn't be a space in that command, noticed this in code
 #for example this line looks like: my_linear_ transfer _mechanism =  Transfer Mechanism (function=Linear), then when I copy and paste its my_linear_transfer_mechanism = TransferMechanism(function=Linear)
 

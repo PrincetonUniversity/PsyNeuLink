@@ -214,7 +214,7 @@
 # IMPLEMENT:  Deferred init for control.
 
 # IMPLEMENT General creation of INPUT_STATES for all mechanisms as ObjectiveMechanism does it
-#           Use that to generalize creation of input_states for PredictionMechanism by EVCMechanism
+#           Use that to generalize creation of input_states for PredictionMechanism by EVCControlMechanism
 #
 # IMPLEMENT: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
 
@@ -291,7 +291,7 @@
 #  DOCUMENTATION: Add mention of specification dictionary format for **control_signals** arg for ControlMechanism
 #  DOCUMENTATION: Matrix specification as 2nd item of in 2-item tuple in list for input_states arg of Mechanism
 #  FIX: `error_signal` as default primary outputState
-#  FIX: MAKE SURE THAT System AND/OR EVCMechanism ASSIGN OutputStates TO MONITOR ONLY
+#  FIX: MAKE SURE THAT System AND/OR EVCControlMechanism ASSIGN OutputStates TO MONITOR ONLY
 #  FIX:      THOSE MECHANISMS FOR WHICH THE OUTPUTSTATES WERE SPECIFIED (UNLESS GIVEN A GENERIC NAME)
 #      PROTOCOL:
 #          a) Mechanism implements empty input_state and output_state in paramClassDefaults,
@@ -503,7 +503,7 @@
 # FIX: ADD "GATING" KEYWORD and GatingSignal CLASS TO INPUT_STATE TUPLE SPECIFICATION,
 #     WHICH SHOULD INSTANTIATE A DEFERRED_INIT GatingProjection (JUST LIKE A ControlProjection)
 # FIX: MAKE ControlSignal stateful (since its last_allocation attribute pertains to a prior state)
-# FIX: DEAL WITH DEPENDENCY OF costFunctionNames: referenced in ControlSignal but defined in EVCMechanism
+# FIX: DEAL WITH DEPENDENCY OF costFunctionNames: referenced in ControlSignal but defined in EVCControlMechanism
 #
 # IMPLEMENT: Support for multiple GatingProjections from a single GatingSignal
 # IMPLEMENT: Abstract modulatory projection in AdaptiveMechanism
@@ -574,7 +574,7 @@
 #        ADD _instantiate_attributes_before_function AND IF MappingProjection IS SPECIFIED FOR error_matrix,
 #                  convert to ParameterState (SEE Stability FOR EXAMPLE)
 
-# FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
+# FIX: WHY IS EVCControlMechanism GETTING NAMED "EVCControlMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
 # FIX: printout of intitial_value with brackets (see devel_upstream on Quill)
 # FIX fix _update_parameter_state in Projection as in Mechanism
 
@@ -663,7 +663,7 @@
 #                      but executing the LearningProjection to it does not
 #    4) ObjectiveMechanisms:
 #              MODIFY TO:
-#                    d) Revise EVCMechanism._get_monitored_output_states_for_system() to NOT direclty assign weights
+#                    d) Revise EVCControlMechanism._get_monitored_output_states_for_system() to NOT direclty assign weights
 #                               and exponents, but rather assign
 #                        (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_output_states)
 #                    f) parse MonitoredOUtputStates specification for monitored_output_states arg
@@ -678,7 +678,7 @@
 #                    on their own)
 #     5) Purge DefaultMonitoringMechanism
 #     7) DDM weights for EVC mechanism:  Handle better in ObjectiveMechanism
-#     8) EVCMechanism:  add objective_mechanism arg (as per LearningMechanism)
+#     8) EVCControlMechanism:  add objective_mechanism arg (as per LearningMechanism)
 #     9) Reorganize:
 #            Add to _validate_params that their receivers are parameterStates
 #          MappingProjection under ProcessingProjection
@@ -747,7 +747,7 @@
 # √ TransferMechanism
 # √ ControlMechanism
 #   DefaultControlMechanism
-# √ EVCMechanism
+# √ EVCControlMechanism
 # √ ControlSignal
 # √ Projection
 # √ MappingProjection
@@ -786,9 +786,9 @@
 #                        keyword, which is a capitlizaed version of its name, including any underscore separators )
 #                        GIVE EXAMPLES.
 
-# DOCUMENT: EVCMechanism NOTES ON API FOR CUSTOM VERSIONS:
+# DOCUMENT: EVCControlMechanism NOTES ON API FOR CUSTOM VERSIONS:
 
-#           FROM EVCMechanism.control_signal_grid_search:
+#           FROM EVCControlMechanism.control_signal_grid_search:
 #             Gets controller as argument (along with any standard params specified in call)
 #             Must include **kwargs to receive standard args (variable, params, time_scale, and context)
 #             Must return an allocation policy compatible with controller.allocation_policy:
@@ -839,7 +839,7 @@
 # DOCUMENT: In Components, document use of params dictionaries and/or assign_params methods for modifying
 #                the parameters of a component "permanently";  describe relatinoshipo of keywords for parameters
 #                which are simply convenience string constants that are the same as the name of the argument
-#                for the parameter in the component's constructor. (see :ref:`EVCMechanism_Creation` for text)
+#                for the parameter in the component's constructor. (see :ref:`EVCControlMechanism_Creation` for text)
 
 # DOCUMENT: input_value and output_values are lists for convenience of user access, whereas
 #           variable and value are 2d np.arrays that are used as internal datastructures
@@ -1166,10 +1166,10 @@
 #
 # QUESTION:     Should ControlSignal "intelligence" (e.g., intensity, costs, etc.)
 #                   be in EVC mechanism rather than ControlProjection?
-#                   EVCMechanism makes more sense theoretically
+#                   EVCControlMechanism makes more sense theoretically
 #                      e.g., seems better to talk about the cost of a control signal, rather than ControlProjection
 #                   Projection is easier to manage (as it is its own object, can be parameterzed, etc.)
-#                   Maybe they should be assigned to OutputStates of the EVCMechanism?
+#                   Maybe they should be assigned to OutputStates of the EVCControlMechanism?
 #
 # QUESTION: DDM:
 #            MULTIPLE PROCESSES AND AVERAGED OUTPUT VALUES IDEA
@@ -1317,9 +1317,9 @@
 #
 # IMPLEMENT: REFACTOR EVC and LEARNING:
 #
-#            EVC:  1) MonitoringMechanism - new one that implements current EVCMechanism's objective function (i.e.,
+#            EVC:  1) MonitoringMechanism - new one that implements current EVCControlMechanism's objective function (i.e.,
 #                                            (i.e., using LinearCombination).
-#                  2) EVCMechanism - new version that takes output of MonitoringMechanism, and just handles search.
+#                  2) EVCControlMechanism - new version that takes output of MonitoringMechanism, and just handles search.
 #                  3) ControlProjection - as it is now.
 #
 #            Learning: 1) MonitoringMechanism - use relevant one, as it does now.
@@ -1414,7 +1414,7 @@
 #  √ ControlProjection
 #  ! DDM
 #    DefaultControlMechanism
-#  √ EVCMechanism
+#  √ EVCControlMechanism
 #    Function
 #  ~ InputState
 #  √ LearningProjection
@@ -1655,7 +1655,7 @@
 #                    -  if INITIALIZING is in context for call to execute, initMethod is checked to determine whether:
 #                        subclass._execute (but NOT Mechanism.execute) is run (initMethod = INIT__EXECUTE__METHOD_ONLY)
 #                        ONLY subclass.function is run (initMethod = INIT_FUNCTION_METHOD_ONLY)
-#                              (EXAMPLE: EVCMechanism -- don't want to run full simulation during init)
+#                              (EXAMPLE: EVCControlMechanism -- don't want to run full simulation during init)
 #                        full subclass._execute and Mechanism.execute method are run
 #                States use .execute only to call .function (during init);  they are updated using <state>.update()
 #            .function is the "business end" of the object:
@@ -1728,8 +1728,8 @@
 #                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
 #                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
 # DOCUMENT: MEANING OF / DIFFERENCES BETWEEN self.variable, self.inputValue, self.value and self.output_values
-# DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.input_states (that receive projections from monitored States) and
-#                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
+# DOCUMENT: DIFFERENCES BETWEEN EVCControlMechanism.input_states (that receive projections from monitored States) and
+#                               EVCControlMechanism.MonitoredOutputStates (the terminal states themselves)
 # DOCUMENT: CURRENTLY, PREDICTION MECHANISMS USE OUTPUT OF CORRESPONDING ORIGIN MECHANISM
 #           (RATHER THAN THEIR INPUT, WHICH == INPUT TO THE PROCESS)
 #           LATTER IS SIMPLEST AND PERHAPS CLOSER TO WHAT IS MOST GENERALLY THE CASE
@@ -2022,7 +2022,7 @@
 #region COMPONENT:
 # -----------------------------------------------------------------------------------------------------------
 #
-# FIX!!: Get straight ComponentName vs. ComponentType (e.g.,. EVCMechanism, ComparatorMechanism)
+# FIX!!: Get straight ComponentName vs. ComponentType (e.g.,. EVCControlMechanism, ComparatorMechanism)
 #
 # FIX!!: VARIABLE VS. VALUE BUSINESS:
 #     QUESTION: is mechanism.value always == mechanism.output_values (if not, document example)
@@ -2209,7 +2209,7 @@
 # IMPLEMENT OrderedSet for toposort execution sets
 # IMPLEMENT Replace execution_list with sorted_execution_list (i.e., sort once formed, so there is only one version)
 # IMPLEMENT:  OUTPUT EDGE LIST FROM GRAPH
-# IMPLEMENT: Add PREDICTION to list of mechanism specifications in System (and document in System, and EVCMechanism)
+# IMPLEMENT: Add PREDICTION to list of mechanism specifications in System (and document in System, and EVCControlMechanism)
 # **IMPLEMENT: System.monitored_output_states:
 #              @property, that gets list of all outputStates monitored by the system's controller
 #              object should include their names, objects, and the inputState used to monitor it
@@ -2348,7 +2348,7 @@
 #                the fraction of the outputvalue used as the input to any projections on each (and every) time_step
 #            values to the right of the decimal point specify the time_step (phase) at which updating begins
 # QUESTION: SHOULD OFF PHASE INPUT VALUES BE SET TO EMPTY OR NONE INSTEAD OF 0?
-#           IN SCRIPTS AND EVCMechanism._get_simulation_system_inputs()
+#           IN SCRIPTS AND EVCControlMechanism._get_simulation_system_inputs()
 # FIX: Replace toposort with NetworkX: http://networkx.readthedocs.io/en/stable/reference/introduction.html
 # IMPLEMENT: Change current System class to ControlledSystem subclass of System_Base,
 #                   and purge System_Base class of any references to or dependencies on controller-related stuff
@@ -2480,7 +2480,7 @@
 #     FIX: NEED TO SOMEHOW CALL _validate_monitored_state_in_system FOR MONITOR_FOR_CONTROL IN SYSTEM.params[]
 #     FIX: CALL _instantiate_monitored_output_states AFTER instantiate_prediction_mechanism (SO LATTER CAN BE MONITORED)
 #     FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR MONITOR_FOR_CONTROL default: System,Mechanism or ConrolMechanism?
-#     IMPLEMENT: EVCMechanism.MonitoredOutputStates (list of each Mechanism.outputState being monitored)
+#     IMPLEMENT: EVCControlMechanism.MonitoredOutputStates (list of each Mechanism.outputState being monitored)
 #
 # FIX!!: CONSOLIDATE _instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module
 # FIX:     Function IN Projection:  (_instantiate_attributes_before_function() and _instantiate_parameter_states())
@@ -2576,11 +2576,11 @@
 #
 #endregion
 
-#region ControlMechanism / EVCMechanism / ControlSignal: -------------------------------------------------------------
+#region ControlMechanism / EVCControlMechanism / ControlSignal: -------------------------------------------------------------
 #
-# FIX: implement System argument for EVCMechanism
+# FIX: implement System argument for EVCControlMechanism
 #
-# FIX: Should __init__ for ControlMechanism and EVCMechanism have default_input_value argument?
+# FIX: Should __init__ for ControlMechanism and EVCControlMechanism have default_input_value argument?
 #
 # FIX!!: ALLOW ControlMechanism.system ASSIGNMENT TO BE DEFERRED (CHECK ONLY ON EXECUTION, or SYSTEM INSTANTATION?)
 #      COORDINATE THIS WITH deferred init for ControlProjection
@@ -2589,17 +2589,17 @@
 #
 # FIX monitor_for_control ISSUES (cf monitored_output_states ISSUES UNDER MECHANISM (ABOVE))
 #     FIX:  ADD monitored_output_states ATTRIBUTE TO ControlMechanism, AND THEN MAKE SURE THAT DOCSTRING REFERENCES RESOLVE
-#                 TO IT RATHER THAN EVCMechanism (AS THEY CURRENTLY DO).
+#                 TO IT RATHER THAN EVCControlMechanism (AS THEY CURRENTLY DO).
 #     - IMPLEMENT: MONITOR_FOR_CONTROL_OPTION for individual Mechanisms (in ControlMechanism):
 #            TBI: Implement either:  (Mechanism, MonitoredOutputStatesOption) tuple in MONITOR_FOR_CONTROL specification
 #                                    and/or MONITOR_FOR_CONTROL in Mechanism.params[]
 #                                             (that is checked when ControlMechanism is implemented
 #            DOCUMENT: if it appears in a tuple with a Mechanism, or in the Mechamism's params list,
 #                          it is applied to just that mechanism
-#     DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.input_states (that receive projections from monitored States) and
-#                                   EVCMechanism.MonitoredOutputStates (the terminal states themselves)
+#     DOCUMENT: DIFFERENCES BETWEEN EVCControlMechanism.input_states (that receive projections from monitored States) and
+#                                   EVCControlMechanism.MonitoredOutputStates (the terminal states themselves)
 #
-# FIX/DOCUMENT:  WHY SYSTEM: None FOR EVCMechanism AND DefaultControlMechanism [TRY REMOVING FROM BOTH]
+# FIX/DOCUMENT:  WHY SYSTEM: None FOR EVCControlMechanism AND DefaultControlMechanism [TRY REMOVING FROM BOTH]
 #
 # FIX: GENERATE MORE MEANINGFUL ERROR WHEN THERE ARE NO OUTPUTSTATES TO MONITOR FOR EVC
 #       USE EVC System Test Script and delete CONTROL_PROJECTION for drift_rate param in DDM.__init__()
@@ -2608,7 +2608,7 @@
 # FIX: EVCMecchanism prefs not settable
 # FIX: Component: UNCOMMENT WHEN EVC IS GIVEN A PREF SET
 #
-# FIX: MAKE EVCMechanism._update_predicted_inputs MORE EFFICIENT
+# FIX: MAKE EVCControlMechanism._update_predicted_inputs MORE EFFICIENT
 #
 # FIX: WHICH IS CORRECT (SEBASTIAN):
 #             # MODIFIED 12/4/16 OLD:
@@ -2639,7 +2639,7 @@
 #
 # IMPLEMENT: Implement way of specifying default allocation policy for ControlSignals in system
 #
-#                   MAKE IT AN ARGUMENT / ATTRIBUTE OF THE EVCMECHANISM THAT IS USED IF NO OTHER IS SPECIFED
+#                   MAKE IT AN ARGUMENT / ATTRIBUTE OF THE EVCControlMechanism THAT IS USED IF NO OTHER IS SPECIFED
 # IMPLEMENT: ADD _instantiate_input_states TO ControlMechanism AND
 #
 # IMPLEMENT      MOVE ASSIGNMENT OF monitor_for_control_factors TO THERE
@@ -2661,7 +2661,7 @@
 # - TEST, DOCUMENT: Option to save all EVC policies and associated values or just max
 # - IMPLEMENT: Control Mechanism that is assigned as default with SYSTEM specification
 #               ONCE THAT IS DONE, THEN FIX: IN System._instantiate_attributes_before_function:
-#                                                         self.controller = EVCMechanism(params={SYSTEM: self})#
+#                                                         self.controller = EVCControlMechanism(params={SYSTEM: self})#
 # - IMPLEMENT: ??execute_system method, that calls execute.update with input pass to System at run time?
 # ? IMPLEMENT .add_projection(Mechanism or State) method that adds control_signal projection
 #                   validate that Mechanism / State.owner is in self.system
@@ -3323,7 +3323,7 @@
 #region ObjectiveMechanism -----------------------------------------------------------------------------------
 #
 #     Validate ObjectiveMechanism.monitor argument:
-#         Note: parsing/validation of monitored_output_states (in EVCMechanism._get_monitored_states) and
+#         Note: parsing/validation of monitored_output_states (in EVCControlMechanism._get_monitored_states) and
 #               monitor (in ObjectiveMechanism._validate_monitored_state_in_system) needs to be handled in a more principled way
 #               either in their _validate_params method, or in class function
 #
@@ -3349,8 +3349,8 @@
 #  Move LearningMechanism and ControlMechanism under this category;  Get rid of MonitoringMechanism
 #endregion
 
-#region EVCMechanism -----------------------------------------------------------------------------------
-#     Validate that EVCMechanism.input_state matches outputState from EVCMechanism.objective_mechanism
+#region EVCControlMechanism -----------------------------------------------------------------------------------
+#     Validate that EVCControlMechanism.input_state matches outputState from EVCControlMechanism.objective_mechanism
 #     Allow it to take objective_mechanism as an argument
 #           (in which case it must be validated, but then don't bother to instantiate ObjectiveMechanism)
 #     Make sure add_monitored_output_state works:

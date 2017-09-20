@@ -26,8 +26,8 @@ EVC Test System
 		Phase 1:
 			Reward
 			Reward Prediction Mechanism
-			EVCMechanism-1 Monitoring Mechanism
-			EVCMechanism-1
+			EVCControlMechanism-1 Monitoring Mechanism
+			EVCControlMechanism-1
 
 	Origin mechanisms: 
 		Input (phase: 0)
@@ -47,7 +47,7 @@ EVC Test System
 
 ---------------------------------------------------------
 
-EVCMechanism-1
+EVCControlMechanism-1
 
 	Monitoring the following mechanism outputStates:
 		Decision: RESPONSE_TIME (exp: [-1.]; wt: [ 1.])

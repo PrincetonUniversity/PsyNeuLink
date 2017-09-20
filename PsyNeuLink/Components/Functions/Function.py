@@ -34,7 +34,7 @@ Integrator Functions:
   * `OrnsteinUhlenbeckIntegrator`
   * `AccumulatorIntegrator`
   * `FHNIntegrator`
-  * `UtilityIntegrator`
+  * `AGTUtilityIntegrator`
   * `BogaczEtAl`
   * `NavarroAndFuss`
 
@@ -150,7 +150,7 @@ Each of these is assigned the name of one of the function's parameters. These ar
 <ModulatorySignal>` to modulate the output of the function (see `figure <ModulatorySignal_Detail_Figure>`).  For
 example, they are used by `GatingSignals <GatingSignal>` to modulate the `function <State_Base.function>` of an
 `InputState` or `OutputState`, and thereby its `value <State_Base.value>`; and by the `ControlSignal(s) <ControlSignal>`
-of an `LCMechanism` to modulate the `multiplicative_param` of the `function <TransferMechanism.function>` of a
+of an `LCControlMechanism` to modulate the `multiplicative_param` of the `function <TransferMechanism.function>` of a
 `TransferMechanism`.
 
 
@@ -5536,7 +5536,7 @@ class AccumulatorIntegrator(
                                                   params=params)
 
         super().__init__(
-            # default_variable=default_variable,
+            default_variable=default_variable,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -5691,10 +5691,10 @@ class AccumulatorIntegrator(
             self.previous_value = value
         return value
 
-class UtilityIntegrator(
+class AGTUtilityIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
-    UtilityIntegrator(                    \
+    AGTUtilityIntegrator(                    \
         default_variable=None,            \
         rate=1.0,                         \
         noise=0.0,                        \
@@ -5714,17 +5714,17 @@ class UtilityIntegrator(
         prefs=None,                       \
         )
 
-    .. _UtilityIntegrator:
+    .. _AGTUtilityIntegrator:
 
     Computes an exponentially weighted moving average on the variable using two sets of parameters:
 
-    short_term_utility = (1 - `short_term_rate <UtilityIntegrator.short_term_rate>`) * `previous_short_term_utility
-    <UtilityIntegrator.previous_short_term_utility>` + `short_term_rate <UtilityIntegrator.short_term_rate>` *
-    `variable <UtilityIntegrator.variable>`
+    short_term_utility = (1 - `short_term_rate <AGTUtilityIntegrator.short_term_rate>`) * `previous_short_term_utility
+    <AGTUtilityIntegrator.previous_short_term_utility>` + `short_term_rate <AGTUtilityIntegrator.short_term_rate>` *
+    `variable <AGTUtilityIntegrator.variable>`
 
-    long_term_utility = (1 - `long_term_rate <UtilityIntegrator.long_term_rate>`) * `previous_long_term_utility
-    <UtilityIntegrator.previous_long_term_utility>` + `long_term_rate <UtilityIntegrator.long_term_rate>` *
-    `variable <UtilityIntegrator.variable>`
+    long_term_utility = (1 - `long_term_rate <AGTUtilityIntegrator.long_term_rate>`) * `previous_long_term_utility
+    <AGTUtilityIntegrator.previous_long_term_utility>` + `long_term_rate <AGTUtilityIntegrator.long_term_rate>` *
+    `variable <AGTUtilityIntegrator.variable>`
 
     then takes the logistic of each utility value, using the corresponding (short term and long term) gain and bias.
 
@@ -5812,11 +5812,11 @@ class UtilityIntegrator(
         specifies smoothing factor of EWMA filter applied to long_term_utility
 
     previous_short_term_utility : 1d np.array
-        stores previous value with which `variable <UtilityIntegrator.variable>` is integrated using the EWMA filter and
+        stores previous value with which `variable <AGTUtilityIntegrator.variable>` is integrated using the EWMA filter and
         short term parameters
 
     previous_long_term_utility : 1d np.array
-        stores previous value with which `variable <UtilityIntegrator.variable>` is integrated using the EWMA filter and
+        stores previous value with which `variable <AGTUtilityIntegrator.variable>` is integrated using the EWMA filter and
         long term parameters
 
     owner : Mechanism
@@ -5863,7 +5863,7 @@ class UtilityIntegrator(
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
-                 context="UtilityIntegrator Init"):
+                 context="AGTUtilityIntegrator Init"):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -5902,7 +5902,7 @@ class UtilityIntegrator(
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign ClassDefaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
-                    #       UtilityIntegrator's constructor, where that is used as a specification for a function parameter
+                    #       AGTUtilityIntegrator's constructor, where that is used as a specification for a function parameter
                     #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
                     #       in that case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]]) before
@@ -5985,8 +5985,8 @@ class UtilityIntegrator(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: some fraction of `variable <UtilityIntegrator.variable>` combined with some fraction of `previous_value
-        <UtilityIntegrator.previous_value>`.
+        Return: some fraction of `variable <AGTUtilityIntegrator.variable>` combined with some fraction of `previous_value
+        <AGTUtilityIntegrator.previous_value>`.
 
         Arguments
         ---------

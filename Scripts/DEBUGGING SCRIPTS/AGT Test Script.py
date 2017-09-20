@@ -1,34 +1,32 @@
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Components.System import System_Base, system
-from PsyNeuLink.Components.Process import Process_Base, process
+from PsyNeuLink.Components.Functions.Function import FHNIntegrator
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism import LCMechanism
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism import ITCMechanism
-from PsyNeuLink.Components.Functions.Function import FHNIntegrator, UtilityIntegrator
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.System import system
+from PsyNeuLink.Library.Subsystems.AGT.AGTControlMechanism import AGTControlMechanism
+from PsyNeuLink.Library.Subsystems.AGT.LCControlMechanism import LCControlMechanism
 
 my_mech_1 = TransferMechanism(name='Processing_Mech')
 
-# my_ITC = ITCMechanism(monitored_output_states=my_mech,)
-# my_LC = LCMechanism(function=(FHNIntegrator(mode=(1.0, my_ITC))),
+# my_AGT = AGTControlMechanism(monitored_output_states=my_mech,)
+# my_LC = LCControlMechanism(function=(FHNIntegrator(mode=(1.0, my_AGT))),
 #                     objective_mechanism=[my_mech])
 
-my_LC = LCMechanism(objective_mechanism=[my_mech_1],
+my_LC = LCControlMechanism(objective_mechanism=[my_mech_1],
                     modulated_mechanisms=[my_mech_1],
                     name='LC')
-my_ITC = ITCMechanism(monitored_output_states=my_mech_1,
+my_AGT = AGTControlMechanism(monitored_output_states=my_mech_1,
                       control_signals=(FHNIntegrator.MODE,my_LC),
                       name='ITC')
 
 # my_main_process = process(pathway=[my_mech_1], name='Main_process')
 # my_LC_process = process(pathway=[my_LC], name='LC_process')
-# my_ITC_process = process(pathway=[my_ITC], name='ITC_process')
-# my_system = system(processes=[my_main_process, my_LC_process, my_ITC_process], name='my_system')
+# my_AGT_process = process(pathway=[my_AGT], name='AGT_process')
+# my_system = system(processes=[my_main_process, my_LC_process, my_AGT_process], name='my_system')
 
 my_main_process = process(pathway=[my_mech_1], name='Main_process')
-my_ITC_process = process(pathway=[my_mech_1, my_ITC], name='ITC_process')
+my_AGT_process = process(pathway=[my_mech_1, my_AGT], name='AGT_process')
 my_LC_process = process(pathway=[my_mech_1, my_LC], name='LC_process')
-my_system = system(processes=[my_main_process, my_LC_process, my_ITC_process], name='my_system')
+my_system = system(processes=[my_main_process, my_LC_process, my_AGT_process], name='my_system')
 
 my_system.show()
 my_system.show_graph()

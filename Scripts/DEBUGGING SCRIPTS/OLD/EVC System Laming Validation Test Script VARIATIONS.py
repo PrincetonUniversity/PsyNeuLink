@@ -1,5 +1,5 @@
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.EVCMechanism import EVCMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.EVCControlMechanism import EVCControlMechanism
 
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 from PsyNeuLink.Components.Process import process
@@ -57,7 +57,7 @@ RewardProcess = process(
 
 # System:
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
-                  controller=EVCMechanism,
+                  controller=EVCControlMechanism,
                   enable_controller=True,
                   monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],
                   # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
