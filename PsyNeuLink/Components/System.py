@@ -3359,6 +3359,18 @@ class System_Base(System):
                     # render normally
                     G.edge(sndr_label, rcvr_label, label = edge_label, color=arrow_color)
 
+                # MODIFIED 9/20/17 NEW:
+                if ORIGIN in sndr.systems[self]:
+                    G.node(sndr_label, color="orange")
+                if TERMINAL in rcvr.systems[self]:
+                    G.node(rcvr_label, color="purple")
+                if ORIGIN in sndr.systems[self] and TERMINAL in sndr.systems[self]:
+                    G.node(sndr_label, color="brown")
+
+                # MODIFIED 9/20/17 END
+
+
+
         # add learning graph if show_learning
         if show_learning:
             rcvrs = list(learning_graph.keys())
