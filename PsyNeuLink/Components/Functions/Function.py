@@ -7539,6 +7539,13 @@ class Distance(ObjectiveFunction):
 
 ReturnVal = namedtuple('ReturnVal', 'learning_signal, error_signal')
 
+LEARNING_ACTIVATION_FUNCTION = 'activation_function'
+LEARNING_ACTIVATION_INPUT = 0  # a(j)
+# MATRIX = 1             # w
+LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
+LEARNING_ERROR_OUTPUT = 2
+AUTOASSOCIATIVE = 'AUTOASSOCIATIVE'
+
 class LearningFunction(Function_Base):
     """Abstract class of `Function` used for learning.
 
@@ -7564,15 +7571,44 @@ class LearningFunction(Function_Base):
     #                      owner=owner,
     #                      prefs=prefs,
     #                      context=context)
+
+    #     self.learning_rate_dim = None
+    #     if learning_rate is not None:
+    #         self.learning_rate_dim = np.array(learning_rate).ndim
+
     #     self.return_val = return_val(None, None)
 
 
-LEARNING_ACTIVATION_FUNCTION = 'activation_function'
-LEARNING_ACTIVATION_INPUT = 0  # a(j)
-# MATRIX = 1             # w
-LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
-LEARNING_ERROR_OUTPUT = 2
+    def _validate_learning_rate(self, learning_rate, type=None):
 
+        learning_rate = np.array(learning_rate).copy()
+        learning_rate_dim = learning_rate.ndim
+
+        if not is_numeric(learning_rate):
+            raise FunctionError("{} arg for {} ({}) must be numeric".
+                                format(LEARNING_RATE, self.name, learning_rate))
+
+        if type is AUTOASSOCIATIVE:
+
+            if learning_rate_dim == 1 and len(learning_rate) != len(self.variable):
+                raise FunctionError("Length of {} arg for {} ({}) must be the same as its variable ({})".
+                                    format(LEARNING_RATE, self.name, len(learning_rate), len(self.variable)))
+
+            if learning_rate_dim == 2:
+                shape = learning_rate.shape
+                if shape[0] != shape[1] or shape[0] != len(self.variable):
+                    raise FunctionError("Shape of {} arg for {} ({}) must be square and "
+                                        "of the same width as the length of its variable ({})".
+                                        format(LEARNING_RATE, self.name, shape, len(self.variable)))
+
+            if learning_rate_dim > 2:
+                raise FunctionError("{} arg for {} ({}) must be a single value of a 1d or 2d array".
+                                    format(LEARNING_RATE, self.name, learning_rate))
+
+        else:
+            if learning_rate_dim:
+                raise FunctionError("{} arg for {} ({}) must be a single value".
+                                    format(LEARNING_RATE, self.name, learning_rate))
 
 class Hebbian(LearningFunction):  # -------------------------------------------------------------------------------
     """
@@ -7612,7 +7648,6 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
-
 
     Attributes
     ----------
@@ -7677,10 +7712,6 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                                                   learning_rate=learning_rate,
                                                   params=params)
 
-        self.learning_rate_dim = None
-        if learning_rate is not None:
-            self.learning_rate_dim = np.array(learning_rate).ndim
-
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -7702,27 +7733,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         """
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
         if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
-
-            learning_rate = np.array(target_set[LEARNING_RATE])
-
-            if not is_numeric(learning_rate):
-                raise FunctionError("{} arg for {} ({}) must be numeric".
-                                    format(LEARNING_RATE, self.name, learning_rate))
-
-            if self.learning_rate_dim == 1 and len(learning_rate) != len(self.variable):
-                raise FunctionError("Length of {} arg for {} ({}) must be the same as its variable ({})".
-                                    format(LEARNING_RATE, self.name, len(learning_rate), len(self.variable)))
-
-            if self.learning_rate_dim == 2:
-                shape = learning_rate.shape
-                if shape[0] != shape[1] or shape[0] != len(self.variable):
-                    raise FunctionError("Shape of {} arg for {} ({}) must be square and "
-                                        "of the same width as the length of its variable ({})".
-                                        format(LEARNING_RATE, self.name, shape, len(self.variable)))
-
-            if self.learning_rate_dim > 2:
-                raise FunctionError("{} arg for {} ({}) must be a single value of a 1d or 2d array".
-                                    format(LEARNING_RATE, self.name, learning_rate))
+            self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
 
     def function(self,
                  variable=None,
@@ -7753,7 +7764,6 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
         self._check_args(variable=variable, params=params, context=context)
 
-
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
         #                          so that the process or system can see it is free to be assigned
@@ -7764,6 +7774,11 @@ class Hebbian(LearningFunction):  # --------------------------------------------
             learning_rate = self.default_learning_rate
         else:
             learning_rate = self.learning_rate
+
+        # FIX: SHOULD PUT THIS ON SUPER (THERE, BUT NEEDS TO BE DEBUGGED)
+        self.learning_rate_dim = None
+        if learning_rate is not None:
+            self.learning_rate_dim = np.array(learning_rate).ndim
 
         variable = np.array(self.variable)
 
@@ -7787,7 +7802,7 @@ class Reinforcement(
     LearningFunction):  # -------------------------------------------------------------------------------
     """
     Reinforcement(                                       \
-        default_variable=ClassDefaults.variable,           \
+        default_variable=ClassDefaults.variable,         \
         activation_function=SoftMax,                     \
         learning_rate=None,                              \
         params=None,                                     \
