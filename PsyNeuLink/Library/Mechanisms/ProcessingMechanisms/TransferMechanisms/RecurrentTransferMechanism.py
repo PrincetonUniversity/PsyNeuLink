@@ -187,7 +187,6 @@ class RecurrentTransferMechanism(TransferMechanism):
     noise=0.0,                         \
     time_constant=1.0,                 \
     range=(float:min, float:max),      \
-    time_scale=TimeScale.TRIAL,        \
     params=None,                       \
     name=None,                         \
     prefs=None)
@@ -257,8 +256,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is a function, it must return a scalar value.
 
     time_constant : float : default 1.0
-        the time constant for exponential time averaging of input when the Mechanism is executed with `time_scale`
-        set to `TimeScale.TIME_STEP`::
+        the time constant for exponential time averaging of input when `integrator_mode
+        <RecurrentTransferMechanism.integrator_mode>` is set to True::
 
          result = (time_constant * current input) +
          (1-time_constant * result on previous time_step)
@@ -273,11 +272,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    time_scale :  TimeScale : TimeScale.TRIAL
-        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
-        This must be set to `TimeScale.TIME_STEP` for the `time_constant <RecurrentTransferMechanism.time_constant>`
-        parameter to have an effect.
 
     name : str : default RecurrentTransferMechanism-<index>
         a string used for the name of the Mechanism.
@@ -326,8 +320,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is a function, it must return a scalar value.
 
     time_constant : float
-        the time constant for exponential time averaging of input
-        when the Mechanism is executed using the `TIME_STEP` `TimeScale`::
+        the time constant for exponential time averaging of input when `integrator_mode
+        <RecurrentTransferMechanism.integrator_mode>` is set to True::
 
           result = (time_constant * current input) + (1-time_constant * result on previous time_step)
 
@@ -373,9 +367,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         * **variance** of the result (``value`` of TRANSFER_VARIANCE outputState);
         * **energy** of the result (``value`` of ENERGY outputState);
         * **entropy** of the result (if the ENTROPY outputState is present).
-
-    time_scale :  TimeScale
-        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
 
     name : str : default RecurrentTransferMechanism-<index>
         the name of the Mechanism.

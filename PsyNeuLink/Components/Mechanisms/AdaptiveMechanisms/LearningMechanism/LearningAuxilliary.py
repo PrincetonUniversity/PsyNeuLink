@@ -23,7 +23,7 @@ COMMENT:
           • Convert ProcessInputState and SystemInputState into Mechanisms with LinearFunction IDENTITY_FUNCTION
           • Use only one ObjectiveMechanism for all levels with the following args:
                 default_variable[[ACTIVITY][ERROR]]
-                monitored_values: [[error_mech.OutputState][error_mech.objective_mechanism.OutputState]]
+                monitored_output_states: [[error_mech.OutputState][error_mech.objective_mechanism.OutputState]]
                 names: [[ACTIVITY][ERROR]]
                 function:  ErrorDerivative(variable, derivative)
                                variable[0] = activity
@@ -135,10 +135,10 @@ import numpy as np
 
 from PsyNeuLink.Components.Component import function_type, method_type
 from PsyNeuLink.Components.Functions.Function import BackPropagation, Linear, Reinforcement
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import ACTIVATION_INPUT, \
-    ACTIVATION_OUTPUT, LearningMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
+    import LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-    import ERROR_SIGNAL, ObjectiveMechanism
+    import OUTCOME, ObjectiveMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
@@ -464,8 +464,8 @@ def _instantiate_learning_components(learning_projection, context=None):
             # Instantiate ObjectiveMechanism
             # Notes:
             # * MappingProjections for ObjectiveMechanism's input_states will be assigned in its own call to Composition
-            # * Need to specify both default_variable and monitored_values since they may not be the same
-            #    sizes (e.g., for RL the monitored_value for the sample may be a vector, but its input_value must be scalar)
+            # * Need to specify both default_variable and monitored_output_states since they may not be the same
+            #    sizes (e.g., for RL the monitored_output_state for the sample may be a vector, but its input_value must be scalar)
             # SAMPLE inputState for ObjectiveMechanism should come from activation_mech_output
             # TARGET inputState for ObjectiveMechanism should be specified by string (TARGET),
             #     so that it is left free to later be assigned a projection from ProcessInputState and/or SystemInputState
@@ -495,7 +495,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
             # # FOR TESTING: ALTERNATIVE to Direct call to ObjectiveMechanism
             # #              (should produce identical result to use of ComparatorMechanism above)
-            # objective_mechanism = ObjectiveMechanism(monitored_values=[lc.activation_mech_output,
+            # objective_mechanism = ObjectiveMechanism(monitored_output_states=[lc.activation_mech_output,
             #                                                            TARGET],
             #                                          input_states=[{SAMPLE:sample_input},
             #                                                        {TARGET:target_input}],

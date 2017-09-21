@@ -2,9 +2,9 @@ import numpy as np
 import pytest
 
 from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, ConstantIntegrator, NormalDist, \
-    SimpleIntegrator
+    SimpleIntegrator, FHNIntegrator
 from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, \
-    OrnsteinUhlenbeckIntegrator
+    OrnsteinUhlenbeckIntegrator, AGTUtilityIntegrator
 from PsyNeuLink.Components.Functions.Function import FunctionError
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism \
@@ -84,38 +84,59 @@ class TestIntegratorFunctions:
     def test_ornstein_uhlenbeck_integrator(self):
         I = IntegratorMechanism(
             function=OrnsteinUhlenbeckIntegrator(
+                decay=0.5,
+                initializer=10.0,
+                rate=0.25,
+                time_step_size=0.5,
+                noise = 0.0,
+                offset= 1.0
+            )
+        )
+        # P = process(pathway=[I])
+        # value = previous_value + decay * (previous_value -  rate * new_value) * time_step_size + np.sqrt(
+        # time_step_size * noise) * np.random.normal()
+        # step 1:
+
+        val = I.execute(1)
+        # value = 10 + 0.5 * ( 10.0 - 0.25*1.0) * 0.5 + sqrt(0.25*0)*random_sample
+        #       = 10 + 0.5*9.75*0.5
+        #       = 12.4375
+        # adjusted_value = 12.4375 + 1.0
+        # previous_value = 13.4375
+        # RETURN 13.4375
+
+        # step 2:
+        val2 = I.execute(1)
+        # value = 13.4375 + 0.5 * ( 13.4375 - 0.25*1.0) * 0.5
+        #       = 13.4375 + 3.296875
+        # adjusted_value = 16.734375 + 1.0
+        # previous_value = 17.734375
+        # RETURN 31
+
+        assert (val, val2) == (13.4375, 17.734375)
+
+    def test_ornstein_uhlenbeck_integrator_time(self):
+        OU = IntegratorMechanism(
+            function=OrnsteinUhlenbeckIntegrator(
                 initializer=10.0,
                 rate=10,
-                time_step_size=0.5,
+                time_step_size=0.2,
+                t0=0.5,
                 decay=0.1,
                 offset=10,
             )
         )
-        # P = process(pathway=[I])
-        # value = previous_value + decay * rate * new_value * time_step_size + np.sqrt(
-        # time_step_size * noise) * np.random.normal()
-        # step 1:
-        val = I.execute(1)
-        # value = 10 + 0.1*10*1*0.5 + 0
-        # adjusted_value = 10.5 + 10
-        # previous_value = 20.5
-        # RETURN 20.5
+        time_0 = OU.function_object.previous_time  # t_0  = 0.5
+        np.testing.assert_allclose(time_0, [0.5], atol=1e-08)
 
-        # step 2:
-        val2 = I.execute(1)
-        # value = 20.5 + 0.1*10*1*0.5 + 0
-        # adjusted_value = 21 + 10
-        # previous_value = 31
-        # RETURN 31
+        OU.execute(10)
+        time_1 = OU.function_object.previous_time  # t_1  = 0.5 + 0.2 = 0.7
+        np.testing.assert_allclose(time_1, [0.7], atol=1e-08)
 
-        # step 3:
-        val3 = I.execute(1)
-        # value = 31 + 0.1*10*1*0.5 + 0
-        # adjusted_value = 31.5 + 10
-        # previous_value = 41.5
-        # RETURN 41.5
-
-        assert (val, val2, val3) == (20.5, 31, 41.5)
+        for i in range(11):  # t_11 = 0.7 + 10*0.2 = 2.7
+            OU.execute(10)
+        time_12 = OU.function_object.previous_time # t_12 = 2.7 + 0.2 = 2.9
+        np.testing.assert_allclose(time_12, [2.9], atol=1e-08)
 
     def test_integrator_no_function(self):
         I = IntegratorMechanism(time_scale=TimeScale.TIME_STEP)
@@ -561,8 +582,7 @@ class TestIntegratorNoise:
         )
 
         val = I.execute([10, 10, 10, 10])[0]
-        print(val)
-        np.testing.assert_allclose(val, [-0.15135721, -0.10321885,  0.4105985,   0.14404357])
+        np.testing.assert_allclose(val, [0.12167502, 0.44386323, 0.33367433, 1.49407907])
 
     def test_integrator_constant_noise_fn(self):
         I = IntegratorMechanism(
@@ -637,11 +657,324 @@ class TestIntegratorNoise:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=OrnsteinUhlenbeckIntegrator(
-                noise=5.0,
+                noise=2.0,
+                decay=0.5,
+                initializer=1.0,
+                rate=0.25
             ),
             time_scale=TimeScale.TIME_STEP
         )
 
-        val = float(I.execute(10))
+        # val = 1.0 + 0.5 * (1.0 - 0.25 * 2.5) * 1.0 + np.sqrt(1.0 * 2.0) * np.random.normal()
 
-        np.testing.assert_allclose(val, 15.010789523731438)
+
+        val = float(I.execute(2.5))
+
+        np.testing.assert_allclose(val, 4.356601554140335)
+
+class TestFHN:
+
+
+    def test_FHN_defaults(self):
+
+        F = IntegratorMechanism(
+            name='IntegratorMech-FHNFunction',
+            function=FHNIntegrator(
+
+            )
+        )
+        plot_v_list = []
+        plot_w_list = []
+
+        expected_v_list = []
+        expected_w_list = []
+        stimulus = 1.0
+        for i in range(10):
+            for j in range(10):
+                new_v = F.execute(stimulus)[0][0][0]
+                new_w = F.execute(stimulus)[1][0][0]
+                # ** uncomment the lines below if you want to view the plot:
+                # plot_v_list.append(new_v)
+                # plot_w_list.append(new_w)
+            expected_v_list.append(new_v)
+            expected_w_list.append(new_w)
+
+        # ** uncomment the lines below if you want to view the plot:
+        # import matplotlib.pyplot as plt
+        # plt.plot(plot_v_list)
+        # plt.plot(plot_w_list)
+        # plt.show()
+
+        np.testing.assert_allclose(expected_v_list, [1.9861589924245777, 1.9184159304279109, 1.7920107368145777,
+                                                     1.6651158106802393, 1.5360917598075965, 1.4019128309448776,
+                                                     1.2568420252868404, 1.08773745582042, 0.8541804646541804,
+                                                     0.34785588139530099])
+        np.testing.assert_allclose(expected_w_list, [0.28713219302304327, 0.65355262255707869, 0.9581082373550347,
+                                                     1.2070585850028435, 1.4068978270680454, 1.5629844531368104,
+                                                     1.6793901854329185, 1.7583410650743645, 1.7981128658110572,
+                                                     1.7817328532815251])
+
+class TestAGTUtilityIntegrator:
+
+    def test_utility_integrator_default(self):
+        # default params:
+        # initial_short_term_utility = 0.0
+        # initial_long_term_utility = 0.0
+        # short_term_rate = 1.0
+        # long_term_rate = 1.0
+
+        U = IntegratorMechanism(
+            name = "AGTUtilityIntegrator",
+            function=AGTUtilityIntegrator(
+            )
+
+        )
+
+        engagement = []
+        short_term_util = []
+        long_term_util = []
+        for i in range(50):
+            engagement.append(U.execute([1])[0][0])
+            short_term_util.append(U.function_object.short_term_utility_logistic[0])
+            long_term_util.append(U.function_object.long_term_utility_logistic[0])
+        print("engagement = ", engagement)
+        print("short_term_util = ", short_term_util)
+        print("long_term_util = ", long_term_util)
+
+    def test_utility_integrator_short_minus_long(self):
+        # default params:
+        # initial_short_term_utility = 0.0
+        # initial_long_term_utility = 0.0
+        # short_term_rate = 1.0
+        # long_term_rate = 1.0
+
+        U = IntegratorMechanism(
+            name = "AGTUtilityIntegrator",
+            function=AGTUtilityIntegrator(
+                operation="s-l"
+            )
+
+        )
+
+        engagement = []
+        short_term_util = []
+        long_term_util = []
+        for i in range(50):
+            engagement.append(U.execute([1])[0][0])
+            short_term_util.append(U.function_object.short_term_utility_logistic[0])
+            long_term_util.append(U.function_object.long_term_utility_logistic[0])
+        print("engagement = ", engagement)
+        print("short_term_util = ", short_term_util)
+        print("long_term_util = ", long_term_util)
+
+    def test_utility_integrator_short_plus_long(self):
+        # default params:
+        # initial_short_term_utility = 0.0
+        # initial_long_term_utility = 0.0
+        # short_term_rate = 1.0
+        # long_term_rate = 1.0
+
+        U = IntegratorMechanism(
+            name = "AGTUtilityIntegrator",
+            function=AGTUtilityIntegrator(
+                operation="s+l"
+            )
+
+        )
+
+        engagement = []
+        short_term_util = []
+        long_term_util = []
+        for i in range(50):
+            engagement.append(U.execute([1])[0][0])
+            short_term_util.append(U.function_object.short_term_utility_logistic[0])
+            long_term_util.append(U.function_object.long_term_utility_logistic[0])
+        print("engagement = ", engagement)
+        print("short_term_util = ", short_term_util)
+        print("long_term_util = ", long_term_util)
+
+    # def test_plot_utility_integrator(self):
+        # from matplotlib import pyplot as plt
+        # from mpl_toolkits.mplot3d import Axes3D
+        # from matplotlib import cm
+        # import numpy as np
+        # fig = plt.figure()
+        # ax = fig.gca(projection='3d')
+        #
+        # def logistic(variable):
+        #
+        #     try:
+        #         return_val = 1 / (1 + np.exp(-variable))
+        #     except (Warning):
+        #         # handle RuntimeWarning: overflow in exp
+        #         return_val = 0
+        #
+        #     return return_val
+        #
+        # short = np.linspace(0, 1, 20)
+        # long = np.linspace(0, 1, 20)
+        # short_grid, long_grid = np.meshgrid(short, long, sparse=True)
+        #
+        # short_logistic = logistic(short)
+        # long_logistic = logistic(long)
+        # short_grid_logistic, long_grid_logistic = np.meshgrid(short_grid, long_grid, sparse=True)
+        #
+        # z = (1-short_grid_logistic)*long_grid_logistic
+        # surf = ax.plot_surface(short_grid_logistic, long_grid_logistic, z,
+        #                        cmap=cm.gray,
+        #                        linewidth=0,
+        #                        # antialiased=False,
+        #
+        #                        )
+        # # fig.colorbar(surf, shrink=0.5, aspect=5)
+        # plt.show()
+
+        # def logistic(x):
+        #
+        #     try:
+        #         return_val = 1 / (1 + np.exp(-x))
+        #     except (Warning):
+        #         # handle RuntimeWarning: overflow in exp
+        #         return_val = 0
+        #
+        #     return return_val
+        #
+        # def combine(s, l):
+        #     return (1-s)*l
+        #
+        # import numpy as np
+        # from mpl_toolkits.mplot3d import Axes3D
+        # import matplotlib.pyplot as plt
+        # import random
+        #
+        #
+        # fig = plt.figure()
+        # ax = fig.add_subplot(111, projection='3d')
+        # s = l = np.arange(0, 1.0, 0.05)
+        # s = list(map(logistic, s))
+        # l = list(map(logistic, l))
+        # S, L = np.meshgrid(s, l)
+        # zs = np.array([combine(s, l) for s, l in zip(np.ravel(S), np.ravel(L))])
+        # Z = zs.reshape(S.shape)
+        #
+        # ax.plot_surface(S, L, Z)
+        #
+        # ax.set_xlabel('short term')
+        # ax.set_ylabel('long term')
+        # ax.set_zlabel('engagement')
+        #
+        # plt.show()
+
+
+    # def test_FHN_gilzenrat(self):
+    #
+    #     F = IntegratorMechanism(
+    #         name='IntegratorMech-FHNFunction',
+    #         function=FHNIntegrator(
+    #             time_step_size=0.1,
+    #             initial_v=0.2,
+    #             initial_w=0.0,
+    #             t_0=0.0,
+    #             time_constant_v=1.0,
+    #             a_v=-1.0,
+    #             b_v=1.5,
+    #             c_v=-0.5,
+    #             d_v=0.0,
+    #             e_v=-1.0,
+    #             f_v=0.0,
+    #             time_constant_w=100.0,
+    #             a_w=1.0,
+    #             b_w=-0.5,
+    #             c_w=0.0
+    #         )
+    #     )
+    #     plot_v_list = []
+    #     plot_w_list = []
+    #
+    #     expected_v_list = []
+    #     expected_w_list = []
+    #     stimulus = 0.0
+    #     for i in range(10):
+    #
+    #         for j in range(50):
+    #             new_v = F.execute(stimulus)[0][0]
+    #             new_w = F.execute(stimulus)[1][0]
+    #             # ** uncomment the lines below if you want to view the plot:
+    #             plot_v_list.append(new_v)
+    #             plot_w_list.append(new_w)
+    #         expected_v_list.append(new_v)
+    #         expected_w_list.append(new_w)
+    #     # print(plot_v_list)
+    #     # print(plot_w_list)
+    #     # ** uncomment the lines below if you want to view the plot:
+    #     import matplotlib.pyplot as plt
+    #     plt.plot(plot_v_list)
+    #     plt.plot(plot_w_list)
+    #     plt.show()
+    #
+    #     # np.testing.assert_allclose(expected_v_list, [1.9861589924245777, 1.9184159304279109, 1.7920107368145777,
+    #     #                                              1.6651158106802393, 1.5360917598075965, 1.4019128309448776,
+    #     #                                              1.2568420252868404, 1.08773745582042, 0.8541804646541804,
+    #     #                                              0.34785588139530099])
+    #     # np.testing.assert_allclose(expected_w_list, [0.28713219302304327, 0.65355262255707869, 0.9581082373550347,
+    #     #                                              1.2070585850028435, 1.4068978270680454, 1.5629844531368104,
+    #     #                                              1.6793901854329185, 1.7583410650743645, 1.7981128658110572,
+    #     #                                              1.7817328532815251])
+    #     #
+    #
+    # def test_FHN_gilzenrat_low_electrotonic_coupling(self):
+    #
+    #     F = IntegratorMechanism(
+    #         name='IntegratorMech-FHNFunction',
+    #         function=FHNIntegrator(
+    #             time_step_size=0.1,
+    #             initial_v=0.2,
+    #             initial_w=0.0,
+    #             t_0=0.0,
+    #             time_constant_v=1.0,
+    #             a_v=-1.0,
+    #             b_v=0.5,
+    #             c_v=0.5,
+    #             d_v=0.0,
+    #             e_v=-1.0,
+    #             f_v=0.0,
+    #             electrotonic_coupling=0.55,
+    #             time_constant_w=100.0,
+    #             a_w=1.0,
+    #             b_w=-0.5,
+    #             c_w=0.0
+    #         )
+    #     )
+    #     plot_v_list = []
+    #     plot_w_list = []
+    #
+    #     expected_v_list = []
+    #     expected_w_list = []
+    #     stimulus = 0.0
+    #     for i in range(10):
+    #
+    #         for j in range(600):
+    #             new_v = F.execute(stimulus)[0][0]
+    #             new_w = F.execute(stimulus)[1][0]
+    #             # ** uncomment the lines below if you want to view the plot:
+    #             plot_v_list.append(new_v)
+    #             plot_w_list.append(new_w)
+    #         expected_v_list.append(new_v)
+    #         expected_w_list.append(new_w)
+    #     # print(plot_v_list)
+    #     # print(plot_w_list)
+    #     # ** uncomment the lines below if you want to view the plot:
+    #     import matplotlib.pyplot as plt
+    #     plt.plot(plot_v_list)
+    #     plt.plot(plot_w_list)
+    #     plt.show()
+    #
+    #     # np.testing.assert_allclose(expected_v_list, [1.9861589924245777, 1.9184159304279109, 1.7920107368145777,
+    #     #                                              1.6651158106802393, 1.5360917598075965, 1.4019128309448776,
+    #     #                                              1.2568420252868404, 1.08773745582042, 0.8541804646541804,
+    #     #                                              0.34785588139530099])
+    #     # np.testing.assert_allclose(expected_w_list, [0.28713219302304327, 0.65355262255707869, 0.9581082373550347,
+    #     #                                              1.2070585850028435, 1.4068978270680454, 1.5629844531368104,
+    #     #                                              1.6793901854329185, 1.7583410650743645, 1.7981128658110572,
+    #     #                                              1.7817328532815251])
+    #     #

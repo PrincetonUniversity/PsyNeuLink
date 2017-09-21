@@ -44,7 +44,7 @@ When a ControlSignal is specified in the **control_signals** argument of the con
 
   * a **ParameterState** of the Mechanism to which the parameter belongs;
   ..
-  * a **tuple**, with the name of the parameter as its 1st item. and the *Mechanism* to which it belongs as the 2nd;
+  * a **tuple**, with the name of the parameter as its 1st item and the *Mechanism* to which it belongs as the 2nd;
     note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
     but precludes specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
   ..
@@ -100,7 +100,7 @@ A ControlSignal has a `modulation <GatingSignal.modulation>` attribute that dete
 specified and used to modulate the `value <State_Base.value>` of a State). The `modulation <ControlSignal.modulation>`
 attribute can be specified in the **modulation** argument of the constructor for a ControlSignal, or in a specification
 dictionary as described `above <ControlSignal_Specification>`. The value must be a value of `ModulationParam`;  if it
-is not specified, its default is the value of the `modulation <ControlMechanism_Base.modulation>` attribute of the
+is not specified, its default is the value of the `modulation <ControlMechanism.modulation>` attribute of the
 ControlMechanism to which the ControlSignal belongs (which is the same for all of the ControlSignals belonging to that
 ControlMechanism).  The value of the `modulation <ControlSignal.modulation>` attribute of a ControlSignal is used by
 all of the `ControlProjections <ControlProjection>` that project from that ControlSignal.
@@ -111,8 +111,8 @@ Allocation, Function and Intensity
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 *Allocation (variable)*. A ControlSignal is assigned an `allocation <ControlSignal>` by the ControlMechanism to
-which it belongs. Some ControlMechanism sample different allocation values for their ControlSignals to determine
-which to use (such as the `EVCMechanism <EVC_Default_Configuration>`);  in those cases, they use each ControlSignal's
+which it belongs. Some ControlMechanisms sample different allocation values for their ControlSignals to determine
+which to use (such as the `EVCControlMechanism <EVC_Default_Configuration>`);  in those cases, they use each ControlSignal's
 `allocation_samples <ControlSignal.allocation_samples>` attribute (specified in the **allocation_samples** argument
 of the ControlSignal's constructor) to determine the allocation values to sample for that ControlSignal.  A
 ControlSignal's `allocation <ControlSignal>` attribute reflects value assigned to it by the ControlMechanism
@@ -187,8 +187,8 @@ that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjection
 Each ParameterState uses that value to modify the value(s) of the parameter(s) that the ControlSignal controls. See
 `ModulatorySignal_Modulation` for a more detailed description of how modulation operates).  The ControlSignal's
 `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost` attribute. That is used
-by some ControlMechanism, along with the ControlSignal's `allocation_samples` attribute, to evaluate an
-`allocation_policy <ControlMechanism_Base.allocation_policy>`, and adjust the ControlSignal's `allocation
+by some ControlMechanisms, along with the ControlSignal's `allocation_samples` attribute, to evaluate an
+`allocation_policy <ControlMechanism.allocation_policy>`, and adjust the ControlSignal's `allocation
 <ControlSignal.allocation>` for the next `TRIAL`.
 
 .. note::
@@ -228,9 +228,9 @@ had been ``ModulationParam.OVERRIDE``, then the ControlSignal's value would have
 value of the *Logistic* Function's `gain <Logistic.gain>` parameter, rather than added to it.
 
 COMMENT:
-    MOVE THIS EXAMPLE TO EVCMechanism
+    MOVE THIS EXAMPLE TO EVCControlMechanism
 
-*Modulate the parameters of several Mechanisms by an EVCMechanism*.  This shows::
+*Modulate the parameters of several Mechanisms by an EVCControlMechanism*.  This shows::
 
     My_Mech_A = TransferMechanism(function=Logistic)
     My_Mech_B = TransferMechanism(function=Linear,
@@ -240,7 +240,7 @@ COMMENT:
     Process_B = process(pathway=[My_Mech_B])
     My_System = system(processes=[Process_A, Process_B])
 
-    My_EVC_Mechanism = EVCMechanism(system=My_System,
+    My_EVC_Mechanism = EVCControlMechanism(system=My_System,
                                     monitor_for_control=[My_Mech_A.output_states[RESULT],
                                                          My_Mech_B.output_states[MEAN]],
                                     control_signals=[(GAIN, My_Mech_A),
@@ -284,7 +284,7 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Component import InitStatus, function_type, method_type
 # import Components
-# FIX: EVCMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCMechanism
+# FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
 from PsyNeuLink.Components.Functions.Function import CombinationFunction, Exponential, IntegratorFunction, Linear, \
     LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
@@ -301,9 +301,6 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, \
     kwCompatibilityType
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import \
-    ADJUSTMENT_COST_FUNCTION, COST_COMBINATION_FUNCTION, DURATION_COST_FUNCTION, INTENSITY_COST_FUNCTION, \
-    costFunctionNames, kpAdjustmentCost, kpAllocation, kpCost, kpDurationCost, kpIntensity, kpIntensityCost
 from PsyNeuLink.Scheduling.TimeScale import CurrentTime, TimeScale
 
 # class OutputStateLog(IntEnum):
@@ -319,6 +316,33 @@ from PsyNeuLink.Scheduling.TimeScale import CurrentTime, TimeScale
 #     TEST_MODE = 240
 # defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
 DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.3)
+
+# -------------------------------------------    KEY WORDS  -------------------------------------------------------
+
+# ControlSignal Costs
+INTENSITY_COST = 'INTENSITY COST'
+ADJUSTMENT_COST = 'ADJUSTMENT COST'
+DURATION_COST = 'DURATION COST'
+
+# ControlSignal Cost Function Names
+INTENSITY_COST_FUNCTION = 'intensity_cost_function'
+ADJUSTMENT_COST_FUNCTION = 'adjustment_cost_function'
+DURATION_COST_FUNCTION = 'duration_cost_function'
+COST_COMBINATION_FUNCTION = 'cost_combination_function'
+costFunctionNames = [INTENSITY_COST_FUNCTION,
+                     ADJUSTMENT_COST_FUNCTION,
+                     DURATION_COST_FUNCTION,
+                     COST_COMBINATION_FUNCTION]
+
+# Attributes / KVO keypaths
+# kpLog = "Control Signal Log"
+kpAllocation = "Control Signal Allocation"
+kpIntensity = "Control Signal Intensity"
+kpCostRange = "Control Signal Cost Range"
+kpIntensityCost = "Control Signal Intensity Cost"
+kpAdjustmentCost = "Control Signal Adjustment Cost"
+kpDurationCost = "Control Signal duration_cost"
+kpCost = "Control Signal Cost"
 
 COST_OPTIONS = 'cost_options'
 class ControlSignalCosts(IntEnum):
@@ -446,7 +470,7 @@ class ControlSignal(ModulatorySignal):
 
     allocation_samples : list : default range(0.1, 1, 0.1)
         specifies the values used by `ControlSignal's `ControlSignal.owner` to determine its
-        `allocation_policy <ControlMechanism_Base.allocation_policy>` (see `ControlSignal_Execution`).
+        `allocation_policy <ControlMechanism.allocation_policy>` (see `ControlSignal_Execution`).
 
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
         specifies the way in which the `value <ControlSignal.value>` the ControlSignal is used to modify the value of
@@ -492,7 +516,7 @@ class ControlSignal(ModulatorySignal):
 
     allocation_samples : list : DEFAULT_SAMPLE_VALUES
         set of values to sample by the ControlSignal's `owner <ControlSignal.owner>` to determine its
-        `allocation_policy <ControlMechanism_Base.allocation_policy>`.
+        `allocation_policy <ControlMechanism.allocation_policy>`.
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         converts `allocation` into the ControlSignal's `intensity`.  The default is the identity function, which
@@ -635,7 +659,7 @@ class ControlSignal(ModulatorySignal):
         # Consider adding self to owner.outputStates here (and removing from ControlProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputStates in ControlProjection._instantiate_sender),
 
-        # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super().__init__(owner=owner,
                          reference_value=reference_value,
                          variable=variable,
@@ -1134,3 +1158,169 @@ class ControlSignal(ModulatorySignal):
     @value.setter
     def value(self, assignment):
         self._value = assignment
+
+# FIX: Refactor to function like _parse_gating_signal_spec,
+# FIX:     then combine the two into a single _parse_modulatory_signal_spec
+def _parse_control_signal_spec(owner, control_signal_spec, context=None):
+    """Take specifications for one or more parameters to be controlled and return ControlSignal specification dictionary
+
+    THIS DOCUMENTATION IS TAKEN FROM _parse_gating_signal AS A TEMPLATE FOR HOW _parse_control_signal_spec
+    SHOULD FUNCTION, BUT NOT ALL OF IT HAS BEEN IMPLEMENTED
+
+    control_signal_spec can take any of the following forms:
+        - an existing ControlSignal
+        - an existing Parameter for a parameter of Mechanisms in self.system
+        - a list of state specifications (see below)
+        - a dictionary that contains either a:
+            - single state specification:
+                NAME:str - contains the name of a ParameterState belonging to MECHANISM
+                MECHANISM:Mechanism - contains a reference to a Mechanism in self.system that owns NAME'd state
+                <PARAM_KEYWORD>:<ControlSignal param value>
+            - multiple state specification:
+                NAME:str - used as name of ControlSignal
+                STATES:List[tuple, dict] - each item must be state specification tuple or dict
+                <PARAM_KEYWORD>:<ControlSignal param value>
+
+    Each state specification must be a:
+        - (str, Mechanism) tuple
+        - {NAME:str, MECHANISM:Mechanism} dict
+        where:
+            str is the name of an InputState or OutputState of the Mechanism,
+            Mechanism is a reference to an existing Mechanism that belongs to self.system
+
+    Checks for duplicate state specifications within state_spec or with any existing ControlSignal of the owner
+        (i.e., states that will receive more than one ControlProjection from the owner)
+
+    If state_spec is already a ControlSignal, it is returned (in the CONTROL_SIGNAL entry) along with its parsed
+    elements
+
+    Returns dictionary with the following entries:
+        NAME:str - name of either the Parameter to be controlled (if there is only one) or the ControlSignal
+        STATES:list - list of ParameterStates to be controlled
+        CONTROL_SIGNAL:ControlSignal or None
+        PARAMS:dict - params dict if any were included in the state_spec
+    """
+    from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+    from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+    from PsyNeuLink.Components.States.State import _parse_state_spec
+    from PsyNeuLink.Components.States.ParameterState import ParameterState, _get_parameter_state
+    from PsyNeuLink.Globals.Keywords import NAME, PARAMS, \
+                                            CONTROL_SIGNAL, CONTROL_SIGNAL_SPECS, PARAMETER_STATE, \
+                                            MECHANISM, PROJECTIONS, SENDER, RECEIVER
+
+    mech = None
+    param_name = None
+    control_projection = None
+    control_signal_params = None
+    parameter_state = None
+    control_signal = None
+
+    control_signal_dict = _parse_state_spec(owner=owner,
+                                            state_type=ControlSignal,
+                                            state_spec=control_signal_spec,
+                                            context=context)
+
+    # Specification is a ParameterState
+    if isinstance(control_signal_dict, ParameterState):
+        mech = control_signal_spec.owner
+        param_name = control_signal_spec.name
+        parameter_state = _get_parameter_state(owner, CONTROL_SIGNAL, param_name, mech)
+
+    # Specification was tuple or dict, now parsed into a dict
+    elif isinstance(control_signal_dict, dict):
+        param_name = control_signal_dict[NAME]
+        control_signal_params = control_signal_dict[PARAMS]
+
+        # control_signal was a specification dict, with MECHANISM as an entry (and parameter as NAME)
+        if control_signal_params and MECHANISM in control_signal_params:
+            mech = control_signal_params[MECHANISM]
+            # Delete MECHANISM entry as it is not a parameter of ControlSignal
+            #     (which will balk at it in ControlSignal._validate_params)
+            del control_signal_params[MECHANISM]
+            parameter_state = _get_parameter_state(owner, CONTROL_SIGNAL, param_name, mech)
+
+        # Specification was originally a tuple, either in parameter specification or control_signal arg;
+        #    1st item was either assigned to the NAME entry of the control_signal_spec dict
+        #        (if tuple was a (param_name, Mechanism tuple) for control_signal arg;
+        #        or used as param value, if it was a parameter specification tuple
+        #    2nd item was placed in CONTROL_SIGNAL_PARAMS entry of params dict in control_signal_spec dict,
+        #        so parse:
+        elif (control_signal_params and
+                any(kw in control_signal_dict[PARAMS] for kw in {CONTROL_SIGNAL_SPECS, PROJECTIONS})):
+
+            # IMPLEMENTATION NOTE:
+            #    CONTROL_SIGNAL_SPECS is used by _parse_control_signal_spec,
+            #                         to pass specification from a parameter specification tuple
+            #    PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
+            #                      here, the tuple comes from a (param, Mechanism) specification in control_signal arg
+            #    Delete whichever one it was, as neither is a recognized ControlSignal param
+            #        (which will balk at it in ControlSignal._validate_params)
+            if CONTROL_SIGNAL_SPECS in control_signal_dict[PARAMS]:
+                spec = control_signal_params[CONTROL_SIGNAL_SPECS]
+                del control_signal_params[CONTROL_SIGNAL_SPECS]
+            elif PROJECTIONS in control_signal_dict[PARAMS]:
+                spec = control_signal_params[PROJECTIONS]
+                del control_signal_params[PROJECTIONS]
+
+            # ControlSignal
+            if isinstance(spec, ControlSignal):
+                # Note: don't specify mech since ControlSignal could project to more than one ParameterState
+                control_signal_dict = spec
+
+            else:
+                # Mechanism
+                # IMPLEMENTATION NOTE: Mechanism was placed in list in PROJECTIONS entry by _parse_state_spec
+                if isinstance(spec, list) and isinstance(spec[0], Mechanism):
+                    mech = spec[0]
+                    parameter_state = _get_parameter_state(owner, CONTROL_SIGNAL, param_name, mech)
+
+                # Projection (in a list)
+                elif isinstance(spec, list):
+                    control_projection = spec[0]
+                    if not isinstance(control_projection, ControlProjection):
+                        raise ControlSignalError("PROGRAM ERROR: list in {} entry of params dict for {} of {} "
+                                                    "must contain a single ControlProjection".
+                                                    format(CONTROL_SIGNAL_SPECS, CONTROL_SIGNAL, owner.name))
+                    if len(spec)>1:
+                        raise ControlSignalError("PROGRAM ERROR: Multiple ControlProjections are not "
+                                                    "currently supported in specification of a ControlSignal")
+                    # Get receiver mech
+                    if control_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                        parameter_state = control_projection.init_args[RECEIVER]
+                        # ControlProjection was created in response to specification of ControlSignal
+                        #     (in a 2-item tuple where the parameter was specified),
+                        #     so get ControlSignal spec
+                        if SENDER in control_projection.init_args:
+                            control_signal_spec = control_projection.init_args[SENDER]
+                            if control_signal_spec and not isinstance(control_signal_spec, ControlSignal):
+                                raise ControlSignalError("PROGRAM ERROR: "
+                                                            "Sender of {} for {} {} of {} is not a {}".
+                                                            format(CONTROL_PROJECTION,
+                                                                   parameter_state.name,
+                                                                   PARAMETER_STATE,
+                                                                   parameter_state.owner.name,
+                                                                   CONTROL_SIGNAL))
+                    else:
+                        parameter_state = control_projection.receiver
+                    param_name = parameter_state.name
+                    mech = parameter_state.owner
+
+                else:
+                    raise ControlSignalError("PROGRAM ERROR: failure to parse specification of {} for {}".
+                                                format(CONTROL_SIGNAL, owner.name))
+        else:
+            raise ControlSignalError("PROGRAM ERROR: No entry found in params dict with specification of "
+                                        "parameter's Mechanism or ControlProjection for {} of {}".
+                                        format(CONTROL_SIGNAL, owner.name))
+
+        if isinstance(control_signal_spec, ControlSignal):
+            control_signal = control_signal_spec
+        else:
+            control_signal = None
+
+    return {MECHANISM: mech,
+            NAME: param_name,
+            PARAMS: control_signal_params,
+            PARAMETER_STATE: parameter_state,
+            CONTROL_PROJECTION: control_projection,
+            CONTROL_SIGNAL: control_signal}

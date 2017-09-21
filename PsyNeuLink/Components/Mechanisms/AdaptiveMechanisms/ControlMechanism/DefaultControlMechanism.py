@@ -37,11 +37,12 @@ import numpy as np
 import typecheck as tc
 import numpy as np
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanismError, ControlMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanismError, ControlMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.States.InputState import InputState
 
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPUT_STATES, INTERCEPT, MODULATION, MONITOR_FOR_CONTROL, NAME, SLOPE
+from PsyNeuLink.Globals.Keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPUT_STATES, INTERCEPT, MODULATION, OBJECTIVE_MECHANISM, NAME, SLOPE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
@@ -54,7 +55,7 @@ class DefaultControlMechanismError(Exception):
         self.error_value = error_value
 
 
-class DefaultControlMechanism(ControlMechanism_Base):
+class DefaultControlMechanism(ControlMechanism):
     """Subclass of `ControlMechanism <ControlMechanism>` that implements a DefaultControlMechanism.
 
     COMMENT:
@@ -89,16 +90,15 @@ class DefaultControlMechanism(ControlMechanism_Base):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class ClassDefaults(ControlMechanism_Base.ClassDefaults):
+    class ClassDefaults(ControlMechanism.ClassDefaults):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import Linear
-    paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({# MAKE_DEFAULT_CONTROLLER:True  <- No need, it is the default by default
-                               FUNCTION:Linear,
+    paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
+    paramClassDefaults.update({FUNCTION:Linear,
                                FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0},
-                               MONITOR_FOR_CONTROL:None,
+                               OBJECTIVE_MECHANISM:None,
                                MODULATION:None,
                                })
 
@@ -107,7 +107,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
                  # default_variable=None,
                  # size=None,
                  system=None,
-                 monitor_for_control:tc.optional(list)=None,
+                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  control_signals:tc.optional(list)=None,
                  params=None,
                  name=None,
@@ -115,7 +115,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
         super(DefaultControlMechanism, self).__init__(# default_variable=default_variable,
                                                     # size=size,
-                                                    monitor_for_control=monitor_for_control,
+                                                    objective_mechanism=objective_mechanism,
                                                     control_signals=control_signals,
                                                     params=params,
                                                     name=name,
@@ -138,12 +138,10 @@ class DefaultControlMechanism(ControlMechanism_Base):
             and assign any OutputStates that project to the input_states to monitored_output_states
 
         IMPLEMENTATION NOTE:  At present, these are dummy assignments, simply to satisfy the requirements for
-                              subclasses of ControlMechanism;  in the future, an _instantiate_monitoring_mechanism()
+                              subclasses of ControlMechanism;  in the future, an _instantiate_objective_mechanism()
                               method should be implemented that also implements an _instantiate_monitored_output_states
                               method, and that can be used to add OutputStates/Mechanisms to be monitored.
         """
-
-        self.monitored_output_states = []
 
         if not hasattr(self, INPUT_STATES):
             self._input_states = None

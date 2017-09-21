@@ -266,7 +266,7 @@ class GatingProjection(ModulatoryProjection_Base):
             # Flag for deferred initialization
             self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
-        # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         super().__init__(sender=sender,
                          receiver=receiver,

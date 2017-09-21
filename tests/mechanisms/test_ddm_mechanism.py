@@ -1,6 +1,6 @@
 import pytest
 import typecheck
-
+import numpy as np
 from PsyNeuLink.Components.Component import ComponentError
 from PsyNeuLink.Components.Functions.Function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, NormalDist
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, DDMError
@@ -100,11 +100,12 @@ def test_DDM_noise_0_5():
             noise=0.5,
             rate=1.0,
             time_step_size=1.0
-        ),
-        time_scale=TimeScale.TIME_STEP
+        )
     )
+
     val = float(T.execute(stim)[0])
-    assert val == 9.892974291631234
+
+    assert val == 9.308960184035778
 
 # ------------------------------------------------------------------------------------------------
 # TEST 3
@@ -119,11 +120,10 @@ def test_DDM_noise_2_0():
             noise=2.0,
             rate=1.0,
             time_step_size=1.0
-        ),
-        time_scale=TimeScale.TIME_STEP
+        )
     )
     val = float(T.execute(stim)[0])
-    assert val == 9.785948583262465
+    assert val == 8.617920368071555
 
 # ------------------------------------------------------------------------------------------------
 
@@ -271,7 +271,6 @@ def test_DDM_input_list_len_2():
 def test_DDM_input_fn():
     with pytest.raises(TypeError) as error_text:
         stim = NormalDist().function
-        print(stim)
         T = DDM(
             name='DDM',
             function=DriftDiffusionIntegrator(
@@ -444,7 +443,7 @@ def test_DDM_size_int_inputs_():
         time_scale=TimeScale.TIME_STEP
     )
     val = T.execute([.4]).tolist()
-    assert val == [[-2.0], [0.0], [0.0], [0.0]]
+    assert val == [[-2.0], [1.0]]
 
 # ------------------------------------------------------------------------------------------------
 
@@ -525,3 +524,26 @@ def test_DDM_size_too_long():
             time_scale=TimeScale.TIME_STEP
         )
     assert "is greater than 1, implying there are" in str(error_text.value)
+
+
+def test_DDM_time():
+
+    D = DDM(
+        name='DDM',
+        function=DriftDiffusionIntegrator(
+            noise=0.0,
+            rate=-5.0,
+            time_step_size=0.2,
+            t0=0.5
+        )
+    )
+    time_0 = D.function_object.previous_time                # t_0  = 0.5
+    np.testing.assert_allclose(time_0, [0.5], atol=1e-08)
+
+    time_1 = D.execute(10)[1][0]                            # t_1  = 0.5 + 0.2 = 0.7
+    np.testing.assert_allclose(time_1, [0.7], atol=1e-08)
+
+    for i in range(10):                                     # t_11 = 0.7 + 10*0.2 = 2.7
+        D.execute(10)
+    time_12 = D.execute(10)[1][0]                           # t_12 = 2.7 + 0.2 = 2.9
+    np.testing.assert_allclose(time_12, [2.9], atol=1e-08)

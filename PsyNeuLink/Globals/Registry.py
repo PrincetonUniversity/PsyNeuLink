@@ -157,9 +157,9 @@ def register_category(entry,
         # If component type is not already registered in registry, then:
         else:
             # Set instance's name to first instance:
-            # If name was not provided, assign componentType-1 as default;
+            # If name was not provided, assign component_type_name-1 as default;
             if not name:
-                entry.name = entry.componentType + "-1"
+                entry.name = component_type_name + "-1"
             else:
                 entry.name = name
 

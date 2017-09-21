@@ -7,7 +7,7 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC import EVCMechanism
+from PsyNeuLink.Library.Subsystems.EVC import EVCControlMechanism
 
 random.seed(0)
 np.random.seed(0)
@@ -60,7 +60,7 @@ RewardProcess = process(
 
 # System:
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
-                  controller=EVCMechanism,
+                  controller=EVCControlMechanism,
                   enable_controller=True,
                   monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],
                   name='EVC Test System')
