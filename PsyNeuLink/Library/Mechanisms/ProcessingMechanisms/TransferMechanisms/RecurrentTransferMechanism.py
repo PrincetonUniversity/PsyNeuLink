@@ -121,7 +121,7 @@ import numbers
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Functions.Function import Linear, Stability, get_matrix
+from PsyNeuLink.Components.Functions.Function import Linear, Stability, get_matrix, LearningFunction, Hebbian
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
@@ -131,7 +131,7 @@ from PsyNeuLink.Globals.Keywords import AUTO, ENERGY, ENTROPY, FULL_CONNECTIVITY
     MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, \
     VARIANCE, HEBBIAN_FUNCTION
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Utilities import is_numeric_or_none
+from PsyNeuLink.Globals.Utilities import is_numeric_or_none, parameter_spec
 from PsyNeuLink.Library.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, \
     get_auto_matrix, get_hetero_matrix
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
@@ -293,12 +293,12 @@ class RecurrentTransferMechanism(TransferMechanism):
         any element of the result that exceeds the specified minimum or maximum value is set to the value of
         `range <RecurrentTransferMechanism.range>` that it exceeds.
 
-    learning_rate : boolean, scalar or list, 1d or 2d np.array, or np.matrix of numeric values: default None
+    learning_rate : boolean, scalar or list, 1d or 2d np.array, or np.matrix of numeric values: default False
         specifies whether learning should be enabled for the RecurrentTransferMechanism and, if so, the learning rate
-        used by its `learning function <RecurrentTransferMechanism.learning_function>`.  If it is `True` then
-        the `learning function <RecurrentTransferMechanism.learning_function>` is assigned as `None` and a default
-        learning_rate is used (see `LearningMechanism_Learning_Rate`); if it is assigned a value, that is used
-        as the `learning_rate <RecurrentTransferMechanism.learning_rate>` (see attribute for details).
+        used by its `learning function <RecurrentTransferMechanism.learning_function>`.  If it is `False`, learning
+        is disabled for the Mechanism;  if it is `True`, then learning is enabled and a default learning_rate is
+        used (see `LearningMechanism_Learning_Rate`); if it is assigned a value, that is used as the learning_rate
+        (see `learning_rate <RecurrentTransferMechanism.learning_rate>` for details).
 
     learning_function : function : default Hebbian
         specifies the function for the LearningMechanism if `learning has been specified
@@ -372,6 +372,12 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     previous_input : 1d np.array of floats
         the value of the input on the previous execution, including the value of `recurrent_projection`.
+
+    learning_enabled : bool : default False
+        indicates whether learning has been enabled for the RecurrentTransferMechanism.  It is set to `True` at the
+        time of construction if the **learning_rate** argument of the Mechanism's constructor is assigned `True` or
+        any numeric value;  otherwise it is set to `False`.  However, it can be toggled at any time to enable or
+        disable learning for the Mechanism.
 
     learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
         specifies the learning rate used by the `function <Hebbian.function>`; supersedes any specification  for the
@@ -467,7 +473,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  integrator_mode=False,
                  range=None,
                  input_states: tc.optional(tc.any(list, dict)) = None,
-                 learning_rate: tc.optional(parameter_spec) = None,
+                 learning_rate: tc.optional(tc.any(parameter_spec, bool)) = False,
                  learning_function: tc.any(function, LearningFunction) = Hebbian,
                  output_states: tc.optional(tc.any(list, dict))=None,
                  time_scale=TimeScale.TRIAL,
@@ -483,12 +489,26 @@ class RecurrentTransferMechanism(TransferMechanism):
         if isinstance(hetero, (list, np.matrix)):
             hetero = np.array(hetero)
 
+        # If learning_rate is False, disable learning
+        if isinstance(learning_rate, bool) and learning_rate == False:
+            self.learning_enabled = False
+        # If learning_rate is specified
+        else:
+            # Enable learning
+            self.learning_enabled = True
+            # If learning_rate is specified simply as `True`, assign learning_rate as `None`;
+            #    otherwise, leave learning_rate as assigned value
+            if isinstance(learning_rate, bool) and learning_rate == True:
+                self.learning_rate = None
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   initial_value=initial_value,
                                                   matrix=matrix,
                                                   decay=decay,
                                                   integrator_mode=integrator_mode,
+                                                  learning_rate=learning_rate,
+                                                  learning_function=learning_function,
                                                   output_states=output_states,
                                                   params=params,
                                                   noise=noise,
@@ -598,6 +618,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             if not (0.0 <= decay and decay <= 1.0):
                 raise RecurrentTransferError("{} argument for {} ({}) must be from 0.0 to 1.0".
                                              format(DECAY, self.name, decay))
+
+        # FIX: validate learning_function and learning_rate here (use Hebbian as template for learning_rate
 
     def _instantiate_attributes_before_function(self, context=None):
         """ using the `matrix` argument the user passed in (which is now stored in function_params), instantiate
@@ -710,6 +732,11 @@ class RecurrentTransferMechanism(TransferMechanism):
                 self.output_states[ENTROPY]._calculate = entropy.function
             else:
                 del self.output_states[ENTROPY]
+
+    def _instantiate_learning_mechanism(self, context=None):
+        """Instantiate LearningMechanism using `LearningFunction` specified in **learning_function**.
+        """
+        pass
 
     def _execute(self,
                  variable=None,
