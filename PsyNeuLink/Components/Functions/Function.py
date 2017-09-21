@@ -7764,10 +7764,6 @@ class Hebbian(LearningFunction):  # --------------------------------------------
             learning_rate = self.default_learning_rate
         else:
             learning_rate = self.learning_rate
-        # # MODIFIED 3/22/17 NEWER:
-        # learning_rate = self.learning_rate
-        # MODIFIED 3/22/17 END
-
 
         variable = np.array(self.variable)
 
@@ -7780,6 +7776,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
         weight_change_matrix = variable * col
 
+        # If learning_rate is scalar or 2d, muliply it by the weight change matrix
         if self.learning_rate_dim in {0, 2}:
             weight_change_matrix = weight_change_matrix * learning_rate
 

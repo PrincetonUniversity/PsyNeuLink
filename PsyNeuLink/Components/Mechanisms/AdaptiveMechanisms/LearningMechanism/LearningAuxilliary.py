@@ -134,7 +134,7 @@ import warnings
 import numpy as np
 
 from PsyNeuLink.Components.Component import function_type, method_type
-from PsyNeuLink.Components.Functions.Function import BackPropagation, Linear, Reinforcement
+from PsyNeuLink.Components.Functions.Function import BackPropagation, Linear, Reinforcement, Hebbian
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
     import LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
@@ -147,7 +147,8 @@ from PsyNeuLink.Components.ShellClasses import Function
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Globals.Keywords import BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, IDENTITY_MATRIX, LEARNING, \
-    LEARNING_MECHANISM, MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, WEIGHT
+    LEARNING_MECHANISM, MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, HEBBIAN_FUNCTION, SAMPLE, TARGET, VARIABLE, \
+    WEIGHT
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
     import ComparatorMechanism
 
@@ -390,28 +391,27 @@ def _instantiate_learning_components(learning_projection, context=None):
     # HEBBIAN LEARNING FUNCTION
     if learning_function.componentName is HEBBIAN_FUNCTION:
 
-        activation_input = np.zeros_like(lc.activation_mech_input.value)
-        activation_output = np.zeros_like(lc.activation_mech_output.value)
-
-        # Force output activity and error arrays to be scalars
-        error_output = error_signal  = np.array([0])
+        activation = np.zeros_like(lc.activation_mech_input.value)
         learning_rate = learning_projection.learning_function.learning_rate
+        activation_output = error_signal = None
 
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     ACTIVATION FUNCTION AND/OR LEARNING RATE
-        learning_function = Hebbian(default_variable=[activation_input, activation_output, error_signal],
+        learning_function = Hebbian(default_variable=activation,
                                     activation_function=lc.activation_mech_fct,
                                     learning_rate=learning_rate)
 
+        objective_mechanism = lc.activation_mech
 
     # REINFORCEMENT LEARNING FUNCTION
-    if learning_function.componentName is RL_FUNCTION:
+    elif learning_function.componentName is RL_FUNCTION:
 
         activation_input = np.zeros_like(lc.activation_mech_input.value)
         activation_output = np.zeros_like(lc.activation_mech_output.value)
 
         # Force output activity and error arrays to be scalars
-        error_output = error_signal  = np.array([0])
+        error_signal = np.array([0])
+        error_output = np.array([0])
         learning_rate = learning_projection.learning_function.learning_rate
 
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
