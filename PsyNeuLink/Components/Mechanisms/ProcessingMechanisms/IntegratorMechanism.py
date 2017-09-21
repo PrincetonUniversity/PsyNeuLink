@@ -92,7 +92,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     default_variable=None,                               \
     size=None,                                              \
     function=AdaptiveIntegrator(rate=0.5), \
-    time_scale=TimeScale.TRIAL,                             \
     params=None,                                            \
     name=None,                                              \
     prefs=None)
@@ -108,8 +107,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
             + classPreference (PreferenceSet): SigmoidLayer_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
             + ClassDefaults.variable (value):  SigmoidLayer_DEFAULT_BIAS
-            + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
-                                          FUNCTION_PARAMS:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
+            + paramClassDefaults (dict): {FUNCTION_PARAMS:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
                                                                      kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN
                                                                      kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS}}
         Class methods:
@@ -139,10 +137,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
         of values, and return one of the same form.
 
-    time_scale :  TimeScale : TimeScale.TRIAL
-        specifies whether the Mechanism is executed on the `TIME_STEP` or `TRIAL` time scale.
-        This must be set to `TimeScale.TIME_STEP` for the :keyword:`rate` parameter to have an effect.
-
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, parameters for its `function <IntegratorMechanism.function>`, and/or a custom function and its
@@ -163,9 +157,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     ----------
     variable : value: default
         the input to Mechanism's ``function``.
-
-    time_scale :  TimeScale : defaultTimeScale.TRIAL
-        specifies whether the Mechanism is executed on the TIME_STEP or TRIAL time scale.
 
     name : str : default IntegratorMechanism-<index>
         the name of the Mechanism.

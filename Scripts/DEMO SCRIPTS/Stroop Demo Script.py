@@ -4,7 +4,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms import EVCMechanism
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms import EVCControlMechanism
 
 # Stimulus Mechanisms
 Color_Input = TransferMechanism(name='Color Input', function=Linear(slope = 0.2995))
@@ -46,7 +46,7 @@ RewardProcess = process(
 
 # System:
 mySystem = system(processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
-                  controller=EVCMechanism,
+                  controller=EVCControlMechanism,
                   enable_controller=True,
                   monitor_for_control=[Reward, (DDM_PROBABILITY_UPPER_THRESHOLD, 1, -1)],
                   name='EVC Gratton System')

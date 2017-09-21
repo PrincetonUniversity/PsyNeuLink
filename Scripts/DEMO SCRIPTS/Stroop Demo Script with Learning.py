@@ -4,7 +4,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms import EVCMechanism
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms import EVCControlMechanism
 
 # Stimulus Mechanisms
 Color_Input = TransferMechanism(name='Color Input', function=Linear(slope = 0.2995))
@@ -42,7 +42,7 @@ WordReadingProcess = process(
 
 # System:
 mySystem = system(processes=[ColorNamingProcess, WordReadingProcess],
-                  controller=EVCMechanism,
+                  controller=EVCControlMechanism,
                   enable_controller=True,
                   monitor_for_control=[Output],
                   targets=[0],

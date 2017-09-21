@@ -404,14 +404,27 @@ def iscompatible(candidate, reference=None, **kargs):
         if isinstance(candidate, numbers.Number):
             return True
         if number_only:
-        # MODIFIED 6/7/16 TO ALLOW ndarray AND list TO MATCH;
-            # if not isinstance(candidate, list) and not isinstance(candidate, tuple):
-            if not isinstance(candidate, (list, tuple, np.ndarray)):
-        # END MODIFIED 6/7/16
+            if not isinstance(candidate, (list, tuple, np.ndarray, np.matrix)):
                 return False
-            if (not all(isinstance(elem, numbers.Number) for elem in candidate) or
-                    not all(isinstance(elem, numbers.Number) for elem in candidate)):
+            def recursively_check_elements_for_numeric(value):
+                # Matrices can't be checked recursively, so convert to array
+                if isinstance(value, np.matrix):
+                    value = value.A
+                if isinstance(value, (list, np.ndarray)):
+                    for item in value:
+                        if not recursively_check_elements_for_numeric(item):
+                            return False
+                        else:
+                            return True
+                else:
+                    if not isinstance(value, numbers.Number):
+                        return False
+                    else:
+                        return True
+            # Test copy since may need to convert matrix to array (see above)
+            if not recursively_check_elements_for_numeric(candidate.copy()):
                 return False
+
         if isinstance(candidate, (list, tuple, dict, np.ndarray)):
             if not match_length:
                 return True
@@ -423,12 +436,10 @@ def iscompatible(candidate, reference=None, **kargs):
                     # If reference was provided, compare element by element
                     elif all(isinstance(c, type(r)) for c, r in zip(candidate,reference)):
                         return True
-                    # MODIFIED 10/28/16 NEW:
                     # Deal with ints in one and floats in the other
                     elif all((isinstance(c, numbers.Number) and isinstance(r, numbers.Number))
                              for c, r in zip(candidate,reference)):
                         return True
-                    # MODIFIED 10/28/16 END
                     else:
                         return False
                 else:

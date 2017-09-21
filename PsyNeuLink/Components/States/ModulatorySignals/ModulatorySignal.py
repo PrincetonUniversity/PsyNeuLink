@@ -43,7 +43,7 @@ Modulatory Components and their attributes are named according to the category o
     - ModulatorySignal name: <*Category*>Signal (e.g., ControlSignal)
     - ModulatoryProjection name: <*Category*>Projection (e.g., ControlProjection)
     - List of an AdaptiveMechanism's ModulatorySignals: <*CategoryMechanism*>.category_signals
-      (e.g., ControlMechanism_Base.control_signals)
+      (e.g., ControlMechanism.control_signals)
     - Value of a ModulatorySignal: <*CategorySignal*>.category_signal (e.g., ControlSignal.control_signal)
 
 
@@ -149,6 +149,8 @@ ModulatorySignal. If it is not specified when a ModulatorySignal is created, it 
    |**Learning** (green)|     *ADDITIVE*        | MappingProjection `ParameterState`   | `AccumulatorIntegrator`     |
    |                    |                       |                                      | (`increment`)               |
    +--------------------+-----------------------+--------------------------------------+-----------------------------+
+
+.. _ModulatorySignal_Detail_Figure:
 
 **Detailed View of Modulation**
 

@@ -23,6 +23,8 @@ Functions
              AdaptiveIntegrator,
              DriftDiffusionIntegrator,
              OrnsteinUhlenbeckIntegrator,
+             FHNIntegrator,
+             AGTUtilityIntegrator,
              AccumulatorIntegrator,
              BogaczEtAl,
              NavarroAndFuss,

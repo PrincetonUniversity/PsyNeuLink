@@ -1,7 +1,0 @@
-setup.cfg
-PsyNeuLink/__init__.py
-PsyNeuLink.egg-info/PKG-INFO
-PsyNeuLink.egg-info/SOURCES.txt
-PsyNeuLink.egg-info/dependency_links.txt
-PsyNeuLink.egg-info/requires.txt
-PsyNeuLink.egg-info/top_level.txt

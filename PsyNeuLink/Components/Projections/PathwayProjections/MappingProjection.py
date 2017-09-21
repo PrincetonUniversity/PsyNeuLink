@@ -38,18 +38,19 @@ MappingProjections are also generated automatically in the following circumstanc
     have a Projection assigned between them (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>`
     specification, which determines the appropriate matrix by context);
   ..
-  * by an `ObjectiveMechanism`, from each `OutputState` listed in its `monitored_values
-    <ObjectiveMechanism.monitored_values>` attribute to the corresponding `InputState` of the ObjectiveMechanism
+  * by an `ObjectiveMechanism`, from each `OutputState` listed in its `monitored_output_states
+    <ObjectiveMechanism.monitored_output_states>` attribute to the corresponding `InputState` of the ObjectiveMechanism
     (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>` specification, which determines the
     appropriate matrix by context);
   ..
   * by a `LearningMechanism`, between it and the other components required to implement learning
     (see `LearningMechanism_Learning_Configurations` for details);
   ..
-  * by a `ControlMechanism <ControlMechanism>`, from the `ObjectiveMechanism` that `it creates
-    <ControlMechanism_Monitored_OutputStates>` to its *ERROR_SIGNAL* ``, and from the `OutputStates <OutputState>`
-    listed in the ControlMechanism's `monitored_output_states <ControlMechanism_Base.monitored_output_states>`
-    attribute) to the ObjectiveMechanism (as described above; an `IDENTITY_MATRIX` is used for all of these).
+  * by a `ControlMechanism <ControlMechanism>`, from the *OUTCOME* `OutputState of the `ObjectiveMechanism` that `it
+    creates <ControlMechanism_ObjectiveMechanism>` to its *ERROR_SIGNAL* `InputState`, and from the `OutputStates
+    <OutputState>` listed in the ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
+    attribute to the ObjectiveMechanism's `primary InputState <InputState_Primary>` (as described above; an
+    `IDENTITY_MATRIX` is used for all of these).
 
 .. _Mapping_Matrix_Specification:
 
@@ -423,7 +424,7 @@ class MappingProjection(PathwayProjection_Base):
         if sender is None or receiver is None:
             self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
-        # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super(MappingProjection, self).__init__(sender=sender,
                                                 receiver=receiver,
                                                 params=params,
