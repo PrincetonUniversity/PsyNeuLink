@@ -1460,8 +1460,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                  # # exponents:is_numeric_or_none=None,
                  # weights=None,
                  # exponents=None,
-                 weights:tc.optional(parameter_spec)=None,
-                 exponents:tc.optional(parameter_spec)=None,
+                 weights: tc.optional(parameter_spec)=None,
+                 exponents: tc.optional(parameter_spec)=None,
                  operation: tc.enum(SUM, PRODUCT)=SUM,
                  # scale=1.0,
                  # offset=0.0,
@@ -1755,6 +1755,8 @@ class TDDeltaFunction(LinearCombination):
                  default_variable=ClassDefaults.variable,
                  weights: tc.optional(parameter_spec)=None,
                  reward=None,
+                 exponents=None,
+                 operation=SUM,
                  scale=None,
                  offset=None,
                  params=None,
@@ -1762,6 +1764,8 @@ class TDDeltaFunction(LinearCombination):
                  prefs: is_pref_set = None,
                  context=componentName + INITIALIZING):
         params = self._assign_args_to_param_dicts(weights=weights,
+                                                  exponents=None,
+                                                  operation=SUM,
                                                   reward=reward,
                                                   scale=scale,
                                                   offset=offset,
@@ -1793,7 +1797,7 @@ class TDDeltaFunction(LinearCombination):
         else:
             scale = 1.0
 
-        if params[REWARD] is None:
+        if params and params[REWARD] is None:
             reward = params[REWARD]
         else:
             reward = 0.0
@@ -6712,11 +6716,6 @@ class Reinforcement(
         # # return:
         # # - weight_change_matrix and error_array
         # return list(self.return_val)
-        print("weight change matrix:")
-        print(weight_change_matrix)
-
-        print("error array:")
-        print(error_array)
         return [weight_change_matrix, error_array]
 
 
