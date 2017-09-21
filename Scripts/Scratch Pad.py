@@ -904,23 +904,23 @@ class ScratchPadError(Exception):
 
 #region TEST AGTUtilityIntegrator FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-from PsyNeuLink.Components.Functions.Function import AGTUtilityIntegrator
-print("TEST AGTUtilityIntegrator FUNCTION")
-
-x = AGTUtilityIntegrator(initial_long_term_utility=0.1,
-                      long_term_rate=.1,
-                      short_term_rate=.6,
-                      initial_short_term_utility=0.1)
-x.operation='s*l'
-x.show_params()
-
-# for i in range(20):
-#     print(x.execute(0))
-for i in range(3):
-    print("input:", 0.1, "; result:", x.execute(0.1))
-print ("SWITCH")
-for i in range(100):
-    print("input:", 1, "; result:", x.execute(1))
+# from PsyNeuLink.Components.Functions.Function import AGTUtilityIntegrator
+# print("TEST AGTUtilityIntegrator FUNCTION")
+#
+# x = AGTUtilityIntegrator(initial_long_term_utility=0.1,
+#                       long_term_rate=.1,
+#                       short_term_rate=.6,
+#                       initial_short_term_utility=0.1)
+# x.operation='s*l'
+# x.show_params()
+#
+# # for i in range(20):
+# #     print(x.execute(0))
+# for i in range(3):
+#     print("input:", 0.1, "; result:", x.execute(0.1))
+# print ("SWITCH")
+# for i in range(100):
+#     print("input:", 1, "; result:", x.execute(1))
 
 #endregion
 
@@ -941,6 +941,28 @@ for i in range(100):
 # z = CombineMeans(x, context='TEST')
 # print (z.execute(x))
 #
+#endregion
+
+#region TEST Hebbian @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Components.Functions.Function import AGTUtilityIntegrator
+# print("TEST AGTUtilityIntegrator FUNCTION")
+#
+# x = AGTUtilityIntegrator(initial_long_term_utility=0.1,
+#                       long_term_rate=.1,
+#                       short_term_rate=.6,
+#                       initial_short_term_utility=0.1)
+# x.operation='s*l'
+# x.show_params()
+#
+# # for i in range(20):
+# #     print(x.execute(0))
+# for i in range(3):
+#     print("input:", 0.1, "; result:", x.execute(0.1))
+# print ("SWITCH")
+# for i in range(100):
+#     print("input:", 1, "; result:", x.execute(1))
+
 #endregion
 
 #region TEST RL @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -2759,7 +2781,7 @@ for i in range(100):
 #     #
 #     #     Use by other objects to add a state or list of states to be monitored by EVC
 #     #     states_spec can be a Mechanism, OutputState or list of either or both
-#     #     If item is a Mechanism, each of its outputStates will be used
+#     #     If item is a Mechanism, each of its OutputStates will be used
 #     #
 #     #     Args:
 #     #         states_spec (Mechanism, MechanimsOutputState or list of either or both:

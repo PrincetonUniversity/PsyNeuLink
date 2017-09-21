@@ -615,7 +615,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
             uses _instantiate_monitoring_input_state and _instantiate_control_mechanism_input_state to do so.
             For each item in self.monitored_output_states:
             - if it is a OutputState, call _instantiate_monitoring_input_state()
-            - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.outputStates
+            - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.output_states
                 (determined by whether it is a `TERMINAL` Mechanism and/or MonitoredOutputStatesOption specification)
             - each InputState is assigned a name with the following format:
                 '<name of Mechanism that owns the monitoredOutputState>_<name of monitoredOutputState>_Monitor'

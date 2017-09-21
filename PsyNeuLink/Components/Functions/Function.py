@@ -50,6 +50,7 @@ Objective Functions:
   * `Distance`
 
 Learning Functions:
+  * `Hebbian`
   * `Reinforcement`
   * `BackPropagation`
 
@@ -206,8 +207,8 @@ from numpy import abs, exp, tanh
 from PsyNeuLink.Components.Component import Component, ComponentError, function_type, method_type, parameter_keywords
 from PsyNeuLink.Components.ShellClasses import Function
 from PsyNeuLink.Globals.Keywords import FHN_INTEGRATOR_FUNCTION, UTILITY_INTEGRATOR_FUNCTION, \
-    ACCUMULATOR_INTEGRATOR_FUNCTION, \
-    ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ANGLE, COMBINE_MEANS_FUNCTION, \
+    ACCUMULATOR_INTEGRATOR_FUNCTION, LEARNING_RATE,\
+    ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ANGLE, COMBINE_MEANS_FUNCTION, HEBBIAN_FUNCTION,\
     ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, \
     COMBINATION_FUNCTION_TYPE, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, \
     DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, \
@@ -7572,6 +7573,215 @@ LEARNING_ACTIVATION_INPUT = 0  # a(j)
 LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
 LEARNING_ERROR_OUTPUT = 2
 
+
+class Hebbian(LearningFunction):  # -------------------------------------------------------------------------------
+    """
+    Hebbian(                                             \
+        default_variable=ClassDefaults.variable,         \
+        activation_function=Linear,                      \
+        learning_rate=None,                              \
+        params=None,                                     \
+        name=None,                                       \
+        prefs=None)
+
+    Implements a function that calculates a matrix of weight changes using the Hebbian (correlational) learning rule.
+
+    Arguments
+    ---------
+
+    variable : List[number] or 1d np.array : default ClassDefaults.variable
+       specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
+
+    activation_function : Function or function : SoftMax
+        specifies the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations
+        in `variable <Hebbian.variable>`.
+
+    learning_rate : float, list, 1d or 2d np.array, or np.matrix : default default_learning_rate
+        specifies the learning rate used by the `function <Hebbian.function>`; supersedes any specification  for the
+        `Process` and/or `System` to which the function's `owner <Function.owner>` belongs (see `learning_rate
+        <Hebbian.learning_rate>` for details).
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+        Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+        of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable: 1d np.array
+        activation values, the pair-wise products of which are used to generate the weight change matrix returned by
+        the `function <Hebbian.function>`.
+
+    activation_function : Function or function : SoftMax
+        the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations in 
+        `variable <Hebbian.variable>`.
+
+    learning_rate : float, 1d or 2d np.array
+        used by the `function <Hebbian.function>` to scale the weight change matrix returned by the `function
+        <Hebbian.function>`.  If specified, it supersedes any learning_rate specified for the `Process
+        <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's `owner <Hebbian.owner>`
+        belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d np.array, it is
+        multiplied by one dimension of the weight change matrix (tantamount to weighting each item of the `variable
+        <Hebbian.variable>`);  if it is a 2d np.array, it is used to generate a Hadamard (elementwise) product with
+        the weight change matrix; if it is `None`, then the `learning_rate <Process_Base.learning_rate>` specified
+        for the Process to which the `owner <Hebbian.owner>` belongs is used;  and, if that is `None`, then the
+        `learning_rate <System_Base.learning_rate>` for the System to which it belongs is used. If all are `None`,
+        then the `default_learning_rate <Hebbian.default_learning_rate>` is used.
+
+    default_learning_rate : float
+        the value used for the `learning_rate <Hebbian.learning_rate>` if it is not otherwise specified.
+
+    function : function
+         calculates the pairwise product of all elements in the `variable <Hebbian.variable>`, and then
+         scales that by the `learning_rate <Hebbian.learning_rate>` to generate the weight change matrix
+         returned by the function.
+
+    owner : Mechanism
+        `Mechanism <Mechanism>` to which the Function belongs.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+    """
+
+    componentName = HEBBIAN_FUNCTION
+
+    class ClassDefaults(LearningFunction.ClassDefaults):
+        variable = [0]
+
+    default_learning_rate = 0.05
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    def __init__(self,
+                 default_variable=ClassDefaults.variable,
+                 activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
+                 learning_rate: tc.optional(parameter_spec) = None,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context='Component Init'):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(activation_function=activation_function,
+                                                  learning_rate=learning_rate,
+                                                  params=params)
+
+        self.learning_rate_dim = None
+        if learning_rate is not None:
+            self.learning_rate_dim = np.array(learning_rate).ndim
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+    def _validate_variable(self, variable, context=None):
+        variable = self._update_variable(super()._validate_variable(variable, context))
+
+        if np.array(variable).ndim != 1 or not is_numeric(variable):
+            raise ComponentError("Variable for {} ({}) must be a list of numbers or a 1d np.array".
+                                 format(self.name, variable))
+        return variable
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate learning_rate
+        """
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
+
+            learning_rate = np.array(target_set[LEARNING_RATE])
+
+            if not is_numeric(learning_rate):
+                raise FunctionError("{} arg for {} ({}) must be numeric".
+                                    format(LEARNING_RATE, self.name, learning_rate))
+
+            if self.learning_rate_dim == 1 and len(learning_rate) != len(self.variable):
+                raise FunctionError("Length of {} arg for {} ({}) must be the same as its variable ({})".
+                                    format(LEARNING_RATE, self.name, len(learning_rate), len(self.variable)))
+
+            if self.learning_rate_dim == 2:
+                shape = learning_rate.shape
+                if shape[0] != shape[1] or shape[0] != len(self.variable):
+                    raise FunctionError("Shape of {} arg for {} ({}) must be square and "
+                                        "of the same width as the length of its variable ({})".
+                                        format(LEARNING_RATE, self.name, shape, len(self.variable)))
+
+            if self.learning_rate_dim > 2:
+                raise FunctionError("{} arg for {} ({}) must be a single value of a 1d or 2d array".
+                                    format(LEARNING_RATE, self.name, learning_rate))
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        """Calculate a matrix of weight changes from a 1d array of activity values
+
+        Arguments
+        ---------
+
+        variable : List[number] or 1d np.array : default ClassDefaults.variable
+            array of activity values, the pairwise products of which are used to generate a weight change matrix.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+            Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+            of the constructor.
+
+        Returns
+        -------
+
+        weight change matrix : 2d np.array
+            matrix of pairwise products of elements of `variable <Hebbian.variable>` scaled by the
+            `learning_rate <HebbinaMechanism.learning_rate>`.
+
+        """
+
+        self._check_args(variable=variable, params=params, context=context)
+
+
+        # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
+        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
+        #                          so that the process or system can see it is free to be assigned
+        #                      2) if neither the system nor the process assigns a value to the learning_rate,
+        #                          then need to assign it to the default value
+        # If learning_rate was not specified for instance or composition, use default value
+        if self.learning_rate is None:
+            learning_rate = self.default_learning_rate
+        else:
+            learning_rate = self.learning_rate
+        # # MODIFIED 3/22/17 NEWER:
+        # learning_rate = self.learning_rate
+        # MODIFIED 3/22/17 END
+
+        # Generate the column array from the variable
+        row = np.array(self.variable)
+        col = row.reshape(len(row),1)
+
+        # If learning_rate is a 1d array, multiply it by one dimension:
+        if self.learning_rate_dim == 1:
+            row = row * self.learning_rate
+            weight_change_matrix = row * col
+        else:
+            weight_change_matrix = row * col * learning_rate
+
+        return [weight_change_matrix]
+
+
 class Reinforcement(
     LearningFunction):  # -------------------------------------------------------------------------------
     """
@@ -7593,7 +7803,7 @@ class Reinforcement(
           return     =  LEARNING_RATE  *  variable
 
         Reinforcement.function:
-            variable must be a 1D np.array with three items (standard for learning functions)
+            variable must be a 2D np.array with three items (standard for learning functions)
                 note: only the LEARNING_ACTIVATION_OUTPUT and LEARNING_ERROR_OUTPUT items are used by RL
             assumes matrix to which errors are applied is the identity matrix
                 (i.e., set of "parallel" weights from input to output)
@@ -7609,7 +7819,7 @@ class Reinforcement(
     Arguments
     ---------
 
-    variable : List or 2d np.array [length 3] : default ClassDefaults.variable
+    variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
        template for the three items provided as the variable in the call to the `function <Reinforcement.function>`
        (in order):
        `activation_input <Reinforcement.activation_input>` (1d np.array),
@@ -7678,7 +7888,7 @@ class Reinforcement(
          `error_signal <Reinforcement.error_signal>` received.
 
     owner : Mechanism
-        `Mechanism <Mechanism>` to which the function belongs.
+        `Mechanism <Mechanism>` to which the Function belongs.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
@@ -7768,7 +7978,7 @@ class Reinforcement(
         Arguments
         ---------
 
-        variable : List or 2d np.array [length 3] : default ClassDefaults.variable
+        variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
            must have three items that are the values for (in order):
            `activation_input <Reinforcement.activation_input>` (not used),
            `activation_output <Reinforcement.activation_output>` (1d np.array with a single non-zero value),
@@ -7859,7 +8069,7 @@ class BackPropagation(LearningFunction):
     Arguments
     ---------
 
-    variable : List or 2d np.array [length 3] : default ClassDefaults.variable
+    variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
        specifies a template for the three items provided as the variable in the call to the
        `function <BackPropagation.function>` (in order):
        `activation_input <BackPropagation.activation_input>` (1d np.array),
@@ -7940,7 +8150,7 @@ class BackPropagation(LearningFunction):
          `error_matrix <BackPropagation.error_matrix>`.
 
     owner : Mechanism
-        `Mechanism <Mechanism>` to which the function belongs.
+        `Mechanism <Mechanism>` to which the Function belongs.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
@@ -8100,7 +8310,7 @@ class BackPropagation(LearningFunction):
         Arguments
         ---------
 
-        variable : List or 2d np.array [length 3] : default ClassDefaults.variable
+        variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
            must have three items that are the values for (in order):
            `activation_input <BackPropagation.activation_input>` (1d np.array),
            `activation_output <BackPropagation.activation_output>` (1d np.array),

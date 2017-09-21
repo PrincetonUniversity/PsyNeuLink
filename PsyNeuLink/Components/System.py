@@ -2029,12 +2029,12 @@ class System_Base(System):
                     name=self.name+' Input Projection to '+target_mech_TARGET_input_state.name)
 
     def _assign_output_states(self):
-        """Assign outputStates for System (the values of which will comprise System_Base.value)
+        """Assign OutputStates for System (the values of which will comprise System_Base.value)
 
         Assign the outputs of terminal Mechanisms in the graph to the System's output_values
 
         Note:
-        * Current implementation simply assigns terminal mechanisms as outputStates
+        * Current implementation simply assigns TERMINAL Mechanisms as OutputStates
         * This method is included so that sublcasses and/or future versions can override it to make custom assignments
 
         """
@@ -2125,7 +2125,7 @@ class System_Base(System):
 
         Notes:
         * MonitoredOutputStatesOption is an AutoNumbered Enum declared in ControlMechanism
-            - it specifies options for assigning outputStates of terminal Mechanisms in the System
+            - it specifies options for assigning OutputStates of TERMINAL Mechanisms in the System
                 to controller.monitored_output_states;  the options are:
                 + PRIMARY_OUTPUT_STATES: assign only the `primary OutputState <OutputState_Primary>` for each
                   TERMINAL Mechanism

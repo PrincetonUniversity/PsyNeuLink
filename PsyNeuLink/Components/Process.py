@@ -1486,7 +1486,7 @@ class Process_Base(Process):
                     # Check if Mechanism already has a Projection from the preceding Mechanism, by testing whether the
                     #    preceding mechanism is the sender of any projections received by the current one's inputState
     # FIX: THIS SHOULD BE DONE FOR ALL INPUTSTATES
-    # FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT outputStates OF) THE SAME MECHANISM
+    # FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT OutputStates OF) THE SAME MECHANISM
 
                     # PRECEDING ITEM IS A MECHANISM
                     projection_list = item.input_state.path_afferents

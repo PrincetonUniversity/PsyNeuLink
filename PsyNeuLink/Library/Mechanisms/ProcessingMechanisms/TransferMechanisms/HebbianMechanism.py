@@ -11,81 +11,81 @@
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
 
-# ****************************************  RecurrentTransferMechanism *************************************************
+# ****************************************  HebbianMechanism *************************************************
 
 """
-.. _Recurrent_Transfer_Overview:
+.. _HebbianMechanism_Overview:
 
 Overview
 --------
 
-A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implements a single-layered recurrent
+A HebbianMechanism is a subclass of `RecurrentTransferMechanism` that implements a single-layered recurrent
 network, in which each element is connected to every other element (instantiated in a recurrent
-`AutoAssociativeProjection` referenced by the Mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).
+`AutoAssociativeProjection` referenced by the Mechanism's `matrix <HebbianMechanism.matrix>` parameter).
 It also allows its previous input to be decayed, and reports the energy and, if appropriate, the entropy of its output.
 
-.. _Recurrent_Transfer_Creation:
+.. _HebbianMechanism_Creation:
 
-Creating a RecurrentTransferMechanism
+Creating a HebbianMechanism
 -------------------------------------
 
-A RecurrentTransferMechanism can be created directly by calling its constructor, or using the `mechanism` command and
+A HebbianMechanism can be created directly by calling its constructor, or using the `mechanism` command and
 specifying RECURRENT_TRANSFER_MECHANISM as its **mech_spec** argument.  The recurrent projection is automatically
 created using the **matrix** (or **auto** and **hetero**) argument of the Mechanism's constructor. If used, the
 **matrix** argument must specify either a square matrix or a `AutoAssociativeProjection` that uses one (the default is
 `FULL_CONNECTIVITY_MATRIX`). Alternatively, **auto** and **hetero** can be specified: these set the diagonal and
-off-diagonal terms, respectively. In all other respects, a RecurrentTransferMechanism is specified in the same way as a
-standard `TransferMechanism`.
+off-diagonal terms, respectively. In all other respects, a HebbianMechanism is specified in the same way as a
+standard `RecurrentTransferMechanism`.
 
 COMMENT:
-8/7/17 CW: In past versions, the first sentence of the paragraph above was: "A RecurrentTransferMechanism can be
+8/7/17 CW: In past versions, the first sentence of the paragraph above was: "A HebbianMechanism can be
 created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>` command and specifying
 RECURRENT_TRANSFER_MECHANISM as its **mech_spec** argument".
 However, the latter method is no longer correct: it instead creates a DDM: the problem is line 590 in Mechanism.py,
 as MechanismRegistry is empty!
 COMMENT
 
-.. _Recurrent_Transfer_Structure:
+.. _HebbianMechanism_Structure:
 
 Structure
 ---------
 
-The distinguishing feature of a RecurrentTransferMechanism is a self-projecting `AutoAssociativeProjection` -- that
+The distinguishing feature of a HebbianMechanism is a self-projecting `AutoAssociativeProjection` -- that
 is, one that projects from the Mechanism's `primary OutputState <OutputState_Primary>` back to its `primary
-InputState <InputState_Primary>`.  This can be parametrized using its `matrix <RecurrentTransferMechanism.matrix>`,
-`auto <RecurrentTransferMechanism.auto>`, and `hetero <RecurrentTransferMechanism.hetero>` attributes.
-In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' attribute, that
-multiplies its `previous_input <RecurrentTransferMechanism.previous_input>` value by the specified factor each time it
+InputState <InputState_Primary>`.  This can be parametrized using its `matrix <HebbianMechanism.matrix>`,
+`auto <HebbianMechanism.auto>`, and `hetero <HebbianMechanism.hetero>` attributes.
+In addition, a HebbianMechanism also has a `decay` <HebbianMechanism.decay>' attribute, that
+multiplies its `previous_input <HebbianMechanism.previous_input>` value by the specified factor each time it
 is executed.  It also has two additional `OutputStates <OutputState>:  an *ENERGY* OutputState and, if its `function
-<RecurrentTransferMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY*
+<HebbianMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY*
 OutputState.  Each of these report the respective values of the vector in it its `primary (*RESULTS*) OutputState
-<OutputState_Primary>`.  In all other respects the Mechanism is identical to a standard `TransferMechanism`.
+<OutputState_Primary>`.  In all other respects the Mechanism is identical to a standard `RecurrentTransferMechanism`.
 
-.. _Recurrent_Transfer_Execution:
+.. _HebbianMechanism_Execution:
 
 Execution
 ---------
 
-When a RecurrentTransferMechanism executes, it includes in its input the value of its
+When a HebbianMechanism executes, it includes in its input the value of its
 `primary OutputState <OutputState_Primary>` (after multiplication by the `matrix` of the recurrent projection) from its
 last execution.
 
 COMMENT:
-Previous version of sentence above: "When a RecurrentTransferMechanism executes, it includes in its input the value of
+Previous version of sentence above: "When a HebbianMechanism executes, it includes in its input the value of
 its `primary OutputState <OutputState_Primary>` from its last execution."
 8/9/17 CW: Changed the sentence above. Rationale: If we're referring to the fact that the recurrent projection
 takes the previous output before adding it to the next input, we should specifically mention the matrix transformation
 that occurs along the way.
 COMMENT
 
-Like a `TransferMechanism`, the function used to update each element can be assigned using its
-`function <RecurrentTransferMechanism.function>` parameter.  When a RecurrentTransferMechanism is executed,
-if its `decay <RecurrentTransferMechanism.decay>` parameter is specified (and is not 1.0), it
-decays the value of its `previous_input <RecurrentTransferMechanism.previous_input>` parameter by the
+Like a `RecurrentTransferMechanism`, the function used to update each element can be assigned using its
+`function <HebbianMechanism.function>` parameter.  When a HebbianMechanism is executed,
+if its `decay <HebbianMechanism.decay>` parameter is specified (and is not 1.0), it
+decays the value of its `previous_input <HebbianMechanism.previous_input>` parameter by the
 specified factor.  It then transforms its input (including from the recurrent projection) using the specified
 function and parameters (see `Transfer_Execution`), and returns the results in its OutputStates.
 
-.. _Recurrent_Transfer_Class_Reference:
+.. _HebbianMechanism_Class_Reference:
 
 Class Reference
 ---------------
@@ -100,7 +100,8 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Functions.Function import Linear, Stability, get_matrix
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism \
+    import RecurrentTransferMechanism
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _instantiate_state
@@ -114,7 +115,7 @@ from PsyNeuLink.Library.Projections.PathwayProjections.AutoAssociativeProjection
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 
-class RecurrentTransferError(Exception):
+class HebbianError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -127,15 +128,15 @@ DECAY = 'decay'
 class RECURRENT_OUTPUT():
 
     """
-        .. _RecurrentTransferMechanism_Standard_OutputStates:
+        .. _HebbianMechanism_Standard_OutputStates:
 
         `Standard OutputStates <OutputState_Standard>` for
-        `RecurrentTransferMechanism`
+        `HebbianMechanism`
 
         .. TRANSFER_RESULT:
 
         *RESULT* : 1d np.array
-            the result of the `function <RecurrentTransferMechanism.function>`
+            the result of the `function <HebbianMechanism.function>`
             of the Mechanism
 
         .. TRANSFER_MEAN:
@@ -173,9 +174,9 @@ class RECURRENT_OUTPUT():
 
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
-class RecurrentTransferMechanism(TransferMechanism):
+class HebbianMechanism(RecurrentTransferMechanism):
     """
-    RecurrentTransferMechanism(        \
+    HebbianMechanism(                  \
     default_variable=None,             \
     size=None,                         \
     function=Linear,                   \
@@ -191,15 +192,15 @@ class RecurrentTransferMechanism(TransferMechanism):
     name=None,                         \
     prefs=None)
 
-    Subclass of `TransferMechanism` that implements a single-layer auto-recurrent network.
+    Subclass of `RecurrentTransferMechanism` that implements a single-layer auto-recurrent network.
 
     COMMENT:
         Description
         -----------
-            RecurrentTransferMechanism is a Subtype of the TransferMechanism Subtype of the ProcessingMechanisms Type
+            HebbianMechanism is a Subtype of the RecurrentTransferMechanism Subtype of the ProcessingMechanisms Type
             of the Mechanism Category of the Component class.
-            It implements a TransferMechanism with a recurrent projection (default matrix: FULL_CONNECTIVITY_MATRIX).
-            In all other respects, it is identical to a TransferMechanism.
+            It implements a RecurrentTransferMechanism with a Hebbian learning.
+            In all other respects, it is identical to a RecurrentTransferMechanism.
     COMMENT
 
     Arguments
@@ -208,8 +209,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the input to the Mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method;
-        also serves as a template to specify the length of `variable <RecurrentTransferMechanism.variable>` for
-        `function <RecurrentTransferMechanism.function>`, and the `primary OutputState <OutputState_Primary>`
+        also serves as a template to specify the length of `variable <HebbianMechanism.variable>` for
+        `function <HebbianMechanism.function>`, and the `primary OutputState <OutputState_Primary>`
         of the Mechanism.
 
     size : int, list or np.ndarray of ints
@@ -221,7 +222,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         or a custom function.
 
     matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX
-        specifies the matrix to use for creating a `recurrent AutoAssociativeProjection <Recurrent_Transfer_Structure>`,
+        specifies the matrix to use for creating a `recurrent AutoAssociativeProjection <HebbianMechanism_Structure>`,
         or a AutoAssociativeProjection to use. If **auto** or **hetero** arguments are specified, the **matrix** argument
         will be ignored in favor of those arguments.
 
@@ -243,37 +244,37 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
-        `time_constant <RecurrentTransferMechanism.time_constant>` is not 1.0).
+        `time_constant <HebbianMechanism.time_constant>` is not 1.0).
         :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 
     decay : number : default 1.0
-        specifies the amount by which to decrement its `previous_input <RecurrentTransferMechanism.previous_input>`
+        specifies the amount by which to decrement its `previous_input <HebbianMechanism.previous_input>`
         each time it is executed.
 
     noise : float or function : default 0.0
-        a stochastically-sampled value added to the result of the `function <RecurrentTransferMechanism.function>`:
+        a stochastically-sampled value added to the result of the `function <HebbianMechanism.function>`:
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
     time_constant : float : default 1.0
         the time constant for exponential time averaging of input when `integrator_mode
-        <RecurrentTransferMechanism.integrator_mode>` is set to True::
+        <HebbianMechanism.integrator_mode>` is set to True::
 
          result = (time_constant * current input) +
          (1-time_constant * result on previous time_step)
 
     range : Optional[Tuple[float, float]]
-        specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`:
+        specifies the allowable range for the result of `function <HebbianMechanism.function>`:
         the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
         any element of the result that exceeds the specified minimum or maximum value is set to the value of
-        `range <RecurrentTransferMechanism.range>` that it exceeds.
+        `range <HebbianMechanism.range>` that it exceeds.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default RecurrentTransferMechanism-<index>
+    name : str : default HebbianMechanism-<index>
         a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
@@ -290,7 +291,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     ----------
 
     variable : value
-        the input to Mechanism's `function <RecurrentTransferMechanism.variable>`.
+        the input to Mechanism's `function <HebbianMechanism.variable>`.
 
     function : Function
         the Function used to transform the input.
@@ -303,7 +304,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         back to its `primary inputState <Mechanism_InputStates>`.
 
     decay : float : default 1.0
-        determines the amount by which to multiply the `previous_input <RecurrentTransferMechanism.previous_input>`
+        determines the amount by which to multiply the `previous_input <HebbianMechanism.previous_input>`
         value each time it is executed.
 
     COMMENT:
@@ -311,33 +312,33 @@ class RecurrentTransferMechanism(TransferMechanism):
     COMMENT
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
         determines the starting value for time-averaged input
-        (only relevant if `time_constant <RecurrentTransferMechanism.time_constant>` parameter is not 1.0).
+        (only relevant if `time_constant <HebbianMechanism.time_constant>` parameter is not 1.0).
         :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 
     noise : float or function : default 0.0
-        a stochastically-sampled value added to the output of the `function <RecurrentTransferMechanism.function>`:
+        a stochastically-sampled value added to the output of the `function <HebbianMechanism.function>`:
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
     time_constant : float
         the time constant for exponential time averaging of input when `integrator_mode
-        <RecurrentTransferMechanism.integrator_mode>` is set to True::
+        <HebbianMechanism.integrator_mode>` is set to True::
 
           result = (time_constant * current input) + (1-time_constant * result on previous time_step)
 
     range : Tuple[float, float]
         determines the allowable range of the result: the first value specifies the minimum allowable value
         and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
-        is set to the value of `range <RecurrentTransferMechanism.range>` it exceeds.  If
-        `function <RecurrentTransferMechanism.function>`
-        is `Logistic`, `range <RecurrentTransferMechanism.range>` is set by default to (0,1).
+        is set to the value of `range <HebbianMechanism.range>` it exceeds.  If
+        `function <HebbianMechanism.function>`
+        is `Logistic`, `range <HebbianMechanism.range>` is set by default to (0,1).
 
     previous_input : 1d np.array of floats
         the value of the input on the previous execution, including the value of `recurrent_projection`.
 
     value : 2d np.array [array(float64)]
-        result of executing `function <RecurrentTransferMechanism.function>`; same value as first item of
-        `output_values <RecurrentTransferMechanism.output_values>`.
+        result of executing `function <HebbianMechanism.function>`; same value as first item of
+        `output_values <HebbianMechanism.output_values>`.
 
     COMMENT:
         CORRECTED:
@@ -349,7 +350,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     output_states : Dict[str, OutputState]
         an OrderedDict with the following `OutputStates <OutputState>`:
 
-        * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <RecurrentTransferMechanism.function>`;
+        * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <HebbianMechanism.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
         * `ENERGY`, the :keyword:`value` of which is the energy of the result,
@@ -368,7 +369,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         * **energy** of the result (``value`` of ENERGY OutputState);
         * **entropy** of the result (if the ENTROPY OutputState is present).
 
-    name : str : default RecurrentTransferMechanism-<index>
+    name : str : default HebbianMechanism-<index>
         the name of the Mechanism.
         Specified in the **name** argument of the constructor for the Projection;
         if not is specified, a default is assigned by `MechanismRegistry`
@@ -382,14 +383,14 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     Returns
     -------
-    instance of RecurrentTransferMechanism : RecurrentTransferMechanism
+    instance of HebbianMechanism : HebbianMechanism
 
     """
     componentType = RECURRENT_TRANSFER_MECHANISM
 
-    paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
+    paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 
-    standard_output_states = TransferMechanism.standard_output_states.copy()
+    standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME:ENERGY}, {NAME:ENTROPY}])
 
     @tc.typecheck
@@ -413,7 +414,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  name=None,
                  prefs: is_pref_set=None,
                  context=componentType+INITIALIZING):
-        """Instantiate RecurrentTransferMechanism
+        """Instantiate HebbianMechanism
         """
         if output_states is None:
             output_states = [RESULT]
@@ -463,24 +464,24 @@ class RecurrentTransferMechanism(TransferMechanism):
         if AUTO in target_set:
             auto_param = target_set[AUTO]
             if (auto_param is not None) and not isinstance(auto_param, (np.ndarray, list, numbers.Number)):
-                raise RecurrentTransferError("auto parameter ({}) of {} is of incompatible type: it should be a "
+                raise HebbianError("auto parameter ({}) of {} is of incompatible type: it should be a "
                                              "number, None, or a 1D numeric array".format(auto_param, self))
             if isinstance(auto_param, (np.ndarray, list)) and len(auto_param) != 1 and len(auto_param) != self.size[0]:
-                raise RecurrentTransferError("auto parameter ({0}) for {1} is of incompatible length with the size "
+                raise HebbianError("auto parameter ({0}) for {1} is of incompatible length with the size "
                                              "({2}) of its owner, {1}.".format(auto_param, self, self.size[0]))
 
         if HETERO in target_set:
             hetero_param = target_set[HETERO]
             if hetero_param is not None and not isinstance(hetero_param, (np.matrix, np.ndarray, list, numbers.Number)):
-                raise RecurrentTransferError("hetero parameter ({}) of {} is of incompatible type: it should be a "
+                raise HebbianError("hetero parameter ({}) of {} is of incompatible type: it should be a "
                                              "number, None, or a 2D numeric matrix or array".format(hetero_param, self))
             hetero_shape = np.array(hetero_param).shape
             if hetero_shape != (1,) and hetero_shape != (1, 1):
                 if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and hetero_shape[0] != self.size[0]:
-                    raise RecurrentTransferError("hetero parameter ({0}) for {1} is of incompatible size with the size "
+                    raise HebbianError("hetero parameter ({0}) for {1} is of incompatible size with the size "
                                                  "({2}) of its owner, {1}.".format(hetero_param, self, self.size[0]))
                 if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and hetero_shape[0] != hetero_shape[1]:
-                    raise RecurrentTransferError("hetero parameter ({}) for {} must be square.".format(hetero_param, self))
+                    raise HebbianError("hetero parameter ({}) for {} must be square.".format(hetero_param, self))
 
         # Validate MATRIX
         if MATRIX in target_set:
@@ -515,7 +516,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                 else:
                     err_msg = "{0} param for {1} must be square; currently, the {0} param is: {2}".\
                         format(MATRIX, self.name, matrix)
-                raise RecurrentTransferError(err_msg)
+                raise HebbianError(err_msg)
 
             # Size of matrix must equal length of variable:
             if rows != size:
@@ -527,14 +528,14 @@ class RecurrentTransferMechanism(TransferMechanism):
                 else:
                     err_msg = ("Size of {} param for {} ({}) must be the same as its variable ({})".
                                format(MATRIX, self.name, rows, size))
-                raise RecurrentTransferError(err_msg)
+                raise HebbianError(err_msg)
 
 
         if DECAY in target_set and target_set[DECAY] is not None:
 
             decay = target_set[DECAY]
             if not (0.0 <= decay and decay <= 1.0):
-                raise RecurrentTransferError("{} argument for {} ({}) must be from 0.0 to 1.0".
+                raise HebbianError("{} argument for {} ({}) must be from 0.0 to 1.0".
                                              format(DECAY, self.name, decay))
 
     def _instantiate_attributes_before_function(self, context=None):
@@ -548,7 +549,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         specified_matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
 
         if specified_matrix is None and (AUTO not in param_keys or HETERO not in param_keys):
-            raise RecurrentTransferError("Matrix parameter ({}) for {} failed to produce a suitable matrix: "
+            raise HebbianError("Matrix parameter ({}) for {} failed to produce a suitable matrix: "
                                          "if the matrix parameter does not produce a suitable matrix, the "
                                          "'auto' and 'hetero' parameters must be specified; currently, either"
                                          "auto or hetero parameter is missing.".format(self.params[MATRIX], self))
@@ -566,7 +567,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             if state is not None:
                 self._parameter_states[AUTO] = state
             else:
-                raise RecurrentTransferError("Failed to create ParameterState for `auto` attribute for {} \"{}\"".
+                raise HebbianError("Failed to create ParameterState for `auto` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
         if HETERO not in param_keys:
             m = specified_matrix.copy()
@@ -582,7 +583,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             if state is not None:
                 self._parameter_states[HETERO] = state
             else:
-                raise RecurrentTransferError("Failed to create ParameterState for `hetero` attribute for {} \"{}\"".
+                raise HebbianError("Failed to create ParameterState for `hetero` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
 
     def _instantiate_attributes_after_function(self, context=None):
@@ -596,13 +597,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         if auto is not None and hetero is not None:
             a = get_auto_matrix(auto, size=self.size[0])
             if a is None:
-                raise RecurrentTransferError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of"
+                raise HebbianError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of"
                                              " type {}. Instead, the `auto` parameter should be a number, 1D array, "
                                              "2d array, 2d list, or numpy matrix".
                                            format(self.__class__.__name__, self.name, auto, type(auto)))
             c = get_hetero_matrix(hetero, size=self.size[0])
             if c is None:
-                raise RecurrentTransferError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was "
+                raise HebbianError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was "
                                              "of type {}. Instead, the `hetero` parameter should be a number, 1D array "
                                              "of length one, 2d array, 2d list, or numpy matrix".
                                            format(self.__class__.__name__, self.name, hetero, type(hetero)))
@@ -610,7 +611,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         elif auto is not None:
             self.matrix = get_auto_matrix(auto, size=self.size[0])
             if self.matrix is None:
-                raise RecurrentTransferError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
+                raise HebbianError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
                                            "type {}. Instead, the `auto` parameter should be a number, 1D array, "
                                            "2d array, 2d list, or numpy matrix".
                                            format(self.__class__.__name__, self.name, auto, type(auto)))
@@ -618,7 +619,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         elif hetero is not None:
             self.matrix = get_hetero_matrix(hetero, size=self.size[0])
             if self.matrix is None:
-                raise RecurrentTransferError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was of "
+                raise HebbianError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was of "
                                            "type {}. Instead, the `hetero` parameter should be a number, 1D array of "
                                            "length one, 2d array, 2d list, or numpy matrix".
                                            format(self.__class__.__name__, self.name, hetero, type(hetero)))
@@ -672,7 +673,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
         for state in self._parameter_states:
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
-            # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param states are updated in the
+            # (the HebbianMechanism doesn't use them), the auto and hetero param states are updated in the
             # projection's _update_parameter_states, and accordingly are not updated here
             if state.name != AUTO or state.name != HETERO:
                 state.update(params=runtime_params, time_scale=time_scale, context=context)

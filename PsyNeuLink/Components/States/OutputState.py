@@ -606,7 +606,7 @@ class OutputState(State_Base):
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
-        # Consider adding self to owner.outputStates here (and removing from ControlProjection._instantiate_sender)
+        # Consider adding self to owner.output_states here (and removing from ControlProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputStates in ControlProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
@@ -769,7 +769,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
          instantiate Calculate function if specified
 
     When completed:
-        - self.outputStates contains a ContentAddressableList of one or more OutputStates;
+        - self.output_states contains a ContentAddressableList of one or more OutputStates;
         - self.output_state contains first or only OutputState in list;
         - paramsCurrent[OUTPUT_STATES] contains the same ContentAddressableList (of one or more OutputStates)
         - each OutputState corresponds to an item in the output of the owner's function

@@ -1367,7 +1367,7 @@ def _instantiate_error_signal_projection(sender, receiver):
 
     Can take as the sender an `ObjectiveMechanism` or a `LearningMechanism`.
     If the sender is an ObjectiveMechanism, uses its `primary OutputState <OutputState_Primary>`.
-    If the sender is a LearningMechanism, uses its `ERROR_SIGNAL <LearningMechanism.outputStates>` OutputState.
+    If the sender is a LearningMechanism, uses its `ERROR_SIGNAL <LearningMechanism.output_states>` OutputState.
     The receiver must be a LearningMechanism; its `ERROR_SIGNAL <LearningMechanism.input_states>` InputState is used.
     Uses and IDENTITY_MATRIX for the MappingProjection, so requires that the sender be the same length as the receiver.
 

@@ -380,11 +380,29 @@ def _instantiate_learning_components(learning_projection, context=None):
     #       which depends on projection to ObjectiveMechanism
 
     # IMPLEMENTATION NOTE:
+    #      THESE SHOULD BE MOVE TO COMPOSITION WHEN IT IS IPMLEMENTED
     #      THESE SHOULD BE MOVED (ALONG WITH THE SPECIFICATION FOR LEARNING) TO A DEDICATED LEARNING SPEC
     #      FOR PROCESS AND SYSTEM, RATHER THAN USING A LearningProjection
     # Get function used for learning and the learning_rate from their specification in the LearningProjection
     learning_function = learning_projection.learning_function
     learning_rate = learning_projection.learning_rate
+
+    # HEBBIAN LEARNING FUNCTION
+    if learning_function.componentName is HEBBIAN_FUNCTION:
+
+        activation_input = np.zeros_like(lc.activation_mech_input.value)
+        activation_output = np.zeros_like(lc.activation_mech_output.value)
+
+        # Force output activity and error arrays to be scalars
+        error_output = error_signal  = np.array([0])
+        learning_rate = learning_projection.learning_function.learning_rate
+
+        # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
+        # FIX:     ACTIVATION FUNCTION AND/OR LEARNING RATE
+        learning_function = Hebbian(default_variable=[activation_input, activation_output, error_signal],
+                                    activation_function=lc.activation_mech_fct,
+                                    learning_rate=learning_rate)
+
 
     # REINFORCEMENT LEARNING FUNCTION
     if learning_function.componentName is RL_FUNCTION:
@@ -534,7 +552,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     #        specified in error_source argument:
     #        Note:  the error_source for LearningMechanism is set in lc.error_signal_mech:
     #            if is_target, this comes from the primary outputState of objective_mechanism;
-    #            otherwise, it comes from outputStates[ERROR_SIGNAL] of the LearningMechanism for lc.error_mech
+    #            otherwise, it comes from output_states[ERROR_SIGNAL] of the LearningMechanism for lc.error_mech
     # - Use of AUTO_ASSIGN_MATRIX for the MappingProjections is safe, as compatibility of senders and receivers
     #    is checked in the instantiation of the learning_function
 
@@ -1032,7 +1050,7 @@ class LearningComponents(object):
 
     # ---------------------------------------------------------------------------------------------------------------
     # FIX: MODIFY TO RETURN EITHER outputState if it is an ObjectiveMechanism or
-    #                              outputStates[ERROR_SIGNAL] if it it a LearningMechanism
+    #                              output_states[ERROR_SIGNAL] if it it a LearningMechanism
     # error_signal_mech_output: outputState of LearningMechanism for error_projection (OutputState)
     @property
     def error_signal_mech_output(self):

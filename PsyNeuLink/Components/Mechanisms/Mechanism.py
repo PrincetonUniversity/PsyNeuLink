@@ -640,14 +640,14 @@ logger = logging.getLogger(__name__)
 MechanismRegistry = {}
 
 class MonitoredOutputStatesOption(AutoNumber):
-    """Specifies outputStates to be monitored by a `ControlMechanism <ControlMechanism>`
+    """Specifies OutputStates to be monitored by a `ControlMechanism <ControlMechanism>`
     (see `ObjectiveMechanism_Monitored_Output_States` for a more complete description of their meanings."""
     ONLY_SPECIFIED_OUTPUT_STATES = ()
     """Only monitor explicitly specified Outputstates."""
     PRIMARY_OUTPUT_STATES = ()
     """Monitor only the `primary OutputState <OutputState_Primary>` of a Mechanism."""
     ALL_OUTPUT_STATES = ()
-    """Monitor all OutputStates <Mechanism_Base.outputStates>` of a Mechanism."""
+    """Monitor all OutputStates <Mechanism_Base.output_states>` of a Mechanism."""
     NUM_MONITOR_STATES_OPTIONS = ()
 
 
@@ -769,7 +769,7 @@ class Mechanism_Base(Mechanism):
                 * Notes:
                     by default, a Mechanism has only one OutputState, assigned to <Mechanism>.outputState;  however:
                     if params[OUTPUT_STATES] is a list (of names) or specification dict (of MechanismOuput State
-                    specs), <Mechanism>.outputStates (note plural) is created and contains a dict of outputStates,
+                    specs), <Mechanism>.output_states (note plural) is created and contains a list of OutputStates,
                     the first of which points to <Mechanism>.outputState (note singular)
                 [TBI * each OutputState maintains a list of Projections for which it serves as the sender]
 
@@ -780,7 +780,7 @@ class Mechanism_Base(Mechanism):
                 variable of the Mechanism's execute method
             - the value of each ParameterState must be compatible with the corresponding parameter of  the Mechanism's
                  execute method
-            - the number of outputStates must correspond to the length of the output of the Mechanism's execute method,
+            - the number of OutputStates must correspond to the length of the output of the Mechanism's execute method,
                 (self.value)
             - the value of each OutputState must be compatible with the corresponding item of the self.value
                  (the output of the Mechanism's execute method)
@@ -920,7 +920,7 @@ class Mechanism_Base(Mechanism):
         .. _outputStateValueMapping : Dict[str, int]:
                contains the mappings of OutputStates to their indices in the output_values list
                The key of each entry is the name of an OutputState, and the value is its position in the
-                    :py:data:`OutputStates <Mechanism_Base.outputStates>` OrderedDict.
+                    :py:data:`OutputStates <Mechanism_Base.output_states>` ContentAddressableList.
                Used in ``_update_output_states`` to assign the value of each OutputState to the correct item of
                    the Mechanism's ``value`` attribute.
                Any Mechanism with a function that returns a value with more than one item (i.e., len > 1) MUST implement
@@ -1002,7 +1002,7 @@ class Mechanism_Base(Mechanism):
     #FIX:  WHEN CALLED BY HIGHER LEVEL OBJECTS DURING INIT (e.g., PROCESS AND SYSTEM), SHOULD USE FULL Mechanism.execute
     # By default, init only the _execute method of Mechanism subclass objects when their execute method is called;
     #    that is, DO NOT run the full Mechanism execute Process, since some components may not yet be instantiated
-    #    (such as outputStates)
+    #    (such as OutputStates)
     initMethod = INIT__EXECUTE__METHOD_ONLY
 
     # IMPLEMENTATION NOTE: move this to a preference
@@ -1279,9 +1279,9 @@ class Mechanism_Base(Mechanism):
         #     # Convert output_states_spec to list if it is not one
         #     if not isinstance(output_states_spec, list):
         #         output_states_spec = [output_states_spec]
-        #     # Get outputStates specified in paramClassDefaults
+        #     # Get OutputStates specified in paramClassDefaults
         #     default_output_states = self.paramClassDefaults[OUTPUT_STATES].copy()
-        #     # Convert outputStates from paramClassDefaults to a list if it is not one
+        #     # Convert OutputStates from paramClassDefaults to a list if it is not one
         #     if not isinstance(default_output_states, list):
         #         default_output_states = [default_output_states]
         #     # Add output_states specified in params to those in paramClassDefaults
@@ -1452,7 +1452,7 @@ class Mechanism_Base(Mechanism):
                 if not ((isclass(item) and issubclass(item, OutputState)) or # OutputState class ref
                             isinstance(item, OutputState) or   # OutputState object
                             isinstance(item, dict) or                   # OutputState specification dict
-                            isinstance(item, str) or                    # Name (to be used as key in outputStates dict)
+                            isinstance(item, str) or                    # Name (to be used as key in OutputStates list)
                             iscompatible(item, **{kwCompatibilityNumeric: True})):  # value
                     # set to None, so it is set to default (self.value) in instantiate_output_state
                     param_value[key] = None
@@ -1480,7 +1480,7 @@ class Mechanism_Base(Mechanism):
                 # - set to None, so that it is set to default (self.value) in instantiate_output_state
                 # Notes:
                 # * if in VERBOSE mode, warning will be issued in instantiate_output_state, where default value is known
-                # * number of outputStates is validated against length of owner Mechanism's execute method output (EMO)
+                # * number of OutputStates is validated against length of owner Mechanism's execute method output (EMO)
                 #     in instantiate_output_state, where an OutputState is assigned to each item (value) of the EMO
                 params[OUTPUT_STATES] = None
 
@@ -1832,7 +1832,7 @@ class Mechanism_Base(Mechanism):
             for state in self._parameter_states:
                 self._parameter_states[state].value =  getattr(self, '_'+state)
             for state in self.output_states:
-                # Zero outputStates in case of recurrence:
+                # Zero OutputStates in case of recurrence:
                 #    don't want any non-zero values as a residuum of initialization runs to be
                 #    transmittted back via recurrent Projections as initial inputs
                 self.output_states[state].value = self.output_states[state].value * 0.0
@@ -2349,7 +2349,7 @@ class MechanismList(UserList):
 
     @property
     def outputStateNames(self):
-        """Return names of all outputStates for all mechanisms in MechanismList"""
+        """Return names of all OutputStates for all mechanisms in MechanismList"""
         names = []
         for item in self.mechanisms:
             for output_state in item.output_states:
@@ -2358,7 +2358,7 @@ class MechanismList(UserList):
 
     @property
     def outputStateValues(self):
-        """Return values of outputStates for all mechanisms in MechanismList"""
+        """Return values of OutputStates for all mechanisms in MechanismList"""
         values = []
         for item in self.mechanisms:
             for output_state in item.output_states:

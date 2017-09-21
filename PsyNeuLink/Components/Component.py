@@ -512,7 +512,7 @@ class Component(object):
              it can be referenced either as self.function, self.params[FUNCTION] or self.paramsCurrent[FUNCTION]
          - function_object (Function): the object to which function belongs (and that defines it's parameters)
          - output (value: self.value)
-         - output_values (return from self.execute: concatenated set of values of outputStates)
+         - output_values (return from self.execute: concatenated set of values of output_states)
          - class and instance variable defaults
          - class and instance param defaults
         The Components's execute method (<subclass>.execute is the Component's primary method
