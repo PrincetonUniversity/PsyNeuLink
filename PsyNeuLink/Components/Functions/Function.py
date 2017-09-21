@@ -7724,7 +7724,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         variable = self._update_variable(super()._validate_variable(variable, context))
 
         if np.array(variable).ndim != 1 or not is_numeric(variable):
-            raise ComponentError("Variable for {} ({}) must be a list of numbers or a 1d np.array".
+            raise ComponentError("Variable for {} ({}) must be a list or 1d np.array containing only numbers".
                                  format(self.name, variable))
         return variable
 

@@ -296,6 +296,7 @@ ADAPTIVE_MECHANISM = "AdpativeMechanism"
 LEARNING_MECHANISM = "LearningMechanism"
 CONTROL_MECHANISM = "ControlMechanism"
 GATING_MECHANISM = 'GatingMechanism'
+AUTOASSOCIATIVE_LEARNING_MECHANISM = 'AutoAssociativeLearningMechanism'
 
 # States:
 INPUT_STATE = "InputState"

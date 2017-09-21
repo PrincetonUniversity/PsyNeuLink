@@ -14,16 +14,21 @@
 Overview
 --------
 
-An AutoAssociativeLearningMechanism is a subclass `LearningMechanism <LearningMechanism>` designed for use with
-a `RecurrentTransferMechanism`, to train its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
+An AutoAssociativeLearningMechanism is a subclass `LearningMechanism <LearningMechanism>`, streamlined for use with a
+`RecurrentTransferMechanism` to train its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
 It is identical in all respects to a LearningMechanism, with the following exceptions:
 
-  * it has only a single `InputState`, that receives a `MappingProjection` from an `OutputState` of another
-  `Mechanism` (typically, the `primary OutputState <OutputState_Primary>` of a RecurrentTransferMechanism;
+  * it has only a single *ACTIVATION_INPUT* `InputState`, that receives a `MappingProjection` from an `OutputState` of
+    another `Mechanism` (identified by the `activity_source <AutoAssociativeLearningMechanism.activity_source>`,
+    typically, the `primary OutputState <OutputState_Primary>` of a RecurrentTransferMechanism);
     
-  * it has a single `OutputState`, that sends a `LearningProjection` to the `matrix <AutoAssociativeProjection>`
-    parameter of an 'AutoAssociativeProjection` (typically, the `recurrent_projection
+  * it has a single *LEARNING_SIGNAL* `OutputState`, that sends a `LearningProjection` to the `matrix
+    <AutoAssociativeProjection>` parameter of an 'AutoAssociativeProjection` (typically, the `recurrent_projection
     <RecurrentTransferMechanism.recurrent_projection>` of a RecurrentTransferMechanism).
+
+  * it has no :keyword:`input_source`, :keyword:`output_source`, or :keyword:`error_source` attributes;  for an
+    AutoAssociativeLearningProjection;  instead, it has a single `activity_source` attribute that identifies the
+    source of the activity vector used by the Mechanism's `function <AutoAssociativeLearningProjection.function>`.
 
 It is created automatically when a RecurrentTransferMechanism is `specified for learning <Recurrent_Transfer_Learning>`.
 
@@ -43,6 +48,7 @@ import typecheck as tc
 from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
 from PsyNeuLink.Components.Functions.Function \
     import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
     import OUTCOME, ObjectiveMechanism
@@ -53,7 +59,7 @@ from PsyNeuLink.Components.ShellClasses import Mechanism, Projection
 from PsyNeuLink.Globals.Keywords import CONTROL_PROJECTIONS, FUNCTION_PARAMS, IDENTITY_MATRIX, INDEX, INITIALIZING, \
     INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
     LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, PARAMETER_STATE, PARAMS, PROJECTION, \
-    PROJECTIONS
+    PROJECTIONS, AUTOASSOCIATIVE_LEARNING_MECHANISM
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import is_numeric, parameter_spec
@@ -77,20 +83,8 @@ def _is_learning_spec(spec):
         return _is_projection_spec(spec)
 
 
-# Used to index variable:
-ACTIVATION_INPUT_INDEX = 0
-ACTIVATION_OUTPUT_INDEX = 1
-ERROR_OUTPUT_INDEX = 2
-ERROR_SIGNAL_INDEX = 3
-
-# Used to name input_states and output_states:
-ACTIVATION_INPUT = 'activation_input'     # InputState
-ACTIVATION_OUTPUT = 'activation_output'   # InputState
-ERROR_SIGNAL = 'error_signal'
-input_state_names =  [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
-output_state_names = [ERROR_SIGNAL, LEARNING_SIGNAL]
-
-ERROR_SOURCE = 'error_source'
+input_state_names =  [ACTIVATION_INPUT]
+output_state_names = [LEARNING_SIGNAL]
 
 DefaultTrainingMechanism = ObjectiveMechanism
 
@@ -106,7 +100,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     """
     AutoAssociativeLearningMechanism(              \
         variable,                                  \
-        error_source,                              \
         function=Hebbian,                          \
         learning_rate=None,                        \
         learning_signals=LEARNING_SIGNAL,          \
@@ -129,18 +122,9 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         with the `value <InputState.value>` of the Mechanism's `InputState <LearningMechanism_InputStates>` (see
         `variable <AutoAssociativeLearningMechanism..variable>` for additional details).
 
-    error_source : OutputState
-        specifies the source of the error signal used by the AutoAssociativeLearningMechanism's `function
-        <AutoAssociativeLearningMechanism.function>`.  It must be an `OutputState` of a `Mechanism`, the value of which
-        is a list or 1d array of numeric values; otherwise it must be a `LearningProjection`.
-        COMMENT:
-            A LearningProjection can be specified (e.g., by LearningAuxiliary._instantiate_learning_components()
-            from which it will identify the error_source
-        COMMENT
-
     learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict]
-        specifies the parameter(s) to be learned (see `learning_signals <LearningMechanism.learning_signals>` for
-        details).
+        specifies the `matrix <AutoAssociativeProjection.matrix>` to be learned (see `learning_signals
+        <LearningMechanism.learning_signals>` for details of specification).
 
     modulation : ModulationParam : ModulationParam.ADDITIVE
         specifies the default form of modulation used by the AutoAssociativeLearningMechanism's LearningSignals,
@@ -150,11 +134,12 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         specifies the function used to calculate the AutoAssociativeLearningMechanism's `learning_signal
         <AutoAssociativeLearningMechanism.learning_signal>` attribute.  It must take as its **variable** argument a
         list or 1d array of numeric values (the "activity vector") and return a list, 2d np.array or np.matrix
-        representing a square matrix with dimensions that equal the length of its variable.
+        representing a square matrix with dimensions that equal the length of its variable (the "weight change
+        matrix").
 
     learning_rate : float
         specifies the learning rate for the AutoAssociativeLearningMechanism. (see `learning_rate
-        <LearningMechanism.learning_rate>` for details).
+        <AutoAssociativeLearningMechanism.learning_rate>` for details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -181,102 +166,92 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     COMMENT
 
     variable : 2d np.array
-        has one item that serves as the template for the input required by the AutoAssociativeLearningMechanism's
-        `function <AutoAssociativeLearningMechanism.function>`, corresponding to the `value <OutputState.value>`
-        of the `OutputState` that is the `sender <AutoAssociativeProjection.sender>` of the AutoAssociativeProjection
-        that the AutoAssociativeLearningMechanism trains (i.e., the `error_source
-        <AutoAssociativeLearningMechanism.error_source>`.
+        has a single item, that serves as the template for the input required by the AutoAssociativeLearningMechanism's
+        `function <AutoAssociativeLearningMechanism.function>`, corresponding to the `value
+        <OutputState.value>` of the `activity_source <AutoAssociativeLearningMechanism.activity_source>`.
 
-XXXX
+    activity_source : OutputState
+        the `OutputState` that is the `sender <AutoAssociativeProjection.sender>` of the `AutoAssociativeProjection`
+        that the Mechanism trains.
+
     input_states : ContentAddressableList[OutputState]
-        list containing the AutoAssociativeLearningMechanism.'s three `InputStates <LearningMechanism_InputStates>`:
-        *ACTIVATION_INPUT*,  *ACTIVATION_OUTPUT*, and *ERROR_SIGNAL*.
+        has a single item, that contains the AutoAssociativeLearningMechanism's single *ACTIVATION_INPUT* `InputState`.
 
-    input_source : ProcessingMechanism
-        the Mechanism that sends the `primary_learned_projection`, and projects to the
-        AutoAssociativeLearningMechanism.'s *ACTIVATION_INPUT* `InputState <LearningMechanism_Activation_Input>`.
-
-    output_source : ProcessingMechanism
-        the Mechanism that receives the `primary_learned_projection`, and  projects to the
-        LearningMechanism's *ACTIVATION_OUTPUT* `InputState <LearningMechanism_Activation_Output>`.
-
-    error_source : ComparatorMechanism or LearningMechanism
-        the Mechanism that calculates the error signal provided to the
-        LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`.
-
-    primary_learned_projection : MappingProjection
-        the Projection with the `matrix <MappingProjection.matrix>` parameter used to generate the
-        AutoAssociativeLearningMechanism.'s `error_signal <LearningMechanism.error_signal>` and `learning_signal
-        <AutoAssociativeLearningMechanism.learning_signal>` attributes.  It is always the first Projection listed in the
-        AutoAssociativeLearningMechanism.'s `learned_projections` attribute.
+    primary_learned_projection : AutoAssociativeProjection
+        the `Projection` with the `matrix <AutoAssociativeProjection.matrix>` parameter being trained by the
+        AutoAssociativeLearningMechanism.  It is always the first Projection listed in the
+        AutoAssociativeLearningMechanism's `learned_projections <AutoAssociativeLearningMechanism.learned_projections>`
+        attribute.
 
     learned_projections : List[MappingProjection]
-        all of the MappingProjections modified by the AutoAssociativeLearningMechanism.;  the first item in the list is always the
-        `primary_learned_projection`.
+        all of the `AutoAssociativeProjections <AutoAssociativeProjection>` modified by the
+        AutoAssociativeLearningMechanism;  the first item in the list is always the `primary_learned_projection
+        <AutoAssociativeLearningMechanism.primary_learned_projection>`.
 
-    function : LearningFunction or function : default BackPropagation
-        specifies the function used to calculate the `learning_signal <AutoAssociativeLearningMechanism.learning_signal>` (assigned
-        to the AutoAssociativeLearningMechanism.'s `LearningSignal(s) <LearningMechanism_LearningSignal>`), and the `error_signal
-        <LearningMechanism.error_signal>` (passed to the next LearningMechanism in a learning sequence for
-        `multilayer learning <LearningMechanism_Multilayer_Learning>`).  It takes the following three arguments,
-        each of which must be a list or 1d array: **input**,  **output**, and **error** (see
-        `LearningMechanism_Function` for additional details).
+    function : LearningFunction or function : default Hebbian
+        specifies the function used to calculate the `learning_signal
+        <AutoAssociativeLearningMechanism.learning_signal>` (assigned to the AutoAssociativeLearningMechanism's
+        `LearningSignal(s) <LearningMechanism_LearningSignal>`). It's `variable <Function_Base.variable>` must be
+        a list or 1d np.array of numeric entries, corresponding in length to the AutoAssociativeLearningMechanism's
+        *ACTIVATION_INPUT* (`primary <InputState_Primary>`) InputState.
 
     learning_rate : float : None
         determines the learning rate for the AutoAssociativeLearningMechanism.  It is used to specify the :keyword:`learning_rate`
         parameter for the AutoAssociativeLearningMechanism.'s `learning function <AutoAssociativeLearningMechanism.function>`
         (see description of `learning_rate <LearningMechanism_Learning_Rate>` for additional details).
 
-    error_signal : 1d np.array
-        one of two values returned by the LearningMechanism's `function <AutoAssociativeLearningMechanism.function>`.  For
-        `single layer learning <LearningMechanism_Single_Layer_Learning>`, this is the same as the value received in
-        the LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`;  for `multilayer
-        learning <LearningMechanism_Multilayer_Learning>`, it is a modified version of the value received, that takes
-        account of the contribution made by the learned_projection and its input to the error signal received. This
-        is assigned as the `value <OutputState.value>` of the LearningMechanism's *ERROR_SIGNAL* `OutputState
-        <LearningMechanism_Output_Error_Signal>`.
+    learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
+        used by `function <AutoAsociativeLearningMechanism.funtion>` to scale the weight change matrix it returns.
+        If specified, it supersedes the learning_rate assigned to any `Process` or `System` to which the
+        RecurrentMechanism is assigned.  If it is a scalar, it is multiplied by the weight change matrix generated by
+        the `function <AutoAssociativeLearningMechanism.function>`;  if it is a 1d np.array, it is
+        multiplied Hadamard (elementwise) by the input to the `function <AutoAssociativeLearningMechanism.function>`
+        ("activity vector") before calculating the weight change matrix;  if it is a 2d np.array, it is multiplied
+        Hadamard (elementwise) by the weight change matrix; if it is `None`, then the `learning_rate
+        <Process_Base.learning_rate>` specified for the Process to which the AutoAssociativeLearningMechanism belongs
+        belongs is used;  and, if that is `None`, then the `learning_rate <System_Base.learning_rate>`
+        for the System to which it belongs is used. If all are `None`, then the `default_learning_rate
+        <LearningMechanism.default_learning_rate>` for the function <AutoAssociativeLearningMechanism.function>` is
+        used (see `learning_rate <LearningMechanism_Learning_Rate>` for additional details).
 
-    learning_signal : number, ndarray or matrix
-        one of two values returned by the AutoAssociativeLearningMechanism.'s `function <AutoAssociativeLearningMechanism.function>`, that specifies
-        the changes to the weights of the `matrix <MappingProjection.matrix>` parameter for the AutoAssociativeLearningMechanism.'s
-        `learned_projections <AutoAssociativeLearningMechanism..learned_projections>`;  it is calculated to reduce the error signal
-        associated with the `primary_learned_projection` and received from the AutoAssociativeLearningMechanism.'s `error_source`.
-        It is assigned as the value of the AutoAssociativeLearningMechanism.'s `LearningSignal(s) <LearningMechanism_LearningSignal>`
-        and, in turn, its LearningProjection(s).
+    learning_signal : 2d ndarray or matrix of numeric values
+        the value returned by `function <AutoAssociativeLearningMechanism.function>`, that specifies
+        the changes to the weights of the `matrix <AutoAssociativeProjection.matrix>` parameter for the
+        AutoAssociativeLearningMechanism's`learned_projections <AutoAssociativeLearningMechanism.learned_projections>`;
+        It is assigned as the value of the AutoAssociativeLearningMechanism's `LearningSignal(s)
+        <LearningMechanism_LearningSignal>` and, in turn, its `LearningProjection(s) <LearningProjection>`.
 
     learning_signals : List[LearningSignal]
-        list of all of the `LearningSignals <LearningSignal>` for the AutoAssociativeLearningMechanism., each of which sends one or
-        more `LearningProjections <LearningProjection>` to the `ParameterState(s) <ParameterState>` for the `matrix
-        <MappingProjection.matrix>` parameter of the `MappingProjection(s) <MappingProjection>` trained by the
-        AutoAssociativeLearningMechanism.  The `value <LearningSignal>` of each LearningSignal is the AutoAssociativeLearningMechanism.'s
-        `learning_signal <AutoAssociativeLearningMechanism.learning_signal>` attribute. Since LearningSignals are `OutputStates
-        <OutputState>`, they are also listed in the AutoAssociativeLearningMechanism.'s `output_states
-        <AutoAssociativeLearningMechanism.output_states>` attribute, after it *ERROR_SIGNAL* `OutputState
-        <LearningMechanism_Output_Error_Signal>`.
+        list of all of the `LearningSignals <LearningSignal>` for the AutoAssociativeLearningMechanism, each of which
+        sends one or more `LearningProjections <LearningProjection>` to the `ParameterState(s) <ParameterState>` for
+        the `matrix <AutoAssociativeProjection.matrix>` parameter of the `AutoAssociativeProjection(s)
+        <AutoAssociativeProjection>` trained by the AutoAssociativeLearningMechanism.  Although in most instances an
+        AutoAssociativeLearningMechanism is used to train a single AutoAssociativeProjection, like a standard
+        `LearningMechanism`, it can be assigned additional LearningSignals and/or LearningProjections to train
+        additional ones;  in such cases, the `value <LearningSignal>` for all of the LearningSignals is the
+        the same:  the AutoAssociativeLearningMechanism's `learning_signal
+        <AutoAssociativeLearningMechanism.learning_signal>` attribute, based on its `activity_source
+        <AutoAssociativeLearningMechanism>.activity_source>`.  Since LearningSignals are `OutputStates
+        <OutputState>`, they are also listed in the AutoAssociativeLearningMechanism's `output_states
+        <AutoAssociativeLearningMechanism.output_states>` attribute.
 
     learning_projections : List[LearningProjection]
-        list of all of the LearningProjections <LearningProject>` from the AutoAssociativeLearningMechanism., listed in the order of
-        the `LearningSignals <LearningSignal>` to which they belong (that is, in the order they are listed in
-        the `learning_signals <AutoAssociativeLearningMechanism.>` attribute).
+        list of all of the LearningProjections <LearningProject>` from the AutoAssociativeLearningMechanism, listed in
+        the order of the `LearningSignals <LearningSignal>` to which they belong (that is, in the order they are
+        listed in the `learning_signals <AutoAssociativeLearningMechanism.learning_signals>` attribute).
 
     output_states : ContentAddressableList[OutputState]
-        list of the AutoAssociativeLearningMechanism.'s `OutputStates <OutputState>`, including its *ERROR_SIGNAL* `OutputState
-        <LearningMechanism_Output_Error_Signal>`, followed by its `LearningSignal(s)
-        <LearningMechanism_LearningSignal>`, and then any additional (e.g., user-specified)
-        `OutputStates <OutputState>`.
-
-    COMMENT:
-       #  FIX: THIS MAY NEED TO BE A 3d array (TO ACCOMDOATE 2d array (MATRICES) AS ENTRIES)\
-    COMMENT
+        list of the AutoAssociativeLearningMechanism's `OutputStates <OutputState>`, beginning with its
+        `LearningSignal(s) <AutoAssociativeLearningMechanism_LearningSignal>`, and followed by any additional
+        (user-specified) `OutputStates <OutputState>`.
 
     output_values : 2d np.array
-        the first item is the `value <OutputState.value>` of the LearningMechanism's *ERROR_SIGNAL* `OutputState
-        <LearningMechanism_Output_Error_Signal>`, followed by the `value <LearningSignal.value>` \\(s) of its
-        `LearningSignal(s) <LearningMechanism_LearningSignal>`, and then those of any additional (e.g., user-specified)
-        `OutputStates <OutputState>`.
+        the first item is the `value <OutputState.value>` of the LearningMechanism's `learning_signal
+        <AutoAssociativeLearningMechanism.learning_signal>`, followed by the `value <OutputState.value>`\\s
+        of any additional (user-specified) `OutputStates <OutputState>`.
 
     modulation : ModulationParam
-        the default form of modulation used by the AutoAssociativeLearningMechanism.'s `LearningSignal(s)
+        the default form of modulation used by the AutoAssociativeLearningMechanism's `LearningSignal(s)
         <LearningMechanism_LearningSignal>`, unless they are `individually specified <LearningSignal_Specification>`.
 
     name : str : default LearningProjection-<index>
@@ -293,7 +268,7 @@ XXXX
 
     """
 
-    componentType = LEARNING_MECHANISM
+    componentType = AUTOASSOCIATIVE_LEARNING_MECHANISM
     className = componentType
     suffix = " " + className
 
@@ -305,9 +280,7 @@ XXXX
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
         INPUT_STATES:input_state_names,
-        OUTPUT_STATES:[{NAME:ERROR_SIGNAL,
-                        INDEX:1},
-                       {NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
+        OUTPUT_STATES:[{NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
                         INDEX:0}
                        ]})
 
@@ -315,7 +288,6 @@ XXXX
     def __init__(self,
                  variable:tc.any(list, np.ndarray),
                  size=None,
-                 error_source:tc.optional(Mechanism)=None,
                  function:is_function_type=BackPropagation,
                  learning_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.ADDITIVE,
@@ -326,8 +298,7 @@ XXXX
                  context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(error_source=error_source,
-                                                  function=function,
+        params = self._assign_args_to_param_dicts(function=function,
                                                   learning_signals=learning_signals,
                                                   params=params)
 
@@ -336,7 +307,6 @@ XXXX
         # self.init_args = locals().copy()
         # self.init_args['context'] = self
         # self.init_args['name'] = name
-        # delete self.init_args[ERROR_SOURCE]
 
         # # Flag for deferred initialization
         # self.init_status = InitStatus.DEFERRED_INITIALIZATION
@@ -355,41 +325,22 @@ XXXX
         """Validate that variable has exactly three items: activation_input, activation_output and error_signal
         """
 
+        # Skip LearningMechanism._validate_variable, as it requires variable to have 3 items
+        super(AdaptiveMechanism_Base)._validate_variable(variable, context)
+
         variable = self._update_variable(super()._validate_variable(variable, context))
 
-        if len(variable) != 3:
-            raise AutoAssociativeLearningMechanismError("Variable for {} ({}) must have three items ({}, {}, and {})".
-                                format(self.name, variable,
-                                       ACTIVATION_INPUT,
-                                       ACTIVATION_OUTPUT,
-                                       ERROR_SIGNAL))
-
-        # Validate that activation_input, activation_output, and error_signal are numeric and lists or 1d np.ndarrays
-        for i in range(len(variable)):
-            item_num_string = ['first', 'second', 'third'][i]
-            item_name = input_state_names[i]
-            if not np.array(variable[i]).ndim == 1:
-                raise AutoAssociativeLearningMechanismError("The {} item of variable for {} ({}:{}) is not a list or 1d np.array".
-                                              format(item_num_string, self.name, item_name, variable[i]))
-            if not (is_numeric(variable[i])):
-                raise AutoAssociativeLearningMechanismError("The {} item of variable for {} ({}:{}) is not numeric".
-                                              format(item_num_string, self.name, item_name, variable[i]))
+        if np.array(variable).ndim != 1 or not is_numeric(variable):
+            raise AutoAssociativeLearningMechanismError("Variable for {} ({}) must be "
+                                                        "a list or 1d np.array containing only numbers".
+                                                        format(self.name, variable))
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate error_source as an Objective Mechanism or another LearningMechanism
-        """
+        # Skip LearningMechanism._validate_params, as it has different requirements
+        super(AdaptiveMechanism_Base)._validate_params(request_set=request_set,target_set=target_set,context=context)
 
-        super()._validate_params(request_set=request_set, target_set=target_set,context=context)
-
-        if ERROR_SOURCE in target_set:
-            if not isinstance(target_set[ERROR_SOURCE], (ObjectiveMechanism, LearningMechanism)):
-                raise AutoAssociativeLearningMechanismError("{} arg for {} ({}) must be an ObjectiveMechanism or another "
-                                             "LearningMechanism".
-                                             format(ERROR_SOURCE, self.name, target_set[ERROR_SOURCE]))
-
-
-        # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS
+        # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS (AKIN TO CONTROL_SIGNAL
         if LEARNING_SIGNALS in target_set and target_set[LEARNING_SIGNALS]:
 
             from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal \
@@ -400,7 +351,6 @@ XXXX
             for spec in target_set[LEARNING_SIGNALS]:
 
                 learning_proj = None  # Projection from LearningSignal to MappingProjection
-                mapping_proj = None   # MappingProjection that receives Projection from LearningSignal
 
                 # Specification is for a LearningSignal
                 if isinstance(spec, LearningSignal):
@@ -511,296 +461,8 @@ XXXX
                                                 format(param_name, mapping_proj.name, LEARNING_SIGNAL, self.name))
 
     def _instantiate_attributes_before_function(self, context=None):
-        """Instantiates MappingProjection from error_source (if specified) to the AutoAssociativeLearningMechanism.
-
-        Also assigns learned_projection attribute (to MappingProjection being learned)
-        """
-
-        super()._instantiate_attributes_before_function(context=context)
-
-        if self.error_source:
-            _instantiate_error_signal_projection(sender=self.error_source, receiver=self)
-
-    def _instantiate_output_states(self, context=None):
-
-        # Create registry for LearningSignals (to manage names)
-        from PsyNeuLink.Globals.Registry import register_category
-        from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
-        from PsyNeuLink.Components.States.State import State_Base
-        register_category(entry=LearningSignal,
-                          base_class=State_Base,
-                          registry=self._stateRegistry,
-                          context=context)
-
-        # Instantiate LearningSignals if they are specified, and assign to self._output_states
-        # Note: if any LearningSignals are specified they will replace the default LEARNING_SIGNAL OutputState
-        #          in the OUTPUT_STATES entry of paramClassDefaults;
-        #       the LearningSignals are appended to _output_states, leaving ERROR_SIGNAL as the first entry.
-        if self.learning_signals:
-            # Delete default LEARNING_SIGNAL item in output_states
-            del self._output_states[1]
-            for i, learning_signal in enumerate(self.learning_signals):
-                # Instantiate LearningSignal
-                ls = self._instantiate_learning_signal(learning_signal=learning_signal, context=context)
-                # Add LearningSignal to ouput_states list
-                self._output_states.append(ls)
-                # Replace spec in learning_signals list with actual LearningSignal
-                self.learning_signals[i] = ls
-
-        super()._instantiate_output_states(context=context)
-
-    def _instantiate_learning_signal(self, learning_signal=None, context=None):
-        """Instantiate LearningSignal OutputState and assign (if specified) or instantiate LearningProjection
-
-        Notes:
-        * learning_signal arg can be a:
-            - LearningSignal object;
-            - LearningProjection;
-            - ParameterState;
-            - Projection (in which case, MATRIX parameter is used as receiver of LearningProjection)
-            - params dict containing a LearningProjection;
-            - tuple (param_name, PROJECTION), from learning_signals arg of constructor;
-                    [NOTE: this is a convenience format;
-                           it precludes specification of LearningSignal params (??e.g., LEARNING_RATE)]
-            - LearningSignal specification dictionary, from learning_signals arg of constructor
-                    [NOTE: this must have at least NAME:str (param name) and MECHANISM:Mechanism entries;
-                           it can also include a PARAMS entry with a params dict containing LearningSignal params]
-            * NOTE: ParameterState must be for a Projection, and generally for MATRIX parameter of a MappingProjection;
-                    however, LearningSignal is implemented to be applicable for any ParameterState of any Projection.
-        * State._parse_state_spec() is used to parse learning_signal arg
-        * params are expected to be for (i.e., to be passed to) LearningSignal;
-        * wait to instantiate deferred_init() Projections until after LearningSignal is instantiated,
-             so that correct OutputState can be assigned as its sender;
-        * index of OutputState is incremented based on number of LearningSignals already instantiated;
-            this means that a AutoAssociativeLearningMechanism.'s function must return as many items as it has LearningSignals,
-            with each item of the function's value used by a corresponding LearningSignal.
-            NOTE: multiple LearningProjections can be assigned to the same LearningSignal to implement "ganged" learning
-                  (that is, learning of many Projections with a single value)
-
-        Returns LearningSignal (OutputState)
-        """
-
-# FIX: THESE NEEDS TO BE DEALT WITH
-# FIX: learning_projection -> learning_projections
-# FIX: trained_projection -> learned_projection
-# FIX: error_signal ??OR?? error_signals??
-# FIX: LearningMechanism: learned_projection attribute -> learned_projections list
-#                         learning_signal -> learning_signals (WITH SINGULAR ONE INDEXING INTO learning_signals.values)
-#  FIX: THIS MAY NEED TO BE A 3d array (TO ACCOMDOATE 2d array (MATRICES) AS ENTRIES)
-
-        from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
-        from PsyNeuLink.Components.States.State import _parse_state_spec
-        from PsyNeuLink.Components.States.ParameterState import ParameterState, _get_parameter_state
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-
-        # FIX: NEED TO CHARACTERIZE error_signal FOR BELOW
-        # # EXTEND error_signals TO ACCOMMODATE NEW LearningSignal -------------------------------------------------
-        # #        also used to determine constraint on LearningSignal output value
-        #
-        # if not hasattr(self, ERROR_SIGNALS) or self.error_signals is None:
-        #     self.error_signals = np.array(defaultErrorSignal)
-        # else:
-        #     self.error_signals = np.append(self.error_signals, defaultErrorSignal)
-
-        # GET index FOR LearningSignal OutputState
-        try:
-            output_state_index = len(self.output_states)
-        except (AttributeError, TypeError):
-            output_state_index = 0
-
-
-        # PARSE learning_signal SPECIFICATION -----------------------------------------------------------------------
-
-        learning_projection = None
-        mapping_projection = None
-        learning_signal_params = None
-
-        learning_signal_spec = _parse_state_spec(owner=self, state_type=LearningSignal, state_spec=learning_signal)
-
-        # Specification is a ParameterState
-        if isinstance(learning_signal_spec, ParameterState):
-            mapping_projection = learning_signal_spec.owner
-            if not isinstance(mapping_projection, MappingProjection):
-                raise AutoAssociativeLearningMechanismError("{} specified for {} of {} ({}) must be a {}".
-                                             format(PARAMETER_STATE,
-                                                    LEARNING_SIGNAL,
-                                                    self.name,
-                                                    mapping_projection,
-                                                    PROJECTION))
-            param_name = learning_signal_spec.name
-            parameter_state = _get_parameter_state(self, LEARNING_SIGNAL, param_name, mapping_projection)
-
-        # Specification was projection, tuple or dict, and parsed into a dict
-        elif isinstance(learning_signal_spec, dict):
-            param_name = learning_signal_spec[NAME]
-            learning_signal_params = learning_signal_spec[PARAMS]
-
-            # learning_signal was a specification dict, with PROJECTION as an entry (and parameter as NAME)
-            if learning_signal_params and PROJECTION in learning_signal_params:
-                mapping_projection = learning_signal_params[PROJECTION]
-                # Delete PROJECTION entry as it is not a parameter of LearningSignal
-                #     (which will balk at it in LearningSignal._validate_params)
-                del learning_signal_params[PROJECTION]
-                parameter_state = _get_parameter_state(self, LEARNING_SIGNAL, param_name, mapping_projection)
-
-            # Specification either a projection
-            # or originally a tuple (either in parameter specification or learning_signal arg):
-            #    1st item was either assigned to the NAME entry of the learning_signal_spec dict
-            #        (if tuple was a (param_name, Projection tuple) for learning_signal arg;
-            #        or used as param value, if it was a parameter specification tuple
-            #    2nd item was placed in learning_signal_params entry of params dict in learning_signal_spec dict,
-            #        so parse:
-            # FIX 5/23/17: NEED TO GET THE KEYWORDS STRAIGHT FOR PASSING LearningSignal SPECIFICATIONS
-            # IMPLEMENTATION NOTE:
-            #    PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
-            #                      here, the tuple comes from a (param, Projection) specification in learning_signal arg
-            #    Delete whichever one it was, as neither is a recognized LearningSignal param
-            #        (which will balk at it in LearningSignal._validate_params)
-            elif (learning_signal_params and
-                    any(kw in learning_signal_spec[PARAMS] for kw in {LEARNING_SIGNAL_SPECS, PROJECTIONS})):
-                if LEARNING_SIGNAL_SPECS in learning_signal_spec[PARAMS]:
-                    spec = learning_signal_params[LEARNING_SIGNAL_SPECS]
-                    del learning_signal_params[LEARNING_SIGNAL_SPECS]
-                elif PROJECTIONS in learning_signal_spec[PARAMS]:
-                    spec = learning_signal_params[PROJECTIONS]
-                    del learning_signal_params[PROJECTIONS]
-
-                # LearningSignal
-                if isinstance(spec, LearningSignal):
-                    learning_signal_spec = spec
-
-                # Projection
-                else:
-                    # IMPLEMENTATION NOTE: Projection was placed in list in PROJECTIONS entry by _parse_state_spec
-                    if isinstance(spec, list) and isinstance(spec[0], Projection):
-                        if isinstance(spec[0], MappingProjection):
-                            mapping_projection = spec[0]
-                            param_name = MATRIX
-                            parameter_state = _get_parameter_state(self,
-                                                                   LEARNING_SIGNAL,
-                                                                   param_name,
-                                                                   mapping_projection)
-                            # MODIFIED 7/21/17 NEW:
-                            learning_projection = LearningProjection(receiver=parameter_state)
-                            # MODIFIED 7/21/17 END
-                        elif isinstance(spec[0], LearningProjection):
-                            learning_projection = spec[0]
-                            if learning_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                                parameter_state = learning_projection.init_args['receiver']
-                            else:
-                                parameter_state = learning_projection.receiver
-                            param_name = parameter_state.name
-                        else:
-                            raise AutoAssociativeLearningMechanismError("PROGRAM ERROR: list in {} entry of params dict for {} of {} "
-                                                        "must contain a single MappingProjection or LearningProjection".
-                                                        format(LEARNING_SIGNAL_SPECS, learning_signal, self.name))
-
-                        if len(spec)>1:
-                            raise AutoAssociativeLearningMechanismError("PROGRAM ERROR: Multiple LearningProjections is not "
-                                                        "currently supported in specification of a LearningSignal")
-                    else:
-                        raise AutoAssociativeLearningMechanismError("PROGRAM ERROR: failure to parse specification of {} for {}".
-                                                    format(learning_signal, self.name))
-            else:
-                raise AutoAssociativeLearningMechanismError("PROGRAM ERROR: No entry found in params dict with specification of "
-                                            "parameter Projection or LearningProjection for {} of {}".
-                                            format(learning_signal, self.name))
-
-
-        # INSTANTIATE LearningSignal -----------------------------------------------------------------------------------
-
-        # Specification is a LearningSignal (either passed in directly, or parsed from tuple above)
-        if isinstance(learning_signal_spec, LearningSignal):
-            # Deferred Initialization, so assign owner, name, and initialize
-            if learning_signal_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                # FIX 5/23/17:  IMPLEMENT DEFERRED_INITIALIZATION FOR LearningSignal
-                # CALL DEFERRED INIT WITH SELF AS OWNER ??AND NAME FROM learning_signal_dict?? (OR WAS IT SPECIFIED)
-                # OR ASSIGN NAME IF IT IS DEFAULT, USING learning_signal_DICT??
-                pass
-            elif not learning_signal_spec.owner is self:
-                raise AutoAssociativeLearningMechanismError("Attempt to assign LearningSignal to {} ({}) that is already owned by {}".
-                                            format(self.name,
-                                                   learning_signal_spec.name,
-                                                   learning_signal_spec.owner.name))
-            learning_signal = learning_signal_spec
-            learning_signal_name = learning_signal_spec.name
-            learning_projections = learning_signal_spec.efferents
-
-            # IMPLEMENTATION NOTE:
-            #    THIS IS TO HANDLE FUTURE POSSIBILITY OF MULTIPLE ControlProjections FROM A SINGLE LearningSignal;
-            #    FOR NOW, HOWEVER, ONLY A SINGLE ONE IS SUPPORTED
-            # parameter_states = [proj.recvr for proj in learning_projections]
-            if len(learning_projections) > 1:
-                raise AutoAssociativeLearningMechanismError("PROGRAM ERROR: list of ControlProjections is not currently supported "
-                                            "as specification in a LearningSignal")
-            else:
-                learning_projection = learning_projections[0]
-                parameter_state = learning_projection.receiver
-
-        # Specification is not a LearningSignal, so create OutputState for it
-        else:
-            learning_signal_name = param_name + '_' + LearningSignal.__name__
-
-            from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal \
-                import LearningSignal
-            from PsyNeuLink.Components.States.State import _instantiate_state
-
-            # Get constraint for OutputState's value
-            # - assume that AutoAssociativeLearningMechanism.value has only two items (learning_signal and error_signal)
-            # - use learning_signal (stored in self.learning_signal) as value for all LearningSignals
-            self._update_value(context=context)
-            constraint_value = self.learning_signal
-            learning_signal_params.update({LEARNED_PARAM:param_name})
-
-            learning_signal = _instantiate_state(owner=self,
-                                                state_type=LearningSignal,
-                                                state_name=learning_signal_name,
-                                                state_spec=constraint_value,
-                                                state_params=learning_signal_params,
-                                                constraint_value=constraint_value,
-                                                constraint_value_name='Default control allocation',
-                                                context=context)
-
-        # VALIDATE OR INSTANTIATE LearningProjection(s) FROM LearningSignal  -------------------------------------------
-
-        # Validate learning_projection (if specified) and get receiver's name
-        if learning_projection:
-            _validate_receiver(self, learning_projection, MappingProjection, LEARNING_SIGNAL, context=context)
-
-            from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-            if not isinstance(learning_projection, LearningProjection):
-                raise AutoAssociativeLearningMechanismError("PROGRAM ERROR: Attempt to assign {}, "
-                                                  "that is not a LearningProjection, to LearningSignal of {}".
-                                                  format(learning_projection, self.name))
-            if learning_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                learning_projection.init_args['sender']=learning_signal
-                if learning_projection.init_args['name'] is None:
-                    # FIX 5/23/17: CLEAN UP NAME STUFF BELOW:
-                    learning_projection.init_args['name'] = LEARNING_PROJECTION + \
-                                                   ' for ' + parameter_state.owner.name + ' ' + parameter_state.name
-                learning_projection._deferred_init()
-            else:
-                learning_projection.sender = learning_signal
-
-            # Add LearningProjection to list of LearningSignal's outgoing Projections
-            # (note: if it was deferred, it just added itself, skip)
-            if not learning_projection in learning_signal.efferents:
-                learning_signal.efferents.append(learning_projection)
-
-            # Add LearningProjection to AutoAssociativeLearningMechanism.'s list of LearningProjections
-            try:
-                self.learning_projections.append(learning_projection)
-            except AttributeError:
-                self.learning_projections = [learning_projection]
-
-        return learning_signal
-
-    def _instantiate_attributes_after_function(self, context=None):
-
-        if self._learning_rate is not None:
-            self.learning_rate = self._learning_rate
-
-        super()._instantiate_attributes_after_function(context=context)
+        # Skip LearningMechanism, as it checks for error_source, which AutoAssociativeLearningMechanism doesn't have
+        super(AdaptiveMechanism_Base)._instantiate_attributes_before_function(context=context)
 
     def _execute(self,
                 variable=None,
@@ -814,14 +476,14 @@ XXXX
         """
 
         # COMPUTE LEARNING SIGNAL (dE/dW):
-        self.learning_signal, self.error_signal = self.function(variable=variable,
-                                                                params=runtime_params,
-                                                                context=context)
+        self.learning_signal = self.function(variable=variable,
+                                             params=runtime_params,
+                                             context=context)
 
         if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
-        self.value = [self.learning_signal, self.error_signal]
+        self.value = [self.learning_signal]
         return self.value
 
     @property
@@ -833,23 +495,13 @@ XXXX
         self.function_object.learning_rate = assignment
 
     @property
-    def input_source(self):
-        try:
-            return self.input_states[ACTIVATION_INPUT].path_afferents[0].sender.owner
-        except IndexError:
-            return None
-
-    @property
-    def output_source(self):
-        try:
-            return self.input_states[ACTIVATION_OUTPUT].path_afferents[0].sender.owner
-        except IndexError:
-            return None
-
-    @property
     def primary_learned_projection(self):
         return self.learned_projection[0]
 
     @property
     def learned_projections(self):
         return [lp.receiver.owner for lp in self.learning_projections]
+
+    @property
+    def activity_source(self):
+        return self.input_state.path_afferents[0].sender.owner

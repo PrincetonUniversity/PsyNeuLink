@@ -127,11 +127,14 @@ import numbers
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Functions.Function import Linear, Stability, get_matrix, LearningFunction, Hebbian
+from PsyNeuLink.Components.Functions.Function \
+    import Linear, Stability, get_matrix, LearningFunction, Hebbian, is_function_type
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
     import LearningMechanism, ACTIVATION_INPUT, LEARNING_SIGNAL
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism \
+    import AutoAssociativeLearningMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
@@ -491,7 +494,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  range=None,
                  input_states: tc.optional(tc.any(list, dict)) = None,
                  learning_rate: tc.optional(tc.any(parameter_spec, bool)) = False,
-                 learning_function: tc.any(callable, LearningFunction) = Hebbian,
+                 learning_function: tc.any(is_function_type) = Hebbian,
                  output_states: tc.optional(tc.any(list, dict))=None,
                  time_scale=TimeScale.TRIAL,
                  params=None,
@@ -872,20 +875,21 @@ class RecurrentTransferMechanism(TransferMechanism):
     # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
     def _instantiate_learning_mechanism(self,
                                         activity_vector:tc.any(list, np.array),
-                                        learning_function:tc.any(callable, LearningFunction),
+                                        learning_function:tc.any(is_function_type),
                                         learning_rate:tc.any(numbers.Number, list, np.ndarray, np.matrix),
                                         matrix,
                                         context=None):
 
-        learning_mechanism = LearningMechanism(variable=[activity_vector.value, [0], [0]],
-                                               function=learning_function,
-                                               learning_rate=learning_rate,
-                                               context=context)
+        # learning_mechanism = LearningMechanism(variable=[activity_vector.value, [0], [0]],
+        #                                        function=learning_function,
+        #                                        learning_rate=learning_rate,
+        #                                        context=context)
 
-        # learning_mechanism = AutoAssociativeLearningMechanism(variable=activity_vector.value,
-        #                                                       function=learning_function,
-        #                                                       learning_rate=learning_rate,
-        #                                                       context=context)
+        learning_mechanism = AutoAssociativeLearningMechanism(variable=activity_vector.value,
+                                                              learning_signals=[self.recurrent_projection],
+                                                              function=learning_function,
+                                                              learning_rate=learning_rate,
+                                                              context=context)
 
         # Instantiate Projection from Mechanism's output to LearningMechanism
         MappingProjection(sender=activity_vector,
