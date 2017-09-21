@@ -22,9 +22,12 @@ Overview
 A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implements a single-layered recurrent
 network, in which each element is connected to every other element (instantiated in a recurrent
 `AutoAssociativeProjection` referenced by the Mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).
-It also allows its previous input to be decayed, and reports the energy and, if appropriate, the entropy of its output.
+It allows its previous input to be decayed, can report the energy and, if appropriate, the entropy of its output,
+and can be configured for to implement autoassociative (e.g., Hebbian) learning.
 
 .. _Recurrent_Transfer_Creation:
+
+A RecurrentTransferMechanism can be specified for learning either by assigning a value to its
 
 Creating a RecurrentTransferMechanism
 -------------------------------------
@@ -36,6 +39,23 @@ created using the **matrix** (or **auto** and **hetero**) argument of the Mechan
 `FULL_CONNECTIVITY_MATRIX`). Alternatively, **auto** and **hetero** can be specified: these set the diagonal and
 off-diagonal terms, respectively. In all other respects, a RecurrentTransferMechanism is specified in the same way as a
 standard `TransferMechanism`.
+
+.. _Recurrent_Transfer_Learning:
+
+Autoassociative Learning
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+A RecurrentTransferMechanism can be specified for learning by assigning either `True` or a numeric value to the
+**learning_rate** argument of its constructor.  Assigning `True` leaves the default value for the `learning_rate
+<RecurrentTransferMechanism.learning_rate>` intact, but enables learning.  When a RecurrentTransferMechanism is
+created that is specified for learning, it creates a LearningMechanism and assigns as its `function
+<Function_Base.function>` the one specified in the **learning_function** argument of the RecurrentTransferMechanism's
+constructor.  By default, this is the `Hebbian` Function;  however, it can be replaced by any other function that is
+suitable for autoassociative learning;  that is, one that takes a list or 1d array of numeric values ("activity vector")
+and returns a square ("weight change") matrix with the same dimensions as the length of the activity vector.
+The LearningMechanism is used to modify the `matrix <AutoAssociativeProjection.matrix>` parameter of its
+`AutoAssociativeProjection` (also referenced by the RecurrentTransferMechanism's own `matrix
+<RecurrentTransferMechanism.matrix>` parameter.
 
 COMMENT:
 8/7/17 CW: In past versions, the first sentence of the paragraph above was: "A RecurrentTransferMechanism can be
@@ -54,12 +74,14 @@ The distinguishing feature of a RecurrentTransferMechanism is a self-projecting 
 is, one that projects from the Mechanism's `primary OutputState <OutputState_Primary>` back to its `primary
 InputState <InputState_Primary>`.  This can be parametrized using its `matrix <RecurrentTransferMechanism.matrix>`,
 `auto <RecurrentTransferMechanism.auto>`, and `hetero <RecurrentTransferMechanism.hetero>` attributes.
-In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' attribute, that
-multiplies its `previous_input <RecurrentTransferMechanism.previous_input>` value by the specified factor each time it
+A RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' attribute, that multiplies its
+`previous_input <RecurrentTransferMechanism.previous_input>` value by the specified factor each time it
 is executed.  It also has two additional `OutputStates <OutputState>:  an *ENERGY* OutputState and, if its `function
 <RecurrentTransferMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY*
 OutputState.  Each of these report the respective values of the vector in it its `primary (*RESULTS*) OutputState
-<OutputState_Primary>`.  In all other respects the Mechanism is identical to a standard `TransferMechanism`.
+<OutputState_Primary>`.  Finally, if it has been `specified for learning <Recurrent_Transfer_Learning>`,
+it is associated with a LearningMechanism that uses an autoassociative `LearningFunction` (e.g., `Hebbian`) to train
+its `AutoAssociativeProjection`. In all other respects the Mechanism is identical to a standard `TransferMechanism`.
 
 .. _Recurrent_Transfer_Execution:
 
@@ -78,18 +100,19 @@ takes the previous output before adding it to the next input, we should specific
 that occurs along the way.
 COMMENT
 
-Like a `TransferMechanism`, the function used to update each element can be assigned using its
-`function <RecurrentTransferMechanism.function>` parameter.  When a RecurrentTransferMechanism is executed,
-if its `decay <RecurrentTransferMechanism.decay>` parameter is specified (and is not 1.0), it
-decays the value of its `previous_input <RecurrentTransferMechanism.previous_input>` parameter by the
-specified factor.  It then transforms its input (including from the recurrent projection) using the specified
-function and parameters (see `Transfer_Execution`), and returns the results in its OutputStates.
+Like a `TransferMechanism`, the function used to update each element can be assigned using its `function
+<RecurrentTransferMechanism.function>` parameter.  When a RecurrentTransferMechanism is executed, if its `decay
+<RecurrentTransferMechanism.decay>` parameter is specified (and is not 1.0), it decays the value of its `previous_input
+<RecurrentTransferMechanism.previous_input>` parameter by the specified factor.  It then transforms its input
+(including from the recurrent projection) using the specified function and parameters (see `Transfer_Execution`),
+and returns the results in its OutputStates.  If it has been `configured for learning <Recurrent_Transfer_Learning>`
+and is executed as part of a `System`, then its associated `LearningMechanism` is executed during the `learning phase
+<System_Learning>` of the `System's execution <System_Execution>`.
 
 .. _Recurrent_Transfer_Class_Reference:
 
 Class Reference
 ---------------
-
 
 """
 
@@ -106,7 +129,7 @@ from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _instantiate_state
 from PsyNeuLink.Globals.Keywords import AUTO, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, HETERO, INITIALIZING, MATRIX, \
     MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, \
-    VARIANCE
+    VARIANCE, HEBBIAN_FUNCTION
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
 from PsyNeuLink.Library.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, \
@@ -187,6 +210,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     noise=0.0,                         \
     time_constant=1.0,                 \
     range=(float:min, float:max),      \
+    learning_rate=None,                \
+    learning_function=Hebbian,         \
     params=None,                       \
     name=None,                         \
     prefs=None)
@@ -222,8 +247,8 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX
         specifies the matrix to use for creating a `recurrent AutoAssociativeProjection <Recurrent_Transfer_Structure>`,
-        or a AutoAssociativeProjection to use. If **auto** or **hetero** arguments are specified, the **matrix** argument
-        will be ignored in favor of those arguments.
+        or an AutoAssociativeProjection to use. If **auto** or **hetero** arguments are specified, the **matrix**
+        argument will be ignored in favor of those arguments.
 
     auto : number, 1D array, or None : default None
         specifies matrix as a diagonal matrix with diagonal entries equal to **auto**, if **auto** is not None;
@@ -267,6 +292,19 @@ class RecurrentTransferMechanism(TransferMechanism):
         the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
         any element of the result that exceeds the specified minimum or maximum value is set to the value of
         `range <RecurrentTransferMechanism.range>` that it exceeds.
+
+    learning_rate : boolean, scalar or list, 1d or 2d np.array, or np.matrix of numeric values: default None
+        specifies whether learning should be enabled for the RecurrentTransferMechanism and, if so, the learning rate
+        used by its `learning function <RecurrentTransferMechanism.learning_function>`.  If it is `True` then
+        the `learning function <RecurrentTransferMechanism.learning_function>` is assigned as `None` and a default
+        learning_rate is used (see `LearningMechanism_Learning_Rate`); if it is assigned a value, that is used
+        as the `learning_rate <RecurrentTransferMechanism.learning_rate>` (see attribute for details).
+
+    learning_function : function : default Hebbian
+        specifies the function for the LearningMechanism if `learning has been specified
+        <Recurrent_Transfer_Learning>` for the RecurrentTransferMechanism.  It can be any function so long as it
+        takes a list or 1d array of numeric values as its `variable <Function_Base.variable>` and returns a sqaure
+        matrix of numeric values with the same dimensions as the length of the input.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -334,6 +372,28 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     previous_input : 1d np.array of floats
         the value of the input on the previous execution, including the value of `recurrent_projection`.
+
+    learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
+        specifies the learning rate used by the `function <Hebbian.function>`; supersedes any specification  for the
+        `Process` and/or `System` to which the function's `owner <Function.owner>` belongs (see `learning_rate
+        <LearningMechanism_Learning_Rate>` for details).  It is used by the `learning_function
+        <RecurrentTransferMechanism.learning_function>` to scale the weight change matrix it returns.  If specified,
+        it supersedes the learning_rate assigned to any `Process` or `System` to which the RecurrentMechanism is
+        assigned.  If it is a scalar, it is multiplied by the weight change matrix generated by the `learning_function
+        <RecurrentTransferMechanism.learning_function>`;  if it is a 1d np.array, it is
+        multiplied Hadamard (elementwise) by the input to the `learning_function
+        <RecurrentTransferMechanism.learning_function>` ("activity vector") before calculating the weight change
+        matrix;  if it is a 2d np.array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
+        `None`, then the `learning_rate <Process_Base.learning_rate>` specified for the Process to which the `owner
+        <Hebbian.owner>` belongs is used;  and, if that is `None`, then the `learning_rate <System_Base.learning_rate>`
+        for the System to which it belongs is used. If all are `None`, then the `default_learning_rate
+        <LearningMechanism.default_learning_rate>` for the learning_function <RecurrentTransferMechanism.learning_rate>`
+        is used (see `learning_rate <LearningMechanism_Learning_Rate>` for additional details).
+
+    learning_function : function : default Hebbian
+        the function used by the LearningMechanism to train the `matrix <RecurrentTransferMechanism>` of the
+        `AutoAssociativeProjection` if `learning has been specified <Recurrent_Transfer_Learning>` for the
+        RecurrentTransferMechanism (see `Recurrent_Transfer_Learning` for additional details).
 
     value : 2d np.array [array(float64)]
         result of executing `function <RecurrentTransferMechanism.function>`; same value as first item of
@@ -407,6 +467,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                  integrator_mode=False,
                  range=None,
                  input_states: tc.optional(tc.any(list, dict)) = None,
+                 learning_rate: tc.optional(parameter_spec) = None,
+                 learning_function: tc.any(function, LearningFunction) = Hebbian,
                  output_states: tc.optional(tc.any(list, dict))=None,
                  time_scale=TimeScale.TRIAL,
                  params=None,

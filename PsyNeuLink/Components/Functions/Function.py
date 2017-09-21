@@ -7596,7 +7596,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         specifies the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations
         in `variable <Hebbian.variable>`.
 
-    learning_rate : float, list, 1d or 2d np.array, or np.matrix : default default_learning_rate
+    learning_rate : scalar or list, 1d or 2d np.array, or np.matrix of numeric values: default default_learning_rate
         specifies the learning rate used by the `function <Hebbian.function>`; supersedes any specification  for the
         `Process` and/or `System` to which the function's `owner <Function.owner>` belongs (see `learning_rate
         <Hebbian.learning_rate>` for details).
