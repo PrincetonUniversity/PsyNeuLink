@@ -6,9 +6,10 @@ from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, \
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
     import OUTCOME
-from PsyNeuLink.Components.States import OutputState
+from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Globals.Keywords import PREDICTION_ERROR_MECHANISM, SAMPLE, \
-    TARGET, INITIALIZING, kwPreferenceSetName
+    TARGET, INITIALIZING, kwPreferenceSetName, INPUT_STATES, VALUE, \
+    FUNCTION_PARAMS, REWARD
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, \
     kpReportOutputPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel, \
@@ -61,19 +62,36 @@ class PredictionErrorMechanism(ComparatorMechanism):
                          prefs=prefs,
                          context=context)
 
-    def _execute(self, variable=None, runtime_params=None, clock=CentralClock,
-                 time_scale=None, context=None):
-        print("Calling Prediction Error Mechanism _execute()")
-
         self.integrator_function = AdaptiveIntegrator(
             initializer=0,
             owner=self,
             context=context)
-        values = [self.integrator_function.execute(variable=self.sample,
-                                                   params=runtime_params,
-                                                   context=context)[0],
-                  self.integrator_function.previous_value]
-        print("values: {}".format(values))
+        self.prev_val = self.integrator_function.previous_value
+
+    def _execute(self, variable=None, runtime_params=None, clock=CentralClock,
+                 time_scale=None, context=None):
+        print("Calling Prediction Error Mechanism _execute()")
+
+        if self.paramsCurrent:
+            sample = self.paramsCurrent[INPUT_STATES][SAMPLE].value
+            reward = self.paramsCurrent[INPUT_STATES][TARGET].value
+        else:
+            sample = self.sample
+            reward = self.target
+
+        try:
+            # integrator_prev_val = self.integrator_function.previous_value
+            print("prev_val = {}".format(self.prev_val))
+            values = [self.integrator_function.execute(variable=sample,
+                                                       params=runtime_params,
+                                                       context=context)[0],
+                      self.prev_val]
+        except AttributeError:
+            values = [0, 0]
+        # print("values: {}".format(values))
+        self.function_object.reward = reward
+        # print("reward = {}".format(self.function_params[REWARD]))
         output_vector = self.function(variable=values,
                                       params=runtime_params)
+        self.prev_val = output_vector[0]
         return output_vector

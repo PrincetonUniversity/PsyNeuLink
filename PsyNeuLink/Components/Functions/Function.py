@@ -1784,7 +1784,11 @@ class TDDeltaFunction(LinearCombination):
         variable = self._update_variable(self._check_args(variable=variable,
                                                           params=params,
                                                           context=context))
+
+        # print("variable = {}".format(variable))
         weights = self.weights
+
+        # print(params)
 
         # TODO: implement offset and scale
         if self.offset is None:
@@ -1797,16 +1801,23 @@ class TDDeltaFunction(LinearCombination):
         else:
             scale = 1.0
 
-        if params and params[REWARD] is None:
-            reward = params[REWARD]
-        else:
+        try:
+            if self.reward:
+                reward = self.reward
+            else:
+                reward = 0.0
+        except AttributeError:
             reward = 0.0
 
         # Apply weights
         if weights is not None:
             variable = self._update_variable(variable * weights)
 
+        # print("reward in function = {}".format(reward))
+
         result = (variable[T] + reward) - variable[T_MINUS_ONE]
+
+        # print("result = {}".format(result))
 
         return result
 
@@ -4196,6 +4207,7 @@ class AdaptiveIntegrator(
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
             self.previous_value = adjusted_value
+            # print("Adaptive Integrator previous val = {}".format(self.previous_value))
 
         return adjusted_value
 

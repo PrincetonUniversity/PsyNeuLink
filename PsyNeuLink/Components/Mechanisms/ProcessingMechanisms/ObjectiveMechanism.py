@@ -688,9 +688,9 @@ def _validate_monitored_value(objective_mech, state_spec, context=None):
     """
     from PsyNeuLink.Components.States.OutputState import OutputState
     if not isinstance(state_spec, (str, OutputState, Mechanism, MonitoredOutputStatesOption, dict)):
-        raise ObjectiveMechanismError("Specification of {} arg for {} ({}) must be"
-                             "an OutputState, Mechanism, or a MonitoredOutputStatesOption value".
-                             format(MONITORED_VALUES, objective_mech.name, state_spec))
+        raise ObjectiveMechanismError("Specification of {} arg for {} ({}) must "
+                                      "be an OutputState, Mechanism, or a MonitoredOutputStatesOption value".
+                                      format(MONITORED_VALUES, objective_mech.name, state_spec))
 
 
 def _objective_mechanism_role(mech, role):
