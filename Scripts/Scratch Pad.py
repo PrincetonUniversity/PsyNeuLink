@@ -943,15 +943,15 @@ class ScratchPadError(Exception):
 #
 #endregion
 
-#region TEST Hebbian @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST Hebbian @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-from PsyNeuLink.Components.Functions.Function import Hebbian
-print("TEST Hebbian FUNCTION")
-
-x = Hebbian(default_variable=[0,0,0], learning_rate=[1,-1,3])
-x.show_params()
-
-print(x.execute([1,2,3]))
+# from PsyNeuLink.Components.Functions.Function import Hebbian
+# print("TEST Hebbian FUNCTION")
+#
+# x = Hebbian(default_variable=[0,0,0], learning_rate=[1,-1,3])
+# x.show_params()
+#
+# print(x.execute([1,2,3]))
 
 #endregion
 
@@ -978,7 +978,65 @@ print(x.execute([1,2,3]))
 #
 #endregion
 
+#region TEST BogaczEtAl Derivative @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Components.Functions.Function import *
+# #
+# x = BogaczEtAl()
+# print(x.function(params={DRIFT_RATE:1.0,
+#                          THRESHOLD:1}))
+# print(x.derivative())
+
+#endregion
+
+#region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Components.Functions.Function import *
+# #
+# x = SoftMax()
+# # x = SoftMax(output=MAX_VAL)
+# a = [-1, 2, 1]
+# # x = SoftMax(output=SoftMax.PROB)
+# y = x.function(a)
+# z = x.derivative(a)
+# print ("SoftMax execute return value: \n", [float(i) for i in y])
+# if z.ndim == 1:
+#     print ("SoftMax derivative return value: \n", [float(i) for i in z])
+# else:
+#     print ("SoftMax derivative return value: \n", [[float(i) for i in j] for j in z])
+
+#endregion
+
+#region TEST Stability and Distance @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# matrix = [[0,-1],[-1,0]]
+# normalize = False
+# activity = [100,0]
+#
+#
+# eng = Stability(default_variable=activity,
+#              matrix=matrix,
+#              normalize=normalize
+#              )
+#
+# dist = Distance(default_variable=[activity,activity],
+#                 metric=CROSS_ENTROPY,
+#                 # normalize=normalize
+#                 )
+#
+# print("Stability: ",eng.function(activity))
+# print("Distance: ", dist.function(activity))
+
+#endregion
+
+# ----------------------------------------------- MECHANISM ------------------------------------------------------------
+
 # region TEST RecurrentTransferMechanism / LCA @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA import LCA, LCA_OUTPUT
+# from PsyNeuLink.Components.System import system
+# from PsyNeuLink.Components.Process import process
+# from PsyNeuLink.Globals.Keywords import LEARNING
 #
 # print("TEST RecurrentTransferMechanism / LCA")
 #
@@ -1041,35 +1099,59 @@ print(x.execute([1,2,3]))
 
 #endregion
 
-#region TEST BogaczEtAl Derivative @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# region TEST RecurrentTransferMechanism @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from PsyNeuLink.Components.Functions.Function import *
-# #
-# x = BogaczEtAl()
-# print(x.function(params={DRIFT_RATE:1.0,
-#                          THRESHOLD:1}))
-# print(x.derivative())
+import numpy as np
+from PsyNeuLink.Components.Functions.Function import Logistic
+from PsyNeuLink.Globals.Keywords import LEARNING
+from PsyNeuLink.Components.System import system
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism \
+    import RecurrentTransferMechanism
+
+print("\nTEST RecurrentTransferMechanism\n")
+
+my_auto = RecurrentTransferMechanism(default_variable=[0,0,0],
+                                     size=3,
+                                     function=Logistic,
+                                     # matrix=RANDOM_CONNECTIVITY_MATRIX,
+                                     matrix=np.array([[1,1,1],[1,1,1],[1,1,1]]),
+                                     learning_rate=True
+                                     # matrix=[[1,1,1],[1,1,1],[1,1,1]]
+                                     )
+
+# THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
+#                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection
+my_process = process(pathway=[my_auto],
+
+# THIS DOESN'T WORK, AS Process._instantiate_pathway() ONLY CHECKS PROJECTIONS AFTER ENCOUNTERING ANOTHER MECHANISM
+# my_process = process(pathway=[my_auto, my_auto_matrix],
+                     target=[0,0,0],
+                     learning=LEARNING
+                     )
+
+# my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
+#                      learning=LEARNING,
+#                      target=[0,0,0])
+
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+#
+input_list = {my_auto:[1,1,1]}
+target_list = {my_auto:[0,0,0]}
+
+# print(my_process.run(inputs=input_list, targets=target_list, num_trials=5))
+
+my_system = system(processes=[my_process],
+                   targets=[0,0,0])
+
+print(my_system.run(inputs=input_list,
+                    targets=target_list,
+                    num_trials=5))
 
 #endregion
-
-#region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-# from PsyNeuLink.Components.Functions.Function import *
-# #
-# x = SoftMax()
-# # x = SoftMax(output=MAX_VAL)
-# a = [-1, 2, 1]
-# # x = SoftMax(output=SoftMax.PROB)
-# y = x.function(a)
-# z = x.derivative(a)
-# print ("SoftMax execute return value: \n", [float(i) for i in y])
-# if z.ndim == 1:
-#     print ("SoftMax derivative return value: \n", [float(i) for i in z])
-# else:
-#     print ("SoftMax derivative return value: \n", [[float(i) for i in j] for j in z])
-
-#endregion
-
 #region TEST ReportOUtput Pref @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Process import *
@@ -1127,28 +1209,6 @@ print(x.execute([1,2,3]))
 # print(c)
 
 #endregion  ********
-
-#region TEST Stability and Distance @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-# matrix = [[0,-1],[-1,0]]
-# normalize = False
-# activity = [100,0]
-#
-#
-# eng = Stability(default_variable=activity,
-#              matrix=matrix,
-#              normalize=normalize
-#              )
-#
-# dist = Distance(default_variable=[activity,activity],
-#                 metric=CROSS_ENTROPY,
-#                 # normalize=normalize
-#                 )
-#
-# print("Stability: ",eng.function(activity))
-# print("Distance: ", dist.function(activity))
-
-#endregion
 
 #region TEST Matrix Assignment to MappingProjection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #

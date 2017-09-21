@@ -491,7 +491,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  range=None,
                  input_states: tc.optional(tc.any(list, dict)) = None,
                  learning_rate: tc.optional(tc.any(parameter_spec, bool)) = False,
-                 learning_function: tc.any(function, LearningFunction) = Hebbian,
+                 learning_function: tc.any(callable, LearningFunction) = Hebbian,
                  output_states: tc.optional(tc.any(list, dict))=None,
                  time_scale=TimeScale.TRIAL,
                  params=None,
@@ -511,12 +511,13 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.learning_enabled = False
         # If learning_rate is specified
         else:
-            # Enable learning
-            self.learning_enabled = True
             # If learning_rate is specified simply as `True`, assign learning_rate as `None`;
             #    otherwise, leave learning_rate as assigned value
             if isinstance(learning_rate, bool) and learning_rate == True:
                 self.learning_rate = None
+            # Set learning_enabled to be True provisionally;  confirmed in _instantiate_attributes_after_function()
+            #   using backing field, as direct assignment requires that self.learning_mechanism has been assigned
+            self._learning_enabled = True
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,
@@ -739,6 +740,9 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                                            learning_rate=self.learning_rate,
                                                                            matrix=self.recurrent_projection,
                                                                            context=context)
+            if self.learning_mechanism is None:
+                self.learning_enabled = False
+
         if ENERGY in self.output_states.names:
             energy = Stability(self.instance_defaults.variable[0],
                                metric=ENERGY,
@@ -868,15 +872,20 @@ class RecurrentTransferMechanism(TransferMechanism):
     # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
     def _instantiate_learning_mechanism(self,
                                         activity_vector:tc.any(list, np.array),
-                                        learning_function:tc.any(function, LearningFunction),
+                                        learning_function:tc.any(callable, LearningFunction),
                                         learning_rate:tc.any(numbers.Number, list, np.ndarray, np.matrix),
                                         matrix,
                                         context=None):
 
-        learning_mechanism = LearningMechanism(variable=activity_vector.value,
-                                                    function=learning_function,
-                                                    learning_rate=learning_rate,
-                                                    context=context)
+        learning_mechanism = LearningMechanism(variable=[activity_vector.value, [0], [0]],
+                                               function=learning_function,
+                                               learning_rate=learning_rate,
+                                               context=context)
+
+        # learning_mechanism = AutoAssociativeLearningMechanism(variable=activity_vector.value,
+        #                                                       function=learning_function,
+        #                                                       learning_rate=learning_rate,
+        #                                                       context=context)
 
         # Instantiate Projection from Mechanism's output to LearningMechanism
         MappingProjection(sender=activity_vector,
