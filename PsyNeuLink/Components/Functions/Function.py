@@ -1434,8 +1434,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=ClassDefaults.variable,
-                 weights:tc.optional(parameter_spec)=None,
-                 exponents:tc.optional(parameter_spec)=None,
+                 weights: tc.optional(parameter_spec)=None,
+                 exponents: tc.optional(parameter_spec)=None,
                  operation: tc.enum(SUM, PRODUCT)=SUM,
                  scale=None,
                  offset=None,
@@ -1907,8 +1907,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(weights=weights,
-                                                  exponents=exponents,
-                                                  operation=operation,
+                                                  reward=reward,
                                                   scale=scale,
                                                   offset=offset,
                                                   params=params)

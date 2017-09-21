@@ -108,7 +108,7 @@ TARGET InputStates in the **input_states** argument of the ComparatorMechanism's
                                              target=my_reward_mech,
                                              input_states = [[0],[0]])
 
-Note that ``my_action_selection_mechanism`` is specified to take an array of length 5 as its input, and therefore
+Note that ``my_action_selection_mech`` is specified to take an array of length 5 as its input, and therefore
 generate one of the same length as its `primary output <OutputState_Primary>`.  Since it is assigned as the **sample**
 of the ComparatorMechanism, by default this will create a *SAMPLE* InputState of length 5, that will not match the
 length of the *TARGET* InputState (which is 1).  This is taken care of, by specifying the **input_states** argument
@@ -220,7 +220,7 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     input_states :  List[InputState, value, str or dict] or Dict[] : default [SAMPLE, TARGET]
         specifies the names and/or formats to use for the values of the sample and target InputStates;
-        by default they are named *SAMPLE* and *TARGET*, and their formats are match the value of the OutputStates
+        by default they are named *SAMPLE* and *TARGET*, and their formats match the value of the OutputStates
         specified in the **sample** and **target** arguments, respectively (see `ComparatorMechanism_Structure`
         for additional details).
 
@@ -347,6 +347,9 @@ class ComparatorMechanism(ObjectiveMechanism):
                                          state_spec=input_states[1],
                                          name=TARGET,
                                          value=None)
+
+        print("Sample input type: {}".format(type(sample_input)))
+        print("Target input type: {}".format(type(target_input)))
 
         # IMPLEMENTATION NOTE: The following prevents the default from being updated by subsequent assignment
         #                     (in this case, to [OUTCOME, {NAME= MSE}]), but fails to expose default in IDE
