@@ -4474,6 +4474,7 @@ class AdaptiveIntegrator(
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
             self.previous_value = adjusted_value
+            # print("Adaptive Integrator previous val = {}".format(self.previous_value))
 
         return adjusted_value
 
