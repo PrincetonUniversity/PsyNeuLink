@@ -1,0 +1,540 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>LCControlMechanism &mdash; PsyNeuLink 0.3.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="AGT" href="AGT.html"/>
+        <link rel="next" title="EVC" href="EVC.html"/>
+        <link rel="prev" title="AGTControlMechanism" href="AGTControlMechanism.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Subsystems.html">Subsystems</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="AGT.html">AGT</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="AGTControlMechanism.html">AGTControlMechanism</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">LCControlMechanism</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="EVC.html">EVC</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanisms.html">Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projections.html">Projections</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Library.html">Library</a> &raquo;</li>
+        
+          <li><a href="Subsystems.html">Subsystems</a> &raquo;</li>
+        
+          <li><a href="AGT.html">AGT</a> &raquo;</li>
+        
+      <li>LCControlMechanism</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/LCControlMechanism.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="lccontrolmechanism">
+<h1>LCControlMechanism<a class="headerlink" href="#lccontrolmechanism" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-Library.Subsystems.AGT.LCControlMechanism"></span><div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>An LCControlMechanism is a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that multiplicatively modulates the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> (usually <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanisms</span></a>).
+It implements an abstract model of the <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/12371518">locus coeruleus (LC)</a> that
+uses an <a class="reference internal" href="Function.html#Function.FHNIntegrator" title="Function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> Function to generate its output.  This is modulated by a <code class="xref any docutils literal"><span class="pre">mode</span></code>
+parameter that regulates its functioning between <a class="reference internal" href="#lccontrolmechanism-modes-of-operation"><span class="std std-ref">&quot;tonic&quot; and &quot;phasic&quot; modes of operation</span></a>.  The Mechanisms modulated by an LCControlMechanism can be listed using
+its <a class="reference internal" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.show" title="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.show"><code class="xref any py py-meth docutils literal"><span class="pre">show</span></code></a> method.  When used with an <a class="reference internal" href="AGTControlMechanism.html"><span class="doc">AGTControlMechanism</span></a> to regulate the <a class="reference internal" href="Function.html#Function.FHNIntegrator.mode" title="Function.FHNIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> parameter of its <a class="reference internal" href="Function.html#Function.FHNIntegrator" title="Function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> Function, it implements a form of the <a class="reference external" href="http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709">Adaptive Gain Theory</a> of the locus coeruleus-norepinephrine
+(LC-NE) system.</p>
+</div>
+<div class="section" id="creating-an-lccontrolmechanism">
+<span id="lccontrolmechanism-creation"></span><h2>Creating an LCControlMechanism<a class="headerlink" href="#creating-an-lccontrolmechanism" title="Permalink to this headline">¶</a></h2>
+<p>An LCControlMechanism can be created in any of the ways used to <a class="reference internal" href="ControlMechanism.html#controlmechanism-creation"><span class="std std-ref">create a ControlMechanism</span></a>.
+The following sections describe how to specify the inputs that drive the LCControlMechanism’s response, and the
+Mechanisms that it controls.</p>
+<div class="section" id="objectivemechanism-and-monitored-outputstates">
+<span id="lccontrolmechanism-objectivemechanism"></span><h3>ObjectiveMechanism and Monitored OutputStates<a class="headerlink" href="#objectivemechanism-and-monitored-outputstates" title="Permalink to this headline">¶</a></h3>
+<p>Like all ControlMechanisms, an LCControlMechanism it receives its <a class="reference internal" href="#lccontrolmechanism-input"><span class="std std-ref">input</span></a> from an
+<a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that, in turn, receives its input from a specified list of <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>.  These
+are used to drive the <a class="reference internal" href="#lccontrolmechanism-modes-of-operation"><span class="std std-ref">phasic response</span></a> of the LCControlMechanism.  The
+ObjectiveMechanism and/or the OutputStates from which it gets its input can be <a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">specified in the standard way for a
+ControlMechanism</span></a>).  By default, an LCControlMechanism creates an
+ObjectiveMechanism that uses a <code class="xref any docutils literal"><span class="pre">CombineMeans</span></code> Function to sum the means of the <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of the
+OutputStates from which it gets its input.  However, this can be customized by specifying a different
+ObjectiveMechanism or its <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, so long as these generate a result that is a
+scalar value.</p>
+</div>
+<div class="section" id="specifying-mechanisms-to-modulate">
+<span id="lccontrolmechanism-modulated-mechanisms"></span><h3>Specifying Mechanisms to Modulate<a class="headerlink" href="#specifying-mechanisms-to-modulate" title="Permalink to this headline">¶</a></h3>
+<p>The Mechanisms to be modulated by an LCControlMechanism are specified in its <strong>modulated_mechanisms</strong> argument. An
+LCControlMechanism controls a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> by modifying the <a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the Mechanism’s <a class="reference internal" href="TransferMechanism.html#TransferMechanism.TransferMechanism.function" title="TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  Therefore, any Mechanism
+specified for control by an LCControlMechanism must be either a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, or a Mechanism that uses a
+<a class="reference internal" href="Function.html#Function.TransferFunction" title="Function.TransferFunction"><code class="xref any py py-class docutils literal"><span class="pre">TransferFunction</span></code></a> or a class of <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> that implements a <a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a>.  The <strong>modulate_mechanisms</strong> argument must be a list of such Mechanisms.  The keyword
+<em>ALL</em> can also be used to specify all of the eligible <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessMechanisms</span></a> in all of the
+<a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> to which the LCControlMechanism belongs.  If a Mechanism specified in the
+<strong>modulated_mechanisms</strong> argument does not implement a multiplicative_param, it is ignored. A <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> is
+automatically created that projects from the LCControlMechanism to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the <a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of every Mechanism specified in the <strong>modulated_mechanisms</strong> argument (and listed in
+its <a class="reference internal" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.modulated_mechanisms" title="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.modulated_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">modulated_mechanisms</span></code></a> attribute).</p>
+</div>
+</div>
+<div class="section" id="structure">
+<span id="lccontrolmechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="input">
+<span id="lccontrolmechanism-input"></span><h3>Input<a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="objectivemechanism">
+<span id="id1"></span><h4>ObjectiveMechanism<a class="headerlink" href="#objectivemechanism" title="Permalink to this headline">¶</a></h4>
+<p>Like any ControlMechanism, an LCControlMechanism receives its input from the <em>OUTCOME</em> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-output"><span class="std std-ref">OutputState</span></a> of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, via a MappingProjection to its <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">InputState</span></code>.  The ObjectiveFunction is listed in the LCControlMechanism’s <a class="reference internal" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.objective_mechanism" title="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> attribute.  By default, the ObjectiveMechanism’s function is a <code class="xref any docutils literal"><span class="pre">CombineMeans</span></code>
+function with its default <a class="reference internal" href="Function.html#Function.LinearCombination.operation" title="Function.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> of <em>SUM</em>; this takes the mean of the <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of the OutputStates that it monitors (listed in its <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_output_states" title="ObjectiveMechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute, and returns the sum of those means.  However, this can be
+customized in a variety of ways:</p>
+<blockquote>
+<div><ul class="simple">
+<li>by specifying a different <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for the ObjectiveMechanism
+(see <code class="xref any docutils literal"><span class="pre">ObjectiveMechanism_Weights_and_Exponents_Example</span></code> for an example);</li>
+</ul>
+<ul class="simple">
+<li>using a list to specify the OutputStates to be monitored  (and the <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-outputstate-tuple"><span class="std std-ref">tuples format</span></a> to specify weights and/or exponents for them) in the
+<strong>objective_mechanism</strong> argument of the EVCControlMechanism’s constructor;</li>
+</ul>
+<ul class="simple">
+<li>using the  <strong>monitored_output_states</strong> argument of the <a class="reference internal" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.objective_mechanism" title="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>’s
+constructor;</li>
+</ul>
+<ul class="simple">
+<li>specifying a different <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> in the LCControlMechanism’s <strong>objective_mechanism</strong> argument of the
+EVCControlMechanism’s constructor. The result of the <a class="reference internal" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.objective_mechanism" title="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>’s
+<a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is used as the input to the LCControlMechanism.</li>
+</ul>
+<div class="admonition note" id="lccontrolmechanism-objective-mechanism-function-note">
+<p class="first admonition-title">Note</p>
+<p class="last">If a constructor for an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> is used for the <strong>objective_mechanism</strong> argument of the
+LCControlMechanism’s constructor, then the default values of its attributes override any used by the LCControlMechanism
+for its <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.objective_mechanism" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>.  In particular, whereas an ObjectiveMechanism
+uses <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> as the default for its <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, an LCControlMechanism
+typically uses <code class="xref any docutils literal"><span class="pre">CombineMeans</span></code> for the <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of its <a class="reference internal" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.objective_mechanism" title="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>.  As a consequence, if the constructor for an ObjectiveMechanism is used to
+specify the LCControlMechanism’s <strong>objective_mechanism</strong> argument, and the <strong>function</strong> argument is not specified,
+<a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> rather than <code class="xref any docutils literal"><span class="pre">CombineMeans</span></code> will be used for the ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  To insure that <code class="xref any docutils literal"><span class="pre">CombineMeans</span></code> is used, it must be specified explicitly in the
+<strong>function</strong> argument of the constructor for the ObjectiveMechanism (for an example of a similar condition
+for an EVCControlMechanism see 1st example under <a class="reference internal" href="System.html#system-control-examples"><span class="std std-ref">Specifying Control for a System</span></a>).</p>
+</div>
+</div></blockquote>
+<p>The OutputStates monitored by the LC’s ObjectiveMechanism are listed in its <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_output_states" title="ObjectiveMechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute), as well as in the <a class="reference internal" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.monitored_output_states" title="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute of the LCControlMechanism itself.  These can be displayed using the
+LCControlMechanism’s <a class="reference internal" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.show" title="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.show"><code class="xref any py py-meth docutils literal"><span class="pre">show</span></code></a> method.</p>
+</div>
+</div>
+<div class="section" id="function">
+<span id="lccontrolmechanism-function"></span><h3>Function<a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
+<p>XXX ADD MENTION OF allocation_policy HERE</p>
+<p>An LCControlMechanism uses the <a class="reference internal" href="Function.html#Function.FHNIntegrator" title="Function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> as its <code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;LCControlMechanism.function</span></code>; this implements a <a class="reference external" href="https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model">FitzHugh-Nagumo
+model</a> often used to describe the spiking of a neuron,
+but in this case the population activity of the LC (see <a class="reference external" href="2002https://www.ncbi.nlm.nih.gov/pubmed/12371518">Gilzenrat et al.,</a>). The <a class="reference internal" href="Function.html#Function.FHNIntegrator" title="Function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> Function takes the <a class="reference internal" href="#lccontrolmechanism-input"><span class="std std-ref">input</span></a> to the LCControlMechanism as its <a class="reference internal" href="Function.html#Function.FHNIntegrator.variable" title="Function.FHNIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+<div class="section" id="lc-modes-of-operation">
+<span id="lccontrolmechanism-modes-of-operation"></span><h4>LC Modes of Operation<a class="headerlink" href="#lc-modes-of-operation" title="Permalink to this headline">¶</a></h4>
+<p>The <a class="reference internal" href="Function.html#Function.FHNIntegrator.mode" title="Function.FHNIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> parameter of the LCControlMechanism’s <a class="reference internal" href="Function.html#Function.FHNIntegrator" title="Function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> Function regulates its operation between
+<a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/8027789">“tonic” and “phasic” modes</a>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>in the <em>tonic mode</em> (low value of <a class="reference internal" href="Function.html#Function.FHNIntegrator.mode" title="Function.FHNIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a>), the output of the LCControlMechanism is moderately low
+and constant; that is, it is relatively unaffected by its <code class="xref any docutils literal"><span class="pre">input</span> <span class="pre">&lt;LCControlMechanism_Input</span></code>.  This blunts the response
+of the Mechanisms that the LCControlMechanism controls to their inputs.</li>
+<li>in the <em>phasic mode</em> (high value of <a class="reference internal" href="Function.html#Function.FHNIntegrator.mode" title="Function.FHNIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a>), when the <code class="xref any docutils literal"><span class="pre">input</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">LC</span></code> is low,
+its <code class="xref any docutils literal"><span class="pre">output</span></code> is even lower than when it is in the tonic regime, and thus the response of the
+Mechanisms it controls to their outputs is even more blunted.  However, when the LCControlMechanism’s input rises above
+a certain value (determined by the <code class="xref any docutils literal"><span class="pre">threshold</span></code> parameter), its output rises sharply
+generating a “phasic response”, and inducing a much sharper response of the Mechanisms it controls to their inputs.</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="output">
+<span id="lccontrolmechanism-output"></span><h3>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
+<p>An LCControlMechanism has a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> for each Mechanism listed in its <a class="reference internal" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.modulated_mechanisms" title="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.modulated_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">modulated_mechanisms</span></code></a> attribute.  All of its ControlSignals are assigned the same value:  the result of
+the LCControlMechanism’s <a class="reference internal" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.function" title="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  Each ControlSignal is assigned a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the
+<a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the  <a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for the Mechanism in <code class="xref any docutils literal"><span class="pre">modulated_mechanisms</span></code> to which it
+corresponds. The Mechanisms modulated by an LCControlMechanism can be displayed using its <a class="reference internal" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.show" title="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.show"><code class="xref py py-func docutils literal"><span class="pre">show</span></code></a>
+method.</p>
+<p class="rubric" id="lccontrolmechanism-examples">Examples</p>
+<p>The following example generates an LCControlMechanism that modulates the function of two TransferMechanisms, one that uses
+a <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function and the other a <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mech_1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">,</span>
+                              <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_linear_mechanism&#39;</span><span class="p">)</span>
+<span class="n">my_mech_2</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span>
+                              <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_logistic_mechanism&#39;</span><span class="p">)</span>
+
+<span class="n">LC</span> <span class="o">=</span> <span class="n">LCControlMechanism</span><span class="p">(</span><span class="n">modulated_mechanisms</span><span class="o">=</span><span class="p">[</span><span class="n">my_mech_1</span><span class="p">,</span> <span class="n">my_mech_2</span><span class="p">],</span>
+                 <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_LC&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Calling <code class="xref any docutils literal"><span class="pre">my_LC.show()</span></code> generates the following report:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_LC</span>
+
+    <span class="n">Modulating</span> <span class="n">the</span> <span class="n">following</span> <span class="n">Mechanism</span> <span class="n">parameters</span><span class="p">:</span>
+        <span class="n">my_logistic_mechanism</span><span class="p">:</span> <span class="n">gain</span>
+        <span class="n">my_linear_mechanism</span><span class="p">:</span> <span class="n">slope</span>
+</pre></div>
+</div>
+<p>Note that the LCControlMechanism controls the <a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of each Mechanism:  the <a class="reference internal" href="Function.html#Function.Logistic.gain" title="Function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter for <code class="docutils literal"><span class="pre">my_mech_1</span></code>, since it uses
+a <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function; and the <a class="reference internal" href="Function.html#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a> parameter for <code class="docutils literal"><span class="pre">my_mech_2</span></code>, since it uses a <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> Function.</p>
+</div>
+</div>
+<div class="section" id="execution">
+<span id="lccontrolmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>An LCControlMechanism executes within a <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> at a point specified in the Composition’s <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> or, if it is the
+<a class="reference internal" href="System.html#System.System_Base" title="System.System_Base"><code class="xref any py py-class docutils literal"><span class="pre">controller</span></code></a> for a <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a>, after all of the other Mechanisms in the Composition have <a class="reference internal" href="Composition.html#composition-execution"><span class="std std-ref">executed</span></a> in a <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>. It’s <a class="reference internal" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.function" title="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> takes the <a class="reference internal" href="InputState.html#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
+the LCControlMechanism’s <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> as its input, and generates a response – under the
+influence of its <a class="reference internal" href="Function.html#Function.FHNIntegrator.mode" title="Function.FHNIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> parameter – that is assigned as the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  The latter are used by its <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to modulate the response – in the next <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution –  of the Mechanisms the LCControlMechanism
+controls.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> that receives a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> does not update its value until its owner Mechanism
+executes (see <code class="xref any docutils literal"><span class="pre">Lazy</span> <span class="pre">Evaluation</span></code> for an explanation of “lazy” updating).  This means that even if a
+LCControlMechanism has executed, the <a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> parameter of the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a Mechanism that it controls will not assume its new value until that Mechanism has
+executed.</p>
+</div>
+</div>
+<div class="section" id="class-reference">
+<span id="lccontrolmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism">
+<em class="property">class </em><code class="descclassname">Library.Subsystems.AGT.LCControlMechanism.</code><code class="descname">LCControlMechanism</code><span class="sig-paren">(</span><em>system=None</em>, <em>objective_mechanism=None</em>, <em>modulated_mechanisms=None</em>, <em>modulation=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">ControlMechanism</span></a> that modulates the <a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>system</strong> (<em>System : default None</em>) – specifies the <a class="reference internal" href="System.html"><span class="doc">System</span></a> for which the LCControlMechanism should serve as a <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>;
+the LCControlMechanism will inherit any <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> specified in the <strong>monitor_for_control</strong>
+argument of the <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a>’s constructor, and any <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>
+specified in its <strong>control_signals</strong> argument.</li>
+<li><strong>objective_mechanism</strong> (<a class="reference internal" href="ObjectiveMechanism.html#module-ObjectiveMechanism" title="ObjectiveMechanism"><em>ObjectiveMechanism</em></a><em>, </em><em>List</em><em>[</em><a class="reference internal" href="OutputState.html#module-OutputState" title="OutputState"><em>OutputState</em></a><em> or </em><em>Tuple</em><em>[</em><a class="reference internal" href="OutputState.html#module-OutputState" title="OutputState"><em>OutputState</em></a><em>, </em><em>list</em><em> or </em><em>1d np.array</em><em>, </em><em>list</em><em> or </em><em>1d</em>) – </li>
+<li><strong>np.array</strong><strong>]</strong><strong>]</strong> (<em>default ObjectiveMechanism</em><em>(</em><em>function=CombineMeans</em><em>)</em>) – specifies either an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to use for the LCControlMechanism or a list of the OutputStates it should
+monitor; if a list of <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitored-output-states"><span class="std std-ref">OutputState specifications</span></a> is used,
+a default ObjectiveMechanism is created and the list is passed to its <strong>monitored_output_states</strong> argument.</li>
+<li><strong>modulated_mechanisms</strong> (List[<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>] or <em>ALL</em>) – specifies the Mechanisms to be modulated by the LCControlMechanism. If it is a list, every item must be a Mechanism
+with a <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> that implements a <a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a>;  alternatively the keyword <em>ALL</em> can be used to specify all of the
+<a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in the Composition(s) to which the LCControlMechanism
+belongs.</li>
+<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters
+for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
+specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+constructor.</li>
+<li><strong>name</strong> (<em>str : default LCControlMechanism-&lt;index&gt;</em>) – a string used for the name of the Mechanism.
+If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
+(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
+<li><strong>prefs</strong> (<em>Optional</em><em>[</em><em>PreferenceSet</em><em> or </em><em>specification dict : Mechanism.classPreferences</em><em>]</em>) – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Mechanism.
+If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.system">
+<code class="descname">system</code><a class="headerlink" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.system" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>System</em> – the <a class="reference internal" href="System.html"><span class="doc">System</span></a> for which LCControlMechanism is the <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>;
+the LCControlMechanism inherits any <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> specified in the <strong>monitor_for_control</strong>
+argument of the <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a>’s constructor, and any <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>
+specified in its <strong>control_signals</strong> argument.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.objective_mechanism">
+<code class="descname">objective_mechanism</code><a class="headerlink" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.objective_mechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ObjectiveMechanism : ObjectiveMechanism(function=CombinedMeans))</em> – the ‘ObjectiveMechanism’ used by the LCControlMechanism to aggregate the <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of the
+OutputStates used to drive its <a class="reference internal" href="#lccontrolmechanism-modes-of-operation"><span class="std std-ref">phasic response</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.monitored_output_states">
+<code class="descname">monitored_output_states</code><a class="headerlink" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.monitored_output_states" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[OutputState]</em> – list of the <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> that project to <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.objective_mechanism" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> (and listed in its <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_output_states" title="ObjectiveMechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute), and used to drive the
+LCControlMechanism’s <a class="reference internal" href="#lccontrolmechanism-modes-of-operation"><span class="std std-ref">phasic response</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.monitored_output_states_weights_and_exponents">
+<code class="descname">monitored_output_states_weights_and_exponents</code><a class="headerlink" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.monitored_output_states_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[Tuple(float, float)]</em> – each tuple in the list contains the weight and exponent associated with a corresponding item of
+<a class="reference internal" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.monitored_output_states" title="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>;  these are the same as those in
+the <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_output_states_weights_and_exponents" title="ObjectiveMechanism.ObjectiveMechanism.monitored_output_states_weights_and_exponents"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states_weights_and_exponents</span></code></a> attribute of the <a class="reference internal" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.objective_mechanism" title="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, and are used by the ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to parametrize the contribution made to its output by each of the values that
+it monitors (see <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-function"><span class="std std-ref">ObjectiveMechanism Function</span></a>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.function">
+<code class="descname">function</code><a class="headerlink" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>FHNIntegrator</em> – takes the LCControlMechanism’s <a class="reference internal" href="#lccontrolmechanism-input"><span class="std std-ref">input</span></a> and generates its response &lt;LCControlMechanism_Output&gt;` under
+the influence of the <a class="reference internal" href="Function.html#Function.FHNIntegrator" title="Function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> Function’s <a class="reference internal" href="Function.html#Function.FHNIntegrator.mode" title="Function.FHNIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> attribute
+(see <a class="reference internal" href="#lccontrolmechanism-function"><span class="std std-ref">Function</span></a> for additional details).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.control_signals">
+<code class="descname">control_signals</code><a class="headerlink" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.control_signals" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[ControlSignal]</em> – list of the <code class="xref any docutils literal"><span class="pre">ControlSignals</span></code> for each Mechanism listed in the LCControlMechanism’s
+<a class="reference internal" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.modulated_mechanisms" title="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.modulated_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">modulated_mechanisms</span></code></a> attribute  (same as the LCControlMechanism’s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.output_states" title="Mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute); each sends a <a class="reference internal" href="ControlProjections.html"><span class="doc">ControlProjections</span></a> to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the
+<a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the <a href="#id2"><span class="problematic" id="id3">`</span></a>function &lt;Mechanism_Base.function&gt;corresponding
+Mechanism.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.control_projections">
+<code class="descname">control_projections</code><a class="headerlink" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.control_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[ControlProjection]</em> – list of all of the <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> sent by the <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> listed
+in <code class="xref any docutils literal"><span class="pre">control_signals</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.modulated_mechanisms">
+<code class="descname">modulated_mechanisms</code><a class="headerlink" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.modulated_mechanisms" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[Mechanism]</em> – list of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> modulated by the LCControlMechanism.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.modulation">
+<code class="descname">modulation</code><a class="headerlink" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.modulation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ModulationParam : default ModulationParam.MULTIPLICATIVE</em> – the default value of <a class="reference internal" href="Function.html#Function.ModulationParam" title="Function.ModulationParam"><code class="xref any py py-class docutils literal"><span class="pre">ModulationParam</span></code></a> that specifies the form of modulation used by the LCControlMechanism’s
+<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> unless they are <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">individually specified</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.add_modulated_mechanisms">
+<code class="descname">add_modulated_mechanisms</code><span class="sig-paren">(</span><em>mechanisms: list</em><span class="sig-paren">)</span><a class="headerlink" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.add_modulated_mechanisms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add ControlProjections to the specified Mechanisms.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.remove_modulated_mechanisms">
+<code class="descname">remove_modulated_mechanisms</code><span class="sig-paren">(</span><em>mechanisms: list</em><span class="sig-paren">)</span><a class="headerlink" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.remove_modulated_mechanisms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the ControlProjections to the specified Mechanisms.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.show">
+<code class="descname">show</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> monitored by the LCControlMechanism’s <a class="reference internal" href="#Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.objective_mechanism" title="Library.Subsystems.AGT.LCControlMechanism.LCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>
+and the <a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">multiplicative_params</span></a> modulated by the LCControlMechanism.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="EVC.html" class="btn btn-neutral float-right" title="EVC" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="AGTControlMechanism.html" class="btn btn-neutral" title="AGTControlMechanism" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.3.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

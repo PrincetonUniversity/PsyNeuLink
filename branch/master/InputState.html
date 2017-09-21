@@ -95,21 +95,24 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projections</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="State.html">States</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">InputState</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
-<li class="toctree-l3"><a class="reference internal" href="OutputState.html">OutputState</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignals</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="State.html">States</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">InputState</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
+<li class="toctree-l4"><a class="reference internal" href="OutputState.html">OutputState</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignals</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -154,6 +157,8 @@
   <ul class="wy-breadcrumbs">
     
       <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Core.html">Core</a> &raquo;</li>
         
           <li><a href="Component.html">Components</a> &raquo;</li>
         
@@ -200,14 +205,14 @@ being created within the <code class="xref any docutils literal"><span class="pr
 as the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the  preceding <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> in
 the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>.</p>
 <p id="inputstate-deferred-initialization">An InputState must be owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.  When InputState is specified in the constructor for a
-Mechanism (see <code class="xref any docutils literal"><span class="pre">below</span></code>), it is automatically assigned to that Mechanism as  its owner. If
+Mechanism (see <a class="reference internal" href="#inputstate-specification"><span class="std std-ref">below</span></a>), it is automatically assigned to that Mechanism as  its owner. If
 the InputState is created directly, its <a class="reference internal" href="#InputState.InputState.owner" title="InputState.InputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> can specified in the <strong>owner</strong>  argument of its
 constructor; otherwise, its initialization will be <a class="reference internal" href="State.html#state-deferred-initialization"><span class="std std-ref">deferred</span></a> until it is assigned
 to an owner using the owner’s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method.</p>
 <div class="section" id="primary-inputstate">
 <span id="inputstate-primary"></span><h3>Primary InputState<a class="headerlink" href="#primary-inputstate" title="Permalink to this headline">¶</a></h3>
 <p>Every Mechanism has at least one InputState, referred to as its <em>primary InputState</em>.  If InputStates are not
-<code class="xref any docutils literal"><span class="pre">explicitly</span> <span class="pre">specified</span></code> for a Mechanism, a primary InputState is automatically created
+<a class="reference internal" href="#inputstate-specification"><span class="std std-ref">explicitly specified</span></a> for a Mechanism, a primary InputState is automatically created
 and assigned to its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.input_state" title="Mechanism.Mechanism_Base.input_state"><code class="xref any py py-attr docutils literal"><span class="pre">input_state</span></code></a> attribute (note the singular),
 and also to the first entry of the Mechanism’s <code class="xref any docutils literal"><span class="pre">input_states</span></code> attribute
 (note the plural).  The <a class="reference internal" href="#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the primary InputState is assigned as the first (and often
@@ -215,7 +220,7 @@ only) item of the Mechanism’s <a class="reference internal" href="Mechanism.ht
 Mechanism’s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute.</p>
 </div>
 <div class="section" id="inputstate-specification">
-<h3>InputState Specification<a class="headerlink" href="#inputstate-specification" title="Permalink to this headline">¶</a></h3>
+<span id="id1"></span><h3>InputState Specification<a class="headerlink" href="#inputstate-specification" title="Permalink to this headline">¶</a></h3>
 <p>If one or more custom InputStates need to be specified for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> when it is created, this can be
 done in the <strong>input_states</strong> argument of the Mechanism’s constructor, or in an <em>INPUT_STATES</em> entry of a parameter
 dictionary assigned to the constructor’s <strong>params</strong> argument.  The latter takes precedence over the former (that is,
@@ -229,10 +234,10 @@ the parameter dictionary in the <strong>params</strong> argument).  The number o
 to the number of items in the Mechanism’s &lt;variable &lt;Mechanism_Base.variable&gt;` attribute.</p>
 </div>
 <p>InputStates can also be <strong>added</strong> to a Mechanism, using the Mechanism’s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method.  However, this has
-consequences for the Mechanism’s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and possbily their relationship to the Mechanism’s
+consequences for the Mechanism’s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and possibly their relationship to the Mechanism’s
 <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (these are discussed <a class="reference internal" href="#inputstates-mechanism-variable-and-function"><span class="std std-ref">below</span></a>).
 If the name of an InputState added to a Mechanism is the same as one that already exists, its name will be suffixed
-with a numerical index (incremented for each OutputState with that name), and the OutputState will be added to the list
+with a numerical index (incremented for each InputState with that name), and the InputState will be added to the list
 (that is, it will <em>not</em> replace ones that were already created).</p>
 <p>Specifying an InputState can be done in any of the ways listed below.  To create multiple InputStates,
 their specifications can be included in a list, or in a dictionary in which the key for each entry is a
@@ -260,14 +265,32 @@ conventions</span>).</li>
 <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> as the InputState’s <a class="reference internal" href="#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, and a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> of the specified type to the InputState using its <a class="reference internal" href="#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> as the
 template for the Projection’s <code class="xref any docutils literal"><span class="pre">value</span></code>.</li>
 </ul>
-<ul class="simple">
-<li>A <strong>State specification dictionary</strong>.  This creates the specified InputState using the first item of the owner’s
+<ul id="inputstate-specification-dictionary">
+<li><p class="first">A <strong>State specification dictionary</strong>.  This creates the specified InputState using the first item of the owner’s
 <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> as the InputState’s <a class="reference internal" href="#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  In addition to the
-standard entries of a <a class="reference internal" href="State.html#state-specification"><span class="std std-ref">State specification dictionary</span></a>, the dictionary can have a
-<em>PROJECTIONS</em> entry, the value of which can be a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, a
-<a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">Projection specification dictionary</span></a>, or a list containing items that
-are either of those.  This can be used to specify one or more afferent <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a>
-to the InpuState, and/or <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> for it to receive.</li>
+standard entries of a <a class="reference internal" href="State.html#state-specification"><span class="std std-ref">State specification dictionary</span></a>, the dictionary can have:</p>
+<ul class="simple">
+<li>a <em>PROJECTIONS</em> entry – the value can be a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, a <a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">Projection specification dictionary</span></a>, or a list containing items that are either of those.  This can be
+used to specify one or more afferent <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a> to the InpuState, and/or
+<a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> for it to receive.</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li>a <em>WEIGHT</em> entry – the value must be an integer or float, and is assigned as the value of the InputState’s
+<a class="reference internal" href="#InputState.InputState.weight" title="InputState.InputState.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> attribute  (see <a class="reference internal" href="#inputstate-weights-and-exponents"><span class="std std-ref">Weights and Exponents</span></a>);  this takes precedence over
+any specification in the <strong>weight</strong> argument of the InputState’s constructor.</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li>an <em>EXPONENT</em> entry – the value must be an integer or float, and is assigned as the value of the InputState’s
+<a class="reference internal" href="#InputState.InputState.exponent" title="InputState.InputState.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> attribute  (see <a class="reference internal" href="#inputstate-weights-and-exponents"><span class="std std-ref">Weights and Exponents</span></a>);  this takes precedence
+over any specification in the <strong>exponent</strong> argument of the InputState’s constructor.</li>
+</ul>
+</li>
 </ul>
 <ul class="simple">
 <li>A <strong>2-item tuple</strong>.  The first item must be a value, and the second a <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> specification. This creates a default InputState using the first item as the InputState’s
@@ -331,6 +354,16 @@ one or more <a class="reference internal" href="GatingProjection.html"><span cla
 under <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">ModulatorySignals</span></a> and <a class="reference internal" href="GatingSignal.html#gatingsignal-modulation"><span class="std std-ref">GatingSignals</span></a> for additional
 details). The GatingProjections received by an InputState are listed in its <a class="reference internal" href="#InputState.InputState.mod_afferents" title="InputState.InputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a>
 attribute.</p>
+<div class="section" id="weights-and-exponents">
+<span id="inputstate-weights-and-exponents"></span><h3>Weights and Exponents<a class="headerlink" href="#weights-and-exponents" title="Permalink to this headline">¶</a></h3>
+<p>Every InputState has a <a class="reference internal" href="#InputState.InputState.weight" title="InputState.InputState.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a>  and an <a class="reference internal" href="#InputState.InputState.exponent" title="InputState.InputState.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> attribute.  These can be
+used by the Mechanism to which it belongs when that combines the <a class="reference internal" href="#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of its States (e.g.,
+an ObjectiveMechanism uses the weights and exponents assigned to its InputStates to determine how the values it monitors
+are combined by its <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">function</span></a>).  The value of each must be an integer or float, and the default
+is 1 for both.</p>
+</div>
+<div class="section" id="variable-function-and-value">
+<h3>Variable, Function and Value<a class="headerlink" href="#variable-function-and-value" title="Permalink to this headline">¶</a></h3>
 <p>Like all PsyNeuLink components, an InputState also has the three following core attributes:</p>
 <ul class="simple">
 <li><a class="reference internal" href="#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>:  this serves as a template for the <code class="xref any docutils literal"><span class="pre">value</span></code> of each Projection
@@ -354,6 +387,7 @@ item of the owner Mechanism’s <a class="reference internal" href="Mechanism.ht
 assigned.</li>
 </ul>
 </div>
+</div>
 <div class="section" id="execution">
 <span id="inputstate-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>An InputState cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
@@ -369,7 +403,7 @@ variable and input_values attributes</span></a> for additional details).</p>
 <span id="inputstate-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="InputState.InputState">
-<em class="property">class </em><code class="descclassname">InputState.</code><code class="descname">InputState</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value=None</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>value=None</em>, <em>projections=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#InputState.InputState" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">InputState.</code><code class="descname">InputState</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value=None</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>value=None</em>, <em>projections=None</em>, <em>weight=None</em>, <em>exponent=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#InputState.InputState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="State.html"><span class="doc">State</span></a> that calculates and represents the input to a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> from one or more
 <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjection</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -390,6 +424,8 @@ item of its owner Mechanism’s <a class="reference internal" href="Mechanism.ht
 received by the InputState, and that will be listed in its <a class="reference internal" href="#InputState.InputState.path_afferents" title="InputState.InputState.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> and
 <a class="reference internal" href="#InputState.InputState.mod_afferents" title="InputState.InputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attributes, respectively (see <a class="reference internal" href="#inputstate-projections"><span class="std std-ref">Projections</span></a> for additional
 details).</li>
+<li><strong>weight</strong> (<em>int</em><em> or </em><em>float : default 1</em>) – specifies the value of the <a class="reference internal" href="#InputState.InputState.weight" title="InputState.InputState.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> attribute of the InputState.</li>
+<li><strong>exponent</strong> (<em>int</em><em> or </em><em>float : default 1</em>) – specifies the value of the <a class="reference internal" href="#InputState.InputState.exponent" title="InputState.InputState.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> attribute of the InputState.</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the InputState or its function, and/or a custom function and its parameters. Values specified for parameters in
 the dictionary override any assigned to those parameters in arguments of the constructor.</li>
@@ -454,6 +490,18 @@ by the InputState.</p>
 InputState (and listed in its <a class="reference internal" href="#InputState.InputState.path_afferents" title="InputState.InputState.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute), possibly <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulated</span></a> by any <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> it receives (listed in its
 <a class="reference internal" href="#InputState.InputState.mod_afferents" title="InputState.InputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute).  The result (whether a value or an ndarray) is
 assigned to an item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="InputState.InputState.weight">
+<code class="descname">weight</code><a class="headerlink" href="#InputState.InputState.weight" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int or float</em> – see <a class="reference internal" href="#inputstate-weights-and-exponents"><span class="std std-ref">Weights and Exponents</span></a> for description.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="InputState.InputState.exponent">
+<code class="descname">exponent</code><a class="headerlink" href="#InputState.InputState.exponent" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int or float</em> – see <a class="reference internal" href="#inputstate-weights-and-exponents"><span class="std std-ref">Weights and Exponents</span></a> for description.</p>
 </dd></dl>
 
 <dl class="attribute">

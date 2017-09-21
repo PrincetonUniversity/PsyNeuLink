@@ -95,13 +95,16 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Scheduling.html">Scheduling</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Condition</a></li>
-<li class="toctree-l2"><a class="reference internal" href="TimeScale.html">TimeScale</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Component.html">Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Scheduling.html">Scheduling</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Condition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TimeScale.html">TimeScale</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Run.html">Run</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
@@ -148,6 +151,8 @@
   <ul class="wy-breadcrumbs">
     
       <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Core.html">Core</a> &raquo;</li>
         
           <li><a href="Scheduling.html">Scheduling</a> &raquo;</li>
         
@@ -207,7 +212,7 @@ context and assigned automatically, as in the following example:</p>
 <span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Here, <code class="xref any docutils literal"><span class="pre">EveryNCalls(A,</span> <span class="pre">2)</span></code> for example, is assigned the <a class="reference internal" href="Function.html#Function.UniformDist.owner" title="Function.UniformDist.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> <code class="xref any docutils literal"><span class="pre">B</span></code>, and the scheduler <code class="xref any docutils literal"><span class="pre">my_scheduler</span></code>.</p>
+<p>Here, <code class="xref any docutils literal"><span class="pre">EveryNCalls(A,</span> <span class="pre">2)</span></code> for example, is assigned the <a class="reference internal" href="Function.html#Function.NormalDist.owner" title="Function.NormalDist.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> <code class="xref any docutils literal"><span class="pre">B</span></code>, and the scheduler <code class="xref any docutils literal"><span class="pre">my_scheduler</span></code>.</p>
 </div>
 <div class="section" id="custom-conditions">
 <span id="condition-custom"></span><h3>Custom Conditions<a class="headerlink" href="#custom-conditions" title="Permalink to this headline">¶</a></h3>
@@ -398,7 +403,7 @@ for which it is <a class="reference internal" href="TimeScale.html#Scheduling.Ti
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.EveryNCalls" title="Scheduling.Condition.EveryNCalls"><code class="xref any py py-class docutils literal"><span class="pre">EveryNCalls</span></code></a>(Component, int[, TimeScale])</dt>
-<dd>satisfied when the specified Component has executed the specified number of times since the       last time <a class="reference internal" href="Function.html#Function.UniformDist.owner" title="Function.UniformDist.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> has run.</dd>
+<dd>satisfied when the specified Component has executed the specified number of times since the       last time <a class="reference internal" href="Function.html#Function.NormalDist.owner" title="Function.NormalDist.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> has run.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
@@ -449,7 +454,7 @@ of execution generated by that <a class="reference internal" href="TimeScale.htm
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>scheduler</strong> (<a class="reference internal" href="Scheduler.html#Scheduling.Scheduler.Scheduler" title="Scheduling.Scheduler.Scheduler"><em>Scheduler</em></a>) – specifies the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> used to evaluate and maintain a record of the information required to
+<li><strong>scheduler</strong> (<a class="reference internal" href="Scheduler.html#module-Scheduling.Scheduler" title="Scheduling.Scheduler"><em>Scheduler</em></a>) – specifies the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> used to evaluate and maintain a record of the information required to
 evaluate the <a class="reference internal" href="#"><span class="doc">Conditions</span></a></li>
 <li><strong>conditions</strong> (dict{<a class="reference internal" href="Component.html"><span class="doc">Component</span></a>: <a class="reference internal" href="#"><span class="doc">Condition</span></a>}) – specifies an iterable collection of <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> and the <a class="reference internal" href="#"><span class="doc">Conditions</span></a> associated
 with each.</li>
@@ -743,7 +748,7 @@ specifies keyword arguments to pass to <code class="xref any docutils literal"><
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>n</strong> (<em>int</em>) – the ‘PASS’ before which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale" title="Scheduling.TimeScale.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -771,7 +776,7 @@ so, <code class="xref any docutils literal"><span class="pre">BeforePass(2)</spa
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> at which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale" title="Scheduling.TimeScale.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -800,7 +805,7 @@ so, <code class="xref any docutils literal"><span class="pre">AtPass(1)</span></
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> after which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale" title="Scheduling.TimeScale.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -828,7 +833,7 @@ so, <code class="xref any docutils literal"><span class="pre">AtPass(1)</span></
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es after which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale" title="Scheduling.TimeScale.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -851,7 +856,7 @@ so, <code class="xref any docutils literal"><span class="pre">AtPass(1)</span></
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>n</strong> (<em>int</em>) – the frequency of passes with which this condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale" title="Scheduling.TimeScale.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -876,7 +881,7 @@ so, <code class="xref any docutils literal"><span class="pre">AtPass(1)</span></
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> before which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s (default: TimeScale.RUN)</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale" title="Scheduling.TimeScale.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s (default: TimeScale.RUN)</li>
 </ul>
 </td>
 </tr>
@@ -904,7 +909,7 @@ so, <code class="xref any docutils literal"><span class="pre">BeforeTrial(2)</sp
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> at which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s (default: TimeScale.RUN)</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale" title="Scheduling.TimeScale.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s (default: TimeScale.RUN)</li>
 </ul>
 </td>
 </tr>
@@ -932,7 +937,7 @@ so, <code class="xref any docutils literal"><span class="pre">AtTrial(1)</span><
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> after which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s. (default: TimeScale.RUN)</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale" title="Scheduling.TimeScale.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s. (default: TimeScale.RUN)</li>
 </ul>
 </td>
 </tr>
@@ -961,7 +966,7 @@ etc.).</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s after which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s (default: TimeScale.RUN)</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale" title="Scheduling.TimeScale.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s (default: TimeScale.RUN)</li>
 </ul>
 </td>
 </tr>
@@ -985,7 +990,7 @@ etc.).</li>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) – the Component on which the Condition depends</li>
 <li><strong>n</strong> (<em>int</em>) – the number of executions of <strong>component</strong> before which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale" title="Scheduling.TimeScale.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -1010,7 +1015,7 @@ within one unit of time at the <a class="reference internal" href="TimeScale.htm
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) – the Component on which the Condition depends</li>
 <li><strong>n</strong> (<em>int</em>) – the number of executions of <strong>component</strong> at which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale" title="Scheduling.TimeScale.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -1035,7 +1040,7 @@ within one unit of time at the <a class="reference internal" href="TimeScale.htm
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) – the Component on which the Condition depends</li>
 <li><strong>n</strong> (<em>int</em>) – the number of executions of <strong>component</strong> after which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale" title="Scheduling.TimeScale.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -1060,7 +1065,7 @@ within one unit of time at the <a class="reference internal" href="TimeScale.htm
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) – the Component on which the Condition depends</li>
 <li><strong>n</strong> (<em>int</em>) – the number of executions of <strong>component</strong> after which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale" title="Scheduling.TimeScale.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -1085,7 +1090,7 @@ within one unit of time at the <a class="reference internal" href="TimeScale.htm
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>*components</strong> (<em>Components</em>) – one or more Components on which the Condition depends</li>
 <li><strong>n</strong> (<em>int</em>) – the number of combined executions of all Components specified in <strong>components</strong> after which the         Condition is satisfied (default: None)</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale" title="Scheduling.TimeScale.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -1162,7 +1167,7 @@ JustRan(A) is satisfied at the beginning of the next <a class="reference interna
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>*components</strong> (<em>Components</em>) – an iterable of Components on which the Condition depends</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale" title="Scheduling.TimeScale.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>

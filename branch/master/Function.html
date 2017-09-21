@@ -95,17 +95,20 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projections</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Functions</a><ul class="simple">
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Functions</a><ul class="simple">
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -151,6 +154,8 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
+          <li><a href="Core.html">Core</a> &raquo;</li>
+        
           <li><a href="Component.html">Components</a> &raquo;</li>
         
       <li>Functions</li>
@@ -186,6 +191,7 @@
 <dd><ul class="first last simple">
 <li><a class="reference internal" href="#Function.Reduce" title="Function.Reduce"><code class="xref any py py-class docutils literal"><span class="pre">Reduce</span></code></a></li>
 <li><a class="reference internal" href="#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a></li>
+<li><code class="xref any docutils literal"><span class="pre">CombineMeans</span></code></li>
 </ul>
 </dd>
 <dt>TransferMechanism Functions:</dt>
@@ -206,6 +212,8 @@
 <li><a class="reference internal" href="#Function.DriftDiffusionIntegrator" title="Function.DriftDiffusionIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">DriftDiffusionIntegrator</span></code></a></li>
 <li><a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator" title="Function.OrnsteinUhlenbeckIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">OrnsteinUhlenbeckIntegrator</span></code></a></li>
 <li><a class="reference internal" href="#Function.AccumulatorIntegrator" title="Function.AccumulatorIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AccumulatorIntegrator</span></code></a></li>
+<li><a class="reference internal" href="#Function.FHNIntegrator" title="Function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a></li>
+<li><a class="reference internal" href="#Function.AGTUtilityIntegrator" title="Function.AGTUtilityIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AGTUtilityIntegrator</span></code></a></li>
 <li><a class="reference internal" href="#Function.BogaczEtAl" title="Function.BogaczEtAl"><code class="xref any py py-class docutils literal"><span class="pre">BogaczEtAl</span></code></a></li>
 <li><a class="reference internal" href="#Function.NavarroAndFuss" title="Function.NavarroAndFuss"><code class="xref any py py-class docutils literal"><span class="pre">NavarroAndFuss</span></code></a></li>
 </ul>
@@ -295,9 +303,11 @@ used by <a class="reference internal" href="ControlProjection.html"><span class=
 <div class="section" id="modulatory-parameters">
 <span id="function-modulatory-params"></span><h3>Modulatory Parameters<a class="headerlink" href="#modulatory-parameters" title="Permalink to this headline">¶</a></h3>
 <p>Some classes of Functions also implement a pair of modulatory parameters: <code class="xref any docutils literal"><span class="pre">multiplicative_param</span></code> and <code class="xref any docutils literal"><span class="pre">additive_param</span></code>.
-Each of these is assigned the name of one of the function’s parameters. These are used by <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> to modulate the output of the function.  For example, they are used by <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> to modulate the <a class="reference internal" href="State.html#State.State_Base.function" title="State.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (and thereby the <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>) of
-an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>; and by the <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> of an <a class="reference internal" href="LCMechanism.html"><span class="doc">LCMechanism</span></a> to
-modulate the <a class="reference internal" href="TransferMechanism.html#TransferMechanism.TransferMechanism.function" title="TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>.</p>
+Each of these is assigned the name of one of the function’s parameters. These are used by <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> to modulate the output of the function (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-detail-figure"><span class="std std-ref">figure</span></a>).  For
+example, they are used by <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignals</span></a> to modulate the <a class="reference internal" href="State.html#State.State_Base.function" title="State.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an
+<a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, and thereby its <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>; and by the <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal(s)</span></a>
+of an <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a> to modulate the <code class="xref any docutils literal"><span class="pre">multiplicative_param</span></code> of the <a class="reference internal" href="TransferMechanism.html#TransferMechanism.TransferMechanism.function" title="TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a
+<a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>.</p>
 </div>
 </div>
 <div class="section" id="execution">
@@ -503,7 +513,7 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function"><em>function</em></a>) – specifies function to “wrap.” It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="#Function.UserDefinedFunction.function" title="Function.UserDefinedFunction.function"><em>function</em></a>) – specifies function to “wrap.” It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
 <li><strong>variable</strong> (<em>value : default ClassDefaults.variable</em>) – specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
@@ -651,7 +661,8 @@ arguments of the constructor.</li>
 <dl class="class">
 <dt id="Function.LinearCombination">
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LinearCombination</code><span class="sig-paren">(</span><em>default_variable</em>, <em>weights=None</em>, <em>exponents=None</em>, <em>operation=SUM</em>, <em>scale=None</em>, <em>offset=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearCombination" title="Permalink to this definition">¶</a></dt>
-<dd><p id="linearcombination">Linearly combine arrays of values with optional integration_type, exponentiation, scaling and/or offset.</p>
+<dd><p id="linearcombination">Linearly combine arrays of values, with optional weighting and/or exponentiation of each array prior to combining,
+and scaling and/or offset of result.</p>
 <p>Combines the arrays in the items of the <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument.  Each array can be
 individually weighted and/or exponentiated; they can combined additively or multiplicatively; and the resulting
 array can be multiplicatively transformed and/or additively offset.</p>
@@ -671,11 +682,11 @@ If it is 1d, its length must equal the number of items in <a class="reference in
 if it is 2d, the length of each item must be the same as those in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>,
 and there must be the same number of items as there are in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#Function.LinearCombination.exponents" title="Function.LinearCombination.exponents"><code class="xref any py py-attr docutils literal"><span class="pre">exponents</span></code></a> for details)</li>
-<li><strong>operation</strong> (<em>SUM</em><em> or </em><em>PRODUCT</em>) – specifies whether the <a class="reference internal" href="#Function.LinearCombination.function" title="Function.LinearCombination.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> takes the elementwise (Hadamarad)
+<li><strong>operation</strong> (<em>SUM</em><em> or </em><em>PRODUCT : default SUM</em>) – specifies whether the <a class="reference internal" href="#Function.LinearCombination.function" title="Function.LinearCombination.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> takes the elementwise (Hadamarad)
 sum or product of the arrays in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
-<li><strong>scale</strong> (<em>float</em><em> or </em><em>np.ndarray : default None</em>) – specifies a value by which to multiply each element of the output of <a class="reference internal" href="#Function.LinearCombination.function" title="Function.LinearCombination.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
+<li><strong>scale</strong> (<em>float</em><em> or </em><em>np.ndarray : default None</em>) – specifies a value by which to multiply each element of the result of <a class="reference internal" href="#Function.LinearCombination.function" title="Function.LinearCombination.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
 (see <a class="reference internal" href="#Function.LinearCombination.scale" title="Function.LinearCombination.scale"><code class="xref any py py-attr docutils literal"><span class="pre">scale</span></code></a> for details)</li>
-<li><strong>offset</strong> (<em>float</em><em> or </em><em>np.ndarray : default None</em>) – specifies a value to add to each element of the output of <a class="reference internal" href="#Function.LinearCombination.function" title="Function.LinearCombination.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
+<li><strong>offset</strong> (<em>float</em><em> or </em><em>np.ndarray : default None</em>) – specifies a value to add to each element of the result of <a class="reference internal" href="#Function.LinearCombination.function" title="Function.LinearCombination.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
 (see <a class="reference internal" href="#Function.LinearCombination.offset" title="Function.LinearCombination.offset"><code class="xref any py py-attr docutils literal"><span class="pre">offset</span></code></a> for details)</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -789,7 +800,7 @@ arguments of the constructor.</li>
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">TransferFunction</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params</em>, <em>owner</em>, <em>prefs</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.TransferFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that transforms variable but maintains its shape</p>
 <p>All TransferFunctions must have the following attributes:</p>
-<p><a class="reference internal" href="#Function.SoftMax.bounds" title="Function.SoftMax.bounds"><code class="xref any py py-attr docutils literal"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
+<p><a class="reference internal" href="#Function.Exponential.bounds" title="Function.Exponential.bounds"><code class="xref any py py-attr docutils literal"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
 <code class="xref any docutils literal"><span class="pre">None</span></code>;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
 respectively, with <code class="xref any docutils literal"><span class="pre">None</span></code> as the entry for no bound.</p>
 <p><code class="xref any docutils literal"><span class="pre">multiplicative_param</span></code> and <code class="xref any docutils literal"><span class="pre">additive_param</span></code> – each of these is assigned the name of one of the function’s
@@ -1261,7 +1272,7 @@ value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, 
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>variable</strong> (<em>list</em><em> or </em><em>1d np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed; length must equal the number of rows of <a class="reference internal" href="#Function.LinearMatrix.matrix" title="Function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
-<li><strong>matrix</strong> (<em>number</em><em>, </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function"><em>function</em></a><em>, or </em><em>matrix keyword : default IDENTITY_MATRIX</em>) – specifies matrix used to transform <a class="reference internal" href="#Function.LinearMatrix.variable" title="Function.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+<li><strong>matrix</strong> (<em>number</em><em>, </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="#Function.UserDefinedFunction.function" title="Function.UserDefinedFunction.function"><em>function</em></a><em>, or </em><em>matrix keyword : default IDENTITY_MATRIX</em>) – specifies matrix used to transform <a class="reference internal" href="#Function.LinearMatrix.variable" title="Function.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#Function.LinearMatrix.matrix" title="Function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> for specification details).</li>
 <li><strong>bounds</strong> (<em>None</em>) – </li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -1368,7 +1379,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="Function.Integrator">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>default_variable=None, rate: &lt;function parameter_spec at 0x104ee3268&gt; = 1.0, noise=0.0, initializer=[[0]], params: &lt;typecheck.framework.optional object at 0x107264978&gt; = None, owner=None, prefs: &lt;function is_pref_set at 0x104ee5e18&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>default_variable=None, rate: &lt;function parameter_spec at 0x1055bd1e0&gt; = 1.0, noise=0.0, initializer=[[0]], params: &lt;typecheck.framework.optional object at 0x10667f320&gt; = None, owner=None, prefs: &lt;function is_pref_set at 0x1055bed90&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Integrator(                         default_variable=None,          rate=1.0,</dt>
 <dd>noise=0.0,                      time_step_size=1.0,             initializer,             params=None,                    owner=None,                     prefs=None,                     )</dd>
@@ -1387,7 +1398,7 @@ integrated.</li>
 <a class="reference internal" href="#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
 <li><strong>time_step_size</strong> (<em>float : default 0.0</em>) – determines the timing precision of the integration process when <a class="reference internal" href="#Function.Integrator.integration_type" title="Function.Integrator.integration_type"><code class="xref any py py-attr docutils literal"><span class="pre">integration_type</span></code></a>
 is set to DIFFUSION (see <code class="xref any docutils literal"><span class="pre">time_step_size</span></code> for details.</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#Function.SimpleIntegrator.initializer" title="Function.SimpleIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#Function.DriftDiffusionIntegrator.initializer" title="Function.DriftDiffusionIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#Function.Integrator.initializer" title="Function.Integrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1475,7 +1486,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <dt id="Function.SimpleIntegrator">
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">SimpleIntegrator</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate=1.0</em>, <em>noise=0.0</em>, <em>initializer</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SimpleIntegrator" title="Permalink to this definition">¶</a></dt>
 <dd><p id="simpleintegrator">Integrate current value of <a class="reference internal" href="#Function.SimpleIntegrator.variable" title="Function.SimpleIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> with its prior value:</p>
-<p><a class="reference internal" href="#Function.SimpleIntegrator.previous_value" title="Function.SimpleIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> +     <a class="reference internal" href="#Function.SimpleIntegrator.rate" title="Function.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> <a href="#id1"><span class="problematic" id="id2">*</span></a><code class="xref any docutils literal"><span class="pre">variable</span></code> +     <a class="reference internal" href="#Function.SimpleIntegrator.noise" title="Function.SimpleIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>;</p>
+<p><code class="xref any docutils literal"><span class="pre">previous_value</span></code> +     <a class="reference internal" href="#Function.SimpleIntegrator.rate" title="Function.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> <a href="#id1"><span class="problematic" id="id2">*</span></a><code class="xref any docutils literal"><span class="pre">variable</span></code> +     <a class="reference internal" href="#Function.SimpleIntegrator.noise" title="Function.SimpleIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>;</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1487,8 +1498,8 @@ integrated.</li>
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#Function.SimpleIntegrator.rate" title="Function.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
 <li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#Function.SimpleIntegrator.function" title="Function.SimpleIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
 <a class="reference internal" href="#Function.SimpleIntegrator.noise" title="Function.SimpleIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#Function.SimpleIntegrator.initializer" title="Function.SimpleIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
-<code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#Function.SimpleIntegrator.initializer" title="Function.SimpleIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#Function.DriftDiffusionIntegrator.initializer" title="Function.DriftDiffusionIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <code class="xref any docutils literal"><span class="pre">initializer</span></code> for details).</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1523,51 +1534,37 @@ applies to the corresponding element of <a class="reference internal" href="#Fun
 <p>If noise is specified as a single float or function, while <a class="reference internal" href="#Function.SimpleIntegrator.variable" title="Function.SimpleIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or array,
 noise will be applied to each variable element. In the case of a noise function, this means that the function
 will be executed separately for each variable element.</p>
-<p><strong>Note:</strong>
-In order to generate random noise, we recommend selecting a probability distribution function
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In order to generate random noise, we recommend selecting a probability distribution function
 (see <code class="xref any docutils literal"><span class="pre">Distribution</span> <span class="pre">Functions</span></code> for details), which will generate a new noise value from
 its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
 the noise will simply be an offset that remains the same across all executions.</p>
+</div>
+</div></blockquote>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="Function.SimpleIntegrator.initializer">
-<code class="descname">initializer</code><a class="headerlink" href="#Function.SimpleIntegrator.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, 1d np.array or list</em> – determines the starting value for integration (i.e., the value to which
-<a class="reference internal" href="#Function.SimpleIntegrator.previous_value" title="Function.SimpleIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set.</p>
-<p>If initializer is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
-<p>TBI:</p>
-<p>Initializer may be a function or list/array of functions.</p>
-<p>If initializer is specified as a single float or function, while <a class="reference internal" href="#Function.SimpleIntegrator.variable" title="Function.SimpleIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
-a list or array, initializer will be applied to each variable element. In the case of an initializer function,
-this means that the function will be executed separately for each variable element.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Function.SimpleIntegrator.previous_value">
-<code class="descname">previous_value</code><a class="headerlink" href="#Function.SimpleIntegrator.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default ClassDefaults.variable</em> – stores previous value with which <a class="reference internal" href="#Function.SimpleIntegrator.variable" title="Function.SimpleIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Function.SimpleIntegrator.owner">
-<code class="descname">owner</code><a class="headerlink" href="#Function.SimpleIntegrator.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Mechanism</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Function.SimpleIntegrator.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#Function.SimpleIntegrator.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
+<dl class="docutils">
+<dt>initializer <span class="classifier-delimiter">:</span> <span class="classifier">float, 1d np.array or list</span></dt>
+<dd><p class="first">determines the starting value for integration (i.e., the value to which
+<code class="xref any docutils literal"><span class="pre">previous_value</span></code> is set.</p>
+<p class="last">If initializer is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
+</dd>
+<dt>previous_value <span class="classifier-delimiter">:</span> <span class="classifier">1d np.array</span> <span class="classifier-delimiter">:</span> <span class="classifier">default ClassDefaults.variable</span></dt>
+<dd>stores previous value with which <a class="reference internal" href="#Function.SimpleIntegrator.variable" title="Function.SimpleIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</dd>
+<dt>owner <span class="classifier-delimiter">:</span> <span class="classifier">Mechanism</span></dt>
+<dd><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</dd>
+<dt>prefs <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Projection.classPreferences</span></dt>
+<dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
-</dd></dl>
-
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</dd>
+</dl>
 <dl class="method">
 <dt id="Function.SimpleIntegrator.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SimpleIntegrator.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return: <a class="reference internal" href="#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> combined with <a class="reference internal" href="#Function.SimpleIntegrator.previous_value" title="Function.SimpleIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>
-according to <a class="reference internal" href="#Function.SimpleIntegrator.previous_value" title="Function.SimpleIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> + <a class="reference internal" href="#Function.SimpleIntegrator.rate" title="Function.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> <a href="#id3"><span class="problematic" id="id4">*</span></a><code class="xref any docutils literal"><span class="pre">variable</span></code> + <a class="reference internal" href="#Function.SimpleIntegrator.noise" title="Function.SimpleIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>;</p>
+<dd><p>Return: <a class="reference internal" href="#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> combined with <code class="xref any docutils literal"><span class="pre">previous_value</span></code>
+according to <code class="xref any docutils literal"><span class="pre">previous_value</span></code> + <a class="reference internal" href="#Function.SimpleIntegrator.rate" title="Function.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> <a href="#id3"><span class="problematic" id="id4">*</span></a><code class="xref any docutils literal"><span class="pre">variable</span></code> + <a class="reference internal" href="#Function.SimpleIntegrator.noise" title="Function.SimpleIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>;</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1577,7 +1574,6 @@ according to <a class="reference internal" href="#Function.SimpleIntegrator.prev
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
-<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) – specifies whether the function is executed on the time_step or trial time scale.</li>
 </ul>
 </td>
 </tr>
@@ -1596,9 +1592,10 @@ arguments of the constructor.</li>
 <dl class="class">
 <dt id="Function.ConstantIntegrator">
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">ConstantIntegrator</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate=1.0</em>, <em>noise=0.0</em>, <em>scale: parameter_spec = 1.0</em>, <em>offset: parameter_spec = 0.0</em>, <em>initializer</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.ConstantIntegrator" title="Permalink to this definition">¶</a></dt>
-<dd><p id="constantintegrator">Integrates prior value by adding <a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> and <a class="reference internal" href="#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>. Ignores
+<dd><p id="constantintegrator">Integrates prior value by adding <a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> and <a class="reference internal" href="#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>. (Ignores
 <a class="reference internal" href="#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>).</p>
-<p><a class="reference internal" href="#Function.Integrator.previous_value" title="Function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> + <a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> + <a class="reference internal" href="#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a></p>
+<p><a class="reference internal" href="#Function.ConstantIntegrator.previous_value" title="Function.ConstantIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> + <a class="reference internal" href="#Function.ConstantIntegrator.rate" title="Function.ConstantIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> +
+<a class="reference internal" href="#Function.ConstantIntegrator.noise" title="Function.ConstantIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1610,7 +1607,7 @@ integrated.</li>
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#Function.ConstantIntegrator.rate" title="Function.ConstantIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
 <li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#Function.ConstantIntegrator.function" title="Function.ConstantIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
 <a class="reference internal" href="#Function.ConstantIntegrator.noise" title="Function.ConstantIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#Function.SimpleIntegrator.initializer" title="Function.SimpleIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#Function.DriftDiffusionIntegrator.initializer" title="Function.DriftDiffusionIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#Function.ConstantIntegrator.initializer" title="Function.ConstantIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1651,11 +1648,13 @@ defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> 
 <p>If noise is specified as a single float or function, while <a class="reference internal" href="#Function.ConstantIntegrator.variable" title="Function.ConstantIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or array,
 noise will be applied to each variable element. In the case of a noise function, this means that the function
 will be executed separately for each variable element.</p>
-<p><strong>Note:</strong>
-In order to generate random noise, we recommend selecting a probability distribution function
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In order to generate random noise, we recommend selecting a probability distribution function
 (see <code class="xref any docutils literal"><span class="pre">Distribution</span> <span class="pre">Functions</span></code> for details), which will generate a new noise value from
 its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
 the noise will simply be an offset that remains the same across all executions.</p>
+</div>
 </dd></dl>
 
 <dl class="attribute">
@@ -1664,11 +1663,6 @@ the noise will simply be an offset that remains the same across all executions.<
 <dd><p><em>float, 1d np.array or list</em> – determines the starting value for integration (i.e., the value to which
 <a class="reference internal" href="#Function.ConstantIntegrator.previous_value" title="Function.ConstantIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set.</p>
 <p>If initializer is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
-<p>TBI:</p>
-<p>Initializer may be a function or list/array of functions.</p>
-<p>If initializer is specified as a single float or function, while <a class="reference internal" href="#Function.ConstantIntegrator.variable" title="Function.ConstantIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
-a list or array, initializer will be applied to each variable element. In the case of an initializer function,
-this means that the function will be executed separately for each variable element.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1695,7 +1689,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="method">
 <dt id="Function.ConstantIntegrator.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.ConstantIntegrator.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return: <a class="reference internal" href="#Function.ConstantIntegrator.previous_value" title="Function.ConstantIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> combined with <a class="reference internal" href="#Function.ConstantIntegrator.rate" title="Function.ConstantIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> and
+<dd><p>Return: the sum of <a class="reference internal" href="#Function.ConstantIntegrator.previous_value" title="Function.ConstantIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>, <a class="reference internal" href="#Function.ConstantIntegrator.rate" title="Function.ConstantIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>, and
 <a class="reference internal" href="#Function.ConstantIntegrator.noise" title="Function.ConstantIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1724,7 +1718,9 @@ arguments of the constructor.</li>
 <dl class="class">
 <dt id="Function.AdaptiveIntegrator">
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">AdaptiveIntegrator</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate=1.0</em>, <em>noise=0.0</em>, <em>scale: parameter_spec = 1.0</em>, <em>offset: parameter_spec = 0.0</em>, <em>initializer</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.AdaptiveIntegrator" title="Permalink to this definition">¶</a></dt>
-<dd><p id="adaptiveintegrator">Integrate current value of <a class="reference internal" href="#Function.AdaptiveIntegrator.variable" title="Function.AdaptiveIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> with its prior value.</p>
+<dd><p id="adaptiveintegrator">Computes an exponentially weighted moving average.</p>
+<p>(1 - <a class="reference internal" href="#Function.AdaptiveIntegrator.rate" title="Function.AdaptiveIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) * <a class="reference internal" href="#Function.AdaptiveIntegrator.previous_value" title="Function.AdaptiveIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> + <a class="reference internal" href="#Function.AdaptiveIntegrator.rate" title="Function.AdaptiveIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> *
+<a class="reference internal" href="#Function.AdaptiveIntegrator.variable" title="Function.AdaptiveIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> + <a class="reference internal" href="#Function.AdaptiveIntegrator.noise" title="Function.AdaptiveIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1732,11 +1728,11 @@ arguments of the constructor.</li>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
 integrated.</li>
-<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the rate of integration.  If it is a list or array, it must be the same length as
+<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the smoothing factor of the EWMA.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#Function.AdaptiveIntegrator.rate" title="Function.AdaptiveIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
 <li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#Function.AdaptiveIntegrator.function" title="Function.AdaptiveIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
 <a class="reference internal" href="#Function.AdaptiveIntegrator.noise" title="Function.AdaptiveIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#Function.SimpleIntegrator.initializer" title="Function.SimpleIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#Function.DriftDiffusionIntegrator.initializer" title="Function.DriftDiffusionIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#Function.AdaptiveIntegrator.initializer" title="Function.AdaptiveIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1752,18 +1748,20 @@ defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> 
 <dl class="attribute">
 <dt id="Function.AdaptiveIntegrator.variable">
 <code class="descname">variable</code><a class="headerlink" href="#Function.AdaptiveIntegrator.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – current input value some portion of which (determined by <a class="reference internal" href="#Function.AdaptiveIntegrator.rate" title="Function.AdaptiveIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) that will be
+<dd><p><em>number or np.array</em> – current input value some portion of which (determined by <a class="reference internal" href="#Function.AdaptiveIntegrator.rate" title="Function.AdaptiveIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) will be
 added to the prior value;  if it is an array, each element is independently integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Function.AdaptiveIntegrator.rate">
 <code class="descname">rate</code><a class="headerlink" href="#Function.AdaptiveIntegrator.rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the rate of integration based on current and prior values.  All rate elements must be between 0 and 1
-(0 = no change; 1 = instantaneous change).</p>
-<p>If rate is a float, it is applied to all elements of <code class="xref any docutils literal"><span class="pre">variable</span></code>;
-if it has more than one element, each element is applied to the corresponding element of
-<code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
+<dd><p><em>float or 1d np.array</em> – determines the smoothing factor of the EWMA. All rate elements must be between 0 and 1 (rate = 0 –&gt; no change,
+<code class="xref any docutils literal"><span class="pre">variable</span></code> is ignored; rate = 1 –&gt;
+<a class="reference internal" href="#Function.AdaptiveIntegrator.previous_value" title="Function.AdaptiveIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is ignored).</p>
+<p>If rate is a float, it is applied to all elements of <code class="xref any docutils literal"><span class="pre">variable</span></code> (and
+<a class="reference internal" href="#Function.AdaptiveIntegrator.previous_value" title="Function.AdaptiveIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>); if it has more than one element, each element is applied
+to the corresponding element of <code class="xref any docutils literal"><span class="pre">variable</span></code> (and
+<a class="reference internal" href="#Function.AdaptiveIntegrator.previous_value" title="Function.AdaptiveIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1786,14 +1784,9 @@ the noise will simply be an offset that remains the same across all executions.<
 <dl class="attribute">
 <dt id="Function.AdaptiveIntegrator.initializer">
 <code class="descname">initializer</code><a class="headerlink" href="#Function.AdaptiveIntegrator.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, 1d np.array or list</em> – determines the starting value for integration (i.e., the value to which
-<a class="reference internal" href="#Function.AdaptiveIntegrator.previous_value" title="Function.AdaptiveIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set.</p>
+<dd><p><em>float, 1d np.array or list</em> – determines the starting value for time-averaging (i.e., the value to which
+<a class="reference internal" href="#Function.AdaptiveIntegrator.previous_value" title="Function.AdaptiveIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is originally set).</p>
 <p>If initializer is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
-<p>TBI:</p>
-<p>Initializer may be a function or list/array of functions.</p>
-<p>If initializer is specified as a single float or function, while <a class="reference internal" href="#Function.AdaptiveIntegrator.variable" title="Function.AdaptiveIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
-a list or array, initializer will be applied to each variable element. In the case of an initializer function,
-this means that the function will be executed separately for each variable element.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1847,8 +1840,8 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="Function.DriftDiffusionIntegrator">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">DriftDiffusionIntegrator</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate=1.0</em>, <em>noise=0.0</em>, <em>scale: parameter_spec = 1.0</em>, <em>offset: parameter_spec = 0.0</em>, <em>time_step_size=1.0</em>, <em>initializer</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.DriftDiffusionIntegrator" title="Permalink to this definition">¶</a></dt>
-<dd><p id="driftdiffusionintegrator">Integrate current value of <a class="reference internal" href="#Function.DriftDiffusionIntegrator.variable" title="Function.DriftDiffusionIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> with its prior value.</p>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">DriftDiffusionIntegrator</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate=1.0</em>, <em>noise=0.0</em>, <em>scale: parameter_spec = 1.0</em>, <em>offset: parameter_spec = 0.0</em>, <em>time_step_size=1.0</em>, <em>t0=0.0</em>, <em>decay=0.0</em>, <em>initializer</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.DriftDiffusionIntegrator" title="Permalink to this definition">¶</a></dt>
+<dd><p id="driftdiffusionintegrator">Accumulate evidence overtime based on a stimulus, previous position, and noise.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1861,7 +1854,9 @@ integrated.</li>
 <li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#Function.DriftDiffusionIntegrator.function" title="Function.DriftDiffusionIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
 <a class="reference internal" href="#Function.DriftDiffusionIntegrator.noise" title="Function.DriftDiffusionIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
 <li><strong>time_step_size</strong> (<em>float : default 0.0</em>) – determines the timing precision of the integration process (see <a class="reference internal" href="#Function.DriftDiffusionIntegrator.time_step_size" title="Function.DriftDiffusionIntegrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> for details.</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#Function.SimpleIntegrator.initializer" title="Function.SimpleIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>t0</strong> (<em>float</em>) – determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
+the DDM Mechanism.</li>
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#Function.DriftDiffusionIntegrator.initializer" title="Function.DriftDiffusionIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#Function.DriftDiffusionIntegrator.initializer" title="Function.DriftDiffusionIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1877,8 +1872,7 @@ defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> 
 <dl class="attribute">
 <dt id="Function.DriftDiffusionIntegrator.variable">
 <code class="descname">variable</code><a class="headerlink" href="#Function.DriftDiffusionIntegrator.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – current input value some portion of which (determined by <a class="reference internal" href="#Function.DriftDiffusionIntegrator.rate" title="Function.DriftDiffusionIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) that will be
-added to the prior value;  if it is an array, each element is independently integrated.</p>
+<dd><p><em>number or np.array</em> – current input value, which represents the stimulus component of drift.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1905,16 +1899,25 @@ value will be used to construct the standard DDM probability distribution.</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="Function.DriftDiffusionIntegrator.t0">
+<code class="descname">t0</code><a class="headerlink" href="#Function.DriftDiffusionIntegrator.t0" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
+the DDM Mechanism.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="Function.DriftDiffusionIntegrator.initializer">
 <code class="descname">initializer</code><a class="headerlink" href="#Function.DriftDiffusionIntegrator.initializer" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>float, 1d np.array or list</em> – determines the starting value for integration (i.e., the value to which
 <a class="reference internal" href="#Function.DriftDiffusionIntegrator.previous_value" title="Function.DriftDiffusionIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set.</p>
 <p>If initializer is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
-<p>TBI:</p>
-<p>Initializer may be a function or list/array of functions.</p>
-<p>If initializer is specified as a single float or function, while <a class="reference internal" href="#Function.DriftDiffusionIntegrator.variable" title="Function.DriftDiffusionIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
-a list or array, initializer will be applied to each variable element. In the case of an initializer function,
-this means that the function will be executed separately for each variable element.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.DriftDiffusionIntegrator.previous_time">
+<code class="descname">previous_time</code><a class="headerlink" href="#Function.DriftDiffusionIntegrator.previous_time" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – stores previous time at which the function was executed and accumulates with each execution according to
+<code class="xref any docutils literal"><span class="pre">time_step_size</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1940,18 +1943,18 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="method">
 <dt id="Function.DriftDiffusionIntegrator.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.DriftDiffusionIntegrator.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return: some fraction of <a class="reference internal" href="#Function.DriftDiffusionIntegrator.variable" title="Function.DriftDiffusionIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> combined with some fraction of
-<a class="reference internal" href="#Function.DriftDiffusionIntegrator.previous_value" title="Function.DriftDiffusionIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>.</p>
+<dd><p>Return: One time step of evidence accumulation according to the Drift Diffusion Model</p>
+<p>previous_value + rate * variable * time_step_size +  * random
+sample from Normal distribution</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – a single value or array of values to be integrated.</li>
+<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – the stimulus component of drift rate in the Drift Diffusion Model.</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
-<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) – specifies whether the function is executed on the time_step or trial time scale.</li>
 </ul>
 </td>
 </tr>
@@ -1969,8 +1972,8 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="Function.OrnsteinUhlenbeckIntegrator">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">OrnsteinUhlenbeckIntegrator</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate=1.0</em>, <em>noise=0.0</em>, <em>scale: parameter_spec = 1.0</em>, <em>offset: parameter_spec = 0.0</em>, <em>time_step_size=1.0</em>, <em>initializer</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.OrnsteinUhlenbeckIntegrator" title="Permalink to this definition">¶</a></dt>
-<dd><p id="ornsteinuhlenbeckintegrator">Integrate current value of <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.variable" title="Function.OrnsteinUhlenbeckIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> with its prior value.</p>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">OrnsteinUhlenbeckIntegrator</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate=1.0</em>, <em>noise=0.0</em>, <em>scale: parameter_spec = 1.0</em>, <em>offset: parameter_spec = 0.0</em>, <em>time_step_size=1.0</em>, <em>t0=0.0</em>, <em>initializer</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.OrnsteinUhlenbeckIntegrator" title="Permalink to this definition">¶</a></dt>
+<dd><p id="ornsteinuhlenbeckintegrator">Accumulate evidence overtime based on a stimulus, noise, decay, and previous position.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1984,7 +1987,9 @@ details).</li>
 <li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.function" title="Function.OrnsteinUhlenbeckIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
 <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.noise" title="Function.OrnsteinUhlenbeckIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
 <li><strong>time_step_size</strong> (<em>float : default 0.0</em>) – determines the timing precision of the integration process (see <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.time_step_size" title="Function.OrnsteinUhlenbeckIntegrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> for details.</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#Function.SimpleIntegrator.initializer" title="Function.SimpleIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>t0</strong> (<em>float : default 0.0</em>) – represents the starting time of the model and is used to compute
+<a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.previous_time" title="Function.OrnsteinUhlenbeckIntegrator.previous_time"><code class="xref any py py-attr docutils literal"><span class="pre">previous_time</span></code></a></li>
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#Function.DriftDiffusionIntegrator.initializer" title="Function.DriftDiffusionIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.initializer" title="Function.OrnsteinUhlenbeckIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -2000,23 +2005,25 @@ defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> 
 <dl class="attribute">
 <dt id="Function.OrnsteinUhlenbeckIntegrator.variable">
 <code class="descname">variable</code><a class="headerlink" href="#Function.OrnsteinUhlenbeckIntegrator.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – current input value some portion of which (determined by <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.rate" title="Function.OrnsteinUhlenbeckIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) that will be
-added to the prior value;  if it is an array, each element is independently integrated.</p>
+<dd><p><em>number or np.array</em> – current input value which represents the stimulus component of drift. The product of
+<a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.variable" title="Function.OrnsteinUhlenbeckIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.rate" title="Function.OrnsteinUhlenbeckIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> is multiplied
+by <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.time_step_size" title="Function.OrnsteinUhlenbeckIntegrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> to model the accumulation of evidence during
+one step.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Function.OrnsteinUhlenbeckIntegrator.rate">
 <code class="descname">rate</code><a class="headerlink" href="#Function.OrnsteinUhlenbeckIntegrator.rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
-all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
-applies to all elements of <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.variable" title="Function.OrnsteinUhlenbeckIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  if it has more than one element, each element
-applies to the corresponding element of <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.variable" title="Function.OrnsteinUhlenbeckIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+<dd><p><em>float or 1d np.array</em> – represents the attentional component of drift. The product of <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.rate" title="Function.OrnsteinUhlenbeckIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> and
+<a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.variable" title="Function.OrnsteinUhlenbeckIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is multiplied by
+<a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.time_step_size" title="Function.OrnsteinUhlenbeckIntegrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> to model the accumulation of evidence during
+one step.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Function.OrnsteinUhlenbeckIntegrator.noise">
 <code class="descname">noise</code><a class="headerlink" href="#Function.OrnsteinUhlenbeckIntegrator.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, function, list, or 1d np.array</em> – scales the random value to be added in each call to <a href="#id7"><span class="problematic" id="id8">`</span></a>function &lt;OrnsteinUhlenbeckIntegrator.function&gt;</p>
+<dd><p><em>float, function, list, or 1d np.array</em> – scales the random value to be added in each call to <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.function" title="Function.OrnsteinUhlenbeckIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a></p>
 <p>Noise must be specified as a float (or list or array of floats) because this
 value will be used to construct the standard DDM probability distribution.</p>
 </dd></dl>
@@ -2031,19 +2038,21 @@ value will be used to construct the standard DDM probability distribution.</p>
 <dt id="Function.OrnsteinUhlenbeckIntegrator.initializer">
 <code class="descname">initializer</code><a class="headerlink" href="#Function.OrnsteinUhlenbeckIntegrator.initializer" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>float, 1d np.array or list</em> – determines the starting value for integration (i.e., the value to which
-<a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.previous_value" title="Function.OrnsteinUhlenbeckIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set.</p>
+<a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.previous_value" title="Function.OrnsteinUhlenbeckIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is originally set.)</p>
 <p>If initializer is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
-<p>TBI:</p>
-<p>Initializer may be a function or list/array of functions.</p>
-<p>If initializer is specified as a single float or function, while <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.variable" title="Function.OrnsteinUhlenbeckIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
-a list or array, initializer will be applied to each variable element. In the case of an initializer function,
-this means that the function will be executed separately for each variable element.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Function.OrnsteinUhlenbeckIntegrator.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#Function.OrnsteinUhlenbeckIntegrator.previous_value" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>1d np.array : default ClassDefaults.variable</em> – stores previous value with which <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.variable" title="Function.OrnsteinUhlenbeckIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.OrnsteinUhlenbeckIntegrator.previous_time">
+<code class="descname">previous_time</code><a class="headerlink" href="#Function.OrnsteinUhlenbeckIntegrator.previous_time" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – stores previous time at which the function was executed and accumulates with each execution according to
+<code class="xref any docutils literal"><span class="pre">time_step_size</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -2063,26 +2072,319 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="method">
 <dt id="Function.OrnsteinUhlenbeckIntegrator.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.OrnsteinUhlenbeckIntegrator.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return: some fraction of <code class="xref any docutils literal"><span class="pre">variable</span></code> combined with some fraction of
-<code class="xref any docutils literal"><span class="pre">previous_value</span></code></p>
+<dd><p>Return: One time step of evidence accumulation according to the Ornstein Uhlenbeck Model</p>
+<p>previous_value + decay * (previous_value -  rate * variable) +  * random
+sample from Normal distribution</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – a single value or array of values to be integrated.</li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – the stimulus component of drift rate in the Drift Diffusion Model.</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>params <span class="classifier-delimiter">:</span> <span class="classifier">Optional[Dict[param keyword, param value]]</span></dt>
+<dd>a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</dd>
+<dt>time_scale <span class="classifier-delimiter">:</span> <span class="classifier">TimeScale</span> <span class="classifier-delimiter">:</span> <span class="classifier">default TimeScale.TRIAL</span></dt>
+<dd>specifies whether the function is executed on the time_step or trial time scale.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>updated value of integral</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">2d np.array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Function.FHNIntegrator">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">FHNIntegrator</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate=1.0</em>, <em>noise=0.0</em>, <em>scale: parameter_spec = 1.0</em>, <em>offset: parameter_spec = 0.0</em>, <em>initial_w=0.0</em>, <em>initial_v=0.0</em>, <em>time_step_size=0.1</em>, <em>t_0=0.0</em>, <em>a_v=-1/3</em>, <em>b_v=0.0</em>, <em>c_v=1.0</em>, <em>d_v=0.0</em>, <em>e_v=-1.0</em>, <em>f_v=1.0</em>, <em>time_constant_v=1.0</em>, <em>a_w=1.0</em>, <em>b_w=-0.8</em>, <em>c_w=0.7</em>, <em>mode=1.0</em>, <em>uncorrelated_activity=0.0               time_constant_w = 12.5</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.FHNIntegrator" title="Permalink to this definition">¶</a></dt>
+<dd><p id="fhnintegrator">Implements the Fitzhugh-Nagumo model using the 4th order Runge Kutta method of numerical integration.</p>
+<p>In order to support several common representations of the model, the FHNIntegrator includes many parameters, some of
+which would not be sensible to use in combination.</p>
+<p>The most general form of the FHNIntegrator function, with all of its arguments, is:</p>
+<blockquote>
+<div><p>time_constant_v * dv/dt = a_v * v^3 + (1 + threshold) * b_v * v^2 + (- threshold) * c_v * v^2 + d_v + e_v *
+w + f_v * I_ext</p>
+<p>time_constant_w * dw/dt = mode * a_w * v + b_w * w + c_w + (1 - self.mode) * self.uncorrelated_activity</p>
+</div></blockquote>
+<p>The three formulations that the FHNIntegrator was designed to allow are:</p>
+<p><strong>Fitzhugh-Nagumo Model</strong></p>
+<blockquote>
+<div><blockquote>
+<div><p>dv/dt = v - (v^3)/3 -w + I_ext</p>
+<p>T*dw/dt = v + a - b*w</p>
+</div></blockquote>
+<p>where dw/dt often has the following parameters:</p>
+<blockquote>
+<div>dw/dt = 0.08(v + 0.7 - 0.8*w)</div></blockquote>
+<p>The FHNIntegrator’s default parameter values map the above equations and parameters onto the PsyNeuLink
+implementation.</p>
+</div></blockquote>
+<p><strong>Modified FHN Model</strong></p>
+<blockquote>
+<div><blockquote>
+<div><p>dv/dt = v*(a-v)(v-1) -w + I_ext</p>
+<p>dw/dt = b*v - c*w</p>
+</div></blockquote>
+<p>In order to reproduce the modified FHN model, the FHNIntegrator’s parameters must be set as follows:</p>
+<blockquote>
+<div><p>a –&gt; <a class="reference internal" href="#Function.FHNIntegrator.threshold" title="Function.FHNIntegrator.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a></p>
+<p>time_constant_w = mode = time_constant_v = a_v = b_v = f_v = 1.0</p>
+<p>c_v = e_v = -1.0</p>
+<p>uncorrelated_activity = d_v = 0.0;</p>
+</div></blockquote>
+<p><a class="reference external" href="http://pcwww.liv.ac.uk/~bnvasiev/Past%20students/Mahbub_549.pdf">Mahbub Khan (2013)</a> provides a nice summary
+of why this formulation is useful.</p>
+</div></blockquote>
+<p><a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub">Gilzenrat (2002)</a> <strong>Implementation
+of the Modified FHN Model</strong></p>
+<blockquote>
+<div><blockquote>
+<div><p>time_constant_v * dv/dt = v*(a-v)(v-1) -w + b*I_ext</p>
+<p>time_constant_w * dw/dt = c*v + (1-c)*d - w</p>
+</div></blockquote>
+<p>In order to reproduce the Gilzenrat formulation, the FHNIntegrator’s parameters must be set as follows:</p>
+<blockquote>
+<div><p>a –&gt; <a class="reference internal" href="#Function.FHNIntegrator.threshold" title="Function.FHNIntegrator.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a></p>
+<p>b –&gt; negative <a class="reference internal" href="#Function.FHNIntegrator.e_v" title="Function.FHNIntegrator.e_v"><code class="xref any py py-attr docutils literal"><span class="pre">e_v</span></code></a></p>
+<p>c –&gt; <a class="reference internal" href="#Function.FHNIntegrator.mode" title="Function.FHNIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a></p>
+<p>d –&gt; <a class="reference internal" href="#Function.FHNIntegrator.uncorrelated_activity" title="Function.FHNIntegrator.uncorrelated_activity"><code class="xref any py py-attr docutils literal"><span class="pre">uncorrelated_activity</span></code></a></p>
+<p>a_v = b_v = f_v = 1.0 ; c_v = -1.0 ; d_v = 0.0;</p>
+</div></blockquote>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the external stimulus</li>
+<li><strong>initial_w</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
+<code class="xref any docutils literal"><span class="pre">default_variable</span></code></li>
+<li><strong>initial_v</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
+<code class="xref any docutils literal"><span class="pre">default_variable</span></code></li>
+<li><strong>time_step_size</strong> (<em>float : default 0.1</em>) – specifies the time step size of numerical integration</li>
+<li><strong>t_0</strong> (<em>float : default 0.0</em>) – specifies starting value for time</li>
+<li><strong>a_v</strong> (<em>float : default -1/3</em>) – coefficient on the v^3 term of the dv/dt equation</li>
+<li><strong>b_v</strong> (<em>float : default 0.0</em>) – coefficient on the v^2 term of the dv/dt equation</li>
+<li><strong>c_v</strong> (<em>float : default 1.0</em>) – coefficient on the v term of the dv/dt equation</li>
+<li><strong>d_v</strong> (<em>float : default 0.0</em>) – constant term in the dv/dt equation</li>
+<li><strong>e_v</strong> (<em>float : default -1.0</em>) – coefficient on the w term in the dv/dt equation</li>
+<li><strong>f_v</strong> (<em>float : default  1.0</em>) – coefficient on the external stimulus (<a class="reference internal" href="#Function.FHNIntegrator.variable" title="Function.FHNIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) term in the dv/dt equation</li>
+<li><strong>time_constant_v</strong> (<em>float : default 1.0</em>) – scaling factor on the dv/dt equation</li>
+<li><strong>a_w</strong> (<em>float : default 1.0</em><em>,</em>) – coefficient on the v term of the dw/dt equation</li>
+<li><strong>b_w</strong> (<em>float : default -0.8</em><em>,</em>) – coefficient on the w term of the dv/dt equation</li>
+<li><strong>c_w</strong> (<em>float : default 0.7</em><em>,</em>) – constant term in the dw/dt equation</li>
+<li><strong>threshold</strong> (<em>float : default -1.0</em>) – specifies a value of the input below which the LC will tend not to respond and above which it will</li>
+<li><strong>mode</strong> (<em>float : default 1.0</em>) – coefficient which simulates electrotonic coupling by scaling the values of dw/dt such that the v term
+(representing the input from the LC) increases when the uncorrelated_activity term (representing baseline
+activity) decreases</li>
+<li><strong>uncorrelated_activity</strong> (<em>float : default 0.0</em>) – constant term in the dw/dt equation</li>
+<li><strong>time_constant_w</strong> (<em>float : default 12.5</em>) – scaling factor on the dv/dt equation</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
-<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) – specifies whether the function is executed on the time_step or trial time scale.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional</em><em>[</em><em>PreferenceSet</em><em> or </em><em>specification dict : Function.classPreferences</em><em>]</em>) – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>updated value of integral</strong></p>
-</td>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Function.FHNIntegrator.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number or np.array</em> – External stimulus</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.previous_v">
+<code class="descname">previous_v</code><a class="headerlink" href="#Function.FHNIntegrator.previous_v" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array : default ClassDefaults.variable</em> – stores accumulated value of v during integration</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.previous_w">
+<code class="descname">previous_w</code><a class="headerlink" href="#Function.FHNIntegrator.previous_w" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array : default ClassDefaults.variable</em> – stores accumulated value of w during integration</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.previous_t">
+<code class="descname">previous_t</code><a class="headerlink" href="#Function.FHNIntegrator.previous_t" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – stores accumulated value of time, which is incremented by time_step_size on each execution of the function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.FHNIntegrator.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mechanism</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.initial_w">
+<code class="descname">initial_w</code><a class="headerlink" href="#Function.FHNIntegrator.initial_w" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float, list or 1d np.array : default 0.0</em> – specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
+<code class="xref any docutils literal"><span class="pre">default_variable</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.initial_v">
+<code class="descname">initial_v</code><a class="headerlink" href="#Function.FHNIntegrator.initial_v" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float, list or 1d np.array : default 0.0</em> – specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
+<code class="xref any docutils literal"><span class="pre">default_variable</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.time_step_size">
+<code class="descname">time_step_size</code><a class="headerlink" href="#Function.FHNIntegrator.time_step_size" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.1</em> – specifies the time step size of numerical integration</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.t_0">
+<code class="descname">t_0</code><a class="headerlink" href="#Function.FHNIntegrator.t_0" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> – specifies starting value for time</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.a_v">
+<code class="descname">a_v</code><a class="headerlink" href="#Function.FHNIntegrator.a_v" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default -1/3</em> – coefficient on the v^3 term of the dv/dt equation</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.b_v">
+<code class="descname">b_v</code><a class="headerlink" href="#Function.FHNIntegrator.b_v" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> – coefficient on the v^2 term of the dv/dt equation</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.c_v">
+<code class="descname">c_v</code><a class="headerlink" href="#Function.FHNIntegrator.c_v" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> – coefficient on the v term of the dv/dt equation</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.d_v">
+<code class="descname">d_v</code><a class="headerlink" href="#Function.FHNIntegrator.d_v" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> – constant term in the dv/dt equation</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.e_v">
+<code class="descname">e_v</code><a class="headerlink" href="#Function.FHNIntegrator.e_v" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default -1.0</em> – coefficient on the w term in the dv/dt equation</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.f_v">
+<code class="descname">f_v</code><a class="headerlink" href="#Function.FHNIntegrator.f_v" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default  1.0</em> – coefficient on the external stimulus (‘variable &lt;FHNIntegrator.variable&gt;`) term in the dv/dt equation</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.time_constant_v">
+<code class="descname">time_constant_v</code><a class="headerlink" href="#Function.FHNIntegrator.time_constant_v" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> – scaling factor on the dv/dt equation</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.a_w">
+<code class="descname">a_w</code><a class="headerlink" href="#Function.FHNIntegrator.a_w" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> – coefficient on the v term of the dw/dt equation</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.b_w">
+<code class="descname">b_w</code><a class="headerlink" href="#Function.FHNIntegrator.b_w" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default -0.8</em> – coefficient on the w term of the dv/dt equation</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.c_w">
+<code class="descname">c_w</code><a class="headerlink" href="#Function.FHNIntegrator.c_w" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.7</em> – constant term in the dw/dt equation</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.threshold">
+<code class="descname">threshold</code><a class="headerlink" href="#Function.FHNIntegrator.threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default -1.0</em> – coefficient that scales both the v^2 [ (1+threshold)*v^2 ] and v [ (-threshold)*v ] terms in the dv/dt equation
+under a specific formulation of the FHN equations, the threshold parameter behaves as a “threshold of
+excitation”, and has the following relationship with variable (the external stimulus):</p>
+<blockquote>
+<div><ul class="simple">
+<li>when the external stimulus is below the threshold of excitation, the system is either in a stable state,
+or will emit a single excitation spike, then reach a stable state. The behavior varies depending on the
+magnitude of the difference between the threshold and the stimulus.</li>
+<li>when the external stimulus is equal to or above the threshold of excitation, the system is
+unstable, and will emit many excitation spikes</li>
+<li>when the external stimulus is too far above the threshold of excitation, the system will emit some
+excitation spikes before reaching a stable state.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.mode">
+<code class="descname">mode</code><a class="headerlink" href="#Function.FHNIntegrator.mode" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> – coefficient which simulates electrotonic coupling by scaling the values of dw/dt such that the v term
+(representing the input from the LC) increases when the uncorrelated_activity term (representing baseline
+activity) decreases</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.uncorrelated_activity">
+<code class="descname">uncorrelated_activity</code><a class="headerlink" href="#Function.FHNIntegrator.uncorrelated_activity" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> – constant term in the dw/dt equation</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.time_constant_w">
+<code class="descname">time_constant_w</code><a class="headerlink" href="#Function.FHNIntegrator.time_constant_w" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 12.5</em> – scaling factor on the dv/dt equation</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.FHNIntegrator.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.FHNIntegrator.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Function.FHNIntegrator.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.FHNIntegrator.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return: current v, current w</p>
+<p>The model is defined by the following system of differential equations:</p>
+<blockquote>
+<div><p>time_constant_v * dv/dt = a_v * v^3 + (1 + threshold) * b_v * v^2 + (- threshold) * c_v * v^2 + d_v + e_v *
+w + f_v * I_ext</p>
+<p>time_constant_w * dw/dt = mode * a_w * v + b_w * w + c_w + (1 - self.mode) * self.uncorrelated_activity</p>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d np.array</p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>current value of v , current value of w</strong></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float, list, or np.array</td>
 </tr>
 </tbody>
 </table>
@@ -2104,14 +2406,14 @@ integrated.</li>
 <li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the multiplicative decrement of <a class="reference internal" href="#Function.AccumulatorIntegrator.previous_value" title="Function.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> (i.e.,
 the rate of exponential decay).  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code>.</li>
-<li><strong>increment</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies an amount to be added to <a class="reference internal" href="#Function.AccumulatorIntegrator.previous_value" title="Function.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">prevous_value</span></code></a> in each call to
+<li><strong>increment</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies an amount to be added to <a class="reference internal" href="#Function.AccumulatorIntegrator.previous_value" title="Function.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> in each call to
 <a class="reference internal" href="#Function.AccumulatorIntegrator.function" title="Function.AccumulatorIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> (see <a class="reference internal" href="#Function.AccumulatorIntegrator.increment" title="Function.AccumulatorIntegrator.increment"><code class="xref any py py-attr docutils literal"><span class="pre">increment</span></code></a> for details).
 If it is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>
 (see <a class="reference internal" href="#Function.AccumulatorIntegrator.increment" title="Function.AccumulatorIntegrator.increment"><code class="xref any py py-attr docutils literal"><span class="pre">increment</span></code></a> for details).</li>
 <li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies random value to be added to <a class="reference internal" href="#Function.AccumulatorIntegrator.previous_value" title="Function.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">prevous_value</span></code></a> in each call to
 <a class="reference internal" href="#Function.AccumulatorIntegrator.function" title="Function.AccumulatorIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#Function.AccumulatorIntegrator.noise" title="Function.AccumulatorIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#Function.SimpleIntegrator.initializer" title="Function.SimpleIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#Function.DriftDiffusionIntegrator.initializer" title="Function.DriftDiffusionIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#Function.AccumulatorIntegrator.initializer" title="Function.AccumulatorIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -2175,11 +2477,6 @@ then the noise will simply be an offset that remains the same across all executi
 <code class="descname">initializer</code><a class="headerlink" href="#Function.AccumulatorIntegrator.initializer" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>float, 1d np.array or list</em> – determines the starting value for integration (i.e., the value to which <a class="reference internal" href="#Function.AccumulatorIntegrator.previous_value" title="Function.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set. If initializer is a list or array, it must be the same length
 as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
-<p>TBI:</p>
-<p>Initializer may be a function or list/array of functions.</p>
-<p>If initializer is specified as a single float or function, while <a class="reference internal" href="#Function.AccumulatorIntegrator.variable" title="Function.AccumulatorIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
-a list or array, initializer will be applied to each variable element. In the case of an initializer function,
-this means that the function will be executed separately for each variable element.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -2217,6 +2514,159 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
 <li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) – specifies whether the function is executed on the time_step or trial time scale.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>updated value of integral</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d np.array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Function.AGTUtilityIntegrator">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">AGTUtilityIntegrator</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate=1.0</em>, <em>noise=0.0</em>, <em>scale: parameter_spec = 1.0</em>, <em>offset: parameter_spec = 0.0</em>, <em>initializer</em>, <em>initial_short_term_utility = 0.0</em>, <em>initial_long_term_utility = 0.0</em>, <em>short_term_gain = 1.0</em>, <em>long_term_gain =1.0</em>, <em>short_term_bias = 0.0</em>, <em>long_term_bias=0.0</em>, <em>short_term_rate=1.0</em>, <em>long_term_rate=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.AGTUtilityIntegrator" title="Permalink to this definition">¶</a></dt>
+<dd><p id="agtutilityintegrator">Computes an exponentially weighted moving average on the variable using two sets of parameters:</p>
+<p>short_term_utility = (1 - <a class="reference internal" href="#Function.AGTUtilityIntegrator.short_term_rate" title="Function.AGTUtilityIntegrator.short_term_rate"><code class="xref any py py-attr docutils literal"><span class="pre">short_term_rate</span></code></a>) * <a class="reference internal" href="#Function.AGTUtilityIntegrator.previous_short_term_utility" title="Function.AGTUtilityIntegrator.previous_short_term_utility"><code class="xref any py py-attr docutils literal"><span class="pre">previous_short_term_utility</span></code></a> + <a class="reference internal" href="#Function.AGTUtilityIntegrator.short_term_rate" title="Function.AGTUtilityIntegrator.short_term_rate"><code class="xref any py py-attr docutils literal"><span class="pre">short_term_rate</span></code></a> *
+<a class="reference internal" href="#Function.AGTUtilityIntegrator.variable" title="Function.AGTUtilityIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a></p>
+<p>long_term_utility = (1 - <a class="reference internal" href="#Function.AGTUtilityIntegrator.long_term_rate" title="Function.AGTUtilityIntegrator.long_term_rate"><code class="xref any py py-attr docutils literal"><span class="pre">long_term_rate</span></code></a>) * <a class="reference internal" href="#Function.AGTUtilityIntegrator.previous_long_term_utility" title="Function.AGTUtilityIntegrator.previous_long_term_utility"><code class="xref any py py-attr docutils literal"><span class="pre">previous_long_term_utility</span></code></a> + <a class="reference internal" href="#Function.AGTUtilityIntegrator.long_term_rate" title="Function.AGTUtilityIntegrator.long_term_rate"><code class="xref any py py-attr docutils literal"><span class="pre">long_term_rate</span></code></a> *
+<a class="reference internal" href="#Function.AGTUtilityIntegrator.variable" title="Function.AGTUtilityIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a></p>
+<p>then takes the logistic of each utility value, using the corresponding (short term and long term) gain and bias.</p>
+<p>Finally, computes a single value which combines the two values according to:</p>
+<p>value = [1-short_term_utility_logistic]*long_term_utility_logistic</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the overall smoothing factor of the EWMA used to combine the long term and short term utility values</li>
+<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – TBI?</li>
+<li><strong>initial_short_term_utility</strong> (<em>float : default 0.0</em>) – specifies starting value for integration of short_term_utility</li>
+<li><strong>initial_long_term_utility</strong> (<em>float : default 0.0</em>) – specifies starting value for integration of long_term_utility</li>
+<li><strong>short_term_gain</strong> (<em>float : default 1.0</em>) – specifies gain for logistic function applied to short_term_utility</li>
+<li><strong>long_term_gain</strong> (<em>float : default 1.0</em>) – specifies gain for logistic function applied to long_term_utility</li>
+<li><strong>short_term_bias</strong> (<em>float : default 0.0</em>) – specifies bias for logistic function applied to short_term_utility</li>
+<li><strong>long_term_bias</strong> (<em>float : default 0.0</em>) – specifies bias for logistic function applied to long_term_utility</li>
+<li><strong>short_term_rate</strong> (<em>float : default 1.0</em>) – specifies smoothing factor of EWMA filter applied to short_term_utility</li>
+<li><strong>long_term_rate</strong> (<em>float : default 1.0</em>) – specifies smoothing factor of EWMA filter applied to long_term_utility</li>
+<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional</em><em>[</em><em>PreferenceSet</em><em> or </em><em>specification dict : Function.classPreferences</em><em>]</em>) – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.AGTUtilityIntegrator.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Function.AGTUtilityIntegrator.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number or np.array</em> – current input value used in both the short term and long term EWMA computations</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.AGTUtilityIntegrator.noise">
+<code class="descname">noise</code><a class="headerlink" href="#Function.AGTUtilityIntegrator.noise" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float, PsyNeuLink Function, list or 1d np.array : default 0.0</em> – TBI?</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.AGTUtilityIntegrator.initial_short_term_utility">
+<code class="descname">initial_short_term_utility</code><a class="headerlink" href="#Function.AGTUtilityIntegrator.initial_short_term_utility" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> – specifies starting value for integration of short_term_utility</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.AGTUtilityIntegrator.initial_long_term_utility">
+<code class="descname">initial_long_term_utility</code><a class="headerlink" href="#Function.AGTUtilityIntegrator.initial_long_term_utility" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> – specifies starting value for integration of long_term_utility</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.AGTUtilityIntegrator.short_term_gain">
+<code class="descname">short_term_gain</code><a class="headerlink" href="#Function.AGTUtilityIntegrator.short_term_gain" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> – specifies gain for logistic function applied to short_term_utility</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.AGTUtilityIntegrator.long_term_gain">
+<code class="descname">long_term_gain</code><a class="headerlink" href="#Function.AGTUtilityIntegrator.long_term_gain" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> – specifies gain for logistic function applied to long_term_utility</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.AGTUtilityIntegrator.short_term_bias">
+<code class="descname">short_term_bias</code><a class="headerlink" href="#Function.AGTUtilityIntegrator.short_term_bias" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> – specifies bias for logistic function applied to short_term_utility</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.AGTUtilityIntegrator.long_term_bias">
+<code class="descname">long_term_bias</code><a class="headerlink" href="#Function.AGTUtilityIntegrator.long_term_bias" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> – specifies bias for logistic function applied to long_term_utility</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.AGTUtilityIntegrator.short_term_rate">
+<code class="descname">short_term_rate</code><a class="headerlink" href="#Function.AGTUtilityIntegrator.short_term_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> – specifies smoothing factor of EWMA filter applied to short_term_utility</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.AGTUtilityIntegrator.long_term_rate">
+<code class="descname">long_term_rate</code><a class="headerlink" href="#Function.AGTUtilityIntegrator.long_term_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> – specifies smoothing factor of EWMA filter applied to long_term_utility</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.AGTUtilityIntegrator.previous_short_term_utility">
+<code class="descname">previous_short_term_utility</code><a class="headerlink" href="#Function.AGTUtilityIntegrator.previous_short_term_utility" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array</em> – stores previous value with which <a class="reference internal" href="#Function.AGTUtilityIntegrator.variable" title="Function.AGTUtilityIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated using the EWMA filter and
+short term parameters</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.AGTUtilityIntegrator.previous_long_term_utility">
+<code class="descname">previous_long_term_utility</code><a class="headerlink" href="#Function.AGTUtilityIntegrator.previous_long_term_utility" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array</em> – stores previous value with which <a class="reference internal" href="#Function.AGTUtilityIntegrator.variable" title="Function.AGTUtilityIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated using the EWMA filter and
+long term parameters</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.AGTUtilityIntegrator.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.AGTUtilityIntegrator.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mechanism</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.AGTUtilityIntegrator.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.AGTUtilityIntegrator.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Function.AGTUtilityIntegrator.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.AGTUtilityIntegrator.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return: some fraction of <a class="reference internal" href="#Function.AGTUtilityIntegrator.variable" title="Function.AGTUtilityIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> combined with some fraction of <code class="xref any docutils literal"><span class="pre">previous_value</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – a single value or array of values to be integrated.</li>
+<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
 </ul>
 </td>
 </tr>
@@ -2818,7 +3268,7 @@ is normalized by the number of elements in the <a class="reference internal" hre
 <li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><em>function keyword</em><em>, or </em><em>MappingProjection : default HOLLOW_MATRIX</em>) – specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
 length of <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>metric</strong> (<em>ENERGY</em><em>, </em><em>ENTROPY</em><em> or </em><em>keyword in DISTANCE_METRICS : Default ENERGY</em>) – specifies the metric used to compute stability.</li>
-<li><strong>transfer_fct</strong> (<a class="reference internal" href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function"><em>function</em></a><em> or </em><em>method : Default None</em>) – specifies the function used to transform output of weight <a class="reference internal" href="#Function.Stability.matrix" title="Function.Stability.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
+<li><strong>transfer_fct</strong> (<a class="reference internal" href="#Function.UserDefinedFunction.function" title="Function.UserDefinedFunction.function"><em>function</em></a><em> or </em><em>method : Default None</em>) – specifies the function used to transform output of weight <a class="reference internal" href="#Function.Stability.matrix" title="Function.Stability.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
 <li><strong>normalize</strong> (<em>bool : Default False</em>) – specifies whether to normalize the stability value by the length of <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -2993,7 +3443,7 @@ defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> 
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="Component.html#Component.Component.variable" title="Component.Component.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="OutputState.html#OutputState.OutputState.variable" title="OutputState.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first last simple">
@@ -3165,9 +3615,9 @@ arguments of the constructor.</li>
 <a class="reference internal" href="#Function.BackPropagation.activation_input" title="Function.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (1d np.array),
 <a class="reference internal" href="#Function.BackPropagation.activation_output" title="Function.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d np.array),
 <a class="reference internal" href="#Function.BackPropagation.error_signal" title="Function.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (1d np.array).</li>
-<li><strong>activation_derivative</strong> (<a class="reference internal" href="#module-Function" title="Function"><em>Function</em></a><em> or </em><a class="reference internal" href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that generates
+<li><strong>activation_derivative</strong> (<a class="reference internal" href="#module-Function" title="Function"><em>Function</em></a><em> or </em><a class="reference internal" href="#Function.UserDefinedFunction.function" title="Function.UserDefinedFunction.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that generates
 <a class="reference internal" href="#Function.BackPropagation.activation_output" title="Function.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a>.</li>
-<li><strong>error_derivative</strong> (<a class="reference internal" href="#module-Function" title="Function"><em>Function</em></a><em> or </em><a class="reference internal" href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that is the receiver of the
+<li><strong>error_derivative</strong> (<a class="reference internal" href="#module-Function" title="Function"><em>Function</em></a><em> or </em><a class="reference internal" href="#Function.UserDefinedFunction.function" title="Function.UserDefinedFunction.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that is the receiver of the
 <a class="reference internal" href="#Function.BackPropagation.error_matrix" title="Function.BackPropagation.error_matrix"><code class="xref any py py-attr docutils literal"><span class="pre">error_matrix</span></code></a>.</li>
 <li><strong>error_matrix</strong> (<em>List</em><em>, </em><em>2d np.array</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="ParameterState.html#module-ParameterState" title="ParameterState"><em>ParameterState</em></a><em>, or </em><a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection" title="PathwayProjections.MappingProjection.MappingProjection"><em>MappingProjection</em></a>) – matrix, the output of which is used to calculate the <a class="reference internal" href="#Function.BackPropagation.error_signal" title="Function.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a>.
 If it is specified as a ParameterState it must be one for the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
@@ -3198,14 +3648,14 @@ defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> 
 <dl class="attribute">
 <dt id="Function.BackPropagation.activation_input">
 <code class="descname">activation_input</code><a class="headerlink" href="#Function.BackPropagation.activation_input" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> – the input to the matrix being modified; same as 1st item of <a href="#id9"><span class="problematic" id="id10">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
+<dd><p><em>1d np.array</em> – the input to the matrix being modified; same as 1st item of <a href="#id7"><span class="problematic" id="id8">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Function.BackPropagation.activation_output">
 <code class="descname">activation_output</code><a class="headerlink" href="#Function.BackPropagation.activation_output" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>1d np.array</em> – the output of the function for which the matrix being modified provides the input;
-same as 2nd item of <a href="#id11"><span class="problematic" id="id12">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
+same as 2nd item of <a href="#id9"><span class="problematic" id="id10">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -3213,7 +3663,7 @@ same as 2nd item of <a href="#id11"><span class="problematic" id="id12">`</span>
 <code class="descname">error_signal</code><a class="headerlink" href="#Function.BackPropagation.error_signal" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>1d np.array</em> – the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
 target (training signal) and the output of the last Mechanism in the sequence;
-same as 3rd item of <a href="#id13"><span class="problematic" id="id14">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
+same as 3rd item of <a href="#id11"><span class="problematic" id="id12">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
 </dd></dl>
 
 <dl class="attribute">

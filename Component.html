@@ -36,8 +36,9 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="Mechanisms" href="Mechanism.html"/>
-        <link rel="prev" title="Quick Reference" href="QuickReference.html"/> 
+        <link rel="prev" title="Core" href="Core.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -94,15 +95,18 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Components</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projections</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Components</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -147,6 +151,8 @@
   <ul class="wy-breadcrumbs">
     
       <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Core.html">Core</a> &raquo;</li>
         
       <li>Components</li>
     
@@ -304,14 +310,13 @@ preference (see <code class="xref any docutils literal"><span class="pre">Prefer
 <div class="section" id="core-informational-attributes">
 <span id="component-informational-attributes"></span><h3>Core Informational Attributes<a class="headerlink" href="#core-informational-attributes" title="Permalink to this headline">¶</a></h3>
 <ul class="simple" id="component-user-params">
-<li><strong>user_params</strong> - this contains a dictionary of all of the configurable attributes for a given Component.
-The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
-class <a class="reference external" href="https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict">UserDict</a>). The
+<li><strong>user_params</strong> - this contains a dictionary of all of the configurable parameters for a given Component.
+The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class <a class="reference external" href="https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict">UserDict</a>). The
 value of an entry can be accessed in the standard manner (e.g., <code class="docutils literal"><span class="pre">my_component.user_params[`PARAMETER</span> <span class="pre">NAME`]</span></code>);
-however, to access a full list of entries it’s data attribute must be used (e.g.,
-<code class="docutils literal"><span class="pre">my_component.user_params.data</span></code>).  Also, because it is read-only, it cannot be used to make assignments.  Rather,
-changes to the value of an attribute must be made by assigning a value to the attribute directly (e.g.,
-<code class="docutils literal"><span class="pre">my_component.my_parameter</span></code>), or using the Component’s <a class="reference internal" href="#Component.Component.assign_params" title="Component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.</li>
+however, to access a full list of entries it’s data attribute must be used (e.g., <code class="docutils literal"><span class="pre">my_component.user_params.data</span></code>).
+Also, because it is read-only, it cannot be used to make assignments.  Rather, changes to the value of a parameter
+must be made by assigning a value to the attribute for that parameter directly (e.g., <code class="docutils literal"><span class="pre">my_component.my_parameter</span></code>),
+or using the Component’s <a class="reference internal" href="#Component.Component.assign_params" title="Component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.</li>
 </ul>
 <ul class="simple" id="component-function-object">
 <li><strong>function_object</strong> - the <a class="reference internal" href="#Component.Component.function_object" title="Component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute refers to the PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> assigned to the
@@ -534,7 +539,7 @@ Instantiate any items in request set that require it (i.e., function or states).
         <a href="Mechanism.html" class="btn btn-neutral float-right" title="Mechanisms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="QuickReference.html" class="btn btn-neutral" title="Quick Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Core.html" class="btn btn-neutral" title="Core" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

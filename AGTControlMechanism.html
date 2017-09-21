@@ -1,0 +1,453 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>AGTControlMechanism &mdash; PsyNeuLink 0.3.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="AGT" href="AGT.html"/>
+        <link rel="next" title="LCControlMechanism" href="LCControlMechanism.html"/>
+        <link rel="prev" title="AGT" href="AGT.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Subsystems.html">Subsystems</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="AGT.html">AGT</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">AGTControlMechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="LCControlMechanism.html">LCControlMechanism</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="EVC.html">EVC</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanisms.html">Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projections.html">Projections</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Library.html">Library</a> &raquo;</li>
+        
+          <li><a href="Subsystems.html">Subsystems</a> &raquo;</li>
+        
+          <li><a href="AGT.html">AGT</a> &raquo;</li>
+        
+      <li>AGTControlMechanism</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/AGTControlMechanism.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="agtcontrolmechanism">
+<h1>AGTControlMechanism<a class="headerlink" href="#agtcontrolmechanism" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-Library.Subsystems.AGT.AGTControlMechanism"></span><div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>An AGTControlMechanism is a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that uses an ObjectiveMechanism with a <a class="reference internal" href="Function.html#Function.AGTUtilityIntegrator" title="Function.AGTUtilityIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AGTUtilityIntegrator</span></code></a>
+Function to regulate its <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.allocation_policy" title="ControlMechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>.  When used with an <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a>
+to regulate the <a class="reference internal" href="Function.html#Function.FHNIntegrator.mode" title="Function.FHNIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> parameter of its <a class="reference internal" href="Function.html#Function.FHNIntegrator" title="Function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> Function, it implements a form of the
+<a class="reference external" href="http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709">Adaptive Gain Theory</a> of the locus
+coeruleus-norepinephrine (LC-NE) system.</p>
+</div>
+<div class="section" id="creating-an-agtcontrolmechanism">
+<span id="agtcontrolmechanism-creation"></span><h2>Creating an AGTControlMechanism<a class="headerlink" href="#creating-an-agtcontrolmechanism" title="Permalink to this headline">¶</a></h2>
+<p>An AGTControlMechanism can be created in any of the ways used to <a class="reference internal" href="ControlMechanism.html#controlmechanism-creation"><span class="std std-ref">create a ControlMechanism</span></a>.</p>
+<p>Like all ControlMechanisms, an AGTControlMechanism it receives its <a class="reference internal" href="#agtcontrolmechanism-input"><span class="std std-ref">input</span></a> from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>.
+However, unlike standard ControlMechanism, an AGTControlMechanism does not have an <strong>objective_mechanism</strong> argument in its
+constructor.  When an AGTControlMechanism is created, it automatically creates an ObjectiveMechanism and assigns a
+<a class="reference internal" href="Function.html#Function.AGTUtilityIntegrator" title="Function.AGTUtilityIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AGTUtilityIntegrator</span></code></a> Function as its <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+<p>The OutputStates to be monitored by the AGTControlMechanism’s <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> are
+specified using the <strong>monitored_output_states</strong> argument of the AGTControlMechanism’s constructor, using any of the ways to
+<a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitored-output-states"><span class="std std-ref">specify the OutputStates monitored by ObjectiveMechanism</span></a>.  The
+monitored OutputStates are listed in the LCControlMechanism’s <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.monitored_output_states" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>
+attribute,  as well as that of its <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>.</p>
+<p>The parameter(s) controlled by an AGTControlMechanism are specified in the <strong>control_signals</strong> argument of its constructor,
+in the <a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">standard way for a ControlMechanism</span></a>.</p>
+</div>
+<div class="section" id="structure">
+<span id="agtcontrolmechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="input-objectivemechanism-and-monitored-outputstates">
+<span id="agtcontrolmechanism-input"></span><h3>Input: ObjectiveMechanism and Monitored OutputStates<a class="headerlink" href="#input-objectivemechanism-and-monitored-outputstates" title="Permalink to this headline">¶</a></h3>
+<p>An AGTControlMechanism has a single (primary) <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">InputState</span></a> that receives its input via a
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the <em>OUTCOME</em> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-output"><span class="std std-ref">OutputState</span></a> of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>.
+The ObjectiveMechanism is created automatically when the AGTControlMechanism is created, using a <a class="reference internal" href="Function.html#Function.AGTUtilityIntegrator" title="Function.AGTUtilityIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AGTUtilityIntegrator</span></code></a> as its
+<a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and is listed in the AGTControlMechanism’s <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> attribute.  The ObjectiveMechanism aggregates the <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s
+of the OutputStates that it monitors, integrates their aggregated value at two different rates, and combines those to
+generate the its output, which is used by the AGTControlMechanism as its input. The OutputStates monitored by the
+ObjectiveMechanism, listed in its <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_output_states" title="ObjectiveMechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>
+attribute, are also listed in the AGTControlMechanism’s <code class="xref any docutils literal"><span class="pre">monitored_output_states</span></code>
+attribute.  They can be displayed using the AGTControlMechanism’s <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.show" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.show"><code class="xref any py py-meth docutils literal"><span class="pre">show</span></code></a> method.</p>
+</div>
+<div class="section" id="function">
+<span id="agtcontrolmechanism-function"></span><h3>Function<a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
+<p>An AGTControlMechanism uses the default function for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> (a default <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> Function), that simply passes
+its input to its output.  Thus, it is the output of the AGTControlMechanism’s <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> that determines its <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.allocation_policy" title="ControlMechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>
+and the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal(s)</span></a>.</p>
+</div>
+<div class="section" id="output">
+<span id="agtcontrolmechanism-output"></span><h3>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
+<p>An AGTControlMechanism has a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> for each parameter specified in its <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.control_signals" title="ControlMechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a> attribute, that sends a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the
+corresponding parameter. ControlSignals are a type of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, and so they are also listed in the
+AGTControlMechanism’s <code class="xref any docutils literal"><span class="pre">output_states</span></code> attribute. The parameters modulated by an
+AGTControlMechanism’s ControlSignals can be displayed using its <code class="xref any docutils literal"><span class="pre">show</span></code> method. By default,
+all of its ControlSignals are assigned the result of the AGTControlMechanism’s <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, which is
+the <a class="reference internal" href="#agtcontrolmechanism-input"><span class="std std-ref">input</span></a> it receives from its <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>.
+above).  The <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> is used by the ControlSignal(s) to determine
+their <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>, which is then assigned as the <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.value" title="ModulatoryProjections.ControlProjection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the
+ControlSignal’s <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>.   The <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.value" title="ModulatoryProjections.ControlProjection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the ControlProjection is used by the
+<a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> to which it projects to modify the value of the parameter it controls (see
+<a class="reference internal" href="ControlSignal.html#controlsignal-modulation"><span class="std std-ref">Modulation</span></a> for description of how a ControlSignal modulates the value of a parameter).</p>
+</div>
+</div>
+<div class="section" id="execution">
+<span id="agtcontrolmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>An AGTControlMechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the <a class="reference internal" href="InputState.html#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
+its <em>ERROR_SIGNAL</em> <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.input_state" title="Mechanism.Mechanism_Base.input_state"><code class="xref any py py-attr docutils literal"><span class="pre">input_state</span></code></a>, and uses that to determine its <code class="xref any docutils literal"><span class="pre">allocation_policy</span></code> which specifies the value assigned to the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of each of
+its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  An AGTControlMechanism assigns the same value (the <a class="reference internal" href="#agtcontrolmechanism-input"><span class="std std-ref">input</span></a> it
+receives from its <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> to all of its ControlSignals.  Each
+ControlSignal uses that value to calculate its <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>, which is used by its
+<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> to modulate the value of the ParameterState(s) for the parameter(s) it
+controls, which are then used in the subsequent <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> that receives a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> does not update its value until its owner Mechanism
+executes (see <code class="xref any docutils literal"><span class="pre">Lazy</span> <span class="pre">Evaluation</span></code> for an explanation of “lazy” updating).  This means that even if a
+ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
+to which it belongs has executed.</p>
+</div>
+</div>
+<div class="section" id="class-reference">
+<span id="agtcontrolmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism">
+<em class="property">class </em><code class="descclassname">Library.Subsystems.AGT.AGTControlMechanism.</code><code class="descname">AGTControlMechanism</code><span class="sig-paren">(</span><em>system=None</em>, <em>monitored_output_states=None</em>, <em>function=Linear</em>, <em>control_signals=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">ControlMechanism</span></a> that modulates the <a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>system</strong> (<em>System : default None</em>) – specifies the <a class="reference internal" href="System.html"><span class="doc">System</span></a> for which the AGTControlMechanism should serve as a <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>;
+the AGTControlMechanism will inherit any <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> specified in the <strong>monitor_for_control</strong>
+argument of the <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a>’s constructor, and any <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>
+specified in its <strong>control_signals</strong> argument.</li>
+<li><strong>monitored_output_states</strong> (List[<a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, str, value, dict, <code class="xref any docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code>] or Dict) – specifies the OutputStates to be monitored by the <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>
+(see <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_output_states" title="ObjectiveMechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> for details of specification).</li>
+<li><strong>function</strong> (<em>TransferFunction :  default Linear</em><em>(</em><em>slope=1</em><em>, </em><em>intercept=0</em><em>)</em>) – specifies the Function used to convert the AGTControlMechanism’s <a class="reference internal" href="#agtcontrolmechanism-input"><span class="std std-ref">input</span></a> into its
+<a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.allocation_policy" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>, that is used to assign the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal(s)</span></a>.</li>
+<li><strong>control_signals</strong> (<em>List</em><em>[</em><a class="reference internal" href="ParameterState.html#module-ParameterState" title="ParameterState"><em>ParameterState</em></a><em>, </em><em>tuple</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>] or </em><em>dict</em><em>]</em>) – specifies the parameters to be controlled by the AGTControlMechanism; a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is created for each
+(see <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">Specifying ControlSignals</span></a> for details of specification).</li>
+<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters
+for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
+specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+constructor.</li>
+<li><strong>name</strong> (<em>str : default AGTControlMechanism-&lt;index&gt;</em>) – a string used for the name of the Mechanism.
+If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
+(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
+<li><strong>prefs</strong> (<em>Optional</em><em>[</em><em>PreferenceSet</em><em> or </em><em>specification dict : Mechanism.classPreferences</em><em>]</em>) – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Mechanism.
+If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.system">
+<code class="descname">system</code><a class="headerlink" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.system" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>System</em> – the <a class="reference internal" href="System.html"><span class="doc">System</span></a> for which AGTControlMechanism is the <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>;
+the AGTControlMechanism inherits any <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> specified in the <strong>monitor_for_control</strong>
+argument of the <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a>’s constructor, and any <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>
+specified in its <strong>control_signals</strong> argument.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism">
+<code class="descname">objective_mechanism</code><a class="headerlink" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ObjectiveMechanism</em> – <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that monitors and evaluates the values specified in the ControlMechanism’s
+<strong>objective_mechanism</strong> argument, the output of which is used as <a class="reference internal" href="#agtcontrolmechanism-input"><span class="std std-ref">input</span></a> to the
+AGTControlMechanism. It is created automatically when AGTControlMechanism is created, and uses as a <a class="reference internal" href="Function.html#Function.AGTUtilityIntegrator" title="Function.AGTUtilityIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AGTUtilityIntegrator</span></code></a> as
+is <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.monitored_output_states">
+<code class="descname">monitored_output_states</code><a class="headerlink" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.monitored_output_states" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[OutputState]</em> – each item is an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> monitored by the <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>; it is
+the same as the ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_output_states" title="ObjectiveMechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>
+attribute. The <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the OutputStates listed are used by the ObjectiveMechanism to
+generate the AGTControlMechanism’s <a class="reference internal" href="#agtcontrolmechanism-input"><span class="std std-ref">input</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.monitored_output_states_weights_and_exponents">
+<code class="descname">monitored_output_states_weights_and_exponents</code><a class="headerlink" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.monitored_output_states_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[Tuple(float, float)]</em> – each tuple in the list contains the weight and exponent associated with a corresponding item of
+<a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.monitored_output_states" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>;  these are the same as those in
+the <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_output_states_weights_and_exponents" title="ObjectiveMechanism.ObjectiveMechanism.monitored_output_states_weights_and_exponents"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states_weights_and_exponents</span></code></a> attribute of the <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, and are used by the ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to parametrize the contribution made to its output by each of the values that
+it monitors (see <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-function"><span class="std std-ref">ObjectiveMechanism Function</span></a>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function">
+<code class="descname">function</code><a class="headerlink" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>TransferFunction :  default Linear(slope=1, intercept=0)</em> – determines the Function used to convert the AGTControlMechanism’s <a class="reference internal" href="#agtcontrolmechanism-input"><span class="std std-ref">input</span></a> into its
+<a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.allocation_policy" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>, that is used to assign the
+<a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> for its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal(s)</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.allocation_policy">
+<code class="descname">allocation_policy</code><a class="headerlink" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.allocation_policy" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> – contains the value(s) assigned as the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> for the <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal(s)</span></a> listed in the <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.control_signals" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a> attribute;  if the default <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+is used, it contains a single value that is assigned as the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> for
+all of the AGTControlMechanism’s <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.control_signals" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>. The AGTControlMechanism’s allocation_policy
+is the same as its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.value" title="Mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.control_signals">
+<code class="descname">control_signals</code><a class="headerlink" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.control_signals" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[ControlSignal]</em> – list of the AGTControlMechanism’s <code class="xref any docutils literal"><span class="pre">ControlSignals</span></code> , including any inherited from a <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.system" title="ControlMechanism.ControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a> for which it is a <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> (same as
+ControlMechanism’s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.output_states" title="Mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute); each sends a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>
+to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the parameter it controls</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.control_projections">
+<code class="descname">control_projections</code><a class="headerlink" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.control_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[ControlProjection]</em> – list of <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>, one for each <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> in <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.control_signals" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.modulation">
+<code class="descname">modulation</code><a class="headerlink" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.modulation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ModulationParam</em> – the default form of modulation used by the ControlMechanism’s <a class="reference internal" href="GatingSignal.html"><span class="doc">ControlSignals</span></a>,
+unless they are <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">individually specified</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.show">
+<code class="descname">show</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> monitored by the AGTControlMechanism’s <a class="reference internal" href="#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>
+and the <a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">multiplicative_params</span></a> modulated by the AGTControlMechanism.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="LCControlMechanism.html" class="btn btn-neutral float-right" title="LCControlMechanism" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="AGT.html" class="btn btn-neutral" title="AGT" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.3.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

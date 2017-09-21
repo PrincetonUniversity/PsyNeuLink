@@ -35,7 +35,10 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="EVC" href="EVC.html"/>
+        <link rel="next" title="Mechanisms" href="Mechanisms.html"/>
+        <link rel="prev" title="EVCControlMechanism" href="EVCControlMechanism.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -88,14 +91,27 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Subsystems.html">Subsystems</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="AGT.html">AGT</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="EVC.html">EVC</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="EVCControlMechanism.html">EVCControlMechanism</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">EVCAuxiliary</a><ul class="simple">
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanisms.html">Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projections.html">Projections</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -140,6 +156,12 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
+          <li><a href="Library.html">Library</a> &raquo;</li>
+        
+          <li><a href="Subsystems.html">Subsystems</a> &raquo;</li>
+        
+          <li><a href="EVC.html">EVC</a> &raquo;</li>
+        
       <li>EVCAuxiliary</li>
     
     
@@ -163,6 +185,162 @@
 <h1>EVCAuxiliary<a class="headerlink" href="#evcauxiliary" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 </div>
+<span class="target" id="module-Library.Subsystems.EVC.EVCAuxiliary"></span><p>Auxiliary functions for <a class="reference internal" href="EVCControlMechanism.html"><span class="doc">EVCControlMechanism</span></a>.</p>
+<dl class="class">
+<dt id="Library.Subsystems.EVC.EVCAuxiliary.ValueFunction">
+<em class="property">class </em><code class="descclassname">Library.Subsystems.EVC.EVCAuxiliary.</code><code class="descname">ValueFunction</code><span class="sig-paren">(</span><em>function=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Library.Subsystems.EVC.EVCAuxiliary.ValueFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-evc"><span class="std std-ref">EVC</span></a> for a given performance outcome and set of costs.</p>
+<p>ValueFunction takes as its arguments an outcome (a value representing the performance of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>)
+and list of costs (each reflecting the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.cost" title="ModulatorySignals.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a> of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of the <code class="xref any docutils literal"><span class="pre">controller</span>
+<span class="pre">System_Base.controller</span></code> of that System), and returns an <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-evc"><span class="std std-ref">expected value of control (EVC)</span></a> based
+on these (along with the outcome and aggregation of costs used to calculate the EVC).</p>
+<p>ValueFunction is the default for an EVCControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.value_function" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.value_function"><code class="xref any py py-attr docutils literal"><span class="pre">value_function</span></code></a> attribute, and
+it is called by <a class="reference internal" href="#Library.Subsystems.EVC.EVCAuxiliary.ControlSignalGridSearch" title="Library.Subsystems.EVC.EVCAuxiliary.ControlSignalGridSearch"><code class="xref any py py-class docutils literal"><span class="pre">ControlSignalGridSearch</span></code></a> (the EVCControlMechanism’s default <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.function" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>).</p>
+<p>The ValueFunction’s default <a class="reference internal" href="#Library.Subsystems.EVC.EVCAuxiliary.ValueFunction.function" title="Library.Subsystems.EVC.EVCAuxiliary.ValueFunction.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> calculates the EVC using the result of the <code class="xref any docutils literal"><span class="pre">function</span>
+<span class="pre">&lt;ObjectiveMechanism.function</span></code> of the EVCControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.objective_mechanism" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, and
+two auxiliary functions specified in corresponding attributes of the EVCControlMechanism: <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.cost_function" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_function</span></code></a> and <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.combine_outcome_and_cost_function" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.combine_outcome_and_cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">combine_outcome_and_cost_function</span></code></a>. The calculation of the EVC
+provided by ValueFunction can be modified by customizing or replacing any of these functions, or by replacing the
+ValueFunction’s <a class="reference internal" href="#Library.Subsystems.EVC.EVCAuxiliary.ValueFunction.function" title="Library.Subsystems.EVC.EVCAuxiliary.ValueFunction.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> itself (in the EVCControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.value_function" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.value_function"><code class="xref any py py-attr docutils literal"><span class="pre">value_function</span></code></a> attribute). Replacement functions must use the same format (number and type of
+items) for its arguments and return values (see <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-calling-and-assigning-functions"><span class="std std-ref">note</span></a>).</p>
+<dl class="method">
+<dt id="Library.Subsystems.EVC.EVCAuxiliary.ValueFunction.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>controller</em>, <em>outcome</em>, <em>costs</em><span class="sig-paren">)</span><a class="headerlink" href="#Library.Subsystems.EVC.EVCAuxiliary.ValueFunction.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the EVC as follows:</p>
+<ul class="simple">
+<li>call the <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.cost_function" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_function</span></code></a> for the EVCControlMechanism specified in the <strong>controller</strong> argument,
+to combine the list of costs specified in the <strong>costs</strong> argument into a single cost value;</li>
+<li>call the <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.combine_outcome_and_cost_function" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.combine_outcome_and_cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">combine_outcome_and_cost_function</span></code></a> for the EVCControlMechanism specified in the <strong>controller</strong> argument,
+to combine the value specified in the <strong>outcome</strong> argument with the value returned by the <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.cost_function" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_function</span></code></a>;</li>
+<li>return the results in a three item tuple: (EVC, outcome and cost).</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>controller</strong> (<a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism"><em>EVCControlMechanism</em></a>) – the EVCControlMechanism for which the EVC is to be calculated;  this is required so that the controller’s
+<a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.cost_function" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_function</span></code></a> and <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.combine_outcome_and_cost_function" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.combine_outcome_and_cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">combine_outcome_and_cost_function</span></code></a> functions can be called.</li>
+<li><strong>outcome</strong> (<em>value : default float</em>) – should represent the outcome of performance of the <a class="reference internal" href="System.html"><span class="doc">System</span></a> for which an <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.allocation_policy" title="ControlMechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> is being
+evaluated.</li>
+<li><strong>costs</strong> (<em>list</em><em> or </em><em>array of values : default 1d np.array of floats</em>) – each item should be the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.cost" title="ModulatorySignals.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a> of one of the controller’s <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-controlsignals"><span class="std std-ref">ControlSignals</span></a>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>(EVC, outcome, cost)</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Tuple(float, float, float)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Library.Subsystems.EVC.EVCAuxiliary.ControlSignalGridSearch">
+<em class="property">class </em><code class="descclassname">Library.Subsystems.EVC.EVCAuxiliary.</code><code class="descname">ControlSignalGridSearch</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>params=None</em>, <em>function=None</em>, <em>owner=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Library.Subsystems.EVC.EVCAuxiliary.ControlSignalGridSearch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conduct an exhaustive search of allocation polices and return the one with the maximum <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-evc"><span class="std std-ref">EVC</span></a>.</p>
+<p>This is the default <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.function" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for an EVCControlMechanism. It identifies the <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.allocation_policy" title="ControlMechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>
+with the maximum <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-evc"><span class="std std-ref">EVC</span></a> by a conducting a grid search over every possible <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.allocation_policy" title="ControlMechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>
+given the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.allocation_samples" title="ModulatorySignals.ControlSignal.ControlSignal.allocation_samples"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_samples</span></code></a> specified for each of its ControlSignals (i.e., the <a class="reference external" href="https://en.wikipedia.org/wiki/Cartesian_product">Cartesian product</a> of the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> values specified
+by the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.allocation_samples" title="ModulatorySignals.ControlSignal.ControlSignal.allocation_samples"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_samples</span></code></a> attribute of each ControlSignal).  The full set of allocation policies is stored in the
+EVCControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.control_signal_search_space" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.control_signal_search_space"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal_search_space</span></code></a> attribute.  The EVCControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.run_simulation" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.run_simulation"><code class="xref any py py-meth docutils literal"><span class="pre">run_simulation</span></code></a> method is used to
+simulate its <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a> under each <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.allocation_policy" title="ControlMechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> in <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.control_signal_search_space" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.control_signal_search_space"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal_search_space</span></code></a>,
+calculate the EVC for each of those policies, and return the policy with the greatest EVC. By default, only the
+maximum EVC is saved and returned.  However, setting the <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.save_all_values_and_policies" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.save_all_values_and_policies"><code class="xref any py py-attr docutils literal"><span class="pre">save_all_values_and_policies</span></code></a> attribute to <code class="xref any docutils literal"><span class="pre">True</span></code> saves
+each policy and its EVC for each simulation run (in the EVCControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_policies" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_policies"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_policies</span></code></a> and <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_values" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_values"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_values</span></code></a> attributes,
+respectively). The EVC is calculated for each policy by iterating over the following steps:</p>
+<ul>
+<li><dl class="first docutils">
+<dt>Select an allocation_policy:</dt>
+<dd><p class="first last">draw a successive item from <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.control_signal_search_space" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.control_signal_search_space"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal_search_space</span></code></a> in each iteration, and assign each of its values as
+the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> value for the corresponding ControlSignal for that simulation of the <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Simulate performance:</dt>
+<dd><p class="first last">execute the <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a> under the selected <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.allocation_policy" title="ControlMechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> using the EVCControlMechanism’s
+<a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.run_simulation" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.run_simulation"><code class="xref any py py-meth docutils literal"><span class="pre">run_simulation</span></code></a> method, and the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.value" title="Mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of its <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.prediction_mechanisms" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.prediction_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">prediction_mechanisms</span></code></a> as the input
+to the <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a>;  these use the history of previous trials to generate an average
+expected input for each <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.ORIGIN" title="Keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism of the <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Calculate the EVC:</dt>
+<dd><p class="first">call the EVCControlMechanism’s <code class="xref any docutils literal"><span class="pre">value_function</span></code> to calculate the EVC for the current
+iteration, using three values (see <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-functions"><span class="std std-ref">Function</span></a> for additional details):</p>
+<ul class="simple">
+<li>the EVCControlMechanism’s <code class="xref any docutils literal"><span class="pre">input</span></code>, which is the result of its <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.objective_mechanism" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>’s <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>) and provides an evaluation
+of the outcome of processing in the <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a> under the current <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.allocation_policy" title="ControlMechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>;</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li>the result of the <code class="xref any docutils literal"><span class="pre">cost</span></code> function, called by the <code class="xref any docutils literal"><span class="pre">value_function</span></code>, that returns the cost for the <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.allocation_policy" title="ControlMechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> based on
+the current <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.cost" title="ModulatorySignals.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a> associated with each of its ControlSignals;</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="last simple">
+<li>the result of the <code class="xref any docutils literal"><span class="pre">combine</span></code> function, called by the <code class="xref any docutils literal"><span class="pre">value_function</span></code>, that returns the EVC by subtracting the cost from the outcome</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Save the values:</dt>
+<dd><p class="first last">if the <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.save_all_values_and_policies" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.save_all_values_and_policies"><code class="xref any py py-attr docutils literal"><span class="pre">save_all_values_and_policies</span></code></a> attribute is <code class="xref any docutils literal"><span class="pre">True</span></code>, save allocation policy in the EVCControlMechanism’s
+<a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_policies" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_policies"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_policies</span></code></a> attribute, and its value is saved in the <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_values" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_values"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_values</span></code></a> attribute; otherwise, retain only
+maximum EVC value.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The ControlSignalGridSearch function returns the <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.allocation_policy" title="ControlMechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> that yielded the maximum EVC.
+Its operation can be modified by customizing or replacing any or all of the functions referred to above
+(also see <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-functions"><span class="std std-ref">Function</span></a>).</p>
+<dl class="method">
+<dt id="Library.Subsystems.EVC.EVCAuxiliary.ControlSignalGridSearch.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#Library.Subsystems.EVC.EVCAuxiliary.ControlSignalGridSearch.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Grid search combinations of control_signals in specified allocation ranges to find one that maximizes EVC</p>
+<blockquote>
+<div><ul class="simple">
+<li>Called by ControlSignalGridSearch.</li>
+<li>Call System_Base.execute for each <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.allocation_policy" title="ControlMechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> in <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.control_signal_search_space" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.control_signal_search_space"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal_search_space</span></code></a>.</li>
+<li><dl class="first docutils">
+<dt>Store an array of values for outputStates in <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.monitored_output_states" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a></dt>
+<dd>(i.e., the input_states in <a class="reference internal" href="LearningMechanism.html#LearningMechanism.LearningMechanism.input_states" title="LearningMechanism.LearningMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a>) for each <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.allocation_policy" title="ControlMechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Call <code class="xref any docutils literal"><span class="pre">_compute_EVC</span></code> for each allocation_policy to calculate the EVC, identify the  maximum,</dt>
+<dd>and assign to <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_max" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_max"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_max</span></code></a>.</dd>
+</dl>
+</li>
+<li>Set <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_max_policy" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_max_policy"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_max_policy</span></code></a> to the <a class="reference internal" href="ControlMechanism.html#ControlMechanism.ControlMechanism.allocation_policy" title="ControlMechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> (outputState.values) corresponding to EVC_max.</li>
+<li>Set value for each control_signal (outputState.value) to the values in <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_max_policy" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.EVC_max_policy"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_max_policy</span></code></a>.</li>
+<li>Return an allocation_policy.</li>
+</ul>
+<p>Note:
+* runtime_params is used for self.__execute (that calculates the EVC for each call to System_Base.execute);</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>it is NOT used for System_Base.execute –&nbsp;that uses the runtime_params provided for the Mechanisms in each</dt>
+<dd>Process.configuration</dd>
+</dl>
+</div></blockquote>
+<p>Return (2D np.array): value of outputState for each monitored state (in self.input_states) for EVC_max</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 
@@ -172,6 +350,15 @@
            </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Mechanisms.html" class="btn btn-neutral float-right" title="Mechanisms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="EVCControlMechanism.html" class="btn btn-neutral" title="EVCControlMechanism" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

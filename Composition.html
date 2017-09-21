@@ -36,6 +36,7 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="System" href="System.html"/>
         <link rel="prev" title="Functions" href="Function.html"/> 
 
@@ -94,13 +95,16 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Compositions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="System.html">System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Process.html">Process</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Component.html">Components</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Compositions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="System.html">System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Process.html">Process</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -145,6 +149,8 @@
   <ul class="wy-breadcrumbs">
     
       <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Core.html">Core</a> &raquo;</li>
         
       <li>Compositions</li>
     
@@ -506,8 +512,8 @@ to receive and execute sets of Mechanisms that are eligible to run until termina
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>inputs</strong> ({ <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> : list }) – a dictionary containing a key-value pair for each Mechanism in the composition that receives inputs from
 the user. For each pair, the key is the Mechanism and the value is a list of inputs.</li>
-<li><strong>scheduler_processing</strong> (<a class="reference internal" href="Scheduler.html#Scheduling.Scheduler.Scheduler" title="Scheduling.Scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object which owns the conditions that will instruct the non-learning execution of this Composition.                 If not specified, the Composition will use its automatically generated scheduler</li>
-<li><strong>scheduler_learning</strong> (<a class="reference internal" href="Scheduler.html#Scheduling.Scheduler.Scheduler" title="Scheduling.Scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object which owns the conditions that will instruct the Learning execution of this Composition.                 If not specified, the Composition will use its automatically generated scheduler</li>
+<li><strong>scheduler_processing</strong> (<a class="reference internal" href="Scheduler.html#module-Scheduling.Scheduler" title="Scheduling.Scheduler"><em>Scheduler</em></a>) – the scheduler object which owns the conditions that will instruct the non-learning execution of this Composition.                 If not specified, the Composition will use its automatically generated scheduler</li>
+<li><strong>scheduler_learning</strong> (<a class="reference internal" href="Scheduler.html#module-Scheduling.Scheduler" title="Scheduling.Scheduler"><em>Scheduler</em></a>) – the scheduler object which owns the conditions that will instruct the Learning execution of this Composition.                 If not specified, the Composition will use its automatically generated scheduler</li>
 <li><strong>execution_id</strong> (<em>UUID</em>) – execution_id will typically be set to none and assigned randomly at runtime</li>
 <li><strong>call_before_time_step</strong> (<em>callable</em>) – will be called before each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed</li>
 <li><strong>call_after_time_step</strong> (<em>callable</em>) – will be called after each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed</li>
@@ -539,9 +545,9 @@ to receive and execute sets of mechanisms that are eligible to run until termina
 <li><strong>inputs</strong> ({ <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> : list }) – a dictionary containing a key-value pair for each Mechanism in the composition that receives inputs from
 the user. For each pair, the key is the Mechanism and the value is a list of inputs. Each input in the
 list corresponds to a certain <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</li>
-<li><strong>scheduler_processing</strong> (<a class="reference internal" href="Scheduler.html#Scheduling.Scheduler.Scheduler" title="Scheduling.Scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object which owns the conditions that will instruct the non-learning execution of
+<li><strong>scheduler_processing</strong> (<a class="reference internal" href="Scheduler.html#module-Scheduling.Scheduler" title="Scheduling.Scheduler"><em>Scheduler</em></a>) – the scheduler object which owns the conditions that will instruct the non-learning execution of
 this Composition. If not specified, the Composition will use its automatically generated scheduler.</li>
-<li><strong>scheduler_learning</strong> (<a class="reference internal" href="Scheduler.html#Scheduling.Scheduler.Scheduler" title="Scheduling.Scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object which owns the conditions that will instruct the Learning execution of
+<li><strong>scheduler_learning</strong> (<a class="reference internal" href="Scheduler.html#module-Scheduling.Scheduler" title="Scheduling.Scheduler"><em>Scheduler</em></a>) – the scheduler object which owns the conditions that will instruct the Learning execution of
 this Composition. If not specified, the Composition will use its automatically generated scheduler.</li>
 <li><strong>execution_id</strong> (<em>UUID</em>) – execution_id will typically be set to none and assigned randomly at runtime.</li>
 <li><strong>num_trials</strong> (<em>int</em>) – typically, the composition will infer the number of trials from the length of its input specification.
