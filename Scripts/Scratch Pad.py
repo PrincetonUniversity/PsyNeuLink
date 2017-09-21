@@ -945,23 +945,13 @@ class ScratchPadError(Exception):
 
 #region TEST Hebbian @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from PsyNeuLink.Components.Functions.Function import AGTUtilityIntegrator
-# print("TEST AGTUtilityIntegrator FUNCTION")
-#
-# x = AGTUtilityIntegrator(initial_long_term_utility=0.1,
-#                       long_term_rate=.1,
-#                       short_term_rate=.6,
-#                       initial_short_term_utility=0.1)
-# x.operation='s*l'
-# x.show_params()
-#
-# # for i in range(20):
-# #     print(x.execute(0))
-# for i in range(3):
-#     print("input:", 0.1, "; result:", x.execute(0.1))
-# print ("SWITCH")
-# for i in range(100):
-#     print("input:", 1, "; result:", x.execute(1))
+from PsyNeuLink.Components.Functions.Function import Hebbian
+print("TEST Hebbian FUNCTION")
+
+x = Hebbian(default_variable=[0,0,0], learning_rate=[1,-1,3])
+x.show_params()
+
+print(x.execute([1,2,3]))
 
 #endregion
 

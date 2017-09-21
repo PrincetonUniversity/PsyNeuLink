@@ -7630,12 +7630,12 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         <Hebbian.function>`.  If specified, it supersedes any learning_rate specified for the `Process
         <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's `owner <Hebbian.owner>`
         belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d np.array, it is
-        multiplied by one dimension of the weight change matrix (tantamount to weighting each item of the `variable
-        <Hebbian.variable>`);  if it is a 2d np.array, it is used to generate a Hadamard (elementwise) product with
-        the weight change matrix; if it is `None`, then the `learning_rate <Process_Base.learning_rate>` specified
-        for the Process to which the `owner <Hebbian.owner>` belongs is used;  and, if that is `None`, then the
-        `learning_rate <System_Base.learning_rate>` for the System to which it belongs is used. If all are `None`,
-        then the `default_learning_rate <Hebbian.default_learning_rate>` is used.
+        multiplied Hadamard (elementwise) by the `variable` <Hebbian.variable>` before calculating the weight change
+        matrix;  if it is a 2d np.array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
+        `None`, then the `learning_rate <Process_Base.learning_rate>` specified for the Process to which the `owner
+        <Hebbian.owner>` belongs is used;  and, if that is `None`, then the `learning_rate <System_Base.learning_rate>`
+        for the System to which it belongs is used. If all are `None`, then the `default_learning_rate
+        <Hebbian.default_learning_rate>` is used.
 
     default_learning_rate : float
         the value used for the `learning_rate <Hebbian.learning_rate>` if it is not otherwise specified.
@@ -7768,16 +7768,20 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         # learning_rate = self.learning_rate
         # MODIFIED 3/22/17 END
 
-        # Generate the column array from the variable
-        row = np.array(self.variable)
-        col = row.reshape(len(row),1)
 
-        # If learning_rate is a 1d array, multiply it by one dimension:
+        variable = np.array(self.variable)
+
+        # If learning_rate is a 1d array, multiply it by variable
         if self.learning_rate_dim == 1:
-            row = row * self.learning_rate
-            weight_change_matrix = row * col
-        else:
-            weight_change_matrix = row * col * learning_rate
+            variable = variable * self.learning_rate
+
+        # Generate the column array from the variable
+        col = variable.reshape(len(variable),1)
+
+        weight_change_matrix = variable * col
+
+        if self.learning_rate_dim in {0, 2}:
+            weight_change_matrix = weight_change_matrix * learning_rate
 
         return [weight_change_matrix]
 
