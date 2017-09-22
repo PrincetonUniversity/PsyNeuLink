@@ -2150,7 +2150,7 @@ class Process_Base(Process):
             #   (in case terminal mechanism of process is part of another process that has learning implemented)
             #    in which case, shouldn't assign target ObjectiveMechanism, but rather just a LearningMechanism)
             try:
-                target_mech = trace_learning_objective_mechanism_projections(self._learning_mechs[0][0])
+                target_mech = trace_learning_objective_mechanism_projections(self._learning_mechs[0])
             except IndexError:
                 raise ProcessError("Learning specified for {} but no ObjectiveMechanisms or LearningMechanism found"
                                    .format(self.name))

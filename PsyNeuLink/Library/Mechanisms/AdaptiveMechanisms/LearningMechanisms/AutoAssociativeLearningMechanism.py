@@ -47,11 +47,12 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
 from PsyNeuLink.Components.Functions.Function \
-    import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
+    import Hebbian, ModulationParam, _is_modulation_param, is_function_type
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-    import OUTCOME, ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
+    import LearningMechanism, ACTIVATION_INPUT
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection \
     import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
@@ -288,7 +289,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     def __init__(self,
                  variable:tc.any(list, np.ndarray),
                  size=None,
-                 function:is_function_type=BackPropagation,
+                 function:is_function_type=Hebbian,
                  learning_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.ADDITIVE,
                  learning_rate:tc.optional(parameter_spec)=None,
@@ -315,6 +316,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         super().__init__(variable=variable,
                          size=size,
+                         function=function,
                          modulation=modulation,
                          params=params,
                          name=name,
@@ -325,12 +327,12 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         """Validate that variable has exactly three items: activation_input, activation_output and error_signal
         """
 
-        # Skip LearningMechanism._validate_variable, as it requires variable to have 3 items
-        super(AdaptiveMechanism_Base)._validate_variable(variable, context)
+        # Skip LearningMechanism._validate_variable in call to super(), as it requires variable to have 3 items
+        variable = self._update_variable(super(LearningMechanism, self)._validate_variable(variable, context))
 
-        variable = self._update_variable(super()._validate_variable(variable, context))
-
-        if np.array(variable).ndim != 1 or not is_numeric(variable):
+        # MODIFIED 9/22/17 NEW: [HACK]
+        if np.array(np.squeeze(variable)).ndim != 1 or not is_numeric(variable):
+        # MODIFIED 9/22/17 END
             raise AutoAssociativeLearningMechanismError("Variable for {} ({}) must be "
                                                         "a list or 1d np.array containing only numbers".
                                                         format(self.name, variable))
@@ -338,7 +340,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     def _validate_params(self, request_set, target_set=None, context=None):
         # Skip LearningMechanism._validate_params, as it has different requirements
-        super(AdaptiveMechanism_Base)._validate_params(request_set=request_set,target_set=target_set,context=context)
+        super(LearningMechanism, self)._validate_params(request_set=request_set,target_set=target_set,context=context)
 
         # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS (AKIN TO CONTROL_SIGNAL
         if LEARNING_SIGNALS in target_set and target_set[LEARNING_SIGNALS]:
@@ -462,7 +464,35 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     def _instantiate_attributes_before_function(self, context=None):
         # Skip LearningMechanism, as it checks for error_source, which AutoAssociativeLearningMechanism doesn't have
-        super(AdaptiveMechanism_Base)._instantiate_attributes_before_function(context=context)
+        super(LearningMechanism, self)._instantiate_attributes_before_function(context=context)
+
+    def _instantiate_output_states(self, context=None):
+
+        # Create registry for LearningSignals (to manage names)
+        from PsyNeuLink.Globals.Registry import register_category
+        from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
+        from PsyNeuLink.Components.States.State import State_Base
+        register_category(entry=LearningSignal,
+                          base_class=State_Base,
+                          registry=self._stateRegistry,
+                          context=context)
+
+        # Instantiate LearningSignals if they are specified, and assign to self._output_states
+        # Note: if any LearningSignals are specified they will replace the default LEARNING_SIGNAL OutputState
+        #          in the OUTPUT_STATES entry of paramClassDefaults;
+        #       the LearningSignals are appended to _output_states, leaving ERROR_SIGNAL as the first entry.
+        if self.learning_signals:
+            # Delete default LEARNING_SIGNAL item in output_states
+            del self._output_states[0]
+            for i, learning_signal in enumerate(self.learning_signals):
+                # Instantiate LearningSignal
+                ls = self._instantiate_learning_signal(learning_signal=learning_signal, context=context)
+                # Add LearningSignal to ouput_states list
+                self._output_states.append(ls)
+                # Replace spec in learning_signals list with actual LearningSignal
+                self.learning_signals[i] = ls
+
+        super(LearningMechanism, self)._instantiate_output_states(context=context)
 
     def _execute(self,
                 variable=None,

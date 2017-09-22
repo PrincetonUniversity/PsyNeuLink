@@ -7692,7 +7692,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     componentName = HEBBIAN_FUNCTION
 
     class ClassDefaults(LearningFunction.ClassDefaults):
-        variable = [0]
+        variable = [0,0]
 
     default_learning_rate = 0.05
 
@@ -7723,8 +7723,17 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     def _validate_variable(self, variable, context=None):
         variable = self._update_variable(super()._validate_variable(variable, context))
 
-        if np.array(variable).ndim != 1 or not is_numeric(variable):
-            raise ComponentError("Variable for {} ({}) must be a list or 1d np.array containing only numbers".
+        variable = np.squeeze(np.array(variable))
+
+        if not is_numeric(variable):
+            raise ComponentError("Variable for {} ({}) contains non-numeric entries".
+                                 format(self.name, variable))
+        if variable.ndim == 0:
+            raise ComponentError("Variable for {} is a single number ({}) "
+                                 "which doesn't make much sense for associative learning".
+                                 format(self.name, variable))
+        if variable.ndim > 1:
+            raise ComponentError("Variable for {} ({}) must be a list or 1d np.array of numbers".
                                  format(self.name, variable))
         return variable
 
@@ -7780,7 +7789,11 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         if learning_rate is not None:
             self.learning_rate_dim = np.array(learning_rate).ndim
 
-        variable = np.array(self.variable)
+        # MODIFIED 9/21/17 NEW:
+        # FIX: SHOULDN'T BE NECESSARY TO DO THIS;  WHY IS IT GETTING A 2D ARRAY AT THIS POINT?
+        if variable.ndim > 1:
+            variable = np.squeeze(variable)
+        # MODIFIED 9/21/17 END
 
         # If learning_rate is a 1d array, multiply it by variable
         if self.learning_rate_dim == 1:
@@ -7795,7 +7808,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         if self.learning_rate_dim in {0, 2}:
             weight_change_matrix = weight_change_matrix * learning_rate
 
-        return [weight_change_matrix]
+        return weight_change_matrix
 
 
 class Reinforcement(

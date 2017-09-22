@@ -1252,7 +1252,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # Specification is not a LearningSignal, so create OutputState for it
         else:
-            learning_signal_name = param_name + '_' + LearningSignal.__name__
+            # # MODIFIED 9/22/17 OLD:
+            # learning_signal_name = param_name + '_' + LearningSignal.__name__
+            # MODIFIED 9/22/17 NEW:
+            learning_signal_name = LEARNING_SIGNAL
+            # MODIFIED 9/22/17 END
 
             from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal \
                 import LearningSignal

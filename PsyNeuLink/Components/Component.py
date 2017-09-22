@@ -1080,11 +1080,12 @@ class Component(object):
             try:
                 return defaults_dict[val]
             except KeyError:
-                raise ComponentError("PROGRAM ERROR: \'{}\' not declared in {}.__init__() "
-                                     "but expected by its parent class ({}).".
-                                     format(val,
-                                            self.__class__.__name__,
-                                            self.__class__.__bases__[0].__name__))
+                # raise ComponentError("PROGRAM ERROR: \'{}\' not declared in {}.__init__() "
+                #                      "but expected by its parent class ({}).".
+                #                      format(val,
+                #                             self.__class__.__name__,
+                #                             self.__class__.__bases__[0].__name__))
+                pass
 
         def parse_arg(arg):
             # Resolve the string value of any args that use keywords as their name
