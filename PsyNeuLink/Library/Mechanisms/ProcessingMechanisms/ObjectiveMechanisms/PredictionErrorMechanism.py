@@ -20,6 +20,20 @@ from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms \
 
 
 class PredictionErrorMechanism(ComparatorMechanism):
+    """
+    PredictionErrorMechanism(                                \
+        sample,                                              \
+        target,                                              \
+        input_states=[SAMPLE,TARGET]                         \
+        function=LinearCombination(weights=[[-1],[1]],       \
+        output_states=[OUTCOME]                              \
+        params=None,                                         \
+        name=None,                                           \
+        prefs=None)
+
+    Subclass of `ComparatorMechanism` that calculates the prediction error
+    between the sample and the target
+    """
     componentType = PREDICTION_ERROR_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
