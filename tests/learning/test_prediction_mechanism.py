@@ -15,7 +15,8 @@ from PsyNeuLink.Globals.Keywords import NAME, SAMPLE, VARIABLE, TARGET, \
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms \
     .PredictionErrorMechanism import PredictionErrorMechanism
 
-
+# Very simple test demonstrating PredictionErrorMechanism
+# Oscillates between 25 and 0 because the sample and target values are constant
 def test_prediction_error_mechanism():
     sample = TransferMechanism(
         default_variable=[5],
