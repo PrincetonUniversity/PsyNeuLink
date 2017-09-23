@@ -1,5 +1,5 @@
 ControlMechanisms
-==================
+=================
 
 **Base class**:
 
@@ -11,6 +11,7 @@ ControlMechanisms
 
 .. toctree::
    :maxdepth: 1
+
 
 * `AGTControlMechanism`
 * `LCControlMechanism`
