@@ -1064,30 +1064,31 @@ print ("\nmy_auto.input_state.path_afferents[0].matrix:\n",
 
 my_process = process(pathway=[my_auto])
 
-# my_auto.learning_enabled = False
+my_auto.learning_enabled = False
+print ("\n***INITIAL STATE WITH [1,1,0,0] AS INPUT")
+my_process.execute([1,1,0,0]),
+print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
 
-my_process.execute([1,1,-1,-1]),
-print('\nActivity: ', my_auto.value)
+my_auto.learning_enabled = True
+print ("\n***START TRAINING WITH [1,1,0,0]")
 
-print ("\nmy_auto.matrix:\n",
-       my_auto.matrix)
-print ("\nmy_auto.recurrent_projection.matrix:\n",
-       my_auto.recurrent_projection.matrix)
-print ("\nmy_auto.input_state.path_afferents[0].matrix:\n",
-       my_auto.input_state.path_afferents[0].matrix)
+my_process.execute([1,1,0,0]),
+print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
 
-print()
+my_process.execute([1,1,0,0]),
+print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
 
-for i in range(4):
-    my_process.execute([0,0,-1,-1]),
-    print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
+my_process.execute([1,1,0,0]),
+print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
+
 
 my_auto.learning_enabled = False
+print ("\n*** DISABLED LEARNING")
 
-my_process.execute([0,0,0,0]),
-print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
-my_process.execute([0,0,0,0]),
-print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
+print ("\n*** START EXECUTING WITH [1,0,0,0]")
+for i in range(4):
+    my_process.execute([1,0,0,0]),
+    print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
 
 
 # #
