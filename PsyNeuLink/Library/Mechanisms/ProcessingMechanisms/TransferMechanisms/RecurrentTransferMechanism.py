@@ -27,8 +27,6 @@ and can be configured for to implement autoassociative (e.g., Hebbian) learning.
 
 .. _Recurrent_Transfer_Creation:
 
-A RecurrentTransferMechanism can be specified for learning either by assigning a value to its
-
 Creating a RecurrentTransferMechanism
 -------------------------------------
 
@@ -520,19 +518,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if isinstance(hetero, (list, np.matrix)):
             hetero = np.array(hetero)
-
-        # # If learning_rate is False, disable learning
-        # if isinstance(learning_rate, bool) and learning_rate == False:
-        #     self.learning_enabled = False
-        # # If learning_rate is specified
-        # else:
-        #     # If learning_rate is specified simply as `True`, assign learning_rate as `None`;
-        #     #    otherwise, leave learning_rate as assigned value
-        #     if isinstance(learning_rate, bool) and learning_rate == True:
-        #         self.learning_rate = None
-        #     # Set learning_enabled to be True provisionally;  confirmed in _instantiate_attributes_after_function()
-        #     #   using backing field, as direct assignment requires that self.learning_mechanism has been assigned
-        #     self._learning_enabled = True
 
         self._learning_enabled = enable_learning
 
