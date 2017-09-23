@@ -267,7 +267,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         specifies matrix as a diagonal matrix with diagonal entries equal to **auto**, if **auto** is not None;
         If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
         **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
-        1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
+        1 and all non-diagonal entries -1. If the **matrix** argument is specified, it will be overwritten by
         **auto** and/or **hetero**, if either is specified. **auto** can be specified as a 1D array with length equal
         to the size of the Mechanism, if a non-uniform diagonal is desired. Can be modified by control.
 
@@ -275,7 +275,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         specifies matrix as a hollow matrix with all non-diagonal entries equal to **hetero**, if **hetero** is not None;
         If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
         **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
-        1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
+        1 and all non-diagonal entries -1. If the **matrix** argument is specified, it will be overwritten by
         **auto** and/or **hetero**, if either is specified. **hetero** can be specified as a 2D array with dimensions
         equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.
 
@@ -658,7 +658,11 @@ class RecurrentTransferMechanism(TransferMechanism):
                                          "'auto' and 'hetero' parameters must be specified; currently, either"
                                          "auto or hetero parameter is missing.".format(self.params[MATRIX], self))
 
-        if AUTO not in param_keys:
+        # # MODIFIED 9/23/17 OLD:
+        # if AUTO not in param_keys:
+        # MODIFIED 9/23/17 NEW [JDC]:
+        if self.auto is not None:
+        # MODIFIED 9/23/17 END
             d = np.diagonal(specified_matrix).copy()
             state = _instantiate_state(owner=self,
                                        state_type=ParameterState,
@@ -673,7 +677,11 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 raise RecurrentTransferError("Failed to create ParameterState for `auto` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
-        if HETERO not in param_keys:
+        # # MODIFIED 9/23/17 OLD:
+        # if HETERO not in param_keys:
+        # MODIFIED 9/23/17 NEW [JDC]:
+        if self.hetero is not None:
+        # MODIFIED 9/23/17 END
             m = specified_matrix.copy()
             np.fill_diagonal(m, 0.0)
             state = _instantiate_state(owner=self,
@@ -696,6 +704,8 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         super()._instantiate_attributes_after_function(context=context)
 
+
+        # [9/23/17 JDC: WHY IS THIS GETTING DONE HERE RATHER THAN IN _instantiate_attributes_before_function ??]
         auto = self.params[AUTO]
         hetero = self.params[HETERO]
         if auto is not None and hetero is not None:
@@ -728,6 +738,15 @@ class RecurrentTransferMechanism(TransferMechanism):
                                            "length one, 2d array, 2d list, or numpy matrix".
                                            format(self.__class__.__name__, self.name, hetero, type(hetero)))
 
+        # MODIFIED 9/23/17 NEW [JDC]:
+        else:
+            self.matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
+            if self.matrix is None:
+                raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
+                                             format(self.__class__.__name__))
+        # MODIFIED 9/23/17 END:
+
+
         # (7/19/17 CW) this line of code is now questionable, given the changes to matrix and the recurrent projection
         if isinstance(self.matrix, AutoAssociativeProjection):
             self.recurrent_projection = self.matrix
@@ -737,6 +756,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.recurrent_projection = self._instantiate_recurrent_projection(self,
                                                                                matrix=self.matrix,
                                                                                context=context)
+
         if self.learning_enabled:
             self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self.output_state,
                                                                            learning_function=self.learning_function,
@@ -807,10 +827,15 @@ class RecurrentTransferMechanism(TransferMechanism):
             # (simplified version of Component's basic make_property getter)
             name = 'matrix'
             backing_field = '_matrix'
+            # MODIFIED 9/23/17 NEW [JDC]:
             try:
-                return self._parameter_states[name].value
+                return self.recurrent_projection.matrix
             except (AttributeError, TypeError):
-                return getattr(self, backing_field)
+            # MODIFIED 9/23/17 END:
+                try:
+                    return self._parameter_states[name].value
+                except (AttributeError, TypeError):
+                    return getattr(self, backing_field)
 
     @matrix.setter
     def matrix(self, val): # simplified version of standard setter (in Component.py)
@@ -845,11 +870,25 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @learning_enabled.setter
     def learning_enabled(self, value:bool):
-        if value and self.learning_mechanism is None:
+
+        # If RecurrentTransferMechanism has no LearningMechanism, warn and then ignore attempt to set learning_enabled
+
+        # if value and self.learning_mechanism is None:
+        #     print("Learning cannot be enabled for {} because it has no {}".
+        #           format(self.name, LearningMechanism.__name__))
+        #     return
+        # self._learning_enabled = value
+        # self.learning_mechanism.learning_enabled = value
+
+        if hasattr(self, 'learning_mechanism'):
+            self._learning_enabled = value
+            self.learning_mechanism.learning_enabled = value
+        else:
             print("Learning cannot be enabled for {} because it has no {}".
                   format(self.name, LearningMechanism.__name__))
             return
-        self._learning_enabled = value
+
+
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     @tc.typecheck

@@ -308,6 +308,12 @@ class LearningProjection(ModulatoryProjection_Base):
     variable : 2d np.array
         same as `learning_signal <LearningProjection.learning_signal>`.
 
+    learning_enabled : bool : default True
+        determines whether the `value <LearningProjection.value>` of the LearningProjection is used to modify
+        the `learned_projection <LearningProjection.learned_projection>` when the latter is executed;  its value is
+        set by the value of the `learning_enabled <LearningMechanism.learning_enabled>` attribute of the
+        `LearningMechanism` to which the LearningProjection's `sender <LearningProjection.sender>` belongs.
+
     learning_signal : 2d np.array
         the `value <LearningSignal.value>` of the LearningProjection's `sender <LearningProjectoin.sender>`: a matrix of
         weight changes calculated by the `LearningMechanism` to which the `sender <LearningProjection.sender>` belongs;
@@ -400,6 +406,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # Flag for deferred initialization
         self.init_status = InitStatus.DEFERRED_INITIALIZATION
+        self.learning_enable = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate sender and receiver

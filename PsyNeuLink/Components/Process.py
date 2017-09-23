@@ -2424,9 +2424,7 @@ class Process_Base(Process):
                               context=context)
 
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
-        for item in self._mechs:
-            mech = item
-            # params = item.params
+        for mech in self._mechs:
 
             # IMPLEMENTATION NOTE:
             #    This implementation restricts learning to ParameterStates of projections to input_states
@@ -2448,12 +2446,20 @@ class Process_Base(Process):
                     # For each parameter_state of the Projection
                     try:
                         for parameter_state in projection._parameter_states:
+
+                            # MODIFIED 9/23/17 NEW:
+                            # Skip learning if the LearningMechanism to which the LearningProjection belongs is disabled
+                            if all(projection.sender.owner.learning_enabled is False
+                                   for projection in parameter_state.mod_afferents):
+                                continue
+                            # MODIFIED 9/23/17 END:
+
                             # Call parameter_state.update with LEARNING in context to update LearningSignals
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
                             context = context + SEPARATOR_BAR + LEARNING
 
-                            # NOTE: This will need to be updated when runtime params are reenabled
+                            # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
                             parameter_state.update(time_scale=TimeScale.TRIAL, context=context)
 

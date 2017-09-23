@@ -560,7 +560,9 @@ class MappingProjection(PathwayProjection_Base):
             self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
 
         # Check whether error_signal has changed
-        if self.learning_mechanism and self.learning_mechanism.status == CHANGED:
+        if (self.learning_mechanism
+            and self.learning_mechanism.learning_enabled
+            and self.learning_mechanism.status == CHANGED):
 
             # Assume that if learning_mechanism attribute is assigned,
             #    both a LearningProjection and ParameterState[MATRIX] to receive it have been instantiated

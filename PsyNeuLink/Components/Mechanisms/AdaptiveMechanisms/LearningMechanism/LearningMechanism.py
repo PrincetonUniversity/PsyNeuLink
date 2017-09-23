@@ -288,6 +288,12 @@ refer to the Components being learned and/or its operation:
   `LearningProjection`, listed in the order of the `LearningSignal(s) <LearningSignal>` to which they belong,
   as those are listed in the LearningMechanism's `learning_signals <LearningMechanism.learning_signals>` attribute.
 ..
+* `learning_enabled <LearningMechanism.learning_enabled>` - if set to `False`, learning is disabled for all of its
+  `LearningProjections <LearningProjection>`;  however, the LearningMechanism is still executed during the learning
+  phase of execution of a `Process <Process_Execution>` or `System  <System_Execution_Learning>`, so that the error
+  signals it calculates can be passed to any other LearningMechanism(s) to which it projects (see
+  `LearningMechanism_Multilayer_Learning`).
+..
 * `input_source` - the `Mechanism <Mechanism>` that sends the `primary_learned_projection`, and projects to the
   LearningMechanism's *ACTIVATION_INPUT* `InputState <LearningMechanism_Activation_Input>`.
 ..
@@ -304,7 +310,7 @@ refer to the Components being learned and/or its operation:
   Modulation.ADD, which causes the weight changes in the `learning_signal` to be added to the current value of the
   `matrix <MappingProjection.matrix>` parameter (see `LearningMechanism_Execution` for a description of how the
   modifications are executed).
-..
+
 .. _LearningMechanism_Learning_Rate:
 
 * `learning_rate <LearningMechanism.learning_rate>` - specifies the :keyword:`learning_rate` parameter used by the
@@ -727,6 +733,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
     learned_projections : List[MappingProjection]
         all of the MappingProjections modified by the LearningMechanism;  the first item in the list is always the
         `primary_learned_projection <LearningMechanism.primary_learned_projection>`.
+
+    learning_enabled : bool : True
+        if set to False, learning is disabled for all of its LearningProjections; however, the LearningMechanism is
+        still executed during the learning phase of execution of a `Process <Process_Execution>` or `System
+        <System_Execution_Learning>`, so that the error signals it calculates can be passed to any other
+        LearningMechanism(s) to which it projects (see `LearningMechanism_Multilayer_Learning`).
 
     function : LearningFunction or function : default BackPropagation
         specifies the function used to calculate the `learning_signal <LearningMechanism.learning_signal>` (assigned
@@ -1340,6 +1352,18 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         self.value = [self.learning_signal, self.error_signal]
         return self.value
+
+    @property
+    def learning_enabled(self):
+        try:
+            return self._learning_enabled
+        except AttributeError:
+            self._learning_enabled = True
+            return self._learning_enabled
+
+    @learning_enabled.setter
+    def learning_enabled(self, assignment):
+        self._learning_enabled = assignment
 
     @property
     def learning_rate(self):
