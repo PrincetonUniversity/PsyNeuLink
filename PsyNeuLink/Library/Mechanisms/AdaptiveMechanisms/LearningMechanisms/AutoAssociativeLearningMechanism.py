@@ -24,16 +24,19 @@ It is identical in all respects to a LearningMechanism, with the following excep
     
   * it has a single *LEARNING_SIGNAL* `OutputState`, that sends a `LearningProjection` to the `matrix
     <AutoAssociativeProjection>` parameter of an 'AutoAssociativeProjection` (typically, the `recurrent_projection
-    <RecurrentTransferMechanism.recurrent_projection>` of a RecurrentTransferMechanism).
+    <RecurrentTransferMechanism.recurrent_projection>` of a RecurrentTransferMechanism);
 
-  * it has no :keyword:`input_source`, :keyword:`output_source`, or :keyword:`error_source` attributes;  for an
-    AutoAssociativeLearningProjection;  instead, it has a single `activity_source` attribute that identifies the
-    source of the activity vector used by the Mechanism's `function <AutoAssociativeLearningProjection.function>`.
+  * it has no `input_source <LearningMechanism.input_source>`, `output_source <LearningMechanism.output_source>`,
+    or `error_source <LearningMechanism.error_source>` attributes;  instead, it has a single `activity_source` attribute
+    that identifies the source of the activity vector used by the Mechanism's `function
+    <AutoAssociativeLearningProjection.function>`.
 
 It is created automatically when a RecurrentTransferMechanism is `specified for learning <Recurrent_Transfer_Learning>`.
 
+COMMENT:
 Function:  XXXX
 LearningRate:  XXX
+COMMENT
 
 .. _AutoAssociativeLearningMechanism_Class_Reference:
 
@@ -232,7 +235,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         additional ones;  in such cases, the `value <LearningSignal>` for all of the LearningSignals is the
         the same:  the AutoAssociativeLearningMechanism's `learning_signal
         <AutoAssociativeLearningMechanism.learning_signal>` attribute, based on its `activity_source
-        <AutoAssociativeLearningMechanism>.activity_source>`.  Since LearningSignals are `OutputStates
+        <AutoAssociativeLearningMechanism.activity_source>`.  Since LearningSignals are `OutputStates
         <OutputState>`, they are also listed in the AutoAssociativeLearningMechanism's `output_states
         <AutoAssociativeLearningMechanism.output_states>` attribute.
 
@@ -243,13 +246,13 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     output_states : ContentAddressableList[OutputState]
         list of the AutoAssociativeLearningMechanism's `OutputStates <OutputState>`, beginning with its
-        `LearningSignal(s) <AutoAssociativeLearningMechanism_LearningSignal>`, and followed by any additional
+        `learning_signals <AutoAssociativeLearningMechanism.learning_signals>`, and followed by any additional
         (user-specified) `OutputStates <OutputState>`.
 
     output_values : 2d np.array
         the first item is the `value <OutputState.value>` of the LearningMechanism's `learning_signal
         <AutoAssociativeLearningMechanism.learning_signal>`, followed by the `value <OutputState.value>`\\s
-        of any additional (user-specified) `OutputStates <OutputState>`.
+        of any additional (user-specified) OutputStates.
 
     modulation : ModulationParam
         the default form of modulation used by the AutoAssociativeLearningMechanism's `LearningSignal(s)
