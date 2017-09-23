@@ -536,7 +536,7 @@ class LearningProjection(ModulatoryProjection_Base):
                 learned_projection.objective_mechanism = candidate_objective_mech
         except TypeError:
             # learning_mechanism does not receive from an ObjectiveMechanism
-            #    (e.g., AutoassociativeLearningMechanism, which receives straight from a ProcessingMechanism)
+            #    (e.g., AutoAssociativeLearningMechanism, which receives straight from a ProcessingMechanism)
             pass
         # MODIFIED 9/22/17 END
         learned_projection.learning_mechanism = learning_mechanism

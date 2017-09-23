@@ -1439,7 +1439,7 @@ class Component(object):
             variable = self._update_variable(variable())
 
         # Validate variable if parameter_validation is set and the function was called with a variable
-        if self.prefs.paramValidationPref and not variable is None:
+        if self.prefs.paramValidationPref and variable is not None:
             if context:
                 context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
             else:

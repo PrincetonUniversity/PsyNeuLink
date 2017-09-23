@@ -1108,14 +1108,16 @@ from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism \
     import RecurrentTransferMechanism
+from PsyNeuLink.Components.Functions.Function import Linear
 
 print("\nTEST RecurrentTransferMechanism\n")
 
-my_auto = RecurrentTransferMechanism(default_variable=[0,0,0],
-                                     size=3,
-                                     function=Logistic,
+my_auto = RecurrentTransferMechanism(
+        # default_variable=[0,0,0,0],
+                                     size=4,
+                                     function=Linear,
                                      # matrix=RANDOM_CONNECTIVITY_MATRIX,
-                                     matrix=np.array([[1,1,1],[1,1,1],[1,1,1]]),
+                                     # matrix=np.array([[1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1]]),
                                      learning_rate=True
                                      # matrix=[[1,1,1],[1,1,1],[1,1,1]]
                                      )
@@ -1134,10 +1136,13 @@ my_process = process(pathway=[my_auto])
 # #                      learning=LEARNING,
 # #                      target=[0,0,0])
 #
-# # print(my_process.execute([1,1,1]))
-# # print(my_process.execute([1,1,1]))
-# # print(my_process.execute([1,1,1]))
-# # print(my_process.execute([1,1,1]))
+my_process.execute([1,1,-1,-1]),
+my_process.execute([1,1,-1,-1]),
+print('Activity: ', my_auto.value, '\nWeight matrix:\n', my_auto.matrix)
+for i in range(100):
+    my_process.execute([1,1,-1,-1]),
+print('Activity: ', my_auto.value, '\nWeight matrix:\n', my_auto.matrix)
+
 # #
 # input_list = {my_auto:[1,1,1]}
 # target_list = {my_auto:[0,0,0]}

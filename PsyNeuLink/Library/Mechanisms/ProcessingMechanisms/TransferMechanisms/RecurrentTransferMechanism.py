@@ -43,7 +43,7 @@ standard `TransferMechanism`.
 
 .. _Recurrent_Transfer_Learning:
 
-Autoassociative Learning
+AutoAssociative Learning
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 A RecurrentTransferMechanism can be specified for learning by assigning either `True` or a numeric entity to the
