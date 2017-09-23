@@ -297,7 +297,7 @@ The following example implements a System with an EVCControlMechanism (and two p
                       controller=EVCControlMechanism,
                       monitor_for_control=[Reward, DDM_DECISION_VARIABLE,(RESPONSE_TIME, 1, -1)],
 
-It uses the System's `monitor_for_control` argument to assign three outputStates to be monitored.  The first one
+It uses the System's `monitor_for_control` argument to assign three OutputStates to be monitored.  The first one
 references the Reward Mechanism (not shown);  its `primary OutputState <OutputState_Primary>` will be used by default.
 The second and third use keywords that are the names of outputStates of a  `DDM` Mechanism (also not shown).
 The last one (RESPONSE_TIME) is assigned a weight of 1 and an exponent of -1. As a result, each calculation of the EVC

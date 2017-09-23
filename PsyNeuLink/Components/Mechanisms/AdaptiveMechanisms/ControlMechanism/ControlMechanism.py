@@ -118,7 +118,6 @@ OutputStates to be monitored can be added to an existing ControlMechanism by usi
 <ObjectiveMechanism.add_monitored_output_states>` method of the ControlMechanism's `objective_mechanism
 <ControlMechanism.objective_mechanism>`.
 
-
 .. _ControlMechanism_Control_Signals:
 
 Specifying Parameters to Control
@@ -615,7 +614,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
             uses _instantiate_monitoring_input_state and _instantiate_control_mechanism_input_state to do so.
             For each item in self.monitored_output_states:
             - if it is a OutputState, call _instantiate_monitoring_input_state()
-            - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.outputStates
+            - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.output_states
                 (determined by whether it is a `TERMINAL` Mechanism and/or MonitoredOutputStatesOption specification)
             - each InputState is assigned a name with the following format:
                 '<name of Mechanism that owns the monitoredOutputState>_<name of monitoredOutputState>_Monitor'
@@ -626,7 +625,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         * self.input_states is the usual ordered dict of states,
             each of which receives a Projection from a corresponding OutputState in self.monitored_output_states
         """
-
         monitored_output_states = None
 
         # GET OutputStates to Monitor (to specify as or add to ObjectiveMechanism's monitored_output_states attribute
