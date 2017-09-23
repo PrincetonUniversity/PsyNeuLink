@@ -1064,7 +1064,7 @@ print ("\nmy_auto.input_state.path_afferents[0].matrix:\n",
 
 my_process = process(pathway=[my_auto])
 
-my_auto.learning_enabled = False
+# my_auto.learning_enabled = False
 
 my_process.execute([1,1,-1,-1]),
 print('\nActivity: ', my_auto.value)
@@ -1082,7 +1082,7 @@ for i in range(4):
     my_process.execute([0,0,-1,-1]),
     print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
 
-# my_auto.learning_enabled = False
+my_auto.learning_enabled = False
 
 my_process.execute([0,0,0,0]),
 print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)

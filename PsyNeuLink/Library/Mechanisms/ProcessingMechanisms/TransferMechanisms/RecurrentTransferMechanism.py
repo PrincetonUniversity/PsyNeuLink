@@ -652,6 +652,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         param_keys = self._parameter_states.key_values
         specified_matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
 
+        # 9/23/17 JDC: DOESN'T matrix arg default to something?
+        # If no matrix was specified, then both AUTO and HETERO must be specified
         if specified_matrix is None and (AUTO not in param_keys or HETERO not in param_keys):
             raise RecurrentTransferError("Matrix parameter ({}) for {} failed to produce a suitable matrix: "
                                          "if the matrix parameter does not produce a suitable matrix, the "
@@ -661,7 +663,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         # # MODIFIED 9/23/17 OLD:
         # if AUTO not in param_keys:
         # MODIFIED 9/23/17 NEW [JDC]:
-        if self.auto is not None:
+        # if self.auto is not None:
+        if AUTO not in param_keys and HETERO in param_keys:
         # MODIFIED 9/23/17 END
             d = np.diagonal(specified_matrix).copy()
             state = _instantiate_state(owner=self,
@@ -680,7 +683,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         # # MODIFIED 9/23/17 OLD:
         # if HETERO not in param_keys:
         # MODIFIED 9/23/17 NEW [JDC]:
-        if self.hetero is not None:
+        # if self.hetero is not None:
+        if HETERO not in param_keys and AUTO in param_keys:
         # MODIFIED 9/23/17 END
             m = specified_matrix.copy()
             np.fill_diagonal(m, 0.0)
@@ -877,13 +881,15 @@ class RecurrentTransferMechanism(TransferMechanism):
         #     print("Learning cannot be enabled for {} because it has no {}".
         #           format(self.name, LearningMechanism.__name__))
         #     return
+        #
         # self._learning_enabled = value
         # self.learning_mechanism.learning_enabled = value
 
+        self._learning_enabled = value
         if hasattr(self, 'learning_mechanism'):
-            self._learning_enabled = value
+            # self._learning_enabled = value
             self.learning_mechanism.learning_enabled = value
-        else:
+        elif value is True:
             print("Learning cannot be enabled for {} because it has no {}".
                   format(self.name, LearningMechanism.__name__))
             return
