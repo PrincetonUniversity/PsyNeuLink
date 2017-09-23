@@ -1051,7 +1051,7 @@ my_auto = RecurrentTransferMechanism(
                                      # function=Logistic,
                                      # matrix=RANDOM_CONNECTIVITY_MATRIX,
                                      matrix=np.full((4,4), 0.1),
-                                     learning_rate=True
+                                     enable_learning=True
                                      # matrix=[[1,1,1],[1,1,1],[1,1,1]]
                                      )
 
