@@ -330,8 +330,8 @@ class LCA(RecurrentTransferMechanism):
             OutputState and the first item of :keyword:`output_values`.
     COMMENT
 
-    outputStates : Dict[str, OutputState]
-        an OrderedDict with the following `OutputStates <OutputState>`:
+    output_states : ContentAddressableList[OutputState]
+        contains the following `OutputStates <OutputState>`:
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;

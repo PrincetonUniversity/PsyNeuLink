@@ -449,7 +449,8 @@ from PsyNeuLink.Globals.Keywords import SYSTEM, EXECUTING, FUNCTION, COMPONENT_I
                                         ORIGIN, INTERNAL, TERMINAL, TARGET, SINGLETON, CONTROL_SIGNAL_SPECS,\
                                         SAMPLE, MATRIX, IDENTITY_MATRIX, kwSeparator, kwSystemComponentCategory, \
                                         CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, MONITOR_FOR_CONTROL, EVC_SIMULATION,\
-                                        CYCLE, INITIALIZE_CYCLE, INITIALIZING, INITIALIZED, INITIAL_VALUES, LEARNING
+                                        CYCLE, INITIALIZE_CYCLE, INITIALIZING, INITIALIZED, INITIAL_VALUES, \
+                                        LEARNING, LEARNING_SIGNAL
 
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -1854,7 +1855,7 @@ class System_Base(System):
 
                         # Reassign error_matrix to one for the projection to which the error_signal_mech projects
                         learning_mech.function_object.error_matrix = \
-                            error_signal_mech._output_states['matrix_LearningSignal'].efferents[0].receiver
+                            error_signal_mech._output_states[LEARNING_SIGNAL].efferents[0].receiver
                         # Delete error_matrix parameterState for error_matrix
                         #    (since its value, which was the IDENTITY_MATRIX, is now itself ParameterState,
                         #     and Components are not allowed  as the value of a ParameterState
@@ -2029,12 +2030,12 @@ class System_Base(System):
                     name=self.name+' Input Projection to '+target_mech_TARGET_input_state.name)
 
     def _assign_output_states(self):
-        """Assign outputStates for System (the values of which will comprise System_Base.value)
+        """Assign OutputStates for System (the values of which will comprise System_Base.value)
 
         Assign the outputs of terminal Mechanisms in the graph to the System's output_values
 
         Note:
-        * Current implementation simply assigns terminal mechanisms as outputStates
+        * Current implementation simply assigns TERMINAL Mechanisms as OutputStates
         * This method is included so that sublcasses and/or future versions can override it to make custom assignments
 
         """
@@ -2125,7 +2126,7 @@ class System_Base(System):
 
         Notes:
         * MonitoredOutputStatesOption is an AutoNumbered Enum declared in ControlMechanism
-            - it specifies options for assigning outputStates of terminal Mechanisms in the System
+            - it specifies options for assigning OutputStates of TERMINAL Mechanisms in the System
                 to controller.monitored_output_states;  the options are:
                 + PRIMARY_OUTPUT_STATES: assign only the `primary OutputState <OutputState_Primary>` for each
                   TERMINAL Mechanism

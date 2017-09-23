@@ -519,7 +519,7 @@
 # FIX: is_param_spec to allow tuple with projection specification in it TO PASS TYPECHECK
 # FIX: PARSING OF input_state AND output_state ARGS IN Mechanism CONSTRUCTORS:
 # FIX:    * input_states arg crashes
-# FIX:    * doesn't recognize reference to existing specification dict for outputStates in constructor arg
+# FIX:    * doesn't recognize reference to existing specification dict for OutputStates in constructor arg
 #            getting packaged by Python interpreter as a tuple in the arg: either look for tuples or use *ref notation?
 #               (see my_mean example in TransferMechanism)
 # IMPLEMENT: Move `calculate` attribute of outputState to function, while preserving index attribute
@@ -1742,7 +1742,7 @@
 #           Mechanisms:  value is always 2D np.array (to accomodate multiple states per Mechanism
 #           All other Function objects: value is always 1D np.array
 #    - Mechanism.value is always an indexible object of which the first item is a 1D np.array
-#               (corresponding to the value of Mechanism.outputState and Mechanism.outputStates.items()[0]
+#               (corresponding to the value of Mechanism.outputState and Mechanism.output_states.items()[0]
 #     Mechanism.variable[i] <-> Mechanism.input_state.items()e[i]
 #     Mechanism.value[i] <-> Mechanism.ouptputState.items()e[i]
 #    - variable = input, value = output
@@ -2045,7 +2045,7 @@
 #     FIX: GET STRAIGHT process.value vs. system.output vs. system.oputputValue
 #     FIX: IMPLEMENT .output FOR Process:  == ndarray of all outputState.variables
 #                         # FIX: THESE NEED TO BE PROPERLY MAPPED
-#                         return np.array(list(item.value for item in self.last_mechanism.outputStates.values()))
+#                         return np.array(list(item.value for item in self.last_mechanism.output_states.values()))
 #     FIX: CHECK FOR dtype == object (I.E., MIXED LENGTH ARRAYS) FOR BOTH VARIABLE AND VALUE REPRESENTATIONS OF MECHANISM)
 #     IMPLEMENT HIERARCHICAL SETTERS AND GETTERS FOR .value AND .metavalues;  USE THEM TO:
 #                                                                             - REPRESENT OUTPUT FORMAT OF function
@@ -2498,7 +2498,7 @@
 # IMPLEMENT: reference to mechanism by name in pathway (look it up in Registry)
 # IMPLEMENT mechanismTuple as named tuple type
 # IMPLEMENT:  Mechanism:  consider adding _update_output_states() to @property method for self.value
-# IMPLEMENT:  Mechanism.initialize (that sets Mechanism.value and updates Mechanism.outputStates)
+# IMPLEMENT:  Mechanism.initialize (that sets Mechanism.value and updates Mechanism.output_states)
 #
 # FIX!!: get_mech_tuple() in MechanismList only gets first mech_tuple in the list, but there could be more than one
 #      check calls to get_mech_tuple() to see if that ever will pose a problem
@@ -2621,7 +2621,7 @@
 # - implementing reward mechanism (gets input from environment)
 # - instantiating EVC with:
 # params={
-#     MONITOR_FOR_CONTROL:[[reward_mechanism, DDM.outputStates[_ddm_rt]],
+#     MONITOR_FOR_CONTROL:[[reward_mechanism, DDM.output_states[_ddm_rt]],
 #     FUNCTION_PARAMS:{OPERATION:LinearCombination.Operation.PRODUCT,
 #                            WEIGHTS:[1,1/x]}}
 #    NEED TO IMPLEMENT 1/x NOTATION FOR WEIGHTS IN LinearCombination
@@ -3068,7 +3068,7 @@
 #        ParameterState and Training Projection both call that object
 # MappingProjection should have LEARNING_PARAM which:
 #    - specifies LearningProjection
-#    - uses self.outputStates.efferents.<MonitoringMechanism> if specified
+#    - uses self.output_states.efferents.<MonitoringMechanism> if specified
 #    - otherwise defaults to LinearCompartor (which it instantiates for itself) and LearningProjection with BP
 #
 # Projection mechanism:
@@ -3336,7 +3336,7 @@
 #   FIX: rename `monitor` and `names` args
 #   - IMPLEMENT call to _instantiate_input_states (not plural) once that is implemented (see State above):
 #                    - parse `monitor` arg into inputState specifications and pass to _instantiate_input_states()
-#   - IMPLEMENT TransferMechanism.outputStates[DERIVATIVE] (per Kristin)
+#   - IMPLEMENT TransferMechanism.output_states[DERIVATIVE] (per Kristin)
 #    Make sure it checks for multiple MappingProjections from its error_source, and that only uses those projections
 #         that go to another ProcessingMechanism that itself projects to an ObjectiveMechanism (i.e., to avoid
 #         ones that go to mechanisms that are not part of learning (e.g., other Processing or Control mechanisms)

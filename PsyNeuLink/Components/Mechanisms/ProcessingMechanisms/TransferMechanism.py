@@ -633,7 +633,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         - context (str)
 
         Returns the following values in self.value (2D np.array) and in
-            the value of the corresponding outputState in the self.outputStates dict:
+            the value of the corresponding outputState in the self.output_states list:
             - activation value (float)
             - mean activation value (float)
             - standard deviation of activation values (float)

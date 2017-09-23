@@ -904,23 +904,23 @@ class ScratchPadError(Exception):
 
 #region TEST AGTUtilityIntegrator FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-from PsyNeuLink.Components.Functions.Function import AGTUtilityIntegrator
-print("TEST AGTUtilityIntegrator FUNCTION")
-
-x = AGTUtilityIntegrator(initial_long_term_utility=0.1,
-                      long_term_rate=.1,
-                      short_term_rate=.6,
-                      initial_short_term_utility=0.1)
-x.operation='s*l'
-x.show_params()
-
-# for i in range(20):
-#     print(x.execute(0))
-for i in range(3):
-    print("input:", 0.1, "; result:", x.execute(0.1))
-print ("SWITCH")
-for i in range(100):
-    print("input:", 1, "; result:", x.execute(1))
+# from PsyNeuLink.Components.Functions.Function import AGTUtilityIntegrator
+# print("TEST AGTUtilityIntegrator FUNCTION")
+#
+# x = AGTUtilityIntegrator(initial_long_term_utility=0.1,
+#                       long_term_rate=.1,
+#                       short_term_rate=.6,
+#                       initial_short_term_utility=0.1)
+# x.operation='s*l'
+# x.show_params()
+#
+# # for i in range(20):
+# #     print(x.execute(0))
+# for i in range(3):
+#     print("input:", 0.1, "; result:", x.execute(0.1))
+# print ("SWITCH")
+# for i in range(100):
+#     print("input:", 1, "; result:", x.execute(1))
 
 #endregion
 
@@ -941,6 +941,18 @@ for i in range(100):
 # z = CombineMeans(x, context='TEST')
 # print (z.execute(x))
 #
+#endregion
+
+#region TEST Hebbian @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Components.Functions.Function import Hebbian
+# print("TEST Hebbian FUNCTION")
+#
+# x = Hebbian(default_variable=[0,0,0], learning_rate=[1,-1,3])
+# x.show_params()
+#
+# print(x.execute([1,2,3]))
+
 #endregion
 
 #region TEST RL @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -966,9 +978,140 @@ for i in range(100):
 #
 #endregion
 
-# region TEST RecurrentTransferMechanism / LCA @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST BogaczEtAl Derivative @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Components.Functions.Function import *
+# #
+# x = BogaczEtAl()
+# print(x.function(params={DRIFT_RATE:1.0,
+#                          THRESHOLD:1}))
+# print(x.derivative())
+
+#endregion
+
+#region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Components.Functions.Function import *
+# #
+# x = SoftMax()
+# # x = SoftMax(output=MAX_VAL)
+# a = [-1, 2, 1]
+# # x = SoftMax(output=SoftMax.PROB)
+# y = x.function(a)
+# z = x.derivative(a)
+# print ("SoftMax execute return value: \n", [float(i) for i in y])
+# if z.ndim == 1:
+#     print ("SoftMax derivative return value: \n", [float(i) for i in z])
+# else:
+#     print ("SoftMax derivative return value: \n", [[float(i) for i in j] for j in z])
+
+#endregion
+
+#region TEST Stability and Distance @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# matrix = [[0,-1],[-1,0]]
+# normalize = False
+# activity = [100,0]
 #
-# print("TEST RecurrentTransferMechanism / LCA")
+#
+# eng = Stability(default_variable=activity,
+#              matrix=matrix,
+#              normalize=normalize
+#              )
+#
+# dist = Distance(default_variable=[activity,activity],
+#                 metric=CROSS_ENTROPY,
+#                 # normalize=normalize
+#                 )
+#
+# print("Stability: ",eng.function(activity))
+# print("Distance: ", dist.function(activity))
+
+#endregion
+
+# ----------------------------------------------- MECHANISM ------------------------------------------------------------
+
+# region TEST RecurrentTransferMechanism @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+import numpy as np
+from PsyNeuLink.Components.Functions.Function import Logistic
+from PsyNeuLink.Globals.Keywords import LEARNING
+from PsyNeuLink.Components.System import system
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism \
+    import RecurrentTransferMechanism
+from PsyNeuLink.Components.Functions.Function import Linear
+
+print("\nTEST RecurrentTransferMechanism\n")
+
+my_auto = RecurrentTransferMechanism(
+        # default_variable=[0,0,0,0],
+                                     size=4,
+                                     function=Linear,
+                                     # function=Logistic,
+                                     # matrix=RANDOM_CONNECTIVITY_MATRIX,
+                                     matrix=np.full((4,4), 0.1),
+                                     learning_rate=True
+                                     # matrix=[[1,1,1],[1,1,1],[1,1,1]]
+                                     )
+
+print ("my_auto.matrix:\n",
+       my_auto.matrix)
+print ("\nmy_auto.recurrent_projection.matrix:\n",
+       my_auto.recurrent_projection.matrix)
+print ("\nmy_auto.input_state.path_afferents[0].matrix:\n",
+       my_auto.input_state.path_afferents[0].matrix)
+
+my_process = process(pathway=[my_auto])
+
+my_auto.learning_enabled = False
+print ("\n***INITIAL STATE WITH [1,1,0,0] AS INPUT")
+my_process.execute([1,1,0,0]),
+print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
+
+my_auto.learning_enabled = True
+print ("\n***START TRAINING WITH [1,1,0,0]")
+
+my_process.execute([1,1,0,0]),
+print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
+
+my_process.execute([1,1,0,0]),
+print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
+
+my_process.execute([1,1,0,0]),
+print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
+
+
+my_auto.learning_enabled = False
+print ("\n*** DISABLED LEARNING")
+
+print ("\n*** START EXECUTING WITH [1,0,0,0]")
+for i in range(4):
+    my_process.execute([1,0,0,0]),
+    print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
+
+
+# #
+# input_list = {my_auto:[1,1,1]}
+# target_list = {my_auto:[0,0,0]}
+#
+# # print(my_process.run(inputs=input_list, targets=target_list, num_trials=5))
+#
+# my_system = system(processes=[my_process],
+#                    targets=[0,0,0])
+#
+# print(my_system.run(inputs=input_list,
+#                     targets=target_list,
+#                     num_trials=5))
+
+# region TEST LCA @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA import LCA, LCA_OUTPUT
+# from PsyNeuLink.Components.System import system
+# from PsyNeuLink.Components.Process import process
+# from PsyNeuLink.Globals.Keywords import LEARNING
+#
+# print("TEST LCA")
 #
 # my_auto = LCA(
 #         size=3,
@@ -978,15 +1121,6 @@ for i in range(100):
 #                        LCA_OUTPUT.MAX_VS_AVG]
 #         # inhibition
 # )
-#
-# # my_auto = RecurrentTransferMechanism(
-# #         default_variable=[0,0,0],
-# #         size=3,
-# #         function=Logistic,
-# #         # matrix=RANDOM_CONNECTIVITY_MATRIX,
-# #         matrix=np.array([[1,1,1],[1,1,1],[1,1,1]])
-# #         # matrix=[[1,1,1],[1,1,1],[1,1,1]]
-# # )
 #
 # # my_auto = TransferMechanism(default_variable=[0,0,0],
 # #                             # function=Logistic
@@ -1029,35 +1163,7 @@ for i in range(100):
 
 #endregion
 
-#region TEST BogaczEtAl Derivative @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-# from PsyNeuLink.Components.Functions.Function import *
-# #
-# x = BogaczEtAl()
-# print(x.function(params={DRIFT_RATE:1.0,
-#                          THRESHOLD:1}))
-# print(x.derivative())
-
 #endregion
-
-#region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-# from PsyNeuLink.Components.Functions.Function import *
-# #
-# x = SoftMax()
-# # x = SoftMax(output=MAX_VAL)
-# a = [-1, 2, 1]
-# # x = SoftMax(output=SoftMax.PROB)
-# y = x.function(a)
-# z = x.derivative(a)
-# print ("SoftMax execute return value: \n", [float(i) for i in y])
-# if z.ndim == 1:
-#     print ("SoftMax derivative return value: \n", [float(i) for i in z])
-# else:
-#     print ("SoftMax derivative return value: \n", [[float(i) for i in j] for j in z])
-
-#endregion
-
 #region TEST ReportOUtput Pref @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Process import *
@@ -1115,28 +1221,6 @@ for i in range(100):
 # print(c)
 
 #endregion  ********
-
-#region TEST Stability and Distance @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-# matrix = [[0,-1],[-1,0]]
-# normalize = False
-# activity = [100,0]
-#
-#
-# eng = Stability(default_variable=activity,
-#              matrix=matrix,
-#              normalize=normalize
-#              )
-#
-# dist = Distance(default_variable=[activity,activity],
-#                 metric=CROSS_ENTROPY,
-#                 # normalize=normalize
-#                 )
-#
-# print("Stability: ",eng.function(activity))
-# print("Distance: ", dist.function(activity))
-
-#endregion
 
 #region TEST Matrix Assignment to MappingProjection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
@@ -2759,7 +2843,7 @@ for i in range(100):
 #     #
 #     #     Use by other objects to add a state or list of states to be monitored by EVC
 #     #     states_spec can be a Mechanism, OutputState or list of either or both
-#     #     If item is a Mechanism, each of its outputStates will be used
+#     #     If item is a Mechanism, each of its OutputStates will be used
 #     #
 #     #     Args:
 #     #         states_spec (Mechanism, MechanimsOutputState or list of either or both:
