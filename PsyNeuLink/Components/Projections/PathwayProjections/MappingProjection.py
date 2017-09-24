@@ -555,7 +555,7 @@ class MappingProjection(PathwayProjection_Base):
         # this one, so if you make a change here, please make it there as well.
 
         # (7/18/17 CW) note that we don't let MappingProjections related to System inputs execute here (due to a
-        # minor bug with execution ID): maybe we should just fix this bug instead, if it's useful to do so
+        # minor bug with execution ID): maybe we should just fix this∞∞∞ bug instead, if it's useful to do so
         if "System" not in str(self.sender.owner):
             self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
 
