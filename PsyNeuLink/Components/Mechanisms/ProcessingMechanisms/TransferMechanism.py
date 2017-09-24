@@ -251,7 +251,9 @@ class TransferMechanism(ProcessingMechanism_Base):
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if `integrator_mode
         <TransferMechanism.integrator_mode>` is True).
-        :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        COMMENT:
+            Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
+        COMMENT
 
     noise : float or function : default 0.0
         a stochastically-sampled value added to the result of the `function <TransferMechanism.function>`:
@@ -311,7 +313,9 @@ class TransferMechanism(ProcessingMechanism_Base):
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if `integrator_mode
         <TransferMechanism.integrator_mode>` is True and `time_constant <TransferMechanism.time_constant>` is not 1.0).
-        :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        COMMENT:
+            Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
+        COMMENT
 
     noise : float or function : default 0.0
         a stochastically-sampled value added to the output of the `function <TransferMechanism.function>`:

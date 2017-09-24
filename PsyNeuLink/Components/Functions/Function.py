@@ -7547,19 +7547,40 @@ LEARNING_ERROR_OUTPUT = 2
 AUTOASSOCIATIVE = 'AUTOASSOCIATIVE'
 
 class LearningFunction(Function_Base):
-    """Abstract class of `Function` used for learning.
+    """Abstract class of `Function <Function>` used for learning.
 
-    All LearningFunctions take three input values (specified in each of the three required items of the
-    `variable` argument), and return two output values.
+    Attributes
+    ----------
 
-    Input values:
-       * input to the parameter being modified (variable[0]);
-       * output of the parameter being modified (variable[1]);
-       * error associated with the output (variable[2]).
+    variable : list or np.array
+        most LearningFunctions take a list or 2d array that must contain three items:
 
-    Output values:
-       * learning_signal: modifications calculated by the function that attempt to reduce the error;
-       * error_signal: the error received, possibly modified by the function.
+        * the input to the parameter being modified (variable[0]);
+        * the output of the parameter being modified (variable[1]);
+        * the error associated with the output (variable[2]).
+
+        However, the exact specification depends on the funtion's type.
+
+    default_learning_rate : numeric
+        the value used for the function's `learning_rate <LearningFunction.learning_rate>` parameter if none of the
+        following are specified:  the `learning_rate <LearningMechanism.learning_rate>` for the `LearningMechanism` to
+        which the function has been assigned, the `learning_rate <Process_Base.learning_rate>` for any `Process` or
+        the `learning_rate <System_Base.learning_rate>` for any `System` to which that LearningMechanism belongs.
+        The exact form of the value (i.e., whether it is a scalar or array) depends on the function's type.
+
+    learning_rate : numeric
+        generally used to multiply the result of the function before it is returned;  however, both the form of the
+        value (i.e., whether it is a scalar or array) and how it is used depend on the function's type.
+
+    Returns
+    -------
+
+    The number of items returned and their format depend on the function's type.
+
+    Most return an array (used as the `learning_signal <LearningMechanism.learning_signal>` by a \
+    `LearningMechanism`), and some also return a similarly formatted array containing either the \
+    error received (in the third item of the `variable <LearningFunction.variable>`) or a \
+    version of it modified by the function.
 
     """
 
