@@ -85,8 +85,8 @@ A RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.deca
 `previous_input <RecurrentTransferMechanism.previous_input>` value by the specified factor each time it
 is executed.  It also has two additional `OutputStates <OutputState>:  an *ENERGY* OutputState and, if its `function
 <RecurrentTransferMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY*
-OutputState.  Each of these report the respective values of the vector in it its `primary (*RESULTS*) OutputState
-<OutputState_Primary>`.  Finally, if it has been `specified for learning <Recurrent_Transfer_Learning>`,
+OutputState.  Each of these report the respective values of the vector in it its *RESULTS* (`primary
+<OutputState_Primary>`) OutputState. Finally, if it has been `specified for learning <Recurrent_Transfer_Learning>`,
 it is associated with a `AutoAssociativeLearningMechanism` that is used to train its `AutoAssociativeProjection`.
 The `learning_enabled <RecurrentTransferMechanism.learning_enabled>` attribute indicates whether learning
 is enabled or disabled for the Mechanism.  If learning was not configure when the Mechanism was created, then it cannot
@@ -286,7 +286,9 @@ class RecurrentTransferMechanism(TransferMechanism):
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
         `time_constant <RecurrentTransferMechanism.time_constant>` is not 1.0).
-        :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        COMMENT:
+            Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
+        COMMENT
 
     decay : number : default 1.0
         specifies the amount by which to decrement its `previous_input <RecurrentTransferMechanism.previous_input>`
@@ -317,9 +319,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     learning_rate : scalar, or list, 1d or 2d np.array, or np.matrix of numeric values: default False
         specifies the learning rate used by its `learning function <RecurrentTransferMechanism.learning_function>`.
-        If it is `None`, the default learning_rate is used (see `LearningMechanism_Learning_Rate`); if it is assigned a
-        value, that is used as the learning_rate (see `learning_rate <RecurrentTransferMechanism.learning_rate>` for
-        details).
+        If it is `None`, the `default learning_rate for a LearningMechanism <LearningMechanism_Learning_Rate>` is
+        used; if it is assigned a value, that is used as the learning_rate (see `learning_rate
+        <RecurrentTransferMechanism.learning_rate>` for details).
 
     learning_function : function : default Hebbian
         specifies the function for the LearningMechanism if `learning has been specified
@@ -369,9 +371,11 @@ class RecurrentTransferMechanism(TransferMechanism):
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
     COMMENT
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
-        determines the starting value for time-averaged input
-        (only relevant if `time_constant <RecurrentTransferMechanism.time_constant>` parameter is not 1.0).
-        :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        determines the starting value for time-averaged input (only relevant if `time_constant
+        <RecurrentTransferMechanism.time_constant>` parameter is not 1.0).
+        COMMENT:
+            Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
+        COMMENT
 
     noise : float or function : default 0.0
         a stochastically-sampled value added to the output of the `function <RecurrentTransferMechanism.function>`:
@@ -398,31 +402,20 @@ class RecurrentTransferMechanism(TransferMechanism):
         indicates whether learning has been enabled for the RecurrentTransferMechanism.  It is set to `True` if
         `learning is specified <Recurrent_Transfer_Learning>` at the time of construction (i.e., if the
         **enable_learning** argument of the Mechanism's constructor is assigned `True`, or when it is configured for
-        learning using the `configure_learning <RecurrentTransferMechanism.configure_learning` method.  Once learning
+        learning using the `configure_learning <RecurrentTransferMechanism.configure_learning>` method.  Once learning
         has been configured, `learning_enabled <RecurrentMechahinsm.learning_enabled>` can be toggled at any time to
         enable or disable learning; however, if the Mechanism has not been configured for learning, an attempt to
         set `learning_enabled <RecurrentMechahinsm.learning_enabled>` to `True` elicits a warning and is then
         ignored.
 
     learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
-        specifies the learning rate used by the `function <Hebbian.function>`; supersedes any specification  for the
-        `Process` and/or `System` to which the function's `owner <Function.owner>` belongs (see `learning_rate
-        <LearningMechanism_Learning_Rate>` for details).  It is used by the `learning_function
-        <RecurrentTransferMechanism.learning_function>` to scale the weight change matrix it returns.  If specified,
-        it supersedes the learning_rate assigned to any `Process` or `System` to which the RecurrentMechanism is
-        assigned.  If it is a scalar, it is multiplied by the weight change matrix generated by the `learning_function
-        <RecurrentTransferMechanism.learning_function>`;  if it is a 1d np.array, it is
-        multiplied Hadamard (elementwise) by the input to the `learning_function
-        <RecurrentTransferMechanism.learning_function>` ("activity vector") before calculating the weight change
-        matrix;  if it is a 2d np.array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
-        `None`, then the `learning_rate <Process_Base.learning_rate>` specified for the Process to which the `owner
-        <Hebbian.owner>` belongs is used;  and, if that is `None`, then the `learning_rate <System_Base.learning_rate>`
-        for the System to which it belongs is used. If all are `None`, then the `default_learning_rate
-        <LearningMechanism.default_learning_rate>` for the learning_function <RecurrentTransferMechanism.learning_rate>`
-        is used (see `learning_rate <LearningMechanism_Learning_Rate>` for additional details).
+        specifies the learning rate used by the `learning_function <RecurrentTransferMechanism.learning_function>`
+        of the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` (see `learning_rate
+        <AutoAssociativeLearningMechanism.learning_rate>` for details concerning specification and default value
+        assignement).
 
     learning_function : function : default Hebbian
-        the function used by the `learning_mechanism <RecurrentTansferMechanism.learning_mechanism>` to train the
+        the function used by the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` to train the
         `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` if `learning is specified
         <Recurrent_Transfer_Learning>`.
 

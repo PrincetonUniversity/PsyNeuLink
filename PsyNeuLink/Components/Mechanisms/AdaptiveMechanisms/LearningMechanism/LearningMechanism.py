@@ -324,11 +324,12 @@ refer to the Components being learned and/or its operation:
   <LearningMechanism.function>`) inherit the specification of the `learning_rate <Process_Base.learning_rate>` for
   the `Process` in which the LearningMechanism is executed. If that is `None`, then it inherits the `learning_rate
   <System_Base.learning_rate>` specification of the `System` in which it is executed.  If that is also `None`, then it
-  uses the default value of the :keyword:`learning_rate` parameter for its `function <LearningMechanism.function>`.
-  A :keyword:`learning_rate` parameter can also be specified for individual `LearningSignals <LearningSignal>` and/or
-  their associated `LearningProjections <LearningProjection>`.  Those have a direct multiplicative effect on the
-  `learning_signal <LearningProjection.learning_signal>` of the LearningSignal and/or it LearningProjections
-  (see `LearningSignal learning_rate <LearningSignal_Learning_Rate>` for additional details).
+  uses the value of the `default_learning_rate <LearningFunction.default_learning_rate>` parameter of its `function
+  <LearningMechanism.function>`. A :keyword:`learning_rate` parameter can also be specified for individual
+  `LearningSignals <LearningSignal>` and/or their associated `LearningProjections <LearningProjection>`.  Those have
+  a direct multiplicative effect on the `learning_signal <LearningProjection.learning_signal>` of the LearningSignal
+  and/or it LearningProjections (see `LearningSignal learning_rate <LearningSignal_Learning_Rate>` for additional
+  details).
 
 .. _LearningMechanism_Learning_Configurations:
 
