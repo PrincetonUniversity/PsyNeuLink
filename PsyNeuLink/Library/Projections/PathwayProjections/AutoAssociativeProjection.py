@@ -310,6 +310,11 @@ class AutoAssociativeProjection(MappingProjection):
                                            format(owner_mech.__class__.__name__, owner_mech.name, raw_hetero, type(raw_hetero)))
             self.matrix = auto_matrix + hetero_matrix
 
+        # 9/23/17 JDC:
+        #     PUT CALL TO SUPER HERE??  OR ADD NEW HOOK FOR "manage_matrix() METHOD" TO SUPER, THAT CAN BE
+        #     OVERRIDDEN HERE (TO KEEP WHAT IS DIFFERENT HERE MORE LOCAL AND THUS REDUCE DEPENDENCY OF THIS METHOD ON
+        #     SUPER)
+
         # note that updating parameter states MUST happen AFTER self.matrix is set by auto_matrix and hetero_matrix,
         # because setting self.matrix only changes the previous_value/variable of the 'matrix' parameter state (which
         # holds the matrix parameter) and the matrix parameter state must be UPDATED AFTERWARDS to put the new value
