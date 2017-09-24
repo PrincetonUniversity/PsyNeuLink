@@ -265,7 +265,6 @@ class AutoAssociativeProjection(MappingProjection):
 
         """
 
-        # IMPLEMENTATION NOTE: SPECIFIC TO AutoAssociativeProjection
         # As of 7/21/17, modulation of parameters through ControlSignals is only possible on Mechanisms
         # so the ParameterStates for 'auto' and 'hetero' live on the RecurrentTransferMechanism rather than on
         # the AutoAssociativeProjection itself. So this projection must reference its owner's ParameterStates
@@ -317,42 +316,41 @@ class AutoAssociativeProjection(MappingProjection):
                                                   type(raw_hetero)))
             self.matrix = auto_matrix + hetero_matrix
 
-        # IMPLEMENTATION NOTE: END
-
-        # 9/23/17 JDC:
-        #     PUT CALL TO SUPER HERE??  OR ADD NEW HOOK FOR "manage_matrix() METHOD" TO SUPER, THAT CAN BE
-        #     OVERRIDDEN HERE (TO KEEP WHAT IS DIFFERENT HERE MORE LOCAL AND THUS REDUCE DEPENDENCY OF THIS METHOD ON
-        #     SUPER)
-
-        # note that updating parameter states MUST happen AFTER self.matrix is set by auto_matrix and hetero_matrix,
-        # because setting self.matrix only changes the previous_value/variable of the 'matrix' parameter state (which
-        # holds the matrix parameter) and the matrix parameter state must be UPDATED AFTERWARDS to put the new value
-        # from the previous_value into the value of the parameterState
-        self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
-
-        # Check whether error_signal has changed
-        if (self.learning_mechanism
-            and self.learning_mechanism.learning_enabled
-            and self.learning_mechanism.status == CHANGED):
-
-            # Assume that if learning_mechanism attribute is assigned,
-            #    both a LearningProjection and ParameterState[MATRIX] to receive it have been instantiated
-            matrix_parameter_state = self._parameter_states[MATRIX]
-
-            # Assign current MATRIX to parameter state's base_value, so that it is updated in call to execute()
-            setattr(self, '_'+MATRIX, self.matrix)
-
-            # Update MATRIX, and AUTO and HETERO accordingly
-            self.matrix = matrix_parameter_state.value
-
-            # IMPLEMENTATION NOTE: SPECIFIC TO AutoAssociativeProjection
-            # DOES THIS NEED TO BE IN THE CONDITIONAL?  CAN IT BE MOVED TO THE AutoAssociativeProjection BLOCK ABOVE?
-            owner_mech.auto = np.diag(self.matrix).copy()
-            owner_mech.hetero = self.matrix.copy()
-            np.fill_diagonal(owner_mech.hetero, 0)
-            # IMPLEMENTATION NOTE: END
-
-        return self.function(self.sender.value, params=params, context=context)
+        # # MODIFIED 9/23/17 OLD [JDC: CALLED SUPER FOR ALL OF THIS, THOUGH SEE IMPLEMENTATION NOTE BELOW]:
+        # # note that updating parameter states MUST happen AFTER self.matrix is set by auto_matrix and hetero_matrix,
+        # # because setting self.matrix only changes the previous_value/variable of the 'matrix' parameter state (which
+        # # holds the matrix parameter) and the matrix parameter state must be UPDATED AFTERWARDS to put the new value
+        # # from the previous_value into the value of the parameterState
+        # self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
+        #
+        # # Check whether error_signal has changed
+        # if (self.learning_mechanism
+        #     and self.learning_mechanism.learning_enabled
+        #     and self.learning_mechanism.status == CHANGED):
+        #
+        #     # Assume that if learning_mechanism attribute is assigned,
+        #     #    both a LearningProjection and ParameterState[MATRIX] to receive it have been instantiated
+        #     matrix_parameter_state = self._parameter_states[MATRIX]
+        #
+        #     # Assign current MATRIX to parameter state's base_value, so that it is updated in call to execute()
+        #     setattr(self, '_'+MATRIX, self.matrix)
+        #
+        #     # Update MATRIX, and AUTO and HETERO accordingly
+        #     self.matrix = matrix_parameter_state.value
+        #
+        #     # # MODIFIED 9/23/17 OLD: [JDC DOESN'T SEEM TO DO ANYTHING:]
+        #     # # IMPLEMENTATION NOTE: SPECIFIC TO AutoAssociativeProjection -
+        #     # # DOES THIS NEED TO BE IN THE CONDITIONAL?  CAN IT BE MOVED TO THE AutoAssociativeProjection BLOCK ABOVE?
+        #     # owner_mech.auto = np.diag(self.matrix).copy()
+        #     # owner_mech.hetero = self.matrix.copy()
+        #     # np.fill_diagonal(owner_mech.hetero, 0)
+        #     # # IMPLEMENTATION NOTE: END
+        #     # # MODIFIED 9/23/17 END
+        #
+        # return self.function(self.sender.value, params=params, context=context)
+        # MODIFIED 9/23/17 NEW:
+        return super().execute(input=input, clock=clock, time_scale=time_scale, params=params, context=context)
+        # MODIFIED 9/23/17 END:
 
     def _update_auto_and_hetero(self, owner_mech=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
         if owner_mech is None:
