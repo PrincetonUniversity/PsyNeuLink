@@ -1066,19 +1066,26 @@ my_process = process(pathway=[my_auto])
 
 my_auto.learning_enabled = False
 print ("\n***INITIAL STATE WITH [1,1,0,0] AS INPUT")
+print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
 my_process.execute([1,1,0,0]),
+print ("\n***AFTER SINGLE EXECUTION [1,1,0,0] AS INPUT")
+print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
+my_process.execute([1,1,0,0]),
+print ("\n***AFTER SECOND EXECUTION [1,1,0,0] AS INPUT")
 print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
 
 my_auto.learning_enabled = True
 print ("\n***START TRAINING WITH [1,1,0,0]")
 
-my_process.execute([1,1,0,0]),
+my_process.execute([1,1,0,0])
+print(my_auto.matrix.tolist())
 print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
 
 my_process.execute([1,1,0,0]),
+print(my_auto.matrix.tolist())
 print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
 
-my_process.execute([1,1,0,0]),
+my_process.execute([1,1,0,0])
 print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
 
 
