@@ -644,7 +644,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             #FIX: IS THIS HANDLED BY _instantiate_input_states??
             for state_spec in target_set[INPUT_STATES]:
                 if not isinstance(state_spec, (str, InputState, Mechanism, dict)):
-                    raise ObjectiveMechanismError("Item in \'{}\'arg for {} is not a "
+                    raise ObjectiveMechanismError("Item in \'{}\' arg for {} is not a "
                                                   "valid specificaton for an InputState".
                                                   format(INPUT_STATES,
                                                          self.name,
