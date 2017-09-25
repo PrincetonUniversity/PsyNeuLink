@@ -10,6 +10,7 @@
 """
 """
 
+import warnings
 import leabra
 import numbers
 import numpy as np
@@ -75,15 +76,23 @@ class LeabraFunction(Function_Base):
                          context=context)
 
     def _validate_variable(self, variable, context=None):
+        print("about to validate variable, which is ", variable)
         if not isinstance(variable, (list, np.ndarray, numbers.Number)):
             raise LeabraError("Input Error: the input variable ({}) was of type {}, but instead should be a list, "
                               "numpy array, or number.".format(variable, type(variable)))
 
         input_size = self.network.layers[0].size
-        if len(variable) != input_size and len(np.atleast_2d(variable[0])) != input_size:
-            # the second check np.atleast_2d(variable[0]) is just in case variable was a 2D array rather than a vector
-            raise LeabraError("Input Error: the input variable was {}, which was of an incompatible length with the "
-                              "input_size, which should be {}.".format(variable, input_size))
+        output_size = self.network.layers[-1].size
+        if (not hasattr(self, "owner")) or (not hasattr(self.owner, "training_flag")) or self.owner.training_flag is False:
+            if len(convert_to_2d_input(variable)[0]) != input_size:
+                # convert_to_2d_input(variable[0]) is just in case variable is a 2D array rather than a vector
+                raise LeabraError("Input Error: the input was {}, which was of an incompatible length with the "
+                                  "input_size, which should be {}.".format(convert_to_2d_input(variable)[0], input_size))
+        else:
+            if len(convert_to_2d_input(variable)[0]) != input_size or len(convert_to_2d_input(variable)[1]) != output_size:
+                raise LeabraError("Input Error: the input variable was {}, which was of an incompatible length with "
+                                  "the input_size or output_size, which should be {} and {} respectively.".
+                                  format(variable, input_size, output_size))
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -98,9 +107,23 @@ class LeabraFunction(Function_Base):
                  time_scale=TimeScale.TRIAL,
                  context=None):
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-        print('variable about to be tested is: ', variable)
-        variable = np.atleast_2d(variable)[0]  # SUPER HACKY
-        return test_network(self.network, input_pattern=variable)
+        print('about to execute with variable, which is ', variable)
+        if (not hasattr(self, "owner")) or (not hasattr(self.owner, "training_flag")) or self.owner.training_flag is False:
+            print('variable about to be tested is: ', variable)
+            variable = convert_to_2d_input(variable)[0]  # FIX: buggy, doesn't handle lists well. hacky conversion from 2D arrays into 1D arrays
+            return test_network(self.network, input_pattern=variable)  # potentially append an array of zeros to make output format consistent
+        else:
+            variable = convert_to_2d_input(variable)  # FIX: buggy, doesn't handle lists well
+            if len(variable) != 2:
+                raise LeabraError("Input Error: the input given ({}) for training was not the right format: the input "
+                                  "should be a 2D array containing two vectors, corresponding to the input and the "
+                                  "training target.".format(variable))
+            if len(variable[0]) != self.network.layers[0].size or len(variable[1]) != self.network.layers[-1].size:
+                raise LeabraError("Input Error: the input given ({}) was not the right format: it should be a 2D array "
+                                  "containing two vectors, corresponding to the input (which should be length {}) and "
+                                  "the training target (which should be length {})".
+                                  format(variable, self.network.layers[0], self.network.layers[-1].size))
+            return train_network(self.network, input_pattern=variable[0], learning_target=variable[1])
 
 class LeabraMechanism(ProcessingMechanism_Base):
     """
@@ -127,6 +150,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
                  output_size=1,
                  hidden_layers=0,
                  function=Linear,
+                 training_flag=False,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
@@ -142,15 +166,33 @@ class LeabraMechanism(ProcessingMechanism_Base):
         params = self._assign_args_to_param_dicts(function=function,
                                                   input_size=input_size,
                                                   output_size=output_size,
+                                                  training_flag=training_flag,
                                                   params=params)
 
-        super().__init__(size=input_size,
-                         input_states=['main_input'],
+        super().__init__(size=[input_size, output_size],
+                         input_states=['main_input', 'target_output'],
                          output_states=['main_output'],
                          params=params,
                          name=name,
                          prefs=prefs,
                          context=self)
+
+#assumes that within lists and arrays, all elements are the same type
+# also this is written sub-optimally: some cases should be broken off into more if statements for speed
+def convert_to_2d_input(array_like):
+    if isinstance(array_like, (np.ndarray, list)):
+        if isinstance(array_like[0], (np.ndarray, list)):
+            if isinstance(array_like[0][0], (np.ndarray, list)):
+                warnings.warn("array_like ({}) is at least 3D, which may cause conversion errors".format(array_like))
+            out = []
+            for a in array_like:
+                out.append(np.array(a))
+            return out
+        elif isinstance(array_like[0], numbers.Number):
+            return [np.array(array_like)]
+    elif isinstance(array_like, numbers.Number):
+        return [np.array([array_like])]
+
 
 def build_network(n_input, n_output, n_hidden):
 

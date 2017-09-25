@@ -255,7 +255,7 @@ from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CONTROL, DEFAULT_MAT
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 ROLE = 'role'
 MONITORED_VALUES = 'monitored_values'
@@ -629,7 +629,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             monitored_value_dict[NAME] = monitored_value_dict[NAME] + MONITORED_VALUE_NAME_SUFFIX
             monitored_values.append(monitored_value_dict)
 
-        # If input_states were not specified, assign value of monitored_valued for each
+        # If input_states were not specified, assign value of monitored_values for each
         #    (to invoke a default assignment for each input_state)
         if self.input_states is None:
             self._input_states = [m[VALUE] for m in monitored_values]
@@ -666,6 +666,21 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                             receiver_list=self.input_states,
                                             receiver_projection_specs=input_state_projection_specs,
                                             context=context)
+
+    def execute(self,
+                input=None,
+                runtime_params=None,
+                clock=CentralClock,
+                time_scale=TimeScale.TRIAL,
+                ignore_execution_id = False,
+                context=None):
+        if hasattr(self, "value"):
+            print("value from previous execute: ", self.value)
+        print("current input: ", input)
+        if hasattr(self, "monitored_values"):
+            print("monitored_values: ", self.monitored_values)
+        return super().execute(input, runtime_params, clock, time_scale, ignore_execution_id, context)
+
 
 def _validate_monitored_value(objective_mech, state_spec, context=None):
     """Validate specification for monitored_value arg
