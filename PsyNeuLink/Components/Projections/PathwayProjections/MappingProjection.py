@@ -551,9 +551,6 @@ class MappingProjection(PathwayProjection_Base):
 
         """
 
-        # IMPLEMENTATION NOTE (7/28/17 CW): The execute() method in AutoAssociativeProjection is heavily based on
-        # this one, so if you make a change here, please make it there as well.
-
         # (7/18/17 CW) note that we don't let MappingProjections related to System inputs execute here (due to a
         # minor bug with execution ID): maybe we should just fix this∞∞∞ bug instead, if it's useful to do so
         if "System" not in str(self.sender.owner):
