@@ -89,4 +89,4 @@ print(LC.objective_mechanism.input_state.path_afferents[0].matrix)
 task = system(processes=[decision_process, lc_process])
 
 task.show()
-# task.show_graph()
+task.show_graph()
