@@ -41,7 +41,7 @@ decision_layer = RecurrentTransferMechanism(size=2,
                                             auto=1,
                                             hetero=-1,
                                             # # GENERATES A FULL CONNECTIVITY MATRIX:
-                                            # auto=[[1]],
+                                            # auto=[[1,1]],
                                             # hetero=[[-1,0],[0,-1]],
                                             # # GENERATES ONLY AN IDENTITY MATRIX, MAYBE SHOULD GENERATE AN ERROR
                                             # auto=[[1]],
@@ -53,7 +53,7 @@ response = RecurrentTransferMechanism(size=1,
                                       function=Logistic,
                                       name='RESPONSE')
 LC = LCControlMechanism(
-        # COMMENTING OUT THE FOLLOWING LINE CAUSES AN ERROR
+        # COMMENTING OUT THE FOLLOWING LINE(S) CAUSES AN ERROR
         objective_mechanism=[ObjectiveMechanism(monitored_output_states=[decision_layer],
                                                 input_states=[[0]])],
         # objective_mechanism=[decision_layer],
@@ -89,4 +89,4 @@ print(LC.objective_mechanism.input_state.path_afferents[0].matrix)
 task = system(processes=[decision_process, lc_process])
 
 task.show()
-# task.show_graph()
+task.show_graph()

@@ -1320,6 +1320,8 @@ class Mechanism_Base(Mechanism):
                                    and calling on corresponding subclass to get default values (if param not found)
                                    (as PROJECTION_TYPE and PROJECTION_SENDER are currently handled)
         """
+        from PsyNeuLink.Components.States.State import _parse_state_spec
+        from PsyNeuLink.Components.States.InputState import InputState
 
         # Perform first-pass validation in Function.__init__():
         # - returns full set of params based on subclass paramClassDefaults
@@ -1347,45 +1349,8 @@ class Mechanism_Base(Mechanism):
 
         # INPUT_STATES is specified, so validate:
         if INPUT_STATES in params and params[INPUT_STATES] is not None:
-
-            param_value = params[INPUT_STATES]
-
-            # If it is a single item or a non-OrderedDict, place in a list (for use here and in instantiate_inputState)
-            if not isinstance(param_value, (list, OrderedDict, ContentAddressableList)):
-                param_value = [param_value]
-            # Validate each item in the list or OrderedDict
-            # Note:
-            # * number of input_states is validated against length of the owner Mechanism's variable
-            #     in instantiate_inputState, where an input_state is assigned to each item of variable
-            i = 0
-            for key, item in param_value if isinstance(param_value, dict) else enumerate(param_value):
-                from PsyNeuLink.Components.States.InputState import InputState
-                # If not valid...
-                if not ((isclass(item) and (issubclass(item, InputState) or # InputState class ref
-                                                issubclass(item, Projection))) or    # Project class ref
-                            isinstance(item, InputState) or      # InputState object
-                            isinstance(item, dict) or            # InputState specification dict
-                            isinstance(item, str) or             # Name (to be used as key in input_states dict)
-                            iscompatible(item, **{kwCompatibilityNumeric: True})):   # value
-                    # set to None, so it is set to default (self.instance_defaults.variable) in instantiate_inputState
-                    param_value[key] = None
-                    if self.prefs.verbosePref:
-                        print(
-                            "Item {0} of {1} param ({2}) in {3} is not a"
-                            " InputState, specification dict or value, nor a list of dict of them; "
-                            "variable ({4}) of execute method for {5} will be used"
-                            " to create a default OutputState for {3}".format(
-                                i,
-                                INPUT_STATES,
-                                param_value,
-                                self.__class__.__name__,
-                                self.instance_defaults.variable,
-                                self.execute.__self__.name,
-                            )
-                        )
-                i += 1
-            params[INPUT_STATES] = param_value
-
+            for state_spec in params[INPUT_STATES]:
+                _parse_state_spec(owner=self, state_type=InputState, state_spec=state_spec)
         # INPUT_STATES is not specified
         else:
             # pass if call is from assign_params (i.e., not from an init method)
@@ -1537,16 +1502,6 @@ class Mechanism_Base(Mechanism):
         self._instantiate_output_states(context=context)
         super()._instantiate_attributes_after_function(context=context)
 
-    # MODIFIED 9/14/17 OLD:
-    # def _instantiate_input_states(self, context=None):
-    #     """Call State._instantiate_input_states to instantiate orderedDict of InputState(s)
-    #
-    #     This is a stub, implemented to allow Mechanism subclasses to override _instantiate_input_states
-    #         or process InputStates before and/or after call to _instantiate_input_states
-    #     """
-    #     from PsyNeuLink.Components.States.InputState import _instantiate_input_states
-    #     _instantiate_input_states(owner=self, input_states=self.input_states, context=context)
-    # MODIFIED 9/14/17 NEW:
     def _instantiate_input_states(self, input_states=None, context=None):
         """Call State._instantiate_input_states to instantiate orderedDict of InputState(s)
 
@@ -1555,7 +1510,6 @@ class Mechanism_Base(Mechanism):
         """
         from PsyNeuLink.Components.States.InputState import _instantiate_input_states
         return _instantiate_input_states(owner=self, input_states=input_states or self.input_states, context=context)
-    # MODIFIED 9/14/17 END
 
     def _instantiate_parameter_states(self, context=None):
         """Call State._instantiate_parameter_states to instantiate a ParameterState for each parameter in user_params
