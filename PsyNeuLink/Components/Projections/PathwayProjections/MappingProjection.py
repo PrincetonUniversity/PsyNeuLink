@@ -504,7 +504,16 @@ class MappingProjection(PathwayProjection_Base):
                 projection_string = 'projection'
 
             if not isinstance(self._matrix_spec, str):
-                raise ProjectionError("Matrix ")
+                raise ProjectionError("Width ({}) of \'{}{}\' from \'{}\' OuputState of \'{}\' to \'{}\'"
+                                      " does not match the length of its \'{}\' InputState ({})".
+                                      format(mapping_output_len,
+                                             self.name,
+                                             projection_string,
+                                             self.sender.name,
+                                             self.sender.owner.name,
+                                             self.receiver.owner.name,
+                                             self.receiver.name,
+                                             receiver_len))
 
             elif self._matrix_spec == IDENTITY_MATRIX or self._matrix_spec == HOLLOW_MATRIX:
                 # Identity matrix is not reshapable
