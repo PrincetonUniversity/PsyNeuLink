@@ -641,15 +641,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                             MONITORED_OUTPUT_STATES,
                                         len(target_set[MONITORED_OUTPUT_STATES])))
 
-            #FIX: IS THIS HANDLED BY _instantiate_input_states??
-            for state_spec in target_set[INPUT_STATES]:
-                if not isinstance(state_spec, (str, InputState, Mechanism, dict)):
-                    raise ObjectiveMechanismError("Item in \'{}\'arg for {} is not a "
-                                                  "valid specificaton for an InputState".
-                                                  format(INPUT_STATES,
-                                                         self.name,
-                                                         target_set[INPUT_STATES]))
-
         if MONITORED_OUTPUT_STATES in target_set and target_set[MONITORED_OUTPUT_STATES] is not None:
             _parse_monitored_output_states(source=self,
                                            output_state_list=target_set[MONITORED_OUTPUT_STATES],
