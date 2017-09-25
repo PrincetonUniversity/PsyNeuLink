@@ -277,18 +277,19 @@ class AutoAssociativeProjection(MappingProjection):
                                        " the sender is {}".
                                        format(self.__class__.__name__, self.name, self.sender))
 
-        param_keys = owner_mech._parameter_states.key_values
+        owner_param_states = owner_mech._parameter_states.key_values
 
         # MODIFIED 9/23/17 NEW: [JDC ALLOW DEFAULT MATRIX TO BE USED IF AUTO AND HETERO ARE NOT SPECIFIED]:
-        if AUTO in param_keys or HETERO in param_keys:
+        if AUTO in owner_param_states or HETERO in owner_param_states:
         # MODIFIED 9/23/17 END
-            if AUTO not in param_keys or HETERO not in param_keys:
-                raise AutoAssociativeError("Auto or Hetero ParameterState not found in {0} \"{1}\"; here are names of the "
-                                           "current ParameterStates for {1}: {2}".format(owner_mech.__class__.__name__,
-                                                                                       owner_mech.name, param_keys))
+            if AUTO not in owner_param_states or HETERO not in owner_param_states:
+                raise AutoAssociativeError("Auto or Hetero ParameterState not found in {0} \"{1}\"; "
+                                           "here are names of the current ParameterStates for {1}: {2}".
+                                           format(owner_mech.__class__.__name__, owner_mech.name, owner_param_states))
 
-            # update the param states for auto/hetero: otherwise, if they've changed since self's last execution, we won't
-            # know because the mechanism may not have updated its param state yet (if we execute before the mechanism)
+            # update the param states for auto/hetero: otherwise, if they've changed since self's last execution,
+            # we won't know because the mechanism may not have updated its param state yet
+            # (if we execute before the mechanism)
             self._update_auto_and_hetero(owner_mech, params, time_scale, context)
 
             # read auto and hetero from their ParameterStates, and put them into `auto_matrix` and `hetero_matrix`
@@ -299,43 +300,57 @@ class AutoAssociativeProjection(MappingProjection):
                 raise AutoAssociativeError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
                                            "type {}. Instead, the `auto` parameter should be a number, 1D array, "
                                            "2d array, 2d list, or numpy matrix".
-                                           format(owner_mech.__class__.__name__, owner_mech.name, raw_auto, type(raw_auto)))
+                                           format(owner_mech.__class__.__name__,
+                                                  owner_mech.name,
+                                                  raw_auto,
+                                                  type(raw_auto)))
 
             raw_hetero = owner_mech.hetero
             hetero_matrix = get_hetero_matrix(raw_hetero=raw_hetero, size=owner_mech.size[0])
             if hetero_matrix is None:
-                raise AutoAssociativeError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was of "
-                                           "type {}. Instead, the `hetero` parameter should be a number, 1D array of "
-                                           "length one, 2d array, 2d list, or numpy matrix".
-                                           format(owner_mech.__class__.__name__, owner_mech.name, raw_hetero, type(raw_hetero)))
+                raise AutoAssociativeError("The `hetero` parameter of {} {} was invalid: it was equal to {}, "
+                                           "and was of type {}. Instead, the `hetero` parameter should be a number, "
+                                           "1D array of length one, 2d array, 2d list, or numpy matrix".
+                                           format(owner_mech.__class__.__name__,
+                                                  owner_mech.name, raw_hetero,
+                                                  type(raw_hetero)))
             self.matrix = auto_matrix + hetero_matrix
 
-        # note that updating parameter states MUST happen AFTER self.matrix is set by auto_matrix and hetero_matrix,
-        # because setting self.matrix only changes the previous_value/variable of the 'matrix' parameter state (which
-        # holds the matrix parameter) and the matrix parameter state must be UPDATED AFTERWARDS to put the new value
-        # from the previous_value into the value of the parameterState
-        self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
-
-        # Check whether error_signal has changed
-        if (self.learning_mechanism
-            and self.learning_mechanism.learning_enabled
-            and self.learning_mechanism.status == CHANGED):
-
-            # Assume that if learning_mechanism attribute is assigned,
-            #    both a LearningProjection and ParameterState[MATRIX] to receive it have been instantiated
-            matrix_parameter_state = self._parameter_states[MATRIX]
-
-            # Assign current MATRIX to parameter state's base_value, so that it is updated in call to execute()
-            setattr(self, '_'+MATRIX, self.matrix)
-
-            # Update MATRIX, and AUTO and HETERO accordingly
-            self.matrix = matrix_parameter_state.value
-
-            owner_mech.auto = np.diag(self.matrix).copy()
-            owner_mech.hetero = self.matrix.copy()
-            np.fill_diagonal(owner_mech.hetero, 0)
-
-        return self.function(self.sender.value, params=params, context=context)
+        # # MODIFIED 9/23/17 OLD [JDC: CALLED SUPER FOR ALL OF THIS, THOUGH SEE IMPLEMENTATION NOTE BELOW]:
+        # # note that updating parameter states MUST happen AFTER self.matrix is set by auto_matrix and hetero_matrix,
+        # # because setting self.matrix only changes the previous_value/variable of the 'matrix' parameter state (which
+        # # holds the matrix parameter) and the matrix parameter state must be UPDATED AFTERWARDS to put the new value
+        # # from the previous_value into the value of the parameterState
+        # self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
+        #
+        # # Check whether error_signal has changed
+        # if (self.learning_mechanism
+        #     and self.learning_mechanism.learning_enabled
+        #     and self.learning_mechanism.status == CHANGED):
+        #
+        #     # Assume that if learning_mechanism attribute is assigned,
+        #     #    both a LearningProjection and ParameterState[MATRIX] to receive it have been instantiated
+        #     matrix_parameter_state = self._parameter_states[MATRIX]
+        #
+        #     # Assign current MATRIX to parameter state's base_value, so that it is updated in call to execute()
+        #     setattr(self, '_'+MATRIX, self.matrix)
+        #
+        #     # Update MATRIX, and AUTO and HETERO accordingly
+        #     self.matrix = matrix_parameter_state.value
+        #
+        #     # # MODIFIED 9/23/17 OLD: [JDC DOESN'T SEEM TO DO ANYTHING:]
+        #     # # IMPLEMENTATION NOTE: SPECIFIC TO AutoAssociativeProjection -
+        #     # # DOES THIS NEED TO BE IN THE CONDITIONAL?  CAN IT BE MOVED TO THE AutoAssociativeProjection BLOCK ABOVE?
+        #     # owner_mech.auto = np.diag(self.matrix).copy()
+        #     # owner_mech.hetero = self.matrix.copy()
+        #     # np.fill_diagonal(owner_mech.hetero, 0)
+        #     # # IMPLEMENTATION NOTE: END
+        #     # # MODIFIED 9/23/17 END
+        #
+        # return self.function(self.sender.value, params=params, context=context)
+        # MODIFIED 9/23/17 NEW:
+        return super().execute(input=input, clock=clock, time_scale=time_scale, params=params, context=context)
+        # MODIFIED 9/23/17 END:
 
     def _update_auto_and_hetero(self, owner_mech=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
         if owner_mech is None:
