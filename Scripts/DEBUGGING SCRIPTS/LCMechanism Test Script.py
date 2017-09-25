@@ -4,6 +4,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingM
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Library.Subsystems.AGT.LCControlMechanism import LCControlMechanism
 
+
 my_mech_1 = TransferMechanism(function=Linear, name='my_linear_mechanism')
 my_mech_2 = TransferMechanism(function=Logistic, name='my_logistic_mechanism')
 

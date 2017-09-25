@@ -308,6 +308,12 @@ class LearningProjection(ModulatoryProjection_Base):
     variable : 2d np.array
         same as `learning_signal <LearningProjection.learning_signal>`.
 
+    learning_enabled : bool : default True
+        determines whether the `value <LearningProjection.value>` of the LearningProjection is used to modify
+        the `learned_projection <LearningProjection.learned_projection>` when the latter is executed;  its value is
+        set by the value of the `learning_enabled <LearningMechanism.learning_enabled>` attribute of the
+        `LearningMechanism` to which the LearningProjection's `sender <LearningProjection.sender>` belongs.
+
     learning_signal : 2d np.array
         the `value <LearningSignal.value>` of the LearningProjection's `sender <LearningProjectoin.sender>`: a matrix of
         weight changes calculated by the `LearningMechanism` to which the `sender <LearningProjection.sender>` belongs;
@@ -400,6 +406,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # Flag for deferred initialization
         self.init_status = InitStatus.DEFERRED_INITIALIZATION
+        self.learning_enable = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate sender and receiver
@@ -525,9 +532,20 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
         #    if it does, assign it to the objective_mechanism attribute for the projection being learned
-        candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
-        if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
-            learned_projection.objective_mechanism = candidate_objective_mech
+        # # MODIFIED 9/22/17 OLD:
+        # candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
+        # if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
+        #     learned_projection.objective_mechanism = candidate_objective_mech
+        # MODIFIED 9/22/17 NEW:
+        try:
+            candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
+            if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
+                learned_projection.objective_mechanism = candidate_objective_mech
+        except TypeError:
+            # learning_mechanism does not receive from an ObjectiveMechanism
+            #    (e.g., AutoAssociativeLearningMechanism, which receives straight from a ProcessingMechanism)
+            pass
+        # MODIFIED 9/22/17 END
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = True
 

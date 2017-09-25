@@ -669,6 +669,44 @@ class TestRecurrentTransferMechanismInSystem:
         assert(T.value.tolist() == [[1, 3, 2, 5]])
         assert(R.value.tolist() == [[21, 3, 12, 35]])
 
+    def test_recurrent_mech_with_learning(self):
+        R = RecurrentTransferMechanism(size=4,
+                                       function=Linear,
+                                       matrix=np.full((4,4), 0.1),
+                                       enable_learning=True
+                                     )
+        # Test that all of these are the same:
+        assert(R.matrix.tolist() ==  [[ 0.1,  0.1, 0.1, 0.1],
+                                      [ 0.1, 0.1, 0.1, 0.1],
+                                      [ 0.1, 0.1, 0.1, 0.1],
+                                      [ 0.1, 0.1, 0.1, 0.1]])
+        assert(R.recurrent_projection.matrix.tolist() == R.matrix.tolist())
+        assert(R.input_state.path_afferents[0].matrix.tolist() == R.matrix.tolist())
+
+        # Test that activity is properly computed prior to learning
+        p = process(pathway=[R])
+        R.learning_enabled = False
+        p.execute([1,1,0,0])
+        p.execute([1,1,0,0])
+        assert(R.value.tolist() == [[1.2,1.2,0.2,0.2]])
+
+        # Test that activity and weight changes are properly computed with learning
+        R.learning_enabled = True
+        p.execute([1,1,0,0])
+        assert(R.value.tolist() == [[1.28,1.28,0.28,0.28]])
+        assert(R.matrix.tolist() ==
+               [[0.18192000000000003, 0.18192000000000003, 0.11792000000000001, 0.11792000000000001],
+                [0.18192000000000003, 0.18192000000000003, 0.11792000000000001, 0.11792000000000001],
+                [0.11792000000000001, 0.11792000000000001, 0.10392000000000001, 0.10392000000000001],
+                [0.11792000000000001, 0.11792000000000001, 0.10392000000000001, 0.10392000000000001]])
+        p.execute([1,1,0,0])
+        assert(R.value.tolist() == [[ 1.5317504, 1.5317504, 0.3600704, 0.3600704]])
+        assert(R.matrix.tolist() ==
+               [[0.299232964395008, 0.299232964395008, 0.14549689896140802, 0.14549689896140802],
+                [0.299232964395008, 0.299232964395008, 0.14549689896140802, 0.14549689896140802],
+                [0.14549689896140802, 0.14549689896140802, 0.11040253464780801, 0.11040253464780801],
+                [0.14549689896140802, 0.14549689896140802, 0.11040253464780801, 0.11040253464780801]])
+
 
 # this doesn't work consistently due to EVC's issue with the scheduler
 
