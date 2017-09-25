@@ -38,11 +38,11 @@ input_weights = np.array([[1, .1],[.1, 1]])
 output_weights = np.array([[1], [0]])
 decision_layer = RecurrentTransferMechanism(size=2,
                                             # matrix=[[1,-1],[-1,1]],
-                                            # auto=1,
-                                            # hetero=-1,
-                                            # GENERATES A FULL CONNECTIVITY MATRIX:
-                                            auto=[[1,1]],
-                                            hetero=[[-1,0],[0,-1]],
+                                            auto=1,
+                                            hetero=-1,
+                                            # # GENERATES A FULL CONNECTIVITY MATRIX:
+                                            # auto=[[1,1]],
+                                            # hetero=[[-1,0],[0,-1]],
                                             # # GENERATES ONLY AN IDENTITY MATRIX, MAYBE SHOULD GENERATE AN ERROR
                                             # auto=[[1]],
                                             # hetero=[[0,-1,],[-1,0]],
@@ -53,7 +53,7 @@ response = RecurrentTransferMechanism(size=1,
                                       function=Logistic,
                                       name='RESPONSE')
 LC = LCControlMechanism(
-        # COMMENTING OUT THE FOLLOWING LINE CAUSES AN ERROR
+        # COMMENTING OUT THE FOLLOWING LINE(S) CAUSES AN ERROR
         objective_mechanism=[ObjectiveMechanism(monitored_output_states=[decision_layer],
                                                 input_states=[[0]])],
         # objective_mechanism=[decision_layer],

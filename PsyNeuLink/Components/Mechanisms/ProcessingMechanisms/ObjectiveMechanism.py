@@ -719,6 +719,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             output_state_dicts:  OutputStates to be monitored by the InputStates
         """
 
+        # PARSE monitored_output_states SPECIFICATION(S)
         # First parse for tuples to extract OutputStates, weights and exponents
         monitored_output_states_parsed = _parse_monitored_output_states(source=self,
                                                           output_state_list=monitored_output_states,
@@ -765,7 +766,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
             output_state_dicts.append(output_state_dict)
 
-        # INSTANTIATE InputState for ObjectiveMechanism CORRESPONDING TO EACH OutputState specified in monitored_output_states
+        # INSTANTIATE InputStates:
+        #    one for ObjectiveMechanism CORRESPONDING TO EACH OutputState specified in monitored_output_states
 
         # If input_states were provided use those for specifications;
         #    otherwise use value of monitored_output_stated for each (to invoke a default assignment for each input_state)

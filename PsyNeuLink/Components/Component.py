@@ -669,6 +669,7 @@ class Component(object):
             return vardict
 
     class ClassDefaults(Defaults):
+        exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
         pass
 
     class InstanceDefaults(Defaults):
