@@ -303,8 +303,9 @@ from PsyNeuLink.Components.Component import InitStatus
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param, LinearCombination
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-           import ObjectiveMechanism, _parse_monitored_output_states, WEIGHT_INDEX, EXPONENT_INDEX, MATRIX_INDEX
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import \
+           ObjectiveMechanism, ObjectiveMechanismError, _parse_monitored_output_states, \
+           WEIGHT_INDEX, EXPONENT_INDEX, MATRIX_INDEX, MONITORED_OUTPUT_STATES
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.ShellClasses import Mechanism, System
@@ -676,10 +677,18 @@ class ControlMechanism(AdaptiveMechanism_Base):
         else:
             # Create specification for ObjectiveMechanism InputStates corresponding to
             #    monitored_output_states and their exponents and weights
-            self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
-                                                           function=LinearCombination(operation=PRODUCT),
-                                                           name=self.name + '_ObjectiveMechanism')
-        # Print monitored_output_states
+            try:
+                self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
+                                                               function=LinearCombination(operation=PRODUCT),
+                                                               name=self.name + '_ObjectiveMechanism')
+            except ObjectiveMechanismError as e:
+                if MONITORED_OUTPUT_STATES in e.args[0]:
+                    raise ControlMechanismError("\'{}\' argument for {} must be specified".
+                                                format(OBJECTIVE_MECHANISM, self.name))
+                else:
+                    raise ObjectiveMechanismError(e)
+
+# Print monitored_output_states
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
             for state in self.monitored_output_states:

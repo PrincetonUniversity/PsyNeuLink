@@ -39,16 +39,15 @@ response = RecurrentTransferMechanism(size=1,
 #    and a MappingProjection to it that zeros the contribution of the decision unit in the decision layer
 LC = LCControlMechanism(
         objective_mechanism=ObjectiveMechanism(
-                monitored_output_states=[decision_layer],
-                input_states=[{VALUE:[0],
-                               PROJECTIONS:np.array([[1],[0]])
-                               }]
-                # # Alternative form of specification:
-                # monitored_output_states=[(decision_layer, None, None, np.array([[1],[0]]))],
-                # input_states=[[0]],
+                                    monitored_output_states=[decision_layer],
+                                    input_states=[{VALUE:[0],
+                                                   PROJECTIONS:np.array([[1],[0]])
+                                                   }],
+                                    # # Alternative form of specification:
+                                    # monitored_output_states=[(decision_layer, None, None, np.array([[1],[0]]))],
+                                    # input_states=[[0]],
+                                    name='LC ObjectiveMechanism'
         ),
-        # COMMENTING OUT THE FOLLOWING LINE(S) CAUSES AN ERROR
-        # objective_mechanism=[decision_layer],
         modulated_mechanisms=[decision_layer, response],
         name='LC')
 
@@ -64,7 +63,7 @@ lc_process = process(pathway=[decision_layer,
                               # CAUSES ERROR:
                               # np.array([[1,0],[0,0]]),
                               LC],
-                           name='DECISION PROCESS')
+                           name='LC PROCESS')
 
 task = system(processes=[decision_process, lc_process])
 

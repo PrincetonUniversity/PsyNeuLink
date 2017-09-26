@@ -927,6 +927,10 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
 
     for item in output_state_list:
 
+        if item is None:
+            raise ObjectiveMechanismError("\'{}\' argument for {} must be specified".
+                                          format(MONITORED_OUTPUT_STATES, source.name))
+
         # Specification is an OutputState on its own, so use it and assign default weight and exponent
         if isinstance(item, OutputState):
             output_states.append(item)
