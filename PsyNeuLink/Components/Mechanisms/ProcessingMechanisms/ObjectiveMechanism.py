@@ -328,6 +328,7 @@ import warnings
 
 import typecheck as tc
 import numbers
+from collections import namedtuple
 
 
 from PsyNeuLink.Components.Component import InitStatus
@@ -358,7 +359,7 @@ OUTPUT_STATE_INDEX = 0
 WEIGHT_INDEX = 1
 EXPONENT_INDEX = 2
 MATRIX_INDEX = 3
-
+MonitoredOutputStateTuple = namedtuple("MonitoredOutputStateTuple", "output_state, weight exponent matrix")
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class OBJECTIVE_OUTPUT():
@@ -730,10 +731,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         monitored_output_states_parsed = _parse_monitored_output_states(source=self,
                                                           output_state_list=monitored_output_states,
                                                           context=context)
-        output_state_specs = [s[OUTPUT_STATE_INDEX] for s in monitored_output_states_parsed]
-        monitored_output_state_weights = [w[WEIGHT_INDEX] for w in monitored_output_states_parsed]
-        monitored_output_state_exponents = [e[EXPONENT_INDEX] for e in monitored_output_states_parsed]
-        monitored_output_state_matrices = [m[MATRIX_INDEX] for m in monitored_output_states_parsed]
+        output_state_specs = [s.output_state for s in monitored_output_states_parsed]
+        monitored_output_state_weights = [w.weight for w in monitored_output_states_parsed]
+        monitored_output_state_exponents = [e.exponent for e in monitored_output_states_parsed]
+        monitored_output_state_matrices = [m.matrix for m in monitored_output_states_parsed]
 
         # Then, parse OutputState specifications
         output_state_dicts = []
@@ -885,7 +886,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         self._instantiate_weights_and_exponents(weights, exponents)
 
 def _parse_monitored_output_states(source, output_state_list, mech=None, context=None):
-    """Parses specifications in list and returns list of tuples: [(OutputState, exponent, weight)...]
+    """Parses specifications in list and returns list of MonitoredOutputStateTuples
 
     Serves the following purposes:
 
@@ -983,7 +984,7 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
                                                          mech=mech, context=context)[0]
 
             # Use OutputState in tuple returned from parse
-            output_state = output_state_tuple[OUTPUT_STATE_INDEX]
+            output_state = output_state_tuple.output_state
 
             # If output_state is a string,
             from PsyNeuLink.Components.System import System
@@ -1004,10 +1005,10 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
             output_states.append(output_state)
 
             # Use weight and exponent if returned from parse;  otherwise use what was in item
-            weight = output_state_tuple[WEIGHT_INDEX] or item[WEIGHT_INDEX]
-            exponent = output_state_tuple[EXPONENT_INDEX] or item[EXPONENT_INDEX]
+            weight = output_state_tuple.weight or item[WEIGHT_INDEX]
+            exponent = output_state_tuple.exponent or item[EXPONENT_INDEX]
             try:
-                matrix = output_state_tuple[MATRIX_INDEX] or item[MATRIX_INDEX]
+                matrix = output_state_tuple.matrix or item[MATRIX_INDEX]
             except IndexError:
                 # matrix spec not included
                 matrix = DEFAULT_MATRIX
@@ -1015,19 +1016,19 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
             if weight and not isinstance(weight, numbers.Number):
                 raise ObjectiveMechanismError("Specification of the weight ({}) in tuple for {} of {} "
                                      "must be a number".
-                                     format(weight, item[OUTPUT_STATE_INDEX].name, source.name))
+                                     format(weight, output_state, source.name))
             weights.append(weight)
 
             if exponent and not isinstance(exponent, numbers.Number):
                 raise ObjectiveMechanismError("Specification of the exponent ({}) in tuple for {} of {} "
                                      "must be a number".
-                                     format(exponent, item[OUTPUT_STATE_INDEX].name, source.name))
+                                     format(exponent, output_state, source.name))
             exponents.append(exponent)
 
             if not is_matrix(matrix):
                 raise ObjectiveMechanismError("Specification of the exponent ({}) in tuple for {} of {} "
                                      "must be a number".
-                                     format(exponent, item[OUTPUT_STATE_INDEX].name, source.name))
+                                     format(exponent, output_state, source.name))
             matrices.append(matrix)
 
         # Specification is a dictionary, so parse
@@ -1045,13 +1046,13 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
                                                               output_state_list=item[OUTPUT_STATES],
                                                               mech=mech,
                                                               context=context)
-                output_states.extend([output_state_tuple[OUTPUT_STATE_INDEX]
+                output_states.extend([output_state_tuple.output_state
                                       for output_state_tuple in output_state_tuples])
-                weights.extend([output_state_tuple[WEIGHT_INDEX]
+                weights.extend([output_state_tuple.weight
                                       for output_state_tuple in output_state_tuples])
-                exponents.extend([output_state_tuple[EXPONENT_INDEX]
+                exponents.extend([output_state_tuple.exponent
                                       for output_state_tuple in output_state_tuples])
-                matrices.extend([output_state_tuple[MATRIX_INDEX]
+                matrices.extend([output_state_tuple.matrix
                                       for output_state_tuple in output_state_tuples])
 
             else:
@@ -1082,7 +1083,12 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
                                              len(matrices),
                                              source.name))
 
-    return list(zip(output_states, weights, exponents, matrices))
+    return list(map(lambda output_state, weight, exponent, matrix:
+                    MonitoredOutputStateTuple(output_state = output_state,
+                                              weight = weight,
+                                              exponent = exponent,
+                                              matrix = matrix),
+                    output_states, weights, exponents, matrices))
 
 def _objective_mechanism_role(mech, role):
     if isinstance(mech, ObjectiveMechanism):
