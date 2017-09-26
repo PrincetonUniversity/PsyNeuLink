@@ -10,52 +10,43 @@ from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.Recur
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA import LCA
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Library.Subsystems.AGT.LCControlMechanism import LCControlMechanism
-from PsyNeuLink.Globals.Keywords import FULL_CONNECTIVITY_MATRIX
-
-# target_input = TransferMechanism(name='target_input')
-# distractor_input = TransferMechanism(name='distractor_input')
-# target_decision = RecurrentTransferMechanism(function=Logistic, name='target_decision')
-# distractor_decision = RecurrentTransferMechanism(function=Logistic, name='distractor_decision')
-# response = RecurrentTransferMechanism(function=Logistic, name='response')
-#
-# MappingProjection(sender=target_decision, receiver=distractor_decision)
-# target_process = process(pathway=[target_input, target_decision, response])
-# distractor_process = process(pathway=[distractor_input, distractor_decision, target_decision])
-#
-# LC = LCControlMechanism(
-#         objective_mechanism=[target_decision],
-#         modulated_mechanisms=[target_decision, distractor_decision, response],
-#         name='LC')
-#
-# task = system(processes=[target_process, distractor_process])
-#
-# task.show()
-# task.show_graph()
+from PsyNeuLink.Globals.Keywords import FULL_CONNECTIVITY_MATRIX, VALUE, PROJECTIONS
 
 input_layer = TransferMechanism(size=2,
                                 name='INPUT LAYER')
+
+# Implement projections from inputs to decision layer with weak cross-talk connections
+#    from target and distractor inputs to their competing decision layer units
 input_weights = np.array([[1, .1],[.1, 1]])
-output_weights = np.array([[1], [0]])
+
+# Implement self-excitatory (auto) and mutually inhibitory (hetero) connections within the decision layer
 decision_layer = RecurrentTransferMechanism(size=2,
-                                            # matrix=[[1,-1],[-1,1]],
                                             auto=1,
                                             hetero=-1,
-                                            # # GENERATES A FULL CONNECTIVITY MATRIX:
-                                            # auto=[[1,1]],
-                                            # hetero=[[-1,0],[0,-1]],
-                                            # # GENERATES ONLY AN IDENTITY MATRIX, MAYBE SHOULD GENERATE AN ERROR
-                                            # auto=[[1]],
-                                            # hetero=[[0,-1,],[-1,0]],
                                             function=Logistic,
                                             name='DECISION LAYER')
+
+# Implement connection from target but not distractor unit in decision layer to response
+output_weights = np.array([[1], [0]])
+
+# Implement response layer with a single, self-excitatory connection
 response = RecurrentTransferMechanism(size=1,
-                                      matrix=[[1]],
                                       function=Logistic,
                                       name='RESPONSE')
+
+# Implement response layer with input_state for ObjectiveMechanism that has a single value
+#    and a MappingProjection to it that zeros the contribution of the decision unit in the decision layer
 LC = LCControlMechanism(
+        objective_mechanism=ObjectiveMechanism(
+                monitored_output_states=[decision_layer],
+                input_states=[{VALUE:[0],
+                               PROJECTIONS:np.array([[1],[0]])
+                               }]
+                # # Alternative form of specification:
+                # monitored_output_states=[(decision_layer, None, None, np.array([[1],[0]]))],
+                # input_states=[[0]],
+        ),
         # COMMENTING OUT THE FOLLOWING LINE(S) CAUSES AN ERROR
-        objective_mechanism=[ObjectiveMechanism(monitored_output_states=[decision_layer],
-                                                input_states=[[0]])],
         # objective_mechanism=[decision_layer],
         modulated_mechanisms=[decision_layer, response],
         name='LC')
@@ -68,23 +59,13 @@ decision_process = process(pathway=[input_layer,
                                     response],
                            name='DECISION PROCESS')
 
-
-# CAUSES ERROR:
-# LC_projection_matrix = MappingProjection(matrix=np.array([[1,0],[0,0]]))
-
 lc_process = process(pathway=[decision_layer,
                               # CAUSES ERROR:
                               # np.array([[1,0],[0,0]]),
                               LC],
                            name='DECISION PROCESS')
 
-# FIX: NEED TO SPECIFY SIZE OF LC OBJECTIVE MECHANISM'S INPUT_STATE AND/OR THE MATRIX OF THE PROJECTION TO IT
 # FIX: NEED TO SCHEDULE RESPONSE TO EXECUTE BEFORE LC (TO BE IN THE SAME PHASE AS THE DECISION LAYER WRT TO GAIN MOD)
-
-print(LC.objective_mechanism.input_state.path_afferents[0].matrix)
-# THIS DOESN'T WORK: (matrix param remains unchanged
-LC.objective_mechanism.input_state.path_afferents[0].matrix = np.array([[1,0],[0,0]])
-print(LC.objective_mechanism.input_state.path_afferents[0].matrix)
 
 task = system(processes=[decision_process, lc_process])
 
