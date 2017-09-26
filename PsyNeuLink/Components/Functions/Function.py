@@ -194,11 +194,10 @@ import warnings
 from collections import namedtuple
 from enum import Enum, IntEnum
 from random import randint
-from typing import Dict, Union, List
+from typing import Union, List
 
 import numpy as np
 import typecheck as tc
-from PsyNeuLink.Globals.Preferences import PreferenceSet
 
 from numpy import abs, exp, tanh
 
@@ -230,8 +229,7 @@ from PsyNeuLink.Globals.Keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, \
     TDLEARNING_FUNCTION, Q_MATRIX, CURRENT_STATE, GOAL_STATE, INITIAL_WEIGHTS, \
     LEARNING_RATE, REWARD, DISCOUNT_FACTOR, INITIAL_ITERATIONS, \
-    IDENTITY_TRANSFORM_FUNCTION, DEFAULT_MATRIX, TD_DELTA_FUNCTION, T, \
-    T_MINUS_ONE
+    TD_DELTA_FUNCTION, T
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
@@ -1759,6 +1757,7 @@ class TDDeltaFunction(LinearCombination):
                  operation=SUM,
                  scale=None,
                  offset=None,
+                 t: tc.optional(is_numeric)=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -1769,12 +1768,15 @@ class TDDeltaFunction(LinearCombination):
                                                   reward=reward,
                                                   scale=scale,
                                                   offset=offset,
+                                                  t=t,
                                                   params=params)
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
                          context=context)
+        if t is None:
+            self.t = 1
 
     def function(self,
                  variable=None,
@@ -1814,8 +1816,15 @@ class TDDeltaFunction(LinearCombination):
             variable = self._update_variable(variable * weights)
 
         # print("reward in function = {}".format(reward))
+        if params is not None:
+            try:
+                t = params[T]
+            except AttributeError:
+                t = self.t
+        else:
+            t = 1
 
-        result = (variable[T] + reward) - variable[T_MINUS_ONE]
+        result = (variable[t] + reward) - variable[t - 1]
 
         # print("result = {}".format(result))
 
