@@ -1815,9 +1815,9 @@ class Process_Base(Process):
                                          context.name))
                     # Process is being implemented in something other than a System
                     #    so warn (irrespecive of verbose)
-                    else:
-                        print("WARNING:  Process ({0}) being instantiated in context "
-                                           "({1}) other than a System ".format(self.name, context))
+                    elif self.verbosePref:
+                        print("WARNING:  Process ({}) is being instantiated outside of a System".
+                              format(self.name))
 
     def _assign_process_input_projections(self, mechanism, context=None):
         """Create Projection(s) for each item in Process input to InputState(s) of the specified Mechanism

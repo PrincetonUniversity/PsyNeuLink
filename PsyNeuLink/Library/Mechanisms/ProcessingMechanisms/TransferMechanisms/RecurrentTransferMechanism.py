@@ -23,7 +23,7 @@ A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implement
 network, in which each element is connected to every other element (instantiated in a recurrent
 `AutoAssociativeProjection` referenced by the Mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).
 It allows its previous input to be decayed, can report the energy and, if appropriate, the entropy of its output,
-and can be configured for to implement autoassociative (e.g., Hebbian) learning.
+and can be configured to implement autoassociative (e.g., Hebbian) learning.
 
 .. _Recurrent_Transfer_Creation:
 
