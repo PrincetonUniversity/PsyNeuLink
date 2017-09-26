@@ -886,7 +886,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         self._instantiate_weights_and_exponents(weights, exponents)
 
 def _parse_monitored_output_states(source, output_state_list, mech=None, context=None):
-    """Parses specifications in list and returns list of tuples: [(OutputState, exponent, weight)...]
+    """Parses specifications in list and returns list of MonitoredOutputStateTuples
 
     Serves the following purposes:
 
@@ -1089,11 +1089,6 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
                                               exponent = exponent,
                                               matrix = matrix),
                     output_states, weights, exponents, matrices))
-    # return [(MonitoredOutputState.output_state,
-    #         MonitoredOutputState.weight,
-    #         MonitoredOutputState.exponent,
-    #         MonitoredOutputState.matrix = item) for item in list(zip(output_states, weights, exponents, matrices))]
-    # return list(zip(output_states, weights, exponents, matrices))
 
 def _objective_mechanism_role(mech, role):
     if isinstance(mech, ObjectiveMechanism):
