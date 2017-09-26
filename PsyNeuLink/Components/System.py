@@ -2358,28 +2358,30 @@ class System_Base(System):
 
         # ASSIGN EXPONENTS, WEIGHTS and MATRICES
 
-        num_monitored_output_states = len(monitored_output_states)
-        weights = [None] * num_monitored_output_states
-        exponents = [None] * num_monitored_output_states
-        matrices = [None] * num_monitored_output_states
+        # num_monitored_output_states = len(monitored_output_states)
+        # weights = [None] * num_monitored_output_states
+        # exponents = [None] * num_monitored_output_states
+        # matrices = [None] * num_monitored_output_states
 
         # Get and assign specification of weights, exponents and matrices
         #    for Mechanisms or OutputStates specified in tuples
-        output_state_tuples = []
+        output_state_tuples = [MonitoredOutputStateTuple(output_state=item, weight=None, exponent=None, matrix=None)
+                               for item in monitored_output_states]
         for spec in all_specs:
             if isinstance(spec, MonitoredOutputStateTuple):
                 object_spec = spec.output_state
                 # For each OutputState in monitored_output_states
-                for item in monitored_output_states:
+                # for item in monitored_output_states:
+                for i, output_state_tuple in enumerate(output_state_tuples):
+                    output_state_spec = output_state_tuple.output_state
                     # If either that OutputState or its owner is the object specified in the tuple
-                    if item is object_spec or item.name is object_spec or item.owner is object_spec:
-                        output_state_tuples.append(spec)
-                        # Assign the weight and exponent specified in the tuple to that OutputState
-                        # output_state_tuple = MonitoredOutputStateTuple
-                        # output_state_tuple.output_state = object_spec
-                        # output_state_tuple.weight = spec.weight
-                        # output_state_tuple.exponent = spec.exponent
-                        # output_state_tuple.matrix = spec.matrix
+                    if (output_state_spec is object_spec
+                        or (isinstance(output_state_spec, Component)
+                            and  (output_state_spec.name is object_spec
+                                  or output_state_spec.owner is object_spec))):
+                        # Assign the weight, exponent and matrix specified in the spec to the output_state_tuple
+                        output_state_tuples[i] = spec
+
                         # i = monitored_output_states.index(item)
                         # weights[i] = spec.weight
                         # exponents[i] = spec.exponent

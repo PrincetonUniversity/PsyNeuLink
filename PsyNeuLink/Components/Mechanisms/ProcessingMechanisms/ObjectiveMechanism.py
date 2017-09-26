@@ -980,7 +980,7 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
             # Recursively call _parse_monitored_output_states to parse the first item of the tuple (the OutputState)
             # (index with 0 since parse returns a list, but should only be one item in it)
             output_state_tuple = _parse_monitored_output_states(source,
-                                                         item.output_state,
+                                                         item[OUTPUT_STATE_INDEX],
                                                          mech=mech, context=context)[0]
 
             # Use OutputState in tuple returned from parse
@@ -1005,10 +1005,10 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
             output_states.append(output_state)
 
             # Use weight and exponent if returned from parse;  otherwise use what was in item
-            weight = output_state_tuple.weight or item.weight
-            exponent = output_state_tuple.exponent or item.exponent
+            weight = output_state_tuple.weight or item[WEIGHT_INDEX]
+            exponent = output_state_tuple.exponent or item[EXPONENT_INDEX]
             try:
-                matrix = output_state_tuple.matrix or item.matrix
+                matrix = output_state_tuple.matrix or item[MATRIX_INDEX]
             except IndexError:
                 # matrix spec not included
                 matrix = DEFAULT_MATRIX
@@ -1016,19 +1016,19 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
             if weight and not isinstance(weight, numbers.Number):
                 raise ObjectiveMechanismError("Specification of the weight ({}) in tuple for {} of {} "
                                      "must be a number".
-                                     format(weight, item.output_state.name, source.name))
+                                     format(weight, output_state, source.name))
             weights.append(weight)
 
             if exponent and not isinstance(exponent, numbers.Number):
                 raise ObjectiveMechanismError("Specification of the exponent ({}) in tuple for {} of {} "
                                      "must be a number".
-                                     format(exponent, item.output_state.name, source.name))
+                                     format(exponent, output_state, source.name))
             exponents.append(exponent)
 
             if not is_matrix(matrix):
                 raise ObjectiveMechanismError("Specification of the exponent ({}) in tuple for {} of {} "
                                      "must be a number".
-                                     format(exponent, item.output_state.name, source.name))
+                                     format(exponent, output_state, source.name))
             matrices.append(matrix)
 
         # Specification is a dictionary, so parse
