@@ -7,13 +7,13 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
     import OUTCOME
 from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Globals.Keywords import PREDICTION_ERROR_MECHANISM, SAMPLE, \
-    TARGET, INITIALIZING, kwPreferenceSetName, INPUT_STATES, VALUE, \
-    FUNCTION_PARAMS, REWARD
+from PsyNeuLink.Globals.Keywords import FUNCTION_PARAMS, INITIALIZING, \
+    INPUT_STATES, PREDICTION_ERROR_MECHANISM, SAMPLE, T, TARGET, \
+    kwPreferenceSetName, REWARD
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, \
     kpReportOutputPref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel, \
-    PreferenceEntry
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, \
+    PreferenceLevel
 from PsyNeuLink.Globals.Utilities import is_numeric
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms \
     .ComparatorMechanism import ComparatorMechanism, MSE
@@ -49,7 +49,6 @@ class PredictionErrorMechanism(ComparatorMechanism):
                                 str) = None,
                  target: tc.any(OutputState, Mechanism_Base, dict, is_numeric,
                                 str) = None,
-                 # reward=None,
                  input_states=[SAMPLE, TARGET],
                  function=TDDeltaFunction(),
                  output_states: tc.optional(tc.any(list, dict)) = [OUTCOME,
@@ -60,7 +59,6 @@ class PredictionErrorMechanism(ComparatorMechanism):
                  context=componentType + INITIALIZING):
         params = self._assign_args_to_param_dicts(sample=sample,
                                                   target=target,
-                                                  # reward=reward,
                                                   function=function,
                                                   input_states=input_states,
                                                   output_states=output_states,
@@ -81,10 +79,12 @@ class PredictionErrorMechanism(ComparatorMechanism):
             owner=self,
             context=context)
         self.prev_val = self.integrator_function.previous_value
+        self.t = 1
 
     def _execute(self, variable=None, runtime_params=None, clock=CentralClock,
                  time_scale=None, context=None):
         print("Calling Prediction Error Mechanism _execute()")
+        print("variable = {}".format(variable))
 
         if self.paramsCurrent:
             sample = self.paramsCurrent[INPUT_STATES][SAMPLE].value
@@ -95,17 +95,20 @@ class PredictionErrorMechanism(ComparatorMechanism):
 
         try:
             # integrator_prev_val = self.integrator_function.previous_value
+            # TODO: AdaptiveIntegrator needs to remember the last value of V
             print("prev_val = {}".format(self.prev_val))
-            values = [self.integrator_function.execute(variable=sample,
-                                                       params=runtime_params,
-                                                       context=context)[0],
-                      self.prev_val]
+            self.integrator_function.execute(variable=sample, context=context)[0]
+            self.prev_val = self.integrator_function.previous_value
+            values = [variable[0], self.prev_val]
         except AttributeError:
             values = [0, 0]
-        # print("values: {}".format(values))
-        self.function_object.reward = reward
-        # print("reward = {}".format(self.function_params[REWARD]))
+
+        try:
+            t = self.t
+        except AttributeError:
+            self.t = t = 1
         output_vector = self.function(variable=values,
-                                      params=runtime_params)
-        self.prev_val = output_vector[0]
+                                      params={T: t,
+                                              REWARD: reward})
+        self.prev_val = values[0]
         return output_vector

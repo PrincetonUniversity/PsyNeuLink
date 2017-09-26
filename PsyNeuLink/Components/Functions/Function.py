@@ -1900,6 +1900,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  operation: tc.enum(SUM, PRODUCT)=SUM,
                  scale=None,
                  offset=None,
+                 t: tc.optional(is_numeric)=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -1910,6 +1911,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                                                   reward=reward,
                                                   scale=scale,
                                                   offset=offset,
+                                                  t=t,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -1917,6 +1919,8 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                          owner=owner,
                          prefs=prefs,
                          context=context)
+        if t is None:
+            self.t = 1
 
         if self.weights is not None:
             self.weights = np.atleast_2d(self.weights).reshape(-1, 1)
