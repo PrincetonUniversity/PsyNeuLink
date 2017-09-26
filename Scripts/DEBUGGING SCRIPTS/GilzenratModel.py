@@ -12,6 +12,7 @@ from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection impo
 from PsyNeuLink.Library.Subsystems.AGT.LCControlMechanism import LCControlMechanism
 from PsyNeuLink.Globals.Keywords import FULL_CONNECTIVITY_MATRIX, VALUE, PROJECTIONS
 
+
 input_layer = TransferMechanism(size=2,
                                 name='INPUT LAYER')
 
@@ -65,9 +66,14 @@ lc_process = process(pathway=[decision_layer,
                               LC],
                            name='DECISION PROCESS')
 
-# FIX: NEED TO SCHEDULE RESPONSE TO EXECUTE BEFORE LC (TO BE IN THE SAME PHASE AS THE DECISION LAYER WRT TO GAIN MOD)
-
 task = system(processes=[decision_process, lc_process])
 
+# This prints information about the System,
+# including its execution list indicating the order in which the Mechanisms will execute
+# IMPLEMENTATION NOTE:
+#  MAY STILL NEED TO SCHEDULE RESPONSE TO EXECUTE BEFORE LC
+#  (TO BE MODULATED BY THE GAIN MANIPULATION IN SYNCH WITH THE DECISION LAYER
 task.show()
+
+# This displays a diagram of the System
 task.show_graph()
