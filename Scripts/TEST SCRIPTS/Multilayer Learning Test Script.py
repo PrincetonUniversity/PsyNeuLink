@@ -166,7 +166,7 @@ elif COMPOSITION is SYSTEM:
     x.reportOutputPref = True
     composition = x
 
-    x.show_graph(show_learning=True)
+    x.show_graph(show_learning=ALL)
     # x.show_graph()
     results = x.run(
         num_trials=10,

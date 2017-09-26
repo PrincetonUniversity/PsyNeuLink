@@ -303,8 +303,9 @@ from PsyNeuLink.Components.Component import InitStatus
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param, LinearCombination
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-                                                           import ObjectiveMechanism, _parse_monitored_output_states
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import \
+           ObjectiveMechanism, ObjectiveMechanismError, _parse_monitored_output_states, \
+           WEIGHT_INDEX, EXPONENT_INDEX, MATRIX_INDEX, MONITORED_OUTPUT_STATES
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.ShellClasses import Mechanism, System
@@ -443,9 +444,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
     monitored_output_states : List[OutputState]
         each item is an `OutputState` monitored by the ObjectiveMechanism listed in the ControlMechanism's
         `objective_mechanism <ControlMechanism.objective_mechanism>` attribute;  it is the same as that
-        ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute. The
-        `value <OutputState.value>` of the OutputStates listed are used by the ObjectiveMechanism to generate the
-        ControlMechanism's `input <ControlMechanism_Input>`.
+        ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute
+        (see `ObjectiveMechanism_Monitored_Output_States` for specification).  The `value <OutputState.value>`
+        of the OutputStates listed are used by the ObjectiveMechanism to generate the ControlMechanism's `input
+        <ControlMechanism_Input>`.
 
     monitored_output_states_weights_and_exponents : List[Tuple(float, float)]
         each tuple in the list contains the weight and exponent associated with a corresponding item of
@@ -560,32 +562,51 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if OBJECTIVE_MECHANISM in target_set and target_set[OBJECTIVE_MECHANISM] is not None:
 
             if isinstance(target_set[OBJECTIVE_MECHANISM], list):
-                output_state_list = target_set[OBJECTIVE_MECHANISM]
-                for spec in output_state_list:
-                    # MODIFIED 9/16/17 OLD:
-                    if isinstance(spec, MonitoredOutputStatesOption):
-                        continue
-                    if isinstance(spec, tuple):
-                        spec = spec[0]
-                    if isinstance(spec, dict):
-                        spec = spec[MECHANISM]
-                    if isinstance(spec, (OutputState, Mechanism_Base)):
-                        spec = spec.name
-                    if not isinstance(spec, str):
-                        raise ControlMechanismError("Specification of {} arg for {} appears to be a list of "
-                                                    "Mechanisms and/or OutputStates to be monitored, but one"
-                                                    "of the items ({}) is invalid".
-                                                    format(OBJECTIVE_MECHANISM, self.name, spec))
-                    # # MODIFIED 9/16/17 NEW:
-                    # _parse_monitored_output_states(source=self, output_state_list=spec, context=context)
-                    # MODIFIED 9/16/17 END
 
-                    # If ControlMechanism has been assigned to a System,
-                    #    check that all the items in the list used to specify objective_mechanism are in the same System
-                    if self.system:
-                        self.system._validate_monitored_state_in_system([spec], context=context)
+                obj_mech_spec_list = target_set[OBJECTIVE_MECHANISM]
 
-            elif not isinstance(target_set[OBJECTIVE_MECHANISM], ObjectiveMechanism):
+                # Check if there is any ObjectiveMechanism in the list
+                #    (incorrect but possibly forgivable mis-specification
+                if any(isinstance(spec, ObjectiveMechanism) for spec in obj_mech_spec_list):
+                    # If an ObjectiveMechanism is the *only* item in the list, forgive the mis-spsecification and use it
+                    if len(obj_mech_spec_list)==1 and isinstance(obj_mech_spec_list[0], ObjectiveMechanism):
+                        if self.verbosePref:
+                            warnings.warn("Specification of {} arg for {} is an {} in a list; it will be used, "
+                                                        "but, for future reference, it should not be in a list".
+                                                        format(OBJECTIVE_MECHANISM,
+                                                               ObjectiveMechanism.__name__,
+                                                               self.name))
+                        target_set[OBJECTIVE_MECHANISM] = target_set[OBJECTIVE_MECHANISM][0]
+                    else:
+                        raise ControlMechanismError("Ambigusous specification of {} arg for {}; "
+                                                    " it is in a list with other items ({})".
+                                                    format(OBJECTIVE_MECHANISM, self.name, obj_mech_spec_list))
+                else:
+                    for spec in obj_mech_spec_list:
+                        # MODIFIED 9/16/17 OLD:
+                        if isinstance(spec, MonitoredOutputStatesOption):
+                            continue
+                        if isinstance(spec, tuple):
+                            spec = spec[0]
+                        if isinstance(spec, dict):
+                            spec = spec[MECHANISM]
+                        if isinstance(spec, (OutputState, Mechanism_Base)):
+                            spec = spec.name
+                        if not isinstance(spec, str):
+                            raise ControlMechanismError("Specification of {} arg for {} appears to be a list of "
+                                                        "Mechanisms and/or OutputStates to be monitored, but one"
+                                                        "of the items ({}) is invalid".
+                                                        format(OBJECTIVE_MECHANISM, self.name, spec))
+                        # # MODIFIED 9/16/17 NEW:
+                        # _parse_monitored_output_states(source=self, output_state_list=spec, context=context)
+                        # MODIFIED 9/16/17 END
+
+                        # If ControlMechanism has been assigned to a System, check that
+                        #    all the items in the list used to specify objective_mechanism are in the same System
+                        if self.system:
+                            self.system._validate_monitored_state_in_system([spec], context=context)
+
+            if not isinstance(target_set[OBJECTIVE_MECHANISM], (ObjectiveMechanism, list)):
                 raise ControlMechanismError("Specification of {} arg for {} ({}) must be an {}"
                                             "or a list of Mechanisms and/or OutputStates to be monitored for control".
                                             format(OBJECTIVE_MECHANISM,
@@ -614,7 +635,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
             uses _instantiate_monitoring_input_state and _instantiate_control_mechanism_input_state to do so.
             For each item in self.monitored_output_states:
             - if it is a OutputState, call _instantiate_monitoring_input_state()
-            - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.outputStates
+            - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.output_states
                 (determined by whether it is a `TERMINAL` Mechanism and/or MonitoredOutputStatesOption specification)
             - each InputState is assigned a name with the following format:
                 '<name of Mechanism that owns the monitoredOutputState>_<name of monitoredOutputState>_Monitor'
@@ -656,17 +677,25 @@ class ControlMechanism(AdaptiveMechanism_Base):
         else:
             # Create specification for ObjectiveMechanism InputStates corresponding to
             #    monitored_output_states and their exponents and weights
-            self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
-                                                           function=LinearCombination(operation=PRODUCT),
-                                                           name=self.name + '_ObjectiveMechanism')
+            try:
+                self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
+                                                               function=LinearCombination(operation=PRODUCT),
+                                                               name=self.name + '_ObjectiveMechanism')
+            except ObjectiveMechanismError as e:
+                if MONITORED_OUTPUT_STATES in e.args[0]:
+                    raise ControlMechanismError("\'{}\' argument for {} must be specified".
+                                                format(OBJECTIVE_MECHANISM, self.name))
+                else:
+                    raise ObjectiveMechanismError(e)
+
         # Print monitored_output_states
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
             for state in self.monitored_output_states:
                 weight = self.monitored_output_states_weights_and_exponents[
-                                                                self.monitored_output_states.index(state)][0]
+                                                         self.monitored_output_states.index(state)][WEIGHT_INDEX]
                 exponent = self.monitored_output_states_weights_and_exponents[
-                                                                self.monitored_output_states.index(state)][1]
+                                                         self.monitored_output_states.index(state)][EXPONENT_INDEX]
                 print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
 
         # Assign ObjetiveMechanism's role as CONTROL
@@ -678,6 +707,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Otherwise, name it based on the ObjectiveMechanism
         else:
             name = self.objective_mechanism.name + ' outcome signal'
+
         MappingProjection(sender=self.objective_mechanism,
                           receiver=self,
                           matrix=AUTO_ASSIGN_MATRIX,

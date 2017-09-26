@@ -296,6 +296,7 @@ ADAPTIVE_MECHANISM = "AdpativeMechanism"
 LEARNING_MECHANISM = "LearningMechanism"
 CONTROL_MECHANISM = "ControlMechanism"
 GATING_MECHANISM = 'GatingMechanism'
+AUTOASSOCIATIVE_LEARNING_MECHANISM = 'AutoAssociativeLearningMechanism'
 
 # States:
 INPUT_STATE = "InputState"
@@ -365,8 +366,9 @@ ADAPTIVE_INTEGRATOR_FUNCTION = "AdaptiveIntegrator Function"
 DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
 ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU Integrator Function"
 LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
-BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
+HEBBIAN_FUNCTION = 'Hebbian Learning Function'
 RL_FUNCTION = 'ReinforcementLearning Function'
+BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
 ERROR_DERIVATIVE_FUNCTION = 'Error Derivative Function'
 
 # Distribution functions

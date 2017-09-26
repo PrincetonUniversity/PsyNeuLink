@@ -227,7 +227,9 @@ class LCA(RecurrentTransferMechanism):
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
         `time_constant <TransferMechanism.time_constant>` is not 1.0).
-        :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        COMMENT:
+            Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
+        COMMENT
 
     noise : float or function : default 0.0
         a stochastically-sampled value added to the result of the `function <TransferMechanism.function>`:
@@ -296,7 +298,9 @@ class LCA(RecurrentTransferMechanism):
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
         determines the starting value for time-averaged input
         (only relevant if `time_constant <TransferMechanism.time_constant>` parameter is not 1.0).
-        :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        COMMENT:
+            Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
+        COMMENT
 
     noise : float or function : default 0.0
         a stochastically-sampled value added to the output of the `function <TransferMechahnism.function>`:
@@ -330,8 +334,8 @@ class LCA(RecurrentTransferMechanism):
             OutputState and the first item of :keyword:`output_values`.
     COMMENT
 
-    outputStates : Dict[str, OutputState]
-        an OrderedDict with the following `OutputStates <OutputState>`:
+    output_states : ContentAddressableList[OutputState]
+        contains the following `OutputStates <OutputState>`:
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;

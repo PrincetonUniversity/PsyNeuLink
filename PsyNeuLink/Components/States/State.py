@@ -328,7 +328,9 @@ from PsyNeuLink.Globals.Log import LogEntry, LogLevel
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import kpVerbosePref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.Utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, append_type_to_name, convert_to_np_array, get_class_attributes, is_value_spec, iscompatible, merge_param_dicts, type_match
+from PsyNeuLink.Globals.Utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, \
+    append_type_to_name, convert_to_np_array, get_class_attributes, is_value_spec, iscompatible, is_numeric, \
+    merge_param_dicts, type_match
 from PsyNeuLink.Scheduling.TimeScale import CurrentTime, TimeScale
 
 state_keywords = component_keywords.copy()
@@ -784,7 +786,7 @@ class State_Base(State):
             #     ParameterState, projection, 2-item tuple or value
         """
 
-        if PROJECTIONS in request_set and request_set[PROJECTIONS]:
+        if PROJECTIONS in request_set and request_set[PROJECTIONS] is not None:
             # if projection specification is an object or class reference, needs to be wrapped in a list
             # - to be consistent with paramClassDefaults
             # - for consistency of treatment below
@@ -1123,7 +1125,8 @@ class State_Base(State):
                 # If the projection was specified with a keyword or attribute value
                 #     then move it to the relevant entry of the params dict for the projection
                 # If projection_spec was in the form of a matrix keyword, move it to a matrix entry in the params dict
-                if issubclass(projection_type, PathwayProjection_Base) and projection_spec in MATRIX_KEYWORD_SET:
+                if (issubclass(projection_type, PathwayProjection_Base)
+                    and (is_numeric(projection_spec) or projection_spec in MATRIX_KEYWORD_SET)):
                     kwargs.update({MATRIX:projection_spec})
                 # If projection_spec was in the form of a ModulationParam value,
                 #    move it to a MODULATION entry in the params dict
