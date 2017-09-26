@@ -1,0 +1,479 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>AutoAssociativeMechanism &mdash; PsyNeuLink 0.3.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="LearningMechanisms" href="LearningMechanisms.html"/>
+        <link rel="next" title="ControlMechanisms" href="ControlMechanisms.html"/>
+        <link rel="prev" title="LearningMechanisms" href="LearningMechanisms.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Subsystems.html">Subsystems</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Mechanisms.html">Mechanisms</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanisms.html">Processing Mechanisms</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="AdaptiveMechanisms.html">AdaptiveMechanisms</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="LearningMechanisms.html">LearningMechanisms</a><ul class="current">
+<li class="toctree-l5 current"><a class="current reference internal" href="#">AutoAssociativeMechanism</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="ControlMechanisms.html">ControlMechanisms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="GatingMechanisms.html">GatingMechanisms</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Projections.html">Projections</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Library.html">Library</a> &raquo;</li>
+        
+          <li><a href="Mechanisms.html">Mechanisms</a> &raquo;</li>
+        
+          <li><a href="AdaptiveMechanisms.html">AdaptiveMechanisms</a> &raquo;</li>
+        
+          <li><a href="LearningMechanisms.html">LearningMechanisms</a> &raquo;</li>
+        
+      <li>AutoAssociativeMechanism</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/AutoAssociativeLearningMechanism.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism">
+<span id="autoassociativemechanism"></span><h1>AutoAssociativeMechanism<a class="headerlink" href="#module-Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<span id="autoassociativelearningmechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>An AutoAssociativeLearningMechanism is a subclass <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>, streamlined for use with a
+<a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> to train its <a class="reference internal" href="RecurrentTransferMechanism.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>.</p>
+</div>
+<div class="section" id="creating-an-autoassociativelearningmechanism">
+<span id="autoassociativelearningmechanism-creation"></span><h2>Creating an AutoAssociativeLearningMechanism<a class="headerlink" href="#creating-an-autoassociativelearningmechanism" title="Permalink to this headline">¶</a></h2>
+<p>An AutoAssociativeLearningMechanism can be created directly by calling its constructor, but most commonly it is
+created automatically when a RecurrentTransferMechanism is <a class="reference internal" href="RecurrentTransferMechanism.html#recurrent-transfer-learning"><span class="std std-ref">configure for learning</span></a>,
+(identified in its activity_source &lt;AutoAssociativeLearningMechanism.activity_source&gt;` attribute).</p>
+</div>
+<div class="section" id="structure">
+<span id="autoassociativelearningmechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>An AutoAssociativeLearningMechanism is identical to a LearningMechanism in all respectes except the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li>it has only a single <em>ACTIVATION_INPUT</em> <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>, that receives a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of
+another <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> (identified by the <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.activity_source" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.activity_source"><code class="xref any py py-attr docutils literal"><span class="pre">activity_source</span></code></a>,
+typically, the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> of a RecurrentTransferMechanism);</li>
+<li>it has a single <em>LEARNING_SIGNAL</em> <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> that sends a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> to the <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">matrix</span></a> parameter of an ‘AutoAssociativeProjection` (typically, the <a class="reference internal" href="RecurrentTransferMechanism.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a> of a RecurrentTransferMechanism), but not an
+<em>ERROR_SIGNAL</em> OutputState.</li>
+<li>it has no <a class="reference internal" href="LearningMechanism.html#LearningMechanism.LearningMechanism.input_source" title="LearningMechanism.LearningMechanism.input_source"><code class="xref any py py-attr docutils literal"><span class="pre">input_source</span></code></a>, <a class="reference internal" href="LearningMechanism.html#LearningMechanism.LearningMechanism.output_source" title="LearningMechanism.LearningMechanism.output_source"><code class="xref any py py-attr docutils literal"><span class="pre">output_source</span></code></a>,
+or <a class="reference internal" href="LearningMechanism.html#LearningMechanism.LearningMechanism.error_source" title="LearningMechanism.LearningMechanism.error_source"><code class="xref any py py-attr docutils literal"><span class="pre">error_source</span></code></a> attributes;  instead, it has a single <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.activity_source" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.activity_source"><code class="xref any py py-attr docutils literal"><span class="pre">activity_source</span></code></a> attribute
+that identifies the source of the activity vector used by the Mechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code>.</li>
+<li>it’s <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.function" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> takes as its <a class="reference internal" href="Function.html#Function.Function_Base.variable" title="Function.Function_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+a list or 1d np.array of numeric entries, corresponding in length to the AutoAssociativeLearningMechanism’s
+<em>ACTIVATION_INPUT</em> InputState; and it returns a <a class="reference internal" href="LearningMechanism.html#LearningMechanism.LearningMechanism.learning_signal" title="LearningMechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a>
+(a weight change matrix assigned to the Mechanism’s <em>LEARNING_SIGNAL</em> OutputState), but not necessarily an
+<a class="reference internal" href="LearningMechanism.html#LearningMechanism.LearningMechanism.error_signal" title="LearningMechanism.LearningMechanism.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a>.</li>
+<li>its <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_rate" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> can be specified as a 1d or 2d array (or
+matrix) to scale the contribution made, respectively, by individual elements or connections among them,
+to the weight change matrix;  as with a standard <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, a scalar can also be specified to scale
+the entire weight change matrix (see <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_rate" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for
+additional details).</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="execution">
+<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>An AutoAssociativeLearningMechanism executes in the same manner as standard <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, however its
+exeuction can be enabled or disabled by setting the the <a class="reference internal" href="RecurrentTransferMechanism.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.learning_enabled" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.learning_enabled"><code class="xref any py py-attr docutils literal"><span class="pre">learning_enabled</span></code></a> attribute of the <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with which it is
+associated (identified in its <code class="xref any docutils literal"><span class="pre">activity_source</span></code>).</p>
+</div>
+<div class="section" id="class-reference">
+<span id="autoassociativelearningmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism">
+<em class="property">class </em><code class="descclassname">Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.</code><code class="descname">AutoAssociativeLearningMechanism</code><span class="sig-paren">(</span><em>variable</em>, <em>function=Hebbian</em>, <em>learning_rate=None</em>, <em>learning_signals=LEARNING_SIGNAL</em>, <em>modulation=ModulationParam.ADDITIVE</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> that modifies the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of an
+<a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a> (typically the <a class="reference internal" href="RecurrentTransferMechanism.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>
+of a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>List</em><em> or </em><em>2d np.array</em>) – it must have a single item that corresponds to the value required by the AutoAssociativeLearningMechanism’s
+<code class="xref any docutils literal"><span class="pre">function</span></code>;  it must each be compatible (in number and type)
+with the <a class="reference internal" href="InputState.html#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism’s <a class="reference internal" href="LearningMechanism.html#learningmechanism-inputstates"><span class="std std-ref">InputState</span></a> (see
+<code class="xref any docutils literal"><span class="pre">variable</span></code> for additional details).</li>
+<li><strong>learning_signals</strong> (<em>List</em><em>[</em><em>parameter of Projection</em><em>, </em><a class="reference internal" href="ParameterState.html#module-ParameterState" title="ParameterState"><em>ParameterState</em></a><em>, </em><a class="reference internal" href="Projection.html#module-Projection" title="Projection"><em>Projection</em></a><em>, </em><em>tuple</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="Projection.html#module-Projection" title="Projection"><em>Projection</em></a><em>] or </em><em>dict</em><em>]</em>) – specifies the <a class="reference internal" href="AutoAssociativeProjection.html#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> to be learned (see <a class="reference internal" href="LearningMechanism.html#LearningMechanism.LearningMechanism.learning_signals" title="LearningMechanism.LearningMechanism.learning_signals"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signals</span></code></a> for details of specification).</li>
+<li><strong>modulation</strong> (<em>ModulationParam : ModulationParam.ADDITIVE</em>) – specifies the default form of modulation used by the AutoAssociativeLearningMechanism’s LearningSignals,
+unless they are <a class="reference internal" href="LearningSignal.html#learningsignal-specification"><span class="std std-ref">individually specified</span></a>.</li>
+<li><strong>function</strong> (<a class="reference internal" href="Function.html#Function.LearningFunction" title="Function.LearningFunction"><em>LearningFunction</em></a><em> or </em><a class="reference internal" href="Function.html#Function.Exponential.function" title="Function.Exponential.function"><em>function</em></a>) – specifies the function used to calculate the AutoAssociativeLearningMechanism’s <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_signal" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> attribute.  It must take as its <strong>variable</strong> argument a
+list or 1d array of numeric values (the “activity vector”) and return a list, 2d np.array or np.matrix
+representing a square matrix with dimensions that equal the length of its variable (the “weight change
+matrix”).</li>
+<li><strong>learning_rate</strong> (<em>float</em>) – specifies the learning rate for the AutoAssociativeLearningMechanism. (see <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_rate" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for details).</li>
+<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
+the Projection’s default <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.function" title="ModulatoryProjections.LearningProjection.LearningProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and parameter assignments.  Values specified
+for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.</li>
+<li><strong>name</strong> (<em>str : default LearningProjection-&lt;index&gt;</em>) – a string used for the name of the LearningProjection.
+If not is specified, a default is assigned by ProjectionRegistry
+(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
+<li><strong>prefs</strong> (<em>Optional</em><em>[</em><em>PreferenceSet</em><em> or </em><em>specification dict : Projection.classPreferences</em><em>]</em>) – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the LearningProjection.
+If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> – has a single item, that serves as the template for the input required by the AutoAssociativeLearningMechanism’s
+<a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.function" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, corresponding to the <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.activity_source" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.activity_source"><code class="xref any py py-attr docutils literal"><span class="pre">activity_source</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.activity_source">
+<code class="descname">activity_source</code><a class="headerlink" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.activity_source" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>OutputState</em> – the <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> that is the <a class="reference internal" href="AutoAssociativeProjection.html#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.sender" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> of the <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a>
+that the Mechanism trains.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.input_states">
+<code class="descname">input_states</code><a class="headerlink" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.input_states" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ContentAddressableList[OutputState]</em> – has a single item, that contains the AutoAssociativeLearningMechanism’s single <em>ACTIVATION_INPUT</em> <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.primary_learned_projection">
+<code class="descname">primary_learned_projection</code><a class="headerlink" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.primary_learned_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>AutoAssociativeProjection</em> – the <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> with the <a class="reference internal" href="AutoAssociativeProjection.html#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter being trained by the
+AutoAssociativeLearningMechanism.  It is always the first Projection listed in the
+AutoAssociativeLearningMechanism’s <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learned_projections" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learned_projections"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projections</span></code></a>
+attribute.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learned_projections">
+<code class="descname">learned_projections</code><a class="headerlink" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learned_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[MappingProjection]</em> – all of the <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjections</span></a> modified by the
+AutoAssociativeLearningMechanism;  the first item in the list is always the <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.primary_learned_projection" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.primary_learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">primary_learned_projection</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.function">
+<code class="descname">function</code><a class="headerlink" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>LearningFunction or function : default Hebbian</em> – the function used to calculate the <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_signal" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a>
+(assigned to the AutoAssociativeLearningMechanism’s <a class="reference internal" href="LearningMechanism.html#learningmechanism-learningsignal"><span class="std std-ref">LearningSignal(s)</span></a>).
+It’s <a class="reference internal" href="Function.html#Function.Function_Base.variable" title="Function.Function_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> must be a list or 1d np.array of numeric entries, corresponding in
+length to the AutoAssociativeLearningMechanism’s <em>ACTIVATION_INPUT</em> (<a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary</span></a>) InputState.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_rate">
+<code class="descname">learning_rate</code><a class="headerlink" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float, 1d or 2d np.array, or np.matrix of numeric values : default None</em> – determines the learning rate used by the AutoAssociativeLearningMechanism’s <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.function" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to scale the weight change matrix it returns. If it is a scalar, it is used to multiply the weight change matrix;  if it is a 2d array or matrix,
+it is used to Hadamard (elementwise) multiply the weight matrix (allowing the contribution of individual
+<em>connections</em> to be scaled);  if it is a 1d np.array, it is used to Hadamard (elementwise) multiply the input
+to the <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.function" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (i.e., the <a class="reference internal" href="InputState.html#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the
+AutoAssociativeLearningMechanism’s <em>ACTIVATION_INPUT</em> <a class="reference internal" href="#autoassociativelearningmechanism-structure"><span class="std std-ref">InputState</span></a>,
+allowing the contribution of individual <em>units</em> to be scaled). If specified, the value supersedes the
+learning_rate assigned to any <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which the AutoAssociativeLearningMechanism belongs.
+If it is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the <a class="reference internal" href="Process.html#Process.Process_Base.learning_rate" title="Process.Process_Base.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> specified for the Process to which the
+AutoAssociativeLearningMechanism belongs belongs is used;  and, if that is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the <a class="reference internal" href="System.html#System.System_Base.learning_rate" title="System.System_Base.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for the System to which it belongs is used. If all are <code class="xref any docutils literal"><span class="pre">None</span></code>, then the
+<a class="reference internal" href="Function.html#Function.LearningFunction.default_learning_rate" title="Function.LearningFunction.default_learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">default_learning_rate</span></code></a> for the <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.function" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is used (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-rate"><span class="std std-ref">learning_rate</span></a>
+for additional details).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_signal">
+<code class="descname">learning_signal</code><a class="headerlink" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d ndarray or matrix of numeric values</em> – the value returned by <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.function" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, that specifies
+the changes to the weights of the <a class="reference internal" href="AutoAssociativeProjection.html#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter for the
+AutoAssociativeLearningMechanism’s`learned_projections &lt;AutoAssociativeLearningMechanism.learned_projections&gt;`;
+It is assigned as the value of the AutoAssociativeLearningMechanism’s <a class="reference internal" href="LearningMechanism.html#learningmechanism-learningsignal"><span class="std std-ref">LearningSignal(s)</span></a> and, in turn, its <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_signals">
+<code class="descname">learning_signals</code><a class="headerlink" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_signals" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[LearningSignal]</em> – list of all of the <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignals</span></a> for the AutoAssociativeLearningMechanism, each of which
+sends one or more <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState(s)</span></a> for
+the <a class="reference internal" href="AutoAssociativeProjection.html#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection(s)</span></a> trained by the AutoAssociativeLearningMechanism.  Although in most instances an
+AutoAssociativeLearningMechanism is used to train a single AutoAssociativeProjection, like a standard
+<a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, it can be assigned additional LearningSignals and/or LearningProjections to train
+additional ones;  in such cases, the <a class="reference internal" href="LearningSignal.html"><span class="doc">value</span></a> for all of the LearningSignals is the
+the same:  the AutoAssociativeLearningMechanism’s <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_signal" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> attribute, based on its <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.activity_source" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.activity_source"><code class="xref any py py-attr docutils literal"><span class="pre">activity_source</span></code></a>.  Since LearningSignals are <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>, they are also listed in the AutoAssociativeLearningMechanism’s <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.output_states" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_projections">
+<code class="descname">learning_projections</code><a class="headerlink" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[LearningProjection]</em> – list of all of the LearningProjections &lt;LearningProjection&gt;` from the AutoAssociativeLearningMechanism, listed
+in the order of the <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignals</span></a> to which they belong (that is, in the order they are
+listed in the <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_signals" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_signals"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signals</span></code></a> attribute).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.output_states">
+<code class="descname">output_states</code><a class="headerlink" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.output_states" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ContentAddressableList[OutputState]</em> – list of the AutoAssociativeLearningMechanism’s <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>, beginning with its
+<a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_signals" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_signals"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signals</span></code></a>, and followed by any additional
+(user-specified) <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.output_values">
+<code class="descname">output_values</code><a class="headerlink" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.output_values" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> – the first item is the <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the LearningMechanism’s <a class="reference internal" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_signal" title="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a>, followed by the <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s
+of any additional (user-specified) OutputStates.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.modulation">
+<code class="descname">modulation</code><a class="headerlink" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.modulation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ModulationParam</em> – the default form of modulation used by the AutoAssociativeLearningMechanism’s <a class="reference internal" href="LearningMechanism.html#learningmechanism-learningsignal"><span class="std std-ref">LearningSignal(s)</span></a>, unless they are <a class="reference internal" href="LearningSignal.html#learningsignal-specification"><span class="std std-ref">individually specified</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.name">
+<code class="descname">name</code><a class="headerlink" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str : default LearningProjection-&lt;index&gt;</em> – the name of the AutoAssociativeLearningMechanism.
+Specified in the <strong>name</strong> argument of the constructor for the Projection;
+if not is specified, a default is assigned by ProjectionRegistry
+(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism.AutoAssociativeLearningMechanism.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for Projection.
+Specified in the <strong>prefs</strong> argument of the constructor for the Projection;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ControlMechanisms.html" class="btn btn-neutral float-right" title="ControlMechanisms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="LearningMechanisms.html" class="btn btn-neutral" title="LearningMechanisms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.3.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

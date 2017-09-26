@@ -12,4 +12,4 @@ LearningMechanisms
 .. toctree::
    :maxdepth: 1
 
-[None]
+   AutoAssociativeLearningMechanism
