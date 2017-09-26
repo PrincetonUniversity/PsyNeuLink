@@ -688,7 +688,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 else:
                     raise ObjectiveMechanismError(e)
 
-# Print monitored_output_states
+        # Print monitored_output_states
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
             for state in self.monitored_output_states:
@@ -707,13 +707,19 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Otherwise, name it based on the ObjectiveMechanism
         else:
             name = self.objective_mechanism.name + ' outcome signal'
-        if monitored_output_states is None:
-            matrix = AUTO_ASSIGN_MATRIX
-        else:
-            matrix = monitored_output_states[MATRIX_INDEX] or AUTO_ASSIGN_MATRIX
+
+        # FIX: MOVE THIS TO WHERE MAPPINGPROJECTION IS CREATED TO INPUTSTATS
+        # if monitored_output_states is None:
+        #     matrix = AUTO_ASSIGN_MATRIX
+        # else:
+        #     matrix = monitored_output_states[MATRIX_INDEX] or AUTO_ASSIGN_MATRIX
+        # MappingProjection(sender=self.objective_mechanism,
+        #                   receiver=self,
+        #                   matrix=matrix,
+        #                   name=name)
         MappingProjection(sender=self.objective_mechanism,
                           receiver=self,
-                          matrix=matrix,
+                          matrix=AUTO_ASSIGN_MATRIX,
                           name=name)
 
     def _instantiate_input_states(self, context=None):

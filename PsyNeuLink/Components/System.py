@@ -507,7 +507,7 @@ class SystemError(Exception):
 
 from PsyNeuLink.Components import SystemDefaultControlMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-                  import ObjectiveMechanism, OUTCOME, OUTPUT_STATE_INDEX, WEIGHT_INDEX, EXPONENT_INDEX
+                  import ObjectiveMechanism, OUTCOME, OUTPUT_STATE_INDEX, WEIGHT_INDEX, EXPONENT_INDEX, MATRIX_INDEX
 from PsyNeuLink.Components.Process import process
 
 # System factory method:
@@ -2355,15 +2355,15 @@ class System_Base(System):
                                        format(output_state.name, mech.name))
 
 
-        # ASSIGN EXPONENTS AND WEIGHTS TO OUTCOME_FUNCTION
+        # ASSIGN EXPONENTS, WEIGHTS and MATRICES
 
         num_monitored_output_states = len(monitored_output_states)
-        # weights = np.ones(num_monitored_output_states)
-        # exponents = np.ones_like(weights)
         weights = [None] * num_monitored_output_states
         exponents = [None] * num_monitored_output_states
+        matrices = [None] * num_monitored_output_states
 
-        # Get and assign specification of weights and exponents for mechanisms or outputStates specified in tuples
+        # Get and assign specification of weights, exponents and matrices
+        #    for Mechanisms or OutputStates specified in tuples
         for spec in all_specs:
             if isinstance(spec, tuple):
                 object_spec = spec[OUTPUT_STATE_INDEX]
@@ -2375,8 +2375,9 @@ class System_Base(System):
                         i = monitored_output_states.index(item)
                         weights[i] = spec[WEIGHT_INDEX]
                         exponents[i] = spec[EXPONENT_INDEX]
+                        matrices[i] = spec[MATRIX_INDEX]
 
-        return list(zip(monitored_output_states, weights, exponents))
+        return list(zip(monitored_output_states, weights, exponents, matrices))
 
     def _validate_monitored_state_in_system(self, monitored_states, context=None):
         for spec in monitored_states:
