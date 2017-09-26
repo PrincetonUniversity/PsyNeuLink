@@ -439,6 +439,7 @@ from PsyNeuLink.Components.Component import Component, ExecutionStatus, function
 from PsyNeuLink.Components.Process import Process_Base, ProcessList, ProcessTuple
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
     import ControlMechanism, OBJECTIVE_MECHANISM
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import MonitoredOutputStateTuple
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
     import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MonitoredOutputStatesOption
@@ -2364,20 +2365,28 @@ class System_Base(System):
 
         # Get and assign specification of weights, exponents and matrices
         #    for Mechanisms or OutputStates specified in tuples
+        output_state_tuples = []
         for spec in all_specs:
-            if isinstance(spec, tuple):
-                object_spec = spec[OUTPUT_STATE_INDEX]
+            if isinstance(spec, MonitoredOutputStateTuple):
+                object_spec = spec.output_state
                 # For each OutputState in monitored_output_states
                 for item in monitored_output_states:
                     # If either that OutputState or its owner is the object specified in the tuple
                     if item is object_spec or item.name is object_spec or item.owner is object_spec:
+                        output_state_tuples.append(spec)
                         # Assign the weight and exponent specified in the tuple to that OutputState
-                        i = monitored_output_states.index(item)
-                        weights[i] = spec[WEIGHT_INDEX]
-                        exponents[i] = spec[EXPONENT_INDEX]
-                        matrices[i] = spec[MATRIX_INDEX]
+                        # output_state_tuple = MonitoredOutputStateTuple
+                        # output_state_tuple.output_state = object_spec
+                        # output_state_tuple.weight = spec.weight
+                        # output_state_tuple.exponent = spec.exponent
+                        # output_state_tuple.matrix = spec.matrix
+                        # i = monitored_output_states.index(item)
+                        # weights[i] = spec.weight
+                        # exponents[i] = spec.exponent
+                        # matrices[i] = spec.matrix
 
-        return list(zip(monitored_output_states, weights, exponents, matrices))
+        # return list(zip(monitored_output_states, weights, exponents, matrices))
+        return output_state_tuples
 
     def _validate_monitored_state_in_system(self, monitored_states, context=None):
         for spec in monitored_states:

@@ -10,7 +10,7 @@
     <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <module name="PsyNeuLink" />
+    <module name="PsyNeuLink (Dropbox)" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" runner="coverage.py" sample_coverage="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/PsyNeuLink/Globals/NetworkX tesst.py" />
     <option name="PARAMETERS" value="" />

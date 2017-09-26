@@ -708,15 +708,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         else:
             name = self.objective_mechanism.name + ' outcome signal'
 
-        # FIX: MOVE THIS TO WHERE MAPPINGPROJECTION IS CREATED TO INPUTSTATS
-        # if monitored_output_states is None:
-        #     matrix = AUTO_ASSIGN_MATRIX
-        # else:
-        #     matrix = monitored_output_states[MATRIX_INDEX] or AUTO_ASSIGN_MATRIX
-        # MappingProjection(sender=self.objective_mechanism,
-        #                   receiver=self,
-        #                   matrix=matrix,
-        #                   name=name)
         MappingProjection(sender=self.objective_mechanism,
                           receiver=self,
                           matrix=AUTO_ASSIGN_MATRIX,
