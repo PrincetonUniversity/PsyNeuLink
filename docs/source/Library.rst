@@ -2,9 +2,9 @@ Library
 =======
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 5
    :titlesonly:
 
-   Subsystems
-   Mechanisms
-   Projections
+   Components
+   Compositions
+   Models
