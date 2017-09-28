@@ -27,8 +27,9 @@ Creating a Component
 A Component is never created by calling the constructor for the Component base class.  However, its ``__init__()``
 method is always called when a Component subclass is instantiated; that, in turn, calls a standard set of methods
 (listed `below <Component_Methods>`) as part of the initialization procedure.  Every Component has a core set of
-configurable parameters that can be specified in the arguments of the constructor, as well as additional attributes
-that provide information about its contents and/or state (see `Component_Attributes` below).
+`configurable parameters <Component_User_Params>` that can be specified in the arguments of the constructor, as well
+as additional attributes that provide information about its contents and/or state (see
+`Component_Informational_Attributes` below).
 
 .. _Component_Deferred_Init:
 
