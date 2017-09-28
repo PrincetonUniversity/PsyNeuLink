@@ -6,7 +6,7 @@ the neural mechanisms that contribute to cognitive control, including `dorsal an
 <https://en.wikipedia.org/wiki/Anterior_cingulate_cortex>`_.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    EVCControlMechanism
    EVCAuxiliary

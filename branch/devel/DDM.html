@@ -97,21 +97,22 @@
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Subsystems.html">Subsystems</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="Mechanisms.html">Mechanisms</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="ProcessingMechanisms.html">Processing Mechanisms</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="TransferMechanisms.html">TransferMechanisms</a></li>
-<li class="toctree-l4 current"><a class="reference internal" href="IntegratorMechanisms.html">IntegratorMechanisms</a><ul class="current">
-<li class="toctree-l5 current"><a class="current reference internal" href="#">DDM</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Components.html">Components</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="Mechanisms.html">Mechanisms</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="ProcessingMechanisms.html">Processing Mechanisms</a><ul class="current">
+<li class="toctree-l5"><a class="reference internal" href="TransferMechanisms.html">TransferMechanisms</a></li>
+<li class="toctree-l5 current"><a class="reference internal" href="IntegratorMechanisms.html">IntegratorMechanisms</a></li>
+<li class="toctree-l5"><a class="reference internal" href="ObjectiveMechanisms.html">ObjectiveMechanisms</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="ObjectiveMechanisms.html">ObjectiveMechanisms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="AdaptiveMechanisms.html">AdaptiveMechanisms</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanisms.html">AdaptiveMechanisms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Projections.html">Projections</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="Projections.html">Projections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Compositions.html">Compositions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Models.html">Models</a></li>
 </ul>
 </li>
 </ul>
@@ -159,6 +160,8 @@
       <li><a href="index.html">Docs</a> &raquo;</li>
         
           <li><a href="Library.html">Library</a> &raquo;</li>
+        
+          <li><a href="Components.html">Components</a> &raquo;</li>
         
           <li><a href="Mechanisms.html">Mechanisms</a> &raquo;</li>
         
@@ -432,7 +435,7 @@ out <a class="reference internal" href="#ddm-integration-mode"><span class="std 
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<a class="reference internal" href="ComparatorMechanism.html#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.value" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default FUNCTION_PARAMS</em><em>[</em><em>STARTING_POINT</em><em>]</em>) – the input to the Mechanism used if none is provided in a call to its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or
+<li><strong>default_variable</strong> (<a class="reference internal" href="ModulatorySignal.html#ModulatorySignals.ModulatorySignal.ModulatorySignal.value" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default FUNCTION_PARAMS</em><em>[</em><em>STARTING_POINT</em><em>]</em>) – the input to the Mechanism used if none is provided in a call to its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or
 <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.run" title="Mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods; also serves as a template to specify the length of the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.variable" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputState</span></code> of the
 DDM (see <code class="xref any docutils literal"><span class="pre">Input</span></code> &lt;DDM_Creation&gt;` for how an input with a length of greater than 1 is handled).</li>
 <li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints</em>) – specifies the <code class="xref any docutils literal"><span class="pre">default_variable</span></code> as array(s) of zeros if <strong>default_variable</strong> is not

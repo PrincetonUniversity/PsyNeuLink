@@ -193,8 +193,9 @@ It defines a common set of attributes possessed, and methods used by all Compone
 <p>A Component is never created by calling the constructor for the Component base class.  However, its <code class="docutils literal"><span class="pre">__init__()</span></code>
 method is always called when a Component subclass is instantiated; that, in turn, calls a standard set of methods
 (listed <a class="reference internal" href="#component-methods"><span class="std std-ref">below</span></a>) as part of the initialization procedure.  Every Component has a core set of
-configurable parameters that can be specified in the arguments of the constructor, as well as additional attributes
-that provide information about its contents and/or state (see <code class="xref any docutils literal"><span class="pre">Component_Attributes</span></code> below).</p>
+<a class="reference internal" href="#component-user-params"><span class="std std-ref">configurable parameters</span></a> that can be specified in the arguments of the constructor, as well
+as additional attributes that provide information about its contents and/or state (see
+<a class="reference internal" href="#component-informational-attributes"><span class="std std-ref">Core Informational Attributes</span></a> below).</p>
 <div class="section" id="deferred-initialization">
 <span id="component-deferred-init"></span><h3>Deferred Initialization<a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
 <p>If information necessary to complete initialization is not specified in the constructor (e.g, the <strong>owner</strong> for a

@@ -37,7 +37,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
         <link rel="up" title="EVC" href="EVC.html"/>
-        <link rel="next" title="Mechanisms" href="Mechanisms.html"/>
+        <link rel="next" title="Models" href="Models.html"/>
         <link rel="prev" title="EVCControlMechanism" href="EVCControlMechanism.html"/> 
 
   
@@ -97,7 +97,8 @@
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="Subsystems.html">Subsystems</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Components.html">Components</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Compositions.html">Compositions</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="AGT.html">AGT</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="EVC.html">EVC</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="EVCControlMechanism.html">EVCControlMechanism</a></li>
@@ -108,8 +109,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanisms.html">Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projections.html">Projections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Models.html">Models</a></li>
 </ul>
 </li>
 </ul>
@@ -158,7 +158,7 @@
         
           <li><a href="Library.html">Library</a> &raquo;</li>
         
-          <li><a href="Subsystems.html">Subsystems</a> &raquo;</li>
+          <li><a href="Compositions.html">Compositions</a> &raquo;</li>
         
           <li><a href="EVC.html">EVC</a> &raquo;</li>
         
@@ -218,7 +218,7 @@ to combine the value specified in the <strong>outcome</strong> argument with the
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>controller</strong> (<a class="reference internal" href="EVCControlMechanism.html#module-Library.Subsystems.EVC.EVCControlMechanism" title="Library.Subsystems.EVC.EVCControlMechanism"><em>EVCControlMechanism</em></a>) – the EVCControlMechanism for which the EVC is to be calculated;  this is required so that the controller’s
+<li><strong>controller</strong> (<a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism"><em>EVCControlMechanism</em></a>) – the EVCControlMechanism for which the EVC is to be calculated;  this is required so that the controller’s
 <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.cost_function" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_function</span></code></a> and <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.combine_outcome_and_cost_function" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.combine_outcome_and_cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">combine_outcome_and_cost_function</span></code></a> functions can be called.</li>
 <li><strong>outcome</strong> (<em>value : default float</em>) – should represent the outcome of performance of the <a class="reference internal" href="System.html"><span class="doc">System</span></a> for which an <a class="reference internal" href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.allocation_policy" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> is being
 evaluated.</li>
@@ -315,7 +315,7 @@ Its operation can be modified by customizing or replacing any or all of the func
 <li>Call System_Base.execute for each <a class="reference internal" href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.allocation_policy" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> in <a class="reference internal" href="EVCControlMechanism.html#Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.control_signal_search_space" title="Library.Subsystems.EVC.EVCControlMechanism.EVCControlMechanism.control_signal_search_space"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal_search_space</span></code></a>.</li>
 <li><dl class="first docutils">
 <dt>Store an array of values for output_states in <a class="reference internal" href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.monitored_output_states" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a></dt>
-<dd>(i.e., the input_states in <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.input_states" title="Mechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a>) for each <a class="reference internal" href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.allocation_policy" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>.</dd>
+<dd>(i.e., the input_states in <a class="reference internal" href="ComparatorMechanism.html#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.input_states" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a>) for each <a class="reference internal" href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.allocation_policy" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
@@ -353,7 +353,7 @@ Its operation can be modified by customizing or replacing any or all of the func
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Mechanisms.html" class="btn btn-neutral float-right" title="Mechanisms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Models.html" class="btn btn-neutral float-right" title="Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="EVCControlMechanism.html" class="btn btn-neutral" title="EVCControlMechanism" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
