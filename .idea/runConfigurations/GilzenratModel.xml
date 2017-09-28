@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" factoryName="Python" name="GilzenratModel" singleton="true" type="PythonConfigurationType">
+  <configuration default="false" name="GilzenratModel" type="PythonConfigurationType" factoryName="Python" singleton="true">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
@@ -10,7 +10,7 @@
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <module name="" />
+    <module name="PsyNeuLink (Dropbox)" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Scripts/Models/GilzenratModel.py" />
     <option name="PARAMETERS" value="" />
     <option name="SHOW_COMMAND_LINE" value="false" />

@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" factoryName="Sphinx task" name="Make HTML" singleton="true" type="docs">
+  <configuration default="false" name="Make HTML" type="docs" factoryName="Sphinx task" singleton="true">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs />
@@ -8,7 +8,7 @@
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <module name="" />
+    <module name="PsyNeuLink (Dropbox)" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" runner="coverage.py" sample_coverage="true" />
     <option name="docutils_input_file" value="$PROJECT_DIR$/docs/source" />
     <option name="docutils_output_file" value="$PROJECT_DIR$/docs/build/html" />

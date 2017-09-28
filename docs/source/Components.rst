@@ -5,7 +5,7 @@ Subclasses of `Core` `Mechanisms <Mechanism>` or `Projections <Projection>` that
 used by `Compositions` in the `Library`.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    Mechanisms
    Projections
