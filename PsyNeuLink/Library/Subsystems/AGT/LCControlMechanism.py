@@ -182,9 +182,9 @@ XXX ADD MENTION OF allocation_policy HERE
 
 An LCControlMechanism uses the `FHNIntegrator` as its `function <LCControlMechanism.function`; this implements a `FitzHugh-Nagumo
 model <https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ often used to describe the spiking of a neuron,
-but in this case the population activity of the LC (see `Gilzenrat et al.,
-<2002https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_). The `FHNIntegrator` Function takes the `input
-<LCControlMechanism_Input>` to the LCControlMechanism as its `variable <FHNIntegrator.variable>`.
+but in this case the population activity of the LC (see `Gilzenrat et al., 2002
+<http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_). The `FHNIntegrator` Function
+takes the `input <LCControlMechanism_Input>` to the LCControlMechanism as its `variable <FHNIntegrator.variable>`.
 
 .. _LCControlMechanism_Modes_Of_Operation:
 

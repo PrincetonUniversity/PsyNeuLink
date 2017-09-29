@@ -91,7 +91,7 @@ COMMENT
           with others by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.
         |
         * a `matrix specification <Mapping_Matrix_Specification>` (optional) -- this can be any legal specification for
-          `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
+          the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
 
     .. _ObjectiveMechanism_Weights_And_Exponents:
 
@@ -727,6 +727,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
 
         # PARSE monitored_output_states SPECIFICATION(S)
+
         # First parse for tuples to extract OutputStates, weights, exponents and matrices
         monitored_output_states_parsed = _parse_monitored_output_states(source=self,
                                                           output_state_list=monitored_output_states,
@@ -775,7 +776,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             output_state_dicts.append(output_state_dict)
 
         # INSTANTIATE InputStates:
-        #    one for ObjectiveMechanism CORRESPONDING TO EACH OutputState specified in monitored_output_states
+        #    one for each OutputState specified in monitored_output_states
 
         # If input_states were provided use those for specifications;
         #    otherwise use value of monitored_output_stated for each (to invoke a default assignment for each input_state)

@@ -177,4 +177,10 @@ Terminology used here:
         use the following construction: `section <LINK>` (so that <LINK> can be searched for replace these later).
  
         
-           
+## Figures
+
+***Class*** (capitalized, bold, italic)
+
+**attribute** (lowercase, bold)
+
+*value* (lowercase, italics)
