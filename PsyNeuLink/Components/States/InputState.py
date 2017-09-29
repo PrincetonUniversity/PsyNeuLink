@@ -725,13 +725,7 @@ class InputState(State_Base):
                                                  Projection.__name))
 
             # Tuple s (spec, weights, exponents<, projection>)
-            elif len (params) == 3:
-
-# FROM OBJECTIVE MECHANISM:
-
-        elif isinstance(item, tuple):
-            #  Check that it has three items:  (monitored_output_state specification, weight, exponent)
-            if len(item)<3 or len(item)>4:
+            elif len(params) in {3, 4}:
                 raise ObjectiveMechanismError("Tuple {} used for monitored_output_state specification in {} "
                                      "has {} items;  it should be 3 (or 4 if a matrix spec is included".
                                      format(item, source.name, len(item)))
