@@ -728,6 +728,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         # PARSE monitored_output_states SPECIFICATION(S)
 
+        # FIX: 9/29/17 - CONSOLIDATE AROUND CALL TO _parse_state_spec, BUT DEAL WITH MonitoredOutputStatesOptions
+        #                ALSO, REDIRECT CALL IN System TO _parse_moniotored_output_states
+        # FIX: 9/29/17 - MAKE SURE THE OUTPUTSTATES RETURNED ARE IN SYSTEM
+        #                AS THIS WAS PREVIOUSLY DONE IN _parse_monitored_input_states
         # First parse for tuples to extract OutputStates, weights, exponents and matrices
         monitored_output_states_parsed = _parse_monitored_output_states(source=self,
                                                           output_state_list=monitored_output_states,

@@ -2180,6 +2180,7 @@ class System_Base(System):
         # If there are none, assign PRIMARY_OUTPUT_STATES as default
         all_specs = controller_specs + system_specs or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
+        # FIX: 9/29/17 REDIRECT CALL TO _parse_state_spec AS IN ObjectiveMechanism._instantiate_monitored_output_states
         # Extract references to Mechanisms and/or OutputStates from any tuples
         # Note: leave tuples in all_specs for use in generating weight and exponent arrays below
         all_specs = _parse_monitored_output_states(self, output_state_list=all_specs)
