@@ -21,11 +21,18 @@ from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, Functio
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError, Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates, standard_output_states
-from PsyNeuLink.Globals.Keywords import FUNCTION, GAIN, INITIALIZER, INITIALIZING, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, MEAN, MEDIAN, NETWORK, NOISE, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
+from PsyNeuLink.Globals.Keywords import FUNCTION, GAIN, INITIALIZER, INITIALIZING, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, MEAN, MEDIAN, NETWORK, NOISE, OUTPUT_STATES, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+
+# Used to name input_states and output_states:
+MAIN_INPUT = 'main_input'
+LEARNING_TARGET = 'learning_target'
+MAIN_OUTPUT = 'main_output'
+input_state_names =  [MAIN_INPUT, LEARNING_TARGET]
+output_state_name = [MAIN_OUTPUT]
 
 class LeabraError(Exception):
     def __init__(self, error_value):
@@ -141,37 +148,40 @@ class LeabraMechanism(ProcessingMechanism_Base):
 
     # LeabraMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({FUNCTION: LeabraFunction,
+                               INPUT_STATES: input_state_names,
+                               OUTPUT_STATES: output_state_name})
 
     standard_output_states = standard_output_states.copy()
 
     def __init__(self,
-                 # input_states: tc.optional(tc.any(list, dict)) = None    (input states will be two)
                  input_size=1,
                  output_size=1,
                  hidden_layers=0,
-                 function=Linear,
+                 hidden_sizes=None,
                  training_flag=False,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
                  context=componentType + INITIALIZING):
 
-        leabra_network = build_network(input_size, output_size, hidden_layers)
+        leabra_network = build_network(input_size, output_size, hidden_layers, hidden_sizes)
 
-        function = LeabraFunction(network=leabra_network)  #, owner=self)
+        function = LeabraFunction(network=leabra_network)
 
-        # size = [input_size, input_size]
-        # input_states = ['main_input', 'learning target']
+        if not isinstance(self.standard_output_states, StandardOutputStates):
+            self.standard_output_states = StandardOutputStates(self,
+                                                               self.standard_output_states,
+                                                               indices=PRIMARY_OUTPUT_STATE)
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   input_size=input_size,
                                                   output_size=output_size,
+                                                  hidden_sizes=hidden_sizes,
                                                   training_flag=training_flag,
                                                   params=params)
 
         super().__init__(size=[input_size, output_size],
-                         input_states=['main_input', 'target_output'],
-                         output_states=['main_output'],
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -183,7 +193,7 @@ def convert_to_2d_input(array_like):
     if isinstance(array_like, (np.ndarray, list)):
         if isinstance(array_like[0], (np.ndarray, list)):
             if isinstance(array_like[0][0], (np.ndarray, list)):
-                warnings.warn("array_like ({}) is at least 3D, which may cause conversion errors".format(array_like))
+                print("array_like ({}) is at least 3D, which may cause conversion errors".format(array_like))
             out = []
             for a in array_like:
                 out.append(np.array(a))
@@ -194,7 +204,7 @@ def convert_to_2d_input(array_like):
         return [np.array([array_like])]
 
 
-def build_network(n_input, n_output, n_hidden):
+def build_network(n_input, n_output, n_hidden, hidden_sizes=None):
 
     # specifications
     unit_spec  = leabra.UnitSpec(adapt_on=True, noisy_act=True)
@@ -209,7 +219,11 @@ def build_network(n_input, n_output, n_hidden):
     layers = [input_layer]
     connections = []
     for i in range(n_hidden):
-        hidden_layer = leabra.Layer(n_input, spec=layer_spec, unit_spec=unit_spec, name='hidden_layer_{}'.format(i))
+        if hidden_sizes is not None:
+            hidden_size = hidden_sizes[i]
+        else:
+            hidden_size = n_input
+        hidden_layer = leabra.Layer(hidden_size, spec=layer_spec, unit_spec=unit_spec, name='hidden_layer_{}'.format(i))
         hidden_conn  = leabra.Connection(layers[-1],  hidden_layer, spec=conn_spec)
         layers.append(hidden_layer)
         connections.append(hidden_conn)
@@ -225,8 +239,13 @@ def build_network(n_input, n_output, n_hidden):
 def test_network(network, input_pattern):
     assert len(network.layers[0].units) == len(input_pattern)
     network.set_inputs({'input_layer': input_pattern})
-    for i in range(3):
+    for i in range(3):  # FIX: should this be 4 quarters, not 3 quarters?
         network.quarter()
     acts = network.layers[-1].activities
     network.quarter()
     return acts
+
+def train_network(network, input_pattern, learning_target):
+    assert len(network.layers[0].units) == len(input_pattern)
+
+    return np.zeros(len(input_pattern))
