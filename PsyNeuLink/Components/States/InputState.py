@@ -727,6 +727,93 @@ class InputState(State_Base):
             # Tuple s (spec, weights, exponents<, projection>)
             elif len (params) == 3:
 
+# FROM OBJECTIVE MECHANISM:
+
+        elif isinstance(item, tuple):
+            #  Check that it has three items:  (monitored_output_state specification, weight, exponent)
+            if len(item)<3 or len(item)>4:
+                raise ObjectiveMechanismError("Tuple {} used for monitored_output_state specification in {} "
+                                     "has {} items;  it should be 3 (or 4 if a matrix spec is included".
+                                     format(item, source.name, len(item)))
+
+            # Recursively call _parse_monitored_output_states to parse the first item of the tuple (the OutputState)
+            # (index with 0 since parse returns a list, but should only be one item in it)
+            output_state_tuple = _parse_monitored_output_states(source,
+                                                         item[OUTPUT_STATE_INDEX],
+                                                         mech=mech, context=context)[0]
+
+            # Use OutputState in tuple returned from parse
+            output_state = output_state_tuple.output_state
+
+            # If output_state is a string,
+            from PsyNeuLink.Components.System import System
+            if isinstance(output_state, str):
+                if not isinstance(source, System):
+                    raise ObjectiveMechanismError("A string was used to specify an OutputState (presumably its name: "
+                                                  "\'{}\') to be monitored by the ObjectiveMechanism for {}; the name "
+                                                  "of an OutputState can be used to specify it only in the "
+                                                  "\'monitor_for_control\' argument of a System, but NOT in the "
+                                                  "\'objective_mechanism\' argument of a ControlMechanism nor in the "
+                                                  "\'monitored_output_states\' argument of an ObjectiveMechanism".
+                                                  format(output_state, source.name))
+
+            elif not isinstance(output_state, (OutputState, Mechanism)):
+                raise ObjectiveMechanismError("PROGRAM ERROR: parse_monitored_output_states() returned a tuple for {}, "
+                                              "the first item of which ({}) is not an OutputState, the name of one, "
+                                              "or Mechanism".format(source.name, output_state))
+            output_states.append(output_state)
+
+            # Use weight and exponent if returned from parse;  otherwise use what was in item
+            weight = output_state_tuple.weight or item[WEIGHT_INDEX]
+            exponent = output_state_tuple.exponent or item[EXPONENT_INDEX]
+            try:
+                matrix = output_state_tuple.matrix or item[MATRIX_INDEX]
+            except IndexError:
+                # matrix spec not included
+                matrix = DEFAULT_MATRIX
+
+            if weight and not isinstance(weight, numbers.Number):
+                raise ObjectiveMechanismError("Specification of the weight ({}) in tuple for {} of {} "
+                                     "must be a number".
+                                     format(weight, output_state, source.name))
+            weights.append(weight)
+
+            if exponent and not isinstance(exponent, numbers.Number):
+                raise ObjectiveMechanismError("Specification of the exponent ({}) in tuple for {} of {} "
+                                     "must be a number".
+                                     format(exponent, output_state, source.name))
+            exponents.append(exponent)
+
+            if not is_matrix(matrix):
+                raise ObjectiveMechanismError("Specification of the exponent ({}) in tuple for {} of {} "
+                                     "must be a number".
+                                     format(exponent, output_state, source.name))
+            matrices.append(matrix)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             else:
                 raise StateError("Tuple provided as state_spec for {} of {} ({}) must have exactly two items".
                                  format(InputState.__name__, owner.name, state_spec))
