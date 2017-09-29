@@ -315,11 +315,11 @@ from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection impo
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
 from PsyNeuLink.Globals.Keywords import VARIABLE, SIZE, FUNCTION_PARAMS, NAME, OWNER, PARAMS, CONTEXT, EXECUTING, \
-    VALUE, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, \
+    MECHANISM, VALUE, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, \
     STANDARD_ARGS, STANDARD_OUTPUT_STATES, \
-    PROJECTIONS, PROJECTION_PARAMS,  PROJECTION_TYPE, RECEIVER, SENDER, \
+    PROJECTIONS, PATHWAY_PROJECTIONS, PROJECTION_PARAMS,  PROJECTION_TYPE, RECEIVER, SENDER, \
     MAPPING_PROJECTION_PARAMS, MATRIX, MATRIX_KEYWORD_SET, \
-    MODULATION, MODULATORY_SIGNAL, \
+    MODULATION, MODULATORY_SIGNAL, MODULATORY_PROJECTIONS, \
     LEARNING, LEARNING_PROJECTION, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
     CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
     GATING, GATING_PROJECTION, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, \
@@ -334,9 +334,12 @@ from PsyNeuLink.Globals.Utilities import ContentAddressableList, MODULATION_OVER
 from PsyNeuLink.Scheduling.TimeScale import CurrentTime, TimeScale
 
 state_keywords = component_keywords.copy()
-state_keywords.update({STATE_VALUE,
+state_keywords.update({MECHANISM,
+                       STATE_VALUE,
                        STATE_PARAMS,
-                       PROJECTIONS,
+                       # PROJECTIONS,
+                       PATHWAY_PROJECTIONS,
+                       MODULATORY_PROJECTIONS,
                        PROJECTION_TYPE,
                        LEARNING_PROJECTION_PARAMS,
                        LEARNING_SIGNAL_SPECS,
@@ -1540,6 +1543,17 @@ class State_Base(State):
             else:
                 return (None, "not a Projection subclass")#
 
+    def _get_primary_state(self, mechanism):
+        raise StateError("PROGRAM ERROR: {} does not implement _get_primary_state method".
+                         format(self.__class__.__name__))
+
+    def _parse_state_specific_dict_entries(self, mechanism):
+        raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_dict_entries method".
+                         format(self.__class__.__name__))
+
+    def _parse_state_specific_tuple(self, mechanism):
+        raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_tuple method".
+                         format(self.__class__.__name__))
 
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
         """Update each projection, combine them, and assign return result
@@ -2100,7 +2114,8 @@ def _instantiate_state(owner,                  # Object to which state will belo
     # - check that its owner = owner
     # - if either fails, assign default State
     if isinstance(state_spec, state_type):
-        # State initialization was deferred (owner or referenc_value was missing), so
+
+        # State initialization was deferred (owner or reference_value was missing), so
         #    assign owner, variable, and/or reference_value if they were not specified
         if state_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
             if not state_spec.init_args[OWNER]:
@@ -2135,7 +2150,6 @@ def _instantiate_state(owner,                  # Object to which state will belo
 
     # Otherwise, state_spec should now be a state specification dict
     state_variable = state_spec[VARIABLE]
-    state_value = state_spec[VALUE]
 
     # Check that it's variable is compatible with constraint_value, and if not, assign the latter as default variable
     if constraint_value is not None and not iscompatible(state_variable, constraint_value):
@@ -2338,6 +2352,10 @@ def _parse_state_type(owner, state_spec):
 
 
 # FIX 5/23/17:  UPDATE TO ACCOMODATE (param, ControlSignal) TUPLE
+# FIX 9/28/17:  UPDATE TO ACCOMODATE (mech, weight, exponent<, matrix>) TUPLE FOR InputState
+# FIX 9/28/17:  UPDATE TO ACCOMODATE {MECHANISM:<>, OUTPUT_STATES:<>} for InputState
+# FIX 9/28/17:  UPDATE TO IMPLEMENT state specification dictionary as a Class
+
 @tc.typecheck
 def _parse_state_spec(owner,
                       state_type:_is_state_type,
@@ -2419,17 +2437,14 @@ def _parse_state_spec(owner,
     # - if force_dict is False, return the primary state object
     # - if force_dict is True, get primary state's attributes and return their values in a state specification dict
     if isinstance(state_spec, Mechanism):
-        primary_state = state_spec._get_primary_state(state_type)
+        # primary_state = state_spec._get_primary_state(state_type)
+        mech = state_spec
+        primary_state = state_type._get_primary_state(state_type, mech)
         # if force_dict:
         #     return _state_dict(primary_state)
         # else:
         #     return primary_state
         return primary_state
-
-    # # Avoid modifying any objects passed in via state_spec
-    # state_spec = copy.deepcopy(state_spec)
-
-    # params = params or {}
 
     if params:
         # If variable is specified in state_params, use that
@@ -2441,7 +2456,9 @@ def _parse_state_spec(owner,
                   VARIABLE: variable,
                   VALUE: value,
                   PARAMS: params,
-                  STATE_TYPE: state_type
+                  STATE_TYPE: state_type,
+                  PATHWAY_PROJECTIONS: None,
+                  MODULATORY_PROJECTIONS: None
                   }
 
     # State class
@@ -2466,30 +2483,28 @@ def _parse_state_spec(owner,
     #                          "class of state being instantiated ({})".format(state_spec, state_type))
 
     # Specification dict
-    # - move any entries other than for standard args into dict in params entry
     elif isinstance(state_spec, dict):
         state_spec=state_spec.copy()
+
         # Dict has a single entry in which the key is not a recognized keyword,
-        #    so assume it is of the form {<STATE_NAME>:<STATE SPECIFICATION DICT>}:
-        #    assign STATE_NAME as name, and return parsed SPECIFICATION_DICT
+        #    so assume it is of the form {<STATE_NAME>:<STATE_SPECIFICATION_DICT>}:
+        #    - assign STATE_NAME as name,
+        #    - recursively call _parse_state_spec
+        #    - return parsed STATE_SPECIFICATION_DICT (with key as value of the NAME entry)
         if len(state_spec) == 1 and list(state_spec.keys())[0] not in (state_keywords | STANDARD_ARGS):
+            # Use name specified as key in initial state_spec (overrides one in STATE_SPECIFICATION_DICT if specified)
+            #    and assign its value as the new state_spec (used in recursive call below)
             name, state_spec = list(state_spec.items())[0]
+            # Recursively call _parse_state_spec
             state_dict = _parse_state_spec(owner=owner,
                                            state_type=state_type,
                                            state_spec=state_spec,
                                            name=name,
                                            variable=variable,
                                            value=value,
-                                           # projections=projections,
-                                           # modulatory_projections=modulatory_projections,
-                                           # params=params)
-                                           )
-            if state_dict[PARAMS]:
-                params = params or {}
-                # params.update(state_dict[PARAMS])
-                # Use name specified as key in state_spec (overrides one in SPEFICATION_DICT if specified):
-                state_dict[PARAMS].update(params)
+                                           params=params)
 
+        # Standard state specification dict
         else:
             # Error if STATE_TYPE is specified in dict and not the same as the state_spec specified in call to method
             if STATE_TYPE in state_spec and state_spec[STATE_TYPE] != state_type:
@@ -2500,15 +2515,17 @@ def _parse_state_spec(owner,
             if not VARIABLE in state_spec and owner.prefs.verbosePref:
                 print("{} missing from specification dict for {} of {};  default ({}) will be used".
                       format(VARIABLE, state_type, owner.name, state_spec))
-            # Move all params-relevant entries from state_spec into params
+            # Move all entries that are not for standard arguments from state_spec into params dict
             for spec in [param_spec for param_spec in state_spec.copy()
                          if not param_spec in STANDARD_ARGS]:
                 params = params or {}
                 params[spec] = state_spec[spec]
                 del state_spec[spec]
             state_dict.update(state_spec)
-            # state_dict = state_spec
             if params:
+                # Call state_type to parse any State-specific params
+                params = state_type._parse_state_specific_dict_entries(state_type, params)
+                # Update state_dict[PARAMS] with params
                 if state_dict[PARAMS] is None:
                     state_dict[PARAMS] = {}
                 state_dict[PARAMS].update(params)
@@ -2570,7 +2587,7 @@ def _parse_state_spec(owner,
         else:
             state_dict[NAME] = state_spec
 
-    # function; try to resolve to a value, otherwise return None to suppress instantiation of state
+    # function; try to resolve to a value, otherwise return None to suppress instantiation of State
     elif isinstance(state_spec, function_type):
         state_dict[VALUE] = get_param_value_for_function(owner, state_spec)
         if state_dict[VALUE] is None:
@@ -2578,7 +2595,7 @@ def _parse_state_spec(owner,
             raise StateError("PROGRAM ERROR: state_spec for {} of {} is a function ({}), "
                              "but it failed to return a value".format(state_type_name, owner.name, state_spec))
 
-    # value, so use as variable of input_state
+    # value, so use as variable of State
     elif is_value_spec(state_spec):
         state_dict[VARIABLE] = state_spec
         state_dict[VALUE] = state_spec
@@ -2604,7 +2621,6 @@ def _parse_state_spec(owner,
     # state_dict[STATE_TYPE] = state_type
 
     return state_dict
-
 
 def _is_legal_state_spec_tuple(owner, state_spec, state_type_name=None):
 

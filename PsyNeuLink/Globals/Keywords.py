@@ -311,7 +311,9 @@ LEARNING_PROJECTION = "LearningProjection"
 CONTROL_PROJECTION = "ControlProjection"
 GATING_PROJECTION = "GatingProjection"
 PATHWAY_PROJECTION = "PathwayProjection"
+PATHWAY_PROJECTIONS = "PathwayProjections"
 MODULATORY_PROJECTION = "ModulatoryProjection"
+MODULATORY_PROJECTIONS = "ModulatoryProjections"
 
 
 # Function:
@@ -432,6 +434,7 @@ kpMechanismExecutedLogEntry = "Mechanism Executed"
 #region ---------------------------------------------    MECHANISM   ---------------------------------------------------
 
 MECHANISM = 'MECHANISM'
+MECHANISMS = 'MECHANISMS'
 kwMechanismName = "MECHANISM NAME"
 kwMechanismDefault = "DEFAULT MECHANISM"
 DEFAULT_PROCESSING_MECHANISM = "DefaultProcessingMechanism"

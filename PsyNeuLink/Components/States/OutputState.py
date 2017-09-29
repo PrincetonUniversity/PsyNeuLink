@@ -739,6 +739,9 @@ class OutputState(State_Base):
 
         return type_match(self.calculate(self.owner.value[self.index]), type(value))
 
+    def _get_primary_state(self, mechanism):
+        return mechanism.output_state
+
     @property
     def pathway_projections(self):
         return self.efferents

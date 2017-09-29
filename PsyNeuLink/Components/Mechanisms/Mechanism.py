@@ -2119,17 +2119,6 @@ class Mechanism_Base(Mechanism):
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, ParameterState) )
 
-    def _get_primary_state(self, state_type):
-        from PsyNeuLink.Components.States.InputState import InputState
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        from PsyNeuLink.Components.States.OutputState import OutputState
-        if issubclass(state_type, InputState):
-            return self.input_state
-        if issubclass(state_type, OutputState):
-            return self.output_state
-        if issubclass(state_type, ParameterState):
-            raise Mechanism("PROGRAM ERROR:  illegal call to {} for a primary {}".format(self.name, PARAMETER_STATE))
-
     @property
     def value(self):
         return self._value

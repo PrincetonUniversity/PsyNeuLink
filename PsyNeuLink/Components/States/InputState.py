@@ -288,11 +288,18 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Component import InitStatus
 from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.States.State import StateError, State_Base, _instantiate_state_list, state_type_keywords
-from PsyNeuLink.Globals.Keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT
+from PsyNeuLink.Components.States.OutputState import OutputState
+from PsyNeuLink.Globals.Keywords import \
+    EXPONENT, FUNCTION, MECHANISMS, INPUT_STATE, INPUT_STATE_PARAMS, OUTPUT_STATES, \
+    MAPPING_PROJECTION, PATHWAY_PROJECTIONS, MODULATORY_PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
+
 state_type_keywords = state_type_keywords.update({INPUT_STATE})
 
 # InputStatePreferenceSet = ComponentPreferenceSet(log_pref=logPrefTypeDefault,
@@ -628,6 +635,121 @@ class InputState(State_Base):
             # mark combined_values as none, so that (after being assigned to self.value)
             #    it is ignored in execute method (i.e., not combined with base_value)
             return None
+
+    def _get_primary_state(self, mechanism):
+        return mechanism.input_state
+
+    def _parse_state_specific_dict_entries(self, owner, params):
+
+        # Iterate through params, looking for the following types of entries:
+        #    MECHANISMS:<Mechanism> or [Mechanism<, Mechanism>]
+        #    OUTPUT_STATES:<OutputState> or [OutputState<, OutputState>]
+        #    Mechanism:<OutputState> or [OutputState<, OutputState..>]
+        # and assign the OutputState specified by each to the relevant projection entries:
+        #    PATHWAY_PROJECTIONS entry if they are ProcessingMechanisms
+        #    MODULATORY_PROJECTIONS entry if they are AdaptiveMechanisms
+
+        # Parse entry for Mechanism, MECHANISMS or OUTPUT_STATES key, return a list of OutputStates
+        def _parse_mechanism_or_output_state_keys(entry, owner):
+            param_key, param_value = entry
+            output_states = []
+            # Key is a keyword (MECHANISHMS or OUTPUT_STATES)
+            if isinstance(param_key, str):
+                if param_key is MECHANISMS:
+                    if not isinstance(param_value, list):
+                        param_value = [param_value]
+                    for param in param_value:
+                        if not isinstance(param_value, Mechanism):
+                            raise InputStateError("Specification in \'{}\' entry of state specification dictionary "
+                                                  "for {} ({}) is not a {}".
+                                                  format(MECHANISMS, owner.name, param, Mechanism.__name__))
+                        output_states.append(param.output_state)
+                        # # Add the primary OutputState of a ProcessingMechanism to the PATHWAY_PROJECTIONS list
+                        # #    to specify that the InputState send it a MappingProjection
+                        # if isinstance(param, ProcessingMechanism_Base):
+                        #     params[PATHWAY_PROJECTIONS].append(param.ouput_state)
+                        # # Add the primary OutputState (ModulatorySignal) of an AdaptiveMechanism to the
+                        # #  MODULATORY_PROJECTIONS list to specify that the InputState send it a ModulatoryProjection
+                        # elif isinstance(param, AdaptiveMechanism_Base):
+                        #     params[MODULATORY_PROJECTIONS].append(param.ouput_state)
+                        # else:
+                        #     raise InputStateError("Specification in {} entry of state specification dictionary "
+                        #                           "for {} ({}) is not a {}".
+                        #                           format(MECHANISMS, owner.name, param, Mechanism.__name__))
+                elif param_key is OUTPUT_STATES:
+                    if not isinstance(param_value, list):
+                        param_value = [param_value]
+                    for param in param_value:
+                        if not isinstance(param, OutputState):
+                            raise InputStateError("Specification in {} entry of state specification dictionary "
+                                                  "for {} ({}) is not a {}".
+                                                  format(OUTPUT_STATES, owner.name, param, OutputState.__name__))
+                        # Add the primary OutputState of a ProcessingMechanism to the PATHWAY_PROJECTIONS list
+                        #    to specify that the InputState send it a MappingProjection
+                        if isinstance(param.owner, ProcessingMechanism_Base):
+                            params[PATHWAY_PROJECTIONS].append(param)
+                        # Add the primary OutputState (ModulatorySignal) of an AdaptiveMechanism to the
+                        #  MODULATORY_PROJECTIONS list to specify that the InputState send it a ModulatoryProjection
+                        elif isinstance(param.owner, AdaptiveMechanism_Base):
+                            params[MODULATORY_PROJECTIONS].append(param)
+                        else:
+                            raise InputStateError("Specification in {} entry of state specification dictionary "
+                                                  "for {} ({}) is not a {}".
+                                                  format(MECHANISMS, owner.name, param, Mechanism.__name__))
+                else:
+                    raise InputStateError("Key for an entry of the state specification dictionary for {} "
+                                          "is an unreconized string (\'{}\')".format(owner.name, param_key))
+
+            # Key is a Mechanism
+            elif  isinstance(param_key, Mechanism):
+                mech = param_key
+                # If the value is not a list, convert it to one for processing below
+                if not isinstance(param_value, list):
+                    param_value = [param_value]
+                for param in param_value:
+
+                    # Item is the name of an OutputState
+                    if isinstance(param, str):
+                        try:
+                            # Get the named OutputState
+                            param = mech.output_states[param]
+                        except IndexError:
+                            raise InputStateError("\'{}\' is not the name of an {} of {} "
+                                                  "(in specification dictionary for {} of {})".
+                                                  format(param,
+                                                         OutputState.__name__,
+                                                         mech.name,
+                                                         InputState.__name__,
+                                                         owner.name))
+                    # Validate that entry is an OutputState
+                    if not isinstance(param, OutputState):
+                            raise InputStateError("{} is not an {} of {} "
+                                                  "(in specification dictionary for {} of {}".
+                                                  format(param,
+                                                         OutputState.__name__,
+                                                         mech.name,
+                                                         InputState.__name__,
+                                                         owner.name))
+                    # Add OutputState of a ProcessingMechanism to the PATHWAY_PROJECTIONS list
+                    #    to specify that the InputState send it a MappingProjection
+                    if isinstance(mech, ProcessingMechanism_Base):
+                        params[PATHWAY_PROJECTIONS].append(param)
+                    # Add OutputState (ModulatorySignal) of an AdaptiveMechanism to the MODULATORY_PROJECTIONS list
+                    #    to specify that the InputState send it a ModulatoryProjection
+                    elif isinstance(mech, AdaptiveMechanism_Base):
+                        params[MODULATORY_PROJECTIONS].append(param)
+                    else:
+                        raise InputStateError("PROGRAM ERROR: {} is not a recognized type of {}".
+                                              format(mech, Mechanism.__name__))
+
+            else:
+                raise InputStateError("Illegal key for an entry of the state specification dictionary for {} ({})".
+                                      format(owner.name, param_key))
+            return output_states
+
+        for param_key, param_value in params:
+
+        return params
 
     @property
     def pathway_projections(self):

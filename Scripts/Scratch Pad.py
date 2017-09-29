@@ -20,6 +20,13 @@
 # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControldProjection
 # from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
 
+class TEST_CLASS():
+
+    def _get_test(arg):
+        print('WORKED: ', arg)
+
+TEST_CLASS._get_test('hello world')
+
 
 class ScratchPadError(Exception):
     def __init__(self, error_value):
@@ -1031,85 +1038,85 @@ class ScratchPadError(Exception):
 
 # ----------------------------------------------- MECHANISM ------------------------------------------------------------
 
-# region TEST RecurrentTransferMechanism @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-import numpy as np
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Globals.Keywords import LEARNING
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism \
-    import RecurrentTransferMechanism
-from PsyNeuLink.Components.Functions.Function import Linear
-
-print("\nTEST RecurrentTransferMechanism\n")
-
-my_auto = RecurrentTransferMechanism(
-        # default_variable=[0,0,0,0],
-                                     size=4,
-                                     function=Linear,
-                                     # function=Logistic,
-                                     # matrix=RANDOM_CONNECTIVITY_MATRIX,
-                                     matrix=np.full((4,4), 0.1),
-                                     enable_learning=True
-                                     # matrix=[[1,1,1],[1,1,1],[1,1,1]]
-                                     )
-
-print ("my_auto.matrix:\n",
-       my_auto.matrix)
-print ("\nmy_auto.recurrent_projection.matrix:\n",
-       my_auto.recurrent_projection.matrix)
-print ("\nmy_auto.input_state.path_afferents[0].matrix:\n",
-       my_auto.input_state.path_afferents[0].matrix)
-
-my_process = process(pathway=[my_auto])
-
-my_auto.learning_enabled = False
-print ("\n***INITIAL STATE WITH [1,1,0,0] AS INPUT")
-print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
-my_process.execute([1,1,0,0]),
-print ("\n***AFTER SINGLE EXECUTION [1,1,0,0] AS INPUT")
-print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
-my_process.execute([1,1,0,0]),
-print ("\n***AFTER SECOND EXECUTION [1,1,0,0] AS INPUT")
-print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
-
-my_auto.learning_enabled = True
-print ("\n***START TRAINING WITH [1,1,0,0]")
-
-my_process.execute([1,1,0,0])
-print(my_auto.matrix.tolist())
-print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
-
-my_process.execute([1,1,0,0]),
-print(my_auto.matrix.tolist())
-print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
-
-my_process.execute([1,1,0,0])
-print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
-
-
-my_auto.learning_enabled = False
-print ("\n*** DISABLED LEARNING")
-
-print ("\n*** START EXECUTING WITH [1,0,0,0]")
-for i in range(4):
-    my_process.execute([1,0,0,0]),
-    print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
-
-
+# # region TEST RecurrentTransferMechanism @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+# import numpy as np
+# from PsyNeuLink.Components.Functions.Function import Logistic
+# from PsyNeuLink.Globals.Keywords import LEARNING
+# from PsyNeuLink.Components.System import system
+# from PsyNeuLink.Components.Process import process
+# from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism \
+#     import RecurrentTransferMechanism
+# from PsyNeuLink.Components.Functions.Function import Linear
+#
+# print("\nTEST RecurrentTransferMechanism\n")
+#
+# my_auto = RecurrentTransferMechanism(
+#         # default_variable=[0,0,0,0],
+#                                      size=4,
+#                                      function=Linear,
+#                                      # function=Logistic,
+#                                      # matrix=RANDOM_CONNECTIVITY_MATRIX,
+#                                      matrix=np.full((4,4), 0.1),
+#                                      enable_learning=True
+#                                      # matrix=[[1,1,1],[1,1,1],[1,1,1]]
+#                                      )
+#
+# print ("my_auto.matrix:\n",
+#        my_auto.matrix)
+# print ("\nmy_auto.recurrent_projection.matrix:\n",
+#        my_auto.recurrent_projection.matrix)
+# print ("\nmy_auto.input_state.path_afferents[0].matrix:\n",
+#        my_auto.input_state.path_afferents[0].matrix)
+#
+# my_process = process(pathway=[my_auto])
+#
+# my_auto.learning_enabled = False
+# print ("\n***INITIAL STATE WITH [1,1,0,0] AS INPUT")
+# print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
+# my_process.execute([1,1,0,0]),
+# print ("\n***AFTER SINGLE EXECUTION [1,1,0,0] AS INPUT")
+# print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
+# my_process.execute([1,1,0,0]),
+# print ("\n***AFTER SECOND EXECUTION [1,1,0,0] AS INPUT")
+# print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
+#
+# my_auto.learning_enabled = True
+# print ("\n***START TRAINING WITH [1,1,0,0]")
+#
+# my_process.execute([1,1,0,0])
+# print(my_auto.matrix.tolist())
+# print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
+#
+# my_process.execute([1,1,0,0]),
+# print(my_auto.matrix.tolist())
+# print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
+#
+# my_process.execute([1,1,0,0])
+# print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
+#
+#
+# my_auto.learning_enabled = False
+# print ("\n*** DISABLED LEARNING")
+#
+# print ("\n*** START EXECUTING WITH [1,0,0,0]")
+# for i in range(4):
+#     my_process.execute([1,0,0,0]),
+#     print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
+#
+#
+# # #
+# # input_list = {my_auto:[1,1,1]}
+# # target_list = {my_auto:[0,0,0]}
 # #
-# input_list = {my_auto:[1,1,1]}
-# target_list = {my_auto:[0,0,0]}
-#
-# # print(my_process.run(inputs=input_list, targets=target_list, num_trials=5))
-#
-# my_system = system(processes=[my_process],
-#                    targets=[0,0,0])
-#
-# print(my_system.run(inputs=input_list,
-#                     targets=target_list,
-#                     num_trials=5))
+# # # print(my_process.run(inputs=input_list, targets=target_list, num_trials=5))
+# #
+# # my_system = system(processes=[my_process],
+# #                    targets=[0,0,0])
+# #
+# # print(my_system.run(inputs=input_list,
+# #                     targets=target_list,
+# #                     num_trials=5))
 
 # region TEST LCA @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
