@@ -209,8 +209,8 @@ itself (see `DDM <DDM_Creation>` for an example).
 
 .. _Mechanism_Function_Object:
 
-function_object Attribute
-^^^^^^^^^^^^^^^^^^^^^^^^^
+`function_object <Mechanism_Base.function_object>` Attribute
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The `Function <Function>` Component assigned as the primary function of a Mechanism is assigned to the Mechanism's
 `function_object <Component.function_object>` attribute, and its `function <Function_Base.function>` is assigned
@@ -297,16 +297,19 @@ COMMENT:
     `function <UserDefinedFunction.function>` attribute.
 COMMENT
 
-variable and value Attributes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _Mechanism_Variable_and_Value:
 
-The input to a Mechanism's `function <Mechanism_Base.function>` is provided by the Mechanism's
-`variable <Mechanism_Base.variable>` attribute.  This is a 2d array with one item for each of the Mechanism's
-`Input_states <Mechanism_InputStates>`.  The result of the `function <Mechanism_Base.function>` is placed in the
-Mechanism's `value <Mechanism_Base.value>` attribute, which is also a 2d array with one or more items.  The
-Mechanism's `value <Mechanism_Base.value>` is used by its `OutputStates <Mechanism_OutputStates>` to generate their
-`value <OutputState.value>` attributes, each of which is assigned as the value of an item of the list in the Mechanism's
-`output_values <Mechanism_Base.output_values>` attribute (see `Mechanism_OutputStates` below).
+`variable <Mechanism_Base.variable>` and `value <Mechanism_Base.value>` Attributes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The input to a Mechanism's `function <Mechanism_Base.function>` is provided by the Mechanism's `variable
+<Mechanism_Base.variable>` attribute.  This is a np.ndarray that is at least 2d, with one item of its outermost
+dimension (axis 0)  for each of the Mechanism's `Input_states <Mechanism_InputStates>`.  The result of the `function
+<Mechanism_Base.function>` is placed in the Mechanism's `value <Mechanism_Base.value>` attribute which is also at
+least a 2d array.  The Mechanism's `value <Mechanism_Base.value>` is referenced by its `OutputStates
+<Mechanism_OutputStates>` to generate their own `value <OutputState.value>` attributes, each of which is assigned as
+the value of an item of the list in the Mechanism's `output_values <Mechanism_Base.output_values>` attribute (see
+`Mechanism_OutputStates` below).
 
 .. note::
    The input to a Mechanism is not necessarily the same as the input to its `function <Mechanism_Base.function>`. The
@@ -337,10 +340,15 @@ The three types of States are shown schematically in the figure below, and descr
    :scale: 75 %
    :align: left
 
-   **Schematic of a Mechanism showing its three types of States** (input, parameter and output). Every Mechanism has at
-   least one `InputState` (its `primary InputState <InputState_Primary>` ) and one `OutputState`
-   (its `primary OutputState <OutputState_Primary>`), and can have additional ones of each.  It also has one
+   **Schematic of a Mechanism showing its three types of States** (`InputState`, `ParameterState` and `OutputState`).
+   Every Mechanism has at least one (`primary <InputState_Primary>`) InputState and one (`primary
+   <OutputState_Primary>`) OutputState, but can have additional states of each type.  It also has one
    `ParameterState` for each of its parameters and the parameters of its `function <Mechanism_Base.function>`.
+   The `value <InputState.value>` of each InputState is assigned as an item of the Mechanism's `variable
+   <Mechanism_Base.variable>`, and the result of its `function <Mechanism_Base.function>` is assigned as the Mechanism's
+   `value <Mechanism_Base.value>`, the items of which are referenced by its OutputStates to determine their own
+   `value <OutputState.value>`\\s (see `Mechanism_Variable_and_Value` above, and more detailed descriptions below).
+
 
 .. _Mechanism_InputStates:
 
