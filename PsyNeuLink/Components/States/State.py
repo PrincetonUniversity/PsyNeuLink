@@ -1547,12 +1547,8 @@ class State_Base(State):
         raise StateError("PROGRAM ERROR: {} does not implement _get_primary_state method".
                          format(self.__class__.__name__))
 
-    def _parse_state_specific_dict_entries(self, mechanism):
-        raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_dict_entries method".
-                         format(self.__class__.__name__))
-
-    def _parse_state_specific_tuple(self, mechanism):
-        raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_tuple method".
+    def _parse_state_specific_entries(self, mechanism):
+        raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_entries method".
                          format(self.__class__.__name__))
 
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
@@ -2382,7 +2378,7 @@ def _parse_state_spec(owner,
             InputState, value should be the projection's value;
             ParameterState, value should be the projection's value;
             OutputState, value should be the projection's variable
-    Any entries with keys other than XXX are moved to entries of the dict in the PARAMS entry
+    Any entries with keys other than STANDARD_ARGS are moved to entries of the dict in the PARAMS entry
     """
 
     # # IMPLEMENTATION NOTE:  ONLY CALLED IF force_dict=True;  CAN AVOID BY NEVER SETTING THAT OPTION TO True
@@ -2457,8 +2453,6 @@ def _parse_state_spec(owner,
                   VALUE: value,
                   PARAMS: params,
                   STATE_TYPE: state_type,
-                  PATHWAY_PROJECTIONS: None,
-                  MODULATORY_PROJECTIONS: None
                   }
 
     # State class
@@ -2524,21 +2518,56 @@ def _parse_state_spec(owner,
             state_dict.update(state_spec)
             if params:
                 # Call state_type to parse any State-specific params
-                params = state_type._parse_state_specific_dict_entries(state_type, params)
+                params = state_type._parse_state_specific_entries(state_type, params)
                 # Update state_dict[PARAMS] with params
                 if state_dict[PARAMS] is None:
                     state_dict[PARAMS] = {}
                 state_dict[PARAMS].update(params)
 
-    # 2-item tuple;  could be:
-    #    (spec, Projection)
-    #    (param_name, Mechanism)
+    # # MODIFIED 9/29/17 OLD:
+    # # 2-item tuple;  could be:
+    # #    (spec, Projection)
+    # #    (param_name, Mechanism)
+    # elif isinstance(state_spec, tuple):
+    #     # FIX 9/29/17 MOVE THE CODE IN THE FOLLOWING METHOD TO _parse_state_specific_entries
+    #     # FIX: DEAL WITH WHICH ITEM OF TUPLE IS WHAT FOR DIFFERENT STATE TYPES (in _parse_state_specific_entries)
+    #     # FIX: REVERSE ORDER OF (MECHANISM, PARAM) SPECIFICATION FOR ParameterStates (ADJUST SCRIPTS ACCODINGLY)
+    #     # _is_legal_state_spec_tuple(owner, state_spec, state_type_name)
+    #     params = state_type._parse_state_specific_entries(state_type, params)
+    #
+    #     # Put projection spec from second item of tuple in params
+    #     params = params or {}
+    #     # FIX 5/23/17: NEED TO HANDLE NON-MODULATORY PROJECTION SPECS
+    #     params.update({PROJECTIONS:[state_spec[1]]})
+    #
+    #     # FIX: 9/17/17 NEED TO HANDLE (ParamName string, Mechanism) for state_type = ControlSignal
+    #
+    #     # Parse state_spec in first item of tuple (without params)
+    #     state_dict = _parse_state_spec(owner=owner,
+    #                                    state_type=state_type,
+    #                                    state_spec=state_spec[0],
+    #                                    name=name,
+    #                                    variable=variable,
+    #                                    value=value,
+    #                                    # projections=projections,
+    #                                    params={})
+    #     # Add params (with projection spec) to any params specified in first item of tuple
+    #     if state_dict[PARAMS] is None:
+    #         state_dict[PARAMS] = {}
+    #     state_dict[PARAMS].update(params)
+
+    # MODIFIED 9/29/17 NEW:
+    # Specification tuple
+    #    Assume first item is the state specification, and use as base for state_dict
+    #    Call _parse_state_specific_entries() with tuple to get params in dict form (to add to state_dict)
+    #    FYI, could be:
+    #        (state_spec, <Mechanism, OutputState or Projection specificaion()s) - for InputState or OutputState
+    #        (state_spec, weights, exponents<, projection specification>) - for InputState
+    #        (param_name, Mechanism) - for ParameterState
     elif isinstance(state_spec, tuple):
-        _is_legal_state_spec_tuple(owner, state_spec, state_type_name)
-        # Put projection spec from second item of tuple in params
-        params = params or {}
-        # FIX 5/23/17: NEED TO HANDLE NON-MODULATORY PROJECTION SPECS
-        params.update({PROJECTIONS:[state_spec[1]]})
+
+        # Get state-specific params from tuple
+        params = state_type._parse_state_specific_entries(state_type, state_spec)
 
         # FIX: 9/17/17 NEED TO HANDLE (ParamName string, Mechanism) for state_type = ControlSignal
 
@@ -2551,10 +2580,12 @@ def _parse_state_spec(owner,
                                        value=value,
                                        # projections=projections,
                                        params={})
-        # Add params (with projection spec) to any params specified in first item of tuple
+        # Add params to any params specified in first item of tuple
         if state_dict[PARAMS] is None:
             state_dict[PARAMS] = {}
         state_dict[PARAMS].update(params)
+
+    # MODIFIED 9/29/17 END
 
     # Projection class, object, or keyword:
     #     set variable to value and assign projection spec to PROJECTIONS entry in params
