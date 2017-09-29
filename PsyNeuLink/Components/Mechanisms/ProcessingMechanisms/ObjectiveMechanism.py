@@ -674,11 +674,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 time_scale=TimeScale.TRIAL,
                 ignore_execution_id = False,
                 context=None):
-        if hasattr(self, "value"):
-            print("value from previous execute: ", self.value)
-        print("current input: ", input)
-        if hasattr(self, "monitored_values"):
-            print("monitored_values: ", self.monitored_values)
+
         return super().execute(input, runtime_params, clock, time_scale, ignore_execution_id, context)
 
 

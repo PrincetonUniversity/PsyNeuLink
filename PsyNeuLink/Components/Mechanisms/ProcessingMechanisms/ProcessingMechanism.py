@@ -119,7 +119,3 @@ class ProcessingMechanism_Base(Mechanism_Base):
     def _validate_inputs(self, inputs=None):
         # Let mechanism itself do validation of the input
         pass
-
-    def _instantiate_attributes_before_function(self, context=None):
-
-        super()._instantiate_attributes_before_function(context=context)
