@@ -950,3 +950,42 @@ def get_class_attributes(cls):
     return [item
             for item in inspect.getmembers(cls)
             if item[0] not in boring]
+
+# FIX: add/test compatability with the np.matrix data type
+def convert_to_2d_input(array_like, num_input_states = None):
+    if isinstance(array_like, numbers.Number) or (isinstance(array_like, np.ndarray) and np.ndim(array_like) == 0):
+        return [np.atleast_1d([array_like])]
+    elif isinstance(array_like, (np.ndarray, list)):
+        if isinstance(array_like[0], (np.ndarray, list)):
+            if isinstance(array_like[0][0], (np.ndarray, list)) and not isinstance(array_like[0][0], np.matrix):
+                print("WARNING: array_like ({}) is at least 3D, which may cause conversion errors".format(array_like))
+            if num_input_states is None or num_input_states == len(array_like):
+                out = []
+                for a in array_like:
+                    out.append(np.atleast_1d(a))
+                return out
+            elif num_input_states == 1:
+                return [np.atleast_2d(array_like)]
+            else:
+                print("WARNING: The number of input states ({}) does not seem compatible with the input ({}).".
+                              format(num_input_states, array_like))
+                out = []
+                for a in array_like:
+                    out.append(np.atleast_1d(a))
+                return out
+        elif isinstance(array_like[0], numbers.Number):
+            if num_input_states is None or num_input_states == 1:
+                return [np.atleast_1d(array_like)]
+            elif num_input_states == len(array_like):
+                out = []
+                for a in array_like:
+                    out.append(np.atleast_1d(a))
+                return out
+            else:
+                print("WARNING: The number of input states ({}) does not seem compatible with the input ({}).".
+                              format(num_input_states, array_like))
+                return [np.atleast_1d(array_like)]
+        else:
+            return np.atleast_2d(array_like)  # this is hacky; mainly for supporting legacy code
+    else:
+        return np.atleast_2d(array_like)  # this is hacky; mainly for supporting legacy code

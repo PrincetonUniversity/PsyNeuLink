@@ -61,11 +61,11 @@ class TestRecurrentTransferMechanismInputs:
     def test_recurrent_mech_inputs_list_of_fns(self):
         R = RecurrentTransferMechanism(
             name='R',
-            size=4,
+            size=2,
             integrator_mode=True
         )
-        val = R.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
-        assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
+        val = R.execute([NormalDist().execute(), ExponentialDist().execute()]).tolist()
+        assert val == [[0.4001572083672233, 0.7872011523172707]]
 
     def test_recurrent_mech_no_inputs(self):
         R = RecurrentTransferMechanism(

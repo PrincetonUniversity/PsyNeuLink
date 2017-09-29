@@ -41,11 +41,11 @@ class TestTransferMechanismInputs:
 
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0, 0],
             integrator_mode=True
         )
-        val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
-        assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
+        val = T.execute([NormalDist().execute(), ExponentialDist().execute()]).tolist()
+        assert val == [[0.4001572083672233, 0.7872011523172707]]
 
     def test_transfer_mech_variable_3D_array(self):
 
@@ -482,11 +482,11 @@ class TestTransferMechanismSize:
     def test_transfer_mech_size_int_inputs_fns(self):
         T = TransferMechanism(
             name='T',
-            size=4,
+            size=2,
             integrator_mode=True
         )
-        val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
-        assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
+        val = T.execute([NormalDist().execute(), ExponentialDist().execute()]).tolist()
+        assert val == [[0.4001572083672233, 0.7872011523172707]]
 
     # ------------------------------------------------------------------------------------------------
     # TEST 5
@@ -531,11 +531,11 @@ class TestTransferMechanismSize:
     def test_transfer_mech_size_float_inputs_fns(self):
         T = TransferMechanism(
             name='T',
-            size=4.0,
+            size=2.0,
             integrator_mode=True
         )
-        val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
-        assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
+        val = T.execute([NormalDist().execute(), ExponentialDist().execute()]).tolist()
+        assert val == [[0.4001572083672233, 0.7872011523172707]]
 
     # ------------------------------------------------------------------------------------------------
     # TEST 9
