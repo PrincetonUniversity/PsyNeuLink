@@ -2352,6 +2352,8 @@ def _parse_state_type(owner, state_spec):
 # FIX 9/28/17:  UPDATE TO ACCOMODATE {MECHANISM:<>, OUTPUT_STATES:<>} for InputState
 # FIX 9/28/17:  UPDATE TO IMPLEMENT state specification dictionary as a Class
 
+STATE_SPEC_INDEX = 0
+
 @tc.typecheck
 def _parse_state_spec(owner,
                       state_type:_is_state_type,

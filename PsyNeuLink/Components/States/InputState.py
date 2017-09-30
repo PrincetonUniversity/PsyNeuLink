@@ -316,11 +316,9 @@ state_type_keywords = state_type_keywords.update({INPUT_STATE})
 #     ALL = TIME_STAMP
 #     DEFAULTS = NONE
 
-STATE_SPEC_INDEX = 0
+# STATE_SPEC_INDEX = 0 <- DECLARED IN State
 WEIGHT_INDEX = 1
 EXPONENT_INDEX = 2
-PROJECTION_SPEC_INDEX = 3
-
 
 class InputStateError(Exception):
     def __init__(self, error_value):
@@ -647,9 +645,7 @@ class InputState(State_Base):
 
     @tc.typecheck
     def _parse_state_specific_entries(self, owner, params:tc.any(dict, tuple)):
-        """Get any OutputStates specified in the params dict and return list of them in PROJECTIONS entry
-
-        Entries specify OutputStates from which the InputState will be assigned Projections
+        """Get OutputStates, weights, and/or exponents in an InputState specification dictionary or tuple
 
         If params is a dict:
             entry key can be any of the following, with the corresponding value:
@@ -657,9 +653,21 @@ class InputState(State_Base):
                 MECHANISMS:<Mechanism> or [Mechanism<, Mechanism>]
                 OUTPUT_STATES:<OutputState> or [OutputState<, OutputState>]
                 PROJECTIONS:dict or Mechanism or [Mechanism, ...] or OutputState or [OutputState,...]
-                   If it is dict, all of its entries must be one of the above
+                            (if it is dict, all of its entries must be one of the above)
 
-        Returns params dict with a PROJECTIONS entry that consists of a list of the specified OutputStates
+        If params is a tuple:
+            - the first must be an InputState specification (processed by _parse_state_spec, not here)
+            - if it has two items, the second must resolve to an OutputState
+                (parsed in a recursive call to _parse_state_specific_entries)
+            - if it has three or four items:
+                - the second is a weight specification
+                - the third is an exponent specification
+                - the fourth (optional) must resolve to an OutputState specification
+                  (parsed in a recursive call to _parse_state_specific_entries)
+
+        Returns params dict with:
+            - PROJECTIONS entry that consists of a list of the specified OutputStates
+            - WEIGHTS and EXPONENTS entries if they were specified
 
         """
         # FIX: MAKE SURE IT IS OK TO USE DICT PASSED IN (as params) AND NOT INADVERTENTLY OVERWRITING STUFF HERE
@@ -673,7 +681,7 @@ class InputState(State_Base):
 
         from PsyNeuLink.Components.States.OutputState import _parse_output_state_specification_dictionary
         from PsyNeuLink.Components.Projections.Projection import Projection
-        from PsyNeuLink.Globals.Keywords import RECEIVER
+        from PsyNeuLink.Globals.Keywords import SENDER
 
         if isinstance(params, dict):
 
@@ -703,18 +711,18 @@ class InputState(State_Base):
                         param_value = [param_value]
                     for param in param_value:
                         # If entry is a dict, it must be an OutputState specification dictionary
-                        if isinstance(param_value, dict):
+                        if isinstance(param, dict):
                             # Parse OutputState specification dictionary and append to PROJECTIONS entry
-                            output_states = _parse_output_state_specification_dictionary(owner, param_value)
+                            output_states = _parse_output_state_specification_dictionary(owner, param)
                             params[PROJECTIONS].append(output_states)
-                        elif isinstance(param_value, Projection):
-                            # Validate the Projection has a receiver and append to PROJECTIONS entry
-                            if hasattr(param_value, RECEIVER) and param_value.reciever is not None:
-                                params[PROJECTIONS].append(param_value.receiver)
+                        elif isinstance(param, Projection):
+                            # Validate the Projection has a sender and append to PROJECTIONS entry
+                            if hasattr(param, SENDER) and param.sender is not None:
+                                params[PROJECTIONS].append(param.sender)
                             else:
                                 raise InputStateError("Specification of {} in \'{}\' entry of InputState specification "
                                                       "dictionary for {} does not have a {}".
-                                                      format(Projection.__name__, PROJECTIONS, owner.name, RECEIVER))
+                                                      format(Projection.__name__, PROJECTIONS, owner.name, SENDER))
 
         elif isinstance(params, tuple):
         # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
@@ -726,8 +734,10 @@ class InputState(State_Base):
             #    that have been specified to project to the InputState
             if len(tuple_spec) == 2:
 
+                AFFERENT_SOURCE_INDEX = 1
+
                 # Get projection specification from tuple
-                afferent_source_spec = tuple_spec[1]
+                afferent_source_spec = tuple_spec[AFFERENT_SOURCE_INDEX]
                 # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
                 try:
                     params = self._parse_state_specific_entries(owner=owner,
@@ -744,10 +754,12 @@ class InputState(State_Base):
             # Tuple is (spec, weights, exponents<, afferent_source_spec>), for specification of Weights + projection to InputState
             elif len(tuple_spec) in {3, 4}:
 
+                AFFERENT_SOURCE_INDEX = 3
+
                 weight = tuple_spec[WEIGHT_INDEX]
                 exponent = tuple_spec[EXPONENT_INDEX]
                 try:
-                    afferent_source_spec = tuple_spec[PROJECTION_SPEC_INDEX]
+                    afferent_source_spec = tuple_spec[AFFERENT_SOURCE_INDEX]
                 except IndexError:
                     afferent_source_spec = None
 
@@ -759,7 +771,7 @@ class InputState(State_Base):
                         raise InputStateError("Item {} of tuple specification in InputState specification dicitionary "
                                               "for {} ({}) is not a recognized specification for one or more "
                                               "{}s, {}s, or {}s that project to it".
-                                              format(PROJECTION_SPEC_INDEX,
+                                              format(AFFERENT_SOURCE_INDEX,
                                                      owner.name,
                                                      afferent_source_spec,
                                                      Mechanism.__name__,
