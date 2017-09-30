@@ -1547,7 +1547,7 @@ class State_Base(State):
         raise StateError("PROGRAM ERROR: {} does not implement _get_primary_state method".
                          format(self.__class__.__name__))
 
-    def _parse_state_specific_entries(self, mechanism):
+    def _parse_state_specific_entries(self, owner, params):
         raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_entries method".
                          format(self.__class__.__name__))
 
@@ -2351,6 +2351,13 @@ def _parse_state_type(owner, state_spec):
 # FIX 9/28/17:  UPDATE TO ACCOMODATE (mech, weight, exponent<, matrix>) TUPLE FOR InputState
 # FIX 9/28/17:  UPDATE TO ACCOMODATE {MECHANISM:<>, OUTPUT_STATES:<>} for InputState
 # FIX 9/28/17:  UPDATE TO IMPLEMENT state specification dictionary as a Class
+# FIX: MAKE SURE IT IS OK TO USE DICT PASSED IN (as params) AND NOT INADVERTENTLY OVERWRITING STUFF HERE
+# FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputState SPECS
+#      CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
+#      THESE CAN BE USED BY THE InputState's LinearCombination Function
+#          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
+#      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
+#      TO A MECHANISM
 
 STATE_SPEC_INDEX = 0
 
@@ -2520,7 +2527,7 @@ def _parse_state_spec(owner,
             state_dict.update(state_spec)
             if params:
                 # Call state_type to parse any State-specific params
-                params = state_type._parse_state_specific_entries(state_type, params)
+                params = state_type._parse_state_specific_entries(owner=state_type, params=params)
                 # Update state_dict[PARAMS] with params
                 if state_dict[PARAMS] is None:
                     state_dict[PARAMS] = {}
@@ -2569,7 +2576,7 @@ def _parse_state_spec(owner,
     elif isinstance(state_spec, tuple):
 
         # Get state-specific params from tuple
-        params = state_type._parse_state_specific_entries(state_type, state_spec)
+        params = state_type._parse_state_specific_entries(owner=state_type, params=state_spec)
 
         # FIX: 9/17/17 NEED TO HANDLE (ParamName string, Mechanism) for state_type = ControlSignal
 

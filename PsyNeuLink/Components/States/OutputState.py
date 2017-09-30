@@ -902,7 +902,6 @@ def _parse_output_state_specification_dictionary(owner, dict):
         """
 
         # FIX: MAKE SURE IT IS OK TO USE DICT PASSED IN (as params) AND NOT INADVERTENTLY OVERWRITING STUFF HERE
-
         # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputState SPECS
         #      CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
         #      THESE CAN BE USED BY THE InputState's LinearCombination Function
@@ -910,8 +909,7 @@ def _parse_output_state_specification_dictionary(owner, dict):
         #      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
 
-        from PsyNeuLink.Components.States.State import STATE_SPEC_INDEX
-        from PsyNeuLink.Components.States.OutputState import _parse_output_state_specification_dictionary
+        from PsyNeuLink.Components.States.InputState import _parse_input_state_specification_dictionary
         from PsyNeuLink.Components.Projections.Projection import Projection
         from PsyNeuLink.Globals.Keywords import RECEIVER, PROJECTIONS, INPUT_STATES
 

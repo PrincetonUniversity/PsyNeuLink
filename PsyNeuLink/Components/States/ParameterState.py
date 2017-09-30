@@ -586,6 +586,137 @@ class ParameterState(State_Base):
 
         return value
 
+
+
+
+    @tc.typecheck
+    def _parse_state_specific_entries(self, owner, params:tc.any(dict, tuple)):
+        """Get Mechanism and Parameter for ParameterState
+
+        If params is a dict:
+            entry key can be any of the following, with the corresponding value:
+                Mechanism:<str> (name of parameter)
+                MECHANISM:<Mechanism> (must be accompanied by PARAMETER entry)
+                PARAMETER:<str> (must be accompanied by MECHANISM entry)
+                PROJECTIONS:dict (all of its entries must be one of the above)
+
+        If params is a tuple:
+            - the first must be a string that is a name of a parameter of the Mechanism in its second entry
+            - the second must resolve to a Mechanism that has the parameter named in the first entry
+
+        Returns params dict with:
+            - PROJECTIONS entry that consists of a list of the specified P
+        """
+
+        # FIX: MAKE SURE IT IS OK TO USE DICT PASSED IN (as params) AND NOT INADVERTENTLY OVERWRITING STUFF HERE
+        # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputState SPECS
+        #      CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
+        #      THESE CAN BE USED BY THE InputState's LinearCombination Function
+        #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
+        #      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
+        #      TO A MECHANISM
+
+        from PsyNeuLink.Components.States.InputState import _parse_input_state_specification_dictionary
+        from PsyNeuLink.Components.Projections.Projection import Projection
+        from PsyNeuLink.Globals.Keywords import RECEIVER, PROJECTIONS, INPUT_STATES
+
+        if isinstance(params, dict):
+
+            # Assume that if there is a dictionary specification in params, it must be for InputState(s)
+            #    for which the OutputState has been specified to send Projection(s).
+            if PROJECTIONS not in params or params[PROJECTIONS] is None:
+                params[PROJECTIONS] = []
+
+            # Process params for State-specific entries
+            for param_key, param_value in params.items():
+
+                # Key is a Mechanism, or the keyword MECHANISMS or INPUT_STATES:
+                if isinstance(param_key, Mechanism) or param_key in {MECHANISMS, INPUT_STATES}:
+                    # param_value is an InputState specification, not an InputState specification dictionary;
+                    if not isinstance(param_value, dict):
+                        # Convert to dict for processing by _parse_output_state_specification_dictionary
+                        param_value  = {param_key: param_value}
+                    # Get specified OutputStates from OutputState specification dictionary
+                    input_states = _parse_input_state_specification_dictionary(owner, param_value)
+                    # Append to PROJECTIONS entry of params
+                    params[PROJECTIONS].append(input_states)
+
+                # Key is PROJECTIONS
+                if param_key is PROJECTIONS:
+                    # If value is not a list, convert it to one for further processing
+                    if not isinstance(param_value, list):
+                        param_value = [param_value]
+                    for param in param_value:
+                        # If entry is a dict, it must be an InputState specification dictionary
+                        if isinstance(param, dict):
+                            # Parse InputState specification dictionary and append to PROJECTIONS entry
+                            input_states = _parse_input_state_specification_dictionary(owner, param)
+                            params[PROJECTIONS].append(input_states)
+                        elif isinstance(param, Projection):
+                            # Validate the Projection has a receiver and append to PROJECTIONS entry
+                            if hasattr(param, RECEIVER) and param.receiver is not None:
+                                params[PROJECTIONS].append(param.receiver)
+                            else:
+                                raise OutputStateError("Specification of {} in \'{}\' entry of OutputState "
+                                                       "specification dictionary for {} does not have a {}".
+                                                      format(Projection.__name__, PROJECTIONS, owner.name, RECEIVER))
+
+        elif isinstance(params, tuple):
+        # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
+
+            tuple_spec = params
+            EFFERENT_DESTINATION_INDEX = 1
+            INDEX_INDEX = 2
+
+            # Tuple is (state_spec, efferent_destination_spec<, index>):
+            #    efferent_destination_spec can be any specification that resolves to (a set of) InputState(s)
+            #    that have been specified as desitnations for projection(s) from the OutputState; index must be an int
+            if len(tuple_spec) in {2, 3}:
+
+                # Get projection specification from tuple
+                efferent_destination_spec = tuple_spec[EFFERENT_DESTINATION_INDEX]
+                if efferent_destination_spec is not None:
+                    # Recurisvely call _parse_state_specific_entries() to get InputStates for efferent_destination_spec
+                    try:
+                        params = self._parse_state_specific_entries(owner=owner,
+                                                                    params={PROJECTIONS: efferent_destination_spec})
+                    except OutputStateError:
+                        raise OutputStateError("2nd item of tuple specification in OutputState specification "
+                                               "dictionary for {} ({}) is not a recognized specification for "
+                                               "one or more {}s, {}s, or {}s that project to it".
+                                               format(owner.name, efferent_destination_spec,
+                                                      Mechanism.__name__,
+                                                      InputState.__name__,
+                                                      Projection.__name))
+                else:
+                    params = {}
+
+                if len(tuple_spec) == 3:
+                    index = tuple_spec[INDEX_INDEX]
+
+                if index is not None and not isinstance(index, numbers.Number):
+                    raise OutputStateError("Specification of the index ({}) in tuple of OutputState specification "
+                                          "dictionary for {} must be a number".format(index, owner.name))
+                params[INDEX] = index
+
+            else:
+                raise OutputStateError("Tuple provided in OuputState specification dictionary for {} of {} ({}) "
+                                       "must have either 2 (OutputState and Projection specification(s) items "
+                                       "or 3 (optional additional index item)".
+                                       format(OutputState.__name__, owner.name, tuple_spec))
+        return params
+
+
+
+
+
+
+
+
+
+
+
+
     @property
     def pathway_projections(self):
         raise ParameterStateError("PROGRAM ERROR: Attempt to access {} for {}; {}s do not have {}s".
