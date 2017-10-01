@@ -753,7 +753,7 @@ class OutputState(State_Base):
 
     # FIX: INTEGRATE WITH _parse_output_state_specification_dictionary ABOVE?
     @tc.typecheck
-    def _parse_state_specific_entries(self, owner, params:tc.any(dict, tuple)):
+    def _parse_state_specific_tuple(self, owner, state_specification_tuple):
         """Get InputStates and possibly index specified in an OutputState specification dictionary or tuple
 
         If params is a dict:
@@ -849,7 +849,7 @@ class OutputState(State_Base):
                 if efferent_destination_spec is not None:
                     # Recurisvely call _parse_state_specific_entries() to get InputStates for efferent_destination_spec
                     try:
-                        params = self._parse_state_specific_entries(owner=owner,
+                        params = self._parse_state_specific_tuple(owner=owner,
                                                                     params={PROJECTIONS: efferent_destination_spec})
                     except OutputStateError:
                         raise OutputStateError("2nd item of tuple specification in OutputState specification "

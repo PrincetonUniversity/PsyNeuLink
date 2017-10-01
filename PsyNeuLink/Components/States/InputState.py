@@ -643,32 +643,17 @@ class InputState(State_Base):
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
 
-# MODIFIED 9/29/17 NEW:
+# MODIFIED 9/30/17 NEW:
     @tc.typecheck
-    def _parse_state_specific_entries(self, owner, params:tc.any(dict, tuple)):
-        """Get OutputStates, weights, and/or exponents in an InputState specification dictionary or tuple
-
-        If params is a dict:
-            entry key can be any of the following, with the corresponding value:
-                Mechanism:<OutputState> or [OutputState<, OutputState..>]
-                MECHANISMS:<Mechanism> or [Mechanism<, Mechanism>]
-                OUTPUT_STATES:<OutputState> or [OutputState<, OutputState>]
-                PROJECTIONS:dict or Mechanism or [Mechanism, ...] or OutputState or [OutputState,...]
-                            (if it is dict, all of its entries must be one of the above)
-
-        If params is a tuple:
-            - the first must be an InputState specification (processed by _parse_state_spec, not here)
-            - if it has two items, the second must resolve to an OutputState
-                (parsed in a recursive call to _parse_state_specific_entries)
-            - if it has three or four items:
-                - the second is a weight specification
-                - the third is an exponent specification
-                - the fourth (optional) must resolve to an OutputState specification
-                  (parsed in a recursive call to _parse_state_specific_entries)
+    def _parse_state_specific_tuple(self, owner, state_specification_tuple):
+        """Get weights, exponents and/or any connections specified in an InputState specification tuple
+        
+        Tuple specification can be:
+            (state_spec, connections)
+            (state_spec, weights, exponents, connections)
 
         Returns params dict with:
-            - PROJECTIONS entry that consists of a list of the specified OutputStates
-            - WEIGHTS and EXPONENTS entries if they were specified
+            - WEIGHTS, EXPONENTS and/or CONNECTIONS entries if any of these were specified
 
         """
         # FIX: MAKE SURE IT IS OK TO USE DICT PASSED IN (as params) AND NOT INADVERTENTLY OVERWRITING STUFF HERE
@@ -680,122 +665,63 @@ class InputState(State_Base):
         #      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
 
-        from PsyNeuLink.Components.States.OutputState import _parse_output_state_specification_dictionary
+        from PsyNeuLink.Components.States.State import _parse_connection_specs
         from PsyNeuLink.Components.Projections.Projection import Projection
-        from PsyNeuLink.Globals.Keywords import SENDER
+        from PsyNeuLink.Globals.Keywords import CONNECTIONS        
 
-        if isinstance(params, dict):
+        params_dict = {}
+        tuple_spec = state_specification_tuple
 
-            # Assume that if there is a dictionary specification in params, it must be for OutputState(s)
-            #    from which the InputState has been specified to receive Projection(s).
-            if PROJECTIONS not in params or params[PROJECTIONS] is None:
-                params[PROJECTIONS] = []
-
-            # Process params for State-specific entries
-            for param_key, param_value in params.items():
-
-                # Key is a Mechanism, or the keyword MECHANISMS or OUTPUT_STATES:
-                if isinstance(param_key, Mechanism) or param_key in {MECHANISMS, OUTPUT_STATES}:
-                    # param_value is an OutputState specification, not an OutputState specification dictionary;
-                    if not isinstance(param_value, dict):
-                        # Convert to dict for processing by _parse_output_state_specification_dictionary
-                        param_value  = {param_key: param_value}
-                    # Get specified OutputStates from OutputState specification dictionary
-                    output_states = _parse_output_state_specification_dictionary(owner, param_value)
-                    # Append to PROJECTIONS entry of params
-                    params[PROJECTIONS].append(output_states)
-
-                # Key is PROJECTIONS
-                if param_key is PROJECTIONS:
-                    # If value is not a list, convert it to one for further processing
-                    if not isinstance(param_value, list):
-                        param_value = [param_value]
-                    for param in param_value:
-                        # If entry is a dict, it must be an OutputState specification dictionary
-                        if isinstance(param, dict):
-                            # Parse OutputState specification dictionary and append to PROJECTIONS entry
-                            output_states = _parse_output_state_specification_dictionary(owner, param)
-                            params[PROJECTIONS].append(output_states)
-                        elif isinstance(param, Projection):
-                            # Validate the Projection has a sender and append to PROJECTIONS entry
-                            if hasattr(param, SENDER) and param.sender is not None:
-                                params[PROJECTIONS].append(param.sender)
-                            else:
-                                raise InputStateError("Specification of {} in \'{}\' entry of InputState specification "
-                                                      "dictionary for {} does not have a {}".
-                                                      format(Projection.__name__, PROJECTIONS, owner.name, SENDER))
-
-        elif isinstance(params, tuple):
         # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
 
-            tuple_spec = params
 
-            # Tuple is (state_spec, <afferent_source_spec>):
-            #    afferent_source_spec can be any specification that resolves to (a set of) OutputState(s)
-            #    that have been specified to project to the InputState
-            if len(tuple_spec) == 2:
+        # Get connection (afferent Projection(s)) specification from tuple
+        CONNECTIONS_INDEX = len(tuple_spec)-1
+        try:
+            connections_spec = tuple_spec[CONNECTIONS_INDEX]
+            # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
+        except IndexError:
+            connections_spec = None
 
-                AFFERENT_SOURCE_INDEX = 1
+        if connections_spec:
+            try:
+                params_dict[CONNECTIONS] = _parse_connection_specs(self.__class__,
+                                                                   owner=owner,
+                                                                   params={connections_spec})
+            except InputStateError:
+                raise InputStateError("Item {} of tuple specification in InputState specification dictionary "
+                                      "for {} ({}) is not a recognized specification for one or more "
+                                      "{}s, {}s, or {}s that project to it".
+                                      format(CONNECTIONS_INDEX,
+                                             owner.name,
+                                             connections_spec,
+                                             Mechanism.__name__,
+                                             OutputState.__name__,
+                                             Projection.__name))
+    
+        # Tuple is (spec, weights, exponents<, afferent_source_spec>), 
+        #    for specification of weights and exponents,  + connection(s) (afferent projection(s)) to InputState
+        if len(tuple_spec) in {3, 4}:
 
-                # Get projection specification from tuple
-                afferent_source_spec = tuple_spec[AFFERENT_SOURCE_INDEX]
-                # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
-                try:
-                    params = self._parse_state_specific_entries(owner=owner,
-                                                                params={PROJECTIONS: afferent_source_spec})
-                except InputStateError:
-                    raise InputStateError("2nd item of tuple specification in InputState specification dicitionary "
-                                          "for {} ({}) is not a recognized specification for one or more "
-                                          "{}s, {}s, or {}s that project to it".
-                                          format(owner.name, afferent_source_spec,
-                                                 Mechanism.__name__,
-                                                 OutputState.__name__,
-                                                 Projection.__name))
+            weight = tuple_spec[WEIGHT_INDEX]
+            exponent = tuple_spec[EXPONENT_INDEX]
 
-            # Tuple is (spec, weights, exponents<, afferent_source_spec>), for specification of Weights + projection to InputState
-            elif len(tuple_spec) in {3, 4}:
+            if weight is not None and not isinstance(weight, numbers.Number):
+                raise InputStateError("Specification of the weight ({}) in tuple of InputState specification "
+                                      "dictionary for {} must be a number".format(weight, owner.name))
+            params_dict[WEIGHT] = weight
 
-                AFFERENT_SOURCE_INDEX = 3
+            if exponent is not None and not isinstance(exponent, numbers.Number):
+                raise InputStateError("Specification of the exponent ({}) in tuple of InputState specification "
+                                      "dictionary for {} must be a number".format(exponent, owner.name))
+            params_dict[EXPONENT] = exponent
 
-                weight = tuple_spec[WEIGHT_INDEX]
-                exponent = tuple_spec[EXPONENT_INDEX]
-                try:
-                    afferent_source_spec = tuple_spec[AFFERENT_SOURCE_INDEX]
-                except IndexError:
-                    afferent_source_spec = None
+        else:
+            raise StateError("Tuple provided as state_spec for {} of {} ({}) must have either 2, 3 or 4 items".
+                             format(InputState.__name__, owner.name, tuple_spec))
 
-                if afferent_source_spec:
-                    try:
-                        params = self._parse_state_specific_entries(owner=owner,
-                                                                    params={PROJECTIONS: afferent_source_spec})
-                    except InputStateError:
-                        raise InputStateError("Item {} of tuple specification in InputState specification dicitionary "
-                                              "for {} ({}) is not a recognized specification for one or more "
-                                              "{}s, {}s, or {}s that project to it".
-                                              format(AFFERENT_SOURCE_INDEX,
-                                                     owner.name,
-                                                     afferent_source_spec,
-                                                     Mechanism.__name__,
-                                                     OutputState.__name__,
-                                                     Projection.__name))
-                else:
-                    params = {}
-
-                if weight is not None and not isinstance(weight, numbers.Number):
-                    raise InputStateError("Specification of the weight ({}) in tuple of InputState specification "
-                                          "dictionary for {} must be a number".format(weight, owner.name))
-                params[WEIGHT] = weight
-
-                if exponent is not None and not isinstance(exponent, numbers.Number):
-                    raise InputStateError("Specification of the exponent ({}) in tuple of InputState specification "
-                                          "dictionary for {} must be a number".format(exponent, owner.name))
-                params[EXPONENT] = exponent
-
-            else:
-                raise StateError("Tuple provided as state_spec for {} of {} ({}) must have either 2, 3 or 4 items".
-                                 format(InputState.__name__, owner.name, tuple_spec))
-        return params
-# MODIFIED 9/29/17 END
+        return params_dict
+# MODIFIED 9/30/17 END
 
     @property
     def pathway_projections(self):

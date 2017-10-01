@@ -1550,8 +1550,8 @@ class State_Base(State):
         raise StateError("PROGRAM ERROR: {} does not implement _get_primary_state method".
                          format(self.__class__.__name__))
 
-    def _parse_state_specific_entries(self, owner, params):
-        raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_entries method".
+    def _parse_state_specific_tuple(self, owner, state_specification_tuple):
+        raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_tuple method".
                          format(self.__class__.__name__))
 
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
@@ -2517,7 +2517,7 @@ def _parse_state_spec(owner,
             if STATE_TYPE in state_spec and state_spec[STATE_TYPE] != state_type:
                 raise StateError("PROGRAM ERROR: STATE_TYPE entry in State specification dictionary for {} ({}) "
                                  "is not the same as one specified in call to _parse_state_spec ({})".
-                                 format(owner.name, state_spec[STATE_TYPE, state_type]))
+                                 format(owner.name, state_spec[STATE_TYPE], state_type))
             # Warn if VARIABLE was not in dict
             if not VARIABLE in state_spec and owner.prefs.verbosePref:
                 print("{} missing from specification dict for {} of {};  default ({}) will be used".
@@ -2541,8 +2541,6 @@ def _parse_state_spec(owner,
                 if PROJECTIONS in params:
                     connection_params.update(params[PROJECTIONS])
                 params[CONNECTIONS] = _parse_connection_specs(state_type, owner, connection_params)
-                # Get state-specific params add to params
-                params.update(state_type._parse_state_specific_entries(owner=state_type, params=params))
                 # Update state_dict[PARAMS] with params
                 if state_dict[PARAMS] is None:
                     state_dict[PARAMS] = {}
@@ -2583,15 +2581,11 @@ def _parse_state_spec(owner,
     # MODIFIED 9/29/17 NEW:
     # Specification tuple
     #    Assume first item is the state specification, and use as base for state_dict
-    #    Call _parse_state_specific_entries() with tuple to get params in dict form (to add to state_dict)
-    #    FYI, could be:
-    #        (state_spec, <Mechanism, OutputState or Projection specificaion()s) - for InputState or OutputState
-    #        (state_spec, weights, exponents<, projection specification>) - for InputState
-    #        (param_name, Mechanism) - for ParameterState
+    #    Call _parse_state_specific_tuple() with tuple to get params in dict form (to add to state_dict)
     elif isinstance(state_spec, tuple):
 
         # Get state-specific params from tuple
-        params = state_type._parse_state_specific_entries(owner=state_type, params=state_spec)
+        params = state_type._parse_state_specific_tuple(owner=state_type, state_specification_tuple=state_spec)
 
         # FIX: 9/17/17 NEED TO HANDLE (ParamName string, Mechanism) for state_type = ControlSignal
 
@@ -2619,15 +2613,12 @@ def _parse_state_spec(owner,
     #                               ParameterState, projection's (= parameter's) value;
     #                               OutputState, projection's variable .
     # Don't allow matrix keywords -- force them to be converted from a string into a value (below)
-    # MODIFIED 9/29/17 NEW:
-        # FIX: CHANGE "PROJECTIONS TO CONNECTIONS"
-    # MODIFIED 9/29/17 END
     elif _is_projection_spec(state_spec, include_matrix_spec=False):
         # state_spec = state_variable
         state_dict[VARIABLE] =  value
         if state_dict[PARAMS] is None:
             state_dict[PARAMS] = {}
-        state_dict[PARAMS].update({PROJECTIONS:[state_spec]})
+        state_dict[PARAMS].update({CONNECTIONS:[state_spec]})
 
     # string (keyword or name specification)
     elif isinstance(state_spec, str):
@@ -2681,9 +2672,15 @@ def _parse_state_spec(owner,
     return state_dict
 
 
-# MODIFIED 9/29/17 NEW:
+def is_state_class(arg):
+    if inspect.isclass(arg) and issubclass(arg, State):
+        return True
+    return False
+
+
+# MODIFIED 9/30/17 NEW:
 # FIX: NEED TO ADD RECOGNITION OF PROJECTION AS THE STATE SPECIFICATION ITSELF (OR JUST USE PROJECTION SPEC)
-# FIX: REPLACE "PROJECTIONS" WITH "CONNECT_WITH"
+# FIX: REPLACE "PROJECTIONS" WITH "CONNECTIONS"
 # FIX: IN RECURSIVE CALLS TO _parse_state_spec, SPECIFY THAT IT HAS TO RETURN AN INSTANTIATED STATE
 # FIX: MAKE SURE IT IS OK TO USE DICT PASSED IN (as params) AND NOT INADVERTENTLY OVERWRITING STUFF HERE
 # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS AND PROJECTION_SPEC FOR EACH ConnectWith ITEM:
@@ -2692,19 +2689,11 @@ def _parse_state_spec(owner,
 #          DICT ENTRIES: *STATE*, *WEIGHT*, *EXPONENT*, *PROJECTION*
 #          TUPLE: (State, weight, exponent, projection_spec)
 #      PURPOSE:  Resolve to set of specs that can be handed to Composition to instantiate
-#      PROJECT SHOULD BE USED TO INSTANTIATE THE PROJECTION TO/FROM THE SPECIFIED STATE 
-#      WEIGHTS AND EXPONENTS SHOULD BE USED BY THE InputState's LinearCombination Function 
+#      PROJECT SHOULD BE USED TO INSTANTIATE THE PROJECTION TO/FROM THE SPECIFIED STATE
+#      WEIGHTS AND EXPONENTS SHOULD BE USED BY THE InputState's LinearCombination Function
 #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
-#          (NOTE: THESE ARE DISTINCT FROM THE WEIGHT AND EXPONENT FOR THE InputState ITSELF) 
+#          (NOTE: THESE ARE DISTINCT FROM THE WEIGHT AND EXPONENT FOR THE InputState ITSELF)
 #      THIS WOULD ALLOW TWO LEVELS OF HIEARCHICAL NESTING OF ALGEBRAIC COMBINATIONS OF INPUT VALUES TO A MECHANISM
-
-
-def is_state_class(arg):
-    if inspect.isclass(arg) and issubclass(arg, State):
-        return True
-    return False
-
-
 @tc.typecheck
 def _parse_connection_specs(connectee_state_type:is_state_class,
                             owner,
@@ -2959,21 +2948,17 @@ def _parse_connection_specs(connectee_state_type:is_state_class,
                     _parse_connection_specs(connectee_state_type, owner, state_connect_spec)
 
         # Process tuple, including final validation of State specification
-
         # Tuple could be:
         #     (state_spec, projection_spec) or
         #     (state_spec, weight, exponent, projection_spec)
-        # So, need to find last item and use that as connection_spec
-        # Also Validates
+        # Note:  this is NOT the same as the State specification tuple (which can have a similar format);
+        #        the weights and exponents here specify *individual* Projections to a particular state,
+        #            (vs. weights and exponents for an entire state (as for InputState);
+        #        State specification tuple is handled in the _parse_state_specific_tuple() method of State subclasses
 
         elif isinstance(connection, tuple):
         # Notes:
         #    - first item is assumed to always be a specification for the State itself
-
-            # 1) DETERMINE LENGTH, AND THEN MAKE VARIABLE ASSIGNENTS
-            # 2) VALIDATE STATE
-            # 3) ASSIGN DEFAULTS FOR SHORT TUPLE
-            # 4) RETURN ConnectionTuple
 
             if len(connection) == 2:
                 state_spec, projection_spec = connection

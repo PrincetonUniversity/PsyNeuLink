@@ -590,7 +590,7 @@ class ParameterState(State_Base):
 
 
     @tc.typecheck
-    def _parse_state_specific_entries(self, owner, params:tc.any(dict, tuple)):
+    def _parse_state_specific_tuple(self, owner, state_specification_tuple):
         """Get Mechanism and Parameter for ParameterState
 
         If params is a dict:
