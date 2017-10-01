@@ -534,7 +534,8 @@ STATE = "State"
 # These are used as keys in State specification dictionaries
 STATES = "STATES"
 STATE_TYPE = "state_type"
-PROJECTIONS = "projections"  # Used to specify projection list to State
+PROJECTIONS = "projections"  # Used to specify projection list to State DEPRECATED;  REPLACED BY CONNECTIONS
+CONNECTIONS = 'CONNECTIONS'
 kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
@@ -561,7 +562,6 @@ OUTPUT_STATE_PARAMS = 'output_states_params'
 STANDARD_OUTPUT_STATES = 'standard_output_states'
 INDEX = 'index'
 CALCULATE = 'calculate'
-
 
 #endregion
 

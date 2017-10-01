@@ -864,7 +864,7 @@ class Projection_Base(Projection):
         #    but averts exception when setting paramsCurrent in Component (around line 850)
         pass
 
-def _is_projection_spec(spec, include_matrix_keywords=True):
+def _is_projection_spec(spec, include_matrix_spec=True):
     """Evaluate whether spec is a valid Projection specification
 
     Return `True` if spec is any of the following:
@@ -873,7 +873,7 @@ def _is_projection_spec(spec, include_matrix_keywords=True):
     + 2-item tuple of which the second is a projection_spec (checked recursively with thi method):
     + specification dict containing:
         + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
-    + Matrix keyword (if include_matrix_keywords is set to `True`)
+    + valid matrix specification (if include_matrix_spec is set to `True`)
 
     Otherwise, return :keyword:`False`
     """
@@ -886,7 +886,7 @@ def _is_projection_spec(spec, include_matrix_keywords=True):
         return True
     if isinstance(spec, str) and spec in PROJECTION_SPEC_KEYWORDS:
         return True
-    if include_matrix_keywords:
+    if include_matrix_spec:
         if isinstance(spec, str) and spec in MATRIX_KEYWORD_SET:
             return True
         from PsyNeuLink.Components.Functions.Function import get_matrix

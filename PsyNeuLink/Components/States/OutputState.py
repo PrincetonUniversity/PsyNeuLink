@@ -751,129 +751,6 @@ class OutputState(State_Base):
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
 
-    @property
-    def pathway_projections(self):
-        return self.efferents
-
-    @pathway_projections.setter
-    def pathway_projections(self, assignment):
-        self.efferents = assignment
-
-def _parse_output_state_specification_dictionary(owner, dict):
-    """Parse dictionary of OutputState specifications, and return list of OutputStates
-
-    Each entry must have a key that is a Mechanism or the keyword MECHANISMS or OUTPUT_STATES
-       with the following corresponding values:
-       Mechanism:<OutputState or list of OutputStates>
-       MECHANISMS:<Mechanism or Projection or list of either>
-       OUTPUT_STATES:<OutuputState or Projection or list of either>
-    """
-
-    # FIX: NEED TO CHECK THAT THE sender OF ANY PROJECTIONS SPECIFICATIONS ARE ASSIGNED TO THE OWNER
-    #        RAISE EXCEPTION OR WARNING IF NOT
-    # FIX: NEED TO CHECK THAT THE receiver OF ANY PROJECTIONS SPECIFICATIONS EXIST
-    #        RAISE EXCEPTION OR WARNING IF NOT
-
-    from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
-    from PsyNeuLink.Components.States.InputState import InputState
-    from PsyNeuLink.Components.Projections.Projection import Projection
-    from PsyNeuLink.Globals.Keywords import MECHANISMS, OUTPUT_STATES
-
-    # def _parse_mechanism_or_output_state_keys(entry, owner):
-    for param_key, param_value in dict:
-        # If the entry is not a list, convert it to one for further processing
-        if not isinstance(param_value, list):
-            param_value = [param_value]
-        output_states = []
-        # Key is the keyword MECHANISMS or OUTPUT_STATES
-        if isinstance(param_key, str):
-            # Must be a list of Mechanism(s) (primary OutputState(s) will be used) or Projection(s)
-            if param_key is MECHANISMS:
-                for param in param_value:
-                    if isinstance(param, Mechanism):
-                        output_states.append(param.output_state)
-                    elif isinstance(param, Projection):
-                        output_states.append(param.receiver)
-                    else:
-                        raise OutputStateError("Specification in \'{}\' entry of OutputState specification dictionary "
-                                              "for {} ({}) is not a {} or {} to one".
-                                              format(MECHANISMS, owner.name, param,
-                                                     Mechanism.__name__, Projection.__name__,))
-            # Must be a list of OutputState(s) (not names, as Mechanism's are not specified) or Projection(s)
-            elif param_key is OUTPUT_STATES:
-                for param in param_value:
-                    if isinstance(param, OutputState):
-                        output_states.append(param.owner.output_state)
-                    elif isinstance(param, Projection):
-                        output_states.append(param.receiver)
-                    else:
-                        raise OutputStateError("Specification in {} entry of OutputState specification dictionary "
-                                              "for {} ({}) is not a {} or {}".
-                                              format(OUTPUT_STATES, owner.name, param,
-                                                     OutputState.__name__, Projection.__name__))
-            else:
-                raise OutputStateError("Key for an entry of the OutputState specification dictionary for {} "
-                                      "is an unrecognized string (\'{}\')".format(owner.name, param_key))
-        # Key is a Mechanism, value must be a list of OutputState(s) or Projection(s) to one(s) for that Mechanism
-        elif  isinstance(param_key, Mechanism):
-            mech = param_key
-
-            for param in param_value:
-                # Entry is the name of an OutputState
-                if isinstance(param, str):
-                    try:
-                        # Get the named OutputState
-                        param = mech.output_states[param]
-                    except IndexError:
-                        raise OutputStateError("\'{}\' is not the name of an {} of {} "
-                                              "(in OutputState specification dictionary for {} of {})".
-                                              format(param,
-                                                     OutputState.__name__,
-                                                     mech.name,
-                                                     InputState.__name__,
-                                                     owner.name))
-                # Entry is an OutputState
-                elif isinstance(param, OutputState):
-                    # Validate that it belongs to the Mechanism
-                    if param.owner is mech:
-                        output_states.append(param)
-                    else:
-                        raise OutputStateError("{} is not an {} of {}"
-                                              "(in OutputState specification dictionary for {} of {}".
-                                              format(param.name,
-                                                     OutputState.__name__,
-                                                     mech.name,
-                                                     InputState.__name__,
-                                                     owner.name))
-                # Entry is a Projection
-                elif isinstance(param, Projection):
-                    # Validate that it's receiver belongs to the Mechanism
-                    if param.receiver.owner is mech:
-                        output_states.append(param.receiver)
-                    else:
-                        raise OutputStateError("{} does not project to an {} of {}"
-                                              "(in OutputState specification dictionary for {} of {}".
-                                              format(param.name,
-                                                     OutputState.__name__,
-                                                     mech.name,
-                                                     InputState.__name__,
-                                                     owner.name))
-                else:
-                    raise OutputStateError("{} is not an {} of, or a {} that projects to an {} of {} "
-                                          "(in OutputState specification dictionary for {} of {}".
-                                          format(param,
-                                                 OutputState.__name__,
-                                                 Projection.__name__,
-                                                 OutputState.__name__,
-                                                 mech.name,
-                                                 InputState.__name__,
-                                                 owner.name))
-
-        else:
-            raise OutputStateError("Illegal key for an entry of the OutputState specification dictionary for {} ({})".
-                                  format(owner.name, param_key))
-        return output_states
-
     # FIX: INTEGRATE WITH _parse_output_state_specification_dictionary ABOVE?
     @tc.typecheck
     def _parse_state_specific_entries(self, owner, params:tc.any(dict, tuple)):
@@ -909,14 +786,15 @@ def _parse_output_state_specification_dictionary(owner, dict):
         #      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
 
-        from PsyNeuLink.Components.States.InputState import _parse_input_state_specification_dictionary
+        from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+        from PsyNeuLink.Components.States.InputState import InputState, _parse_input_state_specification_dictionary
         from PsyNeuLink.Components.Projections.Projection import Projection
-        from PsyNeuLink.Globals.Keywords import RECEIVER, PROJECTIONS, INPUT_STATES
+        from PsyNeuLink.Globals.Keywords import RECEIVER, PROJECTIONS, INPUT_STATES, MECHANISMS
 
         if isinstance(params, dict):
 
             # Assume that if there is a dictionary specification in params, it must be for InputState(s)
-            #    for which the OutputState has been specified to send Projection(s).
+            #    to which the OutputState has been specified to send Projection(s).
             if PROJECTIONS not in params or params[PROJECTIONS] is None:
                 params[PROJECTIONS] = []
 
@@ -977,7 +855,8 @@ def _parse_output_state_specification_dictionary(owner, dict):
                         raise OutputStateError("2nd item of tuple specification in OutputState specification "
                                                "dictionary for {} ({}) is not a recognized specification for "
                                                "one or more {}s, {}s, or {}s that project to it".
-                                               format(owner.name, efferent_destination_spec,
+                                               format(owner.name,
+                                                      efferent_destination_spec,
                                                       Mechanism.__name__,
                                                       InputState.__name__,
                                                       Projection.__name))
@@ -998,6 +877,129 @@ def _parse_output_state_specification_dictionary(owner, dict):
                                        "or 3 (optional additional index item)".
                                        format(OutputState.__name__, owner.name, tuple_spec))
         return params
+
+    @property
+    def pathway_projections(self):
+        return self.efferents
+
+    @pathway_projections.setter
+    def pathway_projections(self, assignment):
+        self.efferents = assignment
+
+def _parse_output_state_specification_dictionary(owner, dict):
+    """Parse dictionary of OutputState specifications, and return list of OutputStates
+
+    Each entry must have a key that is a Mechanism or the keyword MECHANISMS or OUTPUT_STATES
+       with the following corresponding values:
+       Mechanism:<OutputState or list of OutputStates>
+       MECHANISMS:<Mechanism or Projection or list of either>
+       OUTPUT_STATES:<OutputState or Projection or list of either>
+    """
+
+    # FIX: NEED TO CHECK THAT THE sender OF ANY PROJECTIONS SPECIFICATIONS ARE ASSIGNED TO THE OWNER
+    #        RAISE EXCEPTION OR WARNING IF NOT
+    # FIX: NEED TO CHECK THAT THE receiver OF ANY PROJECTIONS SPECIFICATIONS EXIST
+    #        RAISE EXCEPTION OR WARNING IF NOT
+
+    from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+    from PsyNeuLink.Components.States.InputState import InputState
+    from PsyNeuLink.Components.Projections.Projection import Projection
+    from PsyNeuLink.Globals.Keywords import MECHANISMS, OUTPUT_STATES
+
+    for param_key, param_value in dict:
+        # If the entry is not a list, convert it to one for further processing
+        if not isinstance(param_value, list):
+            param_value = [param_value]
+        output_states = []
+        # Key is the keyword MECHANISMS or OUTPUT_STATES
+        if isinstance(param_key, str):
+            # Must be a list of Mechanism(s) (primary OutputState(s) will be used) or Projection(s)
+            if param_key is MECHANISMS:
+                for param in param_value:
+                    if isinstance(param, Mechanism):
+                        output_states.append(param.output_state)
+                    elif isinstance(param, Projection):
+                        output_states.append(param.sender)
+                    else:
+                        raise OutputStateError("Specification in \'{}\' entry of OutputState specification dictionary "
+                                              "for {} ({}) is not a {} or {} to one".
+                                              format(MECHANISMS, owner.name, param,
+                                                     Mechanism.__name__, Projection.__name__,))
+            # Must be a list of OutputState(s) (not names, as Mechanism's are not specified) or Projection(s)
+            elif param_key is OUTPUT_STATES:
+                for param in param_value:
+                    if isinstance(param, OutputState):
+                        output_states.append(param)
+                    elif isinstance(param, Projection):
+                        output_states.append(param.sender)
+                    else:
+                        raise OutputStateError("Specification in {} entry of OutputState specification dictionary "
+                                              "for {} ({}) is not a {} or {}".
+                                              format(OUTPUT_STATES, owner.name, param,
+                                                     OutputState.__name__, Projection.__name__))
+            else:
+                raise OutputStateError("Key for an entry of the OutputState specification dictionary for {} "
+                                      "is an unrecognized string (\'{}\')".format(owner.name, param_key))
+        # Key is a Mechanism, value must be a list of OutputState(s) or Projection(s) from one(s) of that Mechanism
+        elif  isinstance(param_key, Mechanism):
+            mech = param_key
+
+            for param in param_value:
+                # Entry is the name of an OutputState
+                if isinstance(param, str):
+                    try:
+                        # Get the named OutputState
+                        param = mech.output_states[param]
+                    except IndexError:
+                        raise OutputStateError("\'{}\' is not the name of an {} of {} "
+                                              "(in OutputState specification dictionary for {} of {})".
+                                              format(param,
+                                                     OutputState.__name__,
+                                                     mech.name,
+                                                     InputState.__name__,
+                                                     owner.name))
+                # Entry is an OutputState
+                elif isinstance(param, OutputState):
+                    # Validate that it belongs to the Mechanism
+                    if param.owner is mech:
+                        output_states.append(param)
+                    else:
+                        raise OutputStateError("{} is not an {} of {}"
+                                              "(in OutputState specification dictionary for {} of {}".
+                                              format(param.name,
+                                                     OutputState.__name__,
+                                                     mech.name,
+                                                     InputState.__name__,
+                                                     owner.name))
+                # Entry is a Projection
+                elif isinstance(param, Projection):
+                    # Validate that it's sender belongs to the Mechanism
+                    if param.sender.owner is mech:
+                        output_states.append(param.sender)
+                    else:
+                        raise OutputStateError("{} does not project from an {} of {}"
+                                              "(in OutputState specification dictionary for {} of {}".
+                                              format(param.name,
+                                                     OutputState.__name__,
+                                                     mech.name,
+                                                     InputState.__name__,
+                                                     owner.name))
+                else:
+                    raise OutputStateError("{} is not an {} of, or a {} that projects from an {} of {} "
+                                          "(in OutputState specification dictionary for {} of {}".
+                                          format(param,
+                                                 OutputState.__name__,
+                                                 Projection.__name__,
+                                                 OutputState.__name__,
+                                                 mech.name,
+                                                 InputState.__name__,
+                                                 owner.name))
+
+        else:
+            raise OutputStateError("Illegal key for an entry of the OutputState specification dictionary for {} ({})".
+                                  format(owner.name, param_key))
+        return output_states
+
 
 def _instantiate_output_states(owner, output_states=None, context=None):
     """Call State._instantiate_state_list() to instantiate ContentAddressableList of OutputState(s)

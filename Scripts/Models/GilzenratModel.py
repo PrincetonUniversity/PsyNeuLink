@@ -17,7 +17,7 @@ from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.Recur
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA import LCA
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Library.Subsystems.AGT.LCControlMechanism import LCControlMechanism
-from PsyNeuLink.Globals.Keywords import FULL_CONNECTIVITY_MATRIX, VALUE, PROJECTIONS
+from PsyNeuLink.Globals.Keywords import FULL_CONNECTIVITY_MATRIX, VARIABLE, VALUE, PROJECTIONS
 
 
 input_layer = TransferMechanism(size=2,
@@ -47,7 +47,7 @@ response = RecurrentTransferMechanism(size=1,
 LC = LCControlMechanism(
         objective_mechanism=ObjectiveMechanism(
                                     monitored_output_states=[decision_layer],
-                                    input_states=[{VALUE:[0],
+                                    input_states=[{VARIABLE:[0],
                                                    PROJECTIONS:np.array([[1],[0]])
                                                    }],
                                     # # Alternative form of specification:
