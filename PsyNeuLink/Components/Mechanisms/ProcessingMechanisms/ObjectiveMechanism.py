@@ -639,14 +639,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             else:
                 raise ObjectiveMechanismError("PROGRAM ERROR: monitored_output_states not instantiated as param or attirb")
 
-            if len(target_set[INPUT_STATES]) != len(monitored_output_states):
-                raise ObjectiveMechanismError("The number of items in the \'{}\'arg for {} ({}) "
-                                              "must equal of the number in the \'{}\' arg ({})".
-                                     format(INPUT_STATES,
-                                            self.name,
-                                            len(target_set[INPUT_STATES]),
-                                            MONITORED_OUTPUT_STATES,
-                                        len(target_set[MONITORED_OUTPUT_STATES])))
+            # if len(target_set[INPUT_STATES]) != len(monitored_output_states):
+            #     raise ObjectiveMechanismError("The number of items in the \'{}\'arg for {} ({}) "
+            #                                   "must equal of the number in the \'{}\' arg ({})".
+            #                          format(INPUT_STATES,
+            #                                 self.name,
+            #                                 len(target_set[INPUT_STATES]),
+            #                                 MONITORED_OUTPUT_STATES,
+            #                             len(target_set[MONITORED_OUTPUT_STATES])))
 
         if MONITORED_OUTPUT_STATES in target_set and target_set[MONITORED_OUTPUT_STATES] is not None:
             _parse_monitored_output_states(source=self,

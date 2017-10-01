@@ -2534,13 +2534,16 @@ def _parse_state_spec(owner,
                 # Call state_type to parse any State-specific params
                 # FIX: TEST THAT ENTRIES EXIST IN PARAMS?
                 # Get and parse connection specifications for the State
-                connection_params = {}
+                connection_params = []
                 if CONNECTIONS in params:
-                    connection_params.update(params[CONNECTIONS])
+                    # connection_params.update(params)
+                    connection_params.append(params[CONNECTIONS])
                 # For backward compatibility:
                 if PROJECTIONS in params:
-                    connection_params.update(params[PROJECTIONS])
-                params[CONNECTIONS] = _parse_connection_specs(state_type, owner, connection_params)
+                    # connection_params.update(params)
+                    connection_params.append(params[PROJECTIONS])
+                if connection_params:
+                    params[CONNECTIONS] = _parse_connection_specs(state_type, owner, connection_params)
                 # Update state_dict[PARAMS] with params
                 if state_dict[PARAMS] is None:
                     state_dict[PARAMS] = {}
@@ -2585,7 +2588,9 @@ def _parse_state_spec(owner,
     elif isinstance(state_spec, tuple):
 
         # Get state-specific params from tuple
-        params = state_type._parse_state_specific_tuple(owner=state_type, state_specification_tuple=state_spec)
+        params = state_type._parse_state_specific_tuple(state_type,
+                                                        owner=owner,
+                                                        state_specification_tuple=state_spec)
 
         # FIX: 9/17/17 NEED TO HANDLE (ParamName string, Mechanism) for state_type = ControlSignal
 
@@ -2618,7 +2623,8 @@ def _parse_state_spec(owner,
         state_dict[VARIABLE] =  value
         if state_dict[PARAMS] is None:
             state_dict[PARAMS] = {}
-        state_dict[PARAMS].update({CONNECTIONS:[state_spec]})
+        # state_dict[PARAMS].update({CONNECTIONS:[state_spec]})
+        state_dict[PARAMS].update({PROJECTIONS:[state_spec]})
 
     # string (keyword or name specification)
     elif isinstance(state_spec, str):
@@ -2697,7 +2703,8 @@ def is_state_class(arg):
 @tc.typecheck
 def _parse_connection_specs(connectee_state_type:is_state_class,
                             owner,
-                            connections:tc.any(State, Mechanism, dict, tuple, ConnectionTuple)):
+                            # connections:tc.any(State, Mechanism, dict, tuple, ConnectionTuple)):
+                            connections):
     """Parse specification(s) for States to/from which the connectee_state_type should be connected
 
     TERMINOLOGY NOTE:
@@ -2859,7 +2866,7 @@ def _parse_connection_specs(connectee_state_type:is_state_class,
         #     to validate the state spec and append ConnectionTuple to connect_with_states
         if isinstance(connection, (Mechanism, State) or _is_projection_spec(connection, include_matrix_spec=False)):
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, DEFAULT_PROJECTION)
-            _parse_connection_specs(connection_tuple)
+            _parse_connection_specs(ConnectWith, owner, connection_tuple)
 
         # Dict of one or more Mechanism specifications, used to specify individual States of (each) Mechanism;
         #   convert all entries to tuples and call _parse_connection_specs recursively to generate ConnectionTuples;
@@ -2903,7 +2910,8 @@ def _parse_connection_specs(connectee_state_type:is_state_class,
 
                         # Call _get_existing_state to parse if it is a str,
                         #    and in either case to make sure it belongs to mech
-                        state = _get_existing_state(state_spec=state_connect_spec,
+                        state = _get_existing_state(owner=owner,
+                                                    state_spec=state_connect_spec,
                                                     state_type=connect_with_attr,
                                                     mech=mech,
                                                     projection_socket=PROJECTION_SOCKET)
@@ -2919,7 +2927,8 @@ def _parse_connection_specs(connectee_state_type:is_state_class,
                         # Get STATE entry
                         state_spec = state_connect_spec[STATE]
                         # Parse it to get reference to actual State make sure it belongs to mech:
-                        state = _get_existing_state(state_spec=state_spec,
+                        state = _get_existing_state(owner=owner,
+                                                    state_spec=state_spec,
                                                     state_type=connect_with_attr,
                                                     mech=mech,
                                                     projection_socket=PROJECTION_SOCKET)
@@ -2931,7 +2940,8 @@ def _parse_connection_specs(connectee_state_type:is_state_class,
                         # Get STATE entry
                         state_spec = state_connect_spec[0]
                         # Parse it to get reference to actual State make sure it belongs to mech:
-                        state = _get_existing_state(state_spec=state_spec,
+                        state = _get_existing_state(owner=owner,
+                                                    state_spec=state_spec,
                                                     state_type=connect_with_attr,
                                                     mech=mech,
                                                     projection_socket=PROJECTION_SOCKET)
@@ -2970,16 +2980,18 @@ def _parse_connection_specs(connectee_state_type:is_state_class,
                 # FIX: FINISH ERROR MESSAGE
                 raise StateError("WRONG LENGTH OF TUPLE MESSAGE".format())
 
-            # Validate state specification and get actual state referenced
-            if isinstance(state_spec, Mechanism):
-                mech = state_spec
-                state = None
-            else:
-                state = state_spec
-                mech = None
-            state = _get_existing_state(state_spec=state,
+            # # Validate state specification and get actual state referenced
+            # if isinstance(state_spec, Mechanism):
+            #     mech = state_spec
+            #     state = None
+            # else:
+            #     state = state_spec
+            #     mech = None
+            state = _get_existing_state(owner=owner,
+                                        # state_spec=state,
+                                        state_spec=state_spec,
                                         state_type=ConnectWith,
-                                        mech=mech,
+                                        # mech=mech,
                                         mech_state_attribute=connect_with_attr,
                                         projection_socket=PROJECTION_SOCKET)
 
@@ -2988,13 +3000,15 @@ def _parse_connection_specs(connectee_state_type:is_state_class,
                 state_name = state.name
             else:
                 state_name = state
-            if not isinstance(state, connectee_state_type):
-                raise StateError("Connection specified for {} to a State ({}) of {}"
+            if not isinstance(state, ConnectWith):
+                raise StateError("Connection was specified for a(n) {} of {} to a State ({}) of {} "
                                  "that is of the wrong type ({}); should be {}".
-                                 format(owner.name,
-                                        state_name, mech.name,
+                                 format(connectee_state_type.__name__,
+                                        owner.name,
+                                        # state_name, mech.name,
+                                        state_name, state_spec.name,
                                         state.__class__.__name__,
-                                        connectee_state_type.__name__))
+                                        ConnectWith.__name__))
 
             if not _is_projection_spec(projection_spec):
                 raise StateError("Invalid projection specification ({}) for {} "
@@ -3045,9 +3059,9 @@ def _get_existing_state(owner,
 
     If state_spec is:
         State name (str), *mech* and *mech_state_attribute* args and must be specified
-        Mechanism, *state_type* must be specified, and primary State is returned
-        Projection, *projection_socket* arg must be specified and
-            Projection must be instantiated or in deferred_init, with projection_socket attribute assigned
+        Mechanism, *state_spec* must be a Mechanism, and *state_type* must be specified; primary State is returned
+        Projection, *projection_socket* arg must be specified;
+                    Projection must be instantiated or in deferred_init, with projection_socket attribute assigned
 
     IMPLEMENTATION NOTES:
     Currently does not support State specification dict (referenced State must be instantiated)
@@ -3083,12 +3097,12 @@ def _get_existing_state(owner,
 
         if state_type is None:
             raise StateError("PROGRAM ERROR: The type of State requested for {} must be specified "
-                             "to get its primary State".format(mech.name))
+                             "to get its primary State".format(state_spec.name))
         try:
-            state = state_type._get_primary_state(state_type, mech)
+            state = state_type._get_primary_state(state_type, state_spec)
         except StateError:
             raise StateError("{} does not seem to have a primary State of type {}"
-                             .format(mech.name, state_type.__name__))
+                             .format(state_spec.name, state_type.__name__))
 
     # Get state from Projection specification (exclude matrix spec as it can't be used to determine the state);
     #     must be an instantiated Projection (at least for now)
@@ -3129,7 +3143,10 @@ def _get_existing_state(owner,
                               format(Projection.__name__, state_type.__name__, owner.name, state_spec))
 
     else:
-        raise StateError("Unrecognized state specification: {}".format(state_spec))
+        if state_spec is None:
+            raise StateError("PROGRAM ERROR: Missing state specification for {}".format(owner.name))
+        else:
+            raise StateError("Unrecognized state specification: {} for {}".format(state_spec, owner.name))
 
     return state
 

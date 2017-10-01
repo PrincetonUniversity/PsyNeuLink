@@ -46,10 +46,18 @@ response = RecurrentTransferMechanism(size=1,
 #    and a MappingProjection to it that zeros the contribution of the decision unit in the decision layer
 LC = LCControlMechanism(
         objective_mechanism=ObjectiveMechanism(
-                                    monitored_output_states=[decision_layer],
+                                    # monitored_output_states=[decision_layer],
+                                    # input_states=[{VARIABLE:[0],
+                                    #                PROJECTIONS:np.array([[1],[0]])
+                                    #                }],
+                                    # MODIFIED 10/1/17 NEW
+                                    monitored_output_states=None,
+                                    # InputState specification dictionary:
                                     input_states=[{VARIABLE:[0],
-                                                   PROJECTIONS:np.array([[1],[0]])
-                                                   }],
+                                                   PROJECTIONS:(decision_layer,np.array([[1],[0]]))}],
+                                    # InputState specification tuple:
+                                    # input_states=[([0],(decision_layer,np.array([[1],[0]])))],
+                                    # MODIFIED 10/1/17 END
                                     # # Alternative form of specification:
                                     # monitored_output_states=[(decision_layer, None, None, np.array([[1],[0]]))],
                                     # input_states=[[0]],

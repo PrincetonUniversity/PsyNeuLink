@@ -652,8 +652,7 @@ class InputState(State_Base):
             (state_spec, connections)
             (state_spec, weights, exponents, connections)
 
-        Returns params dict with:
-            - WEIGHTS, EXPONENTS and/or CONNECTIONS entries if any of these were specified
+        Returns params dict with WEIGHT, EXPONENT and/or CONNECTIONS entries if any of these was specified.
 
         """
         # FIX: MAKE SURE IT IS OK TO USE DICT PASSED IN (as params) AND NOT INADVERTENTLY OVERWRITING STUFF HERE
@@ -685,14 +684,16 @@ class InputState(State_Base):
 
         if connections_spec:
             try:
-                params_dict[CONNECTIONS] = _parse_connection_specs(self.__class__,
+                # params_dict[CONNECTIONS] = _parse_connection_specs(self.__class__,
+                params_dict[PROJECTIONS] = _parse_connection_specs(self.__class__,
                                                                    owner=owner,
-                                                                   params={connections_spec})
+                                                                   connections={connections_spec})
             except InputStateError:
-                raise InputStateError("Item {} of tuple specification in InputState specification dictionary "
+                raise InputStateError("Item {} of tuple specification in {} specification dictionary "
                                       "for {} ({}) is not a recognized specification for one or more "
                                       "{}s, {}s, or {}s that project to it".
                                       format(CONNECTIONS_INDEX,
+                                             InputState.__name__,
                                              owner.name,
                                              connections_spec,
                                              Mechanism.__name__,
@@ -707,13 +708,13 @@ class InputState(State_Base):
             exponent = tuple_spec[EXPONENT_INDEX]
 
             if weight is not None and not isinstance(weight, numbers.Number):
-                raise InputStateError("Specification of the weight ({}) in tuple of InputState specification "
-                                      "dictionary for {} must be a number".format(weight, owner.name))
+                raise InputStateError("Specification of the weight ({}) in tuple of {} specification dictionary "
+                                      "for {} must be a number".format(weight, InputState.__name__, owner.name))
             params_dict[WEIGHT] = weight
 
             if exponent is not None and not isinstance(exponent, numbers.Number):
-                raise InputStateError("Specification of the exponent ({}) in tuple of InputState specification "
-                                      "dictionary for {} must be a number".format(exponent, owner.name))
+                raise InputStateError("Specification of the exponent ({}) in tuple of {} specification dictionary "
+                                      "for {} must be a number".format(exponent, InputState.__name__, owner.name))
             params_dict[EXPONENT] = exponent
 
         else:

@@ -411,3 +411,47 @@ class ModulatorySignal(OutputState):
 
         for receiver_spec in modulatory_projection_specs:
             self._instantiate_projection_from_state(projection_spec=type(self), receiver=receiver_spec, context=context)
+
+# MODIFIED 9/30/17 NEW:
+    def _parse_state_specific_tuple(self, owner, state_specification_tuple):
+        """Get connections specified in a ParameterState specification tuple
+
+        Tuple specification can be:
+            (state_spec, connections)
+
+        Returns params dict with CONNECTIONS entries if any of these was specified.
+
+        """
+        from PsyNeuLink.Components.States.State import _parse_connection_specs
+        from PsyNeuLink.Components.Projections.Projection import Projection
+        from PsyNeuLink.Globals.Keywords import CONNECTIONS, PROJECTIONS
+
+        params_dict = {}
+        tuple_spec = state_specification_tuple
+
+        # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
+
+        # Get connection (afferent Projection(s)) specification from tuple
+        CONNECTIONS_INDEX = len(tuple_spec)-1
+        try:
+            connections_spec = tuple_spec[CONNECTIONS_INDEX]
+            # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
+        except IndexError:
+            connections_spec = None
+
+        if connections_spec:
+            try:
+                # params_dict[CONNECTIONS] = _parse_connection_specs(self.__class__,
+                params_dict[PROJECTIONS] = _parse_connection_specs(self.__class__,
+                                                                   owner=owner,
+                                                                   connections={connections_spec})
+            except ModulatorySignalError:
+                raise ModulatorySignalError("Item {} of tuple specification in {} specification dictionary "
+                                      "for {} ({}) is not a recognized specification".
+                                      format(CONNECTIONS_INDEX,
+                                             ModulatorySignalError.__name__,
+                                             owner.name,
+                                             connections_spec))
+
+        return params_dict
+# MODIFIED 9/30/17 END
