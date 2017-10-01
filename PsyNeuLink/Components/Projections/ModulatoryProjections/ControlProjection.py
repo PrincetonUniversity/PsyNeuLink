@@ -102,6 +102,8 @@ import typecheck as tc
 from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
 from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
+from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
+from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process
@@ -250,6 +252,10 @@ class ControlProjection(ModulatoryProjection_Base):
     componentType = CONTROL_PROJECTION
     className = componentType
     suffix = " " + className
+
+    class socket:
+        sender=ControlSignal
+        receiver=ParameterState
 
     classPreferenceLevel = PreferenceLevel.TYPE
 

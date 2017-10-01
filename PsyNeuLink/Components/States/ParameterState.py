@@ -622,7 +622,7 @@ class ParameterState(State_Base):
                 # params_dict[CONNECTIONS] = _parse_connection_specs(self,
                 params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                    owner=owner,
-                                                                   connections={connections_spec})
+                                                                   connections=connections_spec)
             except ParameterStateError:
                 raise ParameterStateError("Item {} of tuple specification in {} specification dictionary "
                                       "for {} ({}) is not a recognized specification".

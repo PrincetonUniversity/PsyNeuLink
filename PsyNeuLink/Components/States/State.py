@@ -2864,9 +2864,9 @@ def _parse_connection_specs(connectee_state_type:is_state_class,
         # If Mechanism, State, str (name) or Projection is specified on its own,
         #     put in tuple with default values of other specs, and call _parse_connection_specs recursively
         #     to validate the state spec and append ConnectionTuple to connect_with_states
-        if isinstance(connection, (Mechanism, State) or _is_projection_spec(connection, include_matrix_spec=False)):
+        if isinstance(connection, (Mechanism, State)) or _is_projection_spec(connection, include_matrix_spec=False):
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, DEFAULT_PROJECTION)
-            _parse_connection_specs(ConnectWith, owner, connection_tuple)
+            _parse_connection_specs(connectee_state_type, owner, connection_tuple)
 
         # Dict of one or more Mechanism specifications, used to specify individual States of (each) Mechanism;
         #   convert all entries to tuples and call _parse_connection_specs recursively to generate ConnectionTuples;
@@ -2981,12 +2981,6 @@ def _parse_connection_specs(connectee_state_type:is_state_class,
                 raise StateError("WRONG LENGTH OF TUPLE MESSAGE".format())
 
             # # Validate state specification and get actual state referenced
-            # if isinstance(state_spec, Mechanism):
-            #     mech = state_spec
-            #     state = None
-            # else:
-            #     state = state_spec
-            #     mech = None
             state = _get_existing_state(owner=owner,
                                         # state_spec=state,
                                         state_spec=state_spec,
@@ -3010,6 +3004,7 @@ def _parse_connection_specs(connectee_state_type:is_state_class,
                                         state.__class__.__name__,
                                         ConnectWith.__name__))
 
+            # Validate projection specification
             if not _is_projection_spec(projection_spec):
                 raise StateError("Invalid projection specification ({}) for {} "
                                  "in connection specification dictionary for {}".
@@ -3120,11 +3115,19 @@ def _get_existing_state(owner,
         if isinstance(state_spec, Projection):
             projection = state_spec
             if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                # Try to get the State to which the Projection will be connected when fully initialized
+                #     as positive confirmation that it is the correct type for state_type
                 try:
                     state = projection.init_args[projection_socket]
                 except KeyError:
                     raise StateError("{} of {} used to specify {} for {} has not been assigned".
                                      format(projection_socket, projection.name, state_type.__name__, owner.name))
+                # projection's projection_socket has not yet been assigned to State
+                # MODIFIED 10/1/17 NEW:
+                if state is None:
+                    # Use projection's type to infer the type of State it's socket will be connected to
+                    state = projection.__class__.socket[projection_socket]
+                # MODIFIED 10/1/17 END
             else:
                 state = getattr(projection, projection_socket)
 
