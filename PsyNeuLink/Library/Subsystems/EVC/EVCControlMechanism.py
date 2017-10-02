@@ -328,8 +328,7 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.ShellClasses import Function
-from PsyNeuLink.Components.System import System
+from PsyNeuLink.Components.ShellClasses import Function, System
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import FUNCTION, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, \
     PARAMETER_STATES, SUM, EVC_MECHANISM, CONTROL, COST_FUNCTION, \

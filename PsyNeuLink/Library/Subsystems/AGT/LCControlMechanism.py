@@ -331,7 +331,6 @@ import warnings
 
 from PsyNeuLink.Components.Functions.Function \
     import ModulationParam, _is_modulation_param, MULTIPLICATIVE_PARAM, FHNIntegrator
-from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
     import ObjectiveMechanism, _parse_monitored_output_states
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
@@ -339,8 +338,8 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.Contro
     import ControlMechanism, ALLOCATION_POLICY
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.ShellClasses import Mechanism, System
 from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import FUNCTION, ALL, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, \
                                         CONTROL_PROJECTIONS, CONTROL_SIGNALS, FULL_CONNECTIVITY_MATRIX

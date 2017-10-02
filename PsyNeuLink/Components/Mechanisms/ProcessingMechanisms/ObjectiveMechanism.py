@@ -988,7 +988,7 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
             output_state = output_state_tuple.output_state
 
             # If output_state is a string,
-            from PsyNeuLink.Components.System import System
+            from PsyNeuLink.Components.ShellClasses import System
             if isinstance(output_state, str):
                 if not isinstance(source, System):
                     raise ObjectiveMechanismError("A string was used to specify an OutputState (presumably its name: "

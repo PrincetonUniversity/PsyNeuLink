@@ -232,7 +232,7 @@ for projection_type in ProjectionRegistry:
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet \
     import ComponentPreferenceSet, ComponentDefaultPrefDicts, PreferenceLevel
 
-from PsyNeuLink.Components.System import System
+from PsyNeuLink.Components.ShellClasses import System
 System.classPreferences = ComponentPreferenceSet(owner=System,
                                                  prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
                                                  level=PreferenceLevel.INSTANCE,
