@@ -969,142 +969,61 @@ class ControlSignal(ModulatorySignal):
 
 
 
+# MODIFIED 9/30/17 NEW:
+    def _parse_state_specific_tuple(self, owner, state_specification_tuple):
+        """Get ControlSignal specified for a parameter or in a 'control_signals' argument
 
-    # MODIFIED 9/29/17 NEW:
-    # @tc.typecheck
-    # def _parse_state_specific_entries(self, owner, params:tc.any(dict, tuple)):
-    #     # IF THERE IS A 2-item (str, Mechanism) tuple in params:
-    #     #    - parse it
-    #     #    - assign ParameterState to PROJECTIONS
-    #     #    - put in params dict to return
-    #     # IF THERE IS A DICT WITH ONE OF THE FOLLOWING ENTRY/IES:
-    #     #    - Mechanism:<str or ParameterState>
-    #     #    - MECHANISM:<Mechanism specification> *AND* PARAMETER:<str or ParameterState>
-    #     #    - put ParameterState in *PROJECTIONS* entry of params dict and return params dict
-    #     # OTHERWISE
-    #     #    - return super._parse_state_specific_entries(owner, params)
-    #     pass
-    #
-    #     # if isinstance(params, dict).items():
-    #     #     for param_key, param_value in params:
-    #     #         if isinstance(param_key, Mechanism):
-    #     #             # Over-specification (doesn't need to be buried in a dictionary), but could happen
-    #     #             if isinstance(param_value, ParameterState):
-    #     #                 parameter_state =
-    #
-    #     if isinstance(params, dict):
-    #
-    #         # Assume that if there is a dictionary specification in params, it must be for ParameterStates(s)
-    #         #    to which the ControlSignal has been specified to send Projection(s).
-    #         if PROJECTIONS not in params or params[PROJECTIONS] is None:
-    #             params[PROJECTIONS] = []
-    #
-    #         # Process params for State-specific entries
-    #         for param_key, param_value in params.items():
-    #
-    #             # Key is a Mechanism, or the keyword MECHANISMS or OUTPUT_STATES:
-    #             if isinstance(param_key, Mechanism) or param_key in {MECHANISMS, OUTPUT_STATES}:
-    #                 # param_value is an OutputState specification, not an OutputState specification dictionary;
-    #                 if not isinstance(param_value, dict):
-    #                     # Convert to dict for processing by _parse_output_state_specification_dictionary
-    #                     param_value  = {param_key: param_value}
-    #                 # Get specified OutputStates from OutputState specification dictionary
-    #                 output_states = _parse_output_state_specification_dictionary(owner, param_value)
-    #                 # Append to PROJECTIONS entry of params
-    #                 params[PROJECTIONS].append(output_states)
-    #
-    #             # Key is PROJECTIONS
-    #             if param_key is PROJECTIONS:
-    #                 # If value is not a list, convert it to one for further processing
-    #                 if not isinstance(param_value, list):
-    #                     param_value = [param_value]
-    #                 for param in param_value:
-    #                     # If entry is a dict, it must be an OutputState specification dictionary
-    #                     if isinstance(param, dict):
-    #                         # Parse OutputState specification dictionary and append to PROJECTIONS entry
-    #                         output_states = _parse_output_state_specification_dictionary(owner, param)
-    #                         params[PROJECTIONS].append(output_states)
-    #                     elif isinstance(param, Projection):
-    #                         # Validate the Projection has a sender and append to PROJECTIONS entry
-    #                         if hasattr(param, SENDER) and param.sender is not None:
-    #                             params[PROJECTIONS].append(param.sender)
-    #                         else:
-    #                             raise InputStateError("Specification of {} in \'{}\' entry of InputState specification "
-    #                                                   "dictionary for {} does not have a {}".
-    #                                                   format(Projection.__name__, PROJECTIONS, owner.name, SENDER))
-    #
-    #     elif isinstance(params, tuple):
-    #     # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
-    #
-    #         tuple_spec = params
-    #
-    #         # Tuple is (state_spec, <afferent_source_spec>):
-    #         #    afferent_source_spec can be any specification that resolves to (a set of) OutputState(s)
-    #         #    that have been specified to project to the InputState
-    #         if len(tuple_spec) == 2:
-    #
-    #             AFFERENT_SOURCE_INDEX = 1
-    #
-    #             # Get projection specification from tuple
-    #             afferent_source_spec = tuple_spec[AFFERENT_SOURCE_INDEX]
-    #             # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
-    #             try:
-    #                 params = self._parse_state_specific_entries(owner=owner,
-    #                                                             params={PROJECTIONS: afferent_source_spec})
-    #             except InputStateError:
-    #                 raise InputStateError("2nd item of tuple specification in InputState specification dicitionary "
-    #                                       "for {} ({}) is not a recognized specification for one or more "
-    #                                       "{}s, {}s, or {}s that project to it".
-    #                                       format(owner.name, afferent_source_spec,
-    #                                              Mechanism.__name__,
-    #                                              OutputState.__name__,
-    #                                              Projection.__name))
-    #
-    #         # Tuple is (spec, weights, exponents<, afferent_source_spec>), for specification of Weights + projection to InputState
-    #         elif len(tuple_spec) in {3, 4}:
-    #
-    #             AFFERENT_SOURCE_INDEX = 3
-    #
-    #             weight = tuple_spec[WEIGHT_INDEX]
-    #             exponent = tuple_spec[EXPONENT_INDEX]
-    #             try:
-    #                 afferent_source_spec = tuple_spec[AFFERENT_SOURCE_INDEX]
-    #             except IndexError:
-    #                 afferent_source_spec = None
-    #
-    #             if afferent_source_spec:
-    #                 try:
-    #                     params = self._parse_state_specific_entries(owner=owner,
-    #                                                                 params={PROJECTIONS: afferent_source_spec})
-    #                 except InputStateError:
-    #                     raise InputStateError("Item {} of tuple specification in InputState specification dicitionary "
-    #                                           "for {} ({}) is not a recognized specification for one or more "
-    #                                           "{}s, {}s, or {}s that project to it".
-    #                                           format(AFFERENT_SOURCE_INDEX,
-    #                                                  owner.name,
-    #                                                  afferent_source_spec,
-    #                                                  Mechanism.__name__,
-    #                                                  OutputState.__name__,
-    #                                                  Projection.__name))
-    #             else:
-    #                 params = {}
-    #
-    #             if weight is not None and not isinstance(weight, numbers.Number):
-    #                 raise InputStateError("Specification of the weight ({}) in tuple of InputState specification "
-    #                                       "dictionary for {} must be a number".format(weight, owner.name))
-    #             params[WEIGHT] = weight
-    #
-    #             if exponent is not None and not isinstance(exponent, numbers.Number):
-    #                 raise InputStateError("Specification of the exponent ({}) in tuple of InputState specification "
-    #                                       "dictionary for {} must be a number".format(exponent, owner.name))
-    #             params[EXPONENT] = exponent
-    #
-    #         else:
-    #             raise StateError("Tuple provided as state_spec for {} of {} ({}) must have either 2, 3 or 4 items".
-    #                              format(InputState.__name__, owner.name, tuple_spec))
-    #     return params
-    # MODIFIED 9/29/17 END
+        Tuple specification can be:
+            (parameter_name, Mechanism)
 
+        Returns params dict with CONNECTIONS entries if any of these was specified.
+
+        """
+        from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        from PsyNeuLink.Components.States.State import _parse_connection_specs
+        from PsyNeuLink.Globals.Keywords import CONNECTIONS, PROJECTIONS
+
+        params_dict = {}
+
+        try:
+            param_name, mech = state_specification_tuple
+        except:
+            raise ControlSignalError("Illegal {} specification tuple for {} ({});  "
+                                     "it must contain two items: (<param_name>, <{}>)".
+                                     format(ControlSignal.__name__, owner.name,
+                                            state_specification_tuple, Mechanism.__name__))
+        if not isinstance(mech, Mechanism):
+            raise ControlSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
+                                     format(ControlSignal.__name__, owner.name, mech, mech.name))
+        if not isinstance(param_name, str):
+            raise ControlSignalError("First item of the {} specification tuple for {} ({}) must be a string "
+                                     "that is the name of a parameter of its second item ({})".
+                                     format(ControlSignal.__name__, owner.name, param_name, mech.name))
+        try:
+            parameter_state = mech._parameter_states[param_name]
+        except KeyError:
+            raise ControlSignalError("No {} found for {} param of {} in {} specificadtion tuple for {}".
+                                     format(ParameterState.__name__, param_name, mech.name,
+                                            ControlSignal.__name__, owner.name))
+        except AttributeError:
+            raise ControlSignalError("{} does not have any {} specified, so can't"
+                                     "assign {} specified for {} ({})".
+                                     format(mech.name, ParameterState.__name__, ControlSignal.__name__,
+                                            owner.name, state_specification_tuple))
+
+        # Assign connection specs to PROJECTIONS entry of params dict
+        try:
+            # params_dict[CONNECTIONS] = _parse_connection_specs(self.__class__,
+            params_dict[PROJECTIONS] = _parse_connection_specs(self,
+                                                               owner=owner,
+                                                               connections=parameter_state)
+        except ControlSignalError:
+            raise ControlSignalError("Unable to parse {} specification dictionary for {} ({})".
+                                        format(ControlSignal.__name__, owner.name, state_specification_tuple))
+
+        return params_dict
+# MODIFIED 9/30/17 END
 
 
 
@@ -1462,3 +1381,4 @@ def _parse_control_signal_spec(owner, control_signal_spec, context=None):
             PARAMETER_STATE: parameter_state,
             CONTROL_PROJECTION: control_projection,
             CONTROL_SIGNAL: control_signal}
+

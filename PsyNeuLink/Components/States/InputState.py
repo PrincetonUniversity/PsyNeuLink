@@ -400,10 +400,10 @@ class InputState(State_Base):
         `mod_afferents <InputState.mod_afferents>` attributes, respectively (see `InputState_Projections` for additional
         details).
 
-    weight : int or float : default 1
+    weight : number : default 1
         specifies the value of the `weight <InputState.weight>` attribute of the InputState.
 
-    exponent : int or float : default 1
+    exponent : number : default 1
         specifies the value of the `exponent <InputState.exponent>` attribute of the InputState.
 
     params : Optional[Dict[param keyword, param value]]
@@ -457,10 +457,10 @@ class InputState(State_Base):
         `mod_afferents <InputState.mod_afferents>` attribute).  The result (whether a value or an ndarray) is
         assigned to an item of the owner Mechanism's `variable <Mechanism_Base.variable>`.
 
-    weight : int or float
+    weight : number
         see `InputState_Weights_And_Exponents` for description.
 
-    exponent : int or float
+    exponent : number
         see `InputState_Weights_And_Exponents` for description.
 
     name : str : default <State subclass>-<index>

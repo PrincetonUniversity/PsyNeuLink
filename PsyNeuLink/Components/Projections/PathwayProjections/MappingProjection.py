@@ -172,6 +172,21 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
   that project to it (see `MappingProjection_Learning` below).  This can be replaced by any function that can take
   as its input an array or matrix, and return one of the same size.
 
+.. _Mapping_Weight_Exponent:
+
+*  `weight <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` - applied to the `value
+   <MappingProjection.value>` of the MappingProjection before it is combined with other projections to the same
+   `InputState` to determine its `value <InputState.value>` (see description under `Projection
+   <Projection_Weight_and_Exponent>` for additional details).
+
+   .. note::
+      The `weight <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` attributes of a
+      MappingProjection are distinct from those of the `InputState` to which it projects.  It is also important
+      to recognize that, as noted under `Projection <Projection_Weight_and_Exponent>`, they are not normalized,
+      and thus contribute to the magnitude of the InputState's `variable <InputState.variable>` and therefore its
+      relationship to that of other InputStates that may belong to the same Mechanism.
+
+
 .. _Mapping_Execution:
 
 Execution
@@ -317,6 +332,14 @@ class MappingProjection(PathwayProjection_Base):
         the context in which the Projection is used, or its initialization will be `deferred
         <MappingProjection_Deferred_Initialization>`.
 
+    weight : number : default None
+       specifies the value by which to multiply the MappingProjection's `value <MappingProjection.value>` before
+       combining it with others (see `weight <MappingProjection.weight>` for additional details).
+
+    exponent : number : default None
+       specifies the value by which to exponentiate the MappingProjection's `value <MappingProjection.value>` before
+       combining it with others (see `weight <MappingProjection.weight>` for additional details).
+
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
         the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to transform the
         value of the `sender <MappingProjection.sender>` into a form suitable for the `variable <InputState.variable>`
@@ -348,6 +371,16 @@ class MappingProjection(PathwayProjection_Base):
 
     receiver: InputState
         the `InputState` of the `Mechanism <Mechanism>` that is the destination of the Projection's output.
+
+    weight : number
+       multiplies `value <Projection.value>` of the Projection after applying `exponent <Projection.exponent>`,
+       and before combining with any others that project to the same `State` to determine that State's `variable
+       <State.variable>` (see `description above <Mapping_Weight_Exponent>` for details).
+
+    exponent : number
+        exponentiates the `value <Projection.value>` of the Projection, before applying `weight <Projection.weight>`,
+        and before combining it with any other Projections that project to the same `State` to determine that State's
+        `variable <State.variable>` (see `description above <Mapping_Weight_Exponent>` for details).
 
     matrix : 2d np.array
         the matrix used by `function <MappingProjection.function>` to transform the input from the MappingProjection's
@@ -398,6 +431,8 @@ class MappingProjection(PathwayProjection_Base):
     def __init__(self,
                  sender=None,
                  receiver=None,
+                 weight=None,
+                 exponent=None,
                  matrix=DEFAULT_MATRIX,
                  params=None,
                  name=None,
@@ -433,6 +468,8 @@ class MappingProjection(PathwayProjection_Base):
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super(MappingProjection, self).__init__(sender=sender,
                                                 receiver=receiver,
+                                                weight=weight,
+                                                exponent=exponent,
                                                 params=params,
                                                 name=name,
                                                 prefs=prefs,

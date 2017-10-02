@@ -413,6 +413,7 @@ class ModulatorySignal(OutputState):
             self._instantiate_projection_from_state(projection_spec=type(self), receiver=receiver_spec, context=context)
 
 # MODIFIED 9/30/17 NEW:
+# FIX: THIS IS GENERIC FOR MODULATORY SIGNALS, BUT SHOULD BE IMPLEMENTED FOR EACH SUBCLASS
     def _parse_state_specific_tuple(self, owner, state_specification_tuple):
         """Get connections specified in a ParameterState specification tuple
 

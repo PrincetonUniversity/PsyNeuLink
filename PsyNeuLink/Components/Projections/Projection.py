@@ -266,6 +266,23 @@ A `receiver <Projection.receiver>` can be specified as:
   ..
   * a **specification dictionary** (see subclasses for details).
 
+.. _Projection_Weight_and_Exponent:
+
+Weight and Exponent
+~~~~~~~~~~~~~~~~~~~
+
+Every Projecton has a `weight <Projection.weight>` and `exponent <Projection.exponent>` attribute. These are applied
+to its `value <Projection.value>` before combining it with other Projections that project to the same `State`.  If
+both are specified, the `exponent <Projection.exponent>` is applied before the `weight <Projection.weight>`.  These
+attributes determine both how the Projection's `value <Projection.value>` is combined with others to determine the
+`variable <State.variable>` of the State to which they project.
+
+.. note::
+   The `weight <Projection.weight>` and `exponent <Projection.exponent>` attributes of a Projection are not
+   normalized, and their aggregate effects contribute to the magnitude of the `variable <State.variable>` to which
+   they project.
+
+
 ParameterStates and Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -408,8 +425,17 @@ class Projection_Base(Projection):
         State from which Projection receives its input.
 
     receiver : State
-        State (of a Mechanism or Projection)
         State to which Projection sends its output.
+
+    weight : number
+       multiplies `value <Projection.value>` of the Projection after applying `exponent <Projection.exponent>`,
+       and before combining with any others that project to the same `State` to determine that State's `variable
+       <State.variable>`.
+
+    exponent : number
+        exponentiates the `value <Projection.value>` of the Projection, before applying `weight <Projection.weight>`,
+        and before combining it with any other Projections that project to the same `State` to determine that State's
+        `variable <State.variable>`.
 
     value : value
         Output of Projection, transmitted as variable to InputState of receiver.
@@ -473,6 +499,8 @@ class Projection_Base(Projection):
     def __init__(self,
                  receiver,
                  sender=None,
+                 weight=None,
+                 exponent=None,
                  params=None,
                  name=None,
                  prefs=None,

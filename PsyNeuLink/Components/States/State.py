@@ -2779,6 +2779,10 @@ def _parse_connection_specs(connectee_state_type,
     # FIX: vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     # FIX: MOVE HANDLING OF ALL THIS TO REGISTRY
 
+    from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+    from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import LearningMechanism
+    from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
+    from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import GatingMechanism
     from PsyNeuLink.Components.States.InputState import InputState
     from PsyNeuLink.Components.States.OutputState import OutputState
     from PsyNeuLink.Components.States.ParameterState import ParameterState
@@ -2816,6 +2820,7 @@ def _parse_connection_specs(connectee_state_type,
     else:
         BaseSpec = connectee_state_type
 
+    # Request for afferent Projections (projection socket is SENDER)
     if isinstance(owner, Mechanism) and issubclass(connectee_state_type, InputState):
         ConnectWith = OutputState            # type of State to which the connectee connects
         connect_with_attr = 'output_states'  # attribute that holds the ConnectWith States
@@ -2823,13 +2828,6 @@ def _parse_connection_specs(connectee_state_type,
         PROJECTION_SOCKET = SENDER           # socket of the Projection that connects to the ConnectWith State
         Modulator = GatingSignal             # type of ModulatorySignal the connecteed can receiver
         # MOD_KEYWORD = GATING_SIGNALS         # keyword used in a State specification dictionary for Modulatory specs
-    elif isinstance(owner, Mechanism) and issubclass(connectee_state_type, OutputState):
-        ConnectWith = InputState 
-        connect_with_attr = 'input_states'
-        CONNECTIONS_KEYWORD = INPUT_STATES
-        PROJECTION_SOCKET = RECEIVER 
-        Modulator = GatingSignal
-        # MOD_KEYWORD = GATING_SIGNALS
     elif isinstance(owner, Mechanism) and issubclass(connectee_state_type, ParameterState):
         ConnectWith = ControlSignal
         connect_with_attr = 'control_signals'
@@ -2844,6 +2842,39 @@ def _parse_connection_specs(connectee_state_type,
         PROJECTION_SOCKET = SENDER
         Modulator = LearningSignal 
         MOD_KEYWORD = LEARNING_SIGNALS
+
+    # Request for efferent Projections (projection socket is RECEIVER)
+    elif isinstance(owner, ProcessingMechanism_Base) and issubclass(connectee_state_type, OutputState):
+        ConnectWith = InputState
+        connect_with_attr = 'input_states'
+        CONNECTIONS_KEYWORD = INPUT_STATES
+        PROJECTION_SOCKET = RECEIVER
+        Modulator = GatingSignal
+        MOD_KEYWORD = GATING_SIGNALS
+    elif isinstance(owner, ControlMechanism) and issubclass(connectee_state_type, ControlSignal):
+        ConnectWith = ParameterState
+        connect_with_attr = 'parameter_states'
+        # CONNECTIONS_KEYWORD = CONTROLLED_PARAMS
+        PROJECTION_SOCKET = RECEIVER
+        Modulator = None
+        MOD_KEYWORD = None
+    elif isinstance(owner, LearningMechanism) and issubclass(connectee_state_type, LearningSignal):
+        ConnectWith = ParameterState
+        connect_with_attr = 'parameter_states'
+        # CONNECTIONS_KEYWORD = LEARNED_PROJECTIONS
+        PROJECTION_SOCKET = RECEIVER
+        Modulator = None
+        MOD_KEYWORD = None
+    elif isinstance(owner, GatingMechanism) and issubclass(connectee_state_type, GatingSignal):
+        # FIX:
+        ConnectWith = InputState or OutputState
+        # FIX:
+        connect_with_attr = 'input_states' or 'output_states'
+        # CONNECTIONS_KEYWORD = GATED_STATES
+        PROJECTION_SOCKET = RECEIVER
+        Modulator = None
+        MOD_KEYWORD = None
+
     else:
         raise StateError("Called for {} with unsupported owner type ({}), connectee_state_type ({}), "
                          "or combination of them".
@@ -3001,32 +3032,31 @@ def _parse_connection_specs(connectee_state_type,
                                         mech_state_attribute=connect_with_attr,
                                         projection_socket=PROJECTION_SOCKET)
 
-            # Validate that the specified State to be connected to is consistent with connectee's type:
-            if not issubclass(state, ConnectWith):
-                if isinstance(state, State):
-                    state_name = state.name
-                else:
-                    state_name = state
-                raise StateError("Connection was specified for a(n) {} of {} to a State ({}) of {} "
-                                 "that is of the wrong type ({}); should be {}".
+            # Validate that the type of the State to be connected to is consistent with connectee's type:
+            if inspect.isclass(state):
+                state_type = state
+            else:
+                state_type = state.__class__
+            if not issubclass(state_type, ConnectWith):
+                raise StateError("Connection was specified for a(n) {} of {} to a(n) {} of {} "
+                                 "that is of the wrong type; should be {}".
                                  format(connectee_state_type.__name__,
                                         owner.name,
-                                        # state_name, mech.name,
-                                        state_name,
+                                        state_type.__name__,
                                         state_spec.name,
-                                        state.__class__.__name__,
                                         ConnectWith.__name__))
 
             # Validate projection specification
-            if _is_projection_spec(projection_spec):
-                _validate_connection(owner, ConnectWith, projection_spec, PROJECTION_SOCKET, connectee_state_type)
-            else:
-                raise StateError("Invalid specification of {} ({}) for connection between {} and {} of {}.".
-                                 format(Projection.__class__.__name__,
-                                        projection_spec,
-                                        state.name,
-                                        connectee_state_type.__name__,
-                                        owner.name))
+            if projection_spec is not None:
+                if _is_projection_spec(projection_spec):
+                    _validate_connection(owner, ConnectWith, projection_spec, PROJECTION_SOCKET, connectee_state_type)
+                else:
+                    raise StateError("Invalid specification of {} ({}) for connection between {} and {} of {}.".
+                                     format(Projection.__class__.__name__,
+                                            projection_spec,
+                                            state.name,
+                                            connectee_state_type.__name__,
+                                            owner.name))
 
             connect_with_states.extend([ConnectionTuple(state, weight, exponent, projection_spec)])
 
@@ -3059,7 +3089,7 @@ def _get_existing_state(owner,
     Currently does not support Projection specification using class, keyword or Projection specification dict
         (Projection must be instantiated, or in deferred_init status with projection_socket assigned)
 
-    Returns State
+    Returns State or State's type (if State has not yet been instantiated)
     """
 
     if isinstance(state_spec, State):

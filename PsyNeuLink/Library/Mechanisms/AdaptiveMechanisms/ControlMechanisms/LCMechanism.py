@@ -229,7 +229,7 @@ import typecheck as tc
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param, MULTIPLICATIVE_PARAM
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
-    import ControlMechanism_Base, ALLOCATION_POLICY
+    import ControlMechanism, ALLOCATION_POLICY
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.Functions.Function import Integrator
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
@@ -252,7 +252,7 @@ class LCMechanismError(Exception):
         self.error_value = error_value
 
 
-class LCMechanism(ControlMechanism_Base):
+class LCMechanism(ControlMechanism):
     """
     LCMechanism(                               \
     monitor_for_control=None,                  \
@@ -372,7 +372,7 @@ class LCMechanism(ControlMechanism_Base):
         variable = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import Linear
-    paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
+    paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION:Integrator,
                                CONTROL_SIGNALS: None,
                                CONTROL_PROJECTIONS: None,
