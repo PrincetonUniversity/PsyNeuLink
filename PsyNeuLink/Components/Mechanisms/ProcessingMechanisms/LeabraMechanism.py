@@ -239,7 +239,7 @@ def build_network(n_input, n_output, n_hidden, hidden_sizes=None):
 def test_network(network, input_pattern):
     assert len(network.layers[0].units) == len(input_pattern)
     network.set_inputs({'input_layer': input_pattern})
-    for i in range(3):  # FIX: should this be 4 quarters, not 3 quarters?
+    for i in range(3):
         network.quarter()
     acts = network.layers[-1].activities
     network.quarter()
