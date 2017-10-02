@@ -102,13 +102,12 @@ import typecheck as tc
 from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
 from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
-from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_PROJECTION, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_SIGNAL, CONTROL_PROJECTION, PROJECTION_SENDER, \
+    PROJECTION_SENDER_VALUE, PARAMETER_STATE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Scheduling.TimeScale import CentralClock
@@ -256,8 +255,8 @@ class ControlProjection(ModulatoryProjection_Base):
     classPreferenceLevel = PreferenceLevel.TYPE
 
     class sockets:
-        sender=[ControlSignal]
-        receiver=[ParameterState]
+        sender=[CONTROL_SIGNAL]
+        receiver=[PARAMETER_STATE]
 
     class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
         variable = 0.0

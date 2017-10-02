@@ -435,14 +435,13 @@ class ModulatorySignal(OutputState):
         CONNECTIONS_INDEX = len(tuple_spec)-1
         try:
             connections_spec = tuple_spec[CONNECTIONS_INDEX]
-            # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
         except IndexError:
             connections_spec = None
 
         if connections_spec:
             try:
                 # params_dict[CONNECTIONS] = _parse_connection_specs(self.__class__,
-                params_dict[PROJECTIONS] = _parse_connection_specs(self.__class__,
+                params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                    owner=owner,
                                                                    connections={connections_spec})
             except ModulatorySignalError:

@@ -1054,7 +1054,7 @@ def _validate_connection(owner,                                   # Owner of Sta
     # Used below
     def _validate_projection_type(projection_class):
         # Validate that Projection's type can connect with the class of connect_with_state
-        if connect_with_state in getattr(projection_class.sockets, projection_socket):
+        if connect_with_state.__name__ in getattr(projection_class.sockets, projection_socket):
             if owner.verbosePref:
                 warnings.warn("{0} specified to be connected with{1} {2} is compatible with the {3} of the "
                               "specified {4} ({5}), but the initialization of the {4} is not yet complete so "

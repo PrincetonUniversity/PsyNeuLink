@@ -93,14 +93,13 @@ import typecheck as tc
 from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
 from PsyNeuLink.Components.Functions.Function import FunctionOutputType, Linear
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import GatingMechanism
-from PsyNeuLink.Components.States.InputState import InputState
-from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process
 from PsyNeuLink.Globals.Defaults import defaultGatingPolicy
-from PsyNeuLink.Globals.Keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, INITIALIZING, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from PsyNeuLink.Globals.Keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_SIGNAL, \
+    GATING_PROJECTION, INITIALIZING, INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Scheduling.TimeScale import CentralClock
@@ -240,8 +239,8 @@ class GatingProjection(ModulatoryProjection_Base):
     classPreferenceLevel = PreferenceLevel.TYPE
 
     class sockets:
-        sender=[GatingSignal]
-        receiver=[InputState, OutputState]
+        sender=[GATING_SIGNAL]
+        receiver=[INPUT_STATE, OUTPUT_STATE]
 
     class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
         variable = 0.0

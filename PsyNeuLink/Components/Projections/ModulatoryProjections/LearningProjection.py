@@ -157,7 +157,7 @@ from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import Learni
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Globals.Keywords import ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, \
-                                        LEARNING_PROJECTION, MATRIX, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
+    LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import iscompatible, parameter_spec
@@ -365,8 +365,8 @@ class LearningProjection(ModulatoryProjection_Base):
     classPreferenceLevel = PreferenceLevel.TYPE
 
     class sockets:
-        sender=[LearningSignal]
-        receiver=[ParameterState]
+        sender=[LEARNING_SIGNAL]
+        receiver=[PARAMETER_STATE]
 
     class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
         variable = None

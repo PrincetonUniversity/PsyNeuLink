@@ -303,6 +303,9 @@ INPUT_STATE = "InputState"
 PARAMETER_STATE = "ParameterState"
 OUTPUT_STATE = "OutputState"
 MODULATORY_SIGNAL = 'ModulatorySignal'
+LEARNING_SIGNAL = 'LearningSignal'
+CONTROL_SIGNAL = 'ControlSignal'
+GATING_SIGNAL = 'GatingSignal'
 
 # Projections:
 MAPPING_PROJECTION = "MappingProjection"
@@ -499,11 +502,9 @@ PREDICTION_MECHANISM = "Prediction Mechanism"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
-LEARNING_SIGNAL = 'learning_signal'
 LEARNING_SIGNALS = 'learning_signals'
 LEARNING_SIGNAL_SPECS = 'LEARNING_SIGNAL_SPECS'
 LEARNED_PARAM = 'learned_param'
-CONTROL_SIGNAL = 'control_signal'
 CONTROL_SIGNALS = 'control_signals'
 CONTROL_SIGNAL_SPECS = 'CONTROL_SIGNAL_SPECS'
 CONTROLLED_PARAM = 'controlled_param'
@@ -519,7 +520,6 @@ ALLOCATION_SAMPLES = "allocation_samples"
 
 # GatingMechanism
 MAKE_DEFAULT_GATING_MECHANISM = "make_default_gating_mechanism"
-GATING_SIGNAL = 'gating_signal'
 GATING_SIGNALS = 'gating_signals'
 GATING_SIGNAL_SPECS = 'GATING_SIGNAL_SPECS'
 GATE = 'GATE'
