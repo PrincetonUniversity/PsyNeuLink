@@ -117,7 +117,7 @@ specify an OutputState:
     * A **2-item tuple**.  The first item must be a value, and the second a `ModulatoryProjection
       <ModulatoryProjection>` specification. This creates a default OutputState using the first item as the
       OutputState's `variable <OutputState.variable>`, and assigns the OutputState as the `receiver
-      `ModualtoryProjection.receiver` of the type of ModulatoryProjection specified in the second item.
+      <ModualtoryProjection.receiver>` of the type of ModulatoryProjection specified in the second item.
 
     .. note::
        In all cases, the `variable <OutputState.variable>` of the OutputState must match (have the same number and
@@ -606,7 +606,7 @@ class OutputState(State_Base):
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
-        # Consider adding self to owner.outputStates here (and removing from ControlProjection._instantiate_sender)
+        # Consider adding self to owner.output_states here (and removing from ControlProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputStates in ControlProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
@@ -769,7 +769,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
          instantiate Calculate function if specified
 
     When completed:
-        - self.outputStates contains a ContentAddressableList of one or more OutputStates;
+        - self.output_states contains a ContentAddressableList of one or more OutputStates;
         - self.output_state contains first or only OutputState in list;
         - paramsCurrent[OUTPUT_STATES] contains the same ContentAddressableList (of one or more OutputStates)
         - each OutputState corresponds to an item in the output of the owner's function
@@ -780,6 +780,8 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     IMPLEMENTATION NOTE:
         default(s) for self.paramsCurrent[OUTPUT_STATES] (self.value) are assigned here
         rather than in _validate_params, as it requires function to have been instantiated first
+
+    Returns list of instantiated OutputStates
     """
 
     constraint_value = []
@@ -878,6 +880,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     else:
         owner._output_states = state_list
 
+    return state_list
 
 class StandardOutputStatesError(Exception):
     def __init__(self, error_value):

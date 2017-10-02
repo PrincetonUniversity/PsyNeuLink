@@ -52,7 +52,7 @@ documented.  It does this in a manner that:
    such as:
 
    * MatLab (general purpose mathematical tools);
-   * TensorFlow, Teano (ODE's, deep learning);
+   * TensorFlow (ODE's, deep learning);
    * Emergent (broad class of neurally-plausible connectionist models);
    * ACT-R (symbolic, production system models).
 
@@ -182,9 +182,7 @@ Table of Contents
    self
    BasicsAndSampler
    QuickReference
-   Components <Component>
-   Compositions <Composition>
-   Scheduling
+   Core
    Library
 
 .. _Indices_and_Tables:

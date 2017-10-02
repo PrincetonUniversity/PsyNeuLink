@@ -455,6 +455,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.Learn
     import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, \
     _is_learning_spec
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
@@ -465,6 +466,7 @@ from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _instantiate_state, _instantiate_state_list
 from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, COMPONENT_INIT, ENABLED, EXECUTING, FUNCTION, \
     FUNCTION_PARAMS, HARD_CLAMP, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, \
+    OBJECTIVE_MECHANISM,\
     MAPPING_PROJECTION, MATRIX, NAME, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SEPARATOR_BAR, \
     SINGLETON, SOFT_CLAMP, TARGET, TERMINAL, TIME_SCALE, kwProcessComponentCategory, kwReceiverArg, kwSeparator
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
@@ -825,7 +827,7 @@ class Process_Base(Process):
          of {argument keyword: argument values} entries and phase is an int.
          Note:  the list includes ComparatorMechanisms and LearningMechanism.
 
-    .. _allMechanisms : MechanismList
+    .. _all_mechanisms : MechanismList
          Contains all Mechanisms in the System (based on _mechs).
 
     .. _origin_mechs : List[MechanismTuple]
@@ -841,18 +843,18 @@ class Process_Base(Process):
          (Note:  the use of a list is for compatibility with the MechanismList object)
 
     .. _learning_mechs : List[MechanismTuple]
-         `MechanismTuples <Mechanism.MechanismTuples>` for all `LearningMechanism <LearningMechanism>` in the
+         `MechanismTuple
          Process (used for learning).
 
     .. mechanisms : List[Mechanism]
          List of all Mechanisms in the Process.
-         property that points to _allMechanisms.mechanisms (see below).
+         property that points to _all_mechanisms.mechanisms (see below).
     COMMENT
 
     mechanism_names : List[str]
         the names of the Mechanisms listed in the `Mechanisms <Process_Base.mechanisms>` attribute.
 
-        .. property that points to _allMechanisms.names (see below).
+        .. property that points to _all_mechanisms.names (see below).
 
     mechanisms : List[Mechanism]
         *all* of the Mechanisms in the Process, including those in the `pathway <Process_Base.pathway>`
@@ -943,9 +945,9 @@ class Process_Base(Process):
         determines the `learning_rate <LearningMechanism.learning_rate>` used for `MappingProjections
         <MappingProjection>` `specified for learning <Process_Learning_Sequence>` in the Process that do not have their
         `learning_rate <LearningProjection.learning_rate>` otherwise specified.   If is `None`, and the Process is
-        executed as part of a `System`, and the System has a `learning_rate <System.learning_rate>` specified, then that
-        is the value used.  Otherwise, the default value of the :keyword:`learning_rate` parameter for the `function
-        <LearningMechanism.function>` of the `LearningMechanism associated with each MappingProjection
+        executed as part of a `System`, and the System has a `learning_rate <System_Base.learning_rate>` specified,
+        then that is the value used.  Otherwise, the default value of the :keyword:`learning_rate` parameter for the
+        `function <LearningMechanism.function>` of the `LearningMechanism associated with each MappingProjection
         <Process_Learning_Sequence>` is used.  If a :keyword:`learning_rate` is specified for the `LearningSignal
         <LearningSignal_Learning_Rate>` or `LearningProjection <LearningProjection_Function_and_Learning_Rate>`
         associated with a MappingProjection, that is applied in addition to any specified for the Process or the
@@ -1213,7 +1215,7 @@ class Process_Base(Process):
         else:
             self._learning_enabled = False
 
-        self._allMechanisms = MechanismList(self, self._mechs)
+        self._all_mechanisms = MechanismList(self, self._mechs)
         self.learning_mechanisms = MechanismList(self, self._learning_mechs)
         self.target_mechanisms = MechanismList(self, self._target_mechs)
 
@@ -1484,7 +1486,7 @@ class Process_Base(Process):
                     # Check if Mechanism already has a Projection from the preceding Mechanism, by testing whether the
                     #    preceding mechanism is the sender of any projections received by the current one's inputState
     # FIX: THIS SHOULD BE DONE FOR ALL INPUTSTATES
-    # FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT outputStates OF) THE SAME MECHANISM
+    # FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT OutputStates OF) THE SAME MECHANISM
 
                     # PRECEDING ITEM IS A MECHANISM
                     projection_list = item.input_state.path_afferents
@@ -1540,9 +1542,42 @@ class Process_Base(Process):
 
                     if not projection_found:
                         # No Projection found, so instantiate MappingProjection from preceding mech to current one;
-                        # Note:  If self.learning arg is specified, it has already been added to projection_params above
+                        # Note: if self.learning arg is specified, it has already been added to projection_params above
+
+                        # MODIFIED 9/19/17 NEW:
+                        #     [ALLOWS ControlMechanism AND ASSOCIATED ObjectiveMechanism TO BE ADDED TO PATHWAY)
+                        # If it is a ControlMechanism with an associated ObjectiveMechanism, try projecting to that
+                        if isinstance(item, ControlMechanism) and item.objective_mechanism is not None:
+                            # If it already has an associated ObjectiveMechanism, make sure it has been implemented
+                            if not isinstance(item.objective_mechanism, Mechanism):
+                                raise ProcessError("{} included in {} for {} ({})"
+                                                   "has an {} arugment, but it is not an {}".
+                                                   format(ControlMechanism.__name__,
+                                                          PATHWAY,
+                                                          self.name,
+                                                          item.objective_mechanism,
+                                                          OBJECTIVE_MECHANISM,
+                                                          ObjectiveMechanism.name))
+                            # Check whether ObjectiveMechanism already receives a projection
+                            #     from the preceding Mechanism in the pathway
+                            # if not any(projection.sender.owner is preceding_item
+                            #            for projection in item.objective_mechanism.input_state.path_afferents):
+                            if not any(
+                                    any(projection.sender.owner is preceding_item
+                                        for projection in input_state.path_afferents)
+                                    for input_state in item.objective_mechanism.input_states):
+                                # Assign projection from preceding Mechanism in pathway to ObjectiveMechanism
+                                receiver = item.objective_mechanism
+
+                            else:
+                                # Ignore (ObjectiveMechanism already as a projection from the Mechanism)
+                                continue
+                        else:
+                            receiver = item
+                        # MODIFIED 9/19/17 END
+
                         MappingProjection(sender=preceding_item,
-                                          receiver=item,
+                                          receiver=receiver,
                                           params=projection_params,
                                           name='{} from {} to {}'.
                                           format(MAPPING_PROJECTION, preceding_item.name, item.name)
@@ -1780,9 +1815,9 @@ class Process_Base(Process):
                                          context.name))
                     # Process is being implemented in something other than a System
                     #    so warn (irrespecive of verbose)
-                    else:
-                        print("WARNING:  Process ({0}) being instantiated in context "
-                                           "({1}) other than a System ".format(self.name, context))
+                    elif self.verbosePref:
+                        print("WARNING:  Process ({}) is being instantiated outside of a System".
+                              format(self.name))
 
     def _assign_process_input_projections(self, mechanism, context=None):
         """Create Projection(s) for each item in Process input to InputState(s) of the specified Mechanism
@@ -2076,14 +2111,16 @@ class Process_Base(Process):
              and report assignment if verbose
         """
 
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-            import ObjectiveMechanism
+        from PsyNeuLink.Globals.Keywords import LEARNING_SIGNAL
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
+            import ACTIVATION_INPUT
         def trace_learning_objective_mechanism_projections(mech):
             """Recursively trace projections to Objective mechanisms;
                    return TARGET ObjectiveMechanism if one is found upstream;
                    return None if no TARGET ObjectiveMechanism is found.
             """
-            for input_state in mech.input_states.values():
+            for input_state in mech.input_states:
                 for projection in input_state.path_afferents:
                     sender = projection.sender.owner
                     # If Projection is not from another ObjectiveMechanism, ignore
@@ -2111,11 +2148,14 @@ class Process_Base(Process):
 
         if not target_mechs:
 
-            # Trace projections to first learning ObjectiveMechanism (which is for the last mechanism in the process)
-            #   (in case terminal mechanism of process is part of another process that has learning implemented)
+            last_learning_mech  = self._learning_mechs[0]
+
+            # Trace projections to first learning ObjectiveMechanism, which is for the last mechanism in the process,
+            #   unless TERMINAL mechanism of process is part of another process that has learning implemented
             #    in which case, shouldn't assign target ObjectiveMechanism, but rather just a LearningMechanism)
+            # NOTE: ignores need for ObjectiveMechanism for AutoAssociativeLearning
             try:
-                target_mech = trace_learning_objective_mechanism_projections(self._learning_mechs[0][0])
+                target_mech = trace_learning_objective_mechanism_projections(last_learning_mech)
             except IndexError:
                 raise ProcessError("Learning specified for {} but no ObjectiveMechanisms or LearningMechanism found"
                                    .format(self.name))
@@ -2128,6 +2168,15 @@ class Process_Base(Process):
                                                              # list(self.terminalMechanisms)[0].name,
                                                              self.last_mechanism.name,
                                                              list(process.name for process in target_mech.processes)))
+            # Check for AutoAssociativeLearningMechanism:
+            #    its *ACTIVATION_INPUT* InputState should receive a projection from the same Mechanism
+            #    that receives a MappingProjection to which its *LEARNING_SIGNAL* projects
+            elif any(projection.sender.owner in [projection.sender.owner
+                                                 for projection in
+                                                 last_learning_mech.input_states[ACTIVATION_INPUT].path_afferents]
+                     for projection in
+                     last_learning_mech.input_states[ACTIVATION_INPUT].path_afferents):
+                pass
             else:
 
                 raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
@@ -2375,9 +2424,7 @@ class Process_Base(Process):
                               context=context)
 
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
-        for item in self._mechs:
-            mech = item
-            # params = item.params
+        for mech in self._mechs:
 
             # IMPLEMENTATION NOTE:
             #    This implementation restricts learning to ParameterStates of projections to input_states
@@ -2399,12 +2446,20 @@ class Process_Base(Process):
                     # For each parameter_state of the Projection
                     try:
                         for parameter_state in projection._parameter_states:
+
+                            # MODIFIED 9/23/17 NEW:
+                            # Skip learning if the LearningMechanism to which the LearningProjection belongs is disabled
+                            if all(projection.sender.owner.learning_enabled is False
+                                   for projection in parameter_state.mod_afferents):
+                                continue
+                            # MODIFIED 9/23/17 END:
+
                             # Call parameter_state.update with LEARNING in context to update LearningSignals
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
                             context = context + SEPARATOR_BAR + LEARNING
 
-                            # NOTE: This will need to be updated when runtime params are reenabled
+                            # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
                             parameter_state.update(time_scale=TimeScale.TRIAL, context=context)
 
@@ -2621,11 +2676,11 @@ class Process_Base(Process):
 
     @property
     def mechanisms(self):
-        return self._allMechanisms.mechanisms
+        return self._all_mechanisms.mechanisms
 
     @property
     def mechanism_names(self):
-        return self._allMechanisms.names
+        return self._all_mechanisms.names
 
     @property
     def output_state(self):

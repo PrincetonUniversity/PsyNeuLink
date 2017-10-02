@@ -205,7 +205,7 @@ class KWTA(RecurrentTransferMechanism):
         specifies the input to the mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method;
         also serves as a template to specify the length of `variable <KWTA.variable>` for
-        `function <KWTA.function>`, and the `primary outputState <OutputState_Primary>`
+        `function <KWTA.function>`, and the `primary OutputState <OutputState_Primary>`
         of the mechanism.
 
     size : int, list or np.ndarray of ints
@@ -240,7 +240,9 @@ class KWTA(RecurrentTransferMechanism):
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
         `time_constant <KWTA.time_constant>` is not 1.0).
-        :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        COMMENT:
+            Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
+        COMMENT
 
     decay : number : default 1.0
         specifies the amount by which to decrement its `previous_input <KWTA.previous_input>` each time it is executed.
@@ -320,7 +322,7 @@ class KWTA(RecurrentTransferMechanism):
         the `matrix <AutoAssociativeProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism.
 
     recurrent_projection : AutoAssociativeProjection
-        an `AutoAssociativeProjection` that projects from the Mechanism's `primary outputState <OutputState_Primary>`
+        an `AutoAssociativeProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
         back to its `primary inputState <Mechanism_InputStates>`.
 
     decay : float : default 1.0
@@ -333,7 +335,9 @@ class KWTA(RecurrentTransferMechanism):
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
         determines the starting value for time-averaged input
         (only relevant if `time_constant <KWTA.time_constant>` parameter is not 1.0).
-        :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        COMMENT:
+            Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
+        COMMENT
 
     noise : float or function : default 0.0
         a stochastically-sampled value added to the output of the `function <KWTA.function>`:
@@ -389,8 +393,8 @@ class KWTA(RecurrentTransferMechanism):
             and the first item of ``output_values``.
     COMMENT
 
-    outputStates : Dict[str, OutputState]
-        an OrderedDict with the following `outputStates <OutputState>`:
+    output_states : Dict[str, OutputState]
+        an OrderedDict with the following `OutputStates <OutputState>`:
 
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <KWTA.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
@@ -405,11 +409,11 @@ class KWTA(RecurrentTransferMechanism):
     output_values : List[array(float64), float, float]
         a list with the following items:
 
-        * **result** of the ``function`` calculation (value of TRANSFER_RESULT outputState);
-        * **mean** of the result (``value`` of TRANSFER_MEAN outputState)
-        * **variance** of the result (``value`` of TRANSFER_VARIANCE outputState);
-        * **energy** of the result (``value`` of ENERGY outputState);
-        * **entropy** of the result (if the ENTROPY outputState is present).
+        * **result** of the ``function`` calculation (value of TRANSFER_RESULT OutputState);
+        * **mean** of the result (``value`` of TRANSFER_MEAN OutputState)
+        * **variance** of the result (``value`` of TRANSFER_VARIANCE OutputState);
+        * **energy** of the result (``value`` of ENERGY OutputState);
+        * **entropy** of the result (if the ENTROPY OutputState is present).
 
     name : str : default KWTA-<index>
         the name of the Mechanism.
@@ -659,9 +663,9 @@ class KWTA(RecurrentTransferMechanism):
         #     - Mean of the activation values across units
         #     - Variance of the activation values across units
         # Return:
-        #     value of input transformed by TransferMechanism function in outputState[TransferOuput.RESULT].value
-        #     mean of items in RESULT outputState[TransferOuput.MEAN].value
-        #     variance of items in RESULT outputState[TransferOuput.VARIANCE].value
+        #     value of input transformed by TransferMechanism function in OutputState[TransferOuput.RESULT].value
+        #     mean of items in RESULT OutputState[TransferOuput.MEAN].value
+        #     variance of items in RESULT OutputState[TransferOuput.VARIANCE].value
         #
         # Arguments:
         #
@@ -675,7 +679,7 @@ class KWTA(RecurrentTransferMechanism):
         # - context (str)
         #
         # Returns the following values in self.value (2D np.array) and in
-        #     the value of the corresponding outputState in the self.outputStates dict:
+        #     the value of the corresponding OutputState in the self.output_states list:
         #     - activation value (float)
         #     - mean activation value (float)
         #     - standard deviation of activation values (float)
@@ -685,7 +689,7 @@ class KWTA(RecurrentTransferMechanism):
         # :param params: (dict)
         # :param time_scale: (TimeScale)
         # :param context: (str)
-        # :rtype self.outputState.value: (number)
+        # :rtype self.output_state.value: (number)
         # """
         #
         # # NOTE: This was heavily based on 6/20/17 devel branch version of _execute from TransferMechanism.py

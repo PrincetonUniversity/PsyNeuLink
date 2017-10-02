@@ -19,7 +19,7 @@ receives its input either from another ProcessingMechanism, or from the input to
 executed.  Similarly, its output is generally conveyed to another ProcessingMechanism or used as the ouput for a Process
 or System.  However, the output of a ProcessingMechanism may also be used by an `AdaptiveMechanism <AdaptiveMechanism>`
 to modify the parameters of other components (or its own). ProcessingMechanisms are always executed before all
-AdaptiveMechanisms in the Process and/or System to which they belong, so that any modifications made by the
+AdaptiveMechanisms in the Process and/or System to which they belong, so that any modificatons made by the
 AdaptiveMechanism are available to all ProcessingMechanisms in the next `TRIAL`.
 
 .. _ProcessingMechanism_Creation:

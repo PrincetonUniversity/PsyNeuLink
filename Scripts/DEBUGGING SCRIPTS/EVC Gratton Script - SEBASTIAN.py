@@ -5,7 +5,7 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms import EVCMechanism
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms import EVCControlMechanism
 
 
 def test_search_function(controller=None, **kwargs):
@@ -106,7 +106,7 @@ RewardProcess = process(
 mySystem = system(processes=[TargetControlProcess, FlankerControlProcess,
                              TargetAutomaticProcess, FlankerAutomaticProcess,
                              RewardProcess],
-                  controller=EVCMechanism,
+                  controller=EVCControlMechanism,
                   enable_controller=True,
                   monitor_for_control=[Reward, Decision.PROBABILITY_UPPER_THRESHOLD],
                   # monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],

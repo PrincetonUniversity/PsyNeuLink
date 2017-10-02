@@ -369,7 +369,7 @@ class LearningSignal(ModulatorySignal):
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
-        # Consider adding self to owner.outputStates here (and removing from LearningProjection._instantiate_sender)
+        # Consider adding self to owner.output_states here (and removing from LearningProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputStates in LearningProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults

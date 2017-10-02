@@ -37,8 +37,8 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism \
     import DefaultProcessingMechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
-    import ControlMechanism_Base
-register_category(entry=ControlMechanism_Base,
+    import ControlMechanism
+register_category(entry=ControlMechanism,
                   base_class=Mechanism_Base,
                   registry=MechanismRegistry,
                   context=kwInitPy)
@@ -71,7 +71,7 @@ DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=DEFAULT_PROCES
 
 # Specifies subclass used to instantiate a ControlMechanism if it is not specified for a System being instantiated
 # Note: must be a class
-# SystemDefaultControlMechanism = EVCMechanism
+# SystemDefaultControlMechanism = EVCControlMechanism
 SystemDefaultControlMechanism = DefaultControlMechanism
 
 

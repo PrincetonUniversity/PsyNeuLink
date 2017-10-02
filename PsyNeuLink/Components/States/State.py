@@ -328,7 +328,9 @@ from PsyNeuLink.Globals.Log import LogEntry, LogLevel
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import kpVerbosePref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.Utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, append_type_to_name, convert_to_np_array, get_class_attributes, is_value_spec, iscompatible, merge_param_dicts, type_match
+from PsyNeuLink.Globals.Utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, \
+    append_type_to_name, convert_to_np_array, get_class_attributes, is_value_spec, iscompatible, is_numeric, \
+    merge_param_dicts, type_match
 from PsyNeuLink.Scheduling.TimeScale import CurrentTime, TimeScale
 
 state_keywords = component_keywords.copy()
@@ -784,7 +786,7 @@ class State_Base(State):
             #     ParameterState, projection, 2-item tuple or value
         """
 
-        if PROJECTIONS in request_set and request_set[PROJECTIONS]:
+        if PROJECTIONS in request_set and request_set[PROJECTIONS] is not None:
             # if projection specification is an object or class reference, needs to be wrapped in a list
             # - to be consistent with paramClassDefaults
             # - for consistency of treatment below
@@ -1123,7 +1125,8 @@ class State_Base(State):
                 # If the projection was specified with a keyword or attribute value
                 #     then move it to the relevant entry of the params dict for the projection
                 # If projection_spec was in the form of a matrix keyword, move it to a matrix entry in the params dict
-                if issubclass(projection_type, PathwayProjection_Base) and projection_spec in MATRIX_KEYWORD_SET:
+                if (issubclass(projection_type, PathwayProjection_Base)
+                    and (is_numeric(projection_spec) or projection_spec in MATRIX_KEYWORD_SET)):
                     kwargs.update({MATRIX:projection_spec})
                 # If projection_spec was in the form of a ModulationParam value,
                 #    move it to a MODULATION entry in the params dict
@@ -2304,11 +2307,11 @@ def _parse_state_type(owner, state_spec):
     # State specification dict
     if isinstance(state_spec, dict):
         if STATE_TYPE in state_spec:
-            if not inspect.isclass(STATE_TYPE) and issubclass(state_spec[STATE_TYPE], State):
+            if not inspect.isclass(state_spec[STATE_TYPE]) and issubclass(state_spec[STATE_TYPE], State):
                 raise StateError("STATE entry of state specification for {} ({})"
                                  "is not a State or type of State".
                                  format(owner.name, state_spec[STATE]))
-            return state_spec[STATE]
+            return state_spec[STATE_TYPE]
 
     # # Mechanism specification (State inferred from context)
     # if isinstance(state_spec, Mechanism):
@@ -2345,7 +2348,8 @@ def _parse_state_spec(owner,
                       # projections:tc.any(list, bool)=[],
                       # modulatory_projections:tc.any(list,bool)=[],
                       params=None,
-                      force_dict=False):
+                      force_dict=False,
+                      context=None):
 
     """Return either State object or State specification dict for state_spec
 
@@ -2430,7 +2434,7 @@ def _parse_state_spec(owner,
     if params:
         # If variable is specified in state_params, use that
         if VARIABLE in params and params[VARIABLE] is not None:
-            variable = self._update_variable(params[VARIABLE])
+            variable = owner._update_variable(params[VARIABLE])
 
     # Create default dict for return
     state_dict = {NAME: name,
@@ -2464,6 +2468,7 @@ def _parse_state_spec(owner,
     # Specification dict
     # - move any entries other than for standard args into dict in params entry
     elif isinstance(state_spec, dict):
+        state_spec=state_spec.copy()
         # Dict has a single entry in which the key is not a recognized keyword,
         #    so assume it is of the form {<STATE_NAME>:<STATE SPECIFICATION DICT>}:
         #    assign STATE_NAME as name, and return parsed SPECIFICATION_DICT
@@ -2500,9 +2505,7 @@ def _parse_state_spec(owner,
                          if not param_spec in STANDARD_ARGS]:
                 params = params or {}
                 params[spec] = state_spec[spec]
-                # MODIFIED 6/5/17 OLD: [REINSTATED, BUT CAUSING TROUBLE IN STROOP TEST SCRIPT]
                 del state_spec[spec]
-                # MODIFIED 6/5/17 END
             state_dict.update(state_spec)
             # state_dict = state_spec
             if params:
@@ -2510,14 +2513,17 @@ def _parse_state_spec(owner,
                     state_dict[PARAMS] = {}
                 state_dict[PARAMS].update(params)
 
-    # # 2-item tuple (spec, projection)
-    # 2-item tuple (spec, Component)
+    # 2-item tuple;  could be:
+    #    (spec, Projection)
+    #    (param_name, Mechanism)
     elif isinstance(state_spec, tuple):
         _is_legal_state_spec_tuple(owner, state_spec, state_type_name)
         # Put projection spec from second item of tuple in params
         params = params or {}
         # FIX 5/23/17: NEED TO HANDLE NON-MODULATORY PROJECTION SPECS
         params.update({PROJECTIONS:[state_spec[1]]})
+
+        # FIX: 9/17/17 NEED TO HANDLE (ParamName string, Mechanism) for state_type = ControlSignal
 
         # Parse state_spec in first item of tuple (without params)
         state_dict = _parse_state_spec(owner=owner,
@@ -2607,8 +2613,14 @@ def _is_legal_state_spec_tuple(owner, state_spec, state_type_name=None):
     if len(state_spec) != 2:
         raise StateError("Tuple provided as state_spec for {} of {} ({}) must have exactly two items".
                          format(state_type_name, owner.name, state_spec))
-    # IMPLEMENTATION NOTE: Mechanism allowed in tuple to accomodate specification of param for ControlSignal
-    if not (_is_projection_spec(state_spec[1]) or isinstance(state_spec[1], (Mechanism, State))):
+    if not (_is_projection_spec(state_spec[1]) or
+                # IMPLEMENTATION NOTE: Mechanism or State allowed as 2nd item of tuple or
+                #                      string (parameter name) as 1st and Mechanism as 2nd
+                #                      to accommodate specification of param for ControlSignal
+                isinstance(state_spec[1], (Mechanism, State))
+                           or (isinstance(state_spec[0], Mechanism) and
+                                       state_spec[1] in state_spec[0]._parameter_states)):
+
         raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a specification "
                          "for a Mechanism, State, or Projection".
                          format(state_type_name, owner.__class__.__name__, state_spec[1]))

@@ -38,18 +38,18 @@ MappingProjections are also generated automatically in the following circumstanc
     have a Projection assigned between them (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>`
     specification, which determines the appropriate matrix by context);
   ..
-  * by an `ObjectiveMechanism`, from each `OutputState` listed in its `monitored_values
-    <ObjectiveMechanism.monitored_values>` attribute to the corresponding `InputState` of the ObjectiveMechanism
+  * by an `ObjectiveMechanism`, from each `OutputState` listed in its `monitored_output_states
+    <ObjectiveMechanism.monitored_output_states>` attribute to the corresponding `InputState` of the ObjectiveMechanism
     (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>` specification, which determines the
     appropriate matrix by context);
   ..
   * by a `LearningMechanism`, between it and the other components required to implement learning
     (see `LearningMechanism_Learning_Configurations` for details);
   ..
-  * by a `ControlMechanism <ControlMechanism>`, from the `ObjectiveMechanism` that `it creates
-    <ControlMechanism_Monitored_OutputStates>` to its *ERROR_SIGNAL* `InputState`, and from the `OutputStates
-    <OutputState>` listed in the ControlMechanism's `monitored_output_states
-    <ControlMechanism_Base.monitored_output_states>` attribute) to the ObjectiveMechanism (as described above; an
+  * by a `ControlMechanism <ControlMechanism>`, from the *OUTCOME* `OutputState of the `ObjectiveMechanism` that `it
+    creates <ControlMechanism_ObjectiveMechanism>` to its *ERROR_SIGNAL* `InputState`, and from the `OutputStates
+    <OutputState>` listed in the ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
+    attribute to the ObjectiveMechanism's `primary InputState <InputState_Primary>` (as described above; an
     `IDENTITY_MATRIX` is used for all of these).
 
 .. _Mapping_Matrix_Specification:
@@ -504,7 +504,16 @@ class MappingProjection(PathwayProjection_Base):
                 projection_string = 'projection'
 
             if not isinstance(self._matrix_spec, str):
-                raise ProjectionError("Matrix ")
+                raise ProjectionError("Width ({}) of \'{}{}\' from \'{}\' OuputState of \'{}\' to \'{}\'"
+                                      " does not match the length of its \'{}\' InputState ({})".
+                                      format(mapping_output_len,
+                                             self.name,
+                                             projection_string,
+                                             self.sender.name,
+                                             self.sender.owner.name,
+                                             self.receiver.owner.name,
+                                             self.receiver.name,
+                                             receiver_len))
 
             elif self._matrix_spec == IDENTITY_MATRIX or self._matrix_spec == HOLLOW_MATRIX:
                 # Identity matrix is not reshapable
@@ -555,12 +564,14 @@ class MappingProjection(PathwayProjection_Base):
         # this one, so if you make a change here, please make it there as well.
 
         # (7/18/17 CW) note that we don't let MappingProjections related to System inputs execute here (due to a
-        # minor bug with execution ID): maybe we should just fix this bug instead, if it's useful to do so
+        # minor bug with execution ID): maybe we should just fix this∞∞∞ bug instead, if it's useful to do so
         if "System" not in str(self.sender.owner):
             self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
 
         # Check whether error_signal has changed
-        if self.learning_mechanism and self.learning_mechanism.status == CHANGED:
+        if (self.learning_mechanism
+            and self.learning_mechanism.learning_enabled
+            and self.learning_mechanism.status == CHANGED):
 
             # Assume that if learning_mechanism attribute is assigned,
             #    both a LearningProjection and ParameterState[MATRIX] to receive it have been instantiated

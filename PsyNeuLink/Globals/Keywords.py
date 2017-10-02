@@ -178,7 +178,8 @@ SEPARATOR_BAR = ' | '
 kwProgressBarChar = '.'
 # kwValueSuffix = '_value'
 NO_CONTEXT = "NO_CONTEXT"
-INITIALIZING = " INITIALIZING "  # Used as context for Log
+INITIALIZING = " INITIALIZING "  # Used as status and context for Log
+INITIALIZED = " INITIALIZED "  # Used as status
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
 EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
 kwAssign = '| Assign' # Used in context for Log
@@ -291,10 +292,11 @@ kwComponentCategory = "Function_Base"
 
 # Mechanisms:
 PROCESSING_MECHANISM = "ProcessingMechanism"
-ADAPTIVE_MECHANISM = "AdpativeMechanism"
+ADAPTIVE_MECHANISM = "AdaptiveMechanism"
 LEARNING_MECHANISM = "LearningMechanism"
 CONTROL_MECHANISM = "ControlMechanism"
 GATING_MECHANISM = 'GatingMechanism'
+AUTOASSOCIATIVE_LEARNING_MECHANISM = 'AutoAssociativeLearningMechanism'
 
 # States:
 INPUT_STATE = "InputState"
@@ -329,10 +331,10 @@ LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
 
 # ControlMechanism:
 DEFAULT_CONTROL_MECHANISM = "DefaultControlMechanism"
-EVC_MECHANISM = "EVCMechanism"
+EVC_MECHANISM = "EVCControlMechanism"
 
 # ObjectiveMechanisms:
-OBJECTIVE_MECHANISM = "ObjectiveMechanism"
+OBJECTIVE_MECHANISM_OBJECT = "ObjectiveMechanism"
 COMPARATOR_MECHANISM = "ComparatorMechanism"
 
 # ProcessingMechanisms:
@@ -350,6 +352,7 @@ ARGUMENT_THERAPY_FUNCTION = "Contradiction Function"
 USER_DEFINED_FUNCTION = "USER DEFINED FUNCTION"
 REDUCE_FUNCTION = "Reduce Function"
 LINEAR_COMBINATION_FUNCTION = "LinearCombination Function"
+COMBINE_MEANS_FUNCTION = "CombineMeans Function"
 LINEAR_FUNCTION = "Linear Function"
 LEABRA_FUNCTION = "Leabra Function"
 EXPONENTIAL_FUNCTION = "Exponential Function"
@@ -360,13 +363,15 @@ SIMPLE_INTEGRATOR_FUNCTION = "SimpleIntegrator Function"
 CONSTANT_INTEGRATOR_FUNCTION = "ConstantIntegrator Function"
 ACCUMULATOR_INTEGRATOR_FUNCTION = "AccumulatorIntegrator Function"
 FHN_INTEGRATOR_FUNCTION = "FHNIntegrator Function"
+UTILITY_INTEGRATOR_FUNCTION = "AGTUtilityIntegrator Function"
 ACCUMULATOR_INTEGRATOR = "AccumulatorIntegrator"  # (7/19/17 CW) added for MappingProjection.py
 ADAPTIVE_INTEGRATOR_FUNCTION = "AdaptiveIntegrator Function"
 DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
 ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU Integrator Function"
 LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
-BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
+HEBBIAN_FUNCTION = 'Hebbian Learning Function'
 RL_FUNCTION = 'ReinforcementLearning Function'
+BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
 ERROR_DERIVATIVE_FUNCTION = 'Error Derivative Function'
 
 # Distribution functions
@@ -487,8 +492,8 @@ kwInitialPoint = 'initial_point'
 
 MODULATION = 'modulation'
 
-# ControlMechanism / EVCMechanism
-MAKE_DEFAULT_CONTROLLER = "make_default_controller"
+# ControlMechanism / EVCControlMechanism
+OBJECTIVE_MECHANISM = "objective_mechanism"
 MONITOR_FOR_CONTROL = "monitor_for_control"
 PREDICTION_MECHANISM = "Prediction Mechanism"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"

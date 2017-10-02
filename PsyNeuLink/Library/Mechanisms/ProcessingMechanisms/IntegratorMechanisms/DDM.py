@@ -168,7 +168,7 @@ decision process is executed, and what information is returned. The `function <D
 the analytical solution to use when `time_scale <DDM.time_scale>` is  set to :keyword:`TimeScale.TRIAL` (see
 :ref:`Functions <DDM_Functions>` below); when `time_scale <DDM.time_scale>` set to `TimeScale.TIME_STEP`,
 executing the DDM Mechanism numerically integrates the path of the decision variable (see `Execution <DDM_Execution>`
-below).  The number of `outputStates <OutputState>` is determined by the `function <DDM.function>` in use (see
+below).  The number of `OutputStates <OutputState>` is determined by the `function <DDM.function>` in use (see
 :ref:`list of output values <DDM_Results>` below).
 
 [TBI - average_output_states ARGUMENT/OPTION AFTER IMPLEMENTING MULTIPROCESS DDM]
@@ -582,7 +582,7 @@ class DDM(ProcessingMechanism_Base):
                 specified params
             - execute(variable, time_scale, params, context)
                 executes specified version of DDM and returns outcome values (in self.value and values of
-                self.outputStates)
+                self.output_states)
             - _out_update(particle, drift, noise, time_step_size, decay)
                 single update for OU (special case l=0 is DDM) -- from Michael Shvartsman
             - _ddm_update(particle, a, s, dt)
@@ -764,7 +764,7 @@ class DDM(ProcessingMechanism_Base):
                 fun = fun.__self__.__class__
 
             if not fun in functions:
-                function_names = [function.componentName for fun in functions]
+                function_names = [fun.componentName for fun in functions]
                 raise DDMError("{} param of {} must be one of the following functions: {}".
                                format(FUNCTION, self.name, function_names))
 
@@ -819,7 +819,7 @@ class DDM(ProcessingMechanism_Base):
             - mean ER
             - mean DT
             - mean ER and DT variabilty (kwNavarroAndFuss ony)
-        Return current decision variable (self.outputState.value) and other output values (self.outputStates[].value
+        Return current decision variable (self.outputState.value) and other output values (self.output_states[].value
         Arguments:
         # CONFIRM:
         variable (float): set to self.value (= self.input_value)
@@ -831,7 +831,7 @@ class DDM(ProcessingMechanism_Base):
             + NOISE (float)
         - context (str)
         Returns the following values in self.value (2D np.array) and in
-            the value of the corresponding outputState in the self.outputStates dict:
+            the value of the corresponding outputState in the self.output_states dict:
             - decision variable (float)
             - mean error rate (float)
             - mean RT (float)

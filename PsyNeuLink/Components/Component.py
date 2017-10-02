@@ -27,8 +27,9 @@ Creating a Component
 A Component is never created by calling the constructor for the Component base class.  However, its ``__init__()``
 method is always called when a Component subclass is instantiated; that, in turn, calls a standard set of methods
 (listed `below <Component_Methods>`) as part of the initialization procedure.  Every Component has a core set of
-configurable parameters that can be specified in the arguments of the constructor, as well as additional attributes
-that provide information about its contents and/or state (see `Component_Attributes` below).
+`configurable parameters <Component_User_Params>` that can be specified in the arguments of the constructor, as well
+as additional attributes that provide information about its contents and/or state (see
+`Component_Informational_Attributes` below).
 
 .. _Component_Deferred_Init:
 
@@ -154,14 +155,14 @@ Core Informational Attributes
 
 .. _Component_User_Params:
 
-* **user_params** - this contains a dictionary of all of the configurable attributes for a given Component.
-  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
-  class `UserDict <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
+* **user_params** - this contains a dictionary of all of the configurable parameters for a given Component.
+  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class `UserDict
+  <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
   value of an entry can be accessed in the standard manner (e.g., ``my_component.user_params[`PARAMETER NAME`]``);
-  however, to access a full list of entries it's data attribute must be used (e.g.,
-  ``my_component.user_params.data``).  Also, because it is read-only, it cannot be used to make assignments.  Rather,
-  changes to the value of an attribute must be made by assigning a value to the attribute directly (e.g.,
-  ``my_component.my_parameter``), or using the Component's `assign_params <Component.assign_params>` method.
+  however, to access a full list of entries it's data attribute must be used (e.g., ``my_component.user_params.data``).
+  Also, because it is read-only, it cannot be used to make assignments.  Rather, changes to the value of a parameter
+  must be made by assigning a value to the attribute for that parameter directly (e.g., ``my_component.my_parameter``),
+  or using the Component's `assign_params <Component.assign_params>` method.
 
 ..
 COMMENT:
@@ -512,7 +513,7 @@ class Component(object):
              it can be referenced either as self.function, self.params[FUNCTION] or self.paramsCurrent[FUNCTION]
          - function_object (Function): the object to which function belongs (and that defines it's parameters)
          - output (value: self.value)
-         - output_values (return from self.execute: concatenated set of values of outputStates)
+         - output_values (return from self.execute: concatenated set of values of output_states)
          - class and instance variable defaults
          - class and instance param defaults
         The Components's execute method (<subclass>.execute is the Component's primary method
@@ -669,6 +670,7 @@ class Component(object):
             return vardict
 
     class ClassDefaults(Defaults):
+        exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
         pass
 
     class InstanceDefaults(Defaults):
@@ -740,6 +742,7 @@ class Component(object):
         context = context + INITIALIZING + ": " + COMPONENT_INIT
         self.execution_status = ExecutionStatus.INITIALIZING
         self.init_status = InitStatus.UNSET
+        # self.init_status = InitStatus.INITIALIZING
 
         defaults = self.ClassDefaults.values().copy()
         if param_defaults is not None:
@@ -870,6 +873,8 @@ class Component(object):
         # Stub for methods that need to be executed after instantiating function
         #    (e.g., instantiate_output_state in Mechanism)
         self._instantiate_attributes_after_function(context=context)
+
+        self.init_status = InitStatus.INITIALIZED
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -1063,16 +1068,27 @@ class Component(object):
     def _assign_args_to_param_dicts(self, **kwargs):
         """Assign args passed in __init__() to params
 
-        Get args and their corresponding values from call to self.__init__()
+        Get args and their corresponding values in call to constructor
         - get default values for all args and assign to class.paramClassDefaults if they have not already been
         - assign arg values to local copy of params dict
         - override those with any values specified in params dict passed as "params" arg
         """
 
-        # Get args in call to __init__ and create access to default values
-        sig = inspect.signature(self.__init__)
-
-        default = lambda val : list(sig.parameters.values())[list(sig.parameters.keys()).index(val)].default
+        # Get args in call to constructor and create dictionary of their default values (for use below)
+        # Create dictionary of default values for args
+        defaults_dict = {}
+        for arg_name, arg in inspect.signature(self.__init__).parameters.items():
+            defaults_dict[arg_name] = arg.default
+        def default(val):
+            try:
+                return defaults_dict[val]
+            except KeyError:
+                # raise ComponentError("PROGRAM ERROR: \'{}\' not declared in {}.__init__() "
+                #                      "but expected by its parent class ({}).".
+                #                      format(val,
+                #                             self.__class__.__name__,
+                #                             self.__class__.__bases__[0].__name__))
+                pass
 
         def parse_arg(arg):
             # Resolve the string value of any args that use keywords as their name
@@ -1426,7 +1442,7 @@ class Component(object):
             variable = self._update_variable(variable())
 
         # Validate variable if parameter_validation is set and the function was called with a variable
-        if self.prefs.paramValidationPref and not variable is None:
+        if self.prefs.paramValidationPref and variable is not None:
             if context:
                 context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
             else:
@@ -1842,7 +1858,7 @@ class Component(object):
             self._instantiate_attributes_before_function(context=COMMAND_LINE)
 
         # Give owner a chance to instantiate function and/or function params
-        # (e.g., wrap in UserDefineFunction, as per EVCMechanism)
+        # (e.g., wrap in UserDefineFunction, as per EVCControlMechanism)
         elif any(isinstance(param_value, (function_type, Function)) or
                       (inspect.isclass(param_value) and issubclass(param_value, Function))
                  for param_value in validated_set.values()):
@@ -2588,6 +2604,20 @@ class Component(object):
         for i in range(len(v)):
             s.append(len(v[i]))
         return np.array(s)
+
+    # @property
+    # def init_status(self):
+    #     try:
+    #         return self._init_status
+    #     except AttributeError:
+    #         return InitStatus.UNSET
+    #
+    # @init_status.setter
+    # def init_status(self, value):
+    #     if not isinstance(value, InitStatus):
+    #         raise ComponentError("PROGRAM ERROR:  Attempt to assign \'init_status\' attribute of {} "
+    #                              "a value ({}) other than one of InitStatus".format(self.name, value))
+    #     self._init_status = value
 
     @property
     def prefs(self):
