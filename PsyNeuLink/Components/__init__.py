@@ -238,7 +238,7 @@ System.classPreferences = ComponentPreferenceSet(owner=System,
                                                  level=PreferenceLevel.INSTANCE,
                                                  context=".__init__.py")
 
-from PsyNeuLink.Components.Process import Process
+from PsyNeuLink.Components.ShellClasses import Process
 Process.classPreferences = ComponentPreferenceSet(owner=Process,
                                                  prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
                                                  level=PreferenceLevel.INSTANCE,
