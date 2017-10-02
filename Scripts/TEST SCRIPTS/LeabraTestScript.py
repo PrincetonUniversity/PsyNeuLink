@@ -5,7 +5,7 @@ import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import leabra
-    from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LeabraMechanism import LeabraMechanism
+    from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.LeabraMechanism import LeabraMechanism
 
 L = LeabraMechanism(input_size=4, output_size=2, hidden_layers=2, name='L')
 
