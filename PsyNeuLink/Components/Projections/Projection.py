@@ -298,7 +298,10 @@ import warnings
 from PsyNeuLink.Components.Component import Component, InitStatus
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
 from PsyNeuLink.Components.ShellClasses import Process, Projection, State
-from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_PROJECTION, GATING, GATING_PROJECTION, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX_KEYWORD_SET, MECHANISM, OUTPUT_STATE, PARAMETER_STATE_PARAMS, PROJECTION, PROJECTION_SENDER, PROJECTION_TYPE, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
+from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_PROJECTION, GATING, GATING_PROJECTION, INPUT_STATE, \
+    LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX_KEYWORD_SET, MECHANISM, \
+    OUTPUT_STATE, PARAMETER_STATE_PARAMS, PROJECTION, PROJECTION_SENDER, PROJECTION_TYPE, \
+    kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Utilities import ContentAddressableList, iscompatible, type_match
@@ -1012,6 +1015,124 @@ def _validate_receiver(sender_mech:Mechanism,
                                     format(projection.__class__.__name__,
                                            spec_type,
                                            sender_mech.name))
+
+@tc.typecheck
+def _validate_connection(owner,                                   # Owner of State seeking connection
+                         connect_with_state:type,                 # State to which connection is being sought
+                         projection_spec:_is_projection_spec,     # projection specification
+                         projection_socket:str,                   # socket of Projection to be connected to target state
+                         connectee_state:tc.optional(type)=None): # State for which connection is being sought
+
+    """Validate that a Projection specification is compatible with the State to which is a connection is specified
+
+    Carries out undirected validation (i.e., without knowing whether the connectee is the sender or receiver).
+    Use _validate_receiver or ([TBI] validate_sender) for directed validation.
+    Note: connectee_state is used only for name in errors
+
+    If projection_spec is a Projection:
+        - if it is instantiated, compare the projection_socket specified (sender or receiver) with connect_with_state
+        - if it in deferred_init, check to see if the specified projection_socket has been specified in init_args;
+            otherwise, use Projection's type
+    If projection_spec is a class specification, use Projection's type
+    If projection_spec is a dict:
+        - check if there is an entry for the socket and if so, use that
+        - otherwise, check to see if there is an entry for the Projection's type
+
+    Returns:
+        `True` if validation has been achieved to same level (though possibly with warnings);
+        `False` if validation could not be done;
+        raises an exception if an incompatibility is detected.
+    """
+
+
+    if connectee_state:
+        connectee_str =  " {} of".format(connectee_state.__name__)
+    else:
+        connectee_str =  ""
+
+
+    # Used below
+    def _validate_projection_type(projection_class):
+        # Validate that Projection's type can connect with the class of connect_with_state
+        if connect_with_state in getattr(projection_class.sockets, projection_socket):
+            if owner.verbosePref:
+                warnings.warn("{0} specified to be connected with{1} {2} is compatible with the {3} of the "
+                              "specified {4} ({5}), but the initialization of the {4} is not yet complete so "
+                              "compatibility can't be fully confirmed".
+                              format(State.__name__, connectee_str, owner.name,
+                                     projection_socket, Projection.__name__, projection_spec))
+
+    # If it is an actual Projection
+    if isinstance(projection_spec, Projection):
+
+        # It is in deferred_init status
+        if projection_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+
+            # Try to get the State to which the Projection will be connected when fully initialized
+            #     as positive confirmation that it is the correct type for state_type
+            try:
+                projection_socket_state = projection_spec.init_args[projection_socket]
+                # Projection's socket has been assigned to a State
+                if projection_socket_state:
+                    # Validate that the State is same class as connect_with_state
+                    if issubclass(projection_socket_state, connect_with_state):
+                        return True
+                else:
+                    _validate_projection_type(projection_spec.__class__)
+                    return True
+            # State for projection's socket couldn't be determined
+            except KeyError:
+                # Us Projection's type for validation
+                # At least validate that Projection's type can connect with the class of connect_with_state
+                    _validate_projection_type(projection_spec.__class__)
+                    return True
+
+        # Projection has been instantiated
+        else:
+            # Compare the State to which the Projection's socket has been assigned with connect_with_state
+            projection_socket_state = getattr(projection_spec, projection_socket)
+            if projection_socket_state is connect_with_state:
+                return True
+
+        # None of the above worked, so must be incompatible
+        raise ProjectionError("{} specified to be connected with{} {} "
+                              "is not compatible with the {} of the specified {} ({})".
+                              format(State.__name__, connectee_str, owner.name,
+                                     projection_socket, Projection.__name__, projection_spec))
+
+    # Projection class
+    elif inspect.isclass(projection_spec):
+        _validate_projection_type(projection_spec)
+        return True
+
+    # Projection specification dictionary
+    elif isinstance(projection_spec, dict):
+        # Try to validate using entry for projection_socket
+        if projection_socket in projection_spec and projection_spec[projection_socket] is not None:
+            if projection_spec[projection_socket] is connect_with_state:
+                return True
+            else:
+                raise ProjectionError("{} specified to be connected with{} {} is not compatible "
+                                      "with the {} in the specification dict for the {} ({})".
+                                      format(State.__name__, connectee_str, owner.name,
+                                             projection_socket,
+                                             Projection.__name__,
+                                             projection_spec[projection_socket]))
+        # Try to validate using entry for Projection' type
+        elif PROJECTION_TYPE in projection_spec and projection_spec[PROJECTION_TYPE] is not None:
+            _validate_projection_type(projection_spec[PROJECTION_TYPE])
+
+    # Projection spec is too abstract to validate here
+    #    (e.g., value or a name that will be used in context to instantiate it)
+    if owner.verbosePref:
+        warnings.warn("Specification of {} ({}) for connection between {} and{} {} "
+                      "cannot be fully validated.".format(Projection.__class__.__name__,
+                                                          projection_spec,
+                                                          connect_with_state.name,
+                                                          connectee_str,
+                                                          owner.name))
+    return False
+
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _add_projection_to(receiver, state, projection_spec, context=None):
