@@ -1238,7 +1238,7 @@ class State_Base(State):
         # ALLOW SPEC TO BE ANY STATE (INCLUDING OutPutState, FOR GATING PROJECTIONS)
         # OR MECHANISM (IN WHICH CASE PRIMARY INPUTSTATE IS ASSUMED)
         # Must be an InputState or ParameterState
-        from PsyNeuLink.Components.States.State import State
+        from PsyNeuLink.Components.ShellClasses import State
         if not isinstance(receiver, (State, Mechanism)):
             raise StateError("Receiver ({}) of {} from {} must be a State or Mechanism".
                              format(receiver, projection_spec, self.name))

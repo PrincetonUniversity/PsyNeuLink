@@ -257,7 +257,7 @@ DDM.classPreferences = ComponentPreferenceSet(owner=DDM,
                                              context=".__init__.py")
 
 
-from PsyNeuLink.Components.States.State import State
+from PsyNeuLink.Components.ShellClasses import State
 State.classPreferences = ComponentPreferenceSet(owner=State,
                                                prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
                                                level=PreferenceLevel.CATEGORY,
