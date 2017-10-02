@@ -712,7 +712,6 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     # if param_name in owner.ParameterStates:
     #     return
 
-    from PsyNeuLink.Components.Projections.Projection import Projection
     if param_value is NotImplemented:
         return
     # Allow numerics but omit booleans (which are treated by is_numeric as numerical)

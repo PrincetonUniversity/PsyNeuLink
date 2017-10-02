@@ -122,13 +122,12 @@ import warnings
 
 from PsyNeuLink.Components.Functions.Function \
     import ModulationParam, _is_modulation_param, AGTUtilityIntegrator
-from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
     import ObjectiveMechanism, _parse_monitored_output_states, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
+from PsyNeuLink.Components.ShellClasses import Mechanism, System
 from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import INIT__EXECUTE__METHOD_ONLY, MECHANISM, \
                                         OBJECTIVE_MECHANISM, CONTROL_PROJECTIONS, CONTROL_SIGNALS, CONTROL

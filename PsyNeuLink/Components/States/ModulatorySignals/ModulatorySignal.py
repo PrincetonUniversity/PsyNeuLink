@@ -197,7 +197,7 @@ Class Reference
 """
 
 from PsyNeuLink.Components.Component import InitStatus, component_keywords
-from PsyNeuLink.Components.ShellClasses import State
+from PsyNeuLink.Components.ShellClasses import Mechanism, State
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.State import StateError, State_Base
 from PsyNeuLink.Globals.Keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL
@@ -396,7 +396,6 @@ class ModulatorySignal(OutputState):
         Call _instantiate_projection_from_state to assign ModulatoryProjections to .efferents
 
         """
-        from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
             import ModulatoryProjection_Base
 

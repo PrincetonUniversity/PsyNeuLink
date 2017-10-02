@@ -54,11 +54,11 @@ import numpy as np
 from collections import Iterable, OrderedDict
 from enum import Enum
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.CompositionInterfaceMechanism \
     import CompositionInterfaceMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.Projection import Projection
+from PsyNeuLink.Components.ShellClasses import Projection
 from PsyNeuLink.Globals.Keywords import EXECUTING
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
 from PsyNeuLink.Scheduling.TimeScale import TimeScale

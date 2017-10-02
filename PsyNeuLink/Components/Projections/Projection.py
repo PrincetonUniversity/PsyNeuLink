@@ -313,12 +313,8 @@ import typecheck as tc
 import warnings
 
 from PsyNeuLink.Components.Component import Component, InitStatus
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
-from PsyNeuLink.Components.ShellClasses import Process, Projection, State
-from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_PROJECTION, GATING, GATING_PROJECTION, INPUT_STATE, \
-    LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX_KEYWORD_SET, MECHANISM, \
-    OUTPUT_STATE, PARAMETER_STATE_PARAMS, PROJECTION, PROJECTION_SENDER, PROJECTION_TYPE, \
-    kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
+from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
+from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_PROJECTION, GATING, GATING_PROJECTION, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX_KEYWORD_SET, MECHANISM, OUTPUT_STATE, PARAMETER_STATE_PARAMS, PROJECTION, PROJECTION_SENDER, PROJECTION_TYPE, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Utilities import ContentAddressableList, iscompatible, type_match

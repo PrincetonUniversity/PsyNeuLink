@@ -292,7 +292,7 @@ kwComponentCategory = "Function_Base"
 
 # Mechanisms:
 PROCESSING_MECHANISM = "ProcessingMechanism"
-ADAPTIVE_MECHANISM = "AdpativeMechanism"
+ADAPTIVE_MECHANISM = "AdaptiveMechanism"
 LEARNING_MECHANISM = "LearningMechanism"
 CONTROL_MECHANISM = "ControlMechanism"
 GATING_MECHANISM = 'GatingMechanism'

@@ -20,7 +20,7 @@ executed.  Similarly, its output is generally conveyed to another ProcessingMech
 or System.  However, the output of a ProcessingMechanism may also be used by an `AdaptiveMechanism <AdaptiveMechanism>`
 to modify the parameters of other components (or its own). ProcessingMechanisms are always executed before all
 AdaptiveMechanisms in the Process and/or System to which they belong, so that any modificatons made by the
-AdpativeMechanism are available to all ProcessingMechanisms in the next `TRIAL`.
+AdaptiveMechanism are available to all ProcessingMechanisms in the next `TRIAL`.
 
 .. _ProcessingMechanism_Creation:
 

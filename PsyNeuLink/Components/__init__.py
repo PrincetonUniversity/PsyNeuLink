@@ -232,20 +232,20 @@ for projection_type in ProjectionRegistry:
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet \
     import ComponentPreferenceSet, ComponentDefaultPrefDicts, PreferenceLevel
 
-from PsyNeuLink.Components.System import System
+from PsyNeuLink.Components.ShellClasses import System
 System.classPreferences = ComponentPreferenceSet(owner=System,
                                                  prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
                                                  level=PreferenceLevel.INSTANCE,
                                                  context=".__init__.py")
 
-from PsyNeuLink.Components.Process import Process
+from PsyNeuLink.Components.ShellClasses import Process
 Process.classPreferences = ComponentPreferenceSet(owner=Process,
                                                  prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
                                                  level=PreferenceLevel.INSTANCE,
                                                  context=".__init__.py")
 
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+from PsyNeuLink.Components.ShellClasses import Mechanism
 Mechanism.classPreferences = ComponentPreferenceSet(owner=Mechanism,
                                                    prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
                                                    level=PreferenceLevel.TYPE,
@@ -257,7 +257,7 @@ DDM.classPreferences = ComponentPreferenceSet(owner=DDM,
                                              context=".__init__.py")
 
 
-from PsyNeuLink.Components.States.State import State
+from PsyNeuLink.Components.ShellClasses import State
 State.classPreferences = ComponentPreferenceSet(owner=State,
                                                prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
                                                level=PreferenceLevel.CATEGORY,
@@ -273,7 +273,7 @@ MappingProjection.classPreferences = ComponentPreferenceSet(owner=MappingProject
                                                  level=PreferenceLevel.TYPE,
                                                  context=".__init__.py")
 
-from PsyNeuLink.Components.Projections.Projection import Projection
+from PsyNeuLink.Components.ShellClasses import Projection
 Projection.classPreferences = ComponentPreferenceSet(owner=Projection,
                                                     prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
                                                     level=PreferenceLevel.CATEGORY,

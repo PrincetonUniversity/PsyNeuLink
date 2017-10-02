@@ -2052,7 +2052,7 @@ class Component(object):
             #    the FUNCTION param (which is not allowed to be specified as a projection)
             #    then simply assign value to paramClassDefault (implication of not specifying it explicitly);
             #    this also allows it to pass the test below and function execution to occur for initialization;
-            from PsyNeuLink.Components.Projections.Projection import Projection, ProjectionRegistry
+            from PsyNeuLink.Components.ShellClasses import Projection
             # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
             # from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
             if (((isinstance(param_value, str) and
@@ -2170,7 +2170,6 @@ class Component(object):
     def _get_param_value_from_tuple(self, param_spec):
         """Returns param value (first item) of a (value, projection) tuple
         """
-        from PsyNeuLink.Components.Projections.Projection import Projection
         # from PsyNeuLink.Components.Projections.Modulatory.ControlProjection import ControlProjection
         # from PsyNeuLink.Components.Projections.Modulatory.LearningProjection import LearningProjection
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
@@ -2416,7 +2415,7 @@ class Component(object):
                     # parse entries of FUNCTION_PARAMS dict
                     else:
                         # Get param value from any params specified in a tuple or a dict
-                        from PsyNeuLink.Components.Projections.Projection import Projection
+                        from PsyNeuLink.Components.ShellClasses import Projection
                         for param_name, param_spec in function_param_specs.items():
                             # Get param value from (param, projection) tuple
                             if (isinstance(param_spec, tuple) and len(param_spec) is 2 and

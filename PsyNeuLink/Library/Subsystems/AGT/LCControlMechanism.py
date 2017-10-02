@@ -331,7 +331,6 @@ import warnings
 
 from PsyNeuLink.Components.Functions.Function \
     import ModulationParam, _is_modulation_param, MULTIPLICATIVE_PARAM, FHNIntegrator
-from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
     import ObjectiveMechanism, _parse_monitored_output_states
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
@@ -339,8 +338,8 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.Contro
     import ControlMechanism, ALLOCATION_POLICY
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.ShellClasses import Mechanism, System
 from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import FUNCTION, ALL, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, \
                                         CONTROL_PROJECTIONS, CONTROL_SIGNALS, FULL_CONNECTIVITY_MATRIX
@@ -508,6 +507,24 @@ class LCControlMechanism(ControlMechanism):
                  # modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
                  modulated_mechanisms=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
+                 initial_w_FHN=0.0,
+                 initial_v_FHN=0.0,
+                 time_step_size_FHN=0.1,
+                 t_0_FHN=0.0,
+                 a_v_FHN=-1 / 3,
+                 b_v_FHN=0.0,
+                 c_v_FHN=1.0,
+                 d_v_FHN=0.0,
+                 e_v_FHN=-1.0,
+                 f_v_FHN=1.0,
+                 time_constant_v_FHN=1.0,
+                 a_w_FHN=1.0,
+                 b_w_FHN=-0.8,
+                 c_w_FHN=0.7,
+                 threshold_FHN=-1.0,
+                 time_constant_w_FHN=12.5,
+                 mode_FHN=1.0,
+                 uncorrelated_activity_FHN=0.0,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -518,11 +535,47 @@ class LCControlMechanism(ControlMechanism):
                                                   objective_mechanism=objective_mechanism,
                                                   modulated_mechanisms=modulated_mechanisms,
                                                   modulation=modulation,
+                                                  initial_v_FHN=initial_v_FHN,
+                                                  initial_w_FHN=initial_w_FHN,
+                                                  time_step_size_FHN=time_step_size_FHN,
+                                                  t_0_FHN=t_0_FHN,
+                                                  a_v_FHN=a_v_FHN,
+                                                  b_v_FHN=b_v_FHN,
+                                                  c_v_FHN=c_v_FHN,
+                                                  d_v_FHN=d_v_FHN,
+                                                  e_v_FHN=e_v_FHN,
+                                                  f_v_FHN=f_v_FHN,
+                                                  time_constant_v_FHN=time_constant_v_FHN,
+                                                  a_w_FHN=a_w_FHN,
+                                                  b_w_FHN=b_w_FHN,
+                                                  c_w_FHN=c_w_FHN,
+                                                  threshold_FHN=threshold_FHN,
+                                                  mode_FHN=mode_FHN,
+                                                  uncorrelated_activity_FHN=uncorrelated_activity_FHN,
+                                                  time_constant_w_FHN=time_constant_w_FHN,
                                                   params=params)
 
         super().__init__(system=system,
                          objective_mechanism=objective_mechanism,
-                         function=FHNIntegrator,
+                         function=FHNIntegrator(initial_v=initial_v_FHN,
+                                                  initial_w=initial_w_FHN,
+                                                  time_step_size=time_step_size_FHN,
+                                                  t_0=t_0_FHN,
+                                                  a_v=a_v_FHN,
+                                                  b_v=b_v_FHN,
+                                                  c_v=c_v_FHN,
+                                                  d_v=d_v_FHN,
+                                                  e_v=e_v_FHN,
+                                                  f_v=f_v_FHN,
+                                                  time_constant_v=time_constant_v_FHN,
+                                                  a_w=a_w_FHN,
+                                                  b_w=b_w_FHN,
+                                                  c_w=c_w_FHN,
+                                                  threshold=threshold_FHN,
+                                                  mode=mode_FHN,
+                                                  uncorrelated_activity=uncorrelated_activity_FHN,
+                                                  time_constant_w=time_constant_w_FHN,
+                         ),
                          modulation=modulation,
                          params=params,
                          name=name,
