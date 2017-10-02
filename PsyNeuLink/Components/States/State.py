@@ -802,7 +802,6 @@ class State_Base(State):
 
         if projections:
             # Validate projection specs in list
-            from PsyNeuLink.Components.Projections.Projection import Projection
             for projection in projections:
                 try:
                     issubclass(projection, Projection)

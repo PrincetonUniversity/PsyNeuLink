@@ -191,7 +191,7 @@ def parameter_spec(param):
     #     param = ??
     # if is_numeric(param):
     from PsyNeuLink.Components.Functions.Function import function_type
-    from PsyNeuLink.Components.Projections.Projection import Projection
+    from PsyNeuLink.Components.ShellClasses import Projection
     from PsyNeuLink.Components.Component import parameter_keywords
 
     if (isinstance(param, (numbers.Number,
