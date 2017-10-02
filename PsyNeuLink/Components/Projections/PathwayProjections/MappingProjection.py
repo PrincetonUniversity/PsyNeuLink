@@ -175,14 +175,14 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
 .. _Mapping_Weight_Exponent:
 
 *  `weight <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` - applied to the `value
-   <MappingProjection.value>` of the MappingProjection before it is combined with other projections to the same
-   `InputState` to determine its `value <InputState.value>` (see description under `Projection
-   <Projection_Weight_and_Exponent>` for additional details).
+   <MappingProjection.value>` of the MappingProjection before it is combined with other MappingProjections
+   to the same `InputState` to determine its `value <InputState.value>` (see description under `Projection
+   <Projection_Weight_Exponent>` for additional details).
 
    .. note::
       The `weight <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` attributes of a
       MappingProjection are distinct from those of the `InputState` to which it projects.  It is also important
-      to recognize that, as noted under `Projection <Projection_Weight_and_Exponent>`, they are not normalized,
+      to recognize that, as noted under `Projection <Projection_Weight_Exponent>`, they are not normalized,
       and thus contribute to the magnitude of the InputState's `variable <InputState.variable>` and therefore its
       relationship to that of other InputStates that may belong to the same Mechanism.
 
@@ -274,6 +274,8 @@ class MappingProjection(PathwayProjection_Base):
         sender=None,                                        \
         receiver=None,                                      \
         matrix=DEFAULT_MATRIX,                              \
+        weight=None,               \
+        exponent=None,             \
         params=None,                                        \
         name=None,                                          \
         prefs=None)
@@ -333,12 +335,12 @@ class MappingProjection(PathwayProjection_Base):
         <MappingProjection_Deferred_Initialization>`.
 
     weight : number : default None
-       specifies the value by which to multiply the MappingProjection's `value <MappingProjection.value>` before
-       combining it with others (see `weight <MappingProjection.weight>` for additional details).
+       specifies the value by which to multiply the MappingProjection's `value <MappingProjection.value>`
+       before combining it with others (see `weight <MappingProjection.weight>` for additional details).
 
     exponent : number : default None
-       specifies the value by which to exponentiate the MappingProjection's `value <MappingProjection.value>` before
-       combining it with others (see `weight <MappingProjection.weight>` for additional details).
+       specifies the value by which to exponentiate the MappingProjection's `value <MappingProjection.value>`
+       before combining it with others (see `exponent <MappingProjection.exponent>` for additional details).
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
         the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to transform the
@@ -372,16 +374,6 @@ class MappingProjection(PathwayProjection_Base):
     receiver: InputState
         the `InputState` of the `Mechanism <Mechanism>` that is the destination of the Projection's output.
 
-    weight : number
-       multiplies `value <Projection.value>` of the Projection after applying `exponent <Projection.exponent>`,
-       and before combining with any others that project to the same `State` to determine that State's `variable
-       <State.variable>` (see `description above <Mapping_Weight_Exponent>` for details).
-
-    exponent : number
-        exponentiates the `value <Projection.value>` of the Projection, before applying `weight <Projection.weight>`,
-        and before combining it with any other Projections that project to the same `State` to determine that State's
-        `variable <State.variable>` (see `description above <Mapping_Weight_Exponent>` for details).
-
     matrix : 2d np.array
         the matrix used by `function <MappingProjection.function>` to transform the input from the MappingProjection's
         `sender <MappingProjection.sender>` into the value provided to its `receiver <MappingProjection.receiver>`.
@@ -397,6 +389,18 @@ class MappingProjection(PathwayProjection_Base):
     value : ndarray
         output of MappingProjection, transmitted to `variable <InputState.variable>` of its `receiver
         <MappingProjection.receiver>`.
+
+    weight : number
+       multiplies `value <MappingProjection.value>` of the MappingProjection after applying `exponent
+       <MappingProjection.exponent>`, and before combining with any others that project to the same `InputState` to
+       determine that InputState's `variable <InputState.variable>` (see `description above
+       <Mapping_Weight_Exponent>` for details).
+
+    exponent : number
+        exponentiates the `value <MappingProjection.value>` of the MappingProjection, before applying `weight
+        <MappingProjection.weight>`, and before combining it with any others that project to the same
+        `InputState` to determine that InputState's `variable <InputState.variable>` (see `description above
+        <Mapping_Weight_Exponent>` for details).
 
     name : str : default MappingProjection-<index>
         the name of the MappingProjection.

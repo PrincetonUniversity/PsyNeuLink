@@ -90,6 +90,8 @@ class ModulatoryProjection_Base(Projection_Base):
     ModulatoryProjection_Base(     \
         receiver,                  \
         sender=None,               \
+        weight=None,               \
+        exponent=None,             \
         params=None,               \
         name=None,                 \
         prefs=None,                \
@@ -109,6 +111,14 @@ class ModulatoryProjection_Base(Projection_Base):
 
     sender : Optional[OutputState or Mechanism] : default None
         specifies the Component from which the ModulatoryProjection projects.
+
+    weight : number : default None
+       specifies the value by which to multiply the ModulatoryProjection's `value <ModulatoryProjection.value>`
+       before combining it with others (see `weight <ModulatoryProjection.weight>` for additional details).
+
+    exponent : number : default None
+       specifies the value by which to exponentiate the ModulatoryProjection's `value <ModulatoryProjection.value>`
+       before combining it with others (see `exponent <ModulatoryProjection.exponent>` for additional details).
 
     params : Optional[Dict[param keyword, param value]] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -152,6 +162,18 @@ class ModulatoryProjection_Base(Projection_Base):
         value used to modulate the `function <State_Base.function>` of the State that is its `receiver
         <ModulatoryProjection.receiver>`.
 
+    weight : number
+       multiplies the `value <ModulatoryProjection.value>` of the ModulatoryProjection after applying `exponent
+       <ModulatoryProjection.exponent>`, and before combining it with any others that project to the same `State` to
+       determine that State's `variable <State.variable>` is modified (see description in `Projection
+       <Projection_Weight_and_Exponent>` for details).
+
+    exponent : number
+        exponentiates the `value <ModulatoryProjection.value>` of the ModulatoryProjection, before applying `weight
+        <ModulatoryProjection.weight>`, and before combining it with any others that project to the same `State` to
+        determine that State's `variable <State.variable>` is modified (see description in `Projection
+        <Projection_Weight_and_Exponent>` for details).
+
     name : str : default ModulatoryProjection-<index>
         the name of the ModulatoryProjection.
         Specified in the **name** argument of the constructor for the ModulatoryProjection;
@@ -170,6 +192,8 @@ class ModulatoryProjection_Base(Projection_Base):
     def __init__(self,
                  receiver,
                  sender=None,
+                 weight=None,
+                 exponent=None,
                  params=None,
                  name=None,
                  prefs=None,
@@ -178,6 +202,8 @@ class ModulatoryProjection_Base(Projection_Base):
         super().__init__(receiver=receiver,
                          sender=sender,
                          params=params,
+                         weight=weight,
+                         exponent=exponent,
                          name=name,
                          prefs=prefs,
                          context=context)

@@ -117,12 +117,15 @@ class GatingProjectionError(Exception):
 
 class GatingProjection(ModulatoryProjection_Base):
     """
-    GatingProjection(  \
-     sender=None,      \
-     receiver=None,    \
-     function=Linear   \
-     params=None,      \
-     name=None,        \
+    GatingProjection(           \
+     sender=None,               \
+     receiver=None,             \
+     function=Linear            \
+     weight=None,               \
+     exponent=None,             \
+     gating_signal_params=None, \
+     params=None,               \
+     name=None,                 \
      prefs=None)
 
     Subclass of `ModulatoryProjection <ModulatoryProjection>` that modulates the value of an `InputState` or
@@ -172,6 +175,19 @@ class GatingProjection(ModulatoryProjection_Base):
         specifies the function used to convert the `gating_signal <GatingProjection.gating_signal>` to the
         GatingProjection's `value <GatingProjection.value>`.
 
+    weight : number : default None
+       specifies the value by which to multiply the GatingProjection's `value <GatingProjection.value>`
+       before combining it with others (see `weight <GatingProjection.weight>` for additional details).
+
+    exponent : number : default None
+       specifies the value by which to exponentiate the GatingProjection's `value <GatingProjection.value>`
+       before combining it with others (see `exponent <GatingProjection.exponent>` for additional details).
+
+    gating_signal_params : Dict[param keyword, param value]
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
+        GatingProjection's `sender <ControlProjection.sender>` (see `GatingSignal_Structure` for a description
+        of GatingSignal parameters).
+
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the GatingProjection, its `function <GatingProjection.function>`, and/or a custom function and its parameters.
@@ -215,6 +231,18 @@ class GatingProjection(ModulatoryProjection_Base):
         `OutputState Execution <OutputState_Execution>` for how modulation operates and how this applies to InputStates
         and OutputStates).
 
+    weight : number
+       multiplies the `value <GatingProjection.value>` of the GatingProjection after applying `exponent
+       <GatingProjection.exponent>`, and before combining it with any others that project to the same `InputState`
+       or `OutputState` to determine how that State's `variable <State.variable>` is modified (see description in
+       `Projection <Projection_Weight_and_Exponent>` for details).
+
+    exponent : number
+        exponentiates the `value <GatingProjection.value>` of the GatingProjection, before applying `weight
+        <ControlProjection.weight>`, and before combining it with any others that project to the same `InputState`
+       or `OutputState` to determine how that State's `variable <State.variable>` is modified (see description in
+       `Projection <Projection_Weight_and_Exponent>` for details).
+
     name : str : default GatingProjection-<index>
         the name of the GatingProjection.
         Specified in the **name** argument of the constructor for the GatingProjection;
@@ -255,7 +283,8 @@ class GatingProjection(ModulatoryProjection_Base):
                  sender=None,
                  receiver=None,
                  function=Linear(params={FUNCTION_OUTPUT_TYPE:FunctionOutputType.RAW_NUMBER}),
-                 # function=Linear,
+                 weight=None,
+                 exponent=None,
                  gating_signal_params:tc.optional(dict)=None,
                  params=None,
                  name=None,
@@ -276,6 +305,8 @@ class GatingProjection(ModulatoryProjection_Base):
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         super().__init__(sender=sender,
                          receiver=receiver,
+                         weight=weight,
+                         exponent=exponent,
                          params=params,
                          name=name,
                          prefs=prefs,

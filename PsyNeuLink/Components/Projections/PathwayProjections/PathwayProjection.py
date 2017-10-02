@@ -61,6 +61,8 @@ class PathwayProjection_Base(Projection_Base):
     def __init__(self,
                  receiver,
                  sender=None,
+                 weight=None,
+                 exponent=None,
                  params=None,
                  name=None,
                  prefs=None,
@@ -68,6 +70,8 @@ class PathwayProjection_Base(Projection_Base):
 
         super().__init__(receiver=receiver,
                          sender=sender,
+                         weight=weight,
+                         exponent=exponent,
                          params=params,
                          name=name,
                          prefs=prefs,

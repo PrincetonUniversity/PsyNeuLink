@@ -102,6 +102,26 @@ over the direct specification of the `learning_rate <LearningProjection.learning
 `function <LearningProjection.function>` is assigned unmodified as the LearningProjection's `value
 <LearningProjection.value>` (and `weight_change_matrix <LearningProjection.weight_change_matrix>` attributes.
 
+.. _Learning_Weight_Exponent:
+
+Weight and Exponent
+~~~~~~~~~~~~~~~~~~~
+
+Every LearningProjection has a `weight <LearningProjection.weight>` and `exponent <LearningProjection.exponent>`
+attribute that are applied to its `value <LearningProjection.value>` before it is combined  with other
+LearningProjections that modify the `ParameterState` for the `matrix <MappingProjection.matrix>` parameter of the
+`MappingProjection` to which they project (see description under `Projection <Projection_Weight_Exponent>` for
+additional details).
+
+.. note::
+   The `weight <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` attributes of a
+   LearningProjection are not commonly used, and are implemented largely for generalit and compatibility with other
+   types of `Projection`.  They are distinct from, and are applied in addition to the LearningProjection's
+   `learning_rate <LearningProjection.learning_rate>` attribute.  As noted under  `Projection
+   <Projection_Weight_Exponent>`, they are not normalized and thus their effects aggregate if a ParameterState
+   receives one or more LearningProjections with non-default values of their  `weight
+   <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` attributes.
+
 .. _LearningProjection_Receiver:
 
 Receiver
@@ -202,6 +222,8 @@ class LearningProjection(ModulatoryProjection_Base):
                  receiver=None,       \
                  learning_function,   \
                  learning_rate=None,  \
+                 weight=None,         \
+                 exponent=None,       \
                  params=None,         \
                  name=None,           \
                  prefs=None)
@@ -270,6 +292,14 @@ class LearningProjection(ModulatoryProjection_Base):
         <LearningMechanism.learning_rate>` for the `LearningMechanism` from which the LearningProjection receives its
         `learning_signal <LearningProjection.learning_signal>` (see `LearningProjection_Function_and_Learning_Rate` for
         additional details).
+
+    weight : number : default None
+       specifies the value by which to multiply the LearningProjection's `value <LearningProjection.value>`
+       before combining it with others (see `weight <LearningProjection.weight>` for additional details).
+
+    exponent : number : default None
+       specifies the value by which to exponentiate the LearningProjection's `value <LearningProjection.value>`
+       before combining it with others (see `exponent <LearningProjection.exponent>` for additional details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -344,6 +374,22 @@ class LearningProjection(ModulatoryProjection_Base):
     value : 2d np.array
         same as `weight_change_matrix`.
 
+    weight : number
+       multiplies the `value <LearningProjection.value>` of the LearningProjection after applying `exponent
+       <LearningProjection.exponent>`, and before combining it with any others that project to the `ParameterState`
+       for the `matrix <MappingProjection.matrix>` parameter of the same `MappingProjection` to determine how that
+       MappingProjection's `matrix <MappingProjection.matrix>` is modified (see `description above
+       <LearningProjection_Weight_and_Exponent>` for additional details, including relationship to `learning_rate
+       <LearningProjection.learning_rate>`).
+
+    exponent : number
+        exponentiates the `value <LearningProjection.value>` of the LearningProjection, before applying `weight
+        <ControlProjection.weight>`, and before combining it with any others that project to the `ParameterState`
+       for the `matrix <MappingProjection.matrix>` parameter of the same `MappingProjection` to determine how that
+       MappingProjection's `matrix <MappingProjection.matrix>` is modified (see `description above
+       <LearningProjection_Weight_and_Exponent>` for additional details, including relationship to `learning_rate
+       <LearningProjection.learning_rate>`).
+
     name : str : default LearningProjection-<index>
         the name of the LearningProjection.
         Specified in the **name** argument of the constructor for the LearningProjection;
@@ -386,6 +432,8 @@ class LearningProjection(ModulatoryProjection_Base):
                  receiver:tc.optional(tc.any(ParameterState, MappingProjection))=None,
                  learning_function:tc.optional(is_function_type)=BackPropagation,
                  learning_rate:tc.optional(tc.any(parameter_spec))=None,
+                 weight=None,
+                 exponent=None,
                  params:tc.optional(dict)=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -405,6 +453,8 @@ class LearningProjection(ModulatoryProjection_Base):
         self.init_args = locals().copy()
         self.init_args['context'] = self
         self.init_args['name'] = name
+        self.init_args['weight'] = weight
+        self.init_args['exponent'] = exponent
         del self.init_args['learning_function']
         del self.init_args['learning_rate']
 

@@ -981,7 +981,7 @@ class ControlSignal(ModulatorySignal):
         """
         from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
         from PsyNeuLink.Components.States.ParameterState import ParameterState
-        from PsyNeuLink.Components.States.State import _parse_connection_specs
+        from PsyNeuLink.Components.Projections.Projection import _parse_connection_specs
         from PsyNeuLink.Globals.Keywords import CONNECTIONS, PROJECTIONS
 
         params_dict = {}
