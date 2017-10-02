@@ -288,7 +288,7 @@ from PsyNeuLink.Components.Component import InitStatus, function_type, method_ty
 #            SHOULD THEY BE LIMITED TO EVC??
 from PsyNeuLink.Components.Functions.Function import CombinationFunction, Exponential, IntegratorFunction, Linear, \
     LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
-from PsyNeuLink.Components.ShellClasses import Function
+from PsyNeuLink.Components.ShellClasses import Function, Mechanism
 from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
 from PsyNeuLink.Components.States.State import State_Base
@@ -1200,7 +1200,6 @@ def _parse_control_signal_spec(owner, control_signal_spec, context=None):
         CONTROL_SIGNAL:ControlSignal or None
         PARAMS:dict - params dict if any were included in the state_spec
     """
-    from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
     from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
     from PsyNeuLink.Components.States.State import _parse_state_spec
     from PsyNeuLink.Components.States.ParameterState import ParameterState, _get_parameter_state

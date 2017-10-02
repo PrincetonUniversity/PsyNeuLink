@@ -245,7 +245,7 @@ Process.classPreferences = ComponentPreferenceSet(owner=Process,
                                                  context=".__init__.py")
 
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+from PsyNeuLink.Components.ShellClasses import Mechanism
 Mechanism.classPreferences = ComponentPreferenceSet(owner=Mechanism,
                                                    prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
                                                    level=PreferenceLevel.TYPE,
