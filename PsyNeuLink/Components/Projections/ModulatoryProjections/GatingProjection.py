@@ -93,6 +93,9 @@ import typecheck as tc
 from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
 from PsyNeuLink.Components.Functions.Function import FunctionOutputType, Linear
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import GatingMechanism
+from PsyNeuLink.Components.States.InputState import InputState
+from PsyNeuLink.Components.States.OutputState import OutputState
+from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process
@@ -235,6 +238,10 @@ class GatingProjection(ModulatoryProjection_Base):
     suffix = " " + className
 
     classPreferenceLevel = PreferenceLevel.TYPE
+
+    class sockets:
+        sender=[GatingSignal]
+        receiver=[InputState, OutputState]
 
     class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
         variable = 0.0

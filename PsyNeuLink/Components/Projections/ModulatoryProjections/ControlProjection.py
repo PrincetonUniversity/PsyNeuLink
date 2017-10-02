@@ -253,11 +253,11 @@ class ControlProjection(ModulatoryProjection_Base):
     className = componentType
     suffix = " " + className
 
+    classPreferenceLevel = PreferenceLevel.TYPE
+
     class sockets:
         sender=[ControlSignal]
         receiver=[ParameterState]
-
-    classPreferenceLevel = PreferenceLevel.TYPE
 
     class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
         variable = 0.0

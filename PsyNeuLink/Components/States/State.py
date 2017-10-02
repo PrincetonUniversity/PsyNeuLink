@@ -2846,7 +2846,9 @@ def _parse_connection_specs(connectee_state_type,
         MOD_KEYWORD = LEARNING_SIGNALS
     else:
         raise StateError("Called for {} with unsupported owner type ({}), class of connectee_state_type ({}), "
-                         " or combination of them".format(owner.name, owner.__class__.__name__, connectee_state_type.__name__))
+                         " or combination of them".
+                         format(owner.name, owner.__class__.__name__, connectee_state_type.__name__))
+
     # FIX: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

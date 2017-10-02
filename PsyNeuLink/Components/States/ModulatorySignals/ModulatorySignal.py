@@ -447,11 +447,11 @@ class ModulatorySignal(OutputState):
                                                                    connections={connections_spec})
             except ModulatorySignalError:
                 raise ModulatorySignalError("Item {} of tuple specification in {} specification dictionary "
-                                      "for {} ({}) is not a recognized specification".
-                                      format(CONNECTIONS_INDEX,
-                                             ModulatorySignalError.__name__,
-                                             owner.name,
-                                             connections_spec))
+                                            "for {} ({}) is not a recognized specification".
+                                            format(CONNECTIONS_INDEX,
+                                                   ModulatorySignalError.__name__,
+                                                   owner.name,
+                                                   connections_spec))
 
         return params_dict
 # MODIFIED 9/30/17 END

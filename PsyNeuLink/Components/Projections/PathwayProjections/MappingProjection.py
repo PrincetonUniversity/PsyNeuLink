@@ -236,8 +236,10 @@ from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
 from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, LinearMatrix, get_matrix
 from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection import PathwayProjection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
-from PsyNeuLink.Components.ShellClasses import Projection
-from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CHANGED, CONTROL_PROJECTION, DEFAULT_MATRIX, DEFERRED_INITIALIZATION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CHANGED, CONTROL_PROJECTION, DEFAULT_MATRIX, \
+    DEFERRED_INITIALIZATION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, \
+    LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER, \
+    PROJECTION_SENDER_VALUE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Scheduling.TimeScale import CentralClock
@@ -382,6 +384,10 @@ class MappingProjection(PathwayProjection_Base):
     suffix = " " + className
 
     classPreferenceLevel = PreferenceLevel.TYPE
+
+    class sockets:
+        sender=[OUTPUT_STATE]
+        receiver=[INPUT_STATE]
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION: LinearMatrix,

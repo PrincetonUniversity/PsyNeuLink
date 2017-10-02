@@ -335,7 +335,6 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Component import Component, InitStatus
 from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, is_function_type
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.States.State import State_Base, _instantiate_state_list, state_type_keywords
 from PsyNeuLink.Globals.Keywords import CALCULATE, INDEX, MAPPING_PROJECTION, MEAN, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
@@ -721,6 +720,7 @@ class OutputState(State_Base):
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
         from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
+        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
         # Treat as ModulatoryProjection spec if it is a ModulatoryProjection, ModulatorySignal or AdaptiveMechanism
         modulatory_projections = [proj for proj in projections

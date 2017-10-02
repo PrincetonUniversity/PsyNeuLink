@@ -364,6 +364,10 @@ class LearningProjection(ModulatoryProjection_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
+    class sockets:
+        sender=[LearningSignal]
+        receiver=[ParameterState]
+
     class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
         variable = None
 
