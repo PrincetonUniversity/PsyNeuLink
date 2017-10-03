@@ -5322,6 +5322,67 @@ class FHNIntegrator(
 
 
 
+    def _runge_kutta_4_FHN(self, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size):
+
+        if callable(slope_v):
+
+            # First approximation
+            # v is approximately previous_value_v
+            # w is approximately previous_value_w
+
+            slope_v_approx_1 = slope_v(previous_time,
+                                       previous_value_v,
+                                       previous_value_w)
+
+            slope_w_approx_1 = slope_w(previous_time,
+                                       previous_value_w,
+                                       previous_value_v)
+            # Second approximation
+            # v is approximately previous_value_v + 0.5 * time_step_size * slope_w_approx_1
+            # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_1
+
+            slope_v_approx_2 = slope_v(previous_time + time_step_size/2,
+                                       previous_value_v + (0.5 * time_step_size * slope_v_approx_1),
+                                       previous_value_w + (0.5 * time_step_size * slope_w_approx_1))
+
+            slope_w_approx_2 = slope_w(previous_time + time_step_size/2,
+                                       previous_value_w + (0.5 * time_step_size * slope_w_approx_1),
+                                       previous_value_v + (0.5 * time_step_size * slope_v_approx_1))
+
+            # Third approximation
+            # v is approximately previous_value_v + 0.5 * time_step_size * slope_v_approx_2
+            # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_2
+
+            slope_v_approx_3 = slope_v(previous_time + time_step_size/2,
+                                       previous_value_v + (0.5 * time_step_size * slope_v_approx_2),
+                                       previous_value_w + (0.5 * time_step_size * slope_w_approx_2))
+
+            slope_w_approx_3 = slope_w(previous_time + time_step_size/2,
+                                       previous_value_w + (0.5 * time_step_size * slope_w_approx_2),
+                                       previous_value_v + (0.5 * time_step_size * slope_v_approx_2))
+
+            # Fourth approximation
+            # v is approximately previous_value_v + time_step_size * slope_v_approx_3
+            # w is approximately previous_value_w + time_step_size * slope_w_approx_3
+
+            slope_v_approx_4 = slope_v(previous_time + time_step_size,
+                                       previous_value_v + (time_step_size * slope_v_approx_3),
+                                       previous_value_w + (time_step_size * slope_v_approx_3))
+
+            slope_w_approx_4 = slope_w(previous_time + time_step_size,
+                                       previous_value_w + (time_step_size * slope_v_approx_3),
+                                       previous_value_v + (time_step_size * slope_v_approx_3))
+
+            new_v = previous_value_v \
+                    + (time_step_size/6)*(slope_v_approx_1 + 2*(slope_v_approx_2 + slope_v_approx_3) + slope_v_approx_4)
+            new_w = previous_value_w \
+                    + (time_step_size/6)*(slope_w_approx_1 + 2*(slope_w_approx_2 + slope_w_approx_3) + slope_w_approx_4)
+
+        # else:
+        #     value = previous_value + time_step_size*slope
+
+        return new_v, new_w
+
 
 
     def function(self,
@@ -5354,33 +5415,42 @@ class FHNIntegrator(
         current value of v , current value of w : float, list, or np.array
 
         """
+        print("self.time_step_size = ", self.time_step_size)
+        def dv_dt(time, v, w):
 
-        def dv_dt(time, v):
-
-            val= (self.a_v*(v**3) + (1+self.threshold)*self.b_v*(v**2) + (-self.threshold)*self.c_v*v + self.d_v
-                    + self.e_v*self.previous_w + self.f_v*variable)/self.time_constant_v
+            # val= (self.a_v*(v**3) + (1+self.threshold)*self.b_v*(v**2) + (-self.threshold)*self.c_v*v + self.d_v
+            #         + self.e_v*self.previous_w + self.f_v*variable)/self.time_constant_v
+            val = v - (v**3)/3 - w + variable
             return val
-        def dw_dt(time, w):
+        def dw_dt(time, w, v):
+            # val = (self.mode*self.a_w*self.previous_v + self.b_w*w + self.c_w +
+            #         (1-self.mode)*self.uncorrelated_activity)/self.time_constant_w
+            val = (v + 0.7 - 0.8*w)/12.5
+            return val
 
-            return (self.mode*self.a_w*self.previous_v + self.b_w*w + self.c_w +
-                    (1-self.mode)*self.uncorrelated_activity)/self.time_constant_w
+        # new_v = self._runge_kutta_4(previous_time=self.previous_t,
+        #                             previous_value=self.previous_v,
+        #                             slope=dv_dt,
+        #                             time_step_size=self.time_step_size)*self.scale + self.offset
+        #
+        # new_w = self._runge_kutta_4(previous_time=self.previous_t,
+        #                             previous_value=self.previous_w,
+        #                             slope=dw_dt,
+        #                             time_step_size=self.time_step_size)*self.scale + self.offset
 
-        new_v = self._runge_kutta_4(previous_time=self.previous_t,
-                                    previous_value=self.previous_v,
-                                    slope=dv_dt,
-                                    time_step_size=self.time_step_size)*self.scale + self.offset
-
-        new_w = self._runge_kutta_4(previous_time=self.previous_t,
-                                    previous_value=self.previous_w,
-                                    slope=dw_dt,
-                                    time_step_size=self.time_step_size)*self.scale + self.offset
+        approximate_values = self._runge_kutta_4_FHN(self.previous_v,
+                                                     self.previous_w,
+                                                     self.previous_t,
+                                                     dv_dt,
+                                                     dw_dt,
+                                                     self.time_step_size)
 
         if not context or INITIALIZING not in context:
-            self.previous_v = new_v
-            self.previous_w = new_w
+            self.previous_v = approximate_values[0]
+            self.previous_w = approximate_values[1]
             self.previous_t += self.time_step_size
 
-        return new_v, new_w
+        return approximate_values
 
 class AccumulatorIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
