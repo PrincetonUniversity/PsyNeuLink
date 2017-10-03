@@ -990,8 +990,8 @@ def _is_projection_subclass(spec, keyword):
 #          (NOTE: THESE ARE DISTINCT FROM THE WEIGHT AND EXPONENT FOR THE InputState ITSELF)
 #      THIS WOULD ALLOW TWO LEVELS OF HIEARCHICAL NESTING OF ALGEBRAIC COMBINATIONS OF INPUT VALUES TO A MECHANISM
 # @tc.typecheck
-# def _parse_connection_specs(connectee_state_type:is_state_class,
-def _parse_connection_specs(connectee_state_type,
+# def _parse_projection_specs(connectee_state_type:is_state_class,
+def _parse_projection_specs(connectee_state_type,
                             owner,
                             # connections:tc.any(State, Mechanism, dict, tuple, ConnectionTuple)):
                             connections):
@@ -1188,23 +1188,23 @@ def _parse_connection_specs(connectee_state_type,
     for connection in connections:
 
         # If a Mechanism, State, or str (name) is used to specify the connection on its own (i.e., w/o dict or tuple)
-        #     put in tuple with default values of other specs, and call _parse_connection_specs recursively
+        #     put in tuple with default values of other specs, and call _parse_projection_specs recursively
         #     to validate the state spec and append ConnectionTuple to connect_with_states
         if isinstance(connection, (Mechanism, State)):
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, DEFAULT_PROJECTION)
-            connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
+            connect_with_states.extend(_parse_projection_specs(connectee_state_type, owner, connection_tuple))
 
         # If a projection specification is used to specify the connection:
         #  assign the projection specification to the projection_specification item of the tuple,
         #  but also leave it is as the connection specification (it will get resolved to a State reference when the
-        #    tuple is created in the recursive call to _parse_connection_specs below).
+        #    tuple is created in the recursive call to _parse_projection_specs below).
         if _is_projection_spec(connection, include_matrix_spec=False):
             projection_spec = connection
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
-            connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
+            connect_with_states.extend(_parse_projection_specs(connectee_state_type, owner, connection_tuple))
 
         # Dict of one or more Mechanism specifications, used to specify individual States of (each) Mechanism;
-        #   convert all entries to tuples and call _parse_connection_specs recursively to generate ConnectionTuples;
+        #   convert all entries to tuples and call _parse_projection_specs recursively to generate ConnectionTuples;
         #   main purpose of this is to resolve any str references to name of state (using context of owner Mechanism)
         elif isinstance(connection, dict):
 
@@ -1289,8 +1289,8 @@ def _parse_connection_specs(connectee_state_type,
                         # Reassign to new tuple
                         state_connect_spec = tuple(state_connect_spec_tuple_items)
 
-                    # Recusively call _parse_connection_specs to get ConnectionTuple and append to connect_with_states
-                    connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, state_connect_spec))
+                    # Recusively call _parse_projection_specs to get ConnectionTuple and append to connect_with_states
+                    connect_with_states.extend(_parse_projection_specs(connectee_state_type, owner, state_connect_spec))
 
         # Process tuple, including final validation of State specification
         # Tuple could be:

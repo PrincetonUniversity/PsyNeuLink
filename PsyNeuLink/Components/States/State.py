@@ -1547,6 +1547,10 @@ class State_Base(State):
                          format(self.__class__.__name__))
 
     def _parse_state_specific_tuple(self, owner, state_specification_tuple):
+        # FIX: MODIFY THIS TO HANDLE STANDARD FORM (state_spec, projection_spec); SUBCLASSES SHOULD OVERRIDE
+        #       IF THEY ALLOW ANYTHING OR THAN IT, BUT SHOULD CALL THIS WHERE THEY WANT TO TRY THE STANDARD FORM
+        # FIX:  ??ADD VERSION OF THIS TO PROJECT (FOR _parse_projection_specific_tuple)??
+
         raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_tuple method".
                          format(self.__class__.__name__))
 
@@ -2539,7 +2543,7 @@ def _parse_state_spec(owner,
                     # connection_params.update(params)
                     connection_params.append(params[PROJECTIONS])
                 if connection_params:
-                    params[CONNECTIONS] = _parse_connection_specs(state_type, owner, connection_params)
+                    params[CONNECTIONS] = _parse_projection_specs(state_type, owner, connection_params)
                 # Update state_dict[PARAMS] with params
                 if state_dict[PARAMS] is None:
                     state_dict[PARAMS] = {}
@@ -2583,6 +2587,7 @@ def _parse_state_spec(owner,
     #    Call _parse_state_specific_tuple() with tuple to get params in dict form (to add to state_dict)
     elif isinstance(state_spec, tuple):
 
+        # FIX: MOVE THIS TO _parse_projection_specs (SINCE TUPLES REFER TO PROJECTIONS)
         # Get state-specific params from tuple
         params = state_type._parse_state_specific_tuple(state_type,
                                                         owner=owner,

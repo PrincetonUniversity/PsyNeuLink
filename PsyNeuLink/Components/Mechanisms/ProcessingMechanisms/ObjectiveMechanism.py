@@ -8,6 +8,7 @@
 
 # *********************************************  ObjectiveMechanism ****************************************************
 
+# FIX: RE-WRITE DOCS TO INDICATE THAT monitored_output_states IS AN ALIAS TO input_states ARGUMENT/ATTRIBUTE
 """
 
 Overview
@@ -389,8 +390,7 @@ class ObjectiveMechanismError(Exception):
 class ObjectiveMechanism(ProcessingMechanism_Base):
     """
     ObjectiveMechanism(               \
-        monitored_output_states,      \
-        input_states=None,            \
+        monitored_output_states,      \   # alias to input_states argument, which can still be used in a spec dict
         function=LinearCombination,   \
         output_states=[OUTCOME],      \
         params=None,                  \
@@ -433,10 +433,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         the ObjectiveMechanism's `function <ObjectiveMechanism>` (see `ObjectiveMechanism_Monitored_Output_States`
         for details of specification).
 
+    COMMENT:
     input_states :  List[InputState, value, str or dict] or Dict[] : default None
         specifies the names and/or formats to use for the values of the InputStates that receive the input from the
         OutputStates specified in the monitored_output_states** argument; if specified, there must be one for each item
         specified in the **monitored_output_states** argument.
+    COMMENT
 
     COMMENT:
     names: List[str]
@@ -567,7 +569,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 context=None,
+                 **kwargs):
+
+        # FIX:  ADD PARSE OF kwargs HERE TO CAPTURE input_states AS ARG IN KWARGS,
+        #            BUT RAISE EXCEPTION IF *ANY OTHER* ARGS ARE IN KWARGS
+        # FIX:  MAP monitored_output_states TO input_states AND MAKE monitored_output_states A PROPERTY THAT
+        #          GETS/SETS input_states
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(monitored_output_states=monitored_output_states,
@@ -575,6 +583,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                   output_states=output_states,
                                                   function=function,
                                                   params=params)
+
         self._learning_role = None
 
         from PsyNeuLink.Components.States.OutputState import StandardOutputStates

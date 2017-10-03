@@ -773,7 +773,7 @@ class OutputState(State_Base):
         #      TO A MECHANISM
 
         from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
-        from PsyNeuLink.Components.States.State import _parse_connection_specs
+        from PsyNeuLink.Components.States.State import _parse_projection_specs
         from PsyNeuLink.Components.Projections.Projection import Projection
         from PsyNeuLink.Globals.Keywords import CONNECTIONS, PROJECTIONS
 
@@ -798,8 +798,8 @@ class OutputState(State_Base):
             connections_spec = None
         if connections_spec:
             try:
-                # params_dict[CONNECTIONS] = _parse_connection_specs(self.__class__,
-                params_dict[PROJECTIONS] = _parse_connection_specs(self.__class__,
+                # params_dict[CONNECTIONS] = _parse_projection_specs(self.__class__,
+                params_dict[PROJECTIONS] = _parse_projection_specs(self.__class__,
                                                                    owner=owner,
                                                                    connections={connections_spec})
             except OutputStateError:

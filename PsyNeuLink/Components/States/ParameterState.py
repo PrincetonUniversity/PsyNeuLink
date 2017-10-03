@@ -600,7 +600,7 @@ class ParameterState(State_Base):
         Returns params dict with CONNECTIONS entries if any of these was specified.
 
         """
-        from PsyNeuLink.Components.Projections.Projection import _parse_connection_specs
+        from PsyNeuLink.Components.Projections.Projection import _parse_projection_specs
         from PsyNeuLink.Components.Projections.Projection import Projection
         from PsyNeuLink.Globals.Keywords import CONNECTIONS, PROJECTIONS
 
@@ -619,8 +619,8 @@ class ParameterState(State_Base):
 
         if connections_spec:
             try:
-                # params_dict[CONNECTIONS] = _parse_connection_specs(self,
-                params_dict[PROJECTIONS] = _parse_connection_specs(self,
+                # params_dict[CONNECTIONS] = _parse_projection_specs(self,
+                params_dict[PROJECTIONS] = _parse_projection_specs(self,
                                                                    owner=owner,
                                                                    connections=connections_spec)
             except ParameterStateError:

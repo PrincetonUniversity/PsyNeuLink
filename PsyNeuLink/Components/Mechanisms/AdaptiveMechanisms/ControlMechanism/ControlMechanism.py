@@ -622,8 +622,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 # # MODIFIED 10/2/17 OLD:
                 # _parse_control_signal_spec(self, control_signal, context=context)
                 # MODIFIED 10/2/17 NEW:
-                # from PsyNeuLink.Components.Projections.Projection import _parse_connection_specs
-                # _parse_connection_specs(ControlSignal, self, control_signal)
+                # from PsyNeuLink.Components.Projections.Projection import _parse_projection_specs
+                # _parse_projection_specs(ControlSignal, self, control_signal)
                 _parse_state_spec(self, ControlSignal, control_signal)
                 # MODIFIED 10/2/17 END
 
@@ -804,8 +804,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # MODIFIED 10/2/17 NEW:
         control_signal_spec = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
         param_name = control_signal_spec[NAME]
-        control_signal_params = control_signal_spec[PARAMS]
-        control_projections = control_signal_params[PROJECTIONS]
+        # FIX: NEED TO REINSTATE THE FUNCTIONALIY OF THE FOLLOWING LINE:
+        # control_projection = control_signal_spec[CONTROL_PROJECTION]
+        parameter_state = control_signal_spec[PARAMS][PROJECTIONS][0].state
+        # control_signal_params = control_signal_spec[PARAMS]
+        control_signal_params = {}
+        control_projection = None
         # MODIFIED 10/2/17 END
 
         default_name = param_name + '_' + ControlSignal.__name__
