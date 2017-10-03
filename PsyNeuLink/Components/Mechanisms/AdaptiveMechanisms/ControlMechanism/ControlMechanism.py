@@ -316,7 +316,7 @@ from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import NAME, PARAMS, OWNER, INIT__EXECUTE__METHOD_ONLY, SYSTEM, MECHANISM, \
                                         PARAMETER_STATE, OBJECTIVE_MECHANISM, \
                                         PRODUCT, AUTO_ASSIGN_MATRIX, REFERENCE_VALUE, \
-                                        CONTROLLED_PARAM, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, \
+                                        CONTROLLED_PARAM, PROJECTIONS, CONTROL_PROJECTIONS, CONTROL_SIGNAL, \
                                         CONTROL_SIGNALS, CONTROL
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -797,13 +797,16 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # PARSE control_signal SPECIFICATION -----------------------------------------------------------------------
         # # MODIFIED 10/2/17 OLD:
         # control_signal_spec = _parse_control_signal_spec(owner=self, control_signal_spec=control_signal)
+        # param_name = control_signal_spec[NAME]
+        # control_signal_params = control_signal_spec[PARAMS]
+        # control_projection = control_signal_spec[CONTROL_PROJECTION]
+        # parameter_state = control_signal_spec[PARAMETER_STATE]
         # MODIFIED 10/2/17 NEW:
         control_signal_spec = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
-        # MODIFIED 10/2/17 END
         param_name = control_signal_spec[NAME]
         control_signal_params = control_signal_spec[PARAMS]
-        control_projection = control_signal_spec[CONTROL_PROJECTION]
-        parameter_state = control_signal_spec[PARAMETER_STATE]
+        control_projections = control_signal_params[PROJECTIONS]
+        # MODIFIED 10/2/17 END
 
         default_name = param_name + '_' + ControlSignal.__name__
 
