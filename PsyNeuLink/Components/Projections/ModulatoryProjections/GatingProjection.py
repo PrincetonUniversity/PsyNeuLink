@@ -89,7 +89,6 @@ Class Reference
 """
 import typecheck as tc
 
-
 from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
 from PsyNeuLink.Components.Functions.Function import FunctionOutputType, Linear
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import GatingMechanism

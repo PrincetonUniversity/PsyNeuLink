@@ -327,23 +327,15 @@ Class Reference
 
 """
 import typecheck as tc
-import warnings
 
-from PsyNeuLink.Components.Functions.Function \
-    import ModulationParam, _is_modulation_param, MULTIPLICATIVE_PARAM, FHNIntegrator
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-    import ObjectiveMechanism, _parse_monitored_output_states
+from PsyNeuLink.Components.Functions.Function import FHNIntegrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
-    import ControlMechanism, ALLOCATION_POLICY
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.ShellClasses import Mechanism, System
-from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import FUNCTION, ALL, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, \
-                                        CONTROL_PROJECTIONS, CONTROL_SIGNALS, FULL_CONNECTIVITY_MATRIX
-
+from PsyNeuLink.Globals.Keywords import ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
@@ -493,7 +485,6 @@ class LCControlMechanism(ControlMechanism):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = defaultControlAllocation
 
-    from PsyNeuLink.Components.Functions.Function import Linear
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION:FHNIntegrator,
                                CONTROL_SIGNALS: None,
@@ -623,9 +614,6 @@ class LCControlMechanism(ControlMechanism):
 
         Returns ControlSignal (OutputState)
         """
-        from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-        from PsyNeuLink.Components.States.ParameterState import _get_parameter_state
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 
         # *ALL* is specified for modulated_mechanisms:
