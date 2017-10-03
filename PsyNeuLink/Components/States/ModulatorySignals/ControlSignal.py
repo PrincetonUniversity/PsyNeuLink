@@ -1242,7 +1242,7 @@ def _parse_control_signal_spec(owner, control_signal_spec, context=None):
         - (str, Mechanism) tuple
         - {NAME:str, MECHANISM:Mechanism} dict
         where:
-            str is the name of an InputState or OutputState of the Mechanism,
+            str is the name of a ParameterState of the Mechanism,
             Mechanism is a reference to an existing Mechanism that belongs to self.system
 
     Checks for duplicate state specifications within state_spec or with any existing ControlSignal of the owner

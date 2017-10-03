@@ -460,8 +460,8 @@ def _parse_gating_signal_spec(owner, state_spec):
                 <PARAM_KEYWORD>:<GatingSignal param value>
 
     Each state specification must be a:
-        - (str, Mechanism) tuple
-        - {NAME:str, MECHANISM:Mechanism} dict
+        - (str, Mechanism) tuple or
+        - {NAME:str, MECHANISM:Mechanism} dict  # FIX: SHOULD REVERSE THIS AND ALLOW MULTIPLE STATES FOR MECH
         where:
             str is the name of an InputState or OutputState of the Mechanism,
             Mechanism is a reference to an existing Mechanism that belongs to self.system

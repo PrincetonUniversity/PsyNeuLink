@@ -600,7 +600,7 @@ class ParameterState(State_Base):
         Returns params dict with CONNECTIONS entries if any of these was specified.
 
         """
-        from PsyNeuLink.Components.States.State import _parse_connection_specs
+        from PsyNeuLink.Components.Projections.Projection import _parse_connection_specs
         from PsyNeuLink.Components.Projections.Projection import Projection
         from PsyNeuLink.Globals.Keywords import CONNECTIONS, PROJECTIONS
 
