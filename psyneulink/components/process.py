@@ -470,6 +470,11 @@ from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import append_type_to_name, convert_to_np_array, iscompatible, parameter_spec
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
+__all__ = [
+    'DEFAULT_PHASE_SPEC', 'DEFAULT_PROJECTION_MATRIX', 'defaultInstanceCount', 'kwProcessInputState', 'kwTarget',
+    'Process', 'ProcessError', 'ProcessInputState', 'ProcessList', 'ProcessRegistry', 'ProcessTuple',
+]
+
 # *****************************************    PROCESS CLASS    ********************************************************
 
 # ProcessRegistry ------------------------------------------------------------------------------------------------------

@@ -54,6 +54,8 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, k
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.scheduling.timescale import TimeScale
 
+__all__ = []
+
 
 class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     """

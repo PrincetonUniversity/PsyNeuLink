@@ -53,6 +53,10 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
+__all__ = [
+    'ProcessingMechanismError',
+]
+
 # ControlMechanismRegistry = {}
 
 

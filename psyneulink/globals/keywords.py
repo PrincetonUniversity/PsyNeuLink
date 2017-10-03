@@ -17,6 +17,7 @@
 #  The attributes of each are assigned to constants (listed in the next section of this module)
 #    that are the ones actually used by the code.
 
+
 class MechanismRoles:
     """
     Attributes

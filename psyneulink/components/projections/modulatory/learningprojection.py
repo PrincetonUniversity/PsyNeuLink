@@ -161,6 +161,10 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import iscompatible, parameter_spec
 from psyneulink.scheduling.timescale import CentralClock
 
+__all__ = [
+    'DefaultTrainingMechanism', 'LearningProjection', 'LearningProjectionError', 'WT_MATRIX_RECEIVERS_DIM', 'WT_MATRIX_SENDER_DIM',
+]
+
 # Params:
 
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})

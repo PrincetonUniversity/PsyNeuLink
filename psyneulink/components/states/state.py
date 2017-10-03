@@ -320,6 +320,10 @@ from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, append_type_to_name, convert_to_np_array, get_class_attributes, is_numeric, is_value_spec, iscompatible, merge_param_dicts, type_match
 from psyneulink.scheduling.timescale import CurrentTime, TimeScale
 
+__all__ = [
+    'State_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry',
+]
+
 state_keywords = component_keywords.copy()
 state_keywords.update({STATE_VALUE,
                        STATE_PARAMS,

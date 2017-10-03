@@ -13,6 +13,10 @@ from collections import namedtuple
 
 from psyneulink.globals.keywords import CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_STATE, MAPPING_PROJECTION, OUTPUT_STATE, PARAMETER_STATE, kwComponentCategory, kwComponentPreferenceSet, kwMechanismComponentCategory, kwPreferenceSet, kwProcessComponentCategory, kwProjectionComponentCategory, kwStateComponentCategory, kwSystemComponentCategory
 
+__all__ = [
+    'RegistryError'
+]
+
 # IMPLEMENTATION NOTE:
 # - Implement Registry as class, and each Registry as subclass
 # - Implement RegistryPreferenceSet as PreferenceSet subclass, and assign prefs attribute to each Registry object

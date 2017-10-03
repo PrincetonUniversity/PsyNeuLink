@@ -203,6 +203,10 @@ from psyneulink.components.states.state import StateError, State_Base
 from psyneulink.globals.keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
+__all__ = [
+    'modulatory_signal_keywords', 'ModulatorySignal', 'ModulatorySignalError',
+]
+
 
 class ModulatorySignalError(Exception):
     def __init__(self, error_value):

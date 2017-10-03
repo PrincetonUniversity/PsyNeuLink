@@ -23,6 +23,12 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, k
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
+__all__ = [
+    'CONTROL_SIGNAL_GRID_SEARCH_FUNCTION', 'CONTROLLER', 'ControlSignalGridSearch', 'COSTS', 'EVCAuxiliaryError',
+    'EVCAuxiliaryFunction', 'kwEVCAuxFunction', 'kwEVCAuxFunctionType', 'kwValueFunction', 'OUTCOME', 'PY_MULTIPROCESSING',
+    'ValueFunction',
+]
+
 PY_MULTIPROCESSING = False
 
 if PY_MULTIPROCESSING:

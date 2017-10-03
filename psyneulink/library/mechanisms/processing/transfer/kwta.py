@@ -161,6 +161,10 @@ from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
+__all__ = [
+    'KWTA', 'KWTAError',
+]
+
 logger = logging.getLogger(__name__)
 
 class KWTAError(Exception):

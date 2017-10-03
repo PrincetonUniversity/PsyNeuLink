@@ -333,6 +333,11 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.globals.utilities import iscompatible, type_match
 
+__all__ = [
+    'make_readonly_property', 'OUTPUTS', 'OutputState', 'OutputStateError', 'PRIMARY_OUTPUT_STATE', 'SEQUENTIAL',
+    'standard_output_states', 'StandardOutputStates', 'StandardOutputStatesError', 'state_type_keywords',
+]
+
 state_type_keywords = state_type_keywords.update({OUTPUT_STATE})
 
 # class OutputStateLog(IntEnum):

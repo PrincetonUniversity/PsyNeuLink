@@ -163,6 +163,10 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
+__all__ = [
+    'GatingMechanism', 'GatingMechanismError', 'GatingMechanismRegistry'
+]
+
 GatingMechanismRegistry = {}
 
 

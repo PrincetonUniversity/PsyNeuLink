@@ -315,7 +315,10 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
-OBJECTIVE_MECHANISM = 'objective_mechanism'
+__all__ = [
+    'ALLOCATION_POLICY', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
+]
+
 ALLOCATION_POLICY = 'allocation_policy'
 
 ControlMechanismRegistry = {}

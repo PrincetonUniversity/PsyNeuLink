@@ -172,26 +172,6 @@ Class Reference
 
 """
 
-# __all__ = ['Reduce',
-#            'LinearCombination',
-#            'CombineMean',
-#            'Linear',
-#            'Exponential',
-#            'Logistic',
-#            'SoftMax',
-#            'Integrator',
-#            'LinearMatrix',
-#            'NormalDist',
-#            'ExponentialDist',
-#            'UniformDist`',
-#            'GammaDist',
-#            'WaldDist',
-#            'Stability`,
-#            'Distance`,
-#            'Reinforcement',
-#            'BackPropagation',
-#            'FunctionError',
-#            "FunctionOutputType"]
 import numbers
 import warnings
 
@@ -212,6 +192,23 @@ from psyneulink.globals.preferences.preferenceset import PreferenceEntry, Prefer
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, is_distance_metric, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
 from psyneulink.scheduling.timescale import TimeScale
+
+__all__ = [
+    'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM', 'AdditiveParam', 'AGTUtilityIntegrator',
+    'ArgumentTherapy', 'AUTOASSOCIATIVE', 'BackPropagation', 'BogaczEtAl', 'BOUNDS', 'CombinationFunction', 'CombineMeans',
+    'ConstantIntegrator', 'DISABLE', 'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
+    'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON', 'ERROR_MATRIX', 'Exponential', 'ExponentialDist',
+    'FHNIntegrator', 'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
+    'GammaDist', 'get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword', 'Hebbian', 'Integrator',
+    'IntegratorFunction', 'is_Function', 'is_function_type', 'kwBogaczEtAl', 'kwNavarrosAndFuss', 'LCAIntegrator',
+    'LEARNING_ACTIVATION_FUNCTION', 'LEARNING_ACTIVATION_INPUT', 'LEARNING_ACTIVATION_OUTPUT', 'LEARNING_ERROR_OUTPUT',
+    'LearningFunction', 'Linear', 'LinearCombination', 'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next',
+    'ModulatedParam', 'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MultiplicativeParam', 'NavarroAndFuss',
+    'NF_Results', 'NON_DECISION_TIME', 'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator', 'OVERRIDE',
+    'OVERRIDE_PARAM', 'PERTINACITY', 'PROPENSITY', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator', 'SoftMax',
+    'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY', 'THRESHOLD', 'TransferFunction', 'TRESHOLD_VARIABILITY',
+    'UniformDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM', 'WT_MATRIX_SENDERS_DIM'
+]
 
 EPSILON = np.finfo(float).eps
 
@@ -4174,7 +4171,7 @@ class LCAIntegrator(
 
         # execute noise if it is a function
         noise = self._try_execute_param(self.noise, variable)
-        
+
         # try:
         #     previous_value = self._initializer
         # except (TypeError, KeyError):

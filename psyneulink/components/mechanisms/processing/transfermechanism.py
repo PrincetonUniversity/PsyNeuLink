@@ -127,6 +127,11 @@ from psyneulink.globals.preferences.preferenceset import PreferenceEntry, Prefer
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
+__all__ = [
+    'INITIAL_VALUE', 'RANGE', 'TIME_CONSTANT', 'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH',
+    'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT', 'TransferError', 'TransferMechanism',
+]
+
 # TransferMechanism parameter keywords:
 RANGE = "range"
 TIME_CONSTANT = "time_constant"

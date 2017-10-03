@@ -131,6 +131,11 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
+__all__ = [
+    'AGTControlMechanism', 'AGTControlMechanismError', 'ControlMechanismRegistry', 'MONITORED_OUTPUT_STATE_NAME_SUFFIX',
+    'MONITORED_OUTPUT_STATES',
+]
+
 MONITORED_OUTPUT_STATES = 'monitored_output_states'
 MONITORED_OUTPUT_STATE_NAME_SUFFIX = '_Monitor'
 

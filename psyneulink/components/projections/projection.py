@@ -302,6 +302,10 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, iscompatible, type_match
 
+__all__ = [
+    'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError',
+]
+
 ProjectionRegistry = {}
 
 kpProjectionTimeScaleLogEntry = "Projection TimeScale"

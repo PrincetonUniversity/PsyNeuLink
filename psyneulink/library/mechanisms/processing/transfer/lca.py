@@ -86,6 +86,10 @@ from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 from psyneulink.scheduling.timescale import TimeScale
 
+__all__ = [
+    'LCA', 'LCA_OUTPUT', 'LCAError', 'MAX_VS_AVG', 'MAX_VS_NEXT',
+]
+
 
 class LCAError(Exception):
     def __init__(self, error_value):

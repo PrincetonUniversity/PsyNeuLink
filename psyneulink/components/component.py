@@ -351,6 +351,11 @@ from psyneulink.globals.preferences.componentpreferenceset import ComponentPrefe
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_to_np_array, is_same_function_spec, iscompatible, kwCompatibilityLength
 
+__all__ = [
+    'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
+    'InitStatus', 'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
+]
+
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
 
 class ResetMode(Enum):

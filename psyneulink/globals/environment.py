@@ -295,6 +295,7 @@ Class Reference
 """
 
 import warnings
+
 from collections import Iterable
 
 import numpy as np
@@ -306,6 +307,10 @@ from psyneulink.components.shellclasses import Mechanism, Process_Base, System_B
 from psyneulink.globals.keywords import EVC_SIMULATION, MECHANISM, PROCESS, PROCESSES_DIM, RUN, SAMPLE, SYSTEM, TARGET
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
+
+__all__ = [
+    'EXECUTION_SET_DIM', 'HETEROGENOUS', 'HOMOGENOUS', 'MECHANISM_DIM', 'PHASE_DIM', 'RunError', 'STATE_DIM', 'run'
+]
 
 HOMOGENOUS = 1
 HETEROGENOUS = 0

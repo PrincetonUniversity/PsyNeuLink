@@ -47,6 +47,10 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
+__all__ = [
+    'DefaultControlMechanism', 'DefaultControlMechanismError'
+]
+
 
 class DefaultControlMechanismError(Exception):
     def __init__(self, error_value):

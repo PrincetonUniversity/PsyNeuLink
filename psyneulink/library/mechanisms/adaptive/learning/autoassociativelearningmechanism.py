@@ -90,6 +90,11 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, parameter_spec
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
+__all__ = [
+    'AutoAssociativeLearningMechanism', 'AutoAssociativeLearningMechanismError', 'DefaultTrainingMechanism',
+    'input_state_names', 'output_state_names',
+]
+
 # Params:
 
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})

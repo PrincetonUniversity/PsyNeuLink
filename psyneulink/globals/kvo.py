@@ -38,6 +38,11 @@
 
 # ********************************************* KVO ********************************************************************
 
+__all__ = [
+    'classProperty', 'observe_value_at_keypath'
+]
+
+
 class classProperty(property):
     def __get__(self, cls, owner):
         return self.fget.__get__(None, owner)()

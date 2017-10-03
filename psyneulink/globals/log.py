@@ -111,6 +111,10 @@ from enum import IntEnum
 
 from psyneulink.globals.keywords import kwContext, kwTime, kwValue
 
+__all__ = [
+    'ALL_ENTRIES', 'EntriesDict', 'kpCentralClock', 'Log', 'LogEntry', 'LogError', 'LogLevel', 'SystemLogEntries',
+]
+
 
 class LogLevel(IntEnum):
     """Specifies levels of logging, as descrdibed below."""

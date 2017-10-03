@@ -97,6 +97,10 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
+__all__ = [
+    'AutoAssociativeError', 'AutoAssociativeProjection', 'get_auto_matrix', 'get_hetero_matrix',
+]
+
 parameter_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
 projection_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
 

@@ -147,6 +147,10 @@ from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
+__all__ = [
+    'DECAY', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
+]
+
 
 class RecurrentTransferError(Exception):
     def __init__(self, error_value):

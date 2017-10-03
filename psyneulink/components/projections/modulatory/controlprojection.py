@@ -111,6 +111,10 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock
 
+__all__ = [
+    'CONTROL_SIGNAL_PARAMS', 'ControlProjection', 'ControlProjectionError',
+]
+
 parameter_keywords.update({CONTROL_PROJECTION, CONTROL})
 projection_keywords.update({CONTROL_PROJECTION, CONTROL})
 

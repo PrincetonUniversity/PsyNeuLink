@@ -98,6 +98,10 @@ from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import ADAPTIVE_MECHANISM
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
+__all__ = [
+    'AdaptiveMechanism_Base', 'AdaptiveMechanismError'
+]
+
 
 class AdaptiveMechanismError(Exception):
     def __init__(self, error_value):

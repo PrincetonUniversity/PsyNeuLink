@@ -300,6 +300,13 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
 from psyneulink.scheduling.timescale import CurrentTime, TimeScale
 
+__all__ = [
+    'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalCosts', 'ControlSignalError',
+    'COST_COMBINATION_FUNCTION', 'COST_OPTIONS', 'costFunctionNames', 'DEFAULT_ALLOCATION_SAMPLES', 'DURATION_COST',
+    'DURATION_COST_FUNCTION', 'INTENSITY_COST', 'INTENSITY_COST_FUNCTION', 'kpAdjustmentCost', 'kpAllocation', 'kpCost',
+    'kpCostRange', 'kpDurationCost', 'kpIntensity', 'kpIntensityCost',
+]
+
 # class OutputStateLog(IntEnum):
 #     NONE            = 0
 #     TIME_STAMP      = 1 << 0

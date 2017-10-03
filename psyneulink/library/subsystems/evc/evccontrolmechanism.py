@@ -336,6 +336,10 @@ from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch, ValueFunction
 from psyneulink.scheduling.timescale import CentralClock, Clock, TimeScale
 
+__all__ = [
+    'EVCControlMechanism', 'EVCError',
+]
+
 
 class EVCError(Exception):
     def __init__(self, error_value):

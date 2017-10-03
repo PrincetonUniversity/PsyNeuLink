@@ -179,6 +179,10 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import parameter_spec
 
+__all__ = [
+    'LearningSignal', 'LearningSignalError',
+]
+
 
 class LearningSignalError(Exception):
     def __init__(self, error_value):

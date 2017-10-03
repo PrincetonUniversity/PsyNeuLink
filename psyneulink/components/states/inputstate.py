@@ -293,6 +293,10 @@ from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_S
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
+
+__all__ = [
+    'InputState', 'InputStateError', 'state_type_keywords',
+]
 state_type_keywords = state_type_keywords.update({INPUT_STATE})
 
 # InputStatePreferenceSet = ComponentPreferenceSet(log_pref=logPrefTypeDefault,

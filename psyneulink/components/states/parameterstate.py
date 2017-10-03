@@ -292,6 +292,10 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, is_numeric, is_value_spec, iscompatible
 
+__all__ = [
+    'ParameterState', 'ParameterStateError', 'state_type_keywords',
+]
+
 state_type_keywords = state_type_keywords.update({PARAMETER_STATE})
 
 

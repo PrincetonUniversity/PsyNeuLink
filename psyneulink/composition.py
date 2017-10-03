@@ -60,6 +60,10 @@ from psyneulink.globals.keywords import EXECUTING
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.timescale import TimeScale
 
+__all__ = [
+    'Composition', 'CompositionError', 'MechanismRole',
+]
+
 logger = logging.getLogger(__name__)
 
 

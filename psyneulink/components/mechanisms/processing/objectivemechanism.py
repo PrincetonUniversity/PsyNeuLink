@@ -344,6 +344,12 @@ from psyneulink.globals.preferences.preferenceset import PreferenceEntry, Prefer
 from psyneulink.globals.utilities import ContentAddressableList, is_matrix
 from psyneulink.scheduling.timescale import TimeScale
 
+__all__ = [
+    'EXPONENT_INDEX', 'MATRIX_INDEX', 'MONITORED_OUTPUT_STATE_NAME_SUFFIX', 'MONITORED_OUTPUT_STATES',
+    'MonitoredOutputStateTuple', 'OBJECTIVE_OUTPUT', 'ObjectiveMechanism', 'ObjectiveMechanismError', 'OUTCOME',
+    'OUTPUT_STATE_INDEX', 'ROLE', 'WEIGHT_INDEX'
+]
+
 ROLE = 'role'
 MONITORED_OUTPUT_STATES = 'monitored_output_states'
 MONITORED_OUTPUT_STATE_NAME_SUFFIX = '_Monitor'

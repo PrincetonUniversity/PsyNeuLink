@@ -101,6 +101,10 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock
 
+__all__ = [
+    'GATING_SIGNAL_PARAMS', 'GatingProjection', 'GatingProjectionError',
+]
+
 parameter_keywords.update({GATING_PROJECTION, GATING})
 projection_keywords.update({GATING_PROJECTION, GATING})
 GATING_SIGNAL_PARAMS = 'gating_signal_params'

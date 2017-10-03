@@ -280,6 +280,10 @@ from toposort import toposort
 from psyneulink.scheduling.condition import AllHaveRun, Always, ConditionSet, Never
 from psyneulink.scheduling.timescale import TimeScale
 
+__all__ = [
+    'Scheduler', 'SchedulerError',
+]
+
 logger = logging.getLogger(__name__)
 
 

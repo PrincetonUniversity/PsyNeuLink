@@ -29,6 +29,10 @@ TBI:
 
 from psyneulink.components.component import Component
 
+__all__ = [
+    'Function', 'Mechanism', 'Process', 'Projection', 'ShellClass', 'ShellClassError', 'State', 'System',
+]
+
 
 class ShellClassError(Exception):
     def __init__(self, error_value):

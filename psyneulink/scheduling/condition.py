@@ -321,6 +321,13 @@ import logging
 
 from psyneulink.scheduling.timescale import TimeScale
 
+__all__ = [
+    'AfterCall', 'AfterNCalls', 'AfterNCallsCombined', 'AfterNPasses', 'AfterNTrials', 'AfterPass', 'AfterTrial', 'All',
+    'AllHaveRun', 'Always', 'Any', 'AtNCalls', 'AtPass', 'AtTrial', 'BeforeNCalls', 'BeforePass', 'BeforeTrial',
+    'Condition', 'ConditionError', 'ConditionSet', 'EveryNCalls', 'EveryNPasses', 'JustRan', 'Never', 'Not', 'NWhen',
+    'WhenFinished', 'WhenFinishedAll', 'WhenFinishedAny', 'While', 'WhileNot',
+]
+
 logger = logging.getLogger(__name__)
 
 

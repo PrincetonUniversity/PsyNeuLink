@@ -15,6 +15,11 @@ from enum import Enum, IntEnum
 from psyneulink.globals.keywords import kwPreferenceSetName
 from psyneulink.globals.utilities import iscompatible, kwCompatibilityType
 
+__all__ = [
+    'PreferenceEntry', 'PreferenceLevel', 'PreferenceSet', 'PreferenceSetError', 'PreferenceSetRegistry',
+    'PreferenceSetVerbosity',
+]
+
 PreferenceSetRegistry = {}
 
 PreferenceSetVerbosity = False
