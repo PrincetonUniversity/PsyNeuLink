@@ -1034,13 +1034,13 @@ class ScratchPadError(Exception):
 # region TEST RecurrentTransferMechanism @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 import numpy as np
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Globals.Keywords import LEARNING
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism \
+from psyneulink.components.functions.function import Logistic
+from psyneulink.globals.keywords import LEARNING
+from psyneulink.components.system import system
+from psyneulink.components.process import process
+from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism \
     import RecurrentTransferMechanism
-from PsyNeuLink.Components.Functions.Function import Linear
+from psyneulink.components.functions.function import Linear
 
 print("\nTEST RecurrentTransferMechanism\n")
 

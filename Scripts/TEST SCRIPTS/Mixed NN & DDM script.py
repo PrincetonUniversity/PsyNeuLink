@@ -1,8 +1,8 @@
-from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Globals.Run import run
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import *
+from psyneulink.components.functions.function import *
+from psyneulink.components.mechanisms.processing.transfermechanism import *
+from psyneulink.components.process import process
+from psyneulink.globals.run import run
+from psyneulink.library.mechanisms.processing.integrator.ddm import *
 
 # import random
 # random.seed(0)

@@ -1,12 +1,12 @@
 import numpy as np
 
-from PsyNeuLink.Components.Functions.Function import Linear, Logistic
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import system, process
-from PsyNeuLink.Globals.Keywords import FULL_CONNECTIVITY_MATRIX, LEARNING, LEARNING_PROJECTION
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism import MSE
+from psyneulink.components.functions.function import Linear, Logistic
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.system import system, process
+from psyneulink.globals.keywords import FULL_CONNECTIVITY_MATRIX, LEARNING, LEARNING_PROJECTION
+from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
+from psyneulink.library.mechanisms.processing.objective.comparatormechanism import MSE
 
 
 class TestStroop:

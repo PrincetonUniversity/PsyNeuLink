@@ -1,12 +1,12 @@
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.States.OutputState import *
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
-from PsyNeuLink.Scheduling.Condition import AfterNCalls
-from PsyNeuLink.Scheduling.TimeScale import TimeScale, CentralClock
+from psyneulink.components.functions.function import Logistic
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import process
+from psyneulink.components.states.outputstate import *
+from psyneulink.components.system import system
+from psyneulink.globals.keywords import *
+from psyneulink.globals.preferences.componentpreferenceset import *
+from psyneulink.scheduling.condition import AfterNCalls
+from psyneulink.scheduling.timescale import TimeScale, CentralClock
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 

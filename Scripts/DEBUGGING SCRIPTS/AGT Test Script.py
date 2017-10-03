@@ -1,9 +1,9 @@
-from PsyNeuLink.Components.Functions.Function import FHNIntegrator
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Library.Subsystems.AGT.AGTControlMechanism import AGTControlMechanism
-from PsyNeuLink.Library.Subsystems.AGT.LCControlMechanism import LCControlMechanism
+from psyneulink.components.functions.function import FHNIntegrator
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import process
+from psyneulink.components.system import system
+from psyneulink.library.subsystems.agt.agtcontrolmechanism import AGTControlMechanism
+from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
 
 decision_mech = TransferMechanism(name='Decision_Mech')
 

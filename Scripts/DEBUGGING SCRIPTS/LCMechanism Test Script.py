@@ -1,8 +1,8 @@
-from PsyNeuLink.Components.Functions.Function import Linear, Logistic
-from PsyNeuLink.Components.Functions.Function import ModulationParam
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import GatingMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Library.Subsystems.AGT.LCControlMechanism import LCControlMechanism
+from psyneulink.components.functions.function import Linear, Logistic
+from psyneulink.components.functions.function import ModulationParam
+from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
 
 
 my_mech_1 = TransferMechanism(function=Linear, name='my_linear_mechanism')

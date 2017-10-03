@@ -1,14 +1,14 @@
 import numpy as np
 
-from PsyNeuLink.Components.Functions.Function import BogaczEtAl, Linear, Logistic
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES
-from PsyNeuLink.Globals.Keywords import CYCLE, INITIALIZE_CYCLE, INTERNAL, ORIGIN, TERMINAL
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
-from PsyNeuLink.Library.Subsystems.EVC.EVCControlMechanism import EVCControlMechanism
+from psyneulink.components.functions.function import BogaczEtAl, Linear, Logistic
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import process
+from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.components.system import system
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES
+from psyneulink.globals.keywords import CYCLE, INITIALIZE_CYCLE, INTERNAL, ORIGIN, TERMINAL
+from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
+from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
 
 
 def test_danglingControlledMech():

@@ -2,11 +2,11 @@
 # Runs examples in the PsyNeuLink Documentation
 #
 
-from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms import DDM
+from psyneulink.components.functions.function import *
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import process
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.library.mechanisms.processing.integrator import ddm
 
 # from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 
@@ -105,7 +105,7 @@ from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms imp
 
 # Specification of mechanisms in a pathway
 mechanism_1 = TransferMechanism()
-mechanism_2 = DDM()
+mechanism_2 = ddm()
 some_params = {PARAMETER_STATE_PARAMS:{THRESHOLD:2,NOISE:0.1}}
 my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params)])
 print(my_process.execute())
@@ -113,21 +113,21 @@ print(my_process.execute())
 # Default projection specification
 mechanism_1 = TransferMechanism()
 mechanism_2 = TransferMechanism()
-mechanism_3 = DDM()
+mechanism_3 = ddm()
 my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
 print(my_process.execute())
 
 # Inline projection specification using an existing projection
 mechanism_1 = TransferMechanism()
 mechanism_2 = TransferMechanism()
-mechanism_3 = DDM()
+mechanism_3 = ddm()
 projection_A = MappingProjection()
 my_process = process(pathway=[mechanism_1, projection_A, mechanism_2, mechanism_3])
 print(my_process.execute())
 
 mechanism_1 = TransferMechanism()
 mechanism_2 = TransferMechanism()
-mechanism_3 = DDM()
+mechanism_3 = ddm()
 # Inline projection specification using a keyword
 my_process = process(pathway=[mechanism_1, RANDOM_CONNECTIVITY_MATRIX, mechanism_2, mechanism_3])
 print(my_process.execute())
@@ -135,7 +135,7 @@ print(my_process.execute())
 # Stand-alone projection specification
 mechanism_1 = TransferMechanism()
 mechanism_2 = TransferMechanism()
-mechanism_3 = DDM()
+mechanism_3 = ddm()
 projection_A = MappingProjection(sender=mechanism_1, receiver=mechanism_2)
 my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
 print(my_process.execute())

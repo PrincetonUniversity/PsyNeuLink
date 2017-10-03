@@ -1,11 +1,11 @@
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
-from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+from psyneulink.components.projections.ControlProjection import ControlProjection
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms import EVCControlMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import *
+from psyneulink.components.process import process
+from psyneulink.components.system import system
+from psyneulink.globals.keywords import *
+from psyneulink.library.mechanisms.adaptive import EVCControlMechanism
 
 
 def test_search_function(controller=None, **kwargs):

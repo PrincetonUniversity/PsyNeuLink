@@ -1,8 +1,8 @@
 # from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.functions.function import Logistic
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import process
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
