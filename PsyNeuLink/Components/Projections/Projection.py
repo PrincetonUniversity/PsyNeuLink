@@ -1105,7 +1105,7 @@ def _parse_connection_specs(connectee_state_type,
     #    - [TBI] subclass' attribute: mod_keyword
 
     if not inspect.isclass(connectee_state_type):
-        raise StateError("Called for {} with \'connectee_state_type\' arg ({}) that is not a class".
+        raise ProjectionError("Called for {} with \'connectee_state_type\' arg ({}) that is not a class".
                          format(owner.name, connectee_state_type))
     else:
         BaseSpec = connectee_state_type
@@ -1166,7 +1166,7 @@ def _parse_connection_specs(connectee_state_type,
         MOD_KEYWORD = None
 
     else:
-        raise StateError("Called for {} with unsupported owner type ({}), connectee_state_type ({}), "
+        raise ProjectionError("Called for {} with unsupported owner type ({}), connectee_state_type ({}), "
                          "or combination of them".
                          format(owner.name, owner.__class__.__name__, connectee_state_type.__name__))
 
@@ -1211,7 +1211,7 @@ def _parse_connection_specs(connectee_state_type,
             # Check that dict has at least one entry with a Mechanism as the key
             if (not any(isinstance(spec, Mechanism) for spec in connection) and
                     not any(spec == STATES for spec in connection)):
-                raise StateError("There are no {} or {} entries in the connection specification dictionary for {}".
+                raise ProjectionError("There are no {} or {} entries in the connection specification dictionary for {}".
                                  format(Mechanism.__name__, STATES, owner.name))
 
             # Add default WEIGHT, EXPONENT, and/or PROJECTION specification for any that are not aleady in the dict
@@ -1240,7 +1240,7 @@ def _parse_connection_specs(connectee_state_type,
                         if isinstance(state_connect_spec, str) and isinstance(key, Mechanism):
                             mech = key
                         else:
-                            raise StateError("{} specified by name ({}) is not in a {} entry".
+                            raise ProjectionError("{} specified by name ({}) is not in a {} entry".
                                              format(State.__name__, state_connect_spec, Mechanism.__name__))
 
                         # Call _get_existing_state to parse if it is a str,
@@ -1313,7 +1313,8 @@ def _parse_connection_specs(connectee_state_type,
                 state_spec, weight, exponent, projection_spec = connection
             else:
                 # FIX: FINISH ERROR MESSAGE
-                raise StateError("WRONG LENGTH OF TUPLE MESSAGE".format())
+                raise ProjectionError("{} specificaton tuple for {} ({}) must have either two or four items".
+                                      format(connectee_state_type.__name__, owner.name, connection))
 
             # # Validate state specification and get actual state referenced
             state = _get_existing_state(owner=owner,
@@ -1328,20 +1329,20 @@ def _parse_connection_specs(connectee_state_type,
             else:
                 state_type = state.__class__
             if not issubclass(state_type, ConnectWith):
-                raise StateError("Connection was specified for a(n) {} of {} to a(n) {} of {} "
-                                 "that is of the wrong type; should be {}".
-                                 format(connectee_state_type.__name__,
-                                        owner.name,
-                                        state_type.__name__,
-                                        state_spec.name,
-                                        ConnectWith.__name__))
+                raise ProjectionError("Connection was specified for a(n) {} of {} to a(n) {} of {} "
+                                      "that is of the wrong type; should be {}".
+                                      format(connectee_state_type.__name__,
+                                             owner.name,
+                                             state_type.__name__,
+                                             state_spec.name,
+                                             ConnectWith.__name__))
 
             # Validate projection specification
             if projection_spec is not None:
                 if _is_projection_spec(projection_spec):
                     _validate_connection_request(owner, ConnectWith, projection_spec, PROJECTION_SOCKET, connectee_state_type)
                 else:
-                    raise StateError("Invalid specification of {} ({}) for connection between {} and {} of {}.".
+                    raise ProjectionError("Invalid specification of {} ({}) for connection between {} and {} of {}.".
                                      format(Projection.__class__.__name__,
                                             projection_spec,
                                             state.name,

@@ -309,6 +309,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism im
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.ShellClasses import Mechanism, System
+from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import _parse_control_signal_spec
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
@@ -615,17 +616,16 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
             from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-            # # MODIFIED 9/17/17 OLD:
-            # if not isinstance(target_set[CONTROL_SIGNALS], (list, UserList)):
-            #     raise ControlMechanismError("{} arg of {} must be list or ContentAddressableList".
-            #                                 format(CONTROL_SIGNAL, self.name))
-            # MODIFIED 9/17/17 NEW:
             if not isinstance(target_set[CONTROL_SIGNALS], list):
                 target_set[CONTROL_SIGNALS] = [target_set[CONTROL_SIGNALS]]
-            # _parse_control_signal_spec(self, target_set[CONTROL_SIGNALS], context=context)
             for control_signal in target_set[CONTROL_SIGNALS]:
-                _parse_control_signal_spec(self, control_signal, context=context)
-            # MODIFIED 9/17/17 END
+                # # MODIFIED 10/2/17 OLD:
+                # _parse_control_signal_spec(self, control_signal, context=context)
+                # MODIFIED 10/2/17 NEW:
+                # from PsyNeuLink.Components.Projections.Projection import _parse_connection_specs
+                # _parse_connection_specs(ControlSignal, self, control_signal)
+                _parse_state_spec(self, ControlSignal, control_signal)
+                # MODIFIED 10/2/17 END
 
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
@@ -795,7 +795,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self._default_value = self.value
 
         # PARSE control_signal SPECIFICATION -----------------------------------------------------------------------
-        control_signal_spec = _parse_control_signal_spec(owner=self, control_signal_spec=control_signal)
+        # # MODIFIED 10/2/17 OLD:
+        # control_signal_spec = _parse_control_signal_spec(owner=self, control_signal_spec=control_signal)
+        # MODIFIED 10/2/17 NEW:
+        control_signal_spec = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
+        # MODIFIED 10/2/17 END
         param_name = control_signal_spec[NAME]
         control_signal_params = control_signal_spec[PARAMS]
         control_projection = control_signal_spec[CONTROL_PROJECTION]

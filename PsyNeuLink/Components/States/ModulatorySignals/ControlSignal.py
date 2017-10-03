@@ -975,6 +975,7 @@ class ControlSignal(ModulatorySignal):
 
         Tuple specification can be:
             (parameter_name, Mechanism)
+            [TBI:] (parameter_name, Mechanism, weight, exponent, projection_specs)
 
         Returns params dict with CONNECTIONS entries if any of these was specified.
 
