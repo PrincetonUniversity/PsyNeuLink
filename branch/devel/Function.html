@@ -514,7 +514,7 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.function" title="ModulatorySignals.ControlSignal.ControlSignal.function"><em>function</em></a>) – specifies function to “wrap.” It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function"><em>function</em></a>) – specifies function to “wrap.” It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
 <li><strong>variable</strong> (<em>value : default ClassDefaults.variable</em>) – specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
@@ -801,7 +801,7 @@ arguments of the constructor.</li>
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">TransferFunction</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params</em>, <em>owner</em>, <em>prefs</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.TransferFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that transforms variable but maintains its shape</p>
 <p>All TransferFunctions must have the following attributes:</p>
-<p><a class="reference internal" href="#Function.Logistic.bounds" title="Function.Logistic.bounds"><code class="xref any py py-attr docutils literal"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
+<p><a class="reference internal" href="#Function.Exponential.bounds" title="Function.Exponential.bounds"><code class="xref any py py-attr docutils literal"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
 <code class="xref any docutils literal"><span class="pre">None</span></code>;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
 respectively, with <code class="xref any docutils literal"><span class="pre">None</span></code> as the entry for no bound.</p>
 <p><code class="xref any docutils literal"><span class="pre">multiplicative_param</span></code> and <code class="xref any docutils literal"><span class="pre">additive_param</span></code> – each of these is assigned the name of one of the function’s
@@ -1273,7 +1273,7 @@ value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, 
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>variable</strong> (<em>list</em><em> or </em><em>1d np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed; length must equal the number of rows of <a class="reference internal" href="#Function.LinearMatrix.matrix" title="Function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
-<li><strong>matrix</strong> (<em>number</em><em>, </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.function" title="ModulatorySignals.ControlSignal.ControlSignal.function"><em>function</em></a><em>, or </em><em>matrix keyword : default IDENTITY_MATRIX</em>) – specifies matrix used to transform <a class="reference internal" href="#Function.LinearMatrix.variable" title="Function.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+<li><strong>matrix</strong> (<em>number</em><em>, </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function"><em>function</em></a><em>, or </em><em>matrix keyword : default IDENTITY_MATRIX</em>) – specifies matrix used to transform <a class="reference internal" href="#Function.LinearMatrix.variable" title="Function.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#Function.LinearMatrix.matrix" title="Function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> for specification details).</li>
 <li><strong>bounds</strong> (<em>None</em>) – </li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -1380,7 +1380,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="Function.Integrator">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>default_variable=None, rate: &lt;function parameter_spec at 0x1055c91e0&gt; = 1.0, noise=0.0, initializer=[[0]], params: &lt;typecheck.framework.optional object at 0x106edfd68&gt; = None, owner=None, prefs: &lt;function is_pref_set at 0x1055cad90&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>default_variable=None, rate: &lt;function parameter_spec at 0x1055c7268&gt; = 1.0, noise=0.0, initializer=[[0]], params: &lt;typecheck.framework.optional object at 0x10794a128&gt; = None, owner=None, prefs: &lt;function is_pref_set at 0x1055c9e18&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Integrator(                         default_variable=None,          rate=1.0,</dt>
 <dd>noise=0.0,                      time_step_size=1.0,             initializer,             params=None,                    owner=None,                     prefs=None,                     )</dd>
@@ -2137,12 +2137,28 @@ implementation.</p>
 <div><p>dv/dt = v*(a-v)(v-1) -w + I_ext</p>
 <p>dw/dt = b*v - c*w</p>
 </div></blockquote>
-<p>In order to reproduce the modified FHN model, the FHNIntegrator’s parameters must be set as follows:</p>
+<p>In order to reproduce the modified FHN equation for dv/dt, the following FHNIntegrator parameters must be set:</p>
 <blockquote>
-<div><p>a –&gt; <a class="reference internal" href="#Function.FHNIntegrator.threshold" title="Function.FHNIntegrator.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a></p>
-<p>time_constant_w = mode = time_constant_v = a_v = b_v = f_v = 1.0</p>
-<p>c_v = e_v = -1.0</p>
-<p>uncorrelated_activity = d_v = 0.0;</p>
+<div><p>b_v = c_v = f_v = time_constant_v = 1.0</p>
+<p>a_v = e_v = -1.0</p>
+<p>d_v = 0.0;</p>
+</div></blockquote>
+<p>When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dv/dt then correspond to the modified FHN equation for dv/dt as follows:</p>
+<blockquote>
+<div><p>(modified FHN representation –&gt; PsyNeuLink representation)</p>
+<p>a –&gt; <a class="reference internal" href="#Function.FHNIntegrator.threshold" title="Function.FHNIntegrator.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a></p>
+<p>I_ext –&gt; <a class="reference internal" href="#Function.FHNIntegrator.variable" title="Function.FHNIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a></p>
+</div></blockquote>
+<p>In order to reproduce the modified FHN equation for dw/dt, the following FHNIntegrator parameters must be set:</p>
+<blockquote>
+<div><p>mode = time_constant_w = 1.0</p>
+<p>c_w = uncorrelated_activity = 0.0;</p>
+</div></blockquote>
+<p>When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dw/dt then correspond to the modified FHN equation for dw/dt as follows:</p>
+<blockquote>
+<div><p>(modified FHN representation –&gt; PsyNeuLink representation)</p>
+<p>b –&gt; <a class="reference internal" href="#Function.FHNIntegrator.a_w" title="Function.FHNIntegrator.a_w"><code class="xref any py py-attr docutils literal"><span class="pre">a_w</span></code></a></p>
+<p>c –&gt; NEGATIVE <a class="reference internal" href="#Function.FHNIntegrator.b_w" title="Function.FHNIntegrator.b_w"><code class="xref any py py-attr docutils literal"><span class="pre">b_w</span></code></a></p>
 </div></blockquote>
 <p><a class="reference external" href="http://pcwww.liv.ac.uk/~bnvasiev/Past%20students/Mahbub_549.pdf">Mahbub Khan (2013)</a> provides a nice summary
 of why this formulation is useful.</p>
@@ -2151,16 +2167,35 @@ of why this formulation is useful.</p>
 of the Modified FHN Model</strong></p>
 <blockquote>
 <div><blockquote>
-<div><p>time_constant_v * dv/dt = v*(a-v)(v-1) -w + b*I_ext</p>
-<p>time_constant_w * dw/dt = c*v + (1-c)*d - w</p>
+<div><p>tau_v * dv/dt = v*(a-v)(v-1) - w + b*f(X_1)</p>
+<p>tau_w * dw/dt = c*v + (1-c)*d - w</p>
 </div></blockquote>
-<p>In order to reproduce the Gilzenrat formulation, the FHNIntegrator’s parameters must be set as follows:</p>
+<p>In order to reproduce the Gilzenrat equation for dv/dt, the following FHNIntegrator parameters must be set:</p>
 <blockquote>
-<div><p>a –&gt; <a class="reference internal" href="#Function.FHNIntegrator.threshold" title="Function.FHNIntegrator.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a></p>
-<p>b –&gt; negative <a class="reference internal" href="#Function.FHNIntegrator.e_v" title="Function.FHNIntegrator.e_v"><code class="xref any py py-attr docutils literal"><span class="pre">e_v</span></code></a></p>
+<div><p>b_v = c_v = 1.0</p>
+<p>a_v = e_v = -1.0</p>
+<p>d_v = 0.0;</p>
+</div></blockquote>
+<p>When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dv/dt then correspond to the Gilzenrat equation for dv/dt as follows:</p>
+<blockquote>
+<div><p>(Gilzenrat representation –&gt; PsyNeuLink representation)</p>
+<p>a –&gt; <a class="reference internal" href="#Function.FHNIntegrator.threshold" title="Function.FHNIntegrator.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a></p>
+<p>b –&gt; <a class="reference internal" href="#Function.FHNIntegrator.f_v" title="Function.FHNIntegrator.f_v"><code class="xref any py py-attr docutils literal"><span class="pre">f_v</span></code></a></p>
+<p>f(X_1) –&gt; <a class="reference internal" href="#Function.FHNIntegrator.variable" title="Function.FHNIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a></p>
+<p>tau_v –&gt; <a class="reference internal" href="#Function.FHNIntegrator.time_constant_v" title="Function.FHNIntegrator.time_constant_v"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant_v</span></code></a></p>
+</div></blockquote>
+<p>In order to reproduce the Gilzenrat equation for dw/dt, the following FHNIntegrator parameters must be set:</p>
+<blockquote>
+<div><p>a_w = 1.0</p>
+<p>b_w = -1.0</p>
+<p>c_w = 0.0;</p>
+</div></blockquote>
+<p>When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dw/dt then correspond to the Gilzenrat equation for dw/dt as follows:</p>
+<blockquote>
+<div><p>(Gilzenrat representation –&gt; PsyNeuLink representation)</p>
 <p>c –&gt; <a class="reference internal" href="#Function.FHNIntegrator.mode" title="Function.FHNIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a></p>
 <p>d –&gt; <a class="reference internal" href="#Function.FHNIntegrator.uncorrelated_activity" title="Function.FHNIntegrator.uncorrelated_activity"><code class="xref any py py-attr docutils literal"><span class="pre">uncorrelated_activity</span></code></a></p>
-<p>a_v = b_v = f_v = 1.0 ; c_v = -1.0 ; d_v = 0.0;</p>
+<p>tau_w –&gt; <a class="reference internal" href="#Function.FHNIntegrator.time_constant_w" title="Function.FHNIntegrator.time_constant_w"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant_w</span></code></a></p>
 </div></blockquote>
 </div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
@@ -3269,7 +3304,7 @@ is normalized by the number of elements in the <a class="reference internal" hre
 <li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><em>function keyword</em><em>, or </em><em>MappingProjection : default HOLLOW_MATRIX</em>) – specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
 length of <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>metric</strong> (<em>ENERGY</em><em>, </em><em>ENTROPY</em><em> or </em><em>keyword in DISTANCE_METRICS : Default ENERGY</em>) – specifies the metric used to compute stability.</li>
-<li><strong>transfer_fct</strong> (<a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.function" title="ModulatorySignals.ControlSignal.ControlSignal.function"><em>function</em></a><em> or </em><em>method : Default None</em>) – specifies the function used to transform output of weight <a class="reference internal" href="#Function.Stability.matrix" title="Function.Stability.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
+<li><strong>transfer_fct</strong> (<a class="reference internal" href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function"><em>function</em></a><em> or </em><em>method : Default None</em>) – specifies the function used to transform output of weight <a class="reference internal" href="#Function.Stability.matrix" title="Function.Stability.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
 <li><strong>normalize</strong> (<em>bool : Default False</em>) – specifies whether to normalize the stability value by the length of <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -3640,11 +3675,11 @@ arguments of the constructor.</li>
 <a class="reference internal" href="#Function.BackPropagation.activation_input" title="Function.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (1d np.array),
 <a class="reference internal" href="#Function.BackPropagation.activation_output" title="Function.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d np.array),
 <a class="reference internal" href="#Function.BackPropagation.error_signal" title="Function.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (1d np.array).</li>
-<li><strong>activation_derivative</strong> (<a class="reference internal" href="#module-Function" title="Function"><em>Function</em></a><em> or </em><a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.function" title="ModulatorySignals.ControlSignal.ControlSignal.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that generates
+<li><strong>activation_derivative</strong> (<a class="reference internal" href="#module-Function" title="Function"><em>Function</em></a><em> or </em><a class="reference internal" href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that generates
 <a class="reference internal" href="#Function.BackPropagation.activation_output" title="Function.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a>.</li>
-<li><strong>error_derivative</strong> (<a class="reference internal" href="#module-Function" title="Function"><em>Function</em></a><em> or </em><a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.function" title="ModulatorySignals.ControlSignal.ControlSignal.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that is the receiver of the
+<li><strong>error_derivative</strong> (<a class="reference internal" href="#module-Function" title="Function"><em>Function</em></a><em> or </em><a class="reference internal" href="AGTControlMechanism.html#Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function" title="Library.Subsystems.AGT.AGTControlMechanism.AGTControlMechanism.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that is the receiver of the
 <a class="reference internal" href="#Function.BackPropagation.error_matrix" title="Function.BackPropagation.error_matrix"><code class="xref any py py-attr docutils literal"><span class="pre">error_matrix</span></code></a>.</li>
-<li><strong>error_matrix</strong> (<em>List</em><em>, </em><em>2d np.array</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="ParameterState.html#module-ParameterState" title="ParameterState"><em>ParameterState</em></a><em>, or </em><a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection" title="PathwayProjections.MappingProjection.MappingProjection"><em>MappingProjection</em></a>) – matrix, the output of which is used to calculate the <a class="reference internal" href="#Function.BackPropagation.error_signal" title="Function.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a>.
+<li><strong>error_matrix</strong> (<em>List</em><em>, </em><em>2d np.array</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="ParameterState.html#module-ParameterState" title="ParameterState"><em>ParameterState</em></a><em>, or </em><a class="reference internal" href="MappingProjection.html#module-PathwayProjections.MappingProjection" title="PathwayProjections.MappingProjection"><em>MappingProjection</em></a>) – matrix, the output of which is used to calculate the <a class="reference internal" href="#Function.BackPropagation.error_signal" title="Function.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a>.
 If it is specified as a ParameterState it must be one for the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
 parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>;  if it is a MappingProjection, it must be one with a
 MATRIX parameterState.</li>
