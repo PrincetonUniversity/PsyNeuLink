@@ -990,7 +990,7 @@ def _is_projection_subclass(spec, keyword):
 #          (NOTE: THESE ARE DISTINCT FROM THE WEIGHT AND EXPONENT FOR THE InputState ITSELF)
 #      THIS WOULD ALLOW TWO LEVELS OF HIEARCHICAL NESTING OF ALGEBRAIC COMBINATIONS OF INPUT VALUES TO A MECHANISM
 # @tc.typecheck
-# def _parse_projection_specs(connectee_state_type:is_state_class,
+# def _parse_projection_specs(connectee_state_type:_is_state_class,
 def _parse_projection_specs(connectee_state_type,
                             owner,
                             # connections:tc.any(State, Mechanism, dict, tuple, ConnectionTuple)):
@@ -1645,8 +1645,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
 
     input_state = _instantiate_state(owner=receiver,
                                     state_type=InputState,
-                                    state_name=input_state,
-                                    state_spec=projection_spec.value,
+                                    name=input_state,
                                     reference_value=projection_spec.value,
                                     reference_value_name='Projection_spec value for new InputState',
                                     context=context)
@@ -1751,8 +1750,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
 
     output_state = _instantiate_state(owner=sender,
                                      state_type=OutputState,
-                                     state_name=output_state,
-                                     state_spec=projection_spec.value,
+                                     name=output_state,
                                      reference_value=projection_spec.value,
                                      reference_value_name='Projection_spec value for new InputState',
 context=context)

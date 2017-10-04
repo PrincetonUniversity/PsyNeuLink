@@ -1284,11 +1284,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
             learning_signal = _instantiate_state(owner=self,
                                                 state_type=LearningSignal,
-                                                state_name=learning_signal_name,
-                                                state_spec=reference_value,
-                                                state_params=learning_signal_params,
+                                                name=learning_signal_name,
                                                 reference_value=reference_value,
                                                 reference_value_name='Default control allocation',
+                                                params=learning_signal_params,
                                                 context=context)
 
         # VALIDATE OR INSTANTIATE LearningProjection(s) FROM LearningSignal  -------------------------------------------

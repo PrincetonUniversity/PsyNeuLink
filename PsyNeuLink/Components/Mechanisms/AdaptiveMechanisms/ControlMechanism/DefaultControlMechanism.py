@@ -244,11 +244,11 @@ class DefaultControlMechanism(ControlMechanism):
         from PsyNeuLink.Components.States.InputState import InputState
         input_state = _instantiate_state(owner=self,
                                          state_type=InputState,
-                                         state_name=input_state_name,
-                                         state_spec=defaultControlAllocation,
-                                         state_params=None,
+                                         name=input_state_name,
+                                         # state_spec=defaultControlAllocation,
                                          reference_value=np.array(self.instance_defaults.variable[variable_item_index]),
                                          reference_value_name='Default control allocation',
+                                         params=None,
                                          context=context)
 
         #  Update inputState and input_states

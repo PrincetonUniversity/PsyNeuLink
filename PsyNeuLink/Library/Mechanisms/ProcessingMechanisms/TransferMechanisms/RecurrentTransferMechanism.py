@@ -661,11 +661,10 @@ class RecurrentTransferMechanism(TransferMechanism):
             d = np.diagonal(specified_matrix).copy()
             state = _instantiate_state(owner=self,
                                        state_type=ParameterState,
-                                       state_name=AUTO,
-                                       state_spec=d,
-                                       state_params=None,
+                                       name=AUTO,
                                        reference_value=d,
                                        reference_value_name=AUTO,
+                                       params=None,
                                        context=context)
             if state is not None:
                 self._parameter_states[AUTO] = state
@@ -682,11 +681,10 @@ class RecurrentTransferMechanism(TransferMechanism):
             np.fill_diagonal(m, 0.0)
             state = _instantiate_state(owner=self,
                                        state_type=ParameterState,
-                                       state_name=HETERO,
-                                       state_spec=m,
-                                       state_params=None,
+                                       name=HETERO,
                                        reference_value=m,
                                        reference_value_name=HETERO,
+                                       params=None,
                                        context=context)
             if state is not None:
                 self._parameter_states[HETERO] = state

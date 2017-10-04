@@ -870,11 +870,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
             # FIX:         OR AGGREGATE ALL ControlSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
             control_signal = _instantiate_state(owner=self,
                                                 state_type=ControlSignal,
-                                                state_name=control_signal_name,
-                                                state_spec=defaultControlAllocation,
-                                                state_params=control_signal_params,
+                                                name=control_signal_name,
                                                 reference_value=output_state_reference_value,
                                                 reference_value_name='Default control allocation',
+                                                params=control_signal_params,
                                                 context=context)
 
         # VALIDATE OR INSTANTIATE ControlProjection(s) TO ControlSignal  -------------------------------------------

@@ -1470,11 +1470,12 @@ class Process_Base(Process):
                                 preceding_item._parameter_states[MATRIX] = _instantiate_state(
                                                                                 owner=preceding_item,
                                                                                 state_type=ParameterState,
-                                                                                state_name=MATRIX,
-                                                                                state_spec=PARAMETER_STATE,
-                                                                                state_params=self.learning,
+                                                                                name=MATRIX,
+                                                                                # # FIX: NOT SURE IF THIS IS CORRECT:
+                                                                                # state_spec=PARAMETER_STATE,
                                                                                 reference_value=self.learning,
                                                                                 reference_value_name=LEARNING_PROJECTION,
+                                                                                params=self.learning,
                                                                                 context=context)
                             # preceding_item has ParameterState for MATRIX,
                             else:
@@ -1523,11 +1524,11 @@ class Process_Base(Process):
                                     projection._parameter_states[MATRIX] = _instantiate_state(
                                                                                 owner=preceding_item,
                                                                                 state_type=ParameterState,
-                                                                                state_name=MATRIX,
-                                                                                state_spec=PARAMETER_STATE,
-                                                                                state_params=self.learning,
+                                                                                name=MATRIX,
+                                                                                # state_spec=PARAMETER_STATE,
                                                                                 reference_value=self.learning,
                                                                                 reference_value_name=LEARNING_PROJECTION,
+                                                                                params=self.learning,
                                                                                 context=context)
 
                                 # Check if Projection's matrix param has a learningSignal

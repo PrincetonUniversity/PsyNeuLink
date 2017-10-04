@@ -305,6 +305,7 @@ Class Reference
 import inspect
 import numbers
 import warnings
+from collections import defaultdict
 
 import numpy as np
 import typecheck as tc
@@ -352,10 +353,12 @@ state_keywords.update({MECHANISM,
 
 state_type_keywords = {STATE_TYPE}
 
-def _is_state_type (spec):
-    if issubclass(spec, State):
+def _is_state_class(spec):
+    if inspect.isclass(spec) and issubclass(spec, State):
         return True
     return False
+
+
 
 # Note:  This is created only for assignment of default projection types for each State subclass (see .__init__.py)
 #        Individual stateRegistries (used for naming) are created for each Mechanism
@@ -1905,74 +1908,79 @@ def _instantiate_state_list(owner,
 
     states = ContentAddressableList(component_type=State_Base,
                                     name=owner.name+' ContentAddressableList of ' + state_param_identifier)
-    # Assign/create state_spec_dict for each item of the list and use it to instantiate the corresponding State
+    # For each state, parse item in list into state_spec_dict and pass to _instantiate_state
+
+            # # FIX: 10/3/17 MOVE RELEVANT VERSION OF THIS TO _instantiate_state, after _parse_state_spec
+
+            # if not state_name is state_spec and not state_name in states:
+            #     state_name = state_spec
+            # # Add index suffix to name if it is already been used
+            # # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
+            # else:
+            #     state_name = state_spec + '_' + str(index)
+            # state_spec_dict[NAME] = state_name
+
+            # # If state_spec has NAME entry
+            # if NAME in state_spec:
+            #     # If it has been used, add suffix to it
+            #     if state_name is state_spec[NAME]:
+            #         state_name = state_spec[NAME] + '_' + str(key)
+            #     # Otherwise, use it
+            #     else:
+            #         state_name = state_spec[NAME]
+            # state_spec_dict[NAME] = state_name
+
+            # # # MODIFIED 9/3/17 OLD:
+            # # # If only one State, don't add index suffix
+            # # if num_states == 1:
+            # #     state_name = 'Default_' + state_param_identifier[:-1]
+            # # # Add incremented index suffix for each State name
+            # # else:
+            # #     state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(index+1)
+            # # MODIFIED 9/3/17 NEW:
+            # # If only one State, don't add index suffix
+            # if num_states == 1:
+            #     state_name = 'Default_' + state_param_identifier
+            # # Add incremented index suffix for each State name
+            # else:
+            #     state_name = 'Default_' + state_param_identifier + "-" + str(index+1)
+            # # MODIFIED 9/3/17 END
+            # # If it is an "exposed" number, make it a 1d np.array
+
     for index, state_spec in enumerate(state_list):
 
-        state_name = ""
-        state_spec_dict = {}
+        state_spec_dict = defaultdict(lambda: None)
+        state_spec_dict[OWNER] = owner
+        state_spec_dict[STATE_TYPE] = state_type
 
         # If state_spec is a string, then use:
         # - string as the name for a default State
         # - index to get corresponding value from reference_value as state_spec
-        # - assign same item of reference_value as the state's reference_value
         if isinstance(state_spec, str):
-            # Use state_spec as State's name if it has not yet been used
-            if not state_name is state_spec and not state_name in states:
-                state_name = state_spec
-            # Add index suffix to name if it is already been used
-            # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
-            else:
-                state_name = state_spec + '_' + str(index)
-            state_spec = reference_value[index]
-            state_reference_value = reference_value[index]
+            state_spec_dict[NAME] = state_spec
+            state_spec_dict[REFERENCE_VALUE] = reference_value[index]
 
-        # FIX: 5/21/17  ADD, AND DEAL WITH state_spec AND state_constraint
-        # elif isinstance(state_spec, dict):
-        #     # If state_spec has NAME entry
-        #     if NAME in state_spec:
-        #         # If it has been used, add suffix to it
-        #         if state_name is state_spec[NAME]:
-        #             state_name = state_spec[NAME] + '_' + str(key)
-        #         # Otherwise, use it
-        #         else:
-        #             state_name = state_spec[NAME]
-        #     state_spec = ??
-        #     state_reference_value = ??
-
-
-        # If state_spec is NOT a string, then:
-        # - use default name (which is incremented for each instance in register_categories)
-        # - use item as state_spec (i.e., assume it is a specification for a State)
+        # If state_spec is a number, use it as the reference_value
         #   Note:  still need to get indexed element of reference_value,
         #          since it was passed in as a 2D array (one for each State)
+        elif isinstance(state_spec, numbers.Number):
+            state_spec_dict[REFERENCE_VALUE] = np.atleast_1d(state_spec)
+            # # FIX: 10/3/17 - STILL NEEDED?
+            # state_reference_value = reference_value[index]
+
+        # If state_spec is a State specification dictionary, use it as state_spec_dict;
+        # if it has no REFERENCE_VALUE entry, use corresponding item of reference_value
+        elif isinstance(state_spec, dict):
+            state_spec_dict.update(state_spec)
+            if state_spec_dict[REFERENCE_VALUE] is None:
+                state_spec_dict[REFERENCE_VALUE] = state_spec[REFERENCE_VALUE]
+
         else:
-            # # MODIFIED 9/3/17 OLD:
-            # # If only one State, don't add index suffix
-            # if num_states == 1:
-            #     state_name = 'Default_' + state_param_identifier[:-1]
-            # # Add incremented index suffix for each State name
-            # else:
-            #     state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(index+1)
-            # MODIFIED 9/3/17 NEW:
-            # If only one State, don't add index suffix
-            if num_states == 1:
-                state_name = 'Default_' + state_param_identifier
-            # Add incremented index suffix for each State name
-            else:
-                state_name = 'Default_' + state_param_identifier + "-" + str(index+1)
-            # MODIFIED 9/3/17 END
-            # If it is an "exposed" number, make it a 1d np.array
-            if isinstance(state_spec, numbers.Number):
-                state_spec = np.atleast_1d(state_spec)
+            raise StateError("Illegal specification for State ({}) in list of {}s for {};"
+                             "must be a string (name), number (reference_value), or State specification dictionary.".
+                             format(state_spec, state_type.__name__, owner.name))
 
-            state_reference_value = reference_value[index]
-
-        state = _instantiate_state(owner=owner,
-                                   state_type=state_type,
-                                   state_name=state_name,
-                                   state_spec=state_spec,
-                                   state_params=state_params,
-                                   reference_value=state_reference_value,
+        state = _instantiate_state(**state_spec_dict,
                                    reference_value_name=reference_value_name,
                                    context=context)
 
@@ -1981,14 +1989,16 @@ def _instantiate_state_list(owner,
     return states
 
 
-def _instantiate_state(owner,                  # Object to which state will belong
-                      state_type,              # State subclass
-                      state_name,              # Name for state (also used to refer to subclass in prompts)
-                      state_spec,              # State subclass, object, spec dict, tuple, projection, value or str
-                      state_params,            # params for state
-                      reference_value,        # Value used to check compatibility
-                      reference_value_name,   # Name of reference_value's type (e.g. variable, output...)
-                      context=None):
+@tc.typecheck
+def _instantiate_state(owner:tc.any(Mechanism, Projection),   # Component to which state will belong
+                       state_type:_is_state_class,    # State subclass
+                       name:str,                      # name for state (also used to refer to subclass in prompts)
+                       reference_value,               # value used to check compatibility
+                       reference_value_name:str,      # name of reference_value's type (e.g. variable, output...)
+                       params:tc.optional(dict)=None, # params for state
+                       context=None,
+                       **state_spec_dict              # State specification dictionary
+                       ):
     """Instantiate a State of specified type, with a value that is compatible with reference_value
 
     Constraint value must be a number or a list or tuple of numbers
@@ -2351,7 +2361,7 @@ STATE_SPEC_INDEX = 0
 
 # @tc.typecheck
 # def _parse_state_spec(owner,
-#                       state_type:_is_state_type,
+#                       state_type:_is_state_class,
 #                       state_spec,
 #                       name:tc.optional(str)=None,
 #                       variable=None,
@@ -2664,7 +2674,7 @@ STATE_SPEC_INDEX = 0
 
 # MODIFIED 10/3/17 NEW:
 @tc.typecheck
-def _parse_state_spec(state_type:_is_state_type,                       # State's type
+def _parse_state_spec(state_type:_is_state_class,                       # State's type
                       state_spec,                                      # value, projection, or state specification tuple
                       owner:tc.any(Mechanism, Projection),             # State's owner
                       name:tc.optional(str)=None,                      # used as state's name if specified
@@ -2950,11 +2960,6 @@ def _parse_state_spec(state_type:_is_state_type,                       # State's
 # MODIFIED 10/3/17 END
 
 
-def is_state_class(arg):
-    if inspect.isclass(arg) and issubclass(arg, State):
-        return True
-    return False
-
 # FIX: COMPARE WITH LIKES OF _parse_input_state_specification_dictionary TO MAKE SURE IT HAS SAME FUNCTIONALITY
 # FIX: INTEGRATE THIS INTO _parse_state_spec WITH "instantiate=True" and STATE CHARACTERISTICS
 # FIX: REPLACE mech_state_attribute WITH DETERMINATION FROM state_type
@@ -2962,7 +2967,7 @@ def is_state_class(arg):
 @tc.typecheck
 def _get_existing_state(owner,
                         state_spec:tc.optional(tc.any(str, State, Mechanism, _is_projection_spec))=None,
-                        state_type:tc.optional(_is_state_type)=None,
+                        state_type:tc.optional(_is_state_class)=None,
                         mech:tc.optional(Mechanism)=None,
                         mech_state_attribute:tc.optional(str)=None,
                         projection_socket:tc.optional(str)=None):

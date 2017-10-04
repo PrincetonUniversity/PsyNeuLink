@@ -803,11 +803,11 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             # Assign parameterState for function_param to the component
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
-                                      state_name=function_param_name,
-                                      state_spec=function_param_value,
-                                      state_params=None,
+                                      name=function_param_name,
+                                      # state_spec=function_param_value,
                                       reference_value=reference_value,
                                       reference_value_name=function_param_name,
+                                      params=None,
                                       context=context)
             if state:
                 owner._parameter_states[function_param_name] = state
@@ -815,11 +815,10 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     elif _is_legal_param_value(owner, param_value):
         state = _instantiate_state(owner=owner,
                                   state_type=ParameterState,
-                                  state_name=param_name,
-                                  state_spec=param_value,
-                                  state_params=None,
+                                  name=param_name,
                                   reference_value=param_value,
                                   reference_value_name=param_name,
+                                  params=None,
                                   context=context)
         if state:
             owner._parameter_states[param_name] = state

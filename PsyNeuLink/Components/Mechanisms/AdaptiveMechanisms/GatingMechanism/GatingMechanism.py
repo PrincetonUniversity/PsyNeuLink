@@ -494,11 +494,10 @@ class GatingMechanism(AdaptiveMechanism_Base):
             # FIX:         OR AGGREGATE ALL GatingSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
             gating_signal = _instantiate_state(owner=self,
                                                state_type=GatingSignal,
-                                               state_name=gating_signal_name,
-                                               state_spec=defaultGatingPolicy,
-                                               state_params=gating_signal_params,
+                                               name=gating_signal_name,
                                                reference_value=output_state_reference_value,
                                                reference_value_name='Default control allocation',
+                                               params=gating_signal_params,
                                                context=context)
 
         # VALIDATE OR INSTANTIATE GatingProjection(s) TO GatingSignal  -------------------------------------------
