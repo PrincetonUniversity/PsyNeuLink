@@ -1902,6 +1902,7 @@ def _instantiate_state_list(owner,
                                     reference_value_name,
                                     owner.name))
 
+
     # INSTANTIATE EACH STATE
 
     states = ContentAddressableList(component_type=State_Base,
