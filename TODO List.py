@@ -933,7 +933,7 @@
 #                                                 runtime_params[param] = self.parameterStates[param].value
 #                                      return keyword values (cf. commented out keyword method for Function.Integrator
 #                                      handle management of contraints in State._instantiate_state (line 1869):
-#                                               constraint_value = convert_to_np_array(constraint_value,1)
+#                                               reference_value = convert_to_np_array(reference_value,1)
 #
 # DOCUMENTATION:  TAKE CARE OF THE FOLLOWING:
 #         COMMENT:
@@ -2505,9 +2505,9 @@
 #      Same problem for ProcessList
 #
 # FIX: IN _instantiate_state:
-# FIX: - check that constraint_value IS NOW ONLY EVER A SINGLE VALUE
-# FIX:  CHANGE ITS NAME TO constraint_value
-# Search & Replace: constraint_value -> constraint_value
+# FIX: - check that reference_value IS NOW ONLY EVER A SINGLE VALUE
+# FIX:  CHANGE ITS NAME TO reference_value
+# Search & Replace: reference_value -> reference_value
 #
 # FIX: ALLOW EXECUTE/RUN OF MECHANISM TO USE RUN-TIME PARAM
 #

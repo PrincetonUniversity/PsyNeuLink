@@ -2412,15 +2412,15 @@ class ScratchPadError(Exception):
 # state = x._instantiate_state(state_type=ParameterState,
 #                               state_name='DDM_TEST_PARAM_STATE',
 #                               state_spec=100.0,
-#                               constraint_value=0.0,
-#                               constraint_value_name='DDM T0 CONSTRAINT',
+#                               reference_value=0.0,
+#                               reference_value_name='DDM T0 CONSTRAINT',
 #                               context='EXOGENOUS SPEC')
 # x.parameterStates['DDM_TEST_PARAM_STATE'] = state
 
 # x._instantiate_state_list(state_type=ParameterState,
 #                                    state_param_identifier='DDM_TEST',
-#                                    constraint_value=0.0,
-#                                    constraint_value_name='DDM T0 CONSTRAINT',
+#                                    reference_value=0.0,
+#                                    reference_value_name='DDM T0 CONSTRAINT',
 #                                    context='EXOGENOUS SPEC')
 
 #endregion

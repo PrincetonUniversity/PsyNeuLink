@@ -1279,16 +1279,16 @@ class LearningMechanism(AdaptiveMechanism_Base):
             # - assume that LearningMechanism.value has only two items (learning_signal and error_signal)
             # - use learning_signal (stored in self.learning_signal) as value for all LearningSignals
             self._update_value(context=context)
-            constraint_value = self.learning_signal
+            reference_value = self.learning_signal
             learning_signal_params.update({LEARNED_PARAM:param_name})
 
             learning_signal = _instantiate_state(owner=self,
                                                 state_type=LearningSignal,
                                                 state_name=learning_signal_name,
-                                                state_spec=constraint_value,
+                                                state_spec=reference_value,
                                                 state_params=learning_signal_params,
-                                                constraint_value=constraint_value,
-                                                constraint_value_name='Default control allocation',
+                                                reference_value=reference_value,
+                                                reference_value_name='Default control allocation',
                                                 context=context)
 
         # VALIDATE OR INSTANTIATE LearningProjection(s) FROM LearningSignal  -------------------------------------------

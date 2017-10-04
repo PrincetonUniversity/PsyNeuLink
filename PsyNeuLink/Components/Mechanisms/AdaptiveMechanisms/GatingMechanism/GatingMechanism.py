@@ -449,7 +449,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                 default_name = gating_signal_spec[NAME] + '_' + GatingSignal.__name__
                 gating_signal.init_args[OWNER] = self
                 gating_signal.init_args[NAME] = gating_signal.init_args[NAME] or default_name
-                # control_signal_spec.init_args[REFERENCE_VALUE] = output_state_constraint_value
+                # control_signal_spec.init_args[REFERENCE_VALUE] = output_state_reference_value
                 gating_signal.init_args[REFERENCE_VALUE] = defaultGatingPolicy
                 gating_signal._deferred_init(context=context)
                 # MODIFIED 7/7/17 END
@@ -485,7 +485,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
             #    - get GatingMechanism's value
             self._update_value(context=context)
             # - get constraint for OutputState's value
-            output_state_constraint_value = self.gating_policy[output_state_index]
+            output_state_reference_value = self.gating_policy[output_state_index]
 
             # gating_signal_params.update({GATE:state_name})
             gating_signal_params.update(gating_signal_spec[PARAMS])
@@ -497,8 +497,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                                state_name=gating_signal_name,
                                                state_spec=defaultGatingPolicy,
                                                state_params=gating_signal_params,
-                                               constraint_value=output_state_constraint_value,
-                                               constraint_value_name='Default control allocation',
+                                               reference_value=output_state_reference_value,
+                                               reference_value_name='Default control allocation',
                                                context=context)
 
         # VALIDATE OR INSTANTIATE GatingProjection(s) TO GatingSignal  -------------------------------------------

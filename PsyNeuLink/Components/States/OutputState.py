@@ -965,7 +965,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
              if it is dict, look for INDEX entry
              if it is anything else, assume index is PRIMARY_OUTPUT_STATE
          get indexed value from output.value
-         append the indexed value to constraint_value
+         append the indexed value to reference_value
              so that it matches specification of OutputStates (by # and function return values)
          instantiate Calculate function if specified
 
@@ -985,7 +985,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     Returns list of instantiated OutputStates
     """
 
-    constraint_value = []
+    reference_value = []
 
     # Get owner.value
     # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?  JUST USE RETURN VALUE??
@@ -1062,17 +1062,17 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                     raise OutputStateError("PROGRAM ERROR: unrecognized item ({}) in output_states specification for {}"
                                            .format(output_state, owner.name))
 
-            constraint_value.append(output_state_value)
+            reference_value.append(output_state_value)
 
     else:
-        constraint_value = owner_value
+        reference_value = owner_value
 
     state_list = _instantiate_state_list(owner=owner,
                                          state_list=output_states,
                                          state_type=OutputState,
                                          state_param_identifier=OUTPUT_STATE,
-                                         constraint_value=constraint_value,
-                                         constraint_value_name="output",
+                                         reference_value=reference_value,
+                                         reference_value_name="output",
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)

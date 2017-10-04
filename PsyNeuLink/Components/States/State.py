@@ -1805,8 +1805,8 @@ def _instantiate_state_list(owner,
                            state_list,              # list of State specs, (state_spec, params) tuples, or None
                            state_type,              # StateType subclass
                            state_param_identifier,  # used to specify state_type State(s) in params[]
-                           constraint_value,       # value(s) used as default for State and to check compatibility
-                           constraint_value_name,  # name of constraint_value type (e.g. variable, output...)
+                           reference_value,       # value(s) used as default for State and to check compatibility
+                           reference_value_name,  # name of reference_value type (e.g. variable, output...)
                            context=None):
     """Instantiate and return a ContentAddressableList of States specified in state_list
 
@@ -1818,22 +1818,22 @@ def _instantiate_state_list(owner,
                                  value (used as constraint value)
                                  # ??CORRECT: (state_spec, params_dict) tuple
                                      SHOULDN'T IT BE: (state_spec, projection) tuple?
-                                 dict (key=name, value=constraint_value or param dict)
-                         if None, instantiate a single default State using constraint_value as state_spec
+                                 dict (key=name, value=reference_value or param dict)
+                         if None, instantiate a single default State using reference_value as state_spec
     - state_param_identifier (str): kw used to identify set of States in params;  must be one of:
         - INPUT_STATE
         - OUTPUT_STATE
-    - constraint_value (2D np.array): set of 1D np.ndarrays used as default values and
+    - reference_value (2D np.array): set of 1D np.ndarrays used as default values and
         for compatibility testing in instantiation of State(s):
         - INPUT_STATE: self.instance_defaults.variable
         - OUTPUT_STATE: self.value
         ?? ** Note:
         * this is ignored if param turns out to be a dict (entry value used instead)
-    - constraint_value_name (str):  passed to State._instantiate_state(), used in error messages
+    - reference_value_name (str):  passed to State._instantiate_state(), used in error messages
     - context (str)
 
     If state_list is None:
-        - instantiate a default State using constraint_value,
+        - instantiate a default State using reference_value,
         - place as the single entry of the list returned.
     Otherwise, if state_list is:
         - a single value:
@@ -1856,40 +1856,40 @@ def _instantiate_state_list(owner,
     state_entries = state_list
     # FIX: INSTANTIATE DICT SPEC BELOW FOR ENTRIES IN state_list
 
-    # If no States were passed in, instantiate a default state_type using constraint_value
+    # If no States were passed in, instantiate a default state_type using reference_value
     if not state_entries:
-        # assign constraint_value as single item in a list, to be used as state_spec below
-        state_entries = constraint_value
+        # assign reference_value as single item in a list, to be used as state_spec below
+        state_entries = reference_value
 
         # issue warning if in VERBOSE mode:
         if owner.prefs.verbosePref:
             print("No {0} specified for {1}; default will be created using {2} of function ({3})"
                   " as its value".format(state_param_identifier,
                                          owner.__class__.__name__,
-                                         constraint_value_name,
-                                         constraint_value))
+                                         reference_value_name,
+                                         reference_value))
 
-    # States should be either in a list, or possibly an np.array (from constraint_value assignment above):
+    # States should be either in a list, or possibly an np.array (from reference_value assignment above):
     if isinstance(state_entries, (ContentAddressableList, list, np.ndarray)):
 
         # VALIDATE THAT NUMBER OF STATES IS COMPATIBLE WITH NUMBER OF CONSTRAINT VALUES
         num_states = len(state_entries)
 
-        # Check that constraint_value is an indexable object, the items of which are the constraints for each State
+        # Check that reference_value is an indexable object, the items of which are the constraints for each State
         # Notes
         # * generally, this will be a list or an np.ndarray (either >= 2D np.array or with a dtype=object)
         # * for OutputStates, this should correspond to its value
         try:
-            # Insure that constraint_value is an indexible item (list, >=2D np.darray, or otherwise)
-            num_constraint_items = len(constraint_value)
+            # Insure that reference_value is an indexible item (list, >=2D np.darray, or otherwise)
+            num_constraint_items = len(reference_value)
         except:
-            raise StateError("PROGRAM ERROR: constraint_value ({0}) for {1} of {2}"
+            raise StateError("PROGRAM ERROR: reference_value ({0}) for {1} of {2}"
                                  " must be an indexable object (e.g., list or np.ndarray)".
-                                 format(constraint_value, constraint_value_name, state_type.__name__))
+                                 format(reference_value, reference_value_name, state_type.__name__))
 
         # IMPLEMENTATION NOTE: NO LONGER VALID SINCE output_states CAN NOW BE ONE TO MANY OR MANY TO ONE
-        #                      WITH RESPECT TO ITEMS OF constraint_value (I.E., owner.value)
-        # If number of States exceeds number of items in constraint_value, raise exception
+        #                      WITH RESPECT TO ITEMS OF reference_value (I.E., owner.value)
+        # If number of States exceeds number of items in reference_value, raise exception
         if num_states > num_constraint_items:
             raise StateError("There are too many {}s specified ({}) in {} "
                                  "for the number of items ({}) in the {} of its function".
@@ -1897,16 +1897,16 @@ def _instantiate_state_list(owner,
                                         num_states,
                                         owner.name,
                                         num_constraint_items,
-                                        constraint_value_name))
+                                        reference_value_name))
 
-        # If number of States is less than number of items in constraint_value, raise exception
+        # If number of States is less than number of items in reference_value, raise exception
         elif num_states < num_constraint_items:
             raise StateError("There are fewer {}s specified ({}) than the number of items ({}) "
                                  "in the {} of the function for {}".
                                  format(state_param_identifier,
                                         num_states,
                                         num_constraint_items,
-                                        constraint_value_name,
+                                        reference_value_name,
                                         owner.name))
 
         # INSTANTIATE EACH STATE
@@ -1927,7 +1927,7 @@ def _instantiate_state_list(owner,
             # - entry value as state_spec
             if isinstance(index, str):
                 state_name = index
-                state_constraint_value = constraint_value
+                state_reference_value = reference_value
                 # Note: state_spec has already been assigned to entry value by enumeration above
                 # MODIFIED 12/11/16 NEW:
                 # If it is an "exposed" number, make it a 1d np.array
@@ -1953,8 +1953,8 @@ def _instantiate_state_list(owner,
 
                 # If state_spec is a string, then use:
                 # - string as the name for a default State
-                # - index (index in list) to get corresponding value from constraint_value as state_spec
-                # - assign same item of constraint_value as the constraint
+                # - index (index in list) to get corresponding value from reference_value as state_spec
+                # - assign same item of reference_value as the constraint
                 if isinstance(state_spec, str):
                     # Use state_spec as state_name if it has not yet been used
                     if not state_name is state_spec and not state_name in states:
@@ -1963,8 +1963,8 @@ def _instantiate_state_list(owner,
                     # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
                     else:
                         state_name = state_spec + '_' + str(index)
-                    state_spec = constraint_value[index]
-                    state_constraint_value = constraint_value[index]
+                    state_spec = reference_value[index]
+                    state_reference_value = reference_value[index]
 
                 # FIX: 5/21/17  ADD, AND DEAL WITH state_spec AND state_constraint
                 # elif isinstance(state_spec, dict):
@@ -1977,13 +1977,13 @@ def _instantiate_state_list(owner,
                 #         else:
                 #             state_name = state_spec[NAME]
                 #     state_spec = ??
-                #     state_constraint_value = ??
+                #     state_reference_value = ??
 
 
                 # If state_spec is NOT a string, then:
                 # - use default name (which is incremented for each instance in register_categories)
                 # - use item as state_spec (i.e., assume it is a specification for a State)
-                #   Note:  still need to get indexed element of constraint_value,
+                #   Note:  still need to get indexed element of reference_value,
                 #          since it was passed in as a 2D array (one for each State)
                 else:
                     # # MODIFIED 9/3/17 OLD:
@@ -2005,15 +2005,15 @@ def _instantiate_state_list(owner,
                     if isinstance(state_spec, numbers.Number):
                         state_spec = np.atleast_1d(state_spec)
 
-                    state_constraint_value = constraint_value[index]
+                    state_reference_value = reference_value[index]
 
             state = _instantiate_state(owner=owner,
                                        state_type=state_type,
                                        state_name=state_name,
                                        state_spec=state_spec,
                                        state_params=state_params,
-                                       constraint_value=state_constraint_value,
-                                       constraint_value_name=constraint_value_name,
+                                       reference_value=state_reference_value,
+                                       reference_value_name=reference_value_name,
                                        context=context)
 
             # Get name of state, and use as index to assign to states ContentAddressableList
@@ -2032,20 +2032,20 @@ def _instantiate_state(owner,                  # Object to which state will belo
                       state_name,              # Name for state (also used to refer to subclass in prompts)
                       state_spec,              # State subclass, object, spec dict, tuple, projection, value or str
                       state_params,            # params for state
-                      constraint_value,        # Value used to check compatibility
-                      constraint_value_name,   # Name of constraint_value's type (e.g. variable, output...)
+                      reference_value,        # Value used to check compatibility
+                      reference_value_name,   # Name of reference_value's type (e.g. variable, output...)
                       context=None):
-    """Instantiate a State of specified type, with a value that is compatible with constraint_value
+    """Instantiate a State of specified type, with a value that is compatible with reference_value
 
     Constraint value must be a number or a list or tuple of numbers
     (since it is used as the variable for instantiating the requested state)
 
     If state_spec is a:
     + State class:
-        implement default using constraint_value
+        implement default using reference_value
     + State object:
         check owner is owner (if not, user is given options in _check_state_ownership)
-        check compatibility of value with constraint_value
+        check compatibility of value with reference_value
     + 2-item tuple: (only allowed for ParameterState spec)
         assign first item to state_spec
             if it is a string:
@@ -2053,22 +2053,22 @@ def _instantiate_state(owner,                  # Object to which state will belo
                 otherwise, return None (suppress assignment of ParameterState)
         assign second item to STATE_PARAMS{PROJECTIONS:<projection>}
     + Projection object:
-        assign constraint_value to value
+        assign reference_value to value
         assign projection to STATE_PARAMS{PROJECTIONS:<projection>}
     + Projection class (or keyword string constant for one):
-        assign constraint_value to value
+        assign reference_value to value
         assign projection class spec to STATE_PARAMS{PROJECTIONS:<projection>}
     + specification dict for State (see XXX for context):
-        check compatibility of STATE_VALUE with constraint_value
+        check compatibility of STATE_VALUE with reference_value
     + value:
         implement default using the value
     + str:
         test if it is a keyword and get its value by calling keyword method of owner's execute method
         # otherwise, return None (suppress assignment of ParameterState)
         otherwise, implement default using the string as its name
-    Check compatibility with constraint_value
+    Check compatibility with reference_value
     If any of the conditions above fail:
-        a default State of specified type is instantiated using constraint_value as value
+        a default State of specified type is instantiated using reference_value as value
 
     If state_params is specified, include as params arg with instantiation of State
 
@@ -2077,7 +2077,7 @@ def _instantiate_state(owner,                  # Object to which state will belo
 
     # IMPLEMENTATION NOTE: CONSIDER MOVING MUCH IF NOT ALL OF THIS TO State.__init__()
 
-    # FIX: IF VARIABLE IS IN state_params EXTRACT IT AND ASSIGN IT TO constraint_value 5/9/17
+    # FIX: IF VARIABLE IS IN state_params EXTRACT IT AND ASSIGN IT TO reference_value 5/9/17
 
     # VALIDATE ARGS
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
@@ -2086,17 +2086,17 @@ def _instantiate_state(owner,                  # Object to which state will belo
     if not isinstance(state_name, str):
         raise StateError("PROGRAM ERROR: state_name arg ({}) for _instantiate_state must be a string".
                              format(state_name))
-    if not isinstance(constraint_value_name, str):
-        raise StateError("PROGRAM ERROR: constraint_value_name arg ({}) for _instantiate_state must be a string".
-                             format(constraint_value_name))
+    if not isinstance(reference_value_name, str):
+        raise StateError("PROGRAM ERROR: reference_value_name arg ({}) for _instantiate_state must be a string".
+                             format(reference_value_name))
 
     state_params = state_params or {}
     state_variable = None
 
-    # PARSE constraint_value
+    # PARSE reference_value
     constraint_dict = _parse_state_spec(owner=owner,
                                         state_type=state_type,
-                                        state_spec=constraint_value)
+                                        state_spec=reference_value)
 
     # FIX: PER THE FOLLOWING (FROM _parse_state_spec DOCSTRING):
     # *value* arg should generally be a constraint for the value of the State;  however,
@@ -2104,21 +2104,21 @@ def _instantiate_state(owner,                  # Object to which state will belo
     #         InputState, value should be the projection's value;
     #         ParameterState, value should be the projection's value;
     #         OutputState, value should be the projection's variable
-    constraint_value = constraint_dict[VARIABLE]
-    # constraint_value = constraint_dict[VALUE]
+    reference_value = constraint_dict[VARIABLE]
+    # reference_value = constraint_dict[VALUE]
 
-    # PARSE state_spec using constraint_value as default for value
-    state_spec = _parse_state_spec(owner=owner,
-                                   state_type=state_type,
+    # PARSE state_spec using reference_value as default for value
+    state_spec = _parse_state_spec(state_type=state_type,
+                                   owner=owner,
                                    state_spec=state_spec,
                                    name=state_name,
                                    params=state_params,
-                                   value=constraint_value)
+                                   value=reference_value)
 
     # state_spec is State object ***************************************
     #    so, validate and return
 
-    # - check that its value attribute matches the constraint_value
+    # - check that its value attribute matches the reference_value
     # - check that its owner = owner
     # - if either fails, assign default State
     if isinstance(state_spec, state_type):
@@ -2134,16 +2134,16 @@ def _instantiate_state(owner,                  # Object to which state will belo
             state_spec._deferred_init()
 
         # Check that State's value is compatible with Mechanism's variable
-        if iscompatible(state_spec.value, constraint_value):
+        if iscompatible(state_spec.value, reference_value):
             # Check that Mechanism is State's owner;  if it is not, user is given options
             state =  _check_state_ownership(owner, state_name, state_spec)
             if state:
                 return state
             else:
                 # State was rejected, and assignment of default selected
-                state_variable = constraint_value
+                state_variable = reference_value
         else:
-            # State's value doesn't match constraint_value, so assign default
+            # State's value doesn't match reference_value, so assign default
             if owner.verbosePref:
                 warnings.warn("Value of {} for {} ({}, {}) does not match expected ({}); "
                               "default {} will be assigned)".
@@ -2151,9 +2151,9 @@ def _instantiate_state(owner,                  # Object to which state will belo
                                      owner.name,
                                      state_spec.name,
                                      state_spec.value,
-                                     constraint_value,
+                                     reference_value,
                                      state_type.__name__))
-            state_variable = constraint_value
+            state_variable = reference_value
 
     # state_spec is State specification dict *****************************
     #    so, call constructor to instantiate State
@@ -2161,36 +2161,36 @@ def _instantiate_state(owner,                  # Object to which state will belo
     state_spec_dict = state_spec
     state_variable = state_variable or state_spec_dict[VARIABLE]
 
-    # Check that it's variable is compatible with constraint_value, and if not, assign the latter as default variable
-    if constraint_value is not None and not iscompatible(state_variable, constraint_value):
+    # Check that it's variable is compatible with reference_value, and if not, assign the latter as default variable
+    if reference_value is not None and not iscompatible(state_variable, reference_value):
         if owner.prefs.verbosePref:
             warnings.warning("{} is not compatible with constraint value ({}) specified for {} of {};  "
-                            "latter will be used".format(VARIABLE, constraint_value, state_type, owner.name))
-        state_variable = constraint_value
+                            "latter will be used".format(VARIABLE, reference_value, state_type, owner.name))
+        state_variable = reference_value
     # else:
-    #     constraint_value = state_variable
+    #     reference_value = state_variable
 
     # INSTANTIATE STATE:
-    # Note: this will be either a default State instantiated using constraint_value as its value
+    # Note: this will be either a default State instantiated using reference_value as its value
     #       or one determined by a specification dict, depending on which of the following obtained above:
     # - state_spec was a 2-item tuple
     # - state_spec was a specification dict
     # - state_spec was a value
-    # - value of specified State was incompatible with constraint_value
+    # - value of specified State was incompatible with reference_value
     # - owner of State was not owner and user chose to implement default
     # IMPLEMENTATION NOTE:
     # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from ComponentPreferenceSet)
     # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its owner;
 
-    #  Convert constraint_value to np.array to match state_variable (which, as output of function, will be an np.array)
-    constraint_value = convert_to_np_array(constraint_value,1)
+    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
+    reference_value = convert_to_np_array(reference_value,1)
 
-    state_spec_dict['reference_value'] = constraint_value
+    state_spec_dict['reference_value'] = reference_value
 
     # Implement default State
     # state = state_type(owner=owner,
     #                    name=state_spec[NAME],
-    #                    reference_value=constraint_value,
+    #                    reference_value=reference_value,
     #                    variable=state_variable,
     #                    params=state_spec[PARAMS],
     #                    prefs=None,

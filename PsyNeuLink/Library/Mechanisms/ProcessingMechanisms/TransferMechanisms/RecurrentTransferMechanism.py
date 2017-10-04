@@ -664,8 +664,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                                        state_name=AUTO,
                                        state_spec=d,
                                        state_params=None,
-                                       constraint_value=d,
-                                       constraint_value_name=AUTO,
+                                       reference_value=d,
+                                       reference_value_name=AUTO,
                                        context=context)
             if state is not None:
                 self._parameter_states[AUTO] = state
@@ -685,8 +685,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                                        state_name=HETERO,
                                        state_spec=m,
                                        state_params=None,
-                                       constraint_value=m,
-                                       constraint_value_name=HETERO,
+                                       reference_value=m,
+                                       reference_value_name=HETERO,
                                        context=context)
             if state is not None:
                 self._parameter_states[HETERO] = state

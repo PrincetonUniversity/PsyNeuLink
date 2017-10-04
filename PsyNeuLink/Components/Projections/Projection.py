@@ -1647,8 +1647,8 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                                     state_type=InputState,
                                     state_name=input_state,
                                     state_spec=projection_spec.value,
-                                    constraint_value=projection_spec.value,
-                                    constraint_value_name='Projection_spec value for new InputState',
+                                    reference_value=projection_spec.value,
+                                    reference_value_name='Projection_spec value for new InputState',
                                     context=context)
 
     #  Update InputState and input_states
@@ -1753,8 +1753,8 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                                      state_type=OutputState,
                                      state_name=output_state,
                                      state_spec=projection_spec.value,
-                                     constraint_value=projection_spec.value,
-                                     constraint_value_name='Projection_spec value for new InputState',
+                                     reference_value=projection_spec.value,
+                                     reference_value_name='Projection_spec value for new InputState',
 context=context)
     #  Update output_state and output_states
     try:

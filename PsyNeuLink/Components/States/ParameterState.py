@@ -773,7 +773,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             #    in the FUNCTION_PARAMS dict of its owner for ALL of the function's params;  however, their values
             #    will be set to None (and there may not be any relevant paramClassDefaults or a way to determine a
             #    default; e.g., the length of the array for the weights or exponents params for LinearCombination).
-            #    Therefore, None will be passed as the constraint_value, which will cause validation of the
+            #    Therefore, None will be passed as the reference_value, which will cause validation of the
             #    ParameterState's function (in _instantiate_function()) to fail.
             #  Current solution is to simply not instantiate a ParameterState for any function_param that has
             #    not been explicitly specified
@@ -798,7 +798,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             #                       for constraints before state_spec, which moves items to subdictionaries,
             #                       which would make them inaccessible to the subsequent parse of state_spec
             from copy import deepcopy
-            constraint_value = deepcopy(function_param_value)
+            reference_value = deepcopy(function_param_value)
 
             # Assign parameterState for function_param to the component
             state = _instantiate_state(owner=owner,
@@ -806,8 +806,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                       state_name=function_param_name,
                                       state_spec=function_param_value,
                                       state_params=None,
-                                      constraint_value=constraint_value,
-                                      constraint_value_name=function_param_name,
+                                      reference_value=reference_value,
+                                      reference_value_name=function_param_name,
                                       context=context)
             if state:
                 owner._parameter_states[function_param_name] = state
@@ -818,8 +818,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                   state_name=param_name,
                                   state_spec=param_value,
                                   state_params=None,
-                                  constraint_value=param_value,
-                                  constraint_value_name=param_name,
+                                  reference_value=param_value,
+                                  reference_value_name=param_name,
                                   context=context)
         if state:
             owner._parameter_states[param_name] = state

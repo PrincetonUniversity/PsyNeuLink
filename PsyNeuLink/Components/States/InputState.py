@@ -868,7 +868,7 @@ def _instantiate_input_states(owner, input_states=None, context=None):
         - if there is only one InputState, it is assigned the full value
 
     Note: State._instantiate_state_list()
-              parses self.instance_defaults.variable (2D np.array, passed in constraint_value)
+              parses self.instance_defaults.variable (2D np.array, passed in reference_value)
               into individual 1D arrays, one for each input state
 
     (See State._instantiate_state_list() for additional details)
@@ -885,8 +885,8 @@ def _instantiate_input_states(owner, input_states=None, context=None):
                                          state_list=input_states,
                                          state_type=InputState,
                                          state_param_identifier=INPUT_STATE,
-                                         constraint_value=owner.instance_defaults.variable,
-                                         constraint_value_name=VARIABLE,
+                                         reference_value=owner.instance_defaults.variable,
+                                         reference_value_name=VARIABLE,
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)

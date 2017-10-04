@@ -247,8 +247,8 @@ class DefaultControlMechanism(ControlMechanism):
                                          state_name=input_state_name,
                                          state_spec=defaultControlAllocation,
                                          state_params=None,
-                                         constraint_value=np.array(self.instance_defaults.variable[variable_item_index]),
-                                         constraint_value_name='Default control allocation',
+                                         reference_value=np.array(self.instance_defaults.variable[variable_item_index]),
+                                         reference_value_name='Default control allocation',
                                          context=context)
 
         #  Update inputState and input_states

@@ -1457,8 +1457,8 @@ class Process_Base(Process):
                                                                                              self.learning)],
                                                                                 state_type=ParameterState,
                                                                                 state_param_identifier=PARAMETER_STATE,
-                                                                                constraint_value=self.learning,
-                                                                                constraint_value_name=LEARNING_PROJECTION,
+                                                                                reference_value=self.learning,
+                                                                                reference_value_name=LEARNING_PROJECTION,
                                                                                 context=context)
 
                             # preceding_item has _parameter_states but not (yet!) one for MATRIX, so instantiate it
@@ -1470,8 +1470,8 @@ class Process_Base(Process):
                                                                                 state_name=MATRIX,
                                                                                 state_spec=PARAMETER_STATE,
                                                                                 state_params=self.learning,
-                                                                                constraint_value=self.learning,
-                                                                                constraint_value_name=LEARNING_PROJECTION,
+                                                                                reference_value=self.learning,
+                                                                                reference_value_name=LEARNING_PROJECTION,
                                                                                 context=context)
                             # preceding_item has ParameterState for MATRIX,
                             else:
@@ -1509,8 +1509,8 @@ class Process_Base(Process):
                                                                                              self.learning)],
                                                                                 state_type=ParameterState,
                                                                                 state_param_identifier=PARAMETER_STATE,
-                                                                                constraint_value=self.learning,
-                                                                                constraint_value_name=LEARNING_PROJECTION,
+                                                                                reference_value=self.learning,
+                                                                                reference_value_name=LEARNING_PROJECTION,
                                                                                 context=context)
 
                                 # Projection has _parameter_states but not (yet!) one for MATRIX,
@@ -1523,8 +1523,8 @@ class Process_Base(Process):
                                                                                 state_name=MATRIX,
                                                                                 state_spec=PARAMETER_STATE,
                                                                                 state_params=self.learning,
-                                                                                constraint_value=self.learning,
-                                                                                constraint_value_name=LEARNING_PROJECTION,
+                                                                                reference_value=self.learning,
+                                                                                reference_value_name=LEARNING_PROJECTION,
                                                                                 context=context)
 
                                 # Check if Projection's matrix param has a learningSignal

@@ -826,7 +826,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         except (AttributeError, TypeError):
             output_state_index = 0
         # - get constraint for OutputState's value
-        output_state_constraint_value = self.allocation_policy[output_state_index]
+        output_state_reference_value = self.allocation_policy[output_state_index]
 
         # Specification is a ControlSignal (either passed in directly, or parsed from tuple above)
         if isinstance(control_signal_spec, ControlSignal):
@@ -834,7 +834,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
             if control_signal_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
                 control_signal_spec.init_args[OWNER] = self
                 control_signal_spec.init_args[NAME] = control_signal_spec.init_args[NAME] or default_name
-                # control_signal_spec.init_args[REFERENCE_VALUE] = output_state_constraint_value
+                # control_signal_spec.init_args[REFERENCE_VALUE] = output_state_reference_value
                 control_signal_spec.init_args[REFERENCE_VALUE] = defaultControlAllocation
                 control_signal_spec._deferred_init(context=context)
                 control_signal = control_signal_spec
@@ -873,8 +873,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                 state_name=control_signal_name,
                                                 state_spec=defaultControlAllocation,
                                                 state_params=control_signal_params,
-                                                constraint_value=output_state_constraint_value,
-                                                constraint_value_name='Default control allocation',
+                                                reference_value=output_state_reference_value,
+                                                reference_value_name='Default control allocation',
                                                 context=context)
 
         # VALIDATE OR INSTANTIATE ControlProjection(s) TO ControlSignal  -------------------------------------------
