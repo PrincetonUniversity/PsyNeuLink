@@ -635,6 +635,8 @@ from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
+import PsyNeuLink.llvm as pnlvm
+
 logger = logging.getLogger(__name__)
 MechanismRegistry = {}
 
@@ -1172,6 +1174,26 @@ class Mechanism_Base(Mechanism):
         self.phaseSpec = None
         self.processes = {}
         self.systems = {}
+
+        self.__llvm_function_name = None
+        self.__llvm_regenerate = True
+        self.__llvm_bin_function = None
+        self.__llvm_recompile = True
+
+    @property
+    def llvmSymbolName(self):
+        if self.__llvm_regenerate:
+            self.__llvm_function_name = self._gen_llvm_function()
+            self.__llvm_regenerate = False
+            self.__llvm_recompile = True
+        return self.__llvm_function_name
+
+    @property
+    def _llvmBinFunction(self):
+        if self.__llvm_recompile:
+            self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self.llvmSymbolName)
+            self.__llvm_recompile = False
+        return self.__llvm_bin_function
 
 
     def _validate_variable(self, variable, context=None):
