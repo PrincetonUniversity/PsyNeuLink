@@ -629,7 +629,14 @@ class Function_Base(Function):
         self.__llvm_bin_function = None
         self.__llvm_recompile = True
 
-        self._variable_length = len(default_variable) if isinstance(default_variable, np.ndarray) else 1
+        # TODO: move this to a nicer, shareable place
+        def nested_len(x):
+            try:
+                return sum(nested_len(y) for y in x)
+            except:
+                return 1
+
+        self._variable_length = nested_len(default_variable)
 
 
     def execute(self, variable=None, params=None, context=None):
