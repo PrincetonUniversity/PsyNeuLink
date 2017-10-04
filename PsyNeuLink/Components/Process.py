@@ -1450,6 +1450,7 @@ class Process_Base(Process):
 
                             # FIX: 10/3/17: USE OF TUPLE AS ITEM IN STATE_LIST IS NOT LONGER IMPLEMENTED
                             #               NEED TO REFORMAT SPECS FOR state_list BELOW
+                            #               (NOTE: NOT BEING CALLED IN CURRENT TESTS)
                             # preceding_item doesn't have a _parameter_states attrib, so assign one with self.learning
                             except AttributeError:
                                 # Instantiate _parameter_states Ordered dict with ParameterState and self.learning
