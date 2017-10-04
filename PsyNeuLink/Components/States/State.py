@@ -1849,13 +1849,12 @@ def _instantiate_state_list(owner,
             the number of States must match length of Mechanisms state_type value or an exception is raised
     """
 
-    state_entries = state_list
     # FIX: INSTANTIATE DICT SPEC BELOW FOR ENTRIES IN state_list
 
     # If no States were passed in, instantiate a default state_type using reference_value
-    if not state_entries:
+    if not state_list:
         # assign reference_value as single item in a list, to be used as state_spec below
-        state_entries = reference_value
+        state_list = reference_value
 
         # issue warning if in VERBOSE mode:
         if owner.prefs.verbosePref:
@@ -1866,124 +1865,120 @@ def _instantiate_state_list(owner,
                                          reference_value))
 
     # States should be either in a list, or possibly an np.array (from reference_value assignment above):
-    if isinstance(state_entries, (ContentAddressableList, list, np.ndarray)):
-
-        # VALIDATE THAT NUMBER OF STATES IS COMPATIBLE WITH NUMBER OF CONSTRAINT VALUES
-        num_states = len(state_entries)
-
-        # Check that reference_value is an indexable object, the items of which are the constraints for each State
-        # Notes
-        # * generally, this will be a list or an np.ndarray (either >= 2D np.array or with a dtype=object)
-        # * for OutputStates, this should correspond to its value
-        try:
-            # Insure that reference_value is an indexible item (list, >=2D np.darray, or otherwise)
-            num_constraint_items = len(reference_value)
-        except:
-            raise StateError("PROGRAM ERROR: reference_value ({0}) for {1} of {2}"
-                                 " must be an indexable object (e.g., list or np.ndarray)".
-                                 format(reference_value, reference_value_name, state_type.__name__))
-
-        # If number of States does not equal the number of items in reference_value, raise exception
-        if num_states != num_constraint_items:
-            if num_states > num_constraint_items:
-                comparison_string = 'more'
-            else:
-                comparison_string = 'fewer'
-            raise StateError("There are {} {}s specified ({}) than the number of items ({}) "
-                                 "in the {} of the function for {}".
-                                 format(comparison_string,
-                                        state_param_identifier,
-                                        num_states,
-                                        num_constraint_items,
-                                        reference_value_name,
-                                        owner.name))
-
-        # INSTANTIATE EACH STATE
-
-        # Iterate through list or state_dict:
-        # - instantiate each item or entry as state_type State
-        # - get name, and use as key to assign as entry in self.<*>states
-        states = ContentAddressableList(component_type=State_Base,
-                                        name=owner.name+' ContentAddressableList of ' + state_param_identifier)
-
-        # Instantiate State for entry in list
-        for index, state_spec in enumerate(state_entries):
-            state_name = ""
-
-            # If state_spec is a string, then use:
-            # - string as the name for a default State
-            # - index to get corresponding value from reference_value as state_spec
-            # - assign same item of reference_value as the constraint
-            if isinstance(state_spec, str):
-                # Use state_spec as state_name if it has not yet been used
-                if not state_name is state_spec and not state_name in states:
-                    state_name = state_spec
-                # Add index suffix to name if it is already been used
-                # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
-                else:
-                    state_name = state_spec + '_' + str(index)
-                state_spec = reference_value[index]
-                state_reference_value = reference_value[index]
-
-            # FIX: 5/21/17  ADD, AND DEAL WITH state_spec AND state_constraint
-            # elif isinstance(state_spec, dict):
-            #     # If state_spec has NAME entry
-            #     if NAME in state_spec:
-            #         # If it has been used, add suffix to it
-            #         if state_name is state_spec[NAME]:
-            #             state_name = state_spec[NAME] + '_' + str(key)
-            #         # Otherwise, use it
-            #         else:
-            #             state_name = state_spec[NAME]
-            #     state_spec = ??
-            #     state_reference_value = ??
-
-
-            # If state_spec is NOT a string, then:
-            # - use default name (which is incremented for each instance in register_categories)
-            # - use item as state_spec (i.e., assume it is a specification for a State)
-            #   Note:  still need to get indexed element of reference_value,
-            #          since it was passed in as a 2D array (one for each State)
-            else:
-                # # MODIFIED 9/3/17 OLD:
-                # # If only one State, don't add index suffix
-                # if num_states == 1:
-                #     state_name = 'Default_' + state_param_identifier[:-1]
-                # # Add incremented index suffix for each State name
-                # else:
-                #     state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(index+1)
-                # MODIFIED 9/3/17 NEW:
-                # If only one State, don't add index suffix
-                if num_states == 1:
-                    state_name = 'Default_' + state_param_identifier
-                # Add incremented index suffix for each State name
-                else:
-                    state_name = 'Default_' + state_param_identifier + "-" + str(index+1)
-                # MODIFIED 9/3/17 END
-                # If it is an "exposed" number, make it a 1d np.array
-                if isinstance(state_spec, numbers.Number):
-                    state_spec = np.atleast_1d(state_spec)
-
-                state_reference_value = reference_value[index]
-
-            state = _instantiate_state(owner=owner,
-                                       state_type=state_type,
-                                       state_name=state_name,
-                                       state_spec=state_spec,
-                                       state_params=state_params,
-                                       reference_value=state_reference_value,
-                                       reference_value_name=reference_value_name,
-                                       context=context)
-
-            # Get name of state, and use as index to assign to states ContentAddressableList
-            states[state.name] = state
-        return states
-
-    else:
-        # This shouldn't happen, as MECHANISM<*>States was validated to be one of the above in _validate_params
+    if not isinstance(state_list, (ContentAddressableList, list, np.ndarray)):
+        # This shouldn't happen, as items of state_list should be validated to be one of the above in _validate_params
         raise StateError("PROGRAM ERROR: {} for {} is not a recognized \'{}\' specification for {}; "
                          "it should have been converted to a list in Mechanism._validate_params)".
-                         format(state_entries, owner.name, state_param_identifier, owner.__class__.__name__))
+                         format(state_list, owner.name, state_param_identifier, owner.__class__.__name__))
+
+
+    # VALIDATE THAT NUMBER OF STATES IS COMPATIBLE WITH NUMBER OF ITEMS IN reference_values
+
+    num_states = len(state_list)
+    # Check that reference_value is an indexable object, the items of which are the constraints for each State
+    # Notes
+    # * generally, this will be a list or an np.ndarray (either >= 2D np.array or with a dtype=object)
+    # * for OutputStates, this should correspond to its value
+    try:
+        # Insure that reference_value is an indexible item (list, >=2D np.darray, or otherwise)
+        num_constraint_items = len(reference_value)
+    except:
+        raise StateError("PROGRAM ERROR: reference_value ({0}) for {1} of {2}"
+                             " must be an indexable object (e.g., list or np.ndarray)".
+                             format(reference_value, reference_value_name, state_type.__name__))
+    # If number of States does not equal the number of items in reference_value, raise exception
+    if num_states != num_constraint_items:
+        if num_states > num_constraint_items:
+            comparison_string = 'more'
+        else:
+            comparison_string = 'fewer'
+        raise StateError("There are {} {}s specified ({}) than the number of items ({}) "
+                             "in the {} of the function for {}".
+                             format(comparison_string,
+                                    state_param_identifier,
+                                    num_states,
+                                    num_constraint_items,
+                                    reference_value_name,
+                                    owner.name))
+
+    # INSTANTIATE EACH STATE
+
+    states = ContentAddressableList(component_type=State_Base,
+                                    name=owner.name+' ContentAddressableList of ' + state_param_identifier)
+    # Assign/create state_spec_dict for each item of the list and use it to instantiate the corresponding State
+    for index, state_spec in enumerate(state_list):
+
+        state_name = ""
+        state_spec_dict = {}
+
+        # If state_spec is a string, then use:
+        # - string as the name for a default State
+        # - index to get corresponding value from reference_value as state_spec
+        # - assign same item of reference_value as the state's reference_value
+        if isinstance(state_spec, str):
+            # Use state_spec as State's name if it has not yet been used
+            if not state_name is state_spec and not state_name in states:
+                state_name = state_spec
+            # Add index suffix to name if it is already been used
+            # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
+            else:
+                state_name = state_spec + '_' + str(index)
+            state_spec = reference_value[index]
+            state_reference_value = reference_value[index]
+
+        # FIX: 5/21/17  ADD, AND DEAL WITH state_spec AND state_constraint
+        # elif isinstance(state_spec, dict):
+        #     # If state_spec has NAME entry
+        #     if NAME in state_spec:
+        #         # If it has been used, add suffix to it
+        #         if state_name is state_spec[NAME]:
+        #             state_name = state_spec[NAME] + '_' + str(key)
+        #         # Otherwise, use it
+        #         else:
+        #             state_name = state_spec[NAME]
+        #     state_spec = ??
+        #     state_reference_value = ??
+
+
+        # If state_spec is NOT a string, then:
+        # - use default name (which is incremented for each instance in register_categories)
+        # - use item as state_spec (i.e., assume it is a specification for a State)
+        #   Note:  still need to get indexed element of reference_value,
+        #          since it was passed in as a 2D array (one for each State)
+        else:
+            # # MODIFIED 9/3/17 OLD:
+            # # If only one State, don't add index suffix
+            # if num_states == 1:
+            #     state_name = 'Default_' + state_param_identifier[:-1]
+            # # Add incremented index suffix for each State name
+            # else:
+            #     state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(index+1)
+            # MODIFIED 9/3/17 NEW:
+            # If only one State, don't add index suffix
+            if num_states == 1:
+                state_name = 'Default_' + state_param_identifier
+            # Add incremented index suffix for each State name
+            else:
+                state_name = 'Default_' + state_param_identifier + "-" + str(index+1)
+            # MODIFIED 9/3/17 END
+            # If it is an "exposed" number, make it a 1d np.array
+            if isinstance(state_spec, numbers.Number):
+                state_spec = np.atleast_1d(state_spec)
+
+            state_reference_value = reference_value[index]
+
+        state = _instantiate_state(owner=owner,
+                                   state_type=state_type,
+                                   state_name=state_name,
+                                   state_spec=state_spec,
+                                   state_params=state_params,
+                                   reference_value=state_reference_value,
+                                   reference_value_name=reference_value_name,
+                                   context=context)
+
+        # Get name of state, and use as index to assign to states ContentAddressableList
+        states[state.name] = state
+    return states
 
 
 def _instantiate_state(owner,                  # Object to which state will belong

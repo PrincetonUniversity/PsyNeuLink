@@ -1448,9 +1448,9 @@ class Process_Base(Process):
                                                         preceding_item._parameter_states[MATRIX].mod_afferents
                                                         if isinstance(projection, LearningProjection))
 
-                            # FIX: 10/3/17: USE OF TUPLE AS ITEM IN STATE_LIST IS NOT LONGER IMPLEMENTED
+                            # FIX: 10/3/17: USE OF TUPLE AS ITEM IN state_list ARGS BELOW IS NO LONGER SUPPORTED
                             #               NEED TO REFORMAT SPECS FOR state_list BELOW
-                            #               (NOTE: NOT BEING CALLED IN CURRENT TESTS)
+                            #               (NOTE: THESE EXCEPTIONS ARE NOT BEING CALLED IN CURRENT TEST SUITES)
                             # preceding_item doesn't have a _parameter_states attrib, so assign one with self.learning
                             except AttributeError:
                                 # Instantiate _parameter_states Ordered dict with ParameterState and self.learning
