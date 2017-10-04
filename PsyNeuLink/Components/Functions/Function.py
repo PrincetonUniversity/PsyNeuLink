@@ -8427,7 +8427,7 @@ class TDLearning(Reinforcement):
 
     def __init__(self,
                  default_variable=Reinforcement.ClassDefaults.variable,
-                 reward:tc.optional(tc.any(np.ndarray, List))=None,
+                 reward:tc.optional(tc.any(np.ndarray, list))=None,
                  learning_rate=Reinforcement.default_learning_rate,
                  params=None,
                  owner=None,

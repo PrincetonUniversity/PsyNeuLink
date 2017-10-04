@@ -371,6 +371,7 @@ LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
 HEBBIAN_FUNCTION = 'Hebbian Learning Function'
 RL_FUNCTION = 'ReinforcementLearning Function'
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
+TDLEARNING_FUNCTION = "TD Learning Function"
 ERROR_DERIVATIVE_FUNCTION = 'Error Derivative Function'
 
 # Distribution functions
@@ -645,4 +646,6 @@ SIMPLE = 'scaled'
 ADAPTIVE = 'adaptive'
 DIFFUSION = 'diffusion'
 
+T = 't'
+REWARD = 'reward'
 #endregion
