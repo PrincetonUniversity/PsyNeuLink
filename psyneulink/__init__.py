@@ -9,6 +9,26 @@
 # ***********************************************  Init ****************************************************************
 import logging as _logging
 
+# starred imports to allow user imports from top level
+from . import components
+from . import composition
+from . import globals
+from . import library
+from . import scheduling
+
+import psyneulink.globals.keywords as keywords
+
+from .components import *
+from .composition import *
+from .globals import *
+from .library import *
+from .scheduling import *
+
+__all__ = components.__all__
+__all__.extend(composition.__all__)
+__all__.extend(globals.__all__)
+__all__.extend(library.__all__)
+__all__.extend(scheduling.__all__)
 
 # https://stackoverflow.com/a/17276457/3131666
 class _Whitelist(_logging.Filter):
@@ -33,4 +53,3 @@ for handler in _logging.root.handlers:
         'psyneulink.scheduling.scheduler',
         'psyneulink.scheduling.condition',
     ))
-

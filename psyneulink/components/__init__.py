@@ -20,6 +20,30 @@ import inspect
 from psyneulink.globals.keywords import DEFAULT_PROCESSING_MECHANISM, PROJECTION_SENDER, PROJECTION_TYPE
 from psyneulink.globals.registry import register_category
 
+from . import functions
+from . import mechanisms
+from . import process
+from . import projections
+from . import states
+from . import system
+
+from .functions import *
+from .mechanisms import *
+from .process import *
+from .projections import *
+from .states import *
+from .system import *
+
+__all__ = [
+    'InitError'
+]
+__all__.extend(functions.__all__)
+__all__.extend(mechanisms.__all__)
+__all__.extend(process.__all__)
+__all__.extend(projections.__all__)
+__all__.extend(states.__all__)
+__all__.extend(system.__all__)
+
 kwInitPy = '__init__.py'
 
 class InitError(Exception):
