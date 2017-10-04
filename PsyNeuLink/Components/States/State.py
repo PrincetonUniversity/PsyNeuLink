@@ -1922,15 +1922,8 @@ def _instantiate_state_list(owner,
 
 
 @tc.typecheck
-def _instantiate_state(owner:tc.any(Mechanism, Projection),   # Component to which state will belong
-                       state_type:_is_state_class,    # State subclass
-                       name:str,                      # name for state (also used to refer to subclass in prompts)
-                       reference_value,               # value used to check compatibility
-                       reference_value_name:str,      # name of reference_value's type (e.g. variable, output...)
-                       params:tc.optional(dict)=None, # params for state
-                       context=None,
-                       **state_spec                   # any allowable form of `State_Specification`
-                       ):
+def _instantiate_state(context=None,
+                       **state_spec):
     """Instantiate a State of specified type, with a value that is compatible with reference_value
 
     This is the interface between the various ways in which a state can be specified and the State's constructor
@@ -1974,47 +1967,11 @@ def _instantiate_state(owner:tc.any(Mechanism, Projection),   # Component to whi
     Returns a State or None
     """
 
-    # FIX: 10/3/17 ??DO THE FOLLOWING:
-    # IMPLEMENTATION NOTE: CONSIDER MOVING MUCH IF NOT ALL OF THIS TO State.__init__()
-
-    # FIX: IF VARIABLE IS IN state_params EXTRACT IT AND ASSIGN IT TO reference_value 5/9/17
-
-    # VALIDATE ARGS
-    if not inspect.isclass(state_type) or not issubclass(state_type, State):
-        raise StateError("PROGRAM ERROR: state_type arg ({}) for _instantiate_state must be a State subclass".
-                         format(state_type))
-    if not isinstance(name, str):
-        raise StateError("PROGRAM ERROR: name arg ({}) for _instantiate_state must be a string".
-                             format(name))
-    if not isinstance(reference_value_name, str):
-        raise StateError("PROGRAM ERROR: reference_value_name arg ({}) for _instantiate_state must be a string".
-                             format(reference_value_name))
-
-    # params = params or {}
-    # state_variable = None
-    #
-    # # PARSE reference_value (in case it is specified as a Projection?? or another State??
-    # constraint_dict = _parse_state_spec(owner=owner,
-    #                                     state_type=state_type,
-    #                                     state_spec=reference_value)
-    #
-    # # FIX: 10/3/17 - PER THE FOLLOWING (FROM _parse_state_spec DOCSTRING):
-    # # FIX:           USE STATE_TYPE AND PROJECTION SPEC (IF SPECIFIED)?
-    # # FIX:           DO THIS AFTER _parse_state_spec??
-    # # FIX:           OR IS THIS ALREADY BEING CHECKED IN _parse_state_spec USING PROJECTION SOCKET??
-    # # *value* arg should generally be a constraint for the value of the State;  however,
-    # #     if state_spec is a Projection, and method is being called from:
-    # #         InputState, value should be the projection's value;
-    # #         ParameterState, value should be the projection's value;
-    # #         OutputState, value should be the projection's variable
-    # reference_value = constraint_dict[VARIABLE]
-    # # reference_value = constraint_dict[VALUE]
-
-
-    # PARSE state_spec using reference_value as default for value
-    state_spec = _parse_state_spec(**state_spec_dict)
+    owner = state_spec[OWNER]
+    parsed_state_spec = _parse_state_spec(**state_spec)
 
     # FIX: 10/3/17: HANDLE NAME HERE (GET CODE FROM ABOVE)
+
 
     # STATE SPECIFICATION IS A State OBJECT ***************************************
     # Validate and return
@@ -2022,39 +1979,43 @@ def _instantiate_state(owner:tc.any(Mechanism, Projection),   # Component to whi
     # - check that its value attribute matches the reference_value
     # - check that it doesn't already belong to another owner
     # - if either fails, assign default State
-    if isinstance(state_spec, state_type):
+    if _is_state_class(parsed_state_spec):
+
+        state = parsed_state_spec
 
         # State initialization was deferred (owner or reference_value was missing), so
         #    assign owner, variable, and/or reference_value if they were not specified
-        if state_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
-            if not state_spec.init_args[OWNER]:
-                state_spec.init_args[OWNER] = owner
-                state_spec.init_args[VARIABLE] = owner.instance_defaults.variable[0]
-            if not hasattr(state_spec, REFERENCE_VALUE):
-                state_spec.reference_value = owner.instance_defaults.variable[0]
-            state_spec._deferred_init()
+        if state.init_status is InitStatus.DEFERRED_INITIALIZATION:
+            if not state.init_args[OWNER]:
+                state.init_args[OWNER] = owner
+                state.init_args[VARIABLE] = owner.instance_defaults.variable[0]
+            if not hasattr(state, REFERENCE_VALUE):
+                state.reference_value = owner.instance_defaults.variable[0]
+            state._deferred_init()
 
         # State's value is incompatible with Mechanism's variable
-        if not iscompatible(state_spec.value, reference_value):
+        if not iscompatible(state.value, state.reference_value):
             raise StateError("{}'s value attribute ({}) is incompatible with the variable ({}) of its owner ({})".
-                             format(state_spec.name, state_spec.value, reference_value, owner.name))
+                             format(state.name, state.value, state.reference_value, owner.name))
         # State has already been assigned to an owner
-        if state_spec.owner is not None:
-            if state_spec.owner is owner:
+        if state.owner is not None:
+            if state.owner is owner:
                 raise StateError("State {} already belongs to the owner for which it is specified ({})".
-                                 format(state_spec.name, owner.name))
+                                 format(state.name, owner.name))
             else:
                 raise StateError("State {} does not belong to the owner for which it is specified ({})".
-                                 format(state_spec.name, owner.name))
+                                 format(state.name, owner.name))
         # Return state
         else:
-            return state_spec
+            return state
 
-    # state_spec is State specification dict *****************************
+    # STATE SPECIFICATION IS A State specification dictionary ***************************************
     #    so, call constructor to instantiate State
 
-    state_spec_dict = state_spec
+    state_spec_dict = parsed_state_spec
 
+    reference_value = state_spec_dict[REFERENCE_VALUE]
+    variable = state_spec_dict[VARIABLE]
 
     # # FIX: 10/3/17 - PER THE FOLLOWING (FROM _parse_state_spec DOCSTRING):
     # # *value* arg should generally be a constraint for the value of the State;  however,
@@ -2064,47 +2025,25 @@ def _instantiate_state(owner:tc.any(Mechanism, Projection),   # Component to whi
     # #         OutputState, value should be the projection's variable
 
     # Check that it's variable is compatible with reference_value, and if not, assign the latter as default variable
-    if reference_value is not None and not iscompatible(state_variable, reference_value):
-        # # MODIFIED 10/3/17 OLD:
-        # if owner.prefs.verbosePref:
-        #     warnings.warning("{} is not compatible with constraint value ({}) specified for {} of {};  "
-        #                     "latter will be used".format(VARIABLE, reference_value, state_type, owner.name))
-        # # state_variable = reference_value
-        # state_spec_dict[VARIABLE] = reference_value
-        # MODIFIED 10/3/17 NEW:
+    # if reference_value is not None and not iscompatible(variable, reference_value):
+    if reference_value is None or not iscompatible(variable, reference_value):
         raise StateError("{}'s value attribute ({}) is incompatible with the variable ({}) of its owner ({})".
-                         format(state_spec.name, state_spec.value, reference_value, owner.name))
-        # MODIFIED 10/3/17 END
-    # else:
-    #     reference_value = state_variable
+                         format(state_spec_dict[NAME],
+                                state_spec_dict[VALUE],
+                                reference_value,
+                                state_spec_dict[OWNER].name))
 
     # INSTANTIATE STATE:
-    # Note: this will be either a default State instantiated using reference_value as its value
-    #       or one determined by a specification dict, depending on which of the following obtained above:
-    # - state_spec was a 2-item tuple
-    # - state_spec was a specification dict
-    # - state_spec was a value
-    # - value of specified State was incompatible with reference_value
-    # - owner of State was not owner and user chose to implement default
+
     # IMPLEMENTATION NOTE:
     # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from ComponentPreferenceSet)
     # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its owner;
 
     #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
-    reference_value = convert_to_np_array(reference_value,1)
-
-    state_spec_dict[REFERENCE_VALUE] = reference_value
-    state_spec_dict[VARIABLE] = state_variable
+    state_spec_dict[REFERENCE_VALUE] = convert_to_np_array(reference_value,1)
 
     # Implement default State
-    # state = state_type(owner=owner,
-    #                    name=state_spec[NAME],
-    #                    reference_value=reference_value,
-    #                    variable=state_variable,
-    #                    params=state_spec[PARAMS],
-    #                    prefs=None,
-    #                    context=context)
-    state = state_type(**state_spec_dict, context=context)
+    state = state_spec_dict[STATE_TYPE](**state_spec_dict, context=context)
 
 # FIX LOG: ADD NAME TO LIST OF MECHANISM'S VALUE ATTRIBUTES FOR USE BY LOGGING ENTRIES
     # This is done here to register name with Mechanism's stateValues[] list
@@ -2632,6 +2571,36 @@ def _parse_state_spec(state_type:_is_state_class,                       # State'
             OutputState, value should be the projection's variable
     Any entries with keys other than STANDARD_ARGS are passed to _parse_state_specific_specs and place in params
     """
+
+    # FIX: FROM _instantiate_state_list:  DEAL WITH PARSING OF REFERENCE_VALUE
+        state_spec_dict = defaultdict(lambda: None)
+        state_spec_dict[OWNER] = owner
+        state_spec_dict[STATE_TYPE] = state_type
+
+        # If state_spec is a string, then use:
+        # - string as the name for a default State
+        # - index to get corresponding value from reference_value as state_spec
+        if isinstance(state_spec, str):
+            state_spec_dict[NAME] = state_spec
+            state_spec_dict[REFERENCE_VALUE] = reference_value[index]
+
+        # If state_spec is a number, use it as the reference_value
+        #   Note:  still need to get indexed element of reference_value,
+        #          since it was passed in as a 2D array (one for each State)
+        elif isinstance(state_spec, numbers.Number):
+            state_spec_dict[REFERENCE_VALUE] = np.atleast_1d(state_spec)
+            # # FIX: 10/3/17 - STILL NEEDED?
+            # state_reference_value = reference_value[index]
+
+        # If state_spec is a State specification dictionary, use it as state_spec_dict;
+        # if it has no REFERENCE_VALUE entry, use corresponding item of reference_value
+        elif isinstance(state_spec, dict):
+            state_spec_dict.update(state_spec)
+            if state_spec_dict[REFERENCE_VALUE] is None:
+                state_spec_dict[REFERENCE_VALUE] = state_spec[REFERENCE_VALUE]
+    # FIX: ***************************************
+
+
 
     # Validate that state_type is a State class
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
