@@ -6,7 +6,6 @@
         <value>
           <list size="2">
             <item index="0" class="java.lang.String" itemvalue="typecheck-decorator" />
-            <item index="1" class="java.lang.String" itemvalue="toposort" />
           </list>
         </value>
       </option>
