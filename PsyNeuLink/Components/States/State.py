@@ -351,6 +351,7 @@ state_keywords.update({MECHANISM,
                        })
 
 state_type_keywords = {STATE_TYPE}
+REFERENCE_VALUE = 'reference_value'
 
 
 def _is_state_type (spec):
@@ -2154,11 +2155,11 @@ def _instantiate_state(owner,                  # Object to which state will belo
                                      state_type.__name__))
             state_variable = constraint_value
 
-    # state_spec is State specification dictt *****************************
+    # state_spec is State specification dict *****************************
     #    so, call constructor to instantiate State
 
     state_spec_dict = state_spec
-    state_variable = state_variable or state_spec[VARIABLE]
+    state_variable = state_variable or state_spec_dict[VARIABLE]
 
     # Check that it's variable is compatible with constraint_value, and if not, assign the latter as default variable
     if constraint_value is not None and not iscompatible(state_variable, constraint_value):
@@ -2184,6 +2185,8 @@ def _instantiate_state(owner,                  # Object to which state will belo
     #  Convert constraint_value to np.array to match state_variable (which, as output of function, will be an np.array)
     constraint_value = convert_to_np_array(constraint_value,1)
 
+    state_spec_dict['reference_value'] = constraint_value
+
     # Implement default State
     # state = state_type(owner=owner,
     #                    name=state_spec[NAME],
@@ -2192,7 +2195,7 @@ def _instantiate_state(owner,                  # Object to which state will belo
     #                    params=state_spec[PARAMS],
     #                    prefs=None,
     #                    context=context)
-    state = state_type(**state_spec, context=context)
+    state = state_type(**state_spec_dict, context=context)
 
 # FIX LOG: ADD NAME TO LIST OF MECHANISM'S VALUE ATTRIBUTES FOR USE BY LOGGING ENTRIES
     # This is done here to register name with Mechanism's stateValues[] list
