@@ -1813,9 +1813,7 @@ def _instantiate_state_list(owner,
     - state_list (list): List of State specifications (generally from owner.paramsCurrent[kw<State>]),
                              each item of which must be a:
                                  string (used as name)
-                                 value (used as constraint value)
-                                 # ??CORRECT: (state_spec, params_dict) tuple
-                                     SHOULDN'T IT BE: (state_spec, projection) tuple?
+                                 number (used as constraint value)
                                  dict (key=name, value=reference_value or param dict)
                          if None, instantiate a single default State using reference_value as state_spec
     - state_param_identifier (str): kw used to identify set of States in params;  must be one of:
@@ -1910,37 +1908,28 @@ def _instantiate_state_list(owner,
 
         # Instantiate State for entry in list or dict
         # Note: if state_entries is a list, state_spec is the item, and key is its index in the list
-        for index, state_spec in state_entries if isinstance(state_entries, dict) else enumerate(state_entries):
+        for id, state_spec in state_entries if isinstance(state_entries, dict) else enumerate(state_entries):
             state_name = ""
 
             # State_entries is a dict, so use:
             # - entry index as State's name
             # - entry value as state_spec
-            if isinstance(index, str):
-                state_name = index
+            if isinstance(id, str):
+                state_name = id
                 state_reference_value = reference_value
+                # FIX: 10/3/17 - ??IF state_spec IS AN number
+                #      CONVERT state_spec TO A STATE_SPECIFICATION DICT HERE
+                #      ASSIGN id TO NAME, AND ASSIGN number TO REFERENCE VALUE??
                 # Note: state_spec has already been assigned to entry value by enumeration above
                 # If it is an "exposed" number, make it a 1d np.array
                 if isinstance(state_spec, numbers.Number):
                     state_spec = np.atleast_1d(state_spec)
-                state_params = None
+                state_params = None  # These should be in state_spec
 
             # State_entries is a list
             # FIX: 10/3/17 - WHAT FORMAT IS THIS?  SHOULDN'T IT BE HANDLED IN _parse_state_spec, AND NOT HERE?
             else:
-                if isinstance(state_spec, tuple):
-                    if not len(state_spec) == 2:
-                        raise StateError("List of {}s to instantiate for {} has tuple with more than 2 items:"
-                                                  " {}".format(state_type.__name__, owner.name, state_spec))
-
-                    state_spec, state_params = state_spec
-                    if not (isinstance(state_params, dict) or state_params is None):
-                        raise StateError("In list of {}s to instantiate for {}, second item of tuple "
-                                                  "({}) must be a params dict or None:".
-                                                  format(state_type.__name__, owner.name, state_params))
-                else:
-                    state_params = None
-
+                index = id
                 # If state_spec is a string, then use:
                 # - string as the name for a default State
                 # - index (index in list) to get corresponding value from reference_value as state_spec
