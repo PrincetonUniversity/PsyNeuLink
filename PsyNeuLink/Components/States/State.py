@@ -2090,6 +2090,7 @@ def _instantiate_state(owner,                  # Object to which state will belo
                              format(constraint_value_name))
 
     state_params = state_params or {}
+    state_variable = None
 
     # PARSE constraint_value
     constraint_dict = _parse_state_spec(owner=owner,
@@ -2113,7 +2114,9 @@ def _instantiate_state(owner,                  # Object to which state will belo
                                    params=state_params,
                                    value=constraint_value)
 
-    # state_spec is State object
+    # state_spec is State object ***************************************
+    #    so, validate and return
+
     # - check that its value attribute matches the constraint_value
     # - check that its owner = owner
     # - if either fails, assign default State
@@ -2137,7 +2140,7 @@ def _instantiate_state(owner,                  # Object to which state will belo
                 return state
             else:
                 # State was rejected, and assignment of default selected
-                state = constraint_value
+                state_variable = constraint_value
         else:
             # State's value doesn't match constraint_value, so assign default
             if owner.verbosePref:
@@ -2149,11 +2152,13 @@ def _instantiate_state(owner,                  # Object to which state will belo
                                      state_spec.value,
                                      constraint_value,
                                      state_type.__name__))
-            # state = constraint_value
             state_variable = constraint_value
 
-    # Otherwise, state_spec should now be a state specification dict
-    state_variable = state_spec[VARIABLE]
+    # state_spec is State specification dictt *****************************
+    #    so, call constructor to instantiate State
+
+    state_spec_dict = state_spec
+    state_variable = state_variable or state_spec[VARIABLE]
 
     # Check that it's variable is compatible with constraint_value, and if not, assign the latter as default variable
     if constraint_value is not None and not iscompatible(state_variable, constraint_value):
