@@ -338,12 +338,12 @@ COMMENT
 """
 import inspect
 import numbers
-import numpy as np
-import typecheck as tc
 import warnings
-
 from collections import Iterable, OrderedDict
 from enum import Enum, IntEnum
+
+import numpy as np
+import typecheck as tc
 
 from PsyNeuLink.Globals.Keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from PsyNeuLink.Globals.Log import Log
@@ -1810,7 +1810,6 @@ class Component(object):
                 warnings.warn("No params specified")
             return
 
-        import copy
         validated_set = {}
 
         self._instantiate_defaults(request_set=request_set,

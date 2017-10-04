@@ -226,7 +226,7 @@ Class Reference
 """
 import typecheck as tc
 
-from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param, MULTIPLICATIVE_PARAM
+from PsyNeuLink.Components.Functions.Function import Integrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
     import ControlMechanism, ALLOCATION_POLICY
@@ -235,9 +235,7 @@ from PsyNeuLink.Components.Functions.Function import Integrator
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import FUNCTION, ALL, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, \
-                                        CONTROL_PROJECTIONS, CONTROL_SIGNALS
-
+from PsyNeuLink.Globals.Keywords import ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
@@ -441,8 +439,6 @@ class LCMechanism(ControlMechanism):
 
         if MODULATED_MECHANISMS in target_set and target_set[MODULATED_MECHANISMS]:
 
-            from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-
             spec = target_set[MODULATED_MECHANISMS]
 
             if isinstance (spec, str):
@@ -501,9 +497,6 @@ class LCMechanism(ControlMechanism):
 
         Returns ControlSignal (OutputState)
         """
-        from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-        from PsyNeuLink.Components.States.ParameterState import _get_parameter_state
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 
         # *ALL* is specified for modulated_mechanisms:

@@ -134,11 +134,9 @@ import warnings
 import numpy as np
 
 from PsyNeuLink.Components.Component import function_type, method_type
-from PsyNeuLink.Components.Functions.Function import BackPropagation, Linear, Reinforcement, Hebbian
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
-    import LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-    import OUTCOME, ObjectiveMechanism
+from PsyNeuLink.Components.Functions.Function import BackPropagation, Hebbian, Linear, Reinforcement
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
@@ -146,11 +144,8 @@ from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.ShellClasses import Function
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Globals.Keywords import BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, IDENTITY_MATRIX, LEARNING, \
-    LEARNING_MECHANISM, MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, HEBBIAN_FUNCTION, SAMPLE, TARGET, VARIABLE, \
-    WEIGHT
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
-    import ComparatorMechanism
+from PsyNeuLink.Globals.Keywords import BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, WEIGHT
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism import ComparatorMechanism
 
 
 class LearningAuxilliaryError(Exception):

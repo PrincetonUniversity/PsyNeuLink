@@ -435,28 +435,18 @@ import numpy as np
 import typecheck as tc
 from toposort import toposort, toposort_flatten
 
-from PsyNeuLink.Components.Component import Component, ExecutionStatus, function_type, InitStatus
-from PsyNeuLink.Components.Process import Process_Base, ProcessList, ProcessTuple
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
-    import ControlMechanism, OBJECTIVE_MECHANISM
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-    import ObjectiveMechanism, MonitoredOutputStateTuple, OUTPUT_STATE_INDEX
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
-    import LearningMechanism
+from PsyNeuLink.Components.Component import Component, ExecutionStatus, InitStatus, function_type
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism, OBJECTIVE_MECHANISM
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MonitoredOutputStatesOption
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import MonitoredOutputStateTuple, OUTPUT_STATE_INDEX, ObjectiveMechanism
+from PsyNeuLink.Components.Process import ProcessList, ProcessTuple, Process_Base
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
-from PsyNeuLink.Globals.Keywords import SYSTEM, EXECUTING, FUNCTION, COMPONENT_INIT, SYSTEM_INIT, TIME_SCALE, ALL,\
-                                        ORIGIN, INTERNAL, TERMINAL, TARGET, SINGLETON, CONTROL_SIGNAL_SPECS,\
-                                        SAMPLE, MATRIX, IDENTITY_MATRIX, kwSeparator, kwSystemComponentCategory, \
-                                        CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, MONITOR_FOR_CONTROL, EVC_SIMULATION,\
-                                        CYCLE, INITIALIZE_CYCLE, INITIALIZING, INITIALIZED, INITIAL_VALUES, \
-                                        LEARNING, LEARNING_SIGNAL
-
+from PsyNeuLink.Globals.Keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CONTROL_SIGNAL_SPECS, CYCLE, EVC_SIMULATION, EXECUTING, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, kwSeparator, kwSystemComponentCategory
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.Utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, \
-    iscompatible, parameter_spec
+from PsyNeuLink.Globals.Utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, parameter_spec
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 

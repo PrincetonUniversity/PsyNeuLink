@@ -628,7 +628,6 @@ Class Reference
 
 import inspect
 import logging
-
 from collections import OrderedDict
 from inspect import isclass
 

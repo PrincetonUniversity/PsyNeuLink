@@ -77,22 +77,14 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
-from PsyNeuLink.Components.Functions.Function \
-    import Hebbian, ModulationParam, _is_modulation_param, is_function_type
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
-    import LearningMechanism, ACTIVATION_INPUT
+from PsyNeuLink.Components.Component import parameter_keywords
+from PsyNeuLink.Components.Functions.Function import Hebbian, ModulationParam, _is_modulation_param, is_function_type
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import ACTIVATION_INPUT, LearningMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.Projection \
-    import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
-from PsyNeuLink.Components.ShellClasses import Mechanism, Projection
-from PsyNeuLink.Globals.Keywords import CONTROL_PROJECTIONS, FUNCTION_PARAMS, IDENTITY_MATRIX, INDEX, INITIALIZING, \
-    INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, PARAMETER_STATE, PARAMS, PROJECTION, \
-    PROJECTIONS, AUTOASSOCIATIVE_LEARNING_MECHANISM
+from PsyNeuLink.Components.Projections.Projection import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
+from PsyNeuLink.Components.ShellClasses import Projection
+from PsyNeuLink.Globals.Keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, FUNCTION_PARAMS, INDEX, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, PROJECTION
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import is_numeric, parameter_spec

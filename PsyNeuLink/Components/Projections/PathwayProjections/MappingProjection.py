@@ -244,7 +244,6 @@ Class Reference
 """
 import inspect
 import typecheck as tc
-
 import numpy as np
 
 from PsyNeuLink.Components.Component import InitStatus, parameter_keywords

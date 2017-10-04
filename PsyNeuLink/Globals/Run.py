@@ -295,7 +295,6 @@ Class Reference
 """
 
 import warnings
-
 from collections import Iterable
 
 import numpy as np

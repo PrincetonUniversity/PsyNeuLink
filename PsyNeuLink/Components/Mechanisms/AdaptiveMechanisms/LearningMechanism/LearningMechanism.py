@@ -521,14 +521,11 @@ import numpy as np
 import typecheck as tc
 
 from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
-from PsyNeuLink.Components.Functions.Function \
-    import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
+from PsyNeuLink.Components.Functions.Function import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-    import OUTCOME, ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import OUTCOME, ObjectiveMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.Projection \
-    import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
+from PsyNeuLink.Components.Projections.Projection import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
 from PsyNeuLink.Components.ShellClasses import Mechanism, Projection
 from PsyNeuLink.Globals.Keywords import CONTROL_PROJECTIONS, FUNCTION_PARAMS, IDENTITY_MATRIX, INDEX, INITIALIZING, \
     INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \

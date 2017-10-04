@@ -325,26 +325,21 @@ Class Reference
 ---------------
 
 """
-import warnings
-
-import typecheck as tc
 import numbers
+import warnings
 from collections import namedtuple
 
+import typecheck as tc
 
 from PsyNeuLink.Components.Component import InitStatus
 from PsyNeuLink.Components.Functions.Function import LinearCombination
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.ShellClasses import Mechanism, State
-from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE, standard_output_states
-from PsyNeuLink.Globals.Keywords import NAME, VARIABLE, FUNCTION, VALUE, PARAMS, TIME_SCALE, OBJECTIVE_MECHANISM, \
-                                        INPUT_STATES, PROJECTIONS, WEIGHT, WEIGHTS, EXPONENT, EXPONENTS, SENDER, \
-                                        MATRIX, DEFAULT_MATRIX, AUTO_ASSIGN_MATRIX, \
-                                        OUTPUT_STATE, OUTPUT_STATES, LEARNING, CONTROL, MECHANISM, kwPreferenceSetName
+from PsyNeuLink.Components.States.State import _parse_state_spec
+from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CONTROL, DEFAULT_MATRIX, EXPONENT, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, MECHANISM, NAME, OBJECTIVE_MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PROJECTIONS, SENDER, TIME_SCALE, VALUE, VARIABLE, WEIGHT, WEIGHTS, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList, is_matrix

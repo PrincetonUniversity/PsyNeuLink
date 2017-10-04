@@ -159,8 +159,7 @@ from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Globals.Keywords import INITIALIZING, KWTA, K_VALUE, RATIO, RESULT, THRESHOLD
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism import \
-    RecurrentTransferMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
 from PsyNeuLink.Library.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
