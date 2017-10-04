@@ -1615,7 +1615,8 @@ class Mechanism_Base(Mechanism):
                 clock=CentralClock,
                 time_scale=TimeScale.TRIAL,
                 ignore_execution_id = False,
-                context=None):
+                context=None,
+                bin_execute=False):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
 
 
@@ -1790,13 +1791,22 @@ class Mechanism_Base(Mechanism):
 
         #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
-        self.value = self._execute(
-            variable=variable,
-            runtime_params=runtime_params,
-            clock=clock,
-            time_scale=time_scale,
-            context=context,
-        )
+        if bin_execute:
+            self.value = self._bin_execute(
+                variable=variable,
+                runtime_params=runtime_params,
+                clock=clock,
+                time_scale=time_scale,
+                context=context,
+            )
+        else:
+            self.value = self._execute(
+                variable=variable,
+                runtime_params=runtime_params,
+                clock=clock,
+                time_scale=time_scale,
+                context=context,
+            )
 
         # # MODIFIED 3/3/17 OLD:
         # self.value = np.atleast_2d(self.value)
