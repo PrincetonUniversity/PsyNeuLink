@@ -228,14 +228,13 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Functions.Function import Integrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
-    import ControlMechanism, ALLOCATION_POLICY
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.Functions.Function import Integrator
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES
+from PsyNeuLink.Globals.Keywords import FUNCTION, INPUT_STATES, INIT__EXECUTE__METHOD_ONLY, ALL, \
+                                        CONTROL_PROJECTIONS, CONTROL_SIGNALS
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale

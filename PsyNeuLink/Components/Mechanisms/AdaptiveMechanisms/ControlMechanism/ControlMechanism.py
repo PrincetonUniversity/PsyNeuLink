@@ -312,15 +312,11 @@ from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection impo
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 from PsyNeuLink.Components.ShellClasses import Mechanism, System
 from PsyNeuLink.Components.States.State import _parse_state_spec
-from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import _parse_control_signal_spec
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import NAME, PARAMS, OWNER, INIT__EXECUTE__METHOD_ONLY, SYSTEM, MECHANISM, \
-                                        PARAMETER_STATE, OBJECTIVE_MECHANISM, \
-                                        PRODUCT, AUTO_ASSIGN_MATRIX, REFERENCE_VALUE, \
-                                        CONTROLLED_PARAM, PROJECTIONS, CONTROL_PROJECTIONS, CONTROL_SIGNAL, \
-                                        CONTROL_SIGNALS, CONTROL
-from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROLLED_PARAM, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, INIT__EXECUTE__METHOD_ONLY, MECHANISM, NAME, OBJECTIVE_MECHANISM, OWNER, PARAMETER_STATE, PARAMS, PRODUCT, REFERENCE_VALUE, SYSTEM
+from PsyNeuLink.Globals.Keywords import OWNER, NAME, REFERENCE_VALUE, PROJECTIONS, PARAMS, INIT__EXECUTE__METHOD_ONLY, \
+                                        SYSTEM, MECHANISM, PRODUCT, OBJECTIVE_MECHANISM, AUTO_ASSIGN_MATRIX, \
+                                        CONTROL, CONTROLLED_PARAM, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
