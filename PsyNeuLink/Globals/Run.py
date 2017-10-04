@@ -873,6 +873,10 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                                   format(mech.name, object.name, stimuli[mech]))
 
         for stim in stimuli[mech]:
+            # 10/3/17 CW: This could be smarter: if it's incompatible, we could try other ways of unpacking the
+            # stimulus, such as if the user wants to pass in a 2D array as the input each round, but only wants one
+            # round, they may pass in stimuli as [[1, 2], [3, 4]] which shouldn't be interpreted as two rounds
+            # ([1, 2] and [3, 4]) like we're doing here
             if not iscompatible(np.atleast_2d(stim), mech.instance_defaults.variable):
                 err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
                     format(stim, mech.name, mech.instance_defaults.variable)
@@ -882,7 +886,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                     err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
                                         " to represent the outside stimulus for the inhibition input state, and " \
                                         "for systems, put your inputs"
-                raise RunError(err_msg)
+                # raise RunError(err_msg)
 
     stim_lists = list(stimuli.values())
     num_input_sets = len(stim_lists[EXECUTION_SET_DIM])

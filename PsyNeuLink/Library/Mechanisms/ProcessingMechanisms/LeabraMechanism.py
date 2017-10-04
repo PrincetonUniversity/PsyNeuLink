@@ -83,7 +83,6 @@ class LeabraFunction(Function_Base):
                          context=context)
 
     def _validate_variable(self, variable, context=None):
-        print("about to validate variable, which is ", variable)
         if not isinstance(variable, (list, np.ndarray, numbers.Number)):
             raise LeabraError("Input Error: the input variable ({}) was of type {}, but instead should be a list, "
                               "numpy array, or number.".format(variable, type(variable)))
@@ -114,9 +113,7 @@ class LeabraFunction(Function_Base):
                  time_scale=TimeScale.TRIAL,
                  context=None):
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-        print('about to execute with variable, which is ', variable)
         if (not hasattr(self, "owner")) or (not hasattr(self.owner, "training_flag")) or self.owner.training_flag is False:
-            print('variable about to be tested is: ', variable)
             variable = convert_to_2d_input(variable)[0]  # FIX: buggy, doesn't handle lists well. hacky conversion from 2D arrays into 1D arrays
             return test_network(self.network, input_pattern=variable)  # potentially append an array of zeros to make output format consistent
         else:
@@ -130,7 +127,7 @@ class LeabraFunction(Function_Base):
                                   "containing two vectors, corresponding to the input (which should be length {}) and "
                                   "the training target (which should be length {})".
                                   format(variable, self.network.layers[0], self.network.layers[-1].size))
-            return train_network(self.network, input_pattern=variable[0], learning_target=variable[1])
+            return train_network(self.network, input_pattern=variable[0], output_pattern=variable[1])
 
 class LeabraMechanism(ProcessingMechanism_Base):
     """
@@ -239,13 +236,17 @@ def build_network(n_input, n_output, n_hidden, hidden_sizes=None):
 def test_network(network, input_pattern):
     assert len(network.layers[0].units) == len(input_pattern)
     network.set_inputs({'input_layer': input_pattern})
-    for i in range(3):
-        network.quarter()
-    acts = network.layers[-1].activities
-    network.quarter()
-    return acts
 
-def train_network(network, input_pattern, learning_target):
+    network.trial()
+    return [unit.act_m for unit in network.layers[-1].units]
+
+def train_network(network, input_pattern, output_pattern):
+    """Run one trial on the network"""
     assert len(network.layers[0].units) == len(input_pattern)
 
-    return np.zeros(len(input_pattern))
+    assert len(network.layers[-1].units) == len(output_pattern)
+    network.set_inputs({'input_layer': input_pattern})
+    network.set_outputs({'output_layer': output_pattern})
+
+    network.trial()
+    return [unit.act_m for unit in network.layers[-1].units]
