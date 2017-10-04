@@ -2237,6 +2237,16 @@ class TransferFunction(Function_Base):
         setattr(self, self.additive_param, val)
 
 
+    def get_context_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            context_type = ir.LiteralStructType([])
+        return context_type
+
+
+    def get_context_initializer(self):
+        return tuple([])
+
+
 class Linear(TransferFunction):  # -------------------------------------------------------------------------------------
     """
     Linear(                \
@@ -4837,11 +4847,19 @@ class AdaptiveIntegrator(
             param_type = ir.LiteralStructType([ctx.float_ty, ctx.float_ty, noise_ty])
         return param_type
 
+
     def get_context_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
             previous_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
-            param_type = ir.LiteralStructType([previous_ty])
-        return param_type
+            context_type = ir.LiteralStructType([previous_ty])
+        return context_type
+
+
+    def get_context_initializer(self, data=None):
+        if data is None:
+            data = [0.0 for x in range(self._variable_length)]
+        return tuple([tuple(data)])
+
 
     def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         rate_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
