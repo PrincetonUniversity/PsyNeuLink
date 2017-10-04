@@ -5010,16 +5010,35 @@ class FHNIntegrator(
 
             dw/dt = b*v - c*w
 
-        In order to reproduce the modified FHN model, the FHNIntegrator's parameters must be set as follows:
+        In order to reproduce the modified FHN equation for dv/dt, the following FHNIntegrator parameters must be set:
+
+            b_v = c_v = f_v = time_constant_v = 1.0
+
+            a_v = e_v = -1.0
+
+            d_v = 0.0;
+
+        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dv/dt then correspond to the modified FHN equation for dv/dt as follows:
+
+            (modified FHN representation --> PsyNeuLink representation)
 
             a --> `threshold <FHNIntegrator.threshold>`
 
-            time_constant_w = mode = time_constant_v = a_v = b_v = f_v = 1.0
+            I_ext --> `variable <FHNIntegrator.variable>`
 
-            c_v = e_v = -1.0
+        In order to reproduce the modified FHN equation for dw/dt, the following FHNIntegrator parameters must be set:
 
-            uncorrelated_activity = d_v = 0.0;
+            mode = time_constant_w = 1.0
 
+            c_w = uncorrelated_activity = 0.0;
+
+        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dw/dt then correspond to the modified FHN equation for dw/dt as follows:
+
+            (modified FHN representation --> PsyNeuLink representation)
+
+            b --> `a_w <FHNIntegrator.a_w>`
+
+            c --> NEGATIVE `b_w <FHNIntegrator.b_w>`
 
         `Mahbub Khan (2013) <http://pcwww.liv.ac.uk/~bnvasiev/Past%20students/Mahbub_549.pdf>`_ provides a nice summary
         of why this formulation is useful.
@@ -5028,21 +5047,48 @@ class FHNIntegrator(
     `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ **Implementation
     of the Modified FHN Model**
 
-            time_constant_v * dv/dt = v*(a-v)(v-1) -w + b*I_ext
+            tau_v * dv/dt = v*(a-v)(v-1) - w + b*f(X_1)
 
-            time_constant_w * dw/dt = c*v + (1-c)*d - w
+            tau_w * dw/dt = c*v + (1-c)*d - w
 
-        In order to reproduce the Gilzenrat formulation, the FHNIntegrator's parameters must be set as follows:
+        In order to reproduce the Gilzenrat equation for dv/dt, the following FHNIntegrator parameters must be set:
+
+            b_v = c_v = 1.0
+
+            a_v = e_v = -1.0
+
+            d_v = 0.0;
+
+        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dv/dt then correspond to the Gilzenrat equation for dv/dt as follows:
+
+            (Gilzenrat representation --> PsyNeuLink representation)
 
             a --> `threshold <FHNIntegrator.threshold>`
 
-            b --> negative `e_v <FHNIntegrator.e_v>`
+            b --> `f_v <FHNIntegrator.f_v>`
+
+            f(X_1) --> `variable <FHNIntegrator.variable>`
+
+            tau_v --> `time_constant_v <FHNIntegrator.time_constant_v>`
+
+
+        In order to reproduce the Gilzenrat equation for dw/dt, the following FHNIntegrator parameters must be set:
+
+            a_w = 1.0
+
+            b_w = -1.0
+
+            c_w = 0.0;
+
+        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dw/dt then correspond to the Gilzenrat equation for dw/dt as follows:
+
+            (Gilzenrat representation --> PsyNeuLink representation)
 
             c --> `mode <FHNIntegrator.mode>`
 
             d --> `uncorrelated_activity <FHNIntegrator.uncorrelated_activity>`
 
-            a_v = b_v = f_v = 1.0 ; c_v = -1.0 ; d_v = 0.0;
+            tau_w --> `time_constant_w <FHNIntegrator.time_constant_w>`
 
 
     Arguments
@@ -5263,7 +5309,7 @@ class FHNIntegrator(
                  scale=1.0,
                  initial_w=0.0,
                  initial_v=0.0,
-                 time_step_size=0.1,
+                 time_step_size=0.05,
                  t_0=0.0,
                  a_v=-1/3,
                  b_v=0.0,
@@ -5324,62 +5370,57 @@ class FHNIntegrator(
 
     def _runge_kutta_4_FHN(self, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size):
 
-        if callable(slope_v):
+        # First approximation
+        # v is approximately previous_value_v
+        # w is approximately previous_value_w
 
-            # First approximation
-            # v is approximately previous_value_v
-            # w is approximately previous_value_w
+        slope_v_approx_1 = slope_v(previous_time,
+                                   previous_value_v,
+                                   previous_value_w)
 
-            slope_v_approx_1 = slope_v(previous_time,
-                                       previous_value_v,
-                                       previous_value_w)
+        slope_w_approx_1 = slope_w(previous_time,
+                                   previous_value_w,
+                                   previous_value_v)
+        # Second approximation
+        # v is approximately previous_value_v + 0.5 * time_step_size * slope_w_approx_1
+        # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_1
 
-            slope_w_approx_1 = slope_w(previous_time,
-                                       previous_value_w,
-                                       previous_value_v)
-            # Second approximation
-            # v is approximately previous_value_v + 0.5 * time_step_size * slope_w_approx_1
-            # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_1
+        slope_v_approx_2 = slope_v(previous_time + time_step_size/2,
+                                   previous_value_v + (0.5 * time_step_size * slope_v_approx_1),
+                                   previous_value_w + (0.5 * time_step_size * slope_w_approx_1))
 
-            slope_v_approx_2 = slope_v(previous_time + time_step_size/2,
-                                       previous_value_v + (0.5 * time_step_size * slope_v_approx_1),
-                                       previous_value_w + (0.5 * time_step_size * slope_w_approx_1))
+        slope_w_approx_2 = slope_w(previous_time + time_step_size/2,
+                                   previous_value_w + (0.5 * time_step_size * slope_w_approx_1),
+                                   previous_value_v + (0.5 * time_step_size * slope_v_approx_1))
 
-            slope_w_approx_2 = slope_w(previous_time + time_step_size/2,
-                                       previous_value_w + (0.5 * time_step_size * slope_w_approx_1),
-                                       previous_value_v + (0.5 * time_step_size * slope_v_approx_1))
+        # Third approximation
+        # v is approximately previous_value_v + 0.5 * time_step_size * slope_v_approx_2
+        # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_2
 
-            # Third approximation
-            # v is approximately previous_value_v + 0.5 * time_step_size * slope_v_approx_2
-            # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_2
+        slope_v_approx_3 = slope_v(previous_time + time_step_size/2,
+                                   previous_value_v + (0.5 * time_step_size * slope_v_approx_2),
+                                   previous_value_w + (0.5 * time_step_size * slope_w_approx_2))
 
-            slope_v_approx_3 = slope_v(previous_time + time_step_size/2,
-                                       previous_value_v + (0.5 * time_step_size * slope_v_approx_2),
-                                       previous_value_w + (0.5 * time_step_size * slope_w_approx_2))
+        slope_w_approx_3 = slope_w(previous_time + time_step_size/2,
+                                   previous_value_w + (0.5 * time_step_size * slope_w_approx_2),
+                                   previous_value_v + (0.5 * time_step_size * slope_v_approx_2))
 
-            slope_w_approx_3 = slope_w(previous_time + time_step_size/2,
-                                       previous_value_w + (0.5 * time_step_size * slope_w_approx_2),
-                                       previous_value_v + (0.5 * time_step_size * slope_v_approx_2))
+        # Fourth approximation
+        # v is approximately previous_value_v + time_step_size * slope_v_approx_3
+        # w is approximately previous_value_w + time_step_size * slope_w_approx_3
 
-            # Fourth approximation
-            # v is approximately previous_value_v + time_step_size * slope_v_approx_3
-            # w is approximately previous_value_w + time_step_size * slope_w_approx_3
+        slope_v_approx_4 = slope_v(previous_time + time_step_size,
+                                   previous_value_v + (time_step_size * slope_v_approx_3),
+                                   previous_value_w + (time_step_size * slope_v_approx_3))
 
-            slope_v_approx_4 = slope_v(previous_time + time_step_size,
-                                       previous_value_v + (time_step_size * slope_v_approx_3),
-                                       previous_value_w + (time_step_size * slope_v_approx_3))
+        slope_w_approx_4 = slope_w(previous_time + time_step_size,
+                                   previous_value_w + (time_step_size * slope_v_approx_3),
+                                   previous_value_v + (time_step_size * slope_v_approx_3))
 
-            slope_w_approx_4 = slope_w(previous_time + time_step_size,
-                                       previous_value_w + (time_step_size * slope_v_approx_3),
-                                       previous_value_v + (time_step_size * slope_v_approx_3))
-
-            new_v = previous_value_v \
-                    + (time_step_size/6)*(slope_v_approx_1 + 2*(slope_v_approx_2 + slope_v_approx_3) + slope_v_approx_4)
-            new_w = previous_value_w \
-                    + (time_step_size/6)*(slope_w_approx_1 + 2*(slope_w_approx_2 + slope_w_approx_3) + slope_w_approx_4)
-
-        # else:
-        #     value = previous_value + time_step_size*slope
+        new_v = previous_value_v \
+                + (time_step_size/6)*(slope_v_approx_1 + 2*(slope_v_approx_2 + slope_v_approx_3) + slope_v_approx_4)
+        new_w = previous_value_w \
+                + (time_step_size/6)*(slope_w_approx_1 + 2*(slope_w_approx_2 + slope_w_approx_3) + slope_w_approx_4)
 
         return new_v, new_w
 
@@ -5415,17 +5456,30 @@ class FHNIntegrator(
         current value of v , current value of w : float, list, or np.array
 
         """
-        print("self.time_step_size = ", self.time_step_size)
         def dv_dt(time, v, w):
 
-            # val= (self.a_v*(v**3) + (1+self.threshold)*self.b_v*(v**2) + (-self.threshold)*self.c_v*v + self.d_v
-            #         + self.e_v*self.previous_w + self.f_v*variable)/self.time_constant_v
-            val = v - (v**3)/3 - w + variable
+            val= (self.a_v*(v**3) + (1+self.threshold)*self.b_v*(v**2) + (-self.threshold)*self.c_v*v + self.d_v
+                    + self.e_v*self.previous_w + self.f_v*variable)/self.time_constant_v
+
+            # Standard coefficients - hardcoded for testing
+            # val = v - (v**3)/3 - w + variable
+
+            # Gilzenrat paper - hardcoded for testing
+            # val = (v*(v-0.5)*(1-v) - w + variable)/0.01
+
             return val
+
         def dw_dt(time, w, v):
-            # val = (self.mode*self.a_w*self.previous_v + self.b_w*w + self.c_w +
-            #         (1-self.mode)*self.uncorrelated_activity)/self.time_constant_w
-            val = (v + 0.7 - 0.8*w)/12.5
+            val = (self.mode*self.a_w*self.previous_v + self.b_w*w + self.c_w +
+                    (1-self.mode)*self.uncorrelated_activity)/self.time_constant_w
+
+            # Standard coefficients - hardcoded for testing
+            # val = (v + 0.7 - 0.8*w)/12.5
+
+            #Gilzenrat paper - hardcoded for testing
+
+            # val = (v - 0.5*w)
+
             return val
 
         # new_v = self._runge_kutta_4(previous_time=self.previous_t,
@@ -5448,9 +5502,9 @@ class FHNIntegrator(
         if not context or INITIALIZING not in context:
             self.previous_v = approximate_values[0]
             self.previous_w = approximate_values[1]
-            self.previous_t += self.time_step_size
+            self.previous_t += self.time_step_size[0]
 
-        return approximate_values
+        return self.previous_v, self.previous_w, self.previous_t
 
 class AccumulatorIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
