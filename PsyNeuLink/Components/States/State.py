@@ -1906,85 +1906,65 @@ def _instantiate_state_list(owner,
         states = ContentAddressableList(component_type=State_Base,
                                         name=owner.name+' ContentAddressableList of ' + state_param_identifier)
 
-        # Instantiate State for entry in list or dict
-        # Note: if state_entries is a list, state_spec is the item, and key is its index in the list
-        for id, state_spec in state_entries if isinstance(state_entries, dict) else enumerate(state_entries):
+        # Instantiate State for entry in list
+        for index, state_spec in enumerate(state_entries):
             state_name = ""
 
-            # State_entries is a dict, so use:
-            # - entry index as State's name
-            # - entry value as state_spec
-            if isinstance(id, str):
-                state_name = id
-                state_reference_value = reference_value
-                # FIX: 10/3/17 - ??IF state_spec IS AN number
-                #      CONVERT state_spec TO A STATE_SPECIFICATION DICT HERE
-                #      ASSIGN id TO NAME, AND ASSIGN number TO REFERENCE VALUE??
-                # Note: state_spec has already been assigned to entry value by enumeration above
+            # If state_spec is a string, then use:
+            # - string as the name for a default State
+            # - index to get corresponding value from reference_value as state_spec
+            # - assign same item of reference_value as the constraint
+            if isinstance(state_spec, str):
+                # Use state_spec as state_name if it has not yet been used
+                if not state_name is state_spec and not state_name in states:
+                    state_name = state_spec
+                # Add index suffix to name if it is already been used
+                # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
+                else:
+                    state_name = state_spec + '_' + str(index)
+                state_spec = reference_value[index]
+                state_reference_value = reference_value[index]
+
+            # FIX: 5/21/17  ADD, AND DEAL WITH state_spec AND state_constraint
+            # elif isinstance(state_spec, dict):
+            #     # If state_spec has NAME entry
+            #     if NAME in state_spec:
+            #         # If it has been used, add suffix to it
+            #         if state_name is state_spec[NAME]:
+            #             state_name = state_spec[NAME] + '_' + str(key)
+            #         # Otherwise, use it
+            #         else:
+            #             state_name = state_spec[NAME]
+            #     state_spec = ??
+            #     state_reference_value = ??
+
+
+            # If state_spec is NOT a string, then:
+            # - use default name (which is incremented for each instance in register_categories)
+            # - use item as state_spec (i.e., assume it is a specification for a State)
+            #   Note:  still need to get indexed element of reference_value,
+            #          since it was passed in as a 2D array (one for each State)
+            else:
+                # # MODIFIED 9/3/17 OLD:
+                # # If only one State, don't add index suffix
+                # if num_states == 1:
+                #     state_name = 'Default_' + state_param_identifier[:-1]
+                # # Add incremented index suffix for each State name
+                # else:
+                #     state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(index+1)
+                # MODIFIED 9/3/17 NEW:
+                # If only one State, don't add index suffix
+                if num_states == 1:
+                    state_name = 'Default_' + state_param_identifier
+                # Add incremented index suffix for each State name
+                else:
+                    state_name = 'Default_' + state_param_identifier + "-" + str(index+1)
+                # MODIFIED 9/3/17 END
                 # If it is an "exposed" number, make it a 1d np.array
                 if isinstance(state_spec, numbers.Number):
                     state_spec = np.atleast_1d(state_spec)
-                state_params = None  # These should be in state_spec
 
-            # State_entries is a list
-            # FIX: 10/3/17 - WHAT FORMAT IS THIS?  SHOULDN'T IT BE HANDLED IN _parse_state_spec, AND NOT HERE?
-            else:
-                index = id
-                # If state_spec is a string, then use:
-                # - string as the name for a default State
-                # - index (index in list) to get corresponding value from reference_value as state_spec
-                # - assign same item of reference_value as the constraint
-                if isinstance(state_spec, str):
-                    # Use state_spec as state_name if it has not yet been used
-                    if not state_name is state_spec and not state_name in states:
-                        state_name = state_spec
-                    # Add index suffix to name if it is already been used
-                    # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
-                    else:
-                        state_name = state_spec + '_' + str(index)
-                    state_spec = reference_value[index]
-                    state_reference_value = reference_value[index]
-
-                # FIX: 5/21/17  ADD, AND DEAL WITH state_spec AND state_constraint
-                # elif isinstance(state_spec, dict):
-                #     # If state_spec has NAME entry
-                #     if NAME in state_spec:
-                #         # If it has been used, add suffix to it
-                #         if state_name is state_spec[NAME]:
-                #             state_name = state_spec[NAME] + '_' + str(key)
-                #         # Otherwise, use it
-                #         else:
-                #             state_name = state_spec[NAME]
-                #     state_spec = ??
-                #     state_reference_value = ??
-
-
-                # If state_spec is NOT a string, then:
-                # - use default name (which is incremented for each instance in register_categories)
-                # - use item as state_spec (i.e., assume it is a specification for a State)
-                #   Note:  still need to get indexed element of reference_value,
-                #          since it was passed in as a 2D array (one for each State)
-                else:
-                    # # MODIFIED 9/3/17 OLD:
-                    # # If only one State, don't add index suffix
-                    # if num_states == 1:
-                    #     state_name = 'Default_' + state_param_identifier[:-1]
-                    # # Add incremented index suffix for each State name
-                    # else:
-                    #     state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(index+1)
-                    # MODIFIED 9/3/17 NEW:
-                    # If only one State, don't add index suffix
-                    if num_states == 1:
-                        state_name = 'Default_' + state_param_identifier
-                    # Add incremented index suffix for each State name
-                    else:
-                        state_name = 'Default_' + state_param_identifier + "-" + str(index+1)
-                    # MODIFIED 9/3/17 END
-                    # If it is an "exposed" number, make it a 1d np.array
-                    if isinstance(state_spec, numbers.Number):
-                        state_spec = np.atleast_1d(state_spec)
-
-                    state_reference_value = reference_value[index]
+                state_reference_value = reference_value[index]
 
             state = _instantiate_state(owner=owner,
                                        state_type=state_type,
