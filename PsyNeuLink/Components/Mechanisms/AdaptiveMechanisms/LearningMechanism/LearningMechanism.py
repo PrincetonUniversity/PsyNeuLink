@@ -86,7 +86,7 @@ required to implement learning that do not already exist are also instantiated. 
 Explicit Creation
 ~~~~~~~~~~~~~~~~~
 
-If a LearningMechanism is created explicitly (using its constructor), then it **variable** and **error_source**
+If a LearningMechanism is created explicitly (using its constructor), then its **variable** and **error_source**
 arguments must be specified.  The **variable** must have three items that are compatible (in number and type) with the
 `value <InputState.value>` of the the LearningMechanism's three `InputStates <LearningMechanism_InputStates>`.  The
 **error_source** must be a `ComparatorMechanism` for `single layer learning <LearningMechanism_Single_Layer_Learning>`

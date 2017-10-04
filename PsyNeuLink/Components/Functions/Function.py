@@ -7818,8 +7818,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         return weight_change_matrix
 
 
-class Reinforcement(
-    LearningFunction):  # -------------------------------------------------------------------------------
+class Reinforcement(LearningFunction):  # -------------------------------------------------------------------------------
     """
     Reinforcement(                                       \
         default_variable=ClassDefaults.variable,         \
@@ -8423,36 +8422,19 @@ class BackPropagation(LearningFunction):
         return [weight_change_matrix, dE_dW]
 
 
-class TDLearning(LearningFunction):
+class TDLearning(Reinforcement):
     componentName = TDLEARNING_FUNCTION
 
-    class ClassDefaults(LearningFunction.ClassDefaults):
-        variable = [[0], [0], [0]]
-
-    default_learning_rate = 0.05
-    default_discount_factor = 0.5
-    default_initial_weights = [[1], [1], [1]]
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        WEIGHTS: None,
-        CURRENT_STATE: None,
-        Q_MATRIX: None
-    })
-
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
-                 reward: Union[List, np.ndarray] = None,
-                 learning_rate=default_learning_rate,
-                 discount_factor=default_discount_factor,
-                 initial_weights=None,
-                 goal_state=0,
-                 initial_state=None,
-                 initial_iterations=10,
+                 default_variable=Reinforcement.ClassDefaults.variable,
+                 reward:tc.optional(tc.any(np.ndarray, List))=None,
+                 learning_rate=Reinforcement.default_learning_rate,
                  params=None,
                  owner=None,
                  prefs=None,
                  context: str = componentName + INITIALIZING):
         """
+        Dummy function used to implement TD Learning via Reinforcement Learning
 
         Parameters
         ----------
@@ -8460,193 +8442,47 @@ class TDLearning(LearningFunction):
 
         learning_rate: float: default 0.05
 
-        reward: 2d np.ndarray or List: default None
-            2-dimensional Numpy array or List representing the reward at
-            each
-            state for taking an action. States are represented by rows and
-            actions are represented by columns. Invalid actions in a
-            state are
-            represented with `None`. All valid actions should have a
-            numerical
-            value.
+        reward: 1d np.ndarray or List: default None
+            1-dimensional Numpy array or List representing the reward at each
+            timestep.
         discount_factor: float: default 0.5
-            the discount factor or gamma value in the Q-learning
-            algorithm. Must
-            be between 0 and 1 inclusive. Values closer to 1 will prioritize
-            future states. Values closer to 0 will prioritize more immediate
-            states.
+            the discount factor or gamma value. Must
+            be between 0 and 1 inclusive. Values closer to 1 will weight
+            timesteps further from the reward in the past higher. Values closer
+            to 0 will weight time steps closer to reward higher.
         initial_weights: 2d np.ndarray or List: default None
             initial weights given to each action
         goal_state: int: default None
-            the goal state to reach represented as an integer. Must be
-            within the
-            range 0 - `len(reward)`
+            the goal state to reach represented as an integer. Must be within
+            the range 0 - `len(reward)`
         initial_state: int: default None
-            the state to start in represented as an integer. Must be
-            within the
+            the state to start in represented as an integer. Must be within the
             range 0 - `len(reward)`
         initial_action: int: default None
-            first action to take from the `initial_state`. Must be within
-            the
-            range 0 - `len(reward[initial_state])` and must correspond to
-            a valid
-            action in `initial_state`
+            first action to take from the `initial_state`. Must be within the
+            range 0 - `len(reward[initial_state])` and must correspond to a
+            valid action in `initial_state`
         params
         owner
         prefs
         context
         """
-        self.name = "TDLearning Function"
-        try:
-            print(self.paramsCurrent)
-        except AttributeError:
-            pass
-
-        if reward is None:
-            try:
-                reward = params['reward']
-            except KeyError:
-                raise FunctionError("Reward matrix must be provided either as a"
-                                    "keyword argument or via the params"
-                                    "dictionary.")
-
-        q_matrix = np.zeros(np.shape(reward), dtype=np.int32)
-
-        if not initial_weights:
-            initial_weights = np.ones(len(reward))
 
         params = self._assign_args_to_param_dicts(
             learning_rate=learning_rate,
             reward=reward,
-            discount_factor=discount_factor,
-            initial_weights=initial_weights,
-            initial_state=initial_state,
-            goal_state=goal_state,
-            initial_iterations=initial_iterations,
             params=params)
-
-        params[WEIGHTS] = initial_weights
-        params[CURRENT_STATE] = initial_state
-        params[Q_MATRIX] = q_matrix
-        self.q_matrix = q_matrix
-        # self.reward = reward
 
         super().__init__(default_variable, params, context=context, owner=owner,
                          prefs=prefs)
 
-        # populate Q-matrix
-        print("Completing initialization...")
-        self._initialize_q_matrix(context)
-        print("_____________________________________________________________")
-        # TODO: add paths keyword argument
-        # look at where SoftMax is called
-        # Look at RL
-        # actor, critic, learner
 
     def _validate_variable(self, variable, context=None):
         super()._validate_variable(variable, context)
 
-    def function(self,
-                 variable=None,
-                 params=None,
+    def function(self, variable=None, params=None, time_scale=TimeScale.TRIAL,
                  context=None):
-        self._check_args(variable=variable, params=params, context=context)
-
-        if context and "INITIALIZING" in context:
-            if variable is not None:
-                print("variable:")
-                print(variable)
-                return np.ones(len(variable[0])), np.zeros(len(variable[0]))
-
-            # return np.zeros(variable.shape), np.zeros(len(variable[0]))
-            return self.default_initial_weights, np.zeros(np.shape(self.default_initial_weights))
-
-        weights = self.paramsCurrent[WEIGHTS]
-        current_state = self.paramsCurrent[CURRENT_STATE]
-        goal_state = self.paramsCurrent[GOAL_STATE]
-        initial_weights = self.paramsCurrent[INITIAL_WEIGHTS]
-        learning_rate = self.paramsCurrent[LEARNING_RATE]
-        discount_factor = self.paramsCurrent[DISCOUNT_FACTOR]
-        # reward -> target (argument to execute or run method of composition)
-        reward = self.paramsCurrent[REWARD]
-        q_matrix = self.paramsCurrent[Q_MATRIX]
-
-        print("Reward shape: {}".format(np.shape(reward)))
-
-        if current_state == goal_state:
-            return weights
-
-        # TODO: change this to highest q-value of next state
-        next_action = np.argmax(q_matrix[current_state])
-        print("Current state: {}".format(current_state))
-        print("Next action: {}".format(next_action))
-        weights[current_state] = weights[current_state] + (learning_rate * (
-            discount_factor * np.max(q_matrix[next_action]) +
-            reward[current_state][next_action] -
-            q_matrix[current_state][next_action]))  # * np.gradient(q_matrix))
-
-        self.paramsCurrent[CURRENT_STATE] = next_action
-        self.paramsCurrent[WEIGHTS] = weights
-        print("weights = {}".format(weights))
-        print("reward = {}".format(reward))
-        return weights - initial_weights, reward
-
-    def _initialize_q_matrix(self, context):
-
-        q_matrix = self.paramsCurrent[Q_MATRIX]
-        goal_state = self.paramsCurrent[GOAL_STATE]
-        reward = self.paramsCurrent[REWARD]
-        num_iterations = self.paramsCurrent[INITIAL_ITERATIONS]
-        discount_factor = self.paramsCurrent[DISCOUNT_FACTOR]
-
-        if np.any(q_matrix):
-            return
-
-        if np.size(q_matrix) != np.size(reward):
-            q_matrix = np.zeros(np.shape(reward), dtype=np.int32)
-
-        if isinstance(goal_state, np.ndarray):
-            goal_state = goal_state[0].astype(np.int64)
-
-        if isinstance(num_iterations, np.ndarray):
-            num_iterations = num_iterations[0].astype(np.int64)
-
-        if isinstance(discount_factor, np.ndarray):
-            discount_factor = discount_factor[0].astype(np.int64)
-
-        for iteration in range(num_iterations):
-            for initial_state in range(len(reward)):
-                if goal_state == initial_state:
-                    continue
-                current_state = initial_state
-                while current_state != goal_state:
-                    possible_next_states = np.concatenate(
-                        np.argwhere(~np.isnan(reward[current_state]))).ravel()
-                    next_action = possible_next_states[
-                        np.random.randint(len(possible_next_states))]
-                    if np.isnan(reward[current_state][next_action]):
-                        continue
-                    max_q = np.nanmax(q_matrix[next_action])
-                    q_matrix[current_state][next_action] = \
-                        reward[current_state][next_action] + discount_factor * max_q
-                    current_state = next_action
-
-                for _ in range(len(reward)):
-                    possible_next_states = np.concatenate(
-                        np.argwhere(~np.isnan(reward[current_state]))).ravel()
-                    next_action = possible_next_states[
-                        np.random.randint(len(possible_next_states))]
-                    if np.isnan(reward[current_state][next_action]):
-                        continue
-                    max_q = np.nanmax(q_matrix[next_action])
-                    q_matrix[current_state][next_action] = \
-                        reward[current_state][next_action] + discount_factor * max_q
-                    current_state = next_action
-
-        self.paramsCurrent[Q_MATRIX] = q_matrix
-
-
-
+        super().function()
 
 
 # region *****************************************   OBJECTIVE FUNCTIONS

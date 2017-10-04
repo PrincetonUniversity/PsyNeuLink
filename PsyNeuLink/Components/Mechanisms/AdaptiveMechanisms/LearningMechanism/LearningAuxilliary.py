@@ -380,6 +380,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     #      THESE SHOULD BE MOVED (ALONG WITH THE SPECIFICATION FOR LEARNING) TO A DEDICATED LEARNING SPEC
     #      FOR PROCESS AND SYSTEM, RATHER THAN USING A LearningProjection
     # Get function used for learning and the learning_rate from their specification in the LearningProjection
+    # FIXME: learning_function is deprecated
     learning_function = learning_projection.learning_function
     learning_rate = learning_projection.learning_rate
 
@@ -414,6 +415,32 @@ def _instantiate_learning_components(learning_projection, context=None):
         learning_function = Reinforcement(default_variable=[activation_input, activation_output, error_signal],
                                           activation_function=lc.activation_mech_fct,
                                           learning_rate=learning_rate)
+
+    elif learning_function.componentName is TDLEARNING_FUNCTION:
+        activation_input = np.zeros_like(lc.activation_mech_input)
+        activation_output = np.zeros_like(lc.activation_mech_output)
+
+        error_output = error_signal = np.array([0])
+
+        learning_function = TDLearning(default_variable=[activation_input,
+                                                         activation_output,
+                                                         error_signal],
+                                       learning_rate=learning_rate)
+
+        if is_target:
+            if objective_mechanism is None:
+                sample_input = target_input = error_output
+                objective_mechanism = PredictionErrorMechanism(sample=lc.activation_mech_input,
+                                                               target=TARGET,
+                                                               input_states=[{
+                                                                   NAME: SAMPLE,
+                                                                   VARIABLE: sample_input
+                                                               }, {
+                                                                   NAME: TARGET,
+                                                                   VARIABLE: target_input
+                                                               }],
+                                                               name="{} {}".format(lc.activation_mech.name,
+                                                                                   PREDICTION_ERROR_MECHANISM))
 
     # BACKPROPAGATION LEARNING FUNCTION
     elif learning_function.componentName is BACKPROPAGATION_FUNCTION:
