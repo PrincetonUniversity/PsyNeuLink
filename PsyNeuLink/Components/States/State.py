@@ -317,7 +317,7 @@ from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _v
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
 from PsyNeuLink.Globals.Keywords import VARIABLE, SIZE, FUNCTION_PARAMS, NAME, OWNER, PARAMS, CONTEXT, EXECUTING, \
     MECHANISM, VALUE, STATE, STATES, STATE_PARAMS, STATE_TYPE, STATE_VALUE, WEIGHT, EXPONENT, PROJECTION, \
-    STANDARD_ARGS, STANDARD_OUTPUT_STATES, \
+    STANDARD_ARGS, STANDARD_OUTPUT_STATES, REFERENCE_VALUE,\
     PROJECTIONS, PATHWAY_PROJECTIONS, PROJECTION_PARAMS,  PROJECTION_TYPE, RECEIVER, SENDER, CONNECTIONS,\
     MAPPING_PROJECTION_PARAMS, MATRIX, MATRIX_KEYWORD_SET, \
     MODULATION, MODULATORY_SIGNAL, MODULATORY_PROJECTIONS, \
@@ -351,8 +351,6 @@ state_keywords.update({MECHANISM,
                        })
 
 state_type_keywords = {STATE_TYPE}
-REFERENCE_VALUE = 'reference_value'
-
 
 def _is_state_type (spec):
     if issubclass(spec, State):
@@ -2159,7 +2157,8 @@ def _instantiate_state(owner,                  # Object to which state will belo
     #    so, call constructor to instantiate State
 
     state_spec_dict = state_spec
-    state_variable = state_variable or state_spec_dict[VARIABLE]
+    # state_variable = state_variable or state_spec_dict[VARIABLE]
+    state_variable = state_spec_dict[VARIABLE]
 
     # Check that it's variable is compatible with reference_value, and if not, assign the latter as default variable
     if reference_value is not None and not iscompatible(state_variable, reference_value):
@@ -2185,7 +2184,8 @@ def _instantiate_state(owner,                  # Object to which state will belo
     #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
     reference_value = convert_to_np_array(reference_value,1)
 
-    state_spec_dict['reference_value'] = reference_value
+    state_spec_dict[REFERENCE_VALUE] = reference_value
+    state_spec_dict[VARIABLE] = state_variable
 
     # Implement default State
     # state = state_type(owner=owner,
