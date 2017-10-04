@@ -1968,9 +1968,52 @@ def _instantiate_state(context=None,
     """
 
     owner = state_spec[OWNER]
+
+    # If a State specification dictionary is specified in a *state_spec* argument,
+    #    move its entries out of the into the local state_spec dict to be passed to _parse_state_spec
+    #    delete its values from the State specification dictionary, so that only the state-specific ones remain
+    if 'state_spec' in state_spec and isinstance(state_spec['state_spec'], dict):
+        state_spec.update(state_spec['state_spec'])
+        del state_spec['state_spec']
+    _parse_state_spec(**state_spec)
+
     parsed_state_spec = _parse_state_spec(**state_spec)
 
     # FIX: 10/3/17: HANDLE NAME HERE (GET CODE FROM ABOVE)
+            # if not state_name is state_spec and not state_name in states:
+            #     state_name = state_spec
+            # # Add index suffix to name if it is already been used
+            # # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
+            # else:
+            #     state_name = state_spec + '_' + str(index)
+            # state_spec_dict[NAME] = state_name
+
+            # # If state_spec has NAME entry
+            # if NAME in state_spec:
+            #     # If it has been used, add suffix to it
+            #     if state_name is state_spec[NAME]:
+            #         state_name = state_spec[NAME] + '_' + str(key)
+            #     # Otherwise, use it
+            #     else:
+            #         state_name = state_spec[NAME]
+            # state_spec_dict[NAME] = state_name
+
+            # # # MODIFIED 9/3/17 OLD:
+            # # # If only one State, don't add index suffix
+            # # if num_states == 1:
+            # #     state_name = 'Default_' + state_param_identifier[:-1]
+            # # # Add incremented index suffix for each State name
+            # # else:
+            # #     state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(index+1)
+            # # MODIFIED 9/3/17 NEW:
+            # # If only one State, don't add index suffix
+            # if num_states == 1:
+            #     state_name = 'Default_' + state_param_identifier
+            # # Add incremented index suffix for each State name
+            # else:
+            #     state_name = 'Default_' + state_param_identifier + "-" + str(index+1)
+            # # MODIFIED 9/3/17 END
+            # # If it is an "exposed" number, make it a 1d np.array
 
 
     # STATE SPECIFICATION IS A State OBJECT ***************************************
@@ -1984,7 +2027,8 @@ def _instantiate_state(context=None,
         state = parsed_state_spec
 
         # State initialization was deferred (owner or reference_value was missing), so
-        #    assign owner, variable, and/or reference_value if they were not specified
+        #    assign owner, variable, and/or reference_value
+        #    if they were not specified in call to _instantiate_state
         if state.init_status is InitStatus.DEFERRED_INITIALIZATION:
             if not state.init_args[OWNER]:
                 state.init_args[OWNER] = owner
@@ -2039,9 +2083,6 @@ def _instantiate_state(context=None,
     # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from ComponentPreferenceSet)
     # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its owner;
 
-    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
-    state_spec_dict[REFERENCE_VALUE] = convert_to_np_array(reference_value,1)
-
     # Implement default State
     state = state_spec_dict[STATE_TYPE](**state_spec_dict, context=context)
 
@@ -2056,74 +2097,75 @@ def _instantiate_state(context=None,
 
     return state
 
-def _check_parameter_state_value(owner, param_name, value):
-    """Check that parameter value (<ParameterState>.value) is compatible with value in paramClassDefault
+# def _check_parameter_state_value(owner, param_name, value):
+#     """Check that parameter value (<ParameterState>.value) is compatible with value in paramClassDefault
+#
+#     :param param_name: (str)
+#     :param value: (value)
+#     :return: (value)
+#     """
+#     default_value = owner.paramClassDefaults[param_name]
+#     if iscompatible(value, default_value):
+#         return value
+#     else:
+#         if owner.prefs.verbosePref:
+#             print("Format is incorrect for value ({0}) of {1} in {2};  default ({3}) will be used.".
+#                   format(value, param_name, owner.name, default_value))
+#         return default_value
 
-    :param param_name: (str)
-    :param value: (value)
-    :return: (value)
-    """
-    default_value = owner.paramClassDefaults[param_name]
-    if iscompatible(value, default_value):
-        return value
-    else:
-        if owner.prefs.verbosePref:
-            print("Format is incorrect for value ({0}) of {1} in {2};  default ({3}) will be used.".
-                  format(value, param_name, owner.name, default_value))
-        return default_value
-
-def _check_state_ownership(owner, param_name, mechanism_state):
-    """Check whether State's owner is owner and if not offer options how to handle it
-
-    If State's owner is not owner, options offered to:
-    - reassign it to owner
-    - make a copy and assign to owner
-    - return None => caller should assign default
-
-    :param param_name: (str)
-    :param mechanism_state: (State)
-    :param context: (str)
-    :return: (State or None)
-    """
-
-    if mechanism_state.owner != owner:
-        reassign = input("\nState for \'{0}\' parameter, assigned to {1} in {2}, already belongs to {3}. "
-                         "You can reassign it (r), copy it (c), or assign default (d):".
-                         format(mechanism_state.name, param_name, owner.name,
-                                mechanism_state.owner.name))
-        while reassign != 'r' and reassign != 'c' and reassign != 'd':
-            reassign = input("\nReassign (r), copy (c), or default (d):".
-                             format(mechanism_state.name, param_name, owner.name,
-                                    mechanism_state.owner.name))
-
-            if reassign == 'r':
-                while reassign != 'y' and reassign != 'n':
-                    reassign = input("\nYou are certain you want to reassign it {0}? (y/n):".
-                                     format(param_name))
-                if reassign == 'y':
-                    # Note: assumed that parameters have already been checked for compatibility with assignment
-                    return mechanism_state
-
-        # Make copy of state
-        if reassign == 'c':
-            import copy
-            # # MODIFIED 10/28/16 OLD:
-            # mechanism_state = copy.deepcopy(mechanism_state)
-            # MODIFIED 10/28/16 NEW:
-            # if owner.verbosePref:
-                # warnings.warn("WARNING: at present, 'deepcopy' can be used to copy States, "
-                #               "so some components of {} might be missing".format(mechanism_state.name))
-            print("WARNING: at present, 'deepcopy' can be used to copy states, "
-                  "so some Components of {} assigned to {} might be missing".
-                  format(mechanism_state.name, append_type_to_name(owner)))
-            mechanism_state = copy.copy(mechanism_state)
-            # MODIFIED 10/28/16 END
-
-        # Assign owner to chosen state
-        mechanism_state.owner = owner
-    return mechanism_state
+# def _check_state_ownership(owner, param_name, mechanism_state):
+#     """Check whether State's owner is owner and if not offer options how to handle it
+#
+#     If State's owner is not owner, options offered to:
+#     - reassign it to owner
+#     - make a copy and assign to owner
+#     - return None => caller should assign default
+#
+#     :param param_name: (str)
+#     :param mechanism_state: (State)
+#     :param context: (str)
+#     :return: (State or None)
+#     """
+#
+#     if mechanism_state.owner != owner:
+#         reassign = input("\nState for \'{0}\' parameter, assigned to {1} in {2}, already belongs to {3}. "
+#                          "You can reassign it (r), copy it (c), or assign default (d):".
+#                          format(mechanism_state.name, param_name, owner.name,
+#                                 mechanism_state.owner.name))
+#         while reassign != 'r' and reassign != 'c' and reassign != 'd':
+#             reassign = input("\nReassign (r), copy (c), or default (d):".
+#                              format(mechanism_state.name, param_name, owner.name,
+#                                     mechanism_state.owner.name))
+#
+#             if reassign == 'r':
+#                 while reassign != 'y' and reassign != 'n':
+#                     reassign = input("\nYou are certain you want to reassign it {0}? (y/n):".
+#                                      format(param_name))
+#                 if reassign == 'y':
+#                     # Note: assumed that parameters have already been checked for compatibility with assignment
+#                     return mechanism_state
+#
+#         # Make copy of state
+#         if reassign == 'c':
+#             import copy
+#             # # MODIFIED 10/28/16 OLD:
+#             # mechanism_state = copy.deepcopy(mechanism_state)
+#             # MODIFIED 10/28/16 NEW:
+#             # if owner.verbosePref:
+#                 # warnings.warn("WARNING: at present, 'deepcopy' can be used to copy States, "
+#                 #               "so some components of {} might be missing".format(mechanism_state.name))
+#             print("WARNING: at present, 'deepcopy' can be used to copy states, "
+#                   "so some Components of {} assigned to {} might be missing".
+#                   format(mechanism_state.name, append_type_to_name(owner)))
+#             mechanism_state = copy.copy(mechanism_state)
+#             # MODIFIED 10/28/16 END
+#
+#         # Assign owner to chosen state
+#         mechanism_state.owner = owner
+#     return mechanism_state
 
 
+# FIX: 10/3/17 - MOVE TO PROJECTIONS / INTEGRATE WITH _parse_projection_spec
 def _check_projection_sender_compatability(owner, projection_type, sender_type):
     from PsyNeuLink.Components.States.OutputState import OutputState
     from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
@@ -2543,7 +2585,7 @@ STATE_SPEC_INDEX = 0
 # MODIFIED 10/3/17 NEW:
 @tc.typecheck
 def _parse_state_spec(state_type:_is_state_class,                       # State's type
-                      state_spec,                                      # value, projection, or state specification tuple
+                      # state_spec,                                      # value, projection, or state specification tuple
                       owner:tc.any(Mechanism, Projection),             # State's owner
                       name:tc.optional(str)=None,                      # used as state's name if specified
                       variable=None,                                   # used as default value for state if specified
@@ -2554,9 +2596,10 @@ def _parse_state_spec(state_type:_is_state_class,                       # State'
                       **state_specific_params                          # state-specific parameters
                       ):
 
-    #FIX: MODIFY TO PARESE REFERENCE VALUE
-    #FIX: MODIFY TO USE state_specific_params
-    #FIX: REDEFINE STANDARD_ARGS AS ARGS IN _parse_state_spec MINUS: state_type, state_spec and context
+    #FIX: MODIFY TO USE state_specific_params as well as name, variable, projections and prefs
+
+    #FIX: REDEFINE STANDARD_ARGS FOR STATE TO BE ARGS IN
+    #FIX:  _parse_state_spec MINUS: state_type, state_specific_params and context
     #NOTE:  state_specific_params WILL END UP HOLDING ONLY THOSE ARGUMENTS NOT ASSIGNED TO ONE OF THE STANDARD ONES
 
     """Return either State object or State specification dict for state_spec
@@ -2572,7 +2615,10 @@ def _parse_state_spec(state_type:_is_state_class,                       # State'
     Any entries with keys other than STANDARD_ARGS are passed to _parse_state_specific_specs and place in params
     """
 
+
     # FIX: FROM _instantiate_state_list:  DEAL WITH PARSING OF REFERENCE_VALUE
+    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
+    state_spec[REFERENCE_VALUE] = convert_to_np_array(state_spec[REFERENCE_VALUE],1)
         state_spec_dict = defaultdict(lambda: None)
         state_spec_dict[OWNER] = owner
         state_spec_dict[STATE_TYPE] = state_type

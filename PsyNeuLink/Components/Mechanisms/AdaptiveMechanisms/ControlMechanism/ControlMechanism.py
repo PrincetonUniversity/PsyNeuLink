@@ -793,6 +793,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.value = self.allocation_policy
         self._default_value = self.value
 
+
+        # FIX: 10/3/17 - THIS NO LONGER BE NEEDED;
+        # FIX:      SHOULD JUST CALL: _instantiate_state(owner=self, state_type=GatingSignal, state_spec=control_signal)
+        # FIX:      _instantiate_state WILL CALL _parse_state_specific_specs TO HANDLE STATE-SPECIFIC SPECS
         # PARSE control_signal SPECIFICATION -----------------------------------------------------------------------
         # # MODIFIED 10/2/17 OLD:
         # control_signal_spec = _parse_control_signal_spec(owner=self, control_signal_spec=control_signal)
@@ -865,6 +869,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
             control_signal_params.update({CONTROLLED_PARAM:param_name})
 
+            # FIX: 10/3/17 - SHOULD BE HANDLED BY CALL TO _instantiate_state ABOVE
             # FIX 5/23/17: CALL super()_instantiate_output_states ??
             # FIX:         OR AGGREGATE ALL ControlSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
             control_signal = _instantiate_state(owner=self,

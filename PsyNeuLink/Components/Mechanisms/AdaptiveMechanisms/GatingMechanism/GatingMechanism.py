@@ -432,6 +432,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
         gating_projections = []
         gating_signal_params = {}
 
+        # FIX: 10/3/17 - THIS NO LONGER BE NEEDED;
+        # FIX:      SHOULD JUST CALL: _instantiate_state(owner=self, state_type=GatingSignal, state_spec=gating_signal)
+        # FIX:      _instantiate_state WILL CALL _parse_state_specific_specs TO HANDLE STATE-SPECIFIC SPECS
         gating_signal_spec = _parse_gating_signal_spec(owner=self, state_spec=gating_signal)
 
         # Specification is a GatingSignal (either passed in directly, or parsed from tuple above)
@@ -461,6 +464,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # Instantiate OutputState for GatingSignal
         else:
+            # FIX: 10/3/17 - THIS SHOULD ALL BE HANDLED IN STATE_instantiate_state
             gating_signal_name = gating_signal_spec[NAME]
             # FIX: ??CALL REGISTRY FOR NAME HERE (AS FOR OUTPUTSTATE IN MECHANISM?? -
             # FIX:  OR IS THIS DONE AUTOMATICALLY IN _instantiate_state??)

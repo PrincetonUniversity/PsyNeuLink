@@ -20,13 +20,53 @@
 # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControldProjection
 # from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
 
-class TEST_CLASS():
+print("SCRATCH AREA")
 
-    def _get_test(arg):
-        print('WORKED: ', arg)
+def _instantiate_state(context=None,
+                       **state_spec):
+    print('\n_instantiate_state state_spec:',
+          '\n\tcontext:',context,
+          '\n\tstate_spec', state_spec)
+    if 'state_spec' in state_spec and isinstance(state_spec['state_spec'], dict):
+        state_spec.update(state_spec['state_spec'])
+        del state_spec['state_spec']
+    _parse_state_spec(**state_spec)
 
-TEST_CLASS._get_test('hello world')
+def _parse_state_spec(state_type,
+                      # state_spec,
+                      owner,
+                      name=None,
+                      variable=None,
+                      reference_value=None,
+                      projections=[],
+                      prefs=None,
+                      context=None,
+                      **state_specific_params
+                      ):
+    print('\n_parse_state_spec:'
+          '\n\tstate_type: {}'
+          '\n\towner: {}'
+          '\n\tname: {}'
+          '\n\tstate_specific_params: {}'.
+          format(state_type, owner, name, state_specific_params))
 
+# _instantiate_state(context=None,
+#                    state_type = 'STATE TYPE',
+#                    owner='OWNER',
+#                    # name='NAME',
+#                    # state_spec=('state_spec_tuple_item_1','state_spec_tuple_item_2')
+#                    state_spec=({'name':'NAME IN DICT',
+#                                 'owner':'OWNER IN DICT'})
+#                    )
+
+_instantiate_state(state_type = 'STATE TYPE',
+                   owner='OWNER',
+                   # name='NAME',
+                   state_spec=('state_spec_tuple_item_1','state_spec_tuple_item_2')
+                   # state_spec=({'name':'NAME IN DICT',
+                   #              'owner':'OWNER IN DICT',
+                   #              'goof':'HELLO'})
+                   )
 
 class ScratchPadError(Exception):
     def __init__(self, error_value):
