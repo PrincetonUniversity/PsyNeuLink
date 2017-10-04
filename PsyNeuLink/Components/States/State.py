@@ -2158,14 +2158,15 @@ def _instantiate_state(owner,                  # Object to which state will belo
 
     state_spec_dict = state_spec
     # state_variable = state_variable or state_spec_dict[VARIABLE]
-    state_variable = state_spec_dict[VARIABLE]
+    # state_variable = state_spec_dict[VARIABLE]
 
     # Check that it's variable is compatible with reference_value, and if not, assign the latter as default variable
     if reference_value is not None and not iscompatible(state_variable, reference_value):
         if owner.prefs.verbosePref:
             warnings.warning("{} is not compatible with constraint value ({}) specified for {} of {};  "
                             "latter will be used".format(VARIABLE, reference_value, state_type, owner.name))
-        state_variable = reference_value
+        # state_variable = reference_value
+        state_spec_dict[VARIABLE] = reference_value
     # else:
     #     reference_value = state_variable
 
