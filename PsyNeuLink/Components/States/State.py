@@ -1852,8 +1852,6 @@ def _instantiate_state_list(owner,
             the number of States must match length of Mechanisms state_type value or an exception is raised
     """
 
-    # FIX: INSTANTIATE DICT SPEC BELOW FOR ENTRIES IN state_list
-
     # If no States were passed in, instantiate a default state_type using reference_value
     if not state_list:
         # assign reference_value as single item in a list, to be used as state_spec below
@@ -1908,79 +1906,12 @@ def _instantiate_state_list(owner,
 
     states = ContentAddressableList(component_type=State_Base,
                                     name=owner.name+' ContentAddressableList of ' + state_param_identifier)
-    # For each state, parse item in list into state_spec_dict and pass to _instantiate_state
-
-            # # FIX: 10/3/17 MOVE RELEVANT VERSION OF THIS TO _instantiate_state, after _parse_state_spec
-
-            # if not state_name is state_spec and not state_name in states:
-            #     state_name = state_spec
-            # # Add index suffix to name if it is already been used
-            # # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
-            # else:
-            #     state_name = state_spec + '_' + str(index)
-            # state_spec_dict[NAME] = state_name
-
-            # # If state_spec has NAME entry
-            # if NAME in state_spec:
-            #     # If it has been used, add suffix to it
-            #     if state_name is state_spec[NAME]:
-            #         state_name = state_spec[NAME] + '_' + str(key)
-            #     # Otherwise, use it
-            #     else:
-            #         state_name = state_spec[NAME]
-            # state_spec_dict[NAME] = state_name
-
-            # # # MODIFIED 9/3/17 OLD:
-            # # # If only one State, don't add index suffix
-            # # if num_states == 1:
-            # #     state_name = 'Default_' + state_param_identifier[:-1]
-            # # # Add incremented index suffix for each State name
-            # # else:
-            # #     state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(index+1)
-            # # MODIFIED 9/3/17 NEW:
-            # # If only one State, don't add index suffix
-            # if num_states == 1:
-            #     state_name = 'Default_' + state_param_identifier
-            # # Add incremented index suffix for each State name
-            # else:
-            #     state_name = 'Default_' + state_param_identifier + "-" + str(index+1)
-            # # MODIFIED 9/3/17 END
-            # # If it is an "exposed" number, make it a 1d np.array
+    # For each state, pass state_spec and the corresponding item of reference_value to _instantiate_state
 
     for index, state_spec in enumerate(state_list):
 
-        state_spec_dict = defaultdict(lambda: None)
-        state_spec_dict[OWNER] = owner
-        state_spec_dict[STATE_TYPE] = state_type
-
-        # If state_spec is a string, then use:
-        # - string as the name for a default State
-        # - index to get corresponding value from reference_value as state_spec
-        if isinstance(state_spec, str):
-            state_spec_dict[NAME] = state_spec
-            state_spec_dict[REFERENCE_VALUE] = reference_value[index]
-
-        # If state_spec is a number, use it as the reference_value
-        #   Note:  still need to get indexed element of reference_value,
-        #          since it was passed in as a 2D array (one for each State)
-        elif isinstance(state_spec, numbers.Number):
-            state_spec_dict[REFERENCE_VALUE] = np.atleast_1d(state_spec)
-            # # FIX: 10/3/17 - STILL NEEDED?
-            # state_reference_value = reference_value[index]
-
-        # If state_spec is a State specification dictionary, use it as state_spec_dict;
-        # if it has no REFERENCE_VALUE entry, use corresponding item of reference_value
-        elif isinstance(state_spec, dict):
-            state_spec_dict.update(state_spec)
-            if state_spec_dict[REFERENCE_VALUE] is None:
-                state_spec_dict[REFERENCE_VALUE] = state_spec[REFERENCE_VALUE]
-
-        else:
-            raise StateError("Illegal specification for State ({}) in list of {}s for {};"
-                             "must be a string (name), number (reference_value), or State specification dictionary.".
-                             format(state_spec, state_type.__name__, owner.name))
-
-        state = _instantiate_state(**state_spec_dict,
+        state = _instantiate_state(state_spec,
+                                   reference_value=reference_value,
                                    reference_value_name=reference_value_name,
                                    context=context)
 
@@ -1997,12 +1928,20 @@ def _instantiate_state(owner:tc.any(Mechanism, Projection),   # Component to whi
                        reference_value_name:str,      # name of reference_value's type (e.g. variable, output...)
                        params:tc.optional(dict)=None, # params for state
                        context=None,
-                       **state_spec_dict              # State specification dictionary
+                       **state_spec                   # any allowable form of `State_Specification`
                        ):
     """Instantiate a State of specified type, with a value that is compatible with reference_value
 
-    Constraint value must be a number or a list or tuple of numbers
-    (since it is used as the variable for instantiating the requested state)
+    This is the interface between the various ways in which a state can be specified and the State's constructor
+        (see list below, and `State_Specification` in docstring above).
+    It calls _parse_state_spec to:
+        create a State specification dictionary (the canonical form) that can be passed to the State's constructor;
+        place any State subclass-specific params in the params entry;
+        call _parse_state_specific_specs to parse and validate the values of those params
+    It checks that the State's value is compatible with the reference value and/or any projection specifications
+
+    # Constraint value must be a number or a list or tuple of numbers
+    # (since it is used as the variable for instantiating the requested state)
 
     If state_spec is a:
     + State class:
@@ -2030,15 +1969,11 @@ def _instantiate_state(owner:tc.any(Mechanism, Projection),   # Component to whi
         test if it is a keyword and get its value by calling keyword method of owner's execute method
         # otherwise, return None (suppress assignment of ParameterState)
         otherwise, implement default using the string as its name
-    Check compatibility with reference_value
-    If any of the conditions above fail:
-        a default State of specified type is instantiated using reference_value as value
-
-    If state_params is specified, include as params arg with instantiation of State
 
     Returns a State or None
     """
 
+    # FIX: 10/3/17 ??DO THE FOLLOWING:
     # IMPLEMENTATION NOTE: CONSIDER MOVING MUCH IF NOT ALL OF THIS TO State.__init__()
 
     # FIX: IF VARIABLE IS IN state_params EXTRACT IT AND ASSIGN IT TO reference_value 5/9/17
@@ -2047,44 +1982,44 @@ def _instantiate_state(owner:tc.any(Mechanism, Projection),   # Component to whi
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
         raise StateError("PROGRAM ERROR: state_type arg ({}) for _instantiate_state must be a State subclass".
                          format(state_type))
-    if not isinstance(state_name, str):
-        raise StateError("PROGRAM ERROR: state_name arg ({}) for _instantiate_state must be a string".
-                             format(state_name))
+    if not isinstance(name, str):
+        raise StateError("PROGRAM ERROR: name arg ({}) for _instantiate_state must be a string".
+                             format(name))
     if not isinstance(reference_value_name, str):
         raise StateError("PROGRAM ERROR: reference_value_name arg ({}) for _instantiate_state must be a string".
                              format(reference_value_name))
 
-    state_params = state_params or {}
-    state_variable = None
+    # params = params or {}
+    # state_variable = None
+    #
+    # # PARSE reference_value (in case it is specified as a Projection?? or another State??
+    # constraint_dict = _parse_state_spec(owner=owner,
+    #                                     state_type=state_type,
+    #                                     state_spec=reference_value)
+    #
+    # # FIX: 10/3/17 - PER THE FOLLOWING (FROM _parse_state_spec DOCSTRING):
+    # # FIX:           USE STATE_TYPE AND PROJECTION SPEC (IF SPECIFIED)?
+    # # FIX:           DO THIS AFTER _parse_state_spec??
+    # # FIX:           OR IS THIS ALREADY BEING CHECKED IN _parse_state_spec USING PROJECTION SOCKET??
+    # # *value* arg should generally be a constraint for the value of the State;  however,
+    # #     if state_spec is a Projection, and method is being called from:
+    # #         InputState, value should be the projection's value;
+    # #         ParameterState, value should be the projection's value;
+    # #         OutputState, value should be the projection's variable
+    # reference_value = constraint_dict[VARIABLE]
+    # # reference_value = constraint_dict[VALUE]
 
-    # PARSE reference_value
-    constraint_dict = _parse_state_spec(owner=owner,
-                                        state_type=state_type,
-                                        state_spec=reference_value)
 
-    # FIX: 10/3/17 - PER THE FOLLOWING (FROM _parse_state_spec DOCSTRING):
-    # *value* arg should generally be a constraint for the value of the State;  however,
-    #     if state_spec is a Projection, and method is being called from:
-    #         InputState, value should be the projection's value;
-    #         ParameterState, value should be the projection's value;
-    #         OutputState, value should be the projection's variable
-    reference_value = constraint_dict[VARIABLE]
-    # reference_value = constraint_dict[VALUE]
-
-    # FIX: 10/3/17 - MOVE ARGS INTO DICT AND PASS AS **kwargs:
     # PARSE state_spec using reference_value as default for value
-    state_spec = _parse_state_spec(state_type=state_type,
-                                   owner=owner,
-                                   state_spec=state_spec,
-                                   name=state_name,
-                                   params=state_params,
-                                   value=reference_value)
+    state_spec = _parse_state_spec(**state_spec_dict)
 
-    # state_spec is State object ***************************************
-    #    so, validate and return
+    # FIX: 10/3/17: HANDLE NAME HERE (GET CODE FROM ABOVE)
+
+    # STATE SPECIFICATION IS A State OBJECT ***************************************
+    # Validate and return
 
     # - check that its value attribute matches the reference_value
-    # - check that its owner = owner
+    # - check that it doesn't already belong to another owner
     # - if either fails, assign default State
     if isinstance(state_spec, state_type):
 
@@ -2094,45 +2029,38 @@ def _instantiate_state(owner:tc.any(Mechanism, Projection),   # Component to whi
             if not state_spec.init_args[OWNER]:
                 state_spec.init_args[OWNER] = owner
                 state_spec.init_args[VARIABLE] = owner.instance_defaults.variable[0]
-            if not hasattr(state_spec, 'reference_value'):
+            if not hasattr(state_spec, REFERENCE_VALUE):
                 state_spec.reference_value = owner.instance_defaults.variable[0]
             state_spec._deferred_init()
 
-        # FIX: 10/3/17 - IS THIS CORRECT FOR OUTPUTSTATE, OR PARAMETER STATE OF A MAPPING PROJECTION?
-        # Check that State's value is compatible with Mechanism's variable
-        if iscompatible(state_spec.value, reference_value):
-            # Check that Mechanism is State's owner;  if it is not, user is given options
-            state =  _check_state_ownership(owner, state_name, state_spec)
-            if state:
-                return state
-        # MODIFIED 10/3/17 OLD:
-        #     else:
-        #         # State was rejected, and assignment of default selected
-        #         state_variable = reference_value
-        # else:
-        #     # State's value doesn't match reference_value, so assign default
-        #     if owner.verbosePref:
-        #         warnings.warn("Value of {} for {} ({}, {}) does not match expected ({}); "
-        #                       "default {} will be assigned)".
-        #                       format(state_type.__name__,
-        #                              owner.name,
-        #                              state_spec.name,
-        #                              state_spec.value,
-        #                              reference_value,
-        #                              state_type.__name__))
-        #     state_variable = reference_value
-        # MODIFIED 10/3/17 NEW:
-        else:
+        # State's value is incompatible with Mechanism's variable
+        if not iscompatible(state_spec.value, reference_value):
             raise StateError("{}'s value attribute ({}) is incompatible with the variable ({}) of its owner ({})".
                              format(state_spec.name, state_spec.value, reference_value, owner.name))
-        # MODIFIED 10/3/17 END
+        # State has already been assigned to an owner
+        if state_spec.owner is not None:
+            if state_spec.owner is owner:
+                raise StateError("State {} already belongs to the owner for which it is specified ({})".
+                                 format(state_spec.name, owner.name))
+            else:
+                raise StateError("State {} does not belong to the owner for which it is specified ({})".
+                                 format(state_spec.name, owner.name))
+        # Return state
+        else:
+            return state_spec
 
     # state_spec is State specification dict *****************************
     #    so, call constructor to instantiate State
 
     state_spec_dict = state_spec
-    # state_variable = state_variable or state_spec_dict[VARIABLE]
-    # state_variable = state_spec_dict[VARIABLE]
+
+
+    # # FIX: 10/3/17 - PER THE FOLLOWING (FROM _parse_state_spec DOCSTRING):
+    # # *value* arg should generally be a constraint for the value of the State;  however,
+    # #     if state_spec is a Projection, and method is being called from:
+    # #         InputState, value should be the projection's value;
+    # #         ParameterState, value should be the projection's value;
+    # #         OutputState, value should be the projection's variable
 
     # Check that it's variable is compatible with reference_value, and if not, assign the latter as default variable
     if reference_value is not None and not iscompatible(state_variable, reference_value):
@@ -2683,8 +2611,13 @@ def _parse_state_spec(state_type:_is_state_class,                       # State'
                       projections:tc.any(list, _is_projection_spec)=[],# specification(s) of projections to/from state
                       prefs=None,
                       context=None,
-                      **params                                         # state-specific parameters
+                      **state_specific_params                          # state-specific parameters
                       ):
+
+    #FIX: MODIFY TO PARESE REFERENCE VALUE
+    #FIX: MODIFY TO USE state_specific_params
+    #FIX: REDEFINE STANDARD_ARGS AS ARGS IN _parse_state_spec MINUS: state_type, state_spec and context
+    #NOTE:  state_specific_params WILL END UP HOLDING ONLY THOSE ARGUMENTS NOT ASSIGNED TO ONE OF THE STANDARD ONES
 
     """Return either State object or State specification dict for state_spec
 
@@ -2696,7 +2629,7 @@ def _parse_state_spec(state_type:_is_state_class,                       # State'
             InputState, value should be the projection's value;
             ParameterState, value should be the projection's value;
             OutputState, value should be the projection's variable
-    Any entries with keys other than STANDARD_ARGS are pass to _parse_state_specific_specs and place in params
+    Any entries with keys other than STANDARD_ARGS are passed to _parse_state_specific_specs and place in params
     """
 
     # Validate that state_type is a State class
