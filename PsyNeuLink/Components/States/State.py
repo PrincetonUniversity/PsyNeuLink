@@ -927,7 +927,7 @@ class State_Base(State):
         If kwMStateProjections is absent or empty, no projections are created
         """
 
-        from PsyNeuLink.Components.Projections.Projection import Projection_Base
+        from PsyNeuLink.Components.Projections.Projection import Projection_Base, _is_projection_spec
         from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection \
             import PathwayProjection_Base
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
@@ -1885,23 +1885,16 @@ def _instantiate_state_list(owner,
                                  " must be an indexable object (e.g., list or np.ndarray)".
                                  format(reference_value, reference_value_name, state_type.__name__))
 
-        # IMPLEMENTATION NOTE: NO LONGER VALID SINCE output_states CAN NOW BE ONE TO MANY OR MANY TO ONE
-        #                      WITH RESPECT TO ITEMS OF reference_value (I.E., owner.value)
-        # If number of States exceeds number of items in reference_value, raise exception
-        if num_states > num_constraint_items:
-            raise StateError("There are too many {}s specified ({}) in {} "
-                                 "for the number of items ({}) in the {} of its function".
-                                 format(state_param_identifier,
-                                        num_states,
-                                        owner.name,
-                                        num_constraint_items,
-                                        reference_value_name))
-
-        # If number of States is less than number of items in reference_value, raise exception
-        elif num_states < num_constraint_items:
-            raise StateError("There are fewer {}s specified ({}) than the number of items ({}) "
+        # If number of States does not equal the number of items in reference_value, raise exception
+        if num_states != num_constraint_items:
+            if num_states > num_constraint_items:
+                comparison_string = 'more'
+            else:
+                comparison_string = 'fewer'
+            raise StateError("There are {} {}s specified ({}) than the number of items ({}) "
                                  "in the {} of the function for {}".
-                                 format(state_param_identifier,
+                                 format(comparison_string,
+                                        state_param_identifier,
                                         num_states,
                                         num_constraint_items,
                                         reference_value_name,
@@ -1927,14 +1920,13 @@ def _instantiate_state_list(owner,
                 state_name = index
                 state_reference_value = reference_value
                 # Note: state_spec has already been assigned to entry value by enumeration above
-                # MODIFIED 12/11/16 NEW:
                 # If it is an "exposed" number, make it a 1d np.array
                 if isinstance(state_spec, numbers.Number):
                     state_spec = np.atleast_1d(state_spec)
-                # MODIFIED 12/11/16 END
                 state_params = None
 
             # State_entries is a list
+            # FIX: 10/3/17 - WHAT FORMAT IS THIS?  SHOULDN'T IT BE HANDLED IN _parse_state_spec, AND NOT HERE?
             else:
                 if isinstance(state_spec, tuple):
                     if not len(state_spec) == 2:
@@ -2096,7 +2088,7 @@ def _instantiate_state(owner,                  # Object to which state will belo
                                         state_type=state_type,
                                         state_spec=reference_value)
 
-    # FIX: PER THE FOLLOWING (FROM _parse_state_spec DOCSTRING):
+    # FIX: 10/3/17 - PER THE FOLLOWING (FROM _parse_state_spec DOCSTRING):
     # *value* arg should generally be a constraint for the value of the State;  however,
     #     if state_spec is a Projection, and method is being called from:
     #         InputState, value should be the projection's value;
@@ -2105,6 +2097,7 @@ def _instantiate_state(owner,                  # Object to which state will belo
     reference_value = constraint_dict[VARIABLE]
     # reference_value = constraint_dict[VALUE]
 
+    # FIX: 10/3/17 - MOVE ARGS INTO DICT AND PASS AS **kwargs:
     # PARSE state_spec using reference_value as default for value
     state_spec = _parse_state_spec(state_type=state_type,
                                    owner=owner,
@@ -2131,27 +2124,34 @@ def _instantiate_state(owner,                  # Object to which state will belo
                 state_spec.reference_value = owner.instance_defaults.variable[0]
             state_spec._deferred_init()
 
+        # FIX: 10/3/17 - IS THIS CORRECT FOR OUTPUTSTATE, OR PARAMETER STATE OF A MAPPING PROJECTION?
         # Check that State's value is compatible with Mechanism's variable
         if iscompatible(state_spec.value, reference_value):
             # Check that Mechanism is State's owner;  if it is not, user is given options
             state =  _check_state_ownership(owner, state_name, state_spec)
             if state:
                 return state
-            else:
-                # State was rejected, and assignment of default selected
-                state_variable = reference_value
+        # MODIFIED 10/3/17 OLD:
+        #     else:
+        #         # State was rejected, and assignment of default selected
+        #         state_variable = reference_value
+        # else:
+        #     # State's value doesn't match reference_value, so assign default
+        #     if owner.verbosePref:
+        #         warnings.warn("Value of {} for {} ({}, {}) does not match expected ({}); "
+        #                       "default {} will be assigned)".
+        #                       format(state_type.__name__,
+        #                              owner.name,
+        #                              state_spec.name,
+        #                              state_spec.value,
+        #                              reference_value,
+        #                              state_type.__name__))
+        #     state_variable = reference_value
+        # MODIFIED 10/3/17 NEW:
         else:
-            # State's value doesn't match reference_value, so assign default
-            if owner.verbosePref:
-                warnings.warn("Value of {} for {} ({}, {}) does not match expected ({}); "
-                              "default {} will be assigned)".
-                              format(state_type.__name__,
-                                     owner.name,
-                                     state_spec.name,
-                                     state_spec.value,
-                                     reference_value,
-                                     state_type.__name__))
-            state_variable = reference_value
+            raise StateError("{}'s value attribute ({}) is incompatible with the variable ({}) of its owner ({})".
+                             format(state_spec.name, state_spec.value, reference_value, owner.name))
+        # MODIFIED 10/3/17 END
 
     # state_spec is State specification dict *****************************
     #    so, call constructor to instantiate State
@@ -2162,11 +2162,16 @@ def _instantiate_state(owner,                  # Object to which state will belo
 
     # Check that it's variable is compatible with reference_value, and if not, assign the latter as default variable
     if reference_value is not None and not iscompatible(state_variable, reference_value):
-        if owner.prefs.verbosePref:
-            warnings.warning("{} is not compatible with constraint value ({}) specified for {} of {};  "
-                            "latter will be used".format(VARIABLE, reference_value, state_type, owner.name))
-        # state_variable = reference_value
-        state_spec_dict[VARIABLE] = reference_value
+        # # MODIFIED 10/3/17 OLD:
+        # if owner.prefs.verbosePref:
+        #     warnings.warning("{} is not compatible with constraint value ({}) specified for {} of {};  "
+        #                     "latter will be used".format(VARIABLE, reference_value, state_type, owner.name))
+        # # state_variable = reference_value
+        # state_spec_dict[VARIABLE] = reference_value
+        # MODIFIED 10/3/17 NEW:
+        raise StateError("{}'s value attribute ({}) is incompatible with the variable ({}) of its owner ({})".
+                         format(state_spec.name, state_spec.value, reference_value, owner.name))
+        # MODIFIED 10/3/17 END
     # else:
     #     reference_value = state_variable
 
@@ -2695,17 +2700,16 @@ STATE_SPEC_INDEX = 0
 
 # MODIFIED 10/3/17 NEW:
 @tc.typecheck
-def _parse_state_spec(owner,
-                      state_type:_is_state_type,                       # State's type
+def _parse_state_spec(state_type:_is_state_type,                       # State's type
                       state_spec,                                      # value, projection, or state specification tuple
                       owner:tc.any(Mechanism, Projection),             # State's owner
                       name:tc.optional(str)=None,                      # used as state's name if specified
                       variable=None,                                   # used as default value for state if specified
                       reference_value=None,                            # used as constraint for State's value
-                      projections:tc.any(list, is_projection_spec)=[], # specification(s) of projections to/from state
+                      projections:tc.any(list, _is_projection_spec)=[],# specification(s) of projections to/from state
                       prefs=None,
                       context=None,
-                      **params
+                      **params                                         # state-specific parameters
                       ):
 
     """Return either State object or State specification dict for state_spec
