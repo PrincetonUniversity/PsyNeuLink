@@ -316,8 +316,8 @@ from PsyNeuLink.Components.Functions.Function import LinearCombination, Modulati
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _validate_connection_request
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
-from PsyNeuLink.Globals.Keywords import VARIABLE, SIZE, FUNCTION_PARAMS, NAME, OWNER, PARAMS, CONTEXT, EXECUTING, \
-    MECHANISM, VALUE, STATE, STATES, STATE_PARAMS, STATE_TYPE, STATE_VALUE, WEIGHT, EXPONENT, PROJECTION, \
+from PsyNeuLink.Globals.Keywords import VARIABLE, SIZE, VALUE, NAME, OWNER, PARAMS, PREFS_ARG, CONTEXT, \
+    FUNCTION_PARAMS, EXECUTING, MECHANISM, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, \
     STANDARD_ARGS, STANDARD_OUTPUT_STATES, REFERENCE_VALUE,\
     PROJECTIONS, PATHWAY_PROJECTIONS, PROJECTION_PARAMS,  PROJECTION_TYPE, RECEIVER, SENDER, CONNECTIONS,\
     MAPPING_PROJECTION_PARAMS, MATRIX, MATRIX_KEYWORD_SET, \
@@ -350,8 +350,9 @@ state_keywords.update({MECHANISM,
                        GATING_PROJECTION_PARAMS,
                        GATING_SIGNAL_SPECS
                        })
-
 state_type_keywords = {STATE_TYPE}
+
+STANDARD_STATE_ARGS = {STATE_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 
 def _is_state_class(spec):
     if inspect.isclass(spec) and issubclass(spec, State):
@@ -2584,23 +2585,15 @@ STATE_SPEC_INDEX = 0
 
 # MODIFIED 10/3/17 NEW:
 @tc.typecheck
-def _parse_state_spec(state_type:_is_state_class,                       # State's type
-                      # state_spec,                                      # value, projection, or state specification tuple
+def _parse_state_spec(state_type:_is_state_class,                      # State's type
                       owner:tc.any(Mechanism, Projection),             # State's owner
+                      reference_value,                                 # used as constraint for State's value and default for variable
                       name:tc.optional(str)=None,                      # used as state's name if specified
                       variable=None,                                   # used as default value for state if specified
-                      reference_value=None,                            # used as constraint for State's value
-                      projections:tc.any(list, _is_projection_spec)=[],# specification(s) of projections to/from state
                       prefs=None,
                       context=None,
-                      **state_specific_params                          # state-specific parameters
+                      **params                                         # state-specific parameters
                       ):
-
-    #FIX: MODIFY TO USE state_specific_params as well as name, variable, projections and prefs
-
-    #FIX: REDEFINE STANDARD_ARGS FOR STATE TO BE ARGS IN
-    #FIX:  _parse_state_spec MINUS: state_type, state_specific_params and context
-    #NOTE:  state_specific_params WILL END UP HOLDING ONLY THOSE ARGUMENTS NOT ASSIGNED TO ONE OF THE STANDARD ONES
 
     """Return either State object or State specification dict for state_spec
 
@@ -2615,13 +2608,13 @@ def _parse_state_spec(state_type:_is_state_class,                       # State'
     Any entries with keys other than STANDARD_ARGS are passed to _parse_state_specific_specs and place in params
     """
 
+    # Move standard args from function call into state_dict
+    args = inspect.signature(_parse_state_spec).parameters.items()
+    state_dict = dict((arg, value) for arg, value in args.items() if arg in STANDARD_STATE_ARGS)
 
-    # FIX: FROM _instantiate_state_list:  DEAL WITH PARSING OF REFERENCE_VALUE
-    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
-    state_spec[REFERENCE_VALUE] = convert_to_np_array(state_spec[REFERENCE_VALUE],1)
-        state_spec_dict = defaultdict(lambda: None)
-        state_spec_dict[OWNER] = owner
-        state_spec_dict[STATE_TYPE] = state_type
+    # Convert reference_value to standard format (
+    if isinstance(reference_value, numbers.Number):
+        reference_value = convert_to_np_array(reference_value,1)
 
         # If state_spec is a string, then use:
         # - string as the name for a default State

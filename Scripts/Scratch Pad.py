@@ -32,6 +32,7 @@ def _instantiate_state(context=None,
         del state_spec['state_spec']
     _parse_state_spec(**state_spec)
 
+import inspect
 def _parse_state_spec(state_type,
                       # state_spec,
                       owner,
@@ -46,18 +47,10 @@ def _parse_state_spec(state_type,
     print('\n_parse_state_spec:'
           '\n\tstate_type: {}'
           '\n\towner: {}'
+          '\n\treference_value: {}'
           '\n\tname: {}'
           '\n\tstate_specific_params: {}'.
-          format(state_type, owner, name, state_specific_params))
-
-# _instantiate_state(context=None,
-#                    state_type = 'STATE TYPE',
-#                    owner='OWNER',
-#                    # name='NAME',
-#                    # state_spec=('state_spec_tuple_item_1','state_spec_tuple_item_2')
-#                    state_spec=({'name':'NAME IN DICT',
-#                                 'owner':'OWNER IN DICT'})
-#                    )
+          format(state_type, owner, reference_value, name, state_specific_params))
 
 _instantiate_state(state_type = 'STATE TYPE',
                    owner='OWNER',
