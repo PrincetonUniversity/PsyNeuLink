@@ -22,19 +22,33 @@
 
 print("SCRATCH AREA")
 
-def _instantiate_state(context=None,
+def _get_args(frame):
+    args, _, _, values = inspect.getargvalues(frame)
+    return dict((key, value) for key, value in values.items() if key in args)
+    # return zip(args, values)
+
+class State:
+    pass
+
+def _instantiate_state(state_type,
+                       owner,
+                       reference_value=None,
+                       name=None,
+                       variable=None,
+                       params=None,
+                       prefs=None,
+                       context=None,
                        **state_spec):
     print('\n_instantiate_state state_spec:',
           '\n\tcontext:',context,
           '\n\tstate_spec', state_spec)
-    if 'state_spec' in state_spec and isinstance(state_spec['state_spec'], dict):
-        state_spec.update(state_spec['state_spec'])
-        del state_spec['state_spec']
-    _parse_state_spec(**state_spec)
+    args = _get_args(inspect.currentframe())
+    # _parse_state_spec(args, **state_spec)
+    _parse_state_spec(**args)
 
 import inspect
-def _parse_state_spec(state_type,
-                      # state_spec,
+def _parse_state_spec(
+                      state_type,
                       owner,
                       name=None,
                       variable=None,
@@ -42,23 +56,39 @@ def _parse_state_spec(state_type,
                       projections=[],
                       prefs=None,
                       context=None,
-                      **state_specific_params
+                      **state_spec
                       ):
+
+    # STANDARD_STATE_ARGS = {'state_type', 'owner', 'reference_value', 'variable', 'name', 'params', 'prefs'}
+    #
+    # args = inspect.signature(_parse_state_spec).parameters.items()
+    # state_dict = dict((arg, value) for arg, value in args if arg in STANDARD_STATE_ARGS)
+
+    args = _get_args(inspect.currentframe())
+
+    if 'state_spec' in state_spec and isinstance(state_spec['state_spec'], dict):
+        # state_spec.update(state_spec['state_spec'])
+        # del state_spec['state_spec']
+        state_dict.update(state_spec['state_spec'])
+        del state_spec['state_spec']
+
     print('\n_parse_state_spec:'
           '\n\tstate_type: {}'
           '\n\towner: {}'
           '\n\treference_value: {}'
           '\n\tname: {}'
-          '\n\tstate_specific_params: {}'.
-          format(state_type, owner, reference_value, name, state_specific_params))
+          '\n\tstate_spec: {}'
+          '\n\tstate_dict: {}'.
+          format(state_type, owner, reference_value, name, state_spec, state_dict))
 
 _instantiate_state(state_type = 'STATE TYPE',
                    owner='OWNER',
                    # name='NAME',
-                   state_spec=('state_spec_tuple_item_1','state_spec_tuple_item_2')
-                   # state_spec=({'name':'NAME IN DICT',
-                   #              'owner':'OWNER IN DICT',
-                   #              'goof':'HELLO'})
+                   # state_spec=State
+                   # state_spec=('state_spec_tuple_item_1','state_spec_tuple_item_2')
+                   state_spec=({'name':'NAME IN DICT',
+                                'owner':'OWNER IN DICT',
+                                'goof':'HELLO'})
                    )
 
 class ScratchPadError(Exception):

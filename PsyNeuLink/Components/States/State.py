@@ -353,6 +353,7 @@ state_keywords.update({MECHANISM,
 state_type_keywords = {STATE_TYPE}
 
 STANDARD_STATE_ARGS = {STATE_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
+STATE_SPEC = 'state_spec'
 
 def _is_state_class(spec):
     if inspect.isclass(spec) and issubclass(spec, State):
@@ -1923,8 +1924,15 @@ def _instantiate_state_list(owner,
 
 
 @tc.typecheck
-def _instantiate_state(context=None,
-                       **state_spec):
+def _instantiate_state(state_type,
+                       owner,
+                       reference_value,
+                       name=None,
+                       variable=None,
+                       params=None,
+                       prefs=None,
+                       context=None,
+                       **state_specification):
     """Instantiate a State of specified type, with a value that is compatible with reference_value
 
     This is the interface between the various ways in which a state can be specified and the State's constructor
@@ -1968,17 +1976,10 @@ def _instantiate_state(context=None,
     Returns a State or None
     """
 
-    owner = state_spec[OWNER]
+    owner = state_specification[OWNER]
 
-    # If a State specification dictionary is specified in a *state_spec* argument,
-    #    move its entries out of the into the local state_spec dict to be passed to _parse_state_spec
-    #    delete its values from the State specification dictionary, so that only the state-specific ones remain
-    if 'state_spec' in state_spec and isinstance(state_spec['state_spec'], dict):
-        state_spec.update(state_spec['state_spec'])
-        del state_spec['state_spec']
-    _parse_state_spec(**state_spec)
-
-    parsed_state_spec = _parse_state_spec(**state_spec)
+    args = inspect.signature(_parse_state_spec).parameters.items()
+    parsed_state_spec = _parse_state_spec(**args, **state_specification)
 
     # FIX: 10/3/17: HANDLE NAME HERE (GET CODE FROM ABOVE)
             # if not state_name is state_spec and not state_name in states:
@@ -2585,14 +2586,16 @@ STATE_SPEC_INDEX = 0
 
 # MODIFIED 10/3/17 NEW:
 @tc.typecheck
-def _parse_state_spec(state_type:_is_state_class,                      # State's type
-                      owner:tc.any(Mechanism, Projection),             # State's owner
-                      reference_value,                                 # used as constraint for State's value and default for variable
-                      name:tc.optional(str)=None,                      # used as state's name if specified
-                      variable=None,                                   # used as default value for state if specified
-                      prefs=None,
-                      context=None,
-                      **params                                         # state-specific parameters
+def _parse_state_spec(
+                      # state_type:_is_state_class,                      # State's type
+                      # owner:tc.any(Mechanism, Projection),             # State's owner
+                      # reference_value,                                 # used as constraint for State's value and default for variable
+                      # name:tc.optional(str)=None,                      # used as state's name if specified
+                      # variable=None,                                   # used as default value for state if specified
+                      # params=None,                                     # state-specific params
+                      # prefs=None,
+                      # context=None,
+                      **state_spec                                      # state_spec (other than a specification dict)
                       ):
 
     """Return either State object or State specification dict for state_spec
@@ -2608,38 +2611,32 @@ def _parse_state_spec(state_type:_is_state_class,                      # State's
     Any entries with keys other than STANDARD_ARGS are passed to _parse_state_specific_specs and place in params
     """
 
+    # If a State specification dictionary is specified in a *state_spec* argument,
+    #    move its entries out of there and into the local ("state_specification") dict
+    #    and delete their values from the State specification dictionary;
+    #    this is so that if a State specification dictionary is used, its assignments appear as
+    #    the args in the State specification dictionary appear as keyword args in _parse_state_spec
+    #        while any other
+    #        are left to be received by parse_state_spec in its *state_spec* dict
+    # NOTES:
+    #    - this gives precedence to values of standard ars specified in the State specification dictionary
+    #      (e.g., by the user) over any explicitly specified in the call to _instantiate_state
+    #    - anything in a *state_spec* argument of _instantiate_state OTHER THAN a State specification dictionary
+    #          (e.g., a name, number, projection, or tuple) is passed into _parse_state_spec as its
+    #          *state_spec* dict to be used to instantiate the State
+    if STATE_SPEC in state_specification and isinstance(state_specification[STATE_SPEC], dict):
+        state_specification.update(state_specification[STATE_SPEC])
+        del state_specification[STATE_SPEC]
+
+
+
     # Move standard args from function call into state_dict
     args = inspect.signature(_parse_state_spec).parameters.items()
     state_dict = dict((arg, value) for arg, value in args.items() if arg in STANDARD_STATE_ARGS)
 
-    # Convert reference_value to standard format (
+    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
     if isinstance(reference_value, numbers.Number):
         reference_value = convert_to_np_array(reference_value,1)
-
-        # If state_spec is a string, then use:
-        # - string as the name for a default State
-        # - index to get corresponding value from reference_value as state_spec
-        if isinstance(state_spec, str):
-            state_spec_dict[NAME] = state_spec
-            state_spec_dict[REFERENCE_VALUE] = reference_value[index]
-
-        # If state_spec is a number, use it as the reference_value
-        #   Note:  still need to get indexed element of reference_value,
-        #          since it was passed in as a 2D array (one for each State)
-        elif isinstance(state_spec, numbers.Number):
-            state_spec_dict[REFERENCE_VALUE] = np.atleast_1d(state_spec)
-            # # FIX: 10/3/17 - STILL NEEDED?
-            # state_reference_value = reference_value[index]
-
-        # If state_spec is a State specification dictionary, use it as state_spec_dict;
-        # if it has no REFERENCE_VALUE entry, use corresponding item of reference_value
-        elif isinstance(state_spec, dict):
-            state_spec_dict.update(state_spec)
-            if state_spec_dict[REFERENCE_VALUE] is None:
-                state_spec_dict[REFERENCE_VALUE] = state_spec[REFERENCE_VALUE]
-    # FIX: ***************************************
-
-
 
     # Validate that state_type is a State class
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
