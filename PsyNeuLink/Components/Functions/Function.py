@@ -4921,16 +4921,14 @@ class AdaptiveIntegrator(
         if hasattr(self.noise, "__len__"):
             noise = tuple(noise)
 
-        previous_value = self.previous_value
-
         bf = self._llvmBinFunction
 
         ret = np.zeros(len(variable))
         par_struct_ty, old_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
         ct_param = par_struct_ty(rate, offset, noise)
-        ct_old = old_struct_ty(tuple(previous_value))
-        #This is bit hacky because numpy can't cast to arrays
+        ct_old = old_struct_ty(tuple(self.previous_value))
+        # This is bit hacky because numpy can't cast to arrays
         ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
         ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
 
