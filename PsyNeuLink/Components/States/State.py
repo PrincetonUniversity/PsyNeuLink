@@ -2100,7 +2100,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     #                             state_spec_dict[OWNER].name))
     # MODIFIED 10/3/17 OLD:
     #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
-    state_spec_dict[REFERENCE_VALUE] = convert_to_np_array(reference_value,1)
+    state_spec_dict[REFERENCE_VALUE] = convert_to_np_array(state_spec_dict[REFERENCE_VALUE],1)
     # MODIFIED 10/3/17 END
 
     # INSTANTIATE STATE:
@@ -2454,7 +2454,7 @@ def _parse_state_spec(standard_args,
             # matrix parameter is specified as a keyword, which may be intentional.
             if owner.prefs.verbosePref:
                 print("{} not specified for {} of {};  default ({}) will be used".
-                      format(VARIABLE, state_type, owner.name, state_dict[VALUE]))
+                      format(VARIABLE, state_type, owner.name, state_dict[REFERENCE_VALUE]))
         # It is not a keyword, so treat string as the name for the state
         else:
             state_dict[NAME] = state_specification
@@ -2462,7 +2462,7 @@ def _parse_state_spec(standard_args,
     # function; try to resolve to a value, otherwise return None to suppress instantiation of State
     elif isinstance(state_specification, function_type):
         # FIX: 10/3/17 - SHOULDN'T THIS BE VARIABLE, NOT VALUE?  OR DEPEND ON STATE TYPE?
-        state_dict[VALUE] = get_param_value_for_function(owner, state_specification)
+        state_dict[REFERENCE_VALUE] = get_param_value_for_function(owner, state_specification)
         if state_dict[VALUE] is None:
             # return None
             raise StateError("PROGRAM ERROR: state_spec for {} of {} is a function ({}), "
@@ -2473,26 +2473,27 @@ def _parse_state_spec(standard_args,
         # FIX: 10/3/17 - SHOULD BOTH OF THESE BE THE SAME?
         #                SHOULDN'T VALUE BE NONE UNTIL FUNCTION IS INSTANTIATED?? OR DEPEND ON STATE TYPE?
         state_dict[VARIABLE] = state_specification
-        state_dict[VALUE] = state_specification
+        state_dict[REFERENCE_VALUE] = state_specification
 
     # State specification tuple
-    #    Assume first item is the state specification, and use as base for state_dict
-    #    Call _parse_state_specific_params() with tuple to get params in dict form (to add to state_dict)
+    #    Assume first item is the state specification, and use as state_spec in a recursive call to parse_state_spec.
+    #    Call _parse_state_specific_params() with tuple to get state-specific params and assign to params entry.
     elif isinstance(state_specification, tuple):
 
         # FIX: 10/3/17 - CONSOLIDATE W/ CALL TO _parse_state_specific_params FOR State specification dict BELOW
-        # FIX:           NEEDS TO MOVE REFRENCE_VALUE ENTRY FROM PARAMS INTO STATE_DICT
+        # FIX:           NEEDS TO MOVE REFERENCE_VALUE ENTRY FROM STATE_PARAMS INTO STATE_DICT
         # Get state-specific params from tuple
         state_params = state_type._parse_state_specific_params(state_type,
                                                               owner=owner,
                                                               state_specific_params=state_specification)
+
+        # Re-parse standard_args using 1st item of tuple as the state_spec
         state_dict = _parse_state_spec(standard_args, context, state_spec=state_specification[0])
 
         # Add params to any params specified in first item of tuple
         if state_dict[PARAMS] is None:
             state_dict[PARAMS] = {}
         state_dict[PARAMS].update(state_params)
-        TEST = True
 
     # State specification dictionary
     else:

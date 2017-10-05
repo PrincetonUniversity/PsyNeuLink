@@ -567,6 +567,7 @@ class ParameterState(State_Base):
 
         Tuple specification can be:
             (state_spec, connections)
+        Assumes that state_spec has already been extracted and used by _parse_state_spec
 
         Returns params dict with CONNECTIONS entries if any of these was specified.
 
@@ -578,20 +579,10 @@ class ParameterState(State_Base):
         params_dict = {}
         tuple_spec = state_specific_params
 
-        # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
+        # Note: 1st item is assumed to be a specification for the ParameterState itself, handled in _parse_state_spec()
 
         # Get connection (afferent Projection(s)) specification from tuple
         PROJECTIONS_INDEX = len(tuple_spec)-1
-        VALUE_INDEX = 0
-
-        # Move value into REFERENCE_VALUE entry of params, so that _parse_state_spec can move it into state_dict
-        try:
-            value_spec = [VALUE_INDEX]
-        except IndexError:
-            value_spec = None
-        if value_spec:
-            params_dict[REFERENCE_VALUE] = value_spec
-
         # Get projection_spec and parse
         try:
             projections_spec = tuple_spec[PROJECTIONS_INDEX]
