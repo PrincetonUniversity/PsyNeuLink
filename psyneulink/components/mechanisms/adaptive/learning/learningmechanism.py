@@ -525,7 +525,7 @@ from psyneulink.components.functions.function import BackPropagation, Modulation
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
+from psyneulink.components.projections.projection import _is_projection_spec, _validate_receiver, projection_keywords
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.globals.keywords import CONTROL_PROJECTIONS, FUNCTION_PARAMS, IDENTITY_MATRIX, INDEX, INITIALIZING, \
     INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
@@ -824,7 +824,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     # ClassDefaults.variable = None
 
-    paramClassDefaults = Projection_Base.paramClassDefaults.copy()
+    paramClassDefaults = AdaptiveMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
         INPUT_STATES:input_state_names,
