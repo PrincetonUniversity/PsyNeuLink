@@ -7513,7 +7513,6 @@ class Stability(ObjectiveFunction):
         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
      """
 
-    from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
     from psyneulink.components.states.parameterstate import ParameterState
 
     componentName = STABILITY_FUNCTION
@@ -7526,7 +7525,7 @@ class Stability(ObjectiveFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=ClassDefaults.variable,
-                 matrix:tc.any(is_matrix, MappingProjection, ParameterState)=HOLLOW_MATRIX,
+                 matrix=HOLLOW_MATRIX,
                  # metric:is_distance_metric=ENERGY,
                  metric:tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric)=ENERGY,
                  transfer_fct:tc.optional(tc.any(function_type, method_type))=None,

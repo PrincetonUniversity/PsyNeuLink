@@ -153,7 +153,6 @@ from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.components.projections.projection import _validate_receiver
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal, _parse_gating_signal_spec
 from psyneulink.components.states.state import State_Base, _instantiate_state
@@ -407,6 +406,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         """
 
         from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
+        from psyneulink.components.projections.projection import _validate_receiver
 
         # EXTEND gating_policy TO ACCOMMODATE NEW GatingSignal -------------------------------------------------
         #        also used to determine constraint on GatingSignal value

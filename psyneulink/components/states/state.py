@@ -311,26 +311,13 @@ import typecheck as tc
 
 from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, function_type
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import _is_projection_spec
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
-from psyneulink.globals.keywords import VARIABLE, SIZE, FUNCTION_PARAMS, NAME, OWNER, PARAMS, CONTEXT, EXECUTING, \
-    VALUE, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, \
-    STANDARD_ARGS, STANDARD_OUTPUT_STATES, \
-    PROJECTIONS, PROJECTION_PARAMS,  PROJECTION_TYPE, RECEIVER, SENDER, \
-    MAPPING_PROJECTION_PARAMS, MATRIX, MATRIX_KEYWORD_SET, \
-    MODULATION, MODULATORY_SIGNAL, \
-    LEARNING, LEARNING_PROJECTION, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
-    CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
-    GATING, GATING_PROJECTION, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, \
-    kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
+from psyneulink.globals.keywords import CONTEXT, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, LEARNING, LEARNING_PROJECTION, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MATRIX_KEYWORD_SET, MODULATION, MODULATORY_SIGNAL, NAME, OWNER, PARAMS, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, SENDER, SIZE, STANDARD_ARGS, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
 from psyneulink.globals.log import LogEntry, LogLevel
 from psyneulink.globals.preferences.componentpreferenceset import kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, \
-    append_type_to_name, convert_to_np_array, get_class_attributes, is_value_spec, iscompatible, is_numeric, \
-    merge_param_dicts, type_match
+from psyneulink.globals.utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, append_type_to_name, convert_to_np_array, get_class_attributes, is_numeric, is_value_spec, iscompatible, merge_param_dicts, type_match
 from psyneulink.scheduling.timescale import CurrentTime, TimeScale
 
 state_keywords = component_keywords.copy()
@@ -2390,6 +2377,8 @@ def _parse_state_spec(owner,
     #                   # PARAMS:{PROJECTIONS:state.pathway_projections}})
     #                   PARAMS:state.params})
 
+    from psyneulink.components.projections.projection import _is_projection_spec
+
     # Validate that state_type is a State class
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
         raise StateError("\'state_type\' arg ({}) must be a sublcass of {}".format(state_type,
@@ -2605,6 +2594,8 @@ def _parse_state_spec(owner,
 
 
 def _is_legal_state_spec_tuple(owner, state_spec, state_type_name=None):
+
+    from psyneulink.components.projections.projection import _is_projection_spec
 
     state_type_name = state_type_name or STATE
 

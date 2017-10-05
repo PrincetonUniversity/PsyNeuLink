@@ -285,7 +285,6 @@ import typecheck as tc
 
 from psyneulink.components.component import Component, function_type, method_type, parameter_keywords
 from psyneulink.components.functions.function import Linear, get_param_value_for_keyword
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
 from psyneulink.globals.keywords import CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTION_TYPE, VALUE

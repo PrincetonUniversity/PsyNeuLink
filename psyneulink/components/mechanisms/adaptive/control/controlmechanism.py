@@ -305,8 +305,6 @@ from psyneulink.components.functions.function import LinearCombination, Modulati
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from psyneulink.components.mechanisms.processing.objectivemechanism import EXPONENT_INDEX, MONITORED_OUTPUT_STATES, ObjectiveMechanism, ObjectiveMechanismError, WEIGHT_INDEX, _parse_monitored_output_states
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import _validate_receiver
 from psyneulink.components.shellclasses import Mechanism, System_Base
 from psyneulink.components.states.modulatorysignals.controlsignal import _parse_control_signal_spec
 from psyneulink.components.states.outputstate import OutputState
@@ -641,6 +639,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
         * self.input_states is the usual ordered dict of states,
             each of which receives a Projection from a corresponding OutputState in self.monitored_output_states
         """
+
+        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+
         monitored_output_states = None
 
         # GET OutputStates to Monitor (to specify as or add to ObjectiveMechanism's monitored_output_states attribute
@@ -771,6 +772,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         Returns ControlSignal (OutputState)
         """
         from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
+        from psyneulink.components.projections.projection import _validate_receiver
         # from PsyNeuLink.Components.States.ParameterState import _get_parameter_state
         # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 

@@ -524,13 +524,8 @@ from psyneulink.components.component import InitStatus, parameter_keywords
 from psyneulink.components.functions.function import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import _is_projection_spec, _validate_receiver, projection_keywords
 from psyneulink.components.shellclasses import Mechanism, Projection
-from psyneulink.globals.keywords import CONTROL_PROJECTIONS, FUNCTION_PARAMS, IDENTITY_MATRIX, INDEX, INITIALIZING, \
-    INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, PARAMETER_STATE, PARAMS, PROJECTION, \
-    PROJECTIONS
+from psyneulink.globals.keywords import CONTROL_PROJECTIONS, FUNCTION_PARAMS, IDENTITY_MATRIX, INDEX, INITIALIZING, INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, PARAMETER_STATE, PARAMS, PROJECTION, PROJECTIONS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, parameter_spec
@@ -539,7 +534,6 @@ from psyneulink.scheduling.timescale import CentralClock, TimeScale
 # Params:
 
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
-projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
 def _is_learning_spec(spec):
     """Evaluate whether spec is a valid learning specification
@@ -548,6 +542,8 @@ def _is_learning_spec(spec):
     Otherwise, return :keyword:`False`
 
     """
+    from psyneulink.components.projections.projection import _is_projection_spec
+
     if spec is LEARNING:
         return True
     else:
@@ -905,6 +901,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
 
+        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.components.projections.projection import _validate_receiver
+
         if ERROR_SOURCE in target_set:
             if not isinstance(target_set[ERROR_SOURCE], (ObjectiveMechanism, LearningMechanism)):
                 raise LearningMechanismError("{} arg for {} ({}) must be an ObjectiveMechanism or another "
@@ -1115,6 +1114,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         from psyneulink.components.states.state import _parse_state_spec
         from psyneulink.components.states.parameterstate import ParameterState, _get_parameter_state
         from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
+        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.components.projections.projection import _validate_receiver
 
         # FIX: NEED TO CHARACTERIZE error_signal FOR BELOW
         # # EXTEND error_signals TO ACCOMMODATE NEW LearningSignal -------------------------------------------------
@@ -1405,6 +1406,7 @@ def _instantiate_error_signal_projection(sender, receiver):
     Uses and IDENTITY_MATRIX for the MappingProjection, so requires that the sender be the same length as the receiver.
 
     """
+    from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 
     if isinstance(sender, ObjectiveMechanism):
         sender = sender.output_states[OUTCOME]
