@@ -753,7 +753,7 @@ class OutputState(State_Base):
 
 # MODIFIED 9/30/17 NEW:
     @tc.typecheck
-    def _parse_state_specific_params(self, owner, state_specification_tuple):
+    def _parse_state_specific_params(self, owner, state_specific_params):
         """Get index and/or connections specified in an OutputState specification tuple
 
         Tuple specification can be:
@@ -778,9 +778,9 @@ class OutputState(State_Base):
         from PsyNeuLink.Globals.Keywords import CONNECTIONS, PROJECTIONS
 
         params_dict = {}
-        tuple_spec = state_specification_tuple
+        tuple_spec = state_specific_params
         INDEX_INDEX = 1
-        CONNECTIONS_INDEX = len(tuple_spec)-1
+        PROJECTIONS_INDEX = len(tuple_spec)-1
 
         # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
         # FIX: TEST FOR LEN OF TUPLE AND RAISE EXCEPTION OF < 2
@@ -792,24 +792,24 @@ class OutputState(State_Base):
 
         # Get CONNECTIONS (efferent Projection(s)) specification from tuple
         try:
-            connections_spec = tuple_spec[CONNECTIONS_INDEX]
+            projections_spec = tuple_spec[PROJECTIONS_INDEX]
             # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
         except IndexError:
-            connections_spec = None
-        if connections_spec:
+            projections_spec = None
+        if projections_spec:
             try:
                 # params_dict[CONNECTIONS] = _parse_projection_specs(self.__class__,
                 params_dict[PROJECTIONS] = _parse_projection_specs(self.__class__,
                                                                    owner=owner,
-                                                                   connections={connections_spec})
+                                                                   connections={projections_spec})
             except OutputStateError:
                 raise OutputStateError("Item {} of tuple specification in {} specification dictionary "
                                       "for {} ({}) is not a recognized specification for one or more "
                                       "{}s, {}s, or {}s that project to it".
-                                      format(CONNECTIONS_INDEX,
+                                      format(PROJECTIONS_INDEX,
                                              OutputState.__name__,
                                              owner.name,
-                                             connections_spec,
+                                             projections_spec,
                                              Mechanism.__name__,
                                              OutputState.__name__,
                                              Projection.__name))

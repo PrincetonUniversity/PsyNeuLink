@@ -970,7 +970,7 @@ class ControlSignal(ModulatorySignal):
 
 
 # MODIFIED 9/30/17 NEW:
-    def _parse_state_specific_params(self, owner, state_specification_tuple):
+    def _parse_state_specific_params(self, owner, state_specific_params):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
 
         Tuple specification can be:
@@ -988,12 +988,12 @@ class ControlSignal(ModulatorySignal):
         params_dict = {}
 
         try:
-            param_name, mech = state_specification_tuple
+            param_name, mech = state_specific_params
         except:
             raise ControlSignalError("Illegal {} specification tuple for {} ({});  "
                                      "it must contain two items: (<param_name>, <{}>)".
                                      format(ControlSignal.__name__, owner.name,
-                                            state_specification_tuple, Mechanism.__name__))
+                                            state_specific_params, Mechanism.__name__))
         if not isinstance(mech, Mechanism):
             raise ControlSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
                                      format(ControlSignal.__name__, owner.name, mech, mech.name))
@@ -1011,7 +1011,7 @@ class ControlSignal(ModulatorySignal):
             raise ControlSignalError("{} does not have any {} specified, so can't"
                                      "assign {} specified for {} ({})".
                                      format(mech.name, ParameterState.__name__, ControlSignal.__name__,
-                                            owner.name, state_specification_tuple))
+                                            owner.name, state_specific_params))
 
         # Assign connection specs to PROJECTIONS entry of params dict
         try:
@@ -1021,7 +1021,7 @@ class ControlSignal(ModulatorySignal):
                                                                connections=parameter_state)
         except ControlSignalError:
             raise ControlSignalError("Unable to parse {} specification dictionary for {} ({})".
-                                        format(ControlSignal.__name__, owner.name, state_specification_tuple))
+                                        format(ControlSignal.__name__, owner.name, state_specific_params))
 
         return params_dict
 # MODIFIED 9/30/17 END

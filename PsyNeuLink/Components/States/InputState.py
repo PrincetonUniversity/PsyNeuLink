@@ -290,13 +290,11 @@ import typecheck as tc
 from PsyNeuLink.Components.Component import InitStatus
 from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.States.State import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Globals.Keywords import \
-    EXPONENT, FUNCTION, MECHANISMS, PROJECTIONS, INPUT_STATE, INPUT_STATE_PARAMS, OUTPUT_STATES, \
-    MAPPING_PROJECTION, PATHWAY_PROJECTIONS, MODULATORY_PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT
+    EXPONENT, FUNCTION, REFERENCE_VALUE, PROJECTIONS, INPUT_STATE, INPUT_STATE_PARAMS, \
+    MAPPING_PROJECTION, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
@@ -645,7 +643,7 @@ class InputState(State_Base):
 
 # MODIFIED 9/30/17 NEW:
     @tc.typecheck
-    def _parse_state_specific_params(self, owner, state_specification_tuple):
+    def _parse_state_specific_params(self, owner, state_specific_params):
         """Get weights, exponents and/or any connections specified in an InputState specification tuple
         
         Tuple specification can be:
@@ -669,33 +667,31 @@ class InputState(State_Base):
         from PsyNeuLink.Globals.Keywords import CONNECTIONS        
 
         params_dict = {}
-        tuple_spec = state_specification_tuple
+        tuple_spec = state_specific_params
 
         # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
 
 
         # Get connection (afferent Projection(s)) specification from tuple
-        CONNECTIONS_INDEX = len(tuple_spec)-1
+        PROJECTIONS_INDEX = len(tuple_spec)-1
         try:
-            connections_spec = tuple_spec[CONNECTIONS_INDEX]
-            # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
+            projections_spec = tuple_spec[PROJECTIONS_INDEX]
         except IndexError:
-            connections_spec = None
+            projections_spec = None
 
-        if connections_spec:
+        if projections_spec:
             try:
-                # params_dict[CONNECTIONS] = _parse_projection_specs(self.__class__,
                 params_dict[PROJECTIONS] = _parse_projection_specs(self.__class__,
                                                                    owner=owner,
-                                                                   connections={connections_spec})
+                                                                   connections={projections_spec})
             except InputStateError:
                 raise InputStateError("Item {} of tuple specification in {} specification dictionary "
                                       "for {} ({}) is not a recognized specification for one or more "
                                       "{}s, {}s, or {}s that project to it".
-                                      format(CONNECTIONS_INDEX,
+                                      format(PROJECTIONS_INDEX,
                                              InputState.__name__,
                                              owner.name,
-                                             connections_spec,
+                                             projections_spec,
                                              Mechanism.__name__,
                                              OutputState.__name__,
                                              Projection.__name))

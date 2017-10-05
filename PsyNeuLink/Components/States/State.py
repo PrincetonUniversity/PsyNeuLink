@@ -1551,7 +1551,7 @@ class State_Base(State):
         raise StateError("PROGRAM ERROR: {} does not implement _get_primary_state method".
                          format(self.__class__.__name__))
 
-    def _parse_state_specific_params(self, owner, state_specification_tuple):
+    def _parse_state_specific_params(self, owner, state_specific_params):
         # FIX: MODIFY THIS TO HANDLE STANDARD FORM (state_spec, projection_spec); SUBCLASSES SHOULD OVERRIDE
         #       IF THEY ALLOW ANYTHING OR THAN IT, BUT SHOULD CALL THIS WHERE THEY WANT TO TRY THE STANDARD FORM
         # FIX:  ??ADD VERSION OF THIS TO PROJECT (FOR _parse_projection_specific_tuple)??
@@ -1978,18 +1978,6 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     Returns a State or None
     """
-
-    # # MODIFIED 10/3/17 OLD:
-    # # PARSE constraint_value
-    # constraint_dict = _parse_state_spec(owner=owner,
-    #                                     state_type=state_type,
-    #                                     state_spec=constraint_value,
-    #                                     value=None,
-    #                                     params=None)
-    # constraint_value = constraint_dict[VARIABLE]
-    # # PARSE state_spec using constraint_value as default for value
-    # # MODIFIED 10/3/17 END
-
 
     standard_args = get_args(inspect.currentframe())
     parsed_state_spec  = _parse_state_spec(standard_args, context, **state_spec)
@@ -2492,17 +2480,19 @@ def _parse_state_spec(standard_args,
     #    Call _parse_state_specific_params() with tuple to get params in dict form (to add to state_dict)
     elif isinstance(state_specification, tuple):
 
-        # FIX: 10/3/17 - MOVE THIS TO _parse_projection_specs (SINCE TUPLES REFER TO PROJECTIONS)
+        # FIX: 10/3/17 - CONSOLIDATE W/ CALL TO _parse_state_specific_params FOR State specification dict BELOW
+        # FIX:           NEEDS TO MOVE REFRENCE_VALUE ENTRY FROM PARAMS INTO STATE_DICT
         # Get state-specific params from tuple
         state_params = state_type._parse_state_specific_params(state_type,
                                                               owner=owner,
-                                                              state_specification_tuple=state_specification)
+                                                              state_specific_params=state_specification)
         state_dict = _parse_state_spec(standard_args, context, state_spec=state_specification[0])
 
         # Add params to any params specified in first item of tuple
         if state_dict[PARAMS] is None:
             state_dict[PARAMS] = {}
         state_dict[PARAMS].update(state_params)
+        TEST = True
 
     # State specification dictionary
     else:
@@ -2530,10 +2520,10 @@ def _parse_state_spec(standard_args,
                       format(VARIABLE, state_type, owner.name, state_specification_dict))
             if params and PROJECTIONS in params:
                 #       (E.G., WEIGHTS AND EXPONENTS FOR InputState AND INDEX FOR OutputState)
-                # FIX: 10/3/17 - ??Call state_type to parse any State-specific params
+                # FIX: 10/3/17 - CONSOLIDATE W/ CALL TO _parse_state_specific_params FOR State specification dict ABOVE
                 state_params = state_type._parse_state_specific_params(state_type,
                                                                       owner=owner,
-                                                                      state_specification_tuple=state_specification)
+                                                                      state_specific_params=state_specification)
                 # Get and parse projection specifications for the State
                 projection_params = []
                 projection_params.append(params[PROJECTIONS])

@@ -413,7 +413,7 @@ class ModulatorySignal(OutputState):
 
 # MODIFIED 9/30/17 NEW:
 # FIX: THIS IS GENERIC FOR MODULATORY SIGNALS, BUT SHOULD BE IMPLEMENTED FOR EACH SUBCLASS
-    def _parse_state_specific_params(self, owner, state_specification_tuple):
+    def _parse_state_specific_params(self, owner, state_specific_params):
         """Get connections specified in a ParameterState specification tuple
 
         Tuple specification can be:
@@ -427,30 +427,30 @@ class ModulatorySignal(OutputState):
         from PsyNeuLink.Globals.Keywords import CONNECTIONS, PROJECTIONS
 
         params_dict = {}
-        tuple_spec = state_specification_tuple
+        tuple_spec = state_specific_params
 
         # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
 
         # Get connection (afferent Projection(s)) specification from tuple
-        CONNECTIONS_INDEX = len(tuple_spec)-1
+        PROJECTIONS_INDEX = len(tuple_spec)-1
         try:
-            connections_spec = tuple_spec[CONNECTIONS_INDEX]
+            projections_spec = tuple_spec[PROJECTIONS_INDEX]
         except IndexError:
-            connections_spec = None
+            projections_spec = None
 
-        if connections_spec:
+        if projections_spec:
             try:
                 # params_dict[CONNECTIONS] = _parse_projection_specs(self.__class__,
                 params_dict[PROJECTIONS] = _parse_projection_specs(self,
                                                                    owner=owner,
-                                                                   connections={connections_spec})
+                                                                   connections={projections_spec})
             except ModulatorySignalError:
                 raise ModulatorySignalError("Item {} of tuple specification in {} specification dictionary "
                                             "for {} ({}) is not a recognized specification".
-                                            format(CONNECTIONS_INDEX,
+                                            format(PROJECTIONS_INDEX,
                                                    ModulatorySignalError.__name__,
                                                    owner.name,
-                                                   connections_spec))
+                                                   projections_spec))
 
         return params_dict
 # MODIFIED 9/30/17 END

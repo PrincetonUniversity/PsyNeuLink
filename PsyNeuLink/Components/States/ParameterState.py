@@ -288,7 +288,10 @@ from PsyNeuLink.Components.Functions.Function import Linear, get_param_value_for
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.ShellClasses import Mechanism, Projection
 from PsyNeuLink.Components.States.State import StateError, State_Base, _instantiate_state, state_type_keywords
-from PsyNeuLink.Globals.Keywords import CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTION_TYPE, VALUE
+from PsyNeuLink.Globals.Keywords import \
+    VALUE, FUNCTION, FUNCTION_PARAMS, REFERENCE_VALUE, MECHANISM, \
+    PROJECTION, PROJECTION_TYPE, PATHWAY_PROJECTION, CONTROL_PROJECTION, \
+    PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList, ReadOnlyOrderedDict, is_numeric, is_value_spec, iscompatible
@@ -557,6 +560,62 @@ class ParameterState(State_Base):
 
         self._instantiate_projections_to_state(projections=projections, context=context)
 
+    # MODIFIED 9/30/17 NEW:
+    @tc.typecheck
+    def _parse_state_specific_params(self, owner, state_specific_params):
+        """Get connections specified in a ParameterState specification tuple
+
+        Tuple specification can be:
+            (state_spec, connections)
+
+        Returns params dict with CONNECTIONS entries if any of these was specified.
+
+        """
+        from PsyNeuLink.Components.Projections.Projection import _parse_projection_specs
+        from PsyNeuLink.Components.Projections.Projection import Projection
+        from PsyNeuLink.Globals.Keywords import CONNECTIONS, PROJECTIONS
+
+        params_dict = {}
+        tuple_spec = state_specific_params
+
+        # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
+
+        # Get connection (afferent Projection(s)) specification from tuple
+        PROJECTIONS_INDEX = len(tuple_spec)-1
+        VALUE_INDEX = 0
+
+        # Move value into REFERENCE_VALUE entry of params, so that _parse_state_spec can move it into state_dict
+        try:
+            value_spec = [VALUE_INDEX]
+        except IndexError:
+            value_spec = None
+        if value_spec:
+            params_dict[REFERENCE_VALUE] = value_spec
+
+        # Get projection_spec and parse
+        try:
+            projections_spec = tuple_spec[PROJECTIONS_INDEX]
+            # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
+        except IndexError:
+            projections_spec = None
+
+        if projections_spec:
+            try:
+                params_dict[PROJECTIONS] = _parse_projection_specs(self,
+                                                                   owner=owner,
+                                                                   connections=projections_spec)
+            except ParameterStateError:
+                raise ParameterStateError("Item {} of tuple specification in {} specification dictionary "
+                                      "for {} ({}) is not a recognized specification".
+                                      format(PROJECTIONS_INDEX,
+                                             ParameterState.__name__,
+                                             owner.name,
+                                             projections_spec))
+
+        return params_dict
+# MODIFIED 9/30/17 END
+
+
     def _execute(self, function_params, context):
         """Call self.function with current parameter value as the variable
 
@@ -585,54 +644,6 @@ class ParameterState(State_Base):
         #           format(self.__class__.__name__.upper(), self.owner.name, CentralClock.trial, value))
 
         return value
-
-# FIX: TUPLE MIGHT SPECIFY CONTROL SIGNAL? (I.E., WHEN A PARAMETER IS SPECIFIED AS A TUPLE)??
-# FIX: CHECK THIS BY EXECUTING IN DEVEL AND BREAKING INSIDE TUPLE BRANCH OF _parse_state_spec
-
-# MODIFIED 9/30/17 NEW:
-    @tc.typecheck
-    def _parse_state_specific_params(self, owner, state_specification_tuple):
-        """Get connections specified in a ParameterState specification tuple
-
-        Tuple specification can be:
-            (state_spec, connections)
-
-        Returns params dict with CONNECTIONS entries if any of these was specified.
-
-        """
-        from PsyNeuLink.Components.Projections.Projection import _parse_projection_specs
-        from PsyNeuLink.Components.Projections.Projection import Projection
-        from PsyNeuLink.Globals.Keywords import CONNECTIONS, PROJECTIONS
-
-        params_dict = {}
-        tuple_spec = state_specification_tuple
-
-        # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
-
-        # Get connection (afferent Projection(s)) specification from tuple
-        CONNECTIONS_INDEX = len(tuple_spec)-1
-        try:
-            connections_spec = tuple_spec[CONNECTIONS_INDEX]
-            # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
-        except IndexError:
-            connections_spec = None
-
-        if connections_spec:
-            try:
-                # params_dict[CONNECTIONS] = _parse_projection_specs(self,
-                params_dict[PROJECTIONS] = _parse_projection_specs(self,
-                                                                   owner=owner,
-                                                                   connections=connections_spec)
-            except ParameterStateError:
-                raise ParameterStateError("Item {} of tuple specification in {} specification dictionary "
-                                      "for {} ({}) is not a recognized specification".
-                                      format(CONNECTIONS_INDEX,
-                                             ParameterState.__name__,
-                                             owner.name,
-                                             connections_spec))
-
-        return params_dict
-# MODIFIED 9/30/17 END
 
     @property
     def pathway_projections(self):
@@ -793,18 +804,21 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                           "with the same name as a parameter of the component itself".
                                           format(function_name, owner.name, function_param_name))
 
-            # Use function_param_value as constraint
-            # IMPLEMENTATION NOTE:  need to copy, since _instantiate_state() calls _parse_state_value()
-            #                       for constraints before state_spec, which moves items to subdictionaries,
-            #                       which would make them inaccessible to the subsequent parse of state_spec
+            # # FIX: 10/3/17 - ??MOVE THIS TO _parse_state_specific_params ----------------
+            # # Use function_param_value as constraint
+            # # IMPLEMENTATION NOTE:  need to copy, since _instantiate_state() calls _parse_state_value()
+            # #                       for constraints before state_spec, which moves items to subdictionaries,
+            # #                       which would make them inaccessible to the subsequent parse of state_spec
             from copy import deepcopy
             reference_value = deepcopy(function_param_value)
+            # # FIX: ----------------------------------------------------------------------
 
             # Assign parameterState for function_param to the component
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
                                       name=function_param_name,
-                                      # state_spec=function_param_value,
+                                      state_spec=function_param_value,
+                                      # reference_value=reference_value,
                                       reference_value=reference_value,
                                       reference_value_name=function_param_name,
                                       params=None,
