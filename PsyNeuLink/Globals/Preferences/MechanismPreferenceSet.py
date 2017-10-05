@@ -13,7 +13,7 @@
 import inspect
 
 from PsyNeuLink.Globals.Keywords import NAME
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import kpReportOutputPref, kpRuntimeParamStickyAssignmentPref, kpVerbosePref
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref, kpVerbosePref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Utilities import Modulation
 
