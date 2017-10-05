@@ -2098,12 +2098,12 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     #                             state_spec_dict[VALUE],
     #                             reference_value,
     #                             state_spec_dict[OWNER].name))
-
-    # INSTANTIATE STATE:
-
-    # MODIFIED 10/3/17 OLD AND NEW:
+    # MODIFIED 10/3/17 OLD:
+    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
     state_spec_dict[REFERENCE_VALUE] = convert_to_np_array(reference_value,1)
     # MODIFIED 10/3/17 END
+
+    # INSTANTIATE STATE:
 
     # IMPLEMENTATION NOTE:
     # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from ComponentPreferenceSet)
