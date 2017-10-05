@@ -32,6 +32,11 @@ runtimeParamStickyAssignmentPrefInstanceDefault = PreferenceEntry(False, Prefere
 runtimeParamStickyAssignmentPrefTypeDefault = PreferenceEntry(False, PreferenceLevel.TYPE)
 runtimeParamStickyAssignmentPrefCategoryDefault = PreferenceEntry(False, PreferenceLevel.CATEGORY)
 
+reportOutputPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+logPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+verbosePrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+paramValidationPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+
 
 class MechanismPreferenceSet(ComponentPreferenceSet):
     """Extends ComponentPreferenceSet to include Mechanism-specific preferences
