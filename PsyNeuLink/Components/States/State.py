@@ -2045,12 +2045,25 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         reference_value = state_spec_dict[REFERENCE_VALUE]
         variable = state_spec_dict[VARIABLE]
 
-        # FIX: FINISH THIS UP FOR REMANIING STANDARD ARGS: REFERENCE_VALUE, PARAMS, PREFS
+        # FIX: FINISH THIS UP FOR REMAINIING STANDARD ARGS: REFERENCE_VALUE, PARAMS, PREFS
         if variable:
                 state.instance_defaults.variable = variable
                 # FIX: ??OR IS THIS THE CORRECT VERSION:
                 variable = owner._update_variable(params[VARIABLE])
                 variable = owner.instance_defaults.variable
+
+        # # FIX: 10/3/17 - PER THE FOLLOWING (FROM _parse_state_spec DOCSTRING):
+        # # FIX: DO THIS _parse_projection_spec??  IS THIS EVE CORRECT?
+        # # *value* arg should generally be a constraint for the value of the State;  however,
+        # #     if state_spec is a Projection, and method is being called from:
+        # #         InputState, value should be the projection's value;
+        # #         ParameterState, value should be the projection's value;
+        # #         OutputState, value should be the projection's variable
+        # FIX: FOR VARIABLE, NEED TO KNOW state_type AND RELATIONSHIP TO ONWER'S VAR/VALUE:
+        # variable:
+        #    InputState: set of projections it receives
+        #    ParameterState: value of its sender
+        #    OutputState: value[INDEX] of its owner
         # FIX: ----------------------------------------------------------
 
         # State's value is incompatible with Mechanism's variable
@@ -2074,21 +2087,9 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     state_spec_dict = parsed_state_spec
 
-    # # FIX: 10/3/17 - PER THE FOLLOWING (FROM _parse_state_spec DOCSTRING):
-    # # FIX: DO THIS _parse_projection_spec??  IS THIS EVE CORRECT?
-    # # *value* arg should generally be a constraint for the value of the State;  however,
-    # #     if state_spec is a Projection, and method is being called from:
-    # #         InputState, value should be the projection's value;
-    # #         ParameterState, value should be the projection's value;
-    # #         OutputState, value should be the projection's variable
-    # FIX: FOR VARIABLE, NEED TO KNOW state_type AND RELATIONSHIP TO ONWER'S VAR/VALUE:
-    # variable:
-    #    InputState: set of projections it receives
-    #    ParameterState: value of its sender
-    #    OutputState: value[INDEX] of its owner
-
     value = state_spec_dict.pop(VALUE, None)
 
+    # FIX: 10/3/17 - RECONCILE WITH XXXXX
     # # Check that it's variable is compatible with reference_value, and if not, assign the latter as default variable
     # # if reference_value is not None and not iscompatible(variable, reference_value):
     # if reference_value is None or not iscompatible(variable, reference_value):
@@ -2289,319 +2290,6 @@ def _parse_state_type(owner, state_spec):
 #      TO A MECHANISM
 
 STATE_SPEC_INDEX = 0
-
-# @tc.typecheck
-# def _parse_state_spec(owner,
-#                       state_type:_is_state_class,
-#                       state_spec,
-#                       name:tc.optional(str)=None,
-#                       variable=None,
-#                       value=None,
-#                       # projections:tc.any(list, bool)=[],
-#                       # modulatory_projections:tc.any(list,bool)=[],
-#                       params=None,
-#                       force_dict=False,
-#                       context=None):
-#
-#     """Return either State object or State specification dict for state_spec
-#
-#     If state_spec is or resolves to a State object:
-#         if force_dict is False:  return State object
-#         if force_dict is True: parse into State specification_dictionary
-#             (replacing any components with their id to avoid problems with deepcopy)
-#     Otherwise, return State specification dictionary using arguments provided as defaults
-#     Warn if variable is assigned the default value, and verbosePref is set on owner.
-#     **value** arg should generally be a constraint for the value of the State;
-#         if state_spec is a Projection, and method is being called from:
-#             InputState, value should be the projection's value;
-#             ParameterState, value should be the projection's value;
-#             OutputState, value should be the projection's variable
-#     Any entries with keys other than STANDARD_ARGS are moved to entries of the dict in the PARAMS entry
-#     """
-#
-#     # # IMPLEMENTATION NOTE:  ONLY CALLED IF force_dict=True;  CAN AVOID BY NEVER SETTING THAT OPTION TO True
-#     # #                       STILL NEEDS WORK: SEEMS TO SET PARAMS AND SO CAUSES CALL TO assign_params TO BAD EFFECT
-#     # # Get convert state object into State specification dictionary,
-#     # #     replacing any set, dict or Component with its id to avoid problems with deepcopy
-#     # @tc.typecheck
-#     # def _state_dict(state:State):
-#     #     @tc.typecheck
-#     #     # Checks if item is Component and returns its id if it is
-#     #     def filter_params(item):
-#     #         if isinstance(item, (set, dict, Component)):
-#     #             item = id(item)
-#     #         return item
-#     #     if hasattr(state, 'params') and state.params:
-#     #         for param in state.params:
-#     #             if isinstance(param, collections.Iterable) and not isinstance(param, str):
-#     #                 for index, item in param if isinstance(param, dict) else enumerate(param):
-#     #                     state.params[param][index] = filter_params(item)
-#     #             else:
-#     #                 state.params[param] = filter_params(state.params[param])
-#     #     return dict(**{NAME:state.name,
-#     #                   VARIABLE:variable,
-#     #                   VALUE:state.value,
-#     #                   # PARAMS:{PROJECTIONS:state.pathway_projections}})
-#     #                   PARAMS:state.params})
-#
-#     # Validate that state_type is a State class
-#     if not inspect.isclass(state_type) or not issubclass(state_type, State):
-#         raise StateError("\'state_type\' arg ({}) must be a sublcass of {}".format(state_type,
-#                                                                                    State.__name__))
-#     state_type_name = state_type.__name__
-#
-#     # State object:
-#     # - check that it is of the specified type and, if so:
-#     #     - if force_dict is False, return the primary state object
-#     #     - if force_dict is True, get state's attributes and return their values in a State specification dictionary
-#
-#     if isinstance(state_spec, State):
-#         if isinstance(state_spec, state_type):
-#             # if force_dict:
-#             #     return _state_dict(state_spec)
-#             # else:
-#             #     return state_spec
-#             return state_spec
-#         else:
-#             raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
-#                              "class of state being instantiated ({})".format(state_spec, state_type_name))
-#
-#     # Mechanism object:
-#     # - call owner to get primary state of specified type;
-#     # - if force_dict is False, return the primary state object
-#     # - if force_dict is True, get primary state's attributes and return their values in a state specification dict
-#     if isinstance(state_spec, Mechanism):
-#         # primary_state = state_spec._get_primary_state(state_type)
-#         mech = state_spec
-#         primary_state = state_type._get_primary_state(state_type, mech)
-#         # if force_dict:
-#         #     return _state_dict(primary_state)
-#         # else:
-#         #     return primary_state
-#         return primary_state
-#
-#     if params:
-#         # If variable is specified in state_params, use that
-#         if VARIABLE in params and params[VARIABLE] is not None:
-#             variable = owner._update_variable(params[VARIABLE])
-#
-#     # Create default dict for return
-#     state_dict = {NAME: name,
-#                   VARIABLE: variable,
-#                   VALUE: value,
-#                   PARAMS: params,
-#                   STATE_TYPE: state_type,
-#                   }
-#
-#     # State class
-#     if inspect.isclass(state_spec) and issubclass(state_spec, State):
-#         if state_spec is state_type:
-#             state_dict[VARIABLE] = state_spec.ClassDefaults.variable
-#         else:
-#             raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
-#                              "class of state being instantiated ({})".format(state_spec, state_type_name))
-#
-#     # # State object [PARSED INTO DICT HERE]
-#     # elif isinstance(state_spec, State):
-#     #     if state_spec is state_type:
-#     #         name = state_spec.name
-#     #         # variable = state_spec.value
-#     #         # variable = state_spec.ClassDefaults.variable
-#     #         value = state_spec.value
-#     #         modulatory_projections =  state_spec.mod_projections
-#     #         params = state_spec.user_params.copy()
-#     #     else:
-#     #         raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
-#     #                          "class of state being instantiated ({})".format(state_spec, state_type))
-#
-#     # Specification dict
-#     elif isinstance(state_spec, dict):
-#         state_spec=state_spec.copy()
-#
-#         # Dict has a single entry in which the key is not a recognized keyword,
-#         #    so assume it is of the form {<STATE_NAME>:<STATE_SPECIFICATION_DICT>}:
-#         #    - assign STATE_NAME as name,
-#         #    - recursively call _parse_state_spec
-#         #    - return parsed STATE_SPECIFICATION_DICT (with key as value of the NAME entry)
-#         if len(state_spec) == 1 and list(state_spec.keys())[0] not in (state_keywords | STANDARD_ARGS):
-#             # Use name specified as key in initial state_spec (overrides one in STATE_SPECIFICATION_DICT if specified)
-#             #    and assign its value as the new state_spec (used in recursive call below)
-#             name, state_spec = list(state_spec.items())[0]
-#             # Recursively call _parse_state_spec
-#             state_dict = _parse_state_spec(owner=owner,
-#                                            state_type=state_type,
-#                                            state_spec=state_spec,
-#                                            name=name,
-#                                            variable=variable,
-#                                            value=value,
-#                                            params=params)
-#
-#         # Standard state specification dict
-#         else:
-#             # Error if STATE_TYPE is specified in dict and not the same as the state_spec specified in call to method
-#             if STATE_TYPE in state_spec and state_spec[STATE_TYPE] != state_type:
-#                 raise StateError("PROGRAM ERROR: STATE_TYPE entry in State specification dictionary for {} ({}) "
-#                                  "is not the same as one specified in call to _parse_state_spec ({})".
-#                                  format(owner.name, state_spec[STATE_TYPE], state_type))
-#             # Warn if VARIABLE was not in dict
-#             if not VARIABLE in state_spec and owner.prefs.verbosePref:
-#                 print("{} missing from specification dict for {} of {};  default ({}) will be used".
-#                       format(VARIABLE, state_type, owner.name, state_spec))
-#             # Move all entries that are not for standard arguments from state_spec into params dict
-#             for spec in [param_spec for param_spec in state_spec.copy()
-#                          if not param_spec in STANDARD_ARGS]:
-#                 params = params or {}
-#                 params[spec] = state_spec[spec]
-#                 del state_spec[spec]
-#             state_dict.update(state_spec)
-#             if params:
-#                 #       (E.G., WEIGHTS AND EXPONENTS FOR InputState AND INDEX FOR OutputState)
-#                 # Call state_type to parse any State-specific params
-#                 # FIX: TEST THAT ENTRIES EXIST IN PARAMS?
-#                 # Get and parse connection specifications for the State
-#                 connection_params = []
-#                 if CONNECTIONS in params:
-#                     # connection_params.update(params)
-#                     connection_params.append(params[CONNECTIONS])
-#                 # For backward compatibility:
-#                 if PROJECTIONS in params:
-#                     # connection_params.update(params)
-#                     connection_params.append(params[PROJECTIONS])
-#                 if connection_params:
-#                     params[CONNECTIONS] = _parse_projection_specs(state_type, owner, connection_params)
-#                 # Update state_dict[PARAMS] with params
-#                 if state_dict[PARAMS] is None:
-#                     state_dict[PARAMS] = {}
-#                 state_dict[PARAMS].update(params)
-#
-#     # # MODIFIED 9/29/17 OLD:
-#     # # 2-item tuple;  could be:
-#     # #    (spec, Projection)
-#     # #    (param_name, Mechanism)
-#     # elif isinstance(state_spec, tuple):
-#     #     # FIX 9/29/17 MOVE THE CODE IN THE FOLLOWING METHOD TO _parse_state_specific_entries
-#     #     # FIX: DEAL WITH WHICH ITEM OF TUPLE IS WHAT FOR DIFFERENT STATE TYPES (in _parse_state_specific_entries)
-#     #     # FIX: REVERSE ORDER OF (MECHANISM, PARAM) SPECIFICATION FOR ParameterStates (ADJUST SCRIPTS ACCODINGLY)
-#     #     # _is_legal_state_spec_tuple(owner, state_spec, state_type_name)
-#     #     params = state_type._parse_state_specific_entries(state_type, params)
-#     #
-#     #     # Put projection spec from second item of tuple in params
-#     #     params = params or {}
-#     #     # FIX 5/23/17: NEED TO HANDLE NON-MODULATORY PROJECTION SPECS
-#     #     params.update({PROJECTIONS:[state_spec[1]]})
-#     #
-#     #     # FIX: 9/17/17 NEED TO HANDLE (ParamName string, Mechanism) for state_type = ControlSignal
-#     #
-#     #     # Parse state_spec in first item of tuple (without params)
-#     #     state_dict = _parse_state_spec(owner=owner,
-#     #                                    state_type=state_type,
-#     #                                    state_spec=state_spec[0],
-#     #                                    name=name,
-#     #                                    variable=variable,
-#     #                                    value=value,
-#     #                                    # projections=projections,
-#     #                                    params={})
-#     #     # Add params (with projection spec) to any params specified in first item of tuple
-#     #     if state_dict[PARAMS] is None:
-#     #         state_dict[PARAMS] = {}
-#     #     state_dict[PARAMS].update(params)
-#
-#     # MODIFIED 9/29/17 NEW:
-#     # Specification tuple
-#     #    Assume first item is the state specification, and use as base for state_dict
-#     #    Call _parse_state_specific_tuple() with tuple to get params in dict form (to add to state_dict)
-#     elif isinstance(state_spec, tuple):
-#
-#         # FIX: MOVE THIS TO _parse_projection_specs (SINCE TUPLES REFER TO PROJECTIONS)
-#         # Get state-specific params from tuple
-#         params = state_type._parse_state_specific_tuple(state_type,
-#                                                         owner=owner,
-#                                                         state_specification_tuple=state_spec)
-#
-#         # FIX: 9/17/17 NEED TO HANDLE (ParamName string, Mechanism) for state_type = ControlSignal
-#
-#         # Parse state_spec in first item of tuple (without params)
-#         state_dict = _parse_state_spec(owner=owner,
-#                                        state_type=state_type,
-#                                        state_spec=state_spec[0],
-#                                        name=name,
-#                                        variable=variable,
-#                                        value=value,
-#                                        # projections=projections,
-#                                        params={})
-#         # Add params to any params specified in first item of tuple
-#         if state_dict[PARAMS] is None:
-#             state_dict[PARAMS] = {}
-#         state_dict[PARAMS].update(params)
-#
-#     # MODIFIED 9/29/17 END
-#
-#     # Projection class, object, or keyword:
-#     #     set variable to value and assign projection spec to PROJECTIONS entry in params
-#     # IMPLEMENTATION NOTE:  It is the caller's responsibility to assign the value arg
-#     #                           appropriately for the state being requested, for:
-#     #                               InputState, projection's value;
-#     #                               ParameterState, projection's (= parameter's) value;
-#     #                               OutputState, projection's variable .
-#     # Don't allow matrix keywords -- force them to be converted from a string into a value (below)
-#     elif _is_projection_spec(state_spec, include_matrix_spec=False):
-#         # state_spec = state_variable
-#         state_dict[VARIABLE] =  value
-#         if state_dict[PARAMS] is None:
-#             state_dict[PARAMS] = {}
-#         # state_dict[PARAMS].update({CONNECTIONS:[state_spec]})
-#         state_dict[PARAMS].update({PROJECTIONS:[state_spec]})
-#
-#     # string (keyword or name specification)
-#     elif isinstance(state_spec, str):
-#         # Check if it is a keyword
-#         spec = get_param_value_for_keyword(owner, state_spec)
-#         # A value was returned, so use value of keyword as variable
-#         if spec is not None:
-#             state_dict[VARIABLE] = spec
-#             # NOTE: (7/26/17 CW) This warning below may not be appropriate, since this routine is run if the
-#             # matrix parameter is specified as a keyword, which may be intentional.
-#             if owner.prefs.verbosePref:
-#                 print("{} not specified for {} of {};  default ({}) will be used".
-#                       format(VARIABLE, state_type, owner.name, value))
-#         # It is not a keyword, so treat string as the name for the state
-#         else:
-#             state_dict[NAME] = state_spec
-#
-#     # function; try to resolve to a value, otherwise return None to suppress instantiation of State
-#     elif isinstance(state_spec, function_type):
-#         state_dict[VALUE] = get_param_value_for_function(owner, state_spec)
-#         if state_dict[VALUE] is None:
-#             # return None
-#             raise StateError("PROGRAM ERROR: state_spec for {} of {} is a function ({}), "
-#                              "but it failed to return a value".format(state_type_name, owner.name, state_spec))
-#
-#     # value, so use as variable of State
-#     elif is_value_spec(state_spec):
-#         state_dict[VARIABLE] = state_spec
-#         state_dict[VALUE] = state_spec
-#
-#     elif state_spec is None:
-#         # pass
-#         raise StateError("PROGRAM ERROR: state_spec for {} of {} is None".format(state_type_name, owner.name))
-#
-#     else:
-#         if name and hasattr(owner, name):
-#             owner_name = owner.name
-#         else:
-#             owner_name = owner.__class__.__name__
-#         raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
-#                          format(state_type_name, owner.name, state_spec))
-#
-#
-#     # If variable is none, use value:
-#     if state_dict[VARIABLE] is None:
-#         state_dict[VARIABLE] = state_dict[VALUE]
-#
-#     # # Add STATE_TYPE entry to state_dict
-#     # state_dict[STATE_TYPE] = state_type
-#
-#     return state_dict
 
 # MODIFIED 10/3/17 NEW:
 @tc.typecheck
