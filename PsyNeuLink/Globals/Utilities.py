@@ -54,6 +54,7 @@ KVO
 
 OTHER
 ~~~~~
+* `get_args`
 * `merge_param_dicts`
 * `multi_getattr`
 * `np_array_less_that_2d`
@@ -453,6 +454,13 @@ def iscompatible(candidate, reference=None, **kargs):
             return True
     else:
         return False
+
+def get_args(frame):
+    """Gets dictionary of arguments and their values for a function
+    Frame should be assigned as follows in the funciton itself:  frame = inspect.currentframe()
+    """
+    args, _, _, values = inspect.getargvalues(frame)
+    return dict((key, value) for key, value in values.items() if key in args)
 
 def merge_param_dicts(source, specific, general):
     """Search source dict for specific and general dicts, merge specific with general, and return merged

@@ -331,8 +331,8 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import kpVerbosePref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, \
-    append_type_to_name, convert_to_np_array, get_class_attributes, is_value_spec, iscompatible, is_numeric, \
-    merge_param_dicts, type_match
+    convert_to_np_array, get_class_attributes, is_value_spec, iscompatible, is_numeric, \
+    merge_param_dicts, type_match, get_args
 from PsyNeuLink.Scheduling.TimeScale import CurrentTime, TimeScale
 
 state_keywords = component_keywords.copy()
@@ -1913,9 +1913,11 @@ def _instantiate_state_list(owner,
 
     for index, state_spec in enumerate(state_list):
 
-        state = _instantiate_state(state_spec,
+        state = _instantiate_state(state_type=state_type,
+                                   owner=owner,
                                    reference_value=reference_value,
                                    reference_value_name=reference_value_name,
+                                   state_spec=state_spec,
                                    context=context)
 
         # Get name of state, and use as index to assign to states ContentAddressableList
@@ -1924,15 +1926,15 @@ def _instantiate_state_list(owner,
 
 
 @tc.typecheck
-def _instantiate_state(state_type,
-                       owner,
-                       reference_value,
-                       name=None,
-                       variable=None,
-                       params=None,
+def _instantiate_state(state_type:_is_state_class,           # State's type
+                       owner:tc.any(Mechanism, Projection),  # State's owner
+                       reference_value,                      # constraint for State's value and default for variable
+                       name:tc.optional(str)=None,           # state's name if specified
+                       variable=None,                        # used as default value for state if specified
+                       params=None,                          # state-specific params
                        prefs=None,
                        context=None,
-                       **state_specification):
+                       **state_spec):                        # captures *state_spec* arg and any other non-standard ones
     """Instantiate a State of specified type, with a value that is compatible with reference_value
 
     This is the interface between the various ways in which a state can be specified and the State's constructor
@@ -1976,10 +1978,8 @@ def _instantiate_state(state_type,
     Returns a State or None
     """
 
-    owner = state_specification[OWNER]
-
-    args = inspect.signature(_parse_state_spec).parameters.items()
-    parsed_state_spec = _parse_state_spec(**args, **state_specification)
+    standard_args = get_args(inspect.currentframe())
+    parsed_state_spec  = _parse_state_spec(standard_args, **state_spec)
 
     # FIX: 10/3/17: HANDLE NAME HERE (GET CODE FROM ABOVE)
             # if not state_name is state_spec and not state_name in states:
@@ -2059,9 +2059,16 @@ def _instantiate_state(state_type,
     #    so, call constructor to instantiate State
 
     state_spec_dict = parsed_state_spec
-
     reference_value = state_spec_dict[REFERENCE_VALUE]
     variable = state_spec_dict[VARIABLE]
+
+    # FIX: FINISH THIS UP FOR REMANIING STANDARD ARGS: REFERENCE_VALUE, PARAMS, PREFS
+    if variable:
+            state.instance_defaults.variable = variable
+            # FIX: ??OR IS THIS THE CORRECT VERSION:
+            variable = owner._update_variable(params[VARIABLE])
+
+
 
     # # FIX: 10/3/17 - PER THE FOLLOWING (FROM _parse_state_spec DOCSTRING):
     # # *value* arg should generally be a constraint for the value of the State;  however,
@@ -2586,17 +2593,8 @@ STATE_SPEC_INDEX = 0
 
 # MODIFIED 10/3/17 NEW:
 @tc.typecheck
-def _parse_state_spec(
-                      # state_type:_is_state_class,                      # State's type
-                      # owner:tc.any(Mechanism, Projection),             # State's owner
-                      # reference_value,                                 # used as constraint for State's value and default for variable
-                      # name:tc.optional(str)=None,                      # used as state's name if specified
-                      # variable=None,                                   # used as default value for state if specified
-                      # params=None,                                     # state-specific params
-                      # prefs=None,
-                      # context=None,
-                      **state_spec                                      # state_spec (other than a specification dict)
-                      ):
+def _parse_state_spec(standard_args,
+                      **state_specs):
 
     """Return either State object or State specification dict for state_spec
 
@@ -2608,31 +2606,59 @@ def _parse_state_spec(
             InputState, value should be the projection's value;
             ParameterState, value should be the projection's value;
             OutputState, value should be the projection's variable
-    Any entries with keys other than STANDARD_ARGS are passed to _parse_state_specific_specs and place in params
+
+    If a State specification dictionary is specified in the *state_specs* argument,
+       its entries are moved to standard_args, replacing any that are there, and they are deleted from state_specs;
+       any remaining entries are passed to _parse_state_specific_specs and placed in params.
+    This gives precedence to values of standard args specified in a State specification dictionary
+       (e.g., by the user) over any explicitly specified in the call to _instantiate_state.
+    The standard arguments (from standard_args and/or a State specification dictonary in state_specs)
+        are placed assigned to state_dict, as defaults for the State specification dictionary returned by this method.
+    Any item in *state_specs* OTHER THAN a State specification dictionary is placed in state_spec_arg
+       is parsed and/or validated by this method.
+    Values in standard_args (i.e., specified in the call to _instantiate_state) are used to validate a state specified
+       in state_spec_arg;
+       - if the State is an existing one, the standard_arg values are assigned to it;
+       - if state_spec_arg specifies a new State, the values in standard_args are used as defaults;  any specified
+          in the state_spec_arg specification are used
+    Any arguments to _instantiate_states that are not standard arguments (in standard_args) or a state_specs_arg
+       generate a warning and are ignored.
+
     """
 
-    # If a State specification dictionary is specified in a *state_spec* argument,
-    #    move its entries out of there and into the local ("state_specification") dict
-    #    and delete their values from the State specification dictionary;
-    #    this is so that if a State specification dictionary is used, its assignments appear as
-    #    the args in the State specification dictionary appear as keyword args in _parse_state_spec
-    #        while any other
-    #        are left to be received by parse_state_spec in its *state_spec* dict
-    # NOTES:
-    #    - this gives precedence to values of standard ars specified in the State specification dictionary
-    #      (e.g., by the user) over any explicitly specified in the call to _instantiate_state
-    #    - anything in a *state_spec* argument of _instantiate_state OTHER THAN a State specification dictionary
-    #          (e.g., a name, number, projection, or tuple) is passed into _parse_state_spec as its
-    #          *state_spec* dict to be used to instantiate the State
-    if STATE_SPEC in state_specification and isinstance(state_specification[STATE_SPEC], dict):
-        state_specification.update(state_specification[STATE_SPEC])
-        del state_specification[STATE_SPEC]
 
+    STATE_SPEC_ARG = 'state_spec'
+    state_specification = None
+    state_specific_args = {}
 
+    # If there is a state_specs arg passed from _instantiate_state:
+    if STATE_SPEC_ARG in state_specs:
 
-    # Move standard args from function call into state_dict
-    args = inspect.signature(_parse_state_spec).parameters.items()
-    state_dict = dict((arg, value) for arg, value in args.items() if arg in STANDARD_STATE_ARGS)
+        # If it is a State specification dictionary
+        if isinstance(state_specs[STATE_SPEC_ARG], dict):
+            # Use the value of any standard args specified in the State specification dictionary
+            #    to replace those explicitly specified in the call to _instantiate_state (i.e., passed in standard_args)
+            state_specific_args = state_specs[STATE_SPEC_ARG]
+            standard_args.update({key: state_specific_args[key] for key in state_specific_args if key in standard_args})
+            # Delete them from the State specification dictionary, leaving only state-specific items there
+            for key in standard_args:
+                state_specific_args.pop(key, None)
+
+        else:
+            state_specification = state_specs[STATE_SPEC_ARG]
+
+        # Delete the State specification dictionary from state_spec
+        del state_specs[STATE_SPEC_ARG]
+
+    if state_specs:
+        print('Args other than standard args and state_spec were in _instantiate_state ({})'.
+              format(state_specs))
+
+    state_dict = standard_args
+    owner = state_dict[OWNER]
+    state_type = state_dict[STATE_TYPE]
+    reference_value = state_dict[REFERENCE_VALUE]
+    variable = state_dict[VARIABLE]
 
     #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
     if isinstance(reference_value, numbers.Number):
@@ -2644,72 +2670,54 @@ def _parse_state_spec(
                                                                                    State.__name__))
     state_type_name = state_type.__name__
 
-    # State object:
-    # - check that it is of the specified type and, if so:
-    #     - if force_dict is False, return the primary state object
-    #     - if force_dict is True, get state's attributes and return their values in a State specification dictionary
+    # EXISTING STATES
 
-    if isinstance(state_spec, State):
-        if isinstance(state_spec, state_type):
-            # if force_dict:
-            #     return _state_dict(state_spec)
-            # else:
-            #     return state_spec
-            return state_spec
-        else:
-            raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
-                             "class of state being instantiated ({})".format(state_spec, state_type_name))
+    # Validate that specified state is consistent with any standard_args specified in call to _instantiate_state
 
-    # Mechanism object:
-    # - call owner to get primary state of specified type;
-    # - if force_dict is False, return the primary state object
-    # - if force_dict is True, get primary state's attributes and return their values in a state specification dict
-    if isinstance(state_spec, Mechanism):
-        # primary_state = state_spec._get_primary_state(state_type)
-        mech = state_spec
-        primary_state = state_type._get_primary_state(state_type, mech)
-        # if force_dict:
-        #     return _state_dict(primary_state)
-        # else:
-        #     return primary_state
-        return primary_state
+    # State or Mechanism object specification:
+    if not isinstance(state_specification, (Mechanism, State)):
+        state = None
 
-    if params:
-        # If variable is specified in state_params, use that
-        if VARIABLE in params and params[VARIABLE] is not None:
-            variable = owner._update_variable(params[VARIABLE])
+        if isinstance(state_specification, State):
+            state = state_specification
 
-    # Create default dict for return
-    state_dict = {NAME: name,
-                  VARIABLE: variable,
-                  VALUE: value,
-                  PARAMS: params,
-                  STATE_TYPE: state_type,
-                  }
+        # Mechanism object:
+        # - call owner to get primary state of specified type
+        # - validate and return
+        elif isinstance(state_specification, Mechanism):
+            mech = state_specification
+            state = state_type._get_primary_state(state_type, mech)
+
+        if not isinstance(state, state_type):
+            raise StateError("State specified in the call to _instantiate_state for {} ({}) "
+                             "does not match the type specified in the \'{}\' argument ({})".
+                             format(owner.name, state.name, STATE_TYPE, state_type.__name__))
+
+        if not state.owner is owner:
+            raise StateError("The State specified in a call to _instantiate_state ({}) "
+                             "does belong to the {} specified in the \'{}\' argument ({})".
+                             format(state.value, owner.name, Mechanism.__name__, OWNER, owner.name))
+
+        if not iscompatible(reference_value, state.value):
+            raise StateError("The value ({}) of the State specified in the call to _instantiate_state for {} ({}) "
+                             "does not match the type specified in the \'{}\' argument ({})".
+                             format(state.value, owner.name, state.name, REFERENCE_VALUE, reference_value))
+
+        if variable and  not iscompatible(variable, state.variable):
+            raise StateError("The variable ({}) of the State specified in the call to _instantiate_state for {} "
+                             "({}) is not compatible with the one specified in the \'{}\' argument ({})".
+                             format(state.variable, owner.name, state.name, VARIABLE, variable))
 
     # State class
-    if inspect.isclass(state_spec) and issubclass(state_spec, State):
-        if state_spec is state_type:
-            state_dict[VARIABLE] = state_spec.ClassDefaults.variable
+    if not (inspect.isclass(state_specification) and issubclass(state_specification, State)):
+        if state_specification is state_type:
+            state_dict[VARIABLE] = state_specification.ClassDefaults.variable
         else:
             raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
-                             "class of state being instantiated ({})".format(state_spec, state_type_name))
+                             "class of state being instantiated ({})".format(state_specification, state_type_name))
 
-    # # State object [PARSED INTO DICT HERE]
-    # elif isinstance(state_spec, State):
-    #     if state_spec is state_type:
-    #         name = state_spec.name
-    #         # variable = state_spec.value
-    #         # variable = state_spec.ClassDefaults.variable
-    #         value = state_spec.value
-    #         modulatory_projections =  state_spec.mod_projections
-    #         params = state_spec.user_params.copy()
-    #     else:
-    #         raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
-    #                          "class of state being instantiated ({})".format(state_spec, state_type))
-
-    # Specification dict
-    elif isinstance(state_spec, dict):
+    # State specification dictionary
+    elif isinstance(state_specification, dict):
         state_spec=state_spec.copy()
 
         # Dict has a single entry in which the key is not a recognized keyword,
@@ -2768,40 +2776,9 @@ def _parse_state_spec(
                     state_dict[PARAMS] = {}
                 state_dict[PARAMS].update(params)
 
-    # # MODIFIED 9/29/17 OLD:
-    # # 2-item tuple;  could be:
-    # #    (spec, Projection)
-    # #    (param_name, Mechanism)
-    # elif isinstance(state_spec, tuple):
-    #     # FIX 9/29/17 MOVE THE CODE IN THE FOLLOWING METHOD TO _parse_state_specific_entries
-    #     # FIX: DEAL WITH WHICH ITEM OF TUPLE IS WHAT FOR DIFFERENT STATE TYPES (in _parse_state_specific_entries)
-    #     # FIX: REVERSE ORDER OF (MECHANISM, PARAM) SPECIFICATION FOR ParameterStates (ADJUST SCRIPTS ACCODINGLY)
-    #     # _is_legal_state_spec_tuple(owner, state_spec, state_type_name)
-    #     params = state_type._parse_state_specific_entries(state_type, params)
-    #
-    #     # Put projection spec from second item of tuple in params
-    #     params = params or {}
-    #     # FIX 5/23/17: NEED TO HANDLE NON-MODULATORY PROJECTION SPECS
-    #     params.update({PROJECTIONS:[state_spec[1]]})
-    #
-    #     # FIX: 9/17/17 NEED TO HANDLE (ParamName string, Mechanism) for state_type = ControlSignal
-    #
-    #     # Parse state_spec in first item of tuple (without params)
-    #     state_dict = _parse_state_spec(owner=owner,
-    #                                    state_type=state_type,
-    #                                    state_spec=state_spec[0],
-    #                                    name=name,
-    #                                    variable=variable,
-    #                                    value=value,
-    #                                    # projections=projections,
-    #                                    params={})
-    #     # Add params (with projection spec) to any params specified in first item of tuple
-    #     if state_dict[PARAMS] is None:
-    #         state_dict[PARAMS] = {}
-    #     state_dict[PARAMS].update(params)
 
     # MODIFIED 9/29/17 NEW:
-    # Specification tuple
+    # State specification tuple
     #    Assume first item is the state specification, and use as base for state_dict
     #    Call _parse_state_specific_tuple() with tuple to get params in dict form (to add to state_dict)
     elif isinstance(state_spec, tuple):

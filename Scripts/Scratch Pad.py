@@ -42,53 +42,68 @@ def _instantiate_state(state_type,
     print('\n_instantiate_state state_spec:',
           '\n\tcontext:',context,
           '\n\tstate_spec', state_spec)
-    args = _get_args(inspect.currentframe())
-    # _parse_state_spec(args, **state_spec)
-    _parse_state_spec(**args)
+    standard_args = _get_args(inspect.currentframe())
+    _parse_state_spec(standard_args, **state_spec)
+    # _parse_state_spec(state_spec, **standard_args)
 
 import inspect
 def _parse_state_spec(
-                      state_type,
-                      owner,
-                      name=None,
-                      variable=None,
-                      reference_value=None,
-                      projections=[],
-                      prefs=None,
-                      context=None,
-                      **state_spec
+                      standard_args,
+                      **state_specs
                       ):
 
-    # STANDARD_STATE_ARGS = {'state_type', 'owner', 'reference_value', 'variable', 'name', 'params', 'prefs'}
-    #
-    # args = inspect.signature(_parse_state_spec).parameters.items()
-    # state_dict = dict((arg, value) for arg, value in args if arg in STANDARD_STATE_ARGS)
+    STATE_SPEC_ARG = 'state_spec'
+    state_specific_dict = {}
+    state_spec_arg = None
 
-    args = _get_args(inspect.currentframe())
+    # If there is a state_specs arg passed from _instantiate_state:
+    if STATE_SPEC_ARG in state_specs:
 
-    if 'state_spec' in state_spec and isinstance(state_spec['state_spec'], dict):
-        # state_spec.update(state_spec['state_spec'])
-        # del state_spec['state_spec']
-        state_dict.update(state_spec['state_spec'])
-        del state_spec['state_spec']
+        # If it is a State specification dictionary
+        if isinstance(state_specs[STATE_SPEC_ARG], dict):
+            # Use the value of any standard args specified in the State specification dictionary
+            #    to replace those explicitly specified in the call to _instantiate_state (i.e., passed in standard_args)
+            state_specific_dict = state_specs[STATE_SPEC_ARG]
+            standard_args.update({key: state_specific_dict[key] for key in state_specific_dict if key in standard_args})
+            # Delete them from the State specification dictionary, leaving only state-specific items there
+            for key in standard_args:
+                state_specific_dict.pop(key, None)
 
-    print('\n_parse_state_spec:'
-          '\n\tstate_type: {}'
-          '\n\towner: {}'
-          '\n\treference_value: {}'
-          '\n\tname: {}'
-          '\n\tstate_spec: {}'
-          '\n\tstate_dict: {}'.
-          format(state_type, owner, reference_value, name, state_spec, state_dict))
+        else:
+            state_spec_arg = state_specs[STATE_SPEC_ARG]
+
+        # Delete the State specification dictionary from state_spec
+        del state_specs[STATE_SPEC_ARG]
+
+    if state_specs:
+        print('Args other than standard args and state_spec were in _instantiate_state ({})'.
+              format(state_specs))
+
+    print('\nstate_dict:')
+    for arg, val in standard_args.items():
+        print('\t{}: {}'.format(arg, val))
+
+    print('\nstate_specific_dict:')
+    for arg, val in state_specific_dict.items():
+        print('\t{}: {}'.format(arg, val))
+
+    print('\nstate_spec:', state_spec_arg)
+    # for arg, val in state_spec.items():
+    #     print('\t{}: {}'.format(arg, val))
+
+    print('\nstate_specs:', state_specs)
+
+
 
 _instantiate_state(state_type = 'STATE TYPE',
                    owner='OWNER',
                    # name='NAME',
                    # state_spec=State
-                   # state_spec=('state_spec_tuple_item_1','state_spec_tuple_item_2')
-                   state_spec=({'name':'NAME IN DICT',
-                                'owner':'OWNER IN DICT',
-                                'goof':'HELLO'})
+                   # state_spec=('state_spec_tuple_item_1','state_spec_tuple_item_2'),
+                   hooblah=3,
+                   # state_spec=({'name':'NAME IN DICT',
+                   #              'owner':'OWNER IN DICT',
+                   #              'goof':'HELLO'})
                    )
 
 class ScratchPadError(Exception):
