@@ -1340,12 +1340,15 @@ class LearningMechanism(AdaptiveMechanism_Base):
         :return: (2D np.array) self.learning_signal
         """
 
+        print("Runtime params:\n")
+        print(runtime_params)
         # COMPUTE LEARNING SIGNAL (dE/dW):
         self.learning_signal, self.error_signal = self.function(variable=variable,
                                                                 params=runtime_params,
                                                                 context=context)
+        value = self.function(variable=variable, params=runtime_params, context=context)
 
-        if not INITIALIZING in context and self.reportOutputPref:
+        if INITIALIZING not in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
         self.value = [self.learning_signal, self.error_signal]

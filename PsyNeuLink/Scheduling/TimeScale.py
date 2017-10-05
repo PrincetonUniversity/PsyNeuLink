@@ -25,7 +25,7 @@ class TimeScale(Enum):
     ----------
 
     TIME_STEP
-        the nuclear unit of time, corresponding to the execution of all `Mechanism <Mechanism>`\\ s allowed to execute
+        the nuclear unit of time, corresponding to the execution of all `Mechanism <Mechanism>`s allowed to execute
         from a single `consideration_set` of a `Scheduler`, and which are considered to have executed simultaneously.
 
     PASS

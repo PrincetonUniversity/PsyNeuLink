@@ -4478,7 +4478,6 @@ class AdaptiveIntegrator(
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
             self.previous_value = adjusted_value
-            # print("Adaptive Integrator previous val = {}".format(self.previous_value))
 
         return adjusted_value
 
@@ -7246,7 +7245,7 @@ class Stability(ObjectiveFunction):
                     param_type_string = "MappingProjection's ParameterState"
                 except KeyError:
                     raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
-                                        "paramaterState that has been assigned a 2d array or matrix".
+                                        "ParameterState that has been assigned a 2d array or matrix".
                                         format(MATRIX, self.name, matrix.shape, MATRIX))
 
             elif isinstance(matrix, ParameterState):
@@ -8152,16 +8151,16 @@ class BackPropagation(LearningFunction):
        `error_signal <BackPropagation.error_signal>`.
 
     activation_input : 1d np.array
-        the input to the matrix being modified; same as 1st item of `variable <BackPropagation.variable>.
+        the input to the matrix being modified; same as 1st item of `variable <BackPropagation.variable>`.
 
     activation_output : 1d np.array
         the output of the function for which the matrix being modified provides the input;
-        same as 2nd item of `variable <BackPropagation.variable>.
+        same as 2nd item of `variable <BackPropagation.variable>`.
 
     error_signal : 1d np.array
         the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
         target (training signal) and the output of the last Mechanism in the sequence;
-        same as 3rd item of `variable <BackPropagation.variable>.
+        same as 3rd item of `variable <BackPropagation.variable>`.
 
     error_matrix : 2d np.array or ParameterState
         matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`;

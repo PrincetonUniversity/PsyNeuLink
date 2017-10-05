@@ -95,11 +95,11 @@ class MatrixKeywords:
     ----------
 
     IDENTITY_MATRIX
-        a square matrix of 1's along the diagnoal, 0's elsewhere; this requires that the length of the sender and
+        a square matrix of 1's along the diagonal, 0's elsewhere; this requires that the length of the sender and
         receiver values are the same.
 
     HOLLOW_MATRIX
-        a square matrix of 0's along the diagnoal, 1's elsewhere; this requires that the length of the sender and
+        a square matrix of 0's along the diagonal, 1's elsewhere; this requires that the length of the sender and
         receiver values are the same.
 
     FULL_CONNECTIVITY_MATRIX
@@ -257,6 +257,8 @@ TRIALS_DIM = 0
 TIME_STEPS_DIM = 1
 PROCESSES_DIM = 2
 INPUTS_DIM = 3
+
+T = 't'
 
 COMPONENT_INIT = 'Component.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
@@ -646,6 +648,5 @@ SIMPLE = 'scaled'
 ADAPTIVE = 'adaptive'
 DIFFUSION = 'diffusion'
 
-T = 't'
 REWARD = 'reward'
 #endregion

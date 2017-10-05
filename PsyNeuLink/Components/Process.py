@@ -293,7 +293,7 @@ Execution
 
 A Process can be executed as part of a `System <System_Execution>` or on its own.  On its own, it is executed by calling
 either its `execute <Process_Base.execute>` or `run <Process_Base.run>` method.  `execute <Process.execute>` executes
-the Process once (that is, it executes a single `TRIAL`);  `run <Process.run>` allows a series of `TRIAL`\\s to be
+the Process once (that is, it executes a single `TRIAL`);  `run <Process.run>` allows a series of `TRIAL`s to be
 executed. When a Process is executed, its `input` is conveyed to the `origin_mechanism <Process_Base.origin_mechanism>`
 (the first Mechanism in the `pathway <Process_Base.pathway>`).  By default, the the input is presented only once.  If
 the `origin_mechanism <Process_Base.origin_mechanism>` is executed again in the same `PASS` of execution (e.g., if it
@@ -1848,6 +1848,7 @@ class Process_Base(Process):
                     seen.add(mech)
                 if mech.processes[self] in {ORIGIN, SINGLETON}:
                     self.instance_defaults.variable.extend(mech.instance_defaults.variable)
+        print("Instance defaults variable: {}".format(self.instance_defaults.variable))
         process_input = convert_to_np_array(self.instance_defaults.variable, 2)
 
         # Get number of Process inputs
@@ -1881,6 +1882,7 @@ class Process_Base(Process):
                 # Insure that each Process input value is compatible with corresponding variable of mechanism.input_state
                 # MODIFIED 4/3/17 NEW:
                 input_state_variable = mechanism.input_states[i].instance_defaults.variable
+                print("input state variable size: {}".format(np.shape(input_state_variable)))
                 # MODIFIED 4/3/17 END
                 if not iscompatible(process_input[i], input_state_variable):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "

@@ -503,7 +503,7 @@ class ParameterState(State_Base):
         # If the parameter is not in either the owner's user_params dict or its function_params dict, throw exception
         if not self.name in self.owner.user_params.keys() and not self.name in self.owner.function_params.keys():
             raise ParameterStateError("Name of requested ParameterState ({}) does not refer to a valid parameter "
-                                      "of the component ({}) or it function ({})".
+                                      "of the component ({}) or its function ({})".
                                       format(self.name,
                                              # self.owner.function_object.__class__.__name__,
                                              self.owner.name,

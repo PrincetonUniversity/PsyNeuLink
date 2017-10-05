@@ -251,7 +251,7 @@ Execution
 
 A System can be executed by calling either its `execute <System_Base.execute>` or `run <System_Base.execute>` methods.
 `execute <System_Base.execute>` executes the System once; that is, it executes a single `TRIAL`.
-`run <System_Base.run>` allows a series of `TRIAL`\\s to be executed, one for each input in the **inputs** argument
+`run <System_Base.run>` allows a series of `TRIAL`s to be executed, one for each input in the **inputs** argument
 of the call to `run <System_Base.run>`.  For each `TRIAL`, it makes a series of calls to the `run <Scheduler.run>`
 method of the relevant `Scheduler` (see `System_Execution_Processing` and `System_Execution_Learning` below), and
 executes the Components returned by that Scheduler (constituting a `TIME_STEP` of execution), until every Component in
@@ -271,7 +271,7 @@ The input to a System is specified in the **input** argument of either its `exec
 each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (listed in the System's
 `origin_mechanisms <System_Base.origin_mechanisms>` attribute). If the `execute <System_Base.execute>` method is used,
 input for only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System_Base.run>` method
-can be used for a sequence of `TRIAL`\\s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In
+can be used for a sequence of `TRIAL`s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In
 both cases, two other types of input can be provided in corresponding arguments of the `run <System_Base.run>` method:
 a  list or ndarray of **initial_values**, and a list or ndarray of **target** values. The **initial_values** are
 assigned at the start of a `TRIAL` as input to Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`,
@@ -542,7 +542,7 @@ def system(default_variable=None,
     Arguments
     ---------
 
-    default_variable : list or ndarray of values : default default input for `ORIGIN` Mechanism of each `Process`
+    default_variable : list or ndarray of values : default input for `ORIGIN` Mechanism of each `Process`
         the input to the System if None is provided in a call to the `execute <System_Base.execute>` or
         `run <System_Base.run>` methods. Should contain one item corresponding to the input of each `ORIGIN` Mechanism
         in the System (listed in its `origin_mechanisms <System_Base.origin_mechanisms>` attribute.
@@ -1544,7 +1544,7 @@ class System_Base(System):
             for receiver_object_item, dep_set in self.execution_graph.items():
                 mech = receiver_object_item
                 if not dep_set:
-                    print("\t\'{}\' is an {} Mechanism".
+                    print("\t'{}' is an {} Mechanism".
                           format(mech.name, mech.systems[self]))
                 else:
                     status = mech.systems[self]
@@ -1552,7 +1552,7 @@ class System_Base(System):
                         status = 'a ' + status
                     elif status in {INTERNAL, INITIALIZE_CYCLE}:
                         status = 'an ' + status
-                    print("\t\'{}\' is {} Mechanism that receives Projections from:".format(mech.name, status))
+                    print("\t'{}' is {} Mechanism that receives Projections from:".format(mech.name, status))
                     for sender_object_item in dep_set:
                         print("\t\t\'{}\'".format(sender_object_item.name))
 

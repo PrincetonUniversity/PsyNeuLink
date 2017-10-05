@@ -661,7 +661,7 @@ class OutputState(State_Base):
             try:
                 self.owner.default_value[target_set[INDEX]]
             except IndexError:
-                raise OutputStateError("Value of \\`{}\\` argument for {} is greater than the number of items in "
+                raise OutputStateError("Value of `{}` argument for {} is greater than the number of items in "
                                        "the output_values ({}) for its owner Mechanism ({})".
                                        format(INDEX, self.name, self.owner.default_value, self.owner.name))
 

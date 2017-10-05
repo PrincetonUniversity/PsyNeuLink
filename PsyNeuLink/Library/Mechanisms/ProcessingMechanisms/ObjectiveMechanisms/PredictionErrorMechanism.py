@@ -60,7 +60,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
                                                   input_states=input_states,
                                                   output_states=output_states,
                                                   params=params)
-        print(params)
+
         super().__init__(sample=sample,
                          target=target,
                          input_states=input_states,
