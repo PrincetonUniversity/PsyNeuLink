@@ -1551,12 +1551,12 @@ class State_Base(State):
         raise StateError("PROGRAM ERROR: {} does not implement _get_primary_state method".
                          format(self.__class__.__name__))
 
-    def _parse_state_specific_tuple(self, owner, state_specification_tuple):
+    def _parse_state_specific_params(self, owner, state_specification_tuple):
         # FIX: MODIFY THIS TO HANDLE STANDARD FORM (state_spec, projection_spec); SUBCLASSES SHOULD OVERRIDE
         #       IF THEY ALLOW ANYTHING OR THAN IT, BUT SHOULD CALL THIS WHERE THEY WANT TO TRY THE STANDARD FORM
         # FIX:  ??ADD VERSION OF THIS TO PROJECT (FOR _parse_projection_specific_tuple)??
 
-        raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_tuple method".
+        raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_params method".
                          format(self.__class__.__name__))
 
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
@@ -2295,7 +2295,6 @@ def _parse_state_type(owner, state_spec):
 
 STATE_SPEC_INDEX = 0
 
-# MODIFIED 10/3/17 NEW:
 @tc.typecheck
 def _parse_state_spec(standard_args,
                       context=None,
@@ -2365,6 +2364,7 @@ def _parse_state_spec(standard_args,
     state_type = state_dict[STATE_TYPE]
     reference_value = state_dict[REFERENCE_VALUE]
     variable = state_dict[VARIABLE]
+    params = state_specific_args
 
     #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
     if isinstance(reference_value, numbers.Number):
@@ -2384,7 +2384,13 @@ def _parse_state_spec(standard_args,
     if isinstance(state_specification, (Mechanism, State)):
         state = None
 
+        # State object:
         if isinstance(state_specification, State):
+            # Validate that State object is same type as one specified in state_type (in call to _instantiate_state)
+            if not type(state_specification) is state_type:
+                raise StateError("PROGRAM ERROR: \'{}\' entry in State specification dictionary for {} ({}) "
+                                 "does not the type specified in call to _instantiate_state ({})".
+                                 format(STATE_TYPE, owner.name, state_specification, state_type))
             state = state_specification
 
         # Mechanism object:
@@ -2471,12 +2477,12 @@ def _parse_state_spec(standard_args,
 
     # State specification tuple
     #    Assume first item is the state specification, and use as base for state_dict
-    #    Call _parse_state_specific_tuple() with tuple to get params in dict form (to add to state_dict)
+    #    Call _parse_state_specific_params() with tuple to get params in dict form (to add to state_dict)
     elif isinstance(state_specification, tuple):
 
         # FIX: 10/3/17 - MOVE THIS TO _parse_projection_specs (SINCE TUPLES REFER TO PROJECTIONS)
         # Get state-specific params from tuple
-        state_params = state_type._parse_state_specific_tuple(state_type,
+        state_params = state_type._parse_state_specific_params(state_type,
                                                               owner=owner,
                                                               state_specification_tuple=state_specification)
         state_dict = _parse_state_spec(standard_args, context, state_spec=state_specification[0])
@@ -2487,14 +2493,8 @@ def _parse_state_spec(standard_args,
         state_dict[PARAMS].update(state_params)
 
     # State specification dictionary
-    # FIX: 10/3/17 - SHOULD TAKE CARE OF THIS ABOVE, WHERE DICTS ARE SORTED OUT
-    # Use state_dict as State Specifiation dictionary (since standard_args were already into it)
-    #     and state_specifc_args as params (FIX: SHOULD PROBABLY JUST MOVE state_specific_args INTO params ABOVE)
-    # elif state_specific_args:
-    #     state_specification_dict=state_specific_args.copy()
     else:
         state_specification_dict = state_dict
-        params = state_specific_args
         # Dict has a single entry in which the key is not a recognized keyword,
         #    so assume it is of the form {<STATE_NAME>:<STATE_SPECIFICATION_DICT>}:
         #    - assign STATE_NAME as name,
@@ -2512,31 +2512,19 @@ def _parse_state_spec(standard_args,
 
         # Standard state specification dict
         else:
-            # Error if STATE_TYPE is specified in dict and not the same as the state_spec specified in call to method
-            if STATE_TYPE in state_specification_dict and state_specification_dict[STATE_TYPE] != state_type:
-                raise StateError("PROGRAM ERROR: STATE_TYPE entry in State specification dictionary for {} ({}) "
-                                 "is not the same as one specified in call to _parse_state_spec ({})".
-                                 format(owner.name, state_specification_dict[STATE_TYPE], state_type))
             # Warn if VARIABLE was not in dict
             if not VARIABLE in state_specification_dict and owner.prefs.verbosePref:
                 print("{} missing from specification dict for {} of {};  default ({}) will be used".
                       format(VARIABLE, state_type, owner.name, state_specification_dict))
-            # Move all entries that are not for standard arguments from state_spec into params dict
-            for spec in [param_spec for param_spec in state_specification_dict.copy()
-                         if not param_spec in STANDARD_ARGS]:
-                params = params or {}
-                params[spec] = state_specification_dict[spec]
-                del state_specification_dict[spec]
-            state_dict.update(state_specification_dict)
-            if params:
+            if params and PROJECTIONS in params:
                 #       (E.G., WEIGHTS AND EXPONENTS FOR InputState AND INDEX FOR OutputState)
-                # Call state_type to parse any State-specific params
-                # FIX: TEST THAT ENTRIES EXIST IN PARAMS?
+                # FIX: 10/3/17 - ??Call state_type to parse any State-specific params
+                state_params = state_type._parse_state_specific_params(state_type,
+                                                                      owner=owner,
+                                                                      state_specification_tuple=state_specification)
                 # Get and parse projection specifications for the State
                 projection_params = []
-                if PROJECTIONS in params:
-                    # connection_params.update(params)
-                    projection_params.append(params[PROJECTIONS])
+                projection_params.append(params[PROJECTIONS])
                 if projection_params:
                     params[PROJECTIONS] = _parse_projection_specs(state_type, owner, projection_params)
                 # Update state_dict[PARAMS] with params
@@ -2544,7 +2532,7 @@ def _parse_state_spec(standard_args,
                     state_dict[PARAMS] = {}
                 state_dict[PARAMS].update(params)
 
-    # # MODIFIED 10/3/17 OLD:
+    # # MODIFIED 10/3/17 OLD: FIX: 10/3/17 - ??REINSTATE
     # elif state_spec is None:
     #     # pass
     #     raise StateError("PROGRAM ERROR: state_spec for {} of {} is None".format(state_type_name, owner.name))
@@ -2566,7 +2554,6 @@ def _parse_state_spec(standard_args,
     # state_dict[STATE_TYPE] = state_type
 
     return state_dict
-# MODIFIED 10/3/17 END
 
 
 # FIX: COMPARE WITH LIKES OF _parse_input_state_specification_dictionary TO MAKE SURE IT HAS SAME FUNCTIONALITY

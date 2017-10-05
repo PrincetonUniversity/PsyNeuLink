@@ -970,7 +970,7 @@ class ControlSignal(ModulatorySignal):
 
 
 # MODIFIED 9/30/17 NEW:
-    def _parse_state_specific_tuple(self, owner, state_specification_tuple):
+    def _parse_state_specific_params(self, owner, state_specification_tuple):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
 
         Tuple specification can be:

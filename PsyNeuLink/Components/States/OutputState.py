@@ -753,7 +753,7 @@ class OutputState(State_Base):
 
 # MODIFIED 9/30/17 NEW:
     @tc.typecheck
-    def _parse_state_specific_tuple(self, owner, state_specification_tuple):
+    def _parse_state_specific_params(self, owner, state_specification_tuple):
         """Get index and/or connections specified in an OutputState specification tuple
 
         Tuple specification can be:

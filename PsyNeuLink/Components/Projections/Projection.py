@@ -1299,7 +1299,7 @@ def _parse_projection_specs(connectee_state_type,
         # Note:  this is NOT the same as the State specification tuple (which can have a similar format);
         #        the weights and exponents here specify *individual* Projections to a particular state,
         #            (vs. weights and exponents for an entire state (as for InputState);
-        #        State specification tuple is handled in the _parse_state_specific_tuple() method of State subclasses
+        #        State specification tuple is handled in the _parse_state_specific_params() method of State subclasses
 
         elif isinstance(connection, tuple):
         # Notes:

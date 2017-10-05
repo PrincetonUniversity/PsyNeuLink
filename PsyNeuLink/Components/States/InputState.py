@@ -645,7 +645,7 @@ class InputState(State_Base):
 
 # MODIFIED 9/30/17 NEW:
     @tc.typecheck
-    def _parse_state_specific_tuple(self, owner, state_specification_tuple):
+    def _parse_state_specific_params(self, owner, state_specification_tuple):
         """Get weights, exponents and/or any connections specified in an InputState specification tuple
         
         Tuple specification can be:

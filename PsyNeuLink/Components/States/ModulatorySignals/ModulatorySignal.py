@@ -413,7 +413,7 @@ class ModulatorySignal(OutputState):
 
 # MODIFIED 9/30/17 NEW:
 # FIX: THIS IS GENERIC FOR MODULATORY SIGNALS, BUT SHOULD BE IMPLEMENTED FOR EACH SUBCLASS
-    def _parse_state_specific_tuple(self, owner, state_specification_tuple):
+    def _parse_state_specific_params(self, owner, state_specification_tuple):
         """Get connections specified in a ParameterState specification tuple
 
         Tuple specification can be:
