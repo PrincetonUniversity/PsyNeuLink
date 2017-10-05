@@ -118,21 +118,15 @@ Class Reference
 
 """
 import typecheck as tc
-import warnings
 
-from PsyNeuLink.Components.Functions.Function \
-    import ModulationParam, _is_modulation_param, AGTUtilityIntegrator
-from PsyNeuLink.Components.System import System
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-    import ObjectiveMechanism, _parse_monitored_output_states, MonitoredOutputStatesOption
+from PsyNeuLink.Components.Functions.Function import AGTUtilityIntegrator, ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import MonitoredOutputStatesOption, ObjectiveMechanism, _parse_monitored_output_states
+from PsyNeuLink.Components.ShellClasses import Mechanism, System
 from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import INIT__EXECUTE__METHOD_ONLY, MECHANISM, \
-                                        OBJECTIVE_MECHANISM, CONTROL_PROJECTIONS, CONTROL_SIGNALS, CONTROL
-
+from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, INIT__EXECUTE__METHOD_ONLY, MECHANISM, OBJECTIVE_MECHANISM
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale

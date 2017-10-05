@@ -9,7 +9,6 @@
 # **********************************************  PreferenceSet **********************************************************
 #
 import inspect
-
 from collections import namedtuple
 from enum import Enum, IntEnum
 

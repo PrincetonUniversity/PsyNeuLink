@@ -68,7 +68,6 @@ Class Reference
 """
 import typecheck as tc
 
-from PsyNeuLink.Components import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Globals.Keywords import INTEGRATOR_MECHANISM, OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
@@ -184,7 +183,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         # Sets template for variable (input)
         variable = [[0]]
 
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
+    paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         # TIME_SCALE: TimeScale.TRIAL,
         OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]

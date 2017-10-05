@@ -68,7 +68,7 @@ Structure
 ---------
 
 An AdaptiveMechanism has the same basic structure as a `Mechanism <Mechanisms>`.  In addition, every AdaptiveMechanism
-has a `modulation <AdpativeMechanism.modulation>` attribute, that determines the default method by which its
+has a `modulation <AdaptiveMechanism.modulation>` attribute, that determines the default method by which its
 `ModulatorySignals <ModulatorySignal>` modify the value of the Components that they modulate (see the `modulation
 <ModulatorySignal_Modulation>` for a description of how modulation operates, and the documentation for individual
 subtypes of AdaptiveMechanism for more specific information about their structure and modulatory operation).
@@ -99,7 +99,7 @@ from PsyNeuLink.Globals.Keywords import ADAPTIVE_MECHANISM
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 
 
-class AdpativeMechanismError(Exception):
+class AdaptiveMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 

@@ -435,28 +435,18 @@ import numpy as np
 import typecheck as tc
 from toposort import toposort, toposort_flatten
 
-from PsyNeuLink.Components.Component import Component, ExecutionStatus, function_type, InitStatus
-from PsyNeuLink.Components.Process import Process_Base, ProcessList, ProcessTuple
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
-    import ControlMechanism, OBJECTIVE_MECHANISM
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
-    import LearningMechanism
+from PsyNeuLink.Components.Component import Component, ExecutionStatus, InitStatus, function_type
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism, OBJECTIVE_MECHANISM
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MonitoredOutputStatesOption
-from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import _parse_control_signal_spec
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import MonitoredOutputStateTuple, OUTPUT_STATE_INDEX, ObjectiveMechanism
+from PsyNeuLink.Components.Process import ProcessList, ProcessTuple, Process_Base
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
-from PsyNeuLink.Globals.Keywords import SYSTEM, EXECUTING, FUNCTION, COMPONENT_INIT, SYSTEM_INIT, TIME_SCALE, ALL,\
-                                        MECHANISM, NAME, \
-                                        ORIGIN, INTERNAL, TERMINAL, TARGET, SINGLETON, CONTROL_SIGNAL_SPECS,\
-                                        SAMPLE, MATRIX, IDENTITY_MATRIX, kwSeparator, kwSystemComponentCategory, \
-                                        CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, MONITOR_FOR_CONTROL, EVC_SIMULATION,\
-                                        CYCLE, INITIALIZE_CYCLE, INITIALIZING, INITIALIZED, INITIAL_VALUES, \
-                                        LEARNING, LEARNING_SIGNAL
-
+from PsyNeuLink.Globals.Keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CONTROL_SIGNAL_SPECS, CYCLE, EVC_SIMULATION, EXECUTING, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, kwSeparator, kwSystemComponentCategory
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.Utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, \
-    iscompatible, parameter_spec
+from PsyNeuLink.Globals.Utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, parameter_spec
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
@@ -505,9 +495,6 @@ class SystemError(Exception):
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
 
-from PsyNeuLink.Components import SystemDefaultControlMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-                  import ObjectiveMechanism, OUTCOME, OUTPUT_STATE_INDEX, WEIGHT_INDEX, EXPONENT_INDEX
 from PsyNeuLink.Components.Process import process
 
 # System factory method:
@@ -2355,28 +2342,30 @@ class System_Base(System):
                                        format(output_state.name, mech.name))
 
 
-        # ASSIGN EXPONENTS AND WEIGHTS TO OUTCOME_FUNCTION
+        # ASSIGN EXPONENTS, WEIGHTS and MATRICES
 
-        num_monitored_output_states = len(monitored_output_states)
-        # weights = np.ones(num_monitored_output_states)
-        # exponents = np.ones_like(weights)
-        weights = [None] * num_monitored_output_states
-        exponents = [None] * num_monitored_output_states
-
-        # Get and assign specification of weights and exponents for mechanisms or outputStates specified in tuples
+        # Get and assign specification of weights, exponents and matrices
+        #    for Mechanisms or OutputStates specified in tuples
+        output_state_tuples = [MonitoredOutputStateTuple(output_state=item, weight=None, exponent=None, matrix=None)
+                               for item in monitored_output_states]
         for spec in all_specs:
-            if isinstance(spec, tuple):
-                object_spec = spec[OUTPUT_STATE_INDEX]
+            if isinstance(spec, MonitoredOutputStateTuple):
+                object_spec = spec.output_state
                 # For each OutputState in monitored_output_states
-                for item in monitored_output_states:
+                for i, output_state_tuple in enumerate(output_state_tuples):
+                    output_state = output_state_tuple.output_state
                     # If either that OutputState or its owner is the object specified in the tuple
-                    if item is object_spec or item.name is object_spec or item.owner is object_spec:
-                        # Assign the weight and exponent specified in the tuple to that OutputState
-                        i = monitored_output_states.index(item)
-                        weights[i] = spec[WEIGHT_INDEX]
-                        exponents[i] = spec[EXPONENT_INDEX]
-
-        return list(zip(monitored_output_states, weights, exponents))
+                    if (output_state is object_spec
+                        or output_state.name is object_spec
+                        or output_state.owner is object_spec):
+                        # Assign the weight, exponent and matrix specified in the spec to the output_state_tuple
+                        # (can't just assign spec, as its output_state entry may be an unparsed string rather than
+                        #  an actual OutputState)
+                        output_state_tuples[i] = MonitoredOutputStateTuple(output_state=output_state,
+                                                                           weight=spec.weight,
+                                                                           exponent=spec.exponent,
+                                                                           matrix=spec.matrix)
+        return output_state_tuples
 
     def _validate_monitored_state_in_system(self, monitored_states, context=None):
         for spec in monitored_states:

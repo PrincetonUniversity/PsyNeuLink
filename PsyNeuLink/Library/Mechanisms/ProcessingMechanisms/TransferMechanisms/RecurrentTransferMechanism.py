@@ -23,7 +23,7 @@ A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implement
 network, in which each element is connected to every other element (instantiated in a recurrent
 `AutoAssociativeProjection` referenced by the Mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).
 It allows its previous input to be decayed, can report the energy and, if appropriate, the entropy of its output,
-and can be configured for to implement autoassociative (e.g., Hebbian) learning.
+and can be configured to implement autoassociative (e.g., Hebbian) learning.
 
 .. _Recurrent_Transfer_Creation:
 
@@ -131,26 +131,20 @@ import numbers
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Functions.Function \
-    import Linear, Stability, get_matrix, LearningFunction, Hebbian, is_function_type
+from PsyNeuLink.Components.Functions.Function import Hebbian, Linear, Stability, get_matrix, is_function_type
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
-    import LearningMechanism, ACTIVATION_INPUT, LEARNING_SIGNAL
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism \
-    import AutoAssociativeLearningMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _instantiate_state
-from PsyNeuLink.Globals.Keywords import AUTO, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, HETERO, INITIALIZING, MATRIX, \
-    MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, \
-    VARIANCE, COMMAND_LINE
+from PsyNeuLink.Globals.Keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, HETERO, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, VARIANCE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none, parameter_spec
-from PsyNeuLink.Library.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, \
-    get_auto_matrix, get_hetero_matrix
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism import AutoAssociativeLearningMechanism
+from PsyNeuLink.Library.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 

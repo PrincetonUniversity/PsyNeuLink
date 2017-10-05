@@ -27,8 +27,9 @@ Creating a Component
 A Component is never created by calling the constructor for the Component base class.  However, its ``__init__()``
 method is always called when a Component subclass is instantiated; that, in turn, calls a standard set of methods
 (listed `below <Component_Methods>`) as part of the initialization procedure.  Every Component has a core set of
-configurable parameters that can be specified in the arguments of the constructor, as well as additional attributes
-that provide information about its contents and/or state (see `Component_Attributes` below).
+`configurable parameters <Component_User_Params>` that can be specified in the arguments of the constructor, as well
+as additional attributes that provide information about its contents and/or state (see
+`Component_Informational_Attributes` below).
 
 .. _Component_Deferred_Init:
 
@@ -337,12 +338,12 @@ COMMENT
 """
 import inspect
 import numbers
-import numpy as np
-import typecheck as tc
 import warnings
-
 from collections import Iterable, OrderedDict
 from enum import Enum, IntEnum
+
+import numpy as np
+import typecheck as tc
 
 from PsyNeuLink.Globals.Keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from PsyNeuLink.Globals.Log import Log
@@ -669,6 +670,7 @@ class Component(object):
             return vardict
 
     class ClassDefaults(Defaults):
+        exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
         pass
 
     class InstanceDefaults(Defaults):
@@ -1808,7 +1810,6 @@ class Component(object):
                 warnings.warn("No params specified")
             return
 
-        import copy
         validated_set = {}
 
         self._instantiate_defaults(request_set=request_set,
@@ -2050,7 +2051,7 @@ class Component(object):
             #    the FUNCTION param (which is not allowed to be specified as a projection)
             #    then simply assign value to paramClassDefault (implication of not specifying it explicitly);
             #    this also allows it to pass the test below and function execution to occur for initialization;
-            from PsyNeuLink.Components.Projections.Projection import Projection, ProjectionRegistry
+            from PsyNeuLink.Components.ShellClasses import Projection
             # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
             # from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
             if (((isinstance(param_value, str) and
@@ -2168,7 +2169,6 @@ class Component(object):
     def _get_param_value_from_tuple(self, param_spec):
         """Returns param value (first item) of a (value, projection) tuple
         """
-        from PsyNeuLink.Components.Projections.Projection import Projection
         # from PsyNeuLink.Components.Projections.Modulatory.ControlProjection import ControlProjection
         # from PsyNeuLink.Components.Projections.Modulatory.LearningProjection import LearningProjection
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
@@ -2414,7 +2414,7 @@ class Component(object):
                     # parse entries of FUNCTION_PARAMS dict
                     else:
                         # Get param value from any params specified in a tuple or a dict
-                        from PsyNeuLink.Components.Projections.Projection import Projection
+                        from PsyNeuLink.Components.ShellClasses import Projection
                         for param_name, param_spec in function_param_specs.items():
                             # Get param value from (param, projection) tuple
                             if (isinstance(param_spec, tuple) and len(param_spec) is 2 and

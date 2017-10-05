@@ -18,7 +18,7 @@ from PsyNeuLink.Library.Subsystems.EVC.EVCControlMechanism import EVCControlMech
 def test_EVC():
     # Mechanisms
     Input = TransferMechanism(
-        name='Input'
+        name='Input',
     )
     Reward = TransferMechanism(
         output_states=[RESULT, MEAN, VARIANCE],

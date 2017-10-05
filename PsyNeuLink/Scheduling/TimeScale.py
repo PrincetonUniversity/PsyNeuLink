@@ -6,8 +6,10 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-from PsyNeuLink.Globals.Keywords import CENTRAL_CLOCK
 from enum import Enum
+
+from PsyNeuLink.Globals.Keywords import CENTRAL_CLOCK
+
 
 # ********************************************* TimeScale ***************************************************************
 

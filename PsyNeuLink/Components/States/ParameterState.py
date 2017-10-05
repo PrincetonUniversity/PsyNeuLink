@@ -38,10 +38,23 @@ below.  The ParameterStates for the parameters of a Mechanism or Projection are 
 :keyword:`parameter_states` attribute.
 
 COMMENT:
-    FOR DEVELOPERS: The instantiation of ParameterStates for the `user_params` of a Component can be suppressed if
-                    a *PARAMETER_STATES* entry is included and set to `NotImplemented` in the paramClassDefaults
-                    dictionary of its class definition;  see LearningProjection and EVCControlMechanism for
-                    examples, and `note <ParameterStates_Suppression>` below for additional information.
+    FOR DEVELOPERS: The instantiation of ParameterStates for all of the `user_params` of a Component can be
+                    suppressed if a *PARAMETER_STATES* entry is included and set to `NotImplemented` in the
+                    paramClassDefaults dictionary of its class definition;  the instantiation of a ParameterState
+                    for an individual parameter in user_params can be suppressed by including it in
+                    ClassDefaults.exclude_from_parameter_states for the class (or one of its parent classes)
+                    (see LearningProjection and EVCControlMechanism for examples, and `note
+                    <ParameterStates_Suppression>` below for additional information about how
+                    to suppress creation of a ParameterState for individual parameters.  This should be done
+                    for any parameter than can take a value or a string that is a keyword as its specification
+                    (i.e., of the arg for the parameter in the Component's constructor) but should not have a
+                    ParameterState (e.g., input_state and output_state), as otherwise the
+                    specification will be interpreted as a numeric parameter (in the case of a value) or
+                    a parameter of the keyword's type, a ParameterState will be created, and then it's value,
+                    rather than the parameter's actual value, will be returned when the parameter is accessed
+                    using "dot notation" (this is because the getter for an attribute's property first checks
+                    to see if there is a ParameterState for that attribute and, if so, returns the value of the
+                    ParameterState).
 COMMENT
 
 .. _ParameterState_Specification:
@@ -128,7 +141,6 @@ of a parameter named *param* is assigned to an attribute named ``param`` that ca
    listed above, then no ParameterState is created and the parameter cannot be modified by a `ModulatorySignal
    <ModulatorySignal>` or in the **runtime_params** argument of a call to a Mechanism's `execute
    <Mechanism_Base.execute>` method.
-
 
 .. _ParameterState_Specification_Examples:
 
@@ -598,7 +610,8 @@ def _instantiate_parameter_states(owner, context=None):
 
     owner._parameter_states = ContentAddressableList(ParameterState, name=owner.name+'.parameter_states')
 
-    # Check that ParameterStates for owner have not been explicitly suppressed (by assigning NotImplemented)
+    # Check that all ParameterStates for owner have not been explicitly suppressed
+    #    (by assigning `NotImplemented` to PARAMETER_STATES entry of paramClassDefaults)
     try:
         if owner.params[PARAMETER_STATES] is NotImplemented:
             return
@@ -612,11 +625,15 @@ def _instantiate_parameter_states(owner, context=None):
         return
     # Instantiate ParameterState for each param in user_params (including all params in function_params dict),
     #     using its value as the state_spec
+    # Exclude input_states and output_states which are also in user_params
     # IMPLEMENTATION NOTE:  Use user_params_for_instantiation since user_params may have been overwritten
     #                       when defaults were assigned to paramsCurrent in Component.__init__,
     #                       (since that will assign values to the properties of each param;
     #                       and that, in turn, will overwrite their current values with the defaults from paramsCurrent)
     for param_name, param_value in owner.user_params_for_instantiation.items():
+        # Skip any parameter that has been specifically excluded by
+        if param_name in owner.ClassDefaults.exclude_from_parameter_states:
+            continue
         _instantiate_parameter_state(owner, param_name, param_value, context=context)
 
 
@@ -647,7 +664,6 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     # if param_name in owner.ParameterStates:
     #     return
 
-    from PsyNeuLink.Components.Projections.Projection import Projection
     if param_value is NotImplemented:
         return
     # Allow numerics but omit booleans (which are treated by is_numeric as numerical)

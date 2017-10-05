@@ -1,4 +1,4 @@
-"""Test that all notebooks in the repository run without error"""
+"""Test that all notebooks in the tutorial run without error"""
 import os
 import subprocess
 
@@ -18,11 +18,11 @@ def _notebook_run(filepath):
     return subprocess.check_call(args, stdout=subprocess.DEVNULL)
 
 def _find_ipynbs():
-    """Finds all the jupyter notebooks present in the repository"""
-    root_dir = os.path.abspath(os.path.join(__file__, '../../..'))
+    """Finds all the jupyter notebooks present in the tutorial directory"""
+    tutorial_dir = os.path.abspath(os.path.join(__file__, '../../../tutorial'))
 
     ipynb_filepaths = []
-    for root, dirs, files in os.walk(root_dir):
+    for root, dirs, files in os.walk(tutorial_dir):
         for filename in files:
             if filename.endswith('.ipynb'):# and os.path.split(root)[1] != '.ipynb_checkpoints':
                 ipynb_filepaths.append(os.path.join(root, filename))

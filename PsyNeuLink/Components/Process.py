@@ -451,24 +451,18 @@ import numpy as np
 import typecheck as tc
 
 from PsyNeuLink.Components.Component import Component, ExecutionStatus, InitStatus, function_type
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
-    import LearningMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
-from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, \
-    _is_learning_spec
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, _is_learning_spec
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import _add_projection_to, _is_projection_spec
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, System
 from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _instantiate_state, _instantiate_state_list
-from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, COMPONENT_INIT, ENABLED, EXECUTING, FUNCTION, \
-    FUNCTION_PARAMS, HARD_CLAMP, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, \
-    OBJECTIVE_MECHANISM,\
-    MAPPING_PROJECTION, MATRIX, NAME, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SEPARATOR_BAR, \
-    SINGLETON, SOFT_CLAMP, TARGET, TERMINAL, TIME_SCALE, kwProcessComponentCategory, kwReceiverArg, kwSeparator
+from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, COMPONENT_INIT, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, HARD_CLAMP, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SEPARATOR_BAR, SINGLETON, SOFT_CLAMP, TARGET, TERMINAL, TIME_SCALE, kwProcessComponentCategory, kwReceiverArg, kwSeparator
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
@@ -1815,9 +1809,9 @@ class Process_Base(Process):
                                          context.name))
                     # Process is being implemented in something other than a System
                     #    so warn (irrespecive of verbose)
-                    else:
-                        print("WARNING:  Process ({0}) being instantiated in context "
-                                           "({1}) other than a System ".format(self.name, context))
+                    elif self.verbosePref:
+                        print("WARNING:  Process ({}) is being instantiated outside of a System".
+                              format(self.name))
 
     def _assign_process_input_projections(self, mechanism, context=None):
         """Create Projection(s) for each item in Process input to InputState(s) of the specified Mechanism
@@ -2111,7 +2105,6 @@ class Process_Base(Process):
              and report assignment if verbose
         """
 
-        from PsyNeuLink.Globals.Keywords import LEARNING_SIGNAL
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
             import ACTIVATION_INPUT

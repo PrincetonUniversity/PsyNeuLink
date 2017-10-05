@@ -72,11 +72,12 @@ OTHER
 
 import inspect
 import numbers
-import numpy as np
 import warnings
-
-from PsyNeuLink.Globals.Keywords import NAME, VALUE, MATRIX_KEYWORD_VALUES, DISTANCE_METRICS
 from enum import Enum, EnumMeta, IntEnum
+
+import numpy as np
+
+from PsyNeuLink.Globals.Keywords import DISTANCE_METRICS, MATRIX_KEYWORD_VALUES, NAME, VALUE
 
 # THE FOLLOWING CAUSES ALL WARNINGS TO GENERATE AN EXCEPTION:
 warnings.filterwarnings("error")
@@ -191,7 +192,7 @@ def parameter_spec(param):
     #     param = ??
     # if is_numeric(param):
     from PsyNeuLink.Components.Functions.Function import function_type
-    from PsyNeuLink.Components.Projections.Projection import Projection
+    from PsyNeuLink.Components.ShellClasses import Projection
     from PsyNeuLink.Components.Component import parameter_keywords
 
     if (isinstance(param, (numbers.Number,
