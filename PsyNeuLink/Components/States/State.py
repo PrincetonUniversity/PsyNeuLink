@@ -2089,7 +2089,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     value = state_spec_dict.pop(VALUE, None)
 
-    # FIX: 10/3/17 - RECONCILE WITH XXXXX
+    # FIX: 10/3/17 - RECONCILE WITH "PER THE FOLLOWING" ABOVE
     # # Check that it's variable is compatible with reference_value, and if not, assign the latter as default variable
     # # if reference_value is not None and not iscompatible(variable, reference_value):
     # if reference_value is None or not iscompatible(variable, reference_value):
