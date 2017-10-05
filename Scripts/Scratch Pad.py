@@ -49,35 +49,49 @@ def _instantiate_state(state_type,
 import inspect
 def _parse_state_spec(
                       standard_args,
-                      **state_specs
+                      **state_spec
                       ):
 
     STATE_SPEC_ARG = 'state_spec'
     state_specific_dict = {}
-    state_spec_arg = None
+    state_specification = None
 
     # If there is a state_specs arg passed from _instantiate_state:
-    if STATE_SPEC_ARG in state_specs:
+    if STATE_SPEC_ARG in state_spec:
 
         # If it is a State specification dictionary
-        if isinstance(state_specs[STATE_SPEC_ARG], dict):
+        if isinstance(state_spec[STATE_SPEC_ARG], dict):
             # Use the value of any standard args specified in the State specification dictionary
             #    to replace those explicitly specified in the call to _instantiate_state (i.e., passed in standard_args)
-            state_specific_dict = state_specs[STATE_SPEC_ARG]
+            state_specific_dict = state_spec[STATE_SPEC_ARG]
             standard_args.update({key: state_specific_dict[key] for key in state_specific_dict if key in standard_args})
             # Delete them from the State specification dictionary, leaving only state-specific items there
             for key in standard_args:
                 state_specific_dict.pop(key, None)
 
         else:
-            state_spec_arg = state_specs[STATE_SPEC_ARG]
+            state_specification = state_spec[STATE_SPEC_ARG]
 
         # Delete the State specification dictionary from state_spec
-        del state_specs[STATE_SPEC_ARG]
+        del state_spec[STATE_SPEC_ARG]
 
-    if state_specs:
+    state_dict = standard_args
+
+    if isinstance(state_specification, tuple):
+        new_dict = _parse_state_spec(standard_args,
+                                     state_spec=state_specification[0])
+        state_dict.update(new_dict)
+
+    elif state_specific_dict:
+        state_specification_dict=state_specific_dict.copy()
+        if len(state_specification_dict) == 1:
+            name, state_spec = list(state_specification_dict.items())[0]
+            state_dict['name']=name
+            state_dict = _parse_state_spec(state_dict, state_spec=state_spec)
+
+    if state_spec:
         print('Args other than standard args and state_spec were in _instantiate_state ({})'.
-              format(state_specs))
+              format(state_spec))
 
     print('\nstate_dict:')
     for arg, val in standard_args.items():
@@ -87,24 +101,32 @@ def _parse_state_spec(
     for arg, val in state_specific_dict.items():
         print('\t{}: {}'.format(arg, val))
 
-    print('\nstate_spec:', state_spec_arg)
+    print('\nstate_spec:', state_specification)
     # for arg, val in state_spec.items():
     #     print('\t{}: {}'.format(arg, val))
 
-    print('\nstate_specs:', state_specs)
+    print('\nstate_specs:', state_spec)
+
+    return state_dict
 
 
 
 _instantiate_state(state_type = 'STATE TYPE',
-                   owner='OWNER',
+                   owner='OWNER FROM INSTANTIATE STATE',
                    # name='NAME',
-                   # state_spec=State
+                   # state_spec=State,
                    # state_spec=('state_spec_tuple_item_1','state_spec_tuple_item_2'),
+                   # state_spec=({'state_type': 'STATE HYPE'},23),
+                   state_spec={'GLOMMETT':{'owner':'GLERULET'}},
+                   # state_spec={'GLOMMETT':('state_spec_tuple_item_1','state_spec_tuple_item_2')},
                    hooblah=3,
                    # state_spec=({'name':'NAME IN DICT',
                    #              'owner':'OWNER IN DICT',
                    #              'goof':'HELLO'})
                    )
+
+
+
 
 class ScratchPadError(Exception):
     def __init__(self, error_value):

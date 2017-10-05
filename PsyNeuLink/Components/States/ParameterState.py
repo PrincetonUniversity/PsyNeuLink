@@ -527,7 +527,7 @@ class ParameterState(State_Base):
         # # Insure that output of function (self.value) is compatible with relevant parameter's reference_value
         if not iscompatible(self.value, self.reference_value):
             raise ParameterStateError("Value ({0}) of the {1} ParameterState for the {2} Mechanism is not compatible "
-                                      "the type of value expected for that parameter ({3})".
+                                      "with the type of value expected for that parameter ({3})".
                                            format(self.value,
                                                   self.name,
                                                   self.owner.name,
