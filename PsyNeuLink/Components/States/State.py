@@ -2101,6 +2101,10 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     # INSTANTIATE STATE:
 
+    # MODIFIED 10/3/17 OLD AND NEW:
+    state_spec_dict[REFERENCE_VALUE] = convert_to_np_array(reference_value,1)
+    # MODIFIED 10/3/17 END
+
     # IMPLEMENTATION NOTE:
     # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from ComponentPreferenceSet)
     # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its owner;
