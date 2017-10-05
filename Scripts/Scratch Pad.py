@@ -20,120 +20,12 @@
 # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControldProjection
 # from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
 
-print("SCRATCH AREA")
-
-def _get_args(frame):
-    args, _, _, values = inspect.getargvalues(frame)
-    return dict((key, value) for key, value in values.items() if key in args)
-    # return zip(args, values)
-
-class State:
-    pass
-
-def _instantiate_state(state_type,
-                       owner,
-                       reference_value=None,
-                       name=None,
-                       variable=None,
-                       params=None,
-                       prefs=None,
-                       context=None,
-                       **state_spec):
-    print('\n_instantiate_state state_spec:',
-          '\n\tcontext:',context,
-          '\n\tstate_spec', state_spec)
-    standard_args = _get_args(inspect.currentframe())
-    _parse_state_spec(standard_args, **state_spec)
-    # _parse_state_spec(state_spec, **standard_args)
-
-import inspect
-def _parse_state_spec(
-                      standard_args,
-                      **state_spec
-                      ):
-
-    STATE_SPEC_ARG = 'state_spec'
-    state_specific_dict = {}
-    state_specification = None
-
-    # If there is a state_specs arg passed from _instantiate_state:
-    if STATE_SPEC_ARG in state_spec:
-
-        # If it is a State specification dictionary
-        if isinstance(state_spec[STATE_SPEC_ARG], dict):
-            # Use the value of any standard args specified in the State specification dictionary
-            #    to replace those explicitly specified in the call to _instantiate_state (i.e., passed in standard_args)
-            state_specific_dict = state_spec[STATE_SPEC_ARG]
-            standard_args.update({key: state_specific_dict[key] for key in state_specific_dict if key in standard_args})
-            # Delete them from the State specification dictionary, leaving only state-specific items there
-            for key in standard_args:
-                state_specific_dict.pop(key, None)
-
-        else:
-            state_specification = state_spec[STATE_SPEC_ARG]
-
-        # Delete the State specification dictionary from state_spec
-        del state_spec[STATE_SPEC_ARG]
-
-    state_dict = standard_args
-
-    if isinstance(state_specification, tuple):
-        new_dict = _parse_state_spec(standard_args,
-                                     state_spec=state_specification[0])
-        state_dict.update(new_dict)
-
-    elif state_specific_dict:
-        state_specification_dict=state_specific_dict.copy()
-        if len(state_specification_dict) == 1:
-            name, state_spec = list(state_specification_dict.items())[0]
-            state_dict['name']=name
-            state_dict = _parse_state_spec(state_dict, state_spec=state_spec)
-
-    if state_spec:
-        print('Args other than standard args and state_spec were in _instantiate_state ({})'.
-              format(state_spec))
-
-    print('\nstate_dict:')
-    for arg, val in standard_args.items():
-        print('\t{}: {}'.format(arg, val))
-
-    print('\nstate_specific_dict:')
-    for arg, val in state_specific_dict.items():
-        print('\t{}: {}'.format(arg, val))
-
-    print('\nstate_spec:', state_specification)
-    # for arg, val in state_spec.items():
-    #     print('\t{}: {}'.format(arg, val))
-
-    print('\nstate_specs:', state_spec)
-
-    return state_dict
-
-
-
-_instantiate_state(state_type = 'STATE TYPE',
-                   owner='OWNER FROM INSTANTIATE STATE',
-                   # name='NAME',
-                   # state_spec=State,
-                   # state_spec=('state_spec_tuple_item_1','state_spec_tuple_item_2'),
-                   # state_spec=({'state_type': 'STATE HYPE'},23),
-                   state_spec={'GLOMMETT':{'owner':'GLERULET'}},
-                   # state_spec={'GLOMMETT':('state_spec_tuple_item_1','state_spec_tuple_item_2')},
-                   hooblah=3,
-                   # state_spec=({'name':'NAME IN DICT',
-                   #              'owner':'OWNER IN DICT',
-                   #              'goof':'HELLO'})
-                   )
-
-
-
 
 class ScratchPadError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
 # ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
-
 
 #region USER GUIDE
 # from PsyNeuLink.Components.Process import process, Process_Base
@@ -880,7 +772,6 @@ class ScratchPadError(Exception):
 # TEST = True
 # endregion
 
-
 #region TEST INPUT FORMATS
 
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
@@ -969,14 +860,120 @@ class ScratchPadError(Exception):
 # endregion
 
 #region TEST MECHANISM @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-#
+
+# print("TEST MECHANISM")
 # from Components.Mechanisms.Mechanism import Mechanism, mechanism
 # from Components.Mechanisms.DDM import DDM
 
 # x = Mechanism(context=kwValidate)
 # test = isinstance(x,Mechanism)
 # temp = True
-#
+
+#endregion
+
+#region TEST STATE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+print("TEST _instantiate_state and _parse_state_spec")
+
+def _get_args(frame):
+    args, _, _, values = inspect.getargvalues(frame)
+    return dict((key, value) for key, value in values.items() if key in args)
+    # return zip(args, values)
+
+class State:
+    pass
+
+def _instantiate_state(state_type,
+                       owner,
+                       reference_value=None,
+                       name=None,
+                       variable=None,
+                       params=None,
+                       prefs=None,
+                       context=None,
+                       **state_spec):
+    print('\n_instantiate_state state_spec:',
+          '\n\tcontext:',context,
+          '\n\tstate_spec', state_spec)
+    standard_args = _get_args(inspect.currentframe())
+    _parse_state_spec(standard_args, **state_spec)
+    # _parse_state_spec(state_spec, **standard_args)
+
+import inspect
+def _parse_state_spec(
+                      standard_args,
+                      **state_spec
+                      ):
+
+    STATE_SPEC_ARG = 'state_spec'
+    state_specific_dict = {}
+    state_specification = None
+
+    # If there is a state_specs arg passed from _instantiate_state:
+    if STATE_SPEC_ARG in state_spec:
+
+        # If it is a State specification dictionary
+        if isinstance(state_spec[STATE_SPEC_ARG], dict):
+            # Use the value of any standard args specified in the State specification dictionary
+            #    to replace those explicitly specified in the call to _instantiate_state (i.e., passed in standard_args)
+            state_specific_dict = state_spec[STATE_SPEC_ARG]
+            standard_args.update({key: state_specific_dict[key] for key in state_specific_dict if key in standard_args})
+            # Delete them from the State specification dictionary, leaving only state-specific items there
+            for key in standard_args:
+                state_specific_dict.pop(key, None)
+
+        else:
+            state_specification = state_spec[STATE_SPEC_ARG]
+
+        # Delete the State specification dictionary from state_spec
+        del state_spec[STATE_SPEC_ARG]
+
+    state_dict = standard_args
+
+    if isinstance(state_specification, tuple):
+        new_dict = _parse_state_spec(standard_args,
+                                     state_spec=state_specification[0])
+        state_dict.update(new_dict)
+
+    elif state_specific_dict:
+        state_specification_dict=state_specific_dict.copy()
+        if len(state_specification_dict) == 1:
+            name, state_spec = list(state_specification_dict.items())[0]
+            state_dict['name']=name
+            state_dict = _parse_state_spec(state_dict, state_spec=state_spec)
+
+    if state_spec:
+        print('Args other than standard args and state_spec were in _instantiate_state ({})'.
+              format(state_spec))
+
+    print('\nstate_dict:')
+    for arg, val in standard_args.items():
+        print('\t{}: {}'.format(arg, val))
+
+    print('\nstate_specific_dict:')
+    for arg, val in state_specific_dict.items():
+        print('\t{}: {}'.format(arg, val))
+
+    print('\nstate_spec:', state_specification)
+    # for arg, val in state_spec.items():
+    #     print('\t{}: {}'.format(arg, val))
+
+    print('\nstate_specs:', state_spec)
+
+    return state_dict
+
+_instantiate_state(state_type = 'STATE TYPE',
+                   owner='OWNER FROM INSTANTIATE STATE',
+                   # name='NAME',
+                   # state_spec=State,
+                   # state_spec=('state_spec_tuple_item_1','state_spec_tuple_item_2'),
+                   # state_spec=({'state_type': 'STATE HYPE'},23),
+                   state_spec={'GLOMMETT':{'owner':'GLERULET'}},
+                   # state_spec={'GLOMMETT':('state_spec_tuple_item_1','state_spec_tuple_item_2')},
+                   hooblah=3,
+                   # state_spec=({'name':'NAME IN DICT',
+                   #              'owner':'OWNER IN DICT',
+                   #              'goof':'HELLO'})
+                   )
 #endregion
 
 #region TEST PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
