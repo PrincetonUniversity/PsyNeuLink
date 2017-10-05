@@ -2487,9 +2487,14 @@ def _parse_state_spec(standard_args,
         state_dict[PARAMS].update(state_params)
 
     # State specification dictionary
-    elif state_specific_args:
-        state_specification_dict=state_specific_args.copy()
-
+    # FIX: 10/3/17 - SHOULD TAKE CARE OF THIS ABOVE, WHERE DICTS ARE SORTED OUT
+    # Use state_dict as State Specifiation dictionary (since standard_args were already into it)
+    #     and state_specifc_args as params (FIX: SHOULD PROBABLY JUST MOVE state_specific_args INTO params ABOVE)
+    # elif state_specific_args:
+    #     state_specification_dict=state_specific_args.copy()
+    else:
+        state_specification_dict = state_dict
+        params = state_specific_args
         # Dict has a single entry in which the key is not a recognized keyword,
         #    so assume it is of the form {<STATE_NAME>:<STATE_SPECIFICATION_DICT>}:
         #    - assign STATE_NAME as name,
