@@ -1979,6 +1979,17 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     Returns a State or None
     """
 
+    # MODIFIED 10/3/17 OLD:
+    # PARSE constraint_value
+    constraint_dict = _parse_state_spec(owner=owner,
+                                        state_type=state_type,
+                                        state_spec=constraint_value,
+                                        value=None,
+                                        params=None)
+    constraint_value = constraint_dict[VARIABLE]
+    # MODIFIED 10/3/17 END
+
+
     standard_args = get_args(inspect.currentframe())
     parsed_state_spec  = _parse_state_spec(standard_args, context, **state_spec)
 
