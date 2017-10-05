@@ -2718,7 +2718,7 @@ def _parse_state_spec(standard_args,
 
    # Projection class, object, or keyword:
     #    set variable to Projection's value and assign projection specification to PROJECTIONS entry in params
-    #    FIX: 10/3/17 - HANDLE THIS IN _parse_connection_spec?? (USING projection_socket)??
+    #    FIX: 10/3/17 - HANDLE THIS IN _parse_projection_specs?? (USING projection_socket)?? (ALSO TO VALIDATE?)
     #    IMPLEMENTATION NOTE:  It is the caller's responsibility to assign the value arg
     #                          appropriately for the state being requested, for:
     #                              InputState, projection's value;
@@ -2727,16 +2727,14 @@ def _parse_state_spec(standard_args,
     # Don't allow matrix keywords -- force them to be converted from a string into a value (below)
     elif _is_projection_spec(state_specification, include_matrix_spec=False):
         # state_spec = state_variable
-        state_dict[VARIABLE] =  value
         if state_dict[PARAMS] is None:
             state_dict[PARAMS] = {}
-        # state_dict[PARAMS].update({CONNECTIONS:[state_spec]})
-        state_dict[PARAMS].update({PROJECTIONS:[state_spec]})
+        state_dict[PARAMS].update({PROJECTIONS:[state_specification]})
 
     # string (keyword or name specification)
-    elif isinstance(state_spec, str):
+    elif isinstance(state_specification, str):
         # Check if it is a keyword
-        spec = get_param_value_for_keyword(owner, state_spec)
+        spec = get_param_value_for_keyword(owner, state_specification)
         # A value was returned, so use value of keyword as variable
         if spec is not None:
             state_dict[VARIABLE] = spec
@@ -2744,48 +2742,53 @@ def _parse_state_spec(standard_args,
             # matrix parameter is specified as a keyword, which may be intentional.
             if owner.prefs.verbosePref:
                 print("{} not specified for {} of {};  default ({}) will be used".
-                      format(VARIABLE, state_type, owner.name, value))
+                      format(VARIABLE, state_type, owner.name, state_dict[VALUE]))
         # It is not a keyword, so treat string as the name for the state
         else:
-            state_dict[NAME] = state_spec
+            state_dict[NAME] = state_specification
 
     # function; try to resolve to a value, otherwise return None to suppress instantiation of State
-    elif isinstance(state_spec, function_type):
-        state_dict[VALUE] = get_param_value_for_function(owner, state_spec)
+    elif isinstance(state_specification, function_type):
+        # FIX: 10/3/17 - SHOULDN'T THIS BE VARIABLE, NOT VALUE?  OR DEPEND ON STATE TYPE?
+        state_dict[VALUE] = get_param_value_for_function(owner, state_specification)
         if state_dict[VALUE] is None:
             # return None
             raise StateError("PROGRAM ERROR: state_spec for {} of {} is a function ({}), "
-                             "but it failed to return a value".format(state_type_name, owner.name, state_spec))
+                             "but it failed to return a value".format(state_type_name, owner.name, state_specification))
 
     # value, so use as variable of State
-    elif is_value_spec(state_spec):
-        state_dict[VARIABLE] = state_spec
-        state_dict[VALUE] = state_spec
+    elif is_value_spec(state_specification):
+        # FIX: 10/3/17 - SHOULD BOTH OF THESE BE THE SAME?
+        #                SHOULDN'T VALUE BE NONE UNTIL FUNCTION IS INSTANTIATED?? OR DEPEND ON STATE TYPE?
+        state_dict[VARIABLE] = state_specification
+        state_dict[VALUE] = state_specification
 
-
-    # MODIFIED 9/29/17 NEW:
     # State specification tuple
     #    Assume first item is the state specification, and use as base for state_dict
     #    Call _parse_state_specific_tuple() with tuple to get params in dict form (to add to state_dict)
-    elif isinstance(state_spec, tuple):
+    elif isinstance(state_specification, tuple):
 
-        # FIX: MOVE THIS TO _parse_projection_specs (SINCE TUPLES REFER TO PROJECTIONS)
+        # FIX: 10/3/17 - MOVE THIS TO _parse_projection_specs (SINCE TUPLES REFER TO PROJECTIONS)
         # Get state-specific params from tuple
         params = state_type._parse_state_specific_tuple(state_type,
                                                         owner=owner,
-                                                        state_specification_tuple=state_spec)
+                                                        state_specification_tuple=state_specification)
 
-        # FIX: 9/17/17 NEED TO HANDLE (ParamName string, Mechanism) for state_type = ControlSignal
-
+        # # MODIFIED 10/3/17 OLD:
         # Parse state_spec in first item of tuple (without params)
-        state_dict = _parse_state_spec(owner=owner,
-                                       state_type=state_type,
-                                       state_spec=state_spec[0],
-                                       name=name,
-                                       variable=variable,
-                                       value=value,
-                                       # projections=projections,
-                                       params={})
+        # state_dict = _parse_state_spec(owner=owner,
+        #                                state_type=state_type,
+        #                                state_spec=state_spec[0],
+        #                                name=name,
+        #                                variable=variable,
+        #                                value=value,
+        #                                # projections=projections,
+        #                                params={})
+        # MODIFIED 10/3/17 NEW:
+        state_dict = _parse_state_spec(**standard_args,
+                                       state_spec=state_specification[0])
+        # MODIFIED 10/3/17 END
+
         # Add params to any params specified in first item of tuple
         if state_dict[PARAMS] is None:
             state_dict[PARAMS] = {}
