@@ -1527,7 +1527,7 @@
 # Why are some parameter type specifications (in parens) italicized and others not?
 # Why do some underlines work and not others (e.g., Examples in Process)
 # Definition of a Python keyword
-# Why does Process_Base get referenced as Process, but System as such?
+# Why does Process get referenced as Process, but System as such?
 
 # US:
 #     Systematize #D vs. #d
@@ -1927,7 +1927,7 @@
 #          DefaultState
 #      In projection() and Function:
 #          DefaultProjection
-#      In Process_Base:
+#      In Process:
 #          kwProcessDefaultProjection: Components.Projections.TransmissiveProjections.MappingProjection
 #          kwProcessDefaultProjectionFunction: Components.Function.LinearMatrix
 #  DefaultMechanism is now being assigned in Process;
@@ -2455,7 +2455,7 @@
 #
 # - implement:  add pathway arg to call, so can be called with a config
 #
-# - implement: alias Process_Base to Process for calls in scripts
+# - implement: alias Process to Process for calls in scripts
 #
 #
 # *** DECIDE HOW TO HANDLE RUNNING OF ALL execute FUNCTIONS ON INIT OF OBJECT:

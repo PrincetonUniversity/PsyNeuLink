@@ -240,7 +240,7 @@ completed.  If a function is used for the **targets**, then it will be used to g
 
 The number of targets specified in the Sequence or Mechanism formats for each `TRIAL`, or generated using
 the function format, must equal the number of `TARGET` Mechanisms for the Process or System being run (see Process
-`target_mechanisms <Process.Process_Base.target_mechanisms>` or
+`target_mechanisms <Process.Process.target_mechanisms>` or
 System `targetMechanism <System.target_mechanisms>` respectively), and the value of each target must
 match (in number and type of elements) that  of the `target <ComparatorMechanism.ComparatorMechanism.target>`
 attribute of the `TARGET` Mechanism for which it is intended.  Furthermore, if a range is specified for the output of
@@ -302,7 +302,7 @@ import typecheck as tc
 
 from psyneulink.components.component import ExecutionStatus, function_type
 from psyneulink.components.process import ProcessInputState
-from psyneulink.components.shellclasses import Mechanism, Process, System_Base
+from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.globals.keywords import EVC_SIMULATION, MECHANISM, PROCESS, PROCESSES_DIM, RUN, SAMPLE, SYSTEM, TARGET
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
@@ -1222,7 +1222,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
 def _get_object_type(object):
     if isinstance(object, Mechanism):
         return MECHANISM
-    elif isinstance(object, Process):
+    elif isinstance(object, Process_Base):
         return PROCESS
     elif isinstance(object, System_Base):
         return SYSTEM

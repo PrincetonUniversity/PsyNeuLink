@@ -3,7 +3,7 @@ import profile
 from psyneulink.components.mechanisms.IntegratorMechanism import *
 from psyneulink.components.mechanisms.LinearMechanism import *
 
-from psyneulink.components.process import Process_Base
+from psyneulink.components.process import Process
 from psyneulink.components.system import System
 from psyneulink.globals.keywords import *
 
@@ -34,17 +34,17 @@ def run():
     #endregion
 
     #region Processes
-    TaskExecutionProcess = Process_Base(default_input_value=[0],
-                                        params={PATHWAY:[(Input, 0),
+    TaskExecutionProcess = Process(default_input_value=[0],
+                                   params={PATHWAY:[(Input, 0),
                                                                  IDENTITY_MATRIX,
                                                                  (Decision, 0)]},
-                                        prefs = process_prefs,
-                                        name = 'TaskExecutionProcess')
+                                   prefs = process_prefs,
+                                   name = 'TaskExecutionProcess')
 
-    RewardProcess = Process_Base(default_input_value=[0],
-                                 params={PATHWAY:[(Reward, 1)]},
-                                 prefs = process_prefs,
-                                 name = 'RewardProcess')
+    RewardProcess = Process(default_input_value=[0],
+                            params={PATHWAY:[(Reward, 1)]},
+                            prefs = process_prefs,
+                            name = 'RewardProcess')
     #endregion
 
     #region System

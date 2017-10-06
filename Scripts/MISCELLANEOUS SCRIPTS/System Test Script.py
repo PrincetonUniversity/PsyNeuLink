@@ -1,5 +1,5 @@
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import Process_Base
+from psyneulink.components.process import Process
 from psyneulink.components.system import System
 from psyneulink.globals.keywords import *
 
@@ -46,13 +46,13 @@ Layer_2 = TransferMechanism(default_variable=[0,0], name='Layer 2')
 Layer_3 = TransferMechanism(default_variable=[0,0], name='Layer 3')
 
 
-myProcess_1 = Process_Base(default_variable=[0, 0],
-                           params={PATHWAY:[(Layer_1, 0),
+myProcess_1 = Process(default_variable=[0, 0],
+                      params={PATHWAY:[(Layer_1, 0),
                                                     IDENTITY_MATRIX,
                                                     (Layer_3, 0)]})
 
-myProcess_2 = Process_Base(default_variable=[0, 0],
-                           params={PATHWAY:[(Layer_2, 0),
+myProcess_2 = Process(default_variable=[0, 0],
+                      params={PATHWAY:[(Layer_2, 0),
                                                     FULL_CONNECTIVITY_MATRIX,
                                                     (Layer_3, 0)]})
 

@@ -228,7 +228,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* `InputState <AutoAssociativeLearningMechanism_Structure>`,
         allowing the contribution of individual *units* to be scaled). If specified, the value supersedes the
         learning_rate assigned to any `Process` or `System` to which the AutoAssociativeLearningMechanism belongs.
-        If it is `None`, then the `learning_rate <Process_Base.learning_rate>` specified for the Process to which the
+        If it is `None`, then the `learning_rate <Process.learning_rate>` specified for the Process to which the
         AutoAssociativeLearningMechanism belongs belongs is used;  and, if that is `None`, then the `learning_rate
         <System.learning_rate>` for the System to which it belongs is used. If all are `None`, then the
         `default_learning_rate <LearningFunction.default_learning_rate>` for the `function

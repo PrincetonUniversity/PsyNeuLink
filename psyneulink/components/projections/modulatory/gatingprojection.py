@@ -94,7 +94,7 @@ from psyneulink.components.functions.function import FunctionOutputType, Linear
 from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
 from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
-from psyneulink.components.shellclasses import Mechanism, Process
+from psyneulink.components.shellclasses import Mechanism, Process_Base
 from psyneulink.globals.defaults import defaultGatingPolicy
 from psyneulink.globals.keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, INITIALIZING, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -279,7 +279,7 @@ class GatingProjection(ModulatoryProjection_Base):
         """
 
         # A Process can't be the sender of a GatingProjection
-        if isinstance(self.sender, Process):
+        if isinstance(self.sender, Process_Base):
             raise ProjectionError("PROGRAM ERROR: attempt to add a {} from a Process {0} "
                                   "to a Mechanism {0} in pathway list".
                                   format(GATING_PROJECTION, self.name, self.sender.name))

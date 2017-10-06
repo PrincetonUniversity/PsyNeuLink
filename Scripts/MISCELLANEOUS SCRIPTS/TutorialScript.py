@@ -11,10 +11,10 @@ my_transfer_mechanism = TransferMechanism(name="My TransferMechanism Mechanism",
                                              kwTransfer_Bias:0
                                          }})
 
-# simple_transfer_process = Process_Base(name='Simple TransferMechanism Process',
+# simple_transfer_process = Process(name='Simple TransferMechanism Process',
 #                                   params={PATHWAY:[TransferMechanism]})
 # simple_transfer_process.execute([0.5])
 
-simple_transfer_process = Process_Base(name='Simple TransferMechanism Process',
+simple_transfer_process = Process(name='Simple TransferMechanism Process',
                                   params={PATHWAY:[my_transfer_mechanism]})
 simple_transfer_process.execute([1])

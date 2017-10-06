@@ -238,11 +238,11 @@ System_Base.classPreferences = ComponentPreferenceSet(owner=System_Base,
                                                       level=PreferenceLevel.INSTANCE,
                                                       context=".__init__.py")
 
-from psyneulink.components.shellclasses import Process
-Process.classPreferences = ComponentPreferenceSet(owner=Process,
-                                                 prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
-                                                 level=PreferenceLevel.INSTANCE,
-                                                 context=".__init__.py")
+from psyneulink.components.shellclasses import Process_Base
+Process_Base.classPreferences = ComponentPreferenceSet(owner=Process_Base,
+                                                       prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
+                                                       level=PreferenceLevel.INSTANCE,
+                                                       context=".__init__.py")
 
 
 from psyneulink.components.shellclasses import Mechanism

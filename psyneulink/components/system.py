@@ -198,7 +198,7 @@ does the same for `learning <System_Execution_Learning>` (assigned to its `sched
 The `scheduler_processing` can be assigned in the **scheduler** argument of the System's constructor;  if it is not
 specified, a default `Scheduler` is created automatically.   The `scheduler_learning` is always assigned automatically.
 The System's Schedulers base the ordering of execution of its Components based on the order in which they are listed
-in the `pathway <Process_Base.pathway>`\\s of the `Proceses <Process>` used to construct the System, constrained by any
+in the `pathway <Process.pathway>`\\s of the `Proceses <Process>` used to construct the System, constrained by any
 `Conditions <Condition>` that have been created for individual Components and assigned to the System's Schedulers (see
 `Scheduler`, `Condition <Condition_Creation>`, `System_Execution_Processing`, and `System_Execution_Learning` for
 additional details).
@@ -440,8 +440,8 @@ from psyneulink.components.mechanisms.adaptive.control.controlmechanism import C
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 from psyneulink.components.mechanisms.mechanism import MechanismList, MonitoredOutputStatesOption
 from psyneulink.components.mechanisms.processing.objectivemechanism import MonitoredOutputStateTuple, OUTPUT_STATE_INDEX, ObjectiveMechanism
-from psyneulink.components.process import ProcessList, ProcessTuple, Process_Base
-from psyneulink.components.shellclasses import Mechanism, Process, System_Base
+from psyneulink.components.process import ProcessList, ProcessTuple, Process
+from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CONTROL_SIGNAL_SPECS, CYCLE, EVC_SIMULATION, EXECUTING, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -1020,7 +1020,7 @@ class System(System_Base):
                                   format(controller, self.name))
 
         for process in target_set[PROCESSES]:
-            if not isinstance(process, Process):
+            if not isinstance(process, Process_Base):
                 raise SystemError("{} (in processes arg for \'{}\') is not a Process object".format(process, self.name))
 
         if INITIAL_VALUES in target_set and target_set[INITIAL_VALUES] is not None:
@@ -1086,8 +1086,8 @@ class System(System_Base):
 
         # Assign default Process if PROCESS is empty, or invalid
         if not processes_spec:
-            from psyneulink.components.process import Process_Base
-            processes_spec.append(ProcessTuple(Process_Base(), None))
+            from psyneulink.components.process import Process
+            processes_spec.append(ProcessTuple(Process(), None))
 
         # If input to system is specified, number of items must equal number of processes with origin mechanisms
         if input is not None and len(input) != len(self.origin_mechanisms):
@@ -1154,20 +1154,20 @@ class System(System_Base):
             #            (QUESTION:  WHERE TO GET SPECS FOR PROCESS FOR RE-INSTANTIATION??)
 
             # If process item is a Process object, assign process_input as default
-            if isinstance(process, Process):
+            if isinstance(process, Process_Base):
                 if process_input is not None:
                     process._instantiate_defaults(variable=process_input, context=context)
 
             # Otherwise, instantiate Process
             else:
-                if inspect.isclass(process) and issubclass(process, Process):
+                if inspect.isclass(process) and issubclass(process, Process_Base):
                     # FIX: MAKE SURE THIS IS CORRECT
                     # Provide self as context, so that Process knows it is part of a System (and which one)
                     # Note: this is used by Process._instantiate_pathway() when instantiating first Mechanism
                     #           in Pathway, to override instantiation of projections from Process.input_state
-                    process = Process(default_variable=process_input,
-                                      learning_rate=self.learning_rate,
-                                      context=self)
+                    process = Process_Base(default_variable=process_input,
+                                           learning_rate=self.learning_rate,
+                                           context=self)
                 elif isinstance(process, dict):
                     # IMPLEMENT:  HANDLE Process specification dict here;
                     #             include process_input as ??param, and context=self
@@ -1323,7 +1323,7 @@ class System(System_Base):
                 for projection in input_state.all_afferents:
                     sender = projection.sender.owner
                     system_processes = self.processes
-                    if isinstance(sender, Process):
+                    if isinstance(sender, Process_Base):
                         if not sender in system_processes:
                             del projection
                     elif not all(sender_process in system_processes for sender_process in sender.processes):
@@ -1857,7 +1857,7 @@ class System(System_Base):
                 for projection in input_state.all_afferents:
                     sender = projection.sender.owner
                     system_processes = self.processes
-                    if isinstance(sender, Process):
+                    if isinstance(sender, Process_Base):
                         if not sender in system_processes:
                             del projection
                     elif not all(sender_process in system_processes for sender_process in sender.processes):
@@ -3410,7 +3410,7 @@ class System(System_Base):
                                 for input_state in sndr.input_states:
                                     for proj in input_state.path_afferents:
                                         # Skip any Projections from ProcesInputStates
-                                        if isinstance(proj.sender.owner, Process_Base):
+                                        if isinstance(proj.sender.owner, Process):
                                             continue
                                         output_mech = proj.sender.owner
                                         G.edge(output_mech.name, sndr.name, color=learning_color, label=proj.name)
@@ -3470,8 +3470,8 @@ SYSTEM_TARGET_INPUT_STATE = 'SystemInputState'
 
 from psyneulink.components.states.outputstate import OutputState
 class SystemInputState(OutputState):
-    """Represents inputs and targets specified in a call to the System's `execute <Process_Base.execute>` and `run
-    <Process_Base.run>` methods.
+    """Represents inputs and targets specified in a call to the System's `execute <Process.execute>` and `run
+    <Process.run>` methods.
 
     COMMENT:
         Each instance encodes a `target <System.target>` to the system (also a 1d array in 2d array of

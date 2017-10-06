@@ -129,7 +129,7 @@ multiplicatively to the LearningProjection`s `learning_signal <LearningProjectio
 used to modulate the learning_rate in addition to (and on top of) one specified for the `LearningMechanism` or its
 `function <LearningMechanism.function>`.  Specification of the `learning_rate <LearningSignal.learning_rate>` for a
 LearningSignal supersedes the `learning_rate <LearningProjection.learning_rate>` for its LearningProjections,
-as well the `learning_rate <Process_Base.learning_rate>` for any Process(es) and/or the
+as well the `learning_rate <Process.learning_rate>` for any Process(es) and/or the
 `learning_rate <System.learning_rate>` for any System(s) to which the LearningSignal's owner belongs
 (see `learning_rate <LearningMechanism_Learning_Rate>` of LearningMechanism for additional details).
 

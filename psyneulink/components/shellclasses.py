@@ -73,7 +73,7 @@ class System_Base(ShellClass):
 # ****************************************** PROCESS *******************************************************************
 
 
-class Process(ShellClass):
+class Process_Base(ShellClass):
     def __init__(self,
                  default_variable=None,
                  size=None,

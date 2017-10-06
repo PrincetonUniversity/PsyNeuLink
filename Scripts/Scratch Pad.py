@@ -29,7 +29,7 @@ class ScratchPadError(Exception):
 
 
 #region USER GUIDE
-# from PsyNeuLink.Components.Process import process, Process_Base
+# from PsyNeuLink.Components.Process import process, Process
 
 #region SIMPLE NN EXAMPLE:
 
@@ -141,11 +141,11 @@ class ScratchPadError(Exception):
 # my_process = Process()
 # print(my_process.name)
 
-# my_process = Process_Base()
+# my_process = Process()
 # print(my_process.name)
-# my_process = Process_Base()
+# my_process = Process()
 # print(my_process.name)
-# my_process = Process_Base()
+# my_process = Process()
 # print(my_process.name)
 
 # my_sys = system()
@@ -880,7 +880,7 @@ class ScratchPadError(Exception):
 #
 # my_transfer = TransferMechanism()
 #
-# x = Process_Base(params={PATHWAY:[my_transfer]})
+# x = Process(params={PATHWAY:[my_transfer]})
 #
 # for i in range(100):
 #     x.execute([1])

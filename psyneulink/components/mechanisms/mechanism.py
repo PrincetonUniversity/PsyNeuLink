@@ -80,7 +80,7 @@ Creating a Mechanism
 Mechanisms can be created in several ways.  The simplest is to call the constructor for the desired type of Mechanism.
 Alternatively, the `mechanism` command can be used to create a specific type of Mechanism or an instance of
 `default_mechanism <Mechanism_Base.default_mechanism>`. Mechanisms can also be specified "in context," for example in
-the `pathway <Process_Base.pathway>` attribute of a `Process`; the Mechanism can be specified in either of the ways
+the `pathway <Process.pathway>` attribute of a `Process`; the Mechanism can be specified in either of the ways
 mentioned above, or using one of the following:
 
   * the name of an **existing Mechanism**;
@@ -107,7 +107,7 @@ mentioned above, or using one of the following:
           <ParameterState_Specification>`. The parameter values specified will be used to instantiate the Mechanism.
           These can be overridden during execution by specifying `Mechanism_Runtime_Parameters`, either when calling
           the Mechanism's `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method, or where it is
-          specified in the `pathway <Process_Base.pathway>` attribute of a `Process`.
+          specified in the `pathway <Process.pathway>` attribute of a `Process`.
 
   * **automatically** -- PsyNeuLink automatically creates one or more Mechanisms under some circumstances. For example,
     a `ComparatorMechanism` and `LearningMechanism <LearningMechanism>` are created automatically when `learning is
@@ -524,7 +524,7 @@ designated as `ORIGIN` receives a `MappingProjection` to its `primary InputState
 Process(es) to which it belongs.  Accordingly, when the Process (or System of which the Process is a part) is
 executed, those Mechanisms receive the input provided to the Process (or System).  The `output_values
 <Mechanism_Base.output_values>` of any Mechanism designated as the `TERMINAL` Mechanism for a Process is assigned as
-the `output <Process_Base.output>` of that Process, and similarly for any System to which it belongs.
+the `output <Process.output>` of that Process, and similarly for any System to which it belongs.
 
 .. note::
    A Mechanism that is the `ORIGIN` or `TERMINAL` of a Process does not necessarily have the same role in the
@@ -539,10 +539,10 @@ Execution
 A Mechanism can be executed using its `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods.  This
 can be useful in testing a Mechanism and/or debugging.  However, more typically, Mechanisms are executed as part of a
 `Process <Process_Execution>` or `System <System_Execution>`.  For either of these, the Mechanism must be included in
-the `pathway <Process_Base.pathway>` of a Process.  There, it can be specified on its own, or as the first item of a
+the `pathway <Process.pathway>` of a Process.  There, it can be specified on its own, or as the first item of a
 tuple that also has an optional set of `runtime parameters <Mechanism_Runtime_Parameters>` (see `Process Mechanisms
 <Process_Mechanisms>` for additional details about specifying a Mechanism in a Process `pathway
-<Process_Base.pathway>`).
+<Process.pathway>`).
 
 .. _Mechanism_Runtime_Parameters:
 

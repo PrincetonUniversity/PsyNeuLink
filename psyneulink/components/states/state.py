@@ -313,7 +313,7 @@ from psyneulink.components.component import Component, ComponentError, InitStatu
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.projection import _is_projection_spec
-from psyneulink.components.shellclasses import Mechanism, Process, Projection, State
+from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.keywords import VARIABLE, SIZE, FUNCTION_PARAMS, NAME, OWNER, PARAMS, CONTEXT, EXECUTING, \
     VALUE, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, \
     STANDARD_ARGS, STANDARD_OUTPUT_STATES, \
@@ -1599,7 +1599,7 @@ class State_Base(State):
         from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
 
         # If owner is a Mechanism, get its execution_id
-        if isinstance(self.owner, (Mechanism, Process)):
+        if isinstance(self.owner, (Mechanism, Process_Base)):
             self_id = self.owner._execution_id
         # If owner is a MappingProjection, get it's sender's execution_id
         elif isinstance(self.owner, MappingProjection):

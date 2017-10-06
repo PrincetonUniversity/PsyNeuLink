@@ -82,7 +82,7 @@ with an input array::
 
     output_layer.execute([0, 2.5, 10.9, 2, 7.6])
 
-The full Process can be run simply by calling its `execute <Process_Base.execute>` method::
+The full Process can be run simply by calling its `execute <Process.execute>` method::
 
     my_encoder.execute([0, 2.5, 10.9, 2, 7.6])
 
@@ -124,7 +124,7 @@ trained using backpropagation simply by adding the **learning** argument to the 
 
     my_encoder = process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
 
-and then specifying the target for each trial when it is executed (here, the Process' `run <Process_Base.run>` command
+and then specifying the target for each trial when it is executed (here, the Process' `run <Process.run>` command
 is used to execute a series of five training trials, one that trains it on each element of the input)::
 
     my_encoder.run(input=[[0,0,0,0,0], [1,0,0,0,0], [0,0,1,0,0], [0,0,0,1,0], [0,0,0,0,1]],
@@ -157,7 +157,7 @@ output layer, which combines the inputs and projects to a drift diffusion mechan
     my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
 
 In this example, ``differencing_weights`` is used to specify a `MappingProjection` between the input layer of the
-`pathway <Process_Base.pathway>` for each Process and the Mechanism (``output_layer``) on which they converge.
+`pathway <Process.pathway>` for each Process and the Mechanism (``output_layer``) on which they converge.
 
 As a Composition gets more complex, it helps to visualize it.  PsyNeuLink has built-in methods for doing so.
 For example, calling ``my_simple_Stroop.show_graph()`` produces the following display:

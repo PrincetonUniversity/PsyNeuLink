@@ -34,7 +34,7 @@ A MappingProjection can be created in any of the ways that can be used to create
 MappingProjections are also generated automatically in the following circumstances, using a value for its `matrix
 <MappingProjection.matrix>` parameter appropriate to the circumstance:
 
-  * by a `Process`, when two adjacent `Mechanisms <Mechanism>` in its `pathway <Process_Base.pathway>` do not already
+  * by a `Process`, when two adjacent `Mechanisms <Mechanism>` in its `pathway <Process.pathway>` do not already
     have a Projection assigned between them (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>`
     specification, which determines the appropriate matrix by context);
   ..
@@ -107,11 +107,11 @@ A MappingProjection is specified for learning in any of the following ways:
     * specifying the MappingProjection (or its *MATRIX* `ParameterState`) in the **learning_signals** argument of
       the constructor for a `LearningMechanism <LearningSignal_Specification>`
     ..
-    * specifying a MappingProjection in the `pathway <Process_Base.pathway>`  for a `Process`,
+    * specifying a MappingProjection in the `pathway <Process.pathway>`  for a `Process`,
       using the `tuple format <MappingProjection_Learning_Tuple_Specification>` to include a learning specification;
     ..
     * `specifying learning <Process_Learning_Sequence>` for a `Process`, which assigns `LearningProjections
-      <LearningProjection>` to all of the  MappingProjections in the Process' `pathway <Process_Base.pathway>`;
+      <LearningProjection>` to all of the  MappingProjections in the Process' `pathway <Process.pathway>`;
 
 See `LearningMechanism` documentation for an overview of `learning components <LearningMechanism_Overview>` and a
 detailed description of `LearningMechanism_Learning_Configurations`;  see `MappingProjection_Learning` below for a
@@ -144,7 +144,7 @@ allows a MappingProjection to be created before its `sender <MappingProjection.s
 <MappingProjection.receiver>` have been created (e.g., before them in a script), by calling its constructor without
 specifying its **sender** or **receiver** arguments. However, for the MappingProjection to be operational,
 initialization must be completed by calling its `deferred_init` method.  This is not necessary if the MappingProjection
-is specified in the `pathway <Process_Base.pathway>` of `Process`, or anywhere else that its `sender
+is specified in the `pathway <Process.pathway>` of `Process`, or anywhere else that its `sender
 <MappingProjection.sender>` and receiver <MappingProjection.receiver>` can be determined by context.
 
 .. _Mapping_Structure:
