@@ -230,7 +230,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         learning_rate assigned to any `Process` or `System` to which the AutoAssociativeLearningMechanism belongs.
         If it is `None`, then the `learning_rate <Process_Base.learning_rate>` specified for the Process to which the
         AutoAssociativeLearningMechanism belongs belongs is used;  and, if that is `None`, then the `learning_rate
-        <System_Base.learning_rate>` for the System to which it belongs is used. If all are `None`, then the
+        <System.learning_rate>` for the System to which it belongs is used. If all are `None`, then the
         `default_learning_rate <LearningFunction.default_learning_rate>` for the `function
         <AutoAssociativeLearningMechanism.function>` is used (see `learning_rate <LearningMechanism_Learning_Rate>`
         for additional details).

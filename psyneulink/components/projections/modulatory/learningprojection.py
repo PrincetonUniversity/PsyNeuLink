@@ -19,7 +19,7 @@ to the *MATRIX* `ParameterState` of a `MappingProjection`.  It takes the `value 
 `LearningSignal` of a `LearningMechanism`, and uses it to modify the value of the `matrix <MappingProjection.matrix>`
 parameter of that MappingProjection.  All of the LearningProjections in a System, along with its other `learning
 components <LearningMechanism_Learning_Configurations>`, can be displayed using the System's `show_graph
-<System_Base.show_graph>` method with its **show_learning** argument assigned as `True`.
+<System.show_graph>` method with its **show_learning** argument assigned as `True`.
 
 .. _LearningProjection_Creation:
 

@@ -112,7 +112,7 @@ mentioned above, or using one of the following:
   * **automatically** -- PsyNeuLink automatically creates one or more Mechanisms under some circumstances. For example,
     a `ComparatorMechanism` and `LearningMechanism <LearningMechanism>` are created automatically when `learning is
     specified <Process_Learning_Sequence>` for a Process; and an `ObjectiveMechanism` and `ControlMechanism
-    <ControlMechanism>` are created when the `controller <System_Base.controller>` is specified for a `System`.
+    <ControlMechanism>` are created when the `controller <System.controller>` is specified for a `System`.
 
 .. _Mechanism_State_Specification:
 

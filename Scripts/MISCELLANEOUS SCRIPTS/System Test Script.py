@@ -1,6 +1,6 @@
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process_Base
-from psyneulink.components.system import System_Base
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import *
 
 # DDM_prefs = ComponentPreferenceSet(
@@ -56,7 +56,7 @@ myProcess_2 = Process_Base(default_variable=[0, 0],
                                                     FULL_CONNECTIVITY_MATRIX,
                                                     (Layer_3, 0)]})
 
-mySystem = System_Base(params={PROCESSES:[(myProcess_1,0), (myProcess_2,0)]})
+mySystem = System(params={PROCESSES:[(myProcess_1, 0), (myProcess_2, 0)]})
 
 myProcess_1.reportOutputPref = True
 myProcess_2.reportOutputPref = True

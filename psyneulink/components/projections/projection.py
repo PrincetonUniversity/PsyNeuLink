@@ -113,10 +113,10 @@ Projection in context:
       * *CONTROL_PROJECTION* (or *CONTROL*)-- this can be used when specifying a parameter using the `tuple format
         <ParameterState_Tuple_Specification>`, to create a default `ControlProjection` to the `ParameterState` for that
         parameter.  If the `Component <Component>` to which the parameter belongs is part of a `System`, then a
-        `ControlSignal` is added to the System's `controller <System_Base.controller>` and assigned as the
+        `ControlSignal` is added to the System's `controller <System.controller>` and assigned as the
         ControlProjection's `sender <ControlProjection.sender>`;  otherwise, the ControlProjection's `initialization
         is deferred <ControlProjection_Deferred_Initialization>` until the Mechanism is assigned to a System,
-        at which time the ControlSignal is added to the System's `controller <System_Base.controller>` and assigned
+        at which time the ControlSignal is added to the System's `controller <System.controller>` and assigned
         as its the ControlProjection's `sender <ControlProjection.sender>`.  See `ControlMechanism_Control_Signals` for
         additional details.
       |

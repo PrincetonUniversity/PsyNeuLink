@@ -83,7 +83,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                     <instances>
 
      Component(variable, params, name, prefs, context)
-         System_Base([default_input, params, name, prefs, context]) # sequence of mechanisms to execute
+         System([default_input, params, name, prefs, context]) # sequence of mechanisms to execute
          Process_Base([default_input, params, name, prefs, context]) # sequence of mechanisms to execute
          Mechanism_Base([variable,                                   # default: DDM
                          params,
@@ -153,7 +153,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
      Component(Object)............................................[PsyNeuLink.Components.Component]
 
          System(Component)........................................[PsyNeuLink.Components.ShellClassses]
-             System_Base(System)..................................[PsyNeuLink.Components.System]
+             System(System)..................................[PsyNeuLink.Components.System]
 
          Process(Component).......................................[PsyNeuLink.Components.ShellClassses]
              Process_Base(Process)................................[PsyNeuLink.Components.Process]

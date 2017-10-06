@@ -118,7 +118,7 @@ Execution
 ---------
 
 A GatingMechanism executes in the same way as a `ProcessingMechanism <ProcessingMechanism>`, based on its place in the
-System's `graph <System_Base.graph>`.  Because `GatingProjections <GatingProjection>` are likely to introduce cycles
+System's `graph <System.graph>`.  Because `GatingProjections <GatingProjection>` are likely to introduce cycles
 (recurrent connection loops) in the graph, the effects of a GatingMechanism and its projections will generally not be
 applied in the first `TRIAL` (see `initialization <System_Execution_Input_And_Initialization>` for a description of
 how to configure the initialization of feedback loops in a System; also see `Scheduler` for a description of detailed

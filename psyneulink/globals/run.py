@@ -40,7 +40,7 @@ When the :keyword:`run` method of a Component is called, it executes that Compon
 execution.  For a `Mechanism <Mechanism>`, the scope of execution is simply the Mechanism itself.  For a `Process`,
 the scope of
 execution is all of the Mechanisms specified in its `pathway` attribute.  For a `System`, the scope of execution is
-all of the Mechanisms in the Processes specified in the System's `processes <System_Base.processes>` attribute.
+all of the Mechanisms in the Processes specified in the System's `processes <System.processes>` attribute.
 
 .. _Run_Timing:
 
@@ -142,8 +142,8 @@ Sequence Format
 *(List[values] or ndarray)* -- this uses a nested list or ndarray to fully specify the input for
 each `TRIAL` in a sequence.  It is more complex than the `Mechanism format <Run_Inputs_Mechanism_Format>`,
 and for Systems requires that the inputs for each Mechanism be specified in the same order in which those Mechanisms
-appear in the System's `origin_mechanisms <System_Base.origin_mechanisms>` attribute.  This is generally the
-same order in which they are declared, and can be displayed using the System's `show <System_Base.show>`
+appear in the System's `origin_mechanisms <System.origin_mechanisms>` attribute.  This is generally the
+same order in which they are declared, and can be displayed using the System's `show <System.show>`
 method). Although this format is more complex, it may be better suited to automated input generation, since it does
 not require that Mechanisms be referenced explicitly (though it is allowed). The following provides a description of
 the Sequence format for all of the combinations of factors describe `above <Run_Inputs_Mechanism_Format>`.
@@ -241,7 +241,7 @@ completed.  If a function is used for the **targets**, then it will be used to g
 The number of targets specified in the Sequence or Mechanism formats for each `TRIAL`, or generated using
 the function format, must equal the number of `TARGET` Mechanisms for the Process or System being run (see Process
 `target_mechanisms <Process.Process_Base.target_mechanisms>` or
-System `targetMechanism <System_Base.target_mechanisms>` respectively), and the value of each target must
+System `targetMechanism <System.target_mechanisms>` respectively), and the value of each target must
 match (in number and type of elements) that  of the `target <ComparatorMechanism.ComparatorMechanism.target>`
 attribute of the `TARGET` Mechanism for which it is intended.  Furthermore, if a range is specified for the output of
 the `TERMINAL` Mechanism with which the target is compared (that is, the Mechanism that provides the
@@ -258,8 +258,8 @@ Sequence Format
 *(List[values] or ndarray):* -- there are at most three levels of nesting (or dimensions) required for
 targets:  one for `TRIAL` \\s, one for Mechanisms, and one for the elements of each input.  For a System
 with more than one `TARGET` Mechanism, the targets must be specified in the same order as they appear in the System's
-`target_mechanisms <System_Base.target_mechanisms>` attribute.  This should be the same order in which
-they are declared, and can be displayed using the System's `show <System_Base.show>` method). All
+`target_mechanisms <System.target_mechanisms>` attribute.  This should be the same order in which
+they are declared, and can be displayed using the System's `show <System.show>` method). All
 other requirements are the same as the `Sequence format <Run_Inputs_Sequence_Format>` for **inputs**.
 
 .. _Run_Targets_Mechanism_Format:
@@ -302,7 +302,7 @@ import typecheck as tc
 
 from psyneulink.components.component import ExecutionStatus, function_type
 from psyneulink.components.process import ProcessInputState
-from psyneulink.components.shellclasses import Mechanism, Process, System
+from psyneulink.components.shellclasses import Mechanism, Process, System_Base
 from psyneulink.globals.keywords import EVC_SIMULATION, MECHANISM, PROCESS, PROCESSES_DIM, RUN, SAMPLE, SYSTEM, TARGET
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
@@ -416,7 +416,7 @@ def run(object,
         if `True`, resets `CentralClock` to 0 before a sequence of `TRIAL` \\s.
 
     initialize : bool default False
-        calls the `initialize <System_Base.initialize>` method of the System prior to the first `TRIAL`.
+        calls the `initialize <System.initialize>` method of the System prior to the first `TRIAL`.
 
     initial_values : Dict[Mechanism:List[input]], List[input] or np.ndarray(input) : default None
         the initial values assigned to Mechanisms designated as `INITIALIZE_CYCLE`.
@@ -1224,7 +1224,7 @@ def _get_object_type(object):
         return MECHANISM
     elif isinstance(object, Process):
         return PROCESS
-    elif isinstance(object, System):
+    elif isinstance(object, System_Base):
         return SYSTEM
     else:
         raise RunError("{} type not supported by Run module".format(object.__class__.__name__))

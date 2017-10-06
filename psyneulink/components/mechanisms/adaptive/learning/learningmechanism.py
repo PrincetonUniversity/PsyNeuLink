@@ -28,7 +28,7 @@ LearningMechanism can be used to train multiple MappingProjections, by assigning
 
 All of the MappingProjection(s) modified by a LearningMechanism must project from one `ProcessingMechanism
 <ProcessingMechanism>` to another in same `System` or `Process`. The learning components of a System can be displayed
-using the System's `show_graph <System_Base.show_graph>` method with its **show_learning** argument assigned `True`.
+using the System's `show_graph <System.show_graph>` method with its **show_learning** argument assigned `True`.
 LearningMechanisms are executed after all of the ProcessingMechanisms in a System or Process have been executed,
 and before any `ControlMechanisms <ControlMechanism>` of the System have been executed (see `System Execution
 <System_Execution>`).
@@ -318,12 +318,12 @@ refer to the Components being learned and/or its operation:
   before returning it as the `learning_signal <LearningMechanism.learning_signal>`.  This can be specified in the
   **learning_rate** argument of the LearningMechanism's constructor (or the constructor for its `function
   <LearningMechanism.function>`;  doing so supersedes specification of the `learning_rate <Process_Base.learning_rate>`
-  for any `Process`, and/or the `learning_rate <System_Base.learning_rate>` for any `System` to which the
+  for any `Process`, and/or the `learning_rate <System.learning_rate>` for any `System` to which the
   LearningMechanism belongs.  The default value for a LearningMechanism's `learning_rate
   <LearningMechanism.learning_rate>` attribute is `None`, in which case the LearningMechanism (and its `function
   <LearningMechanism.function>`) inherit the specification of the `learning_rate <Process_Base.learning_rate>` for
   the `Process` in which the LearningMechanism is executed. If that is `None`, then it inherits the `learning_rate
-  <System_Base.learning_rate>` specification of the `System` in which it is executed.  If that is also `None`, then it
+  <System.learning_rate>` specification of the `System` in which it is executed.  If that is also `None`, then it
   uses the value of the `default_learning_rate <LearningFunction.default_learning_rate>` parameter of its `function
   <LearningMechanism.function>`. A :keyword:`learning_rate` parameter can also be specified for individual
   `LearningSignals <LearningSignal>` and/or their associated `LearningProjections <LearningProjection>`.  Those have

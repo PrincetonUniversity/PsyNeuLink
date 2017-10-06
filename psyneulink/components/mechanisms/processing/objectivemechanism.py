@@ -39,7 +39,7 @@ Monitored OutputStates
 The **monitored_output_states** argument of the constructor specifies the OutputStates it monitors.  The assignment of
 the OutputStates to be monitored can also be passed from the **objective_mechanism** argument of the constructor for a
 `ControlMechanism`, or the **monitor_for_control** argument of a `System` for which the ControlMechanism is a
-`controller <System_Base.controller>`.  The **monitored_output_states** argument can be specified using a  list
+`controller <System.controller>`.  The **monitored_output_states** argument can be specified using a  list
 containing any of the following:
 
 COMMENT:
@@ -983,9 +983,9 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
             output_state = output_state_tuple.output_state
 
             # If output_state is a string,
-            from psyneulink.components.shellclasses import System
+            from psyneulink.components.shellclasses import System_Base
             if isinstance(output_state, str):
-                if not isinstance(source, System):
+                if not isinstance(source, System_Base):
                     raise ObjectiveMechanismError("A string was used to specify an OutputState (presumably its name: "
                                                   "\'{}\') to be monitored by the ObjectiveMechanism for {}; the name "
                                                   "of an OutputState can be used to specify it only in the "

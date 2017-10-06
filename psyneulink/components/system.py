@@ -35,7 +35,7 @@ A System is a `Composition <Composition>` that is a collection of `Processes <Pr
 together. Executing a System executes all of the `Mechanisms <Mechanism>` in its Processes in a structured order.
 `Projections <Projection>` between Mechanisms in different Processes within the System are permitted, as are recurrent
 Projections, but Projections from Mechanisms in other Systems are ignored (PsyNeuLink does not support ESP).  A System
-can also be assigned a `ControlMechanism <ControlMechanism>` as its `controller <System_Base.controller>`, that can be
+can also be assigned a `ControlMechanism <ControlMechanism>` as its `controller <System.controller>`, that can be
 used to control parameters of other `Mechanisms <Mechanism>` (or their `functions <Mechanism_Base.function>` in the
 System.
 
@@ -47,7 +47,7 @@ Creating a System
 Systems are created by calling the `system` command.  If no arguments are provided, a System with a single `Process`
 containing a single `default_mechanism <Mechanism_Base.default_mechanism>` is created.  More commonly, a System is
 created from one or more `Processes <Process>` that are specified in the **processes**  argument of the `system`
-command, and listed in its `processes <System_Base.processes>` attribute.
+command, and listed in its `processes <System.processes>` attribute.
 
 .. note::
    At present, only `Processes <Process>` can be assigned to a System; `Mechanisms <Mechanism>` cannot be assigned
@@ -69,7 +69,7 @@ attributes, respectively.  In addition, these can be specified in the **monitor_
 arguments of the `system` command, as described below.
 
 * **monitor_for_control** argument -- used to specify OutputStates of Mechanisms in the System that be monitored by the
-  `ObjectiveMechanism` associated with the System's `controller <System_Base.controller>` (see
+  `ObjectiveMechanism` associated with the System's `controller <System.controller>` (see
   `ControlMechanism_ObjectiveMechanism`);  these are used in addition to any specified for the ControlMechanism or
   its ObjectiveMechanism.  These can be specified in the **monitor_for_control** argument of the `system` command using
   any of the ways used to specify the *monitored_output_states* argument of the constructor for an ObjectiveMechanism (see
@@ -85,7 +85,7 @@ arguments of the `system` command, as described below.
   * **MonitoredOutputStatesOption** -- must be a value of `MonitoredOutputStatesOption`, and must appear alone or as a
     single item in the list specifying the **monitor_for_control** argument;  any other specification(s) included in
     the list will take precedence.  The MonitoredOutputStatesOption applies to all of the Mechanisms in the System
-    except its `controller <System_Base.controller>` and `LearningMechanisms <LearningMechanism>`. The
+    except its `controller <System.controller>` and `LearningMechanisms <LearningMechanism>`. The
     *PRIMARY_OUTPUT_STATES* value specifies that the `primary OutputState <OutputState_Primary>` of every Mechanism be
     monitored, whereas *ALL_OUTPUT_STATES* specifies that *every* OutputState of every Mechanism be monitored.
 
@@ -98,7 +98,7 @@ arguments of the `system` command, as described below.
 * **control_signals** argument -- used to specify the parameters of Components in the System to be controlled. These
   can be specified in any of the ways used to `specify ControlSignals <ControlMechanism_Control_Signals>` in the
   *control_signals* argument of a ControlMechanism. These are added to any `ControlSignals <ControlSignal>` that have
-  already been specified for the `controller <System_Base.controller>` (listed in its `control_signals
+  already been specified for the `controller <System.controller>` (listed in its `control_signals
   <ControlMechanism.control_signals>` attribute), and any parameters that have directly been `specified for
   control <ParameterState_Specification>` within the System (see `System_Control` below for additional details).
 
@@ -130,10 +130,10 @@ Mechanisms
 ~~~~~~~~~~
 
 The `Mechanisms <Mechanism>` in a System are assigned designations based on the position they occupy in the `graph
-<System_Base.graph>` and/or the role they play in a System:
+<System.graph>` and/or the role they play in a System:
 
-    `ORIGIN`: receives input to the System (provided in the `execute <System_Base.execute>` or `run
-    <System_Base.run> method), and does not receive a `Projection <Projection>` from any other `ProcessingMechanisms
+    `ORIGIN`: receives input to the System (provided in the `execute <System.execute>` or `run
+    <System.run> method), and does not receive a `Projection <Projection>` from any other `ProcessingMechanisms
     <ProcessingMechanism>`.
 
     `TERMINAL`: provides output from the System, and does not send Projections to any other ProcessingMechanisms.
@@ -149,7 +149,7 @@ The `Mechanisms <Mechanism>` in a System are assigned designations based on the 
     `LEARNING`: monitors the value of another Mechanism for use in learning.
 
     `TARGET`: ComparatorMechanism that monitors a `TERMINAL` Mechanism of a Process and compares it to a corresponding
-    value provided in the `execute <System_Base.execute>` or `run <System_Base.run>` method.
+    value provided in the `execute <System.execute>` or `run <System.run>` method.
 
     `INTERNAL`: ProcessingMechanism that does not fall into any of the categories above.
 
@@ -170,15 +170,15 @@ Graph
 ~~~~~
 
 When a System is created, a graph is constructed that describes the `Projections <Projection>` (edges) among its
-`Mechanisms <Mechanism>` (nodes). The graph is assigned to the System's `graph <System_Base.graph>` attribute.  A
-System's `graph <System_Base.graph>` can be displayed using its `System_Base.show_graph` method.  The `graph
-<System_Base.graph>` is stored as a dictionary of dependencies that can be passed to graph theoretical tools for
+`Mechanisms <Mechanism>` (nodes). The graph is assigned to the System's `graph <System.graph>` attribute.  A
+System's `graph <System.graph>` can be displayed using its `System.show_graph` method.  The `graph
+<System.graph>` is stored as a dictionary of dependencies that can be passed to graph theoretical tools for
 analysis.  A System can have recurrent Processing pathways, such as feedback loops;  that is, the System's `graph
-<System_Base.graph> can be *cyclic*.  PsyNeuLink also uses the `graph <System_Base.graph>` to determine the order in
+<System.graph> can be *cyclic*.  PsyNeuLink also uses the `graph <System.graph>` to determine the order in
 which its Mechanisms are executed.  To do so in an orderly manner, however, the graph must be *acyclic*.  To address
-this, PsyNeuLink constructs an `execution_graph <System_Base.execution_graph>` from the System's `graph
-<System_Base.graph>`. If the  System is acyclic, these are the same. If the System is cyclic, then the `execution_graph
-<System_Base.execution_graph>` is a subset of the `graph <System_Base.graph>` in which the dependencies (edges)
+this, PsyNeuLink constructs an `execution_graph <System.execution_graph>` from the System's `graph
+<System.graph>`. If the  System is acyclic, these are the same. If the System is cyclic, then the `execution_graph
+<System.execution_graph>` is a subset of the `graph <System.graph>` in which the dependencies (edges)
 associated with Projections that close a loop have been removed. Note that this only impacts the order of execution;
 the Projections themselves remain in effect, and will be fully functional during the execution of the Mechanisms
 to and from which they project (see `System_Execution` below for a more detailed description).
@@ -208,9 +208,9 @@ additional details).
 Control
 ~~~~~~~
 
-A System can be assigned a `ControlMechanism` as its `controller <System_Base.controller>`, that can be  used to
+A System can be assigned a `ControlMechanism` as its `controller <System.controller>`, that can be  used to
 control parameters of other `Mechanisms <Mechanism>` in the System. Although any number of ControlMechanism can be
-assigned to and executed within a System, a System can have only one `controller <System_Base.controller>`, that is
+assigned to and executed within a System, a System can have only one `controller <System.controller>`, that is
 executed after all of the other Components in the System have been executed, including any other ControlMechanisms (see
 `System Execution <System_Execution>`). When a ControlMechanism is assigned to or created by a System, it inherits
 specifications made for the System as follows:
@@ -229,7 +229,7 @@ specifications made for the System as follows:
 See `System_Control_Specification` above, `ControlMechanism <ControlMechanism>` and `ModulatorySignal_Modulation`
 for details of how control operates, and `System_Execution_Control` below for a description of how it is engaged
 when a System is executed. The control Components of a System can be displayed using the System's `show_graph
-<System_Base.show_graph>` method with its **show_control** argument assigned as `True`.
+<System.show_graph>` method with its **show_control** argument assigned as `True`.
 
 .. _System_Learning:
 
@@ -237,10 +237,10 @@ Learning
 ~~~~~~~~
 
 A System cannot itself be specified for learning.  However, if learning has been specified for any of its `processes
-<System_Base.processes>`, then it will be `implemented <LearningMechanism_Learning_Configurations>` and `executed
+<System.processes>`, then it will be `implemented <LearningMechanism_Learning_Configurations>` and `executed
 <System_Execution_Learning>` as part of the System.  Note, however, that for the learning Components of a Process to
 be implemented by a System, learning must be `specified for the entire Process <Process_Learning_Specification>`. The
-learning Components of a System can be displayed using the System's `System_Base.show_graph` method with its
+learning Components of a System can be displayed using the System's `System.show_graph` method with its
 **show_learning** argument assigned as `True`.
 
 
@@ -249,10 +249,10 @@ learning Components of a System can be displayed using the System's `System_Base
 Execution
 ---------
 
-A System can be executed by calling either its `execute <System_Base.execute>` or `run <System_Base.execute>` methods.
-`execute <System_Base.execute>` executes the System once; that is, it executes a single `TRIAL`.
-`run <System_Base.run>` allows a series of `TRIAL`\\s to be executed, one for each input in the **inputs** argument
-of the call to `run <System_Base.run>`.  For each `TRIAL`, it makes a series of calls to the `run <Scheduler.run>`
+A System can be executed by calling either its `execute <System.execute>` or `run <System.execute>` methods.
+`execute <System.execute>` executes the System once; that is, it executes a single `TRIAL`.
+`run <System.run>` allows a series of `TRIAL`\\s to be executed, one for each input in the **inputs** argument
+of the call to `run <System.run>`.  For each `TRIAL`, it makes a series of calls to the `run <Scheduler.run>`
 method of the relevant `Scheduler` (see `System_Execution_Processing` and `System_Execution_Learning` below), and
 executes the Components returned by that Scheduler (constituting a `TIME_STEP` of execution), until every Component in
 the System has been executed at least once, or another `termination condition <Scheduler_Termination_Conditions>` is
@@ -266,16 +266,16 @@ met.  The execution of each `TRIAL` occurs in four phases: `initialization <Syst
 Input and Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The input to a System is specified in the **input** argument of either its `execute <System_Base.execute>` or
-`run <System_Base.run>` method. In both cases, the input for a single `TRIAL` must be a list or ndarray of values,
+The input to a System is specified in the **input** argument of either its `execute <System.execute>` or
+`run <System.run>` method. In both cases, the input for a single `TRIAL` must be a list or ndarray of values,
 each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (listed in the System's
-`origin_mechanisms <System_Base.origin_mechanisms>` attribute). If the `execute <System_Base.execute>` method is used,
-input for only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System_Base.run>` method
+`origin_mechanisms <System.origin_mechanisms>` attribute). If the `execute <System.execute>` method is used,
+input for only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System.run>` method
 can be used for a sequence of `TRIAL`\\s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In
-both cases, two other types of input can be provided in corresponding arguments of the `run <System_Base.run>` method:
+both cases, two other types of input can be provided in corresponding arguments of the `run <System.run>` method:
 a  list or ndarray of **initial_values**, and a list or ndarray of **target** values. The **initial_values** are
 assigned at the start of a `TRIAL` as input to Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`,
-and listed in the System's `recurrent_init_mechanisms <System_Base.recurrent_init_mechanisms>` attribute), and
+and listed in the System's `recurrent_init_mechanisms <System.recurrent_init_mechanisms>` attribute), and
 **target** values are assigned as the *TARGET* input of the System's `TARGET` Mechanisms (see
 `System_Execution_Learning` below;  also, see `Run` for additional details of formatting input specifications).
 
@@ -289,7 +289,7 @@ Once the relevant inputs have been assigned, the `ProcessingMechanisms <Processi
 in the order they are listed in the `Processes <Process>` used to construct the System.  When a Mechanism is executed,
 it receives input from any other Mechanisms that project to it within the System,  but not from any Mechanisms outside
 the System (PsyNeuLink does not support ESP).  The order of execution is determined by the System's `execution_graph`
-attribute, which is a subset of the System's `graph <System_Base.graph>` that has been "pruned" to be acyclic (i.e.,
+attribute, which is a subset of the System's `graph <System.graph>` that has been "pruned" to be acyclic (i.e.,
 devoid of recurrent loops (see `System_Graph` above).  While the `execution_graph` is acyclic, all recurrent Projections
 in the System remain intact during execution and can be `initialized <System_Execution_Input_And_Initialization>` at
 the start of execution. The order in which Components are executed can also be customized, using the System's
@@ -304,17 +304,17 @@ Learning
 ~~~~~~~~
 
 A System executes learning if it is specified for one or more `Processes <Process_Learning_Sequence>` in the System.
-The System's `learning <System_Base.learning>` attribute indicates whether learning is enabled for the System. Learning
+The System's `learning <System.learning>` attribute indicates whether learning is enabled for the System. Learning
 is executed for any Components (individual Projections or Processes) for which it is `specified
 <Process_Learning_Sequence>` after the  `processing <System_Execution_Processing>` of each `TRIAL` has completed, but
-before the `controller <System_Base.controller> is executed <System_Execution_Control>`.  The learning Components of a
-System can be displayed using the System's `show_graph <System_Base.show_graph>` method with its **show_learning**
+before the `controller <System.controller> is executed <System_Execution_Control>`.  The learning Components of a
+System can be displayed using the System's `show_graph <System.show_graph>` method with its **show_learning**
 argument assigned `True`. The stimuli used for learning (both inputs and targets) can be specified in either of two
 formats, Sequence or Mechanism, that are described in the `Run` module; see `Run_Inputs` and `Run_Targets`).  Both
 formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its `origin_mechanisms
-<System_Base.origin_mechanisms>` attribute).  If the targets are specified in `Sequence <Run_Targets_Sequence_Format>`
+<System.origin_mechanisms>` attribute).  If the targets are specified in `Sequence <Run_Targets_Sequence_Format>`
 or `Mechanism <Run_Targets_Mechanism_Format>` format, one target must be provided for each `TARGET` Mechanism (listed
-in its `target_mechanisms <System_Base.target_mechanisms>` attribute).  Targets can also be specified in a `function
+in its `target_mechanisms <System.target_mechanisms>` attribute).  Targets can also be specified in a `function
 format <Run_Targets_Function_Format>`, which generates a target for each execution of a  `TARGET` Mechanism.
 
 .. note::
@@ -329,11 +329,11 @@ format <Run_Targets_Function_Format>`, which generates a target for each executi
 Control
 ~~~~~~~
 
-The System's `controller <System_Base.controller>` is executed in the last phase of execution in a `TRIAL`, after all
+The System's `controller <System.controller>` is executed in the last phase of execution in a `TRIAL`, after all
 other Mechanisms in the System have executed.  Although a System may have more than one `ControlMechanism`, only one
-can be assigned as its `controller <System_Base.controller>`;  all other ControlMechanisms are executed during the
+can be assigned as its `controller <System.controller>`;  all other ControlMechanisms are executed during the
 `processing `System_Execution_Processing` phase of the `TRIAL` like any other Mechanism.  The `controller
-<System_Base.controller>` uses its `objective_mechanism <ControlMechanism.objective_mechanism>` to monitor and evaluate
+<System.controller>` uses its `objective_mechanism <ControlMechanism.objective_mechanism>` to monitor and evaluate
 the `OutputState(s) <OutputState>` of Mechanisms in the System; based on the information it receives from that
 `ObjectiveMechanism`, it modulates the value of the parameters of Components in the System that have been `specified
 for control <ControlMechanism_Control_Signals>`, which then take effect in the next `TRIAL` (see `System_Control` for
@@ -353,7 +353,7 @@ COMMENT
 
    Module Contents
    system factory method:  instantiate System
-   System_Base: class definition
+   System: class definition
 COMMENT
 
 .. _System_Control_Examples:
@@ -412,7 +412,7 @@ here they can be referenced simply by name; when ``my_system`` is created, it wi
 Mechanisms for OutputStates with those names, and assign them to the `monitored_output_states <ObjectiveMechanism>`
 attribute of the EVCControlMechanism's `objective_mechanism <EVCControlMechanism.objective_mechanism>` (see
 `System_Control_Specification` for a more detailed explanation of how OutputStates are assigned to be monitored by a
-System's `controller <System_Base.controller>`).  While this form of the specification is much simpler,
+System's `controller <System.controller>`).  While this form of the specification is much simpler,
 it less flexible (i.e., it can't be used to customize the ObjectiveMechanism used by the EVCControlMechanism or its
 `function <ObjectiveMechanism.function>`.
 
@@ -441,7 +441,7 @@ from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import
 from psyneulink.components.mechanisms.mechanism import MechanismList, MonitoredOutputStatesOption
 from psyneulink.components.mechanisms.processing.objectivemechanism import MonitoredOutputStateTuple, OUTPUT_STATE_INDEX, ObjectiveMechanism
 from psyneulink.components.process import ProcessList, ProcessTuple, Process_Base
-from psyneulink.components.shellclasses import Mechanism, Process, System
+from psyneulink.components.shellclasses import Mechanism, Process, System_Base
 from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CONTROL_SIGNAL_SPECS, CYCLE, EVC_SIMULATION, EXECUTING, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -537,15 +537,15 @@ def system(default_variable=None,
     <Mechanism>`; if called with a name string, that is used as the name of the instance of System returned;
     if a params dictionary is included, it is passed to the instantiated System.
 
-    See :class:`System_Base` for class description
+    See :class:`System` for class description
 
     Arguments
     ---------
 
     default_variable : list or ndarray of values : default default input for `ORIGIN` Mechanism of each `Process`
-        the input to the System if None is provided in a call to the `execute <System_Base.execute>` or
-        `run <System_Base.run>` methods. Should contain one item corresponding to the input of each `ORIGIN` Mechanism
-        in the System (listed in its `origin_mechanisms <System_Base.origin_mechanisms>` attribute.
+        the input to the System if None is provided in a call to the `execute <System.execute>` or
+        `run <System.run>` methods. Should contain one item corresponding to the input of each `ORIGIN` Mechanism
+        in the System (listed in its `origin_mechanisms <System.origin_mechanisms>` attribute.
         COMMENT:
             REPLACE DefaultProcess BELOW USING Inline markup
         COMMENT
@@ -586,7 +586,7 @@ def system(default_variable=None,
 
     learning_rate : float : default None
         sets the `learning_rate <LearningMechanism.learning_rate>` for all `LearningMechanism <LearningMechanism>` in
-        the System (see `learning_rate <System_Base.learning_rate>` attribute for additional information).
+        the System (see `learning_rate <System.learning_rate>` attribute for additional information).
 
     targets : Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes
         the values assigned to the TARGET input of each `TARGET` Mechanism in the System (listed in its
@@ -623,28 +623,28 @@ def system(default_variable=None,
     if not processes:
         processes = [process()]
 
-    return System_Base(default_variable=default_variable,
-                       size=size,
-                       processes=processes,
-                       controller=controller,
-                       scheduler=scheduler,
-                       initial_values=initial_values,
-                       enable_controller=enable_controller,
-                       monitor_for_control=monitor_for_control,
-                       control_signals=control_signals,
-                       # learning=learning,
+    return System(default_variable=default_variable,
+                  size=size,
+                  processes=processes,
+                  controller=controller,
+                  scheduler=scheduler,
+                  initial_values=initial_values,
+                  enable_controller=enable_controller,
+                  monitor_for_control=monitor_for_control,
+                  control_signals=control_signals,
+                  # learning=learning,
                        learning_rate=learning_rate,
-                       targets=targets,
-                       params=params,
-                       name=name,
-                       prefs=prefs,
-                       context=context)
+                  targets=targets,
+                  params=params,
+                  name=name,
+                  prefs=prefs,
+                  context=context)
 
 
-class System_Base(System):
+class System(System_Base):
     """
 
-    System_Base(                                  \
+    System(                                  \
         default_variable=None,                    \
         processes=None,                           \
         initial_values=None,                      \
@@ -720,7 +720,7 @@ class System_Base(System):
         .. _processList : ProcessList
             Provides access to (process, input) tuples.
             Derived from self.input and self.processes.
-            Used to construct :py:data:`execution_graph <System_Base.execution_graph>` and execute the System
+            Used to construct :py:data:`execution_graph <System.execution_graph>` and execute the System
 
     controller : ControlMechanism : default SystemDefaultControlMechanism
         the `ControlMechanism <ControlMechanism>` used to monitor the `value <OutputState.value>` of the `OutputState(s)
@@ -728,7 +728,7 @@ class System_Base(System):
         and that controls the parameters specified in the **control_signals** argument of the System's constructor.
 
     enable_controller :  bool : default :keyword:`False`
-        determines whether the `controller <System_Base.controller>` is executed during System execution.
+        determines whether the `controller <System.controller>` is executed during System execution.
 
     learning : bool : default False
         indicates whether learning is enabled for the System;  is set to `True` if learning is specified for any
@@ -738,13 +738,13 @@ class System_Base(System):
         determines the learning_rate for all `LearningMechanisms <LearningMechanism>` in the System.  This overrides any
         values set for the function of individual LearningMechanisms or `LearningSignals <LearningSignal>`, and persists
         for all subsequent executions of the System.  If it is set to `None`, then the `learning_rate
-        <System_Base.learning_rate>` is determined by last value assigned to each LearningMechanism (either directly,
+        <System.learning_rate>` is determined by last value assigned to each LearningMechanism (either directly,
         or following the execution of any `Process` or System to which the LearningMechanism belongs and for which a
         `learning_rate <LearningMechanism.learning_rate>` was set).
 
     targets : 2d nparray
         used as template for the values of the System's `target_input_states`, and to represent the targets specified in
-        the **targets** argument of System's `execute <System_Base.execute>` and `run <System_Base.run>` methods.
+        the **targets** argument of System's `execute <System.execute>` and `run <System.run>` methods.
 
     graph : OrderedDict
         contains a graph of all of the Components in the System. Each entry specifies a set of <Receiver>: {sender,
@@ -752,7 +752,7 @@ class System_Base(System):
         that send Projections to that receiver. If a key (receiver) has no dependents, its value is an empty set.
 
     execution_graph : OrderedDict
-        contains an acyclic subset of the System's `graph <System_Base.graph>`, hierarchically organized by a
+        contains an acyclic subset of the System's `graph <System.graph>`, hierarchically organized by a
         `toposort <https://en.wikipedia.org/wiki/Topological_sorting>`_. Used to specify the order in which
         Components are `executed <System_Execution>`.
 
@@ -813,14 +813,14 @@ class System_Base(System):
         `Mechanisms <Mechanism>`, listed in ``origin_mechanisms.data``.
 
         .. based on _origin_mechs
-           System_Base.input contains the input to each `ORIGIN` Mechanism
+           System.input contains the input to each `ORIGIN` Mechanism
 
     terminalMechanisms : MechanismList
         all `TERMINAL` Mechanisms in the System (i.e., that don't project to any other `ProcessingMechanisms
         <ProcessingMechanism>`), listed in ``terminalMechanisms.data``.
 
         .. based on _terminal_mechs
-           System_Base.ouput contains the output of each TERMINAL Mechanism
+           System.ouput contains the output of each TERMINAL Mechanism
 
     recurrent_init_mechanisms : MechanismList
         `Mechanisms <Mechanism>` with recurrent `Projections <Projection>` that are candidates for `initialization
@@ -838,14 +838,14 @@ class System_Base(System):
 
     target_input_states : List[SystemInputState]
         one item for each `TARGET` Mechanism in the System (listed in its `target_mechanisms
-        <System_Base.target_mechansims>` attribute).  Used to represent the values specified in the **targets**
+        <System.target_mechansims>` attribute).  Used to represent the values specified in the **targets**
         argument of the System's `execute <System.execute>` and `run <System.run>` methods, and to provide
         thoese values to the the TARGET `InputState` of each `TARGET` Mechanism during `execution
         <System_Execution_Learning>`.
 
 
         .. control_mechanism : MechanismList
-            contains the `ControlMechanism <ControlMechanism>` that is the `controller <System_Base.controller>` of the
+            contains the `ControlMechanism <ControlMechanism>` that is the `controller <System.controller>` of the
             System.
             COMMENT:
                 ??and any other `ControlMechanisms <ControlMechanism>` in the System
@@ -868,7 +868,7 @@ class System_Base(System):
     initial_values : list or ndarray of values
         values used to initialize Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`).
         Length must equal the number of `INITIALIZE_CYCLE` Mechanisms listed in the System's
-        `recurrent_init_mechanisms <System_Base.recurrent_init_mechanisms>` attribute.
+        `recurrent_init_mechanisms <System.recurrent_init_mechanisms>` attribute.
 
     timeScale : TimeScale  : default TimeScale.TRIAL
         determines the default `TimeScale` value used by Mechanisms in the System.
@@ -882,7 +882,7 @@ class System_Base(System):
         if not is specified, a default is assigned by SystemRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : System_Base.classPreferences
+    prefs : PreferenceSet or specification dict : System.classPreferences
         the `PreferenceSet` for System.
         Specified in the **prefs** argument of the constructor for the System;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
@@ -904,7 +904,7 @@ class System_Base(System):
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # Use inputValueSystemDefault as default input to process
-    class ClassDefaults(System.ClassDefaults):
+    class ClassDefaults(System_Base.ClassDefaults):
         variable = None
 
     paramClassDefaults = Component.paramClassDefaults.copy()
@@ -965,7 +965,7 @@ class System_Base(System):
         self.termination_learning = None
 
         register_category(entry=self,
-                          base_class=System_Base,
+                          base_class=System,
                           name=name,
                           registry=SystemRegistry,
                           context=context)
@@ -997,7 +997,7 @@ class System_Base(System):
         """Convert self.ClassDefaults.variable, self.instance_defaults.variable, and variable to 2D np.array: \
         one 1D value for each input state
         """
-        super(System_Base, self)._validate_variable(variable, context)
+        super(System, self)._validate_variable(variable, context)
 
         # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):
         if variable is None:
@@ -1054,7 +1054,7 @@ class System_Base(System):
 
         # If validation pref is set, instantiate and execute the System
         if self.prefs.paramValidationPref:
-            super(System_Base, self)._instantiate_function(context=context)
+            super(System, self)._instantiate_function(context=context)
         # Otherwise, just set System output info to the corresponding info for the last mechanism(s) in self.processes
         else:
             self.value = self.processes[-1].output_state.value
@@ -2017,7 +2017,7 @@ class System_Base(System):
                     name=self.name+' Input Projection to '+target_mech_TARGET_input_state.name)
 
     def _assign_output_states(self):
-        """Assign OutputStates for System (the values of which will comprise System_Base.value)
+        """Assign OutputStates for System (the values of which will comprise System.value)
 
         Assign the outputs of terminal Mechanisms in the graph to the System's output_values
 
@@ -2408,7 +2408,7 @@ class System_Base(System):
                                           "being assigned to {} is not in that System".format(self.name))
 
     def initialize(self):
-        """Assign `initial_values <System_Base.initialize>` to mechanisms designated as `INITIALIZE_CYCLE` \and
+        """Assign `initial_values <System.initialize>` to mechanisms designated as `INITIALIZE_CYCLE` \and
         contained in recurrent_init_mechanisms.
         """
         # FIX:  INITIALIZE PROCESS INPUT??
@@ -2430,7 +2430,7 @@ class System_Base(System):
                 # time_scale=TimeScale.TRIAL
                 context=None):
         """Execute mechanisms in System at specified :ref:`phases <System_Execution_Phase>` in order \
-        specified by the :py:data:`execution_graph <System_Base.execution_graph>` attribute.
+        specified by the :py:data:`execution_graph <System.execution_graph>` attribute.
 
         Assign items of input to `ORIGIN` mechanisms
 
@@ -2442,13 +2442,13 @@ class System_Base(System):
         Execute controller after all mechanisms have been executed (after each numPhases)
 
         .. Execution:
-            - the input arg in System_Base.execute() or run() is provided as input to ORIGIN mechanisms (and
-              System_Base.input);
+            - the input arg in System.execute() or run() is provided as input to ORIGIN mechanisms (and
+              System.input);
                 As with a process, `ORIGIN` Mechanisms will receive their input only once (first execution)
                     unless clamp_input (or SOFT_CLAMP or HARD_CLAMP) are specified, in which case they will continue to
             - execute() calls Mechanism.execute() for each Mechanism in its execute_graph in sequence
-            - outputs of `TERMINAL` Mechanisms are assigned as System_Base.ouputValue
-            - System_Base.controller is executed after execution of all Mechanisms in the System
+            - outputs of `TERMINAL` Mechanisms are assigned as System.ouputValue
+            - System.controller is executed after execution of all Mechanisms in the System
             - notes:
                 * the same Mechanism can be listed more than once in a System, inducing recurrent processing
 
@@ -2805,7 +2805,7 @@ class System_Base(System):
             if True, resets the :py:class:`CentralClock <TimeScale.CentralClock>` to 0 before a sequence of executions.
 
         initialize : bool default :keyword:`False`
-            if `True`, calls the :py:meth:`initialize <System_Base.initialize>` method of the System before a
+            if `True`, calls the :py:meth:`initialize <System.initialize>` method of the System before a
             sequence of executions.
 
         initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default None
@@ -3239,7 +3239,7 @@ class System_Base(System):
                    ):
         """Generate a display of the graph structure of mechanisms and projections in the system.
 
-        Displays a graph showing the structure of the System (based on the `System's graph <System_Base.graph>`).
+        Displays a graph showing the structure of the System (based on the `System's graph <System.graph>`).
         By default, only the primary processing Components are shown.  However,the **show_learning** and
         **show_control** arguments can be used to also show the Components associated with `learning
         <LearningMechanism>` and those associated with the System's `controller <System_Control>`. `Mechanisms
@@ -3282,7 +3282,7 @@ class System_Base(System):
 
         control_color : keyword : default `blue`
             specifies the color in which the learning components are displayed (note: if the System's
-            `controller <System_Base.controller>`) is an `EVCControlMechanism`, then a link is shown in red from the
+            `controller <System.controller>`) is an `EVCControlMechanism`, then a link is shown in red from the
             `prediction Mechanisms <EVCControlMechanism_Prediction_Mechanisms>` it creates to the corresponding
             `ORIGIN` Mechanisms of the System, to indicate that although no projection are created for these,
             the prediction Mechanisms determine the input to the `ORIGIN` Mechanisms when the EVCControlMechanism
@@ -3474,8 +3474,8 @@ class SystemInputState(OutputState):
     <Process_Base.run>` methods.
 
     COMMENT:
-        Each instance encodes a `target <System_Base.target>` to the system (also a 1d array in 2d array of
-        `targets <System_Base.targets>`) and provides it to a `MappingProjection` that projects to a `TARGET`
+        Each instance encodes a `target <System.target>` to the system (also a 1d array in 2d array of
+        `targets <System.targets>`) and provides it to a `MappingProjection` that projects to a `TARGET`
         Mechanism of the System.
 
         .. Declared as a subclass of OutputState so that it is recognized as a legitimate sender to a Projection
@@ -3486,12 +3486,12 @@ class SystemInputState(OutputState):
 
     A SystemInputState is created for each `InputState` of each `ORIGIN` Mechanism in `origin_mechanisms`, and for the
     *TARGET* `InputState <ComparatorMechanism_Structure>` of each `ComparatorMechanism <ComparatorMechanism>` listed
-    in `target_mechanisms <System_Base.target_mechanisms>`.  A `MappingProjection` is created that projects to each
-    of these InputStates from the corresponding SystemInputState.  When the System's `execute <System_Base.execute>` or
-    `run <System_Base.run>` method is called, each item of its **inputs** and **targets** arguments is assigned as
+    in `target_mechanisms <System.target_mechanisms>`.  A `MappingProjection` is created that projects to each
+    of these InputStates from the corresponding SystemInputState.  When the System's `execute <System.execute>` or
+    `run <System.run>` method is called, each item of its **inputs** and **targets** arguments is assigned as
     the `value <SystemInputState.value>` of a SystemInputState, which is then conveyed to the
-    corresponding InputState of the `origin_mechanisms <System_Base.origin_mechanisms>` and `terminal_mechanisms
-    <System_Base.terminal_mechanisms>`.  See `System_Mechanisms` and `System_Execution` for additional details.
+    corresponding InputState of the `origin_mechanisms <System.origin_mechanisms>` and `terminal_mechanisms
+    <System.terminal_mechanisms>`.  See `System_Mechanisms` and `System_Execution` for additional details.
 
     """
 

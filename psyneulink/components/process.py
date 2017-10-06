@@ -318,7 +318,7 @@ The `input <Process_Input_And_Output>` to a Process is specified in the **input*
 <Process_Base.execute>` or `run <Process_Base.run>` method. In both cases, the input for a single `TRIAL` must be a
 number, list or ndarray of values that is compatible with the `variable <Mechanism_Base.variable>` of the
 `origin_mechanism <Process_Base.origin_mechanism>`. If the `execute <Process_Base.execute>` method is used, input for
-only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System_Base.run>` method can be
+only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System.run>` method can be
 used for a sequence of `TRIAL`\\s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In both
 cases, two other types of input can be provided in corresponding arguments of the `execute <Process_Base.execute>`
 and `run <Process_Base.run>` methods: a  list or ndarray of **initial_values**, and a list or ndarray of **target**
@@ -458,7 +458,7 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import Objec
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection, _is_learning_spec
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.projection import _add_projection_to, _is_projection_spec
-from psyneulink.components.shellclasses import Mechanism, Process, Projection, System
+from psyneulink.components.shellclasses import Mechanism, Process, Projection, System_Base
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state, _instantiate_state_list
@@ -939,7 +939,7 @@ class Process_Base(Process):
         determines the `learning_rate <LearningMechanism.learning_rate>` used for `MappingProjections
         <MappingProjection>` `specified for learning <Process_Learning_Sequence>` in the Process that do not have their
         `learning_rate <LearningProjection.learning_rate>` otherwise specified.   If is `None`, and the Process is
-        executed as part of a `System`, and the System has a `learning_rate <System_Base.learning_rate>` specified,
+        executed as part of a `System`, and the System has a `learning_rate <System.learning_rate>` specified,
         then that is the value used.  Otherwise, the default value of the :keyword:`learning_rate` parameter for the
         `function <LearningMechanism.function>` of the `LearningMechanism associated with each MappingProjection
         <Process_Learning_Sequence>` is used.  If a :keyword:`learning_rate` is specified for the `LearningSignal
@@ -1776,7 +1776,7 @@ class Process_Base(Process):
             #    check if Process is in a System, and Projection is from another Mechanism in the System
             else:
                 try:
-                    if (inspect.isclass(context) and issubclass(context, System)):
+                    if (inspect.isclass(context) and issubclass(context, System_Base)):
                         # Relabel for clarity
                         system = context
                     else:

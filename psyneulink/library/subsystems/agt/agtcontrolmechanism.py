@@ -123,7 +123,7 @@ from psyneulink.components.functions.function import AGTUtilityIntegrator, Modul
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import MonitoredOutputStatesOption, ObjectiveMechanism, _parse_monitored_output_states
-from psyneulink.components.shellclasses import Mechanism, System
+from psyneulink.components.shellclasses import Mechanism, System_Base
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, INIT__EXECUTE__METHOD_ONLY, MECHANISM, OBJECTIVE_MECHANISM
@@ -159,7 +159,7 @@ class AGTControlMechanism(ControlMechanism):
     ---------
 
     system : System : default None
-        specifies the `System` for which the AGTControlMechanism should serve as a `controller <System_Base.controller>`;
+        specifies the `System` for which the AGTControlMechanism should serve as a `controller <System.controller>`;
         the AGTControlMechanism will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
         argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
@@ -197,8 +197,8 @@ class AGTControlMechanism(ControlMechanism):
     Attributes
     ----------
 
-    system : System
-        the `System` for which AGTControlMechanism is the `controller <System_Base.controller>`;
+    system : System_Base
+        the `System` for which AGTControlMechanism is the `controller <System.controller>`;
         the AGTControlMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
         argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
@@ -238,7 +238,7 @@ class AGTControlMechanism(ControlMechanism):
 
     control_signals : List[ControlSignal]
         list of the AGTControlMechanism's `ControlSignals <ControlSignals>` , including any inherited from a `system
-        <ControlMechanism.system>` for which it is a `controller <System_Base.controller>` (same as
+        <ControlMechanism.system>` for which it is a `controller <System.controller>` (same as
         ControlMechanism's `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`
         to the `ParameterState` for the parameter it controls
 
@@ -273,7 +273,7 @@ class AGTControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 system:tc.optional(System)=None,
+                 system:tc.optional(System_Base)=None,
                  monitored_output_states=None,
                  function = Linear(slope=1, intercept=0),
                  # control_signals:tc.optional(list) = None,

@@ -232,11 +232,11 @@ for projection_type in ProjectionRegistry:
 from psyneulink.globals.preferences.componentpreferenceset \
     import ComponentPreferenceSet, ComponentDefaultPrefDicts, PreferenceLevel
 
-from psyneulink.components.shellclasses import System
-System.classPreferences = ComponentPreferenceSet(owner=System,
-                                                 prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
-                                                 level=PreferenceLevel.INSTANCE,
-                                                 context=".__init__.py")
+from psyneulink.components.shellclasses import System_Base
+System_Base.classPreferences = ComponentPreferenceSet(owner=System_Base,
+                                                      prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
+                                                      level=PreferenceLevel.INSTANCE,
+                                                      context=".__init__.py")
 
 from psyneulink.components.shellclasses import Process
 Process.classPreferences = ComponentPreferenceSet(owner=Process,
@@ -332,6 +332,6 @@ Function.classPreferences = ComponentPreferenceSet(owner=Function,
 
 
 # # # MODIFIED 6/28/16: -- COMMENT OUT TO RUN
-# from Components.System import System_Base
+# from Components.System import System
 # # Use as default System (by EVC)
-# DefaultSystem = System_Base(name = DEFAULT_SYSTEM)
+# DefaultSystem = System(name = DEFAULT_SYSTEM)

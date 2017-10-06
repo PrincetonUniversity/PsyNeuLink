@@ -48,7 +48,7 @@ class ShellClass(Component):
 
 # ******************************************* SYSTEM *******************************************************************
 
-class System(ShellClass):
+class System_Base(ShellClass):
 
     def __init__(self,
                  default_variable=None,

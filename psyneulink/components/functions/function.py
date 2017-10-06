@@ -7884,7 +7884,7 @@ class LearningFunction(Function_Base):
         the value used for the function's `learning_rate <LearningFunction.learning_rate>` parameter if none of the
         following are specified:  the `learning_rate <LearningMechanism.learning_rate>` for the `LearningMechanism` to
         which the function has been assigned, the `learning_rate <Process_Base.learning_rate>` for any `Process` or
-        the `learning_rate <System_Base.learning_rate>` for any `System` to which that LearningMechanism belongs.
+        the `learning_rate <System.learning_rate>` for any `System` to which that LearningMechanism belongs.
         The exact form of the value (i.e., whether it is a scalar or array) depends on the function's type.
 
     learning_rate : numeric
@@ -8008,7 +8008,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         multiplied Hadamard (elementwise) by the `variable` <Hebbian.variable>` before calculating the weight change
         matrix;  if it is a 2d np.array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
         `None`, then the `learning_rate <Process_Base.learning_rate>` specified for the Process to which the `owner
-        <Hebbian.owner>` belongs is used;  and, if that is `None`, then the `learning_rate <System_Base.learning_rate>`
+        <Hebbian.owner>` belongs is used;  and, if that is `None`, then the `learning_rate <System.learning_rate>`
         for the System to which it belongs is used. If all are `None`, then the `default_learning_rate
         <Hebbian.default_learning_rate>` is used.
 
@@ -8246,7 +8246,7 @@ class Reinforcement(
         `Process <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's
         `owner <Reinforcement.owner>` belongs.  If it is `None`, then the `learning_rate <Process_Base.learning_rate>`
         specified for the Process to which the `owner <Reinforcement.owner>` belongs is used;  and, if that is `None`,
-        then the `learning_rate <System_Base.learning_rate>` for the System to which it belongs is used. If all are
+        then the `learning_rate <System.learning_rate>` for the System to which it belongs is used. If all are
         `None`, then the `default_learning_rate <Reinforcement.default_learning_rate>` is used.
 
     default_learning_rate : float

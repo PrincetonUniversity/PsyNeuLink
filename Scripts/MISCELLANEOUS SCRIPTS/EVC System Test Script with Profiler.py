@@ -4,7 +4,7 @@ from psyneulink.components.mechanisms.IntegratorMechanism import *
 from psyneulink.components.mechanisms.LinearMechanism import *
 
 from psyneulink.components.process import Process_Base
-from psyneulink.components.system import System_Base
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import *
 
 
@@ -48,9 +48,9 @@ def run():
     #endregion
 
     #region System
-    mySystem = System_Base(params={PROCESSES:[TaskExecutionProcess, RewardProcess],
-                                   MONITOR_FOR_CONTROL:[Reward, ERROR_RATE,(RESPONSE_TIME, -1, 1)]},
-                           name='EVC Test System')
+    mySystem = System(params={PROCESSES:[TaskExecutionProcess, RewardProcess],
+                              MONITOR_FOR_CONTROL:[Reward, ERROR_RATE,(RESPONSE_TIME, -1, 1)]},
+                      name='EVC Test System')
     #endregion
 
     #region Show

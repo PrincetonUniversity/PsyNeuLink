@@ -765,7 +765,7 @@
 #
 # FIX: MAKE SURE SAME ORIGIN FOR DIFFERENT PROCESSES IS NOT ASSIGNED DIFFERENT PHASES
 
-# DOCUMENT: targets argunment in system() and System_Base.__init__()
+# DOCUMENT: targets argunment in system() and System.__init__()
 
 # DOCUMENT: ADD CHAIN EXAMPLE TO System AND Mechanism DOCSTRINGS
 #
@@ -1527,7 +1527,7 @@
 # Why are some parameter type specifications (in parens) italicized and others not?
 # Why do some underlines work and not others (e.g., Examples in Process)
 # Definition of a Python keyword
-# Why does Process_Base get referenced as Process, but System_Base as such?
+# Why does Process_Base get referenced as Process, but System as such?
 
 # US:
 #     Systematize #D vs. #d
@@ -2350,8 +2350,8 @@
 # QUESTION: SHOULD OFF PHASE INPUT VALUES BE SET TO EMPTY OR NONE INSTEAD OF 0?
 #           IN SCRIPTS AND EVCControlMechanism._get_simulation_system_inputs()
 # FIX: Replace toposort with NetworkX: http://networkx.readthedocs.io/en/stable/reference/introduction.html
-# IMPLEMENT: Change current System class to ControlledSystem subclass of System_Base,
-#                   and purge System_Base class of any references to or dependencies on controller-related stuff
+# IMPLEMENT: Change current System class to ControlledSystem subclass of System,
+#                   and purge System class of any references to or dependencies on controller-related stuff
 # IMPLEMENT: *** ADD System.controller to execution_list and
 #                execute based on that, rather than dedicated line in System.execute
 # IMPLEMENT: *** sort System.execution_list (per System.show() and exeucte based on that, rather than checking modulos

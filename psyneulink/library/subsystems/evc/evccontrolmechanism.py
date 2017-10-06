@@ -21,7 +21,7 @@ background concerning the purpose and structure of the EVCControlMechanism.
 
 An EVCControlMechanism is similar to a standard `ControlMechanism`, with the following exceptions:
 
-  * it can only be assigned to a System as its `controller <System_Base.controller>`, and not in any other capacity
+  * it can only be assigned to a System as its `controller <System.controller>`, and not in any other capacity
     (see `ControlMechanism_System_Controller`);
   ..
   * it has several specialized functions that are used to search over the `allocations <ControlSignal.allocations>`\\s
@@ -62,7 +62,7 @@ standard way for a ControlMechanism (see `ControlMechanism_ObjectiveMechanism` a
 
 .. note::
    Although an EVCControlMechanism can be created on its own, it can only be assigned to, and executed within a `System` as
-   the System's `controller <System_Base.controller>`.
+   the System's `controller <System.controller>`.
 
 When an EVCControlMechanism is assigned to, or created by a System, it is assigned the OutputStates to be monitored and
 parameters to be controlled specified for that System (see `System_Control`), and a `prediction Mechanism
@@ -70,7 +70,7 @@ parameters to be controlled specified for that System (see `System_Control`), an
 The prediction Mechanisms are assigned to the EVCControlMechanism's `prediction_mechanisms` attribute. The OutputStates used
 to determine an EVCControlMechanism’s allocation_policy and the parameters it controls can be listed using its show method.
 The EVCControlMechanism and the Components associated with it in its `system <EVCControlMechanism.system>` can be displayed using
-the System's `System_Base.show_graph` method with its **show_control** argument assigned as `True`
+the System's `System.show_graph` method with its **show_control** argument assigned as `True`
 
 An EVCControlMechanism that has been constructed automatically can be customized by assigning values to its attributes (e.g.,
 those described above, or its `function <EVCControlMechanism.function>` as described under `EVC_Default_Configuration `below).
@@ -261,7 +261,7 @@ ControlSignal's `allocation_samples <ControlSignal.allocation_samples>` attribut
 Execution
 ---------
 
-An EVCControlMechanism must be the `controller <System_Base.controller>` of a System, and as a consequence it is always the
+An EVCControlMechanism must be the `controller <System.controller>` of a System, and as a consequence it is always the
 last `Mechanism <Mechanism>` to be executed in a `TRIAL` for its `system <EVCControlMechanism.system>` (see `System Control
 <System_Execution_Control>` and `Execution <System_Execution>`). When an EVCControlMechanism is executed, it updates the
 value of its `prediction_mechanisms` and `objective_mechanism`, and then calls its `function <EVCControlMechanism.function>`,
@@ -307,7 +307,7 @@ OutputState of the DDM Mechanism.
 
 See `ObjectiveMechanism <ObjectiveMechanism_Monitored_Output_States_Examples>` for additional examples of how to specify it's
 **monitored_output_states** argument, `ControlMechanism <ControlMechanism_Examples>` for additional examples of how to
-specify ControlMechanisms, and `System <System_Examples>` for how to specify the `controller <System_Base.controller>`
+specify ControlMechanisms, and `System <System_Examples>` for how to specify the `controller <System.controller>`
 of a System.
 
 .. _EVCControlMechanism_Class_Reference:
@@ -327,7 +327,7 @@ from psyneulink.components.mechanisms.mechanism import MechanismList
 from psyneulink.components.mechanisms.processing import integratormechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.shellclasses import Function, System
+from psyneulink.components.shellclasses import Function, System_Base
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import CONTROL, COST_FUNCTION, EVC_MECHANISM, FUNCTION, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -412,7 +412,7 @@ class EVCControlMechanism(ControlMechanism):
     ---------
 
     system : System : default None
-        specifies the `System` for which the EVCControlMechanism should serve as a `controller <System_Base.controller>`;
+        specifies the `System` for which the EVCControlMechanism should serve as a `controller <System.controller>`;
         the EVCControlMechanism will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
         argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
@@ -476,8 +476,8 @@ class EVCControlMechanism(ControlMechanism):
     Attributes
     ----------
 
-    system : System
-        the `System` for which EVCControlMechanism is the `controller <System_Base.controller>`;
+    system : System_Base
+        the `System` for which EVCControlMechanism is the `controller <System.controller>`;
         the EVCControlMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
         argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
@@ -676,7 +676,7 @@ class EVCControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 system:tc.optional(System)=None,
+                 system:tc.optional(System_Base)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  prediction_mechanism_type=integratormechanism.IntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
@@ -854,7 +854,7 @@ class EVCControlMechanism(ControlMechanism):
                                           num_control_projections))
 
     @tc.typecheck
-    def assign_as_controller(self, system:System, context=None):
+    def assign_as_controller(self, system:System_Base, context=None):
         super().assign_as_controller(system=system, context=context)
         self._instantiate_prediction_mechanisms(context=context)
 
@@ -942,7 +942,7 @@ class EVCControlMechanism(ControlMechanism):
                        time_scale=TimeScale.TRIAL,
                        context=None):
         """
-        Run simulation of `System` for which the EVCControlMechanism is the `controller <System_Base.controller>`.
+        Run simulation of `System` for which the EVCControlMechanism is the `controller <System.controller>`.
 
         Arguments
         ----------

@@ -32,7 +32,7 @@ COMMENT:
     controls.  Each ControlSignal is associated with a `ControlProjection` that regulates the value of the parameter it
     controls, with the magnitude of that regulation determined by the ControlSignal's `intensity`.  A particular
     combination of ControlSignal `intensity` values is called an `allocation_policy`. When a `System` is executed that
-    uses an EVCControlMechanism as its `controller <System_Base.controller>`, it concludes by executing the EVCControlMechanism, which
+    uses an EVCControlMechanism as its `controller <System.controller>`, it concludes by executing the EVCControlMechanism, which
     determines its `allocation_policy` for the next `TRIAL`.  That, in turn, determines the `intensity` for each of the
     ControlSignals, and therefore the values of the parameters they control on the next `TRIAL`. The OutputStates used
     to determine an EVCControlMechanism's `allocation_policy <EVCControlMechanism.allocation_policy>` and the parameters it
@@ -46,16 +46,16 @@ ControlMechanisms and a System
 
 A ControlMechanism can be assigned to and executed within one or more Systems (listed in its `systems
 <Mechanism_Base.systems>` attribute), just like any other Mechanism.  It also be assigned as the `controller
-<System_Base.controller>` of a `System`, that has a special relation to the System: it is used to control any and all
+<System.controller>` of a `System`, that has a special relation to the System: it is used to control any and all
 parameters that have been `specified for control <ControlMechanism_Control_Signals>` in that System.  A
-ControlMechanism can be the `controller <System_Base.controller>` for only one System, and a System can have only one
-one `controller <System_Base.controller>`.  The System's `controller <System_Base.controller>` is executed after all
+ControlMechanism can be the `controller <System.controller>` for only one System, and a System can have only one
+one `controller <System.controller>`.  The System's `controller <System.controller>` is executed after all
 of the other Components in the System have been executed, including any other ControlMechanisms that belong to it (see
-`System Execution <System_Execution>`).  A ControlMechanism can be assigned as the `controller <System_Base.controller>`
+`System Execution <System_Execution>`).  A ControlMechanism can be assigned as the `controller <System.controller>`
 for a System by specifying it in the **controller** argument of the System's constructor, or by specifying the System
 as the **system** argument of either the ControlMechanism's constructor or its `assign_as_controller
-<ControlMechanism.assign_as_controller>` method. A System's `controller  <System_Base.controller>` and its
-associated Components can be displayed using the System's `show_graph <System_Base.show_graph>` method with its
+<ControlMechanism.assign_as_controller>` method. A System's `controller  <System.controller>` and its
+associated Components can be displayed using the System's `show_graph <System.show_graph>` method with its
 **show_control** argument assigned as `True`.
 
 
@@ -307,7 +307,7 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base, Monitored
 from psyneulink.components.mechanisms.processing.objectivemechanism import EXPONENT_INDEX, MONITORED_OUTPUT_STATES, ObjectiveMechanism, ObjectiveMechanismError, WEIGHT_INDEX, _parse_monitored_output_states
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.projection import _validate_receiver
-from psyneulink.components.shellclasses import Mechanism, System
+from psyneulink.components.shellclasses import Mechanism, System_Base
 from psyneulink.components.states.modulatorysignals.controlsignal import _parse_control_signal_spec
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.defaults import defaultControlAllocation
@@ -366,7 +366,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
             OBJECTIVE_MECHANISM param determines which States will be monitored.
                 specifies the OutputStates of the terminal Mechanisms in the System to be monitored by ControlMechanism
-                this specification overrides any in System_Base.params[], but can be overridden by Mechanism.params[]
+                this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
                 ?? if MonitoredOutputStates appears alone, it will be used to determine how States are assigned from
                     System.execution_graph by default
                 if MonitoredOutputStatesOption is used, it applies to any Mechanisms specified in the list for which
@@ -388,7 +388,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     system : System or bool : default None
         specifies the `System` to which the ControlMechanism should be assigned as its `controller
-        <System_Base.controller>`.
+        <System.controller>`.
 
     objective_mechanism : ObjectiveMechanism or List[OutputState specification] : default None
         specifies either an `ObjectiveMechanism` to use for the ControlMechanism, or a list of the OutputStates it
@@ -425,8 +425,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
     Attributes
     ----------
 
-    system : System
-        The `System` for which the ControlMechanism is a `controller <System_Base>`.  Note that this is distinct from
+    system : System_Base
+        The `System` for which the ControlMechanism is a `controller <System>`.  Note that this is distinct from
         a Mechanism's `systems <Mechanism_Base.systems>` attribute, which lists all of the Systems to which a
         `Mechanism` belongs -- a ControlMechanism can belong to but not be the `controller of a System
         <ControlMechanism_System_Controller>`.
@@ -465,7 +465,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     control_signals : List[ControlSignal]
         list of the `ControlSignals <ControlSignals>` for the ControlMechanism, including any inherited from a
-        `system <ControlMechanism.system>` for which it is a `controller <System_Base.controller>` (same as
+        `system <ControlMechanism.system>` for which it is a `controller <System.controller>` (same as
         ControlMechanism's `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`
         to the `ParameterState` for the parameter it controls
 
@@ -503,7 +503,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 system:tc.optional(System)=None,
+                 system:tc.optional(System_Base)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  function = Linear(slope=1, intercept=0),
                  # control_signals:tc.optional(list) = None,
@@ -549,7 +549,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                                  target_set=target_set,
                                                                  context=context)
         if SYSTEM in target_set:
-            if not isinstance(target_set[SYSTEM], System):
+            if not isinstance(target_set[SYSTEM], System_Base):
                 raise KeyError
             else:
                 self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
@@ -987,12 +987,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
             self.system._validate_monitored_state_in_system(output_states, context=context)
 
     @tc.typecheck
-    def assign_as_controller(self, system:System, context=None):
-        """Assign ControlMechanism as `controller <System_Base.controller>` for a `System`.
+    def assign_as_controller(self, system:System_Base, context=None):
+        """Assign ControlMechanism as `controller <System.controller>` for a `System`.
 
         **system** must be a System for which the ControlMechanism should be assigned as the `controller
-        <System_Base.controller>`;  if the specified System already has a `controller <System_Base.controller>`,
-        it will be replaced by the current one;  if the current one is already the `controller <System_Base.controller>`
+        <System.controller>`;  if the specified System already has a `controller <System.controller>`,
+        it will be replaced by the current one;  if the current one is already the `controller <System.controller>`
         for another System, it will be disabled for that System.
         COMMENT:
             [TBI:
@@ -1006,12 +1006,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
             IMPLEMENTATION NOTE:  This is handled as a method on ControlMechanism (rather than System) so that:
 
                                   - [TBI: if necessary, it can detach itself from a System for which it is already the
-                                    `controller <System_Base.controller>`;]
+                                    `controller <System.controller>`;]
 
                                   - any class-specific actions that must be taken to instantiate the ControlMechanism
                                     can be handled by subclasses of ControlMechanism (e.g., an EVCControlMechanism must
                                     instantiate its Prediction Mechanisms). However, the actual assignment of the
-                                    ControlMechanism the System's `controller <System_Base.controller>` attribute must
+                                    ControlMechanism the System's `controller <System.controller>` attribute must
                                     be left to the System to avoid recursion, since it is a property, the setter of
                                     which calls the current method.
         COMMENT

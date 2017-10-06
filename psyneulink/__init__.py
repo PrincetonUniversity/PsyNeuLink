@@ -20,7 +20,7 @@ from psyneulink.globals.keywords import ALL, DEFAULT_MATRIX, EXPONENTS, FULL_CON
     FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INITIALIZER, INPUT_STATES, MATRIX, \
     MAX_INDICATOR, MAX_VAL, MONITOR_FOR_CONTROL, OFFSET, OPERATION, OUTPUT_STATES, PARAMETER_STATES, PROB, SCALE, \
     WEIGHTS
-from psyneulink.components.shellclasses import System
+from psyneulink.components.shellclasses import System_Base
 from psyneulink.components.system import system
 from psyneulink.library.mechanisms.processing.integrator import ddm
 from psyneulink.library.mechanisms.processing.objective.comparatormechanism import \
@@ -52,7 +52,7 @@ for handler in logging.root.handlers:
         'psyneulink.scheduling.condition',
     ))
 
-__all__ = ['System',
+__all__ = ['System_Base',
            'system',
            'process',
            'CentralClock',

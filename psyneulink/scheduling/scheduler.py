@@ -43,7 +43,7 @@ COMMENT:
 COMMENT
 
 * a `System` in the **system** argument - if a System is specified,
-  the Scheduler is created using the Components in the System's `execution_list <System_Base.execution_list>` and an
+  the Scheduler is created using the Components in the System's `execution_list <System.execution_list>` and an
   order of execution specified by the dependencies among the Components in its `execution_graph
   <System.execution_graph>`.
 

@@ -3,7 +3,7 @@ from psyneulink.components.mechanisms.processing.Deprecated.LinearMechanism impo
 from psyneulink.components.functions.function import Exponential, Linear
 from psyneulink.components.process import process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.components.system import System_Base
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import *
 
 if MPI_IMPLEMENTATION:
@@ -64,9 +64,9 @@ RewardProcess = process(default_variable=[0],
 #endregion
 
 #region System
-mySystem = System_Base(processes=[TaskExecutionProcess, RewardProcess],
-                       monitor_for_control=[Reward, ERROR_RATE, (RESPONSE_TIME, -1, 1)],
-                       name='Test System')
+mySystem = System(processes=[TaskExecutionProcess, RewardProcess],
+                  monitor_for_control=[Reward, ERROR_RATE, (RESPONSE_TIME, -1, 1)],
+                  name='Test System')
 #endregion
 
 #region Show
