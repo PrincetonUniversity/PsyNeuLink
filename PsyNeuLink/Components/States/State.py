@@ -1981,7 +1981,8 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     # standard_args = get_args(inspect.currentframe())
     # parsed_state_spec  = _parse_state_spec(standard_args, context, **state_spec)
-    parsed_state_spec = _parse_state_spec(owner=owner,
+    parsed_state_spec = _parse_state_spec(state_type=state_type,
+                                          owner=owner,
                                           reference_value=reference_value,
                                           name=name,
                                           variable=variable,
@@ -2304,10 +2305,8 @@ def _parse_state_type(owner, state_spec):
 STATE_SPEC_INDEX = 0
 
 @tc.typecheck
-# def _parse_state_spec(standard_args,
-#                       context=None,
-#                       **state_spec):
-def _parse_state_spec(owner=None,
+def _parse_state_spec(state_type=None,
+                      owner=None,
                       reference_value=None,
                       name=None,
                       variable=None,
@@ -2345,6 +2344,7 @@ def _parse_state_spec(owner=None,
        generate a warning and are ignored.
 
     """
+    # Get all of the standard arguments passed from _instantiate_state (i.e., those other than state_spec) into a dict
     standard_args = get_args(inspect.currentframe())
 
     STATE_SPEC_ARG = 'state_spec'
