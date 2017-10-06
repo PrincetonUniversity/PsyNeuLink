@@ -4,6 +4,6 @@ EVCAuxiliary
 .. toctree::
    :maxdepth: 1
 
-.. automodule:: Library.Subsystems.EVC.EVCAuxiliary
+.. automodule:: psyneulink.library.subsystems.evc.evcauxiliary
    :members:
    :exclude-members: random, LinearCombination, EVCAuxiliaryFunction

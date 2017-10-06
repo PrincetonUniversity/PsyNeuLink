@@ -10,6 +10,6 @@ Processing Mechanisms
    IntegratorMechanism
    ObjectiveMechanism
 
-.. automodule:: ProcessingMechanisms.ProcessingMechanism
+.. automodule:: psyneulink.components.mechanisms.processing.processingmechanism
    :members:
    :exclude-members: ProcessingMechanism_Base, MechanismTuple, MechanismList, random
