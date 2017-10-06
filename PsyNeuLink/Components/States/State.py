@@ -1987,7 +1987,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                                           variable=variable,
                                           params=params,
                                           prefs=prefs,
-                                          context=context
+                                          context=context,
                                           **state_spec)
 
     # FIX: 10/3/17: HANDLE NAME HERE (GET CODE FROM ABOVE)
@@ -2374,9 +2374,9 @@ def _parse_state_spec(owner=None,
         print('Args other than standard args and state_spec were in _instantiate_state ({})'.
               format(state_spec))
 
-    state_dict = defaultdict(lambda: None)
-    state_dict.update(standard_args)
-    # state_dict = standard_args
+    # state_dict = defaultdict(lambda: None)
+    # state_dict.update(standard_args)
+    state_dict = standard_args
     context = state_dict.pop(CONTEXT, None)
     owner = state_dict[OWNER]
     state_type = state_dict[STATE_TYPE]
@@ -2510,7 +2510,7 @@ def _parse_state_spec(owner=None,
                                                               state_specific_params=state_specification)
 
         # Re-parse standard_args using 1st item of tuple as the state_spec
-        state_dict = _parse_state_spec(standard_args, context, state_spec=state_specification[0])
+        state_dict = _parse_state_spec(context=context, state_spec=state_specification[0], **standard_args)
 
         # Add params to any params specified in first item of tuple
         if state_dict[PARAMS] is None:
@@ -2533,7 +2533,7 @@ def _parse_state_spec(owner=None,
                 #    and assign its value as the new state_spec
                 # Recursively call _parse_state_spec
                 state_specification_dict['name']=name
-                state_dict = _parse_state_spec(state_specification_dict, context, state_spec=state_spec)
+                state_dict = _parse_state_spec(context=context, state_spec=state_spec, **state_specification_dict, )
 
         # Standard state specification dict
         else:
