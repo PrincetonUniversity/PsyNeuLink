@@ -1979,8 +1979,16 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     Returns a State or None
     """
 
-    standard_args = get_args(inspect.currentframe())
-    parsed_state_spec  = _parse_state_spec(standard_args, context, **state_spec)
+    # standard_args = get_args(inspect.currentframe())
+    # parsed_state_spec  = _parse_state_spec(standard_args, context, **state_spec)
+    parsed_state_spec = _parse_state_spec(owner=owner,
+                                          reference_value=reference_value,
+                                          name=name,
+                                          variable=variable,
+                                          params=params,
+                                          prefs=prefs,
+                                          context=context
+                                          **state_spec)
 
     # FIX: 10/3/17: HANDLE NAME HERE (GET CODE FROM ABOVE)
             # if not state_name is state_spec and not state_name in states:
@@ -2296,7 +2304,15 @@ def _parse_state_type(owner, state_spec):
 STATE_SPEC_INDEX = 0
 
 @tc.typecheck
-def _parse_state_spec(standard_args,
+# def _parse_state_spec(standard_args,
+#                       context=None,
+#                       **state_spec):
+def _parse_state_spec(owner=None,
+                      reference_value=None,
+                      name=None,
+                      variable=None,
+                      params=None,
+                      prefs=None,
                       context=None,
                       **state_spec):
 
@@ -2329,7 +2345,7 @@ def _parse_state_spec(standard_args,
        generate a warning and are ignored.
 
     """
-
+    standard_args = get_args(inspect.currentframe())
 
     STATE_SPEC_ARG = 'state_spec'
     state_specification = None
