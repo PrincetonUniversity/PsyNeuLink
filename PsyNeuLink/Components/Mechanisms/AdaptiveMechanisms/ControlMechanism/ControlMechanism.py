@@ -615,6 +615,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
             from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
+            from PsyNeuLink.Globals.Keywords import STATE_TYPE
             if not isinstance(target_set[CONTROL_SIGNALS], list):
                 target_set[CONTROL_SIGNALS] = [target_set[CONTROL_SIGNALS]]
             for control_signal in target_set[CONTROL_SIGNALS]:
@@ -623,7 +624,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 # MODIFIED 10/2/17 NEW:
                 # from PsyNeuLink.Components.Projections.Projection import _parse_projection_specs
                 # _parse_projection_specs(ControlSignal, self, control_signal)
-                _parse_state_spec(self, ControlSignal, control_signal)
+                # _parse_state_spec(self, ControlSignal, control_signal)
+                _parse_state_spec({STATE_TYPE:ControlSignal}, state_spec=control_signal)
                 # MODIFIED 10/2/17 END
 
 

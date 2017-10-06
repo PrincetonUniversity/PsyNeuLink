@@ -900,7 +900,7 @@ def _instantiate_state(state_type,
 
 import inspect
 def _parse_state_spec(
-                      standard_args,
+                      *standard_args,
                       **state_spec
                       ):
 

@@ -1140,7 +1140,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         mapping_projection = None
         learning_signal_params = None
 
-        learning_signal_spec = _parse_state_spec(owner=self, state_type=LearningSignal, state_spec=learning_signal)
+        learning_signal_spec = _parse_state_spec({OWNER:self, STATE_TYPE:LearningSignal}, state_spec=learning_signal)
 
         # Specification is a ParameterState
         if isinstance(learning_signal_spec, ParameterState):

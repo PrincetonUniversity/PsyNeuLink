@@ -2358,7 +2358,9 @@ def _parse_state_spec(standard_args,
         print('Args other than standard args and state_spec were in _instantiate_state ({})'.
               format(state_spec))
 
-    state_dict = standard_args
+    state_dict = defaultdict(lambda: None)
+    state_dict.update(standard_args)
+    # state_dict = standard_args
     context = state_dict.pop(CONTEXT, None)
     owner = state_dict[OWNER]
     state_type = state_dict[STATE_TYPE]
@@ -2449,7 +2451,11 @@ def _parse_state_spec(standard_args,
         spec = get_param_value_for_keyword(owner, state_specification)
         # A value was returned, so use value of keyword as variable
         if spec is not None:
-            state_dict[VARIABLE] = spec
+            # # MODIFIED 10/3/17 OLD:
+            # state_dict[VARIABLE] = spec
+            # MODIFIED 10/3/17 NEW:  FIX: [COMMENT BELOW IS CORRECT, NEED TO BETTER SORT OUT CONDITIONS]
+            state_dict[REFERENCE_VALUE] = spec
+            # MODIFIED 10/3/17 END
             # NOTE: (7/26/17 CW) This warning below may not be appropriate, since this routine is run if the
             # matrix parameter is specified as a keyword, which may be intentional.
             if owner.prefs.verbosePref:

@@ -749,8 +749,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         output_state_dicts = []
         for value in output_state_specs:
             output_state_dict = {}
-            output_state_spec = _parse_state_spec(owner=self,
-                                                  state_type=OutputState,
+            output_state_spec = _parse_state_spec({STATE_TYPE:OutputState},
                                                   state_spec=value)
             if isinstance(output_state_spec, dict):
                 output_state_dict = output_state_spec
