@@ -628,6 +628,7 @@ Class Reference
 
 import inspect
 import logging
+
 from collections import OrderedDict
 from inspect import isclass
 
@@ -964,7 +965,7 @@ class Mechanism_Base(Mechanism):
 
     default_mechanism : Mechanism : default DDM
         type of Mechanism instantiated when the `mechanism` command is called without a specification for its
-        **mech_spec** argument, or the `process` command is called without a specification for its **pathway** argument.
+        **mech_spec** argument.
 
     name : str : default <Mechanism subclass>-<index>
         the name of the Mechanism.

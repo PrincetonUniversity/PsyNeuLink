@@ -75,7 +75,7 @@ function (the default for a TransferMechanism), and the other two of which use a
     output_layer = TransferMechanism(size=5, function=Logistic)
 
     # Construct the Process:
-    my_encoder = process(pathway=[input_layer, hidden_layer, output_layer])
+    my_encoder = Process(pathway=[input_layer, hidden_layer, output_layer])
 
 Each of the Mechanisms can be executed individually, by simply calling its `execute <Mechanism_Base.execute>` method
 with an input array::
@@ -93,24 +93,24 @@ using random initial weights.  However, it is easy to specify them explicitly, s
 the Mechanisms in the pathway for the Process::
 
     my_projection_1 = MappingProjection(matrix=(.2 * np.random.rand(2, 5)) - .1))
-    my_encoder = process(pathway=[input_layer, my_projection_1, hidden_layer, output_layer])
+    my_encoder = Process(pathway=[input_layer, my_projection_1, hidden_layer, output_layer])
 
 The first line above creates a Projection with a 2x5 matrix of random weights constrained to be between -.1 and +.1,
 which is then inserted in the pathway between the ``input_layer`` and ``output_layer``.  The matrix itself could also
 have been inserted directly, as follows::
 
-    my_encoder = process(pathway=[input_layer, (.2 * np.random.rand(2, 5)) - .1)), hidden_layer, output_layer])
+    my_encoder = Process(pathway=[input_layer, (.2 * np.random.rand(2, 5)) - .1)), hidden_layer, output_layer])
 
 PsyNeuLink knows to create a MappingProjection using the matrix.  PsyNeuLink is also flexible.  For example,
 a recurrent Projection from the ``output_layer`` back to the ``hidden_layer`` can be added simply by adding another
 entry to the pathway::
 
-    my_encoder = process(pathway=[input_layer, hidden_layer, output_layer, hidden_layer])
+    my_encoder = Process(pathway=[input_layer, hidden_layer, output_layer, hidden_layer])
 
 This tells PsyNeuLink to create a Projection from the output_layer back to the hidden_layer.  The same could have also
 been accomplished by explicitly creating the recurrent connection::
 
-    my_encoder = process(pathway=[input_layer, hidden_layer, output_layer])
+    my_encoder = Process(pathway=[input_layer, hidden_layer, output_layer])
     MappingProjection(sender=output_layer,
                       receiver=hidden_layer)
 
@@ -122,7 +122,7 @@ More Elaborate Configurations
 Configuring more complex features is just as simple and flexible.  For example, the feedforward network above can be
 trained using backpropagation simply by adding the **learning** argument to the constructor for the Process::
 
-    my_encoder = process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
+    my_encoder = Process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
 
 and then specifying the target for each trial when it is executed (here, the Process' `run <Process.run>` command
 is used to execute a series of five training trials, one that trains it on each element of the input)::
@@ -149,9 +149,9 @@ output layer, which combines the inputs and projects to a drift diffusion mechan
     differencing_weights = np.array([[1], [-1]])
 
     # Construct the Processes:
-    colors_process = process(pathway=[colors_input_layer, differencing_weights, output_layer])
-    words_process = process(pathway=[words_input_layer, differencing_weights, output_layer])
-    decision_process = process(pathway=[output_layer, decision_mech])
+    colors_process = Process(pathway=[colors_input_layer, differencing_weights, output_layer])
+    words_process = Process(pathway=[words_input_layer, differencing_weights, output_layer])
+    decision_process = Process(pathway=[output_layer, decision_mech])
 
     # Construct the System:
     my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
@@ -204,8 +204,8 @@ follows::
     recurrent_layer = RecurrentTransferMechanism(size = 10)
 
     # Construct the Processes:
-    feed_forward_network = process(pathway=[input_layer, hidden_layer, output_layer])
-    recurrent_network = process(pathway=[hidden_layer, recurrent_layer, hidden_layer])
+    feed_forward_network = Process(pathway=[input_layer, hidden_layer, output_layer])
+    recurrent_network = Process(pathway=[hidden_layer, recurrent_layer, hidden_layer])
 
     # Construct the System:
     full_model = system(processes=[feed_forward_network, recurrent_network])

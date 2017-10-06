@@ -3,7 +3,7 @@
 import random
 
 from psyneulink.components.mechanisms.processing.transfermechanism import *
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.system import system
 from psyneulink.globals.keywords import *
@@ -46,13 +46,13 @@ Reward = TransferMechanism(name='Reward')
 
 
 # Processes:
-TaskExecutionProcess = process(
+TaskExecutionProcess = Process(
     default_variable=[0],
     pathway=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
     prefs = process_prefs,
     name = 'TaskExecutionProcess')
 
-RewardProcess = process(
+RewardProcess = Process(
     default_variable=[0],
     pathway=[(Reward, 1)],
     prefs = process_prefs,

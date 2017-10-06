@@ -29,7 +29,7 @@ class ScratchPadError(Exception):
 
 
 #region USER GUIDE
-# from PsyNeuLink.Components.Process import process, Process
+# from PsyNeuLink.Components.Process import Process
 
 #region SIMPLE NN EXAMPLE:
 
@@ -40,8 +40,8 @@ class ScratchPadError(Exception):
 # input_layer = TransferMechanism(default_variable=[0,0,0,0,0])
 # hidden_layer = TransferMechanism(default_variable=[0,0], function=Logistic)
 # output_layer = TransferMechanism(default_variable=[0,0,0,0,0], function=Logistic)
-# # my_process = process(pathway=[input_layer, hidden_layer, output_layer], target=[0,0,0,0,0], learning=LEARNING)
-# my_process = process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
+# # my_process = Process(pathway=[input_layer, hidden_layer, output_layer], target=[0,0,0,0,0], learning=LEARNING)
+# my_process = Process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
 #
 # # my_system = system(processes=[my_process], targets=[0,0,0,0,0])
 # my_system = system(processes=[my_process])
@@ -70,9 +70,9 @@ class ScratchPadError(Exception):
 #                                        function=Logistic,
 #                                        name='OUTPUT')
 # decision_mech = DDM(name='DECISION')
-# colors_process = process(pathway=[colors_input_layer, FULL_CONNECTIVITY_MATRIX, output_layer], name='COLOR PROCESS')
-# words_process = process(pathway=[words_input_layer, FULL_CONNECTIVITY_MATRIX, output_layer], name='WORD PROCESS')
-# decision_process = process(pathway=[output_layer, FULL_CONNECTIVITY_MATRIX, decision_mech], name='DECISION_PROCESS')
+# colors_process = Process(pathway=[colors_input_layer, FULL_CONNECTIVITY_MATRIX, output_layer], name='COLOR PROCESS')
+# words_process = Process(pathway=[words_input_layer, FULL_CONNECTIVITY_MATRIX, output_layer], name='WORD PROCESS')
+# decision_process = Process(pathway=[output_layer, FULL_CONNECTIVITY_MATRIX, decision_mech], name='DECISION_PROCESS')
 # my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
 #
 
@@ -82,13 +82,13 @@ class ScratchPadError(Exception):
 # words_input_layer = TransferMechanism(default_variable=[0,0], function=Logistic, name='WORDS INPUT')
 # output_layer = TransferMechanism(default_variable=[0], name='OUTPUT')
 # decision_mech = DDM(name='DECISION')
-# colors_process = process(pathway=[colors_input_layer, differencing_weights, output_layer],
+# colors_process = Process(pathway=[colors_input_layer, differencing_weights, output_layer],
 #                          target=[0],
 #                          name='COLOR PROCESS')
-# words_process = process(pathway=[words_input_layer, differencing_weights, output_layer],
+# words_process = Process(pathway=[words_input_layer, differencing_weights, output_layer],
 #                         target=[0],
 #                         name='WORD PROCESS')
-# decision_process = process(pathway=[output_layer, decision_mech],
+# decision_process = Process(pathway=[output_layer, decision_mech],
 #                            name='DECISION PROCESS')
 # my_simple_Stroop = system(processes=[colors_process, words_process],
 #                           targets=[0])
@@ -129,13 +129,13 @@ class ScratchPadError(Exception):
 
 # my_mech = Mechanism_Base()
 
-# my_process = process()
+# my_process = Process()
 # print(my_process.name)
-# my_process = process()
+# my_process = Process()
 # print(my_process.name)
-# my_process = process()
+# my_process = Process()
 # print(my_process.name)
-# my_process = process()
+# my_process = Process()
 # print(my_process.name)
 
 # my_process = Process()
@@ -383,8 +383,8 @@ class ScratchPadError(Exception):
 # My_Mech_B = TransferMechanism(function=Linear,
 #                              output_states=[RESULT, MEAN])
 #
-# Process_A = process(pathway=[My_Mech_A])
-# Process_B = process(pathway=[My_Mech_B])
+# Process_A = Process(pathway=[My_Mech_A])
+# Process_B = Process(pathway=[My_Mech_B])
 # My_System = system(processes=[Process_A, Process_B])
 #
 # My_EVC_Mechanism = EVCControlMechanism(system=My_System,
@@ -400,8 +400,8 @@ class ScratchPadError(Exception):
 # My_Mech_A = TransferMechanism(function=Logistic)
 # My_Mech_B = TransferMechanism(function=Linear,
 #                              output_states=[RESULT, MEAN])
-# Process_A = process(pathway=[My_Mech_A])
-# Process_B = process(pathway=[My_Mech_B])
+# Process_A = Process(pathway=[My_Mech_A])
+# Process_B = Process(pathway=[My_Mech_B])
 #
 # My_System = system(processes=[Process_A, Process_B],
 #                                 monitor_for_control=[My_Mech_A.output_states[RESULT],
@@ -478,7 +478,7 @@ class ScratchPadError(Exception):
 # # # transfer_mechanism_3 = TransferMechanism()
 # # transfer_mechanism_3 = TransferMechanism(function=Linear(slope=3))
 # #
-# # # my_process = process(pathway=[transfer_mechanism_1,
+# # # my_process = Process(pathway=[transfer_mechanism_1,
 # # #                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
 # # #                                                                                     Modulation.OVERRIDE)}}),
 # # #                               transfer_mechanism_2])
@@ -531,7 +531,7 @@ class ScratchPadError(Exception):
 # transfer_mechanism_3 = TransferMechanism(function=Linear(slope=1))
 #
 # transfer_mechanism_1.execute()
-# # my_process = process(pathway=[transfer_mechanism_1,
+# # my_process = Process(pathway=[transfer_mechanism_1,
 # #                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
 # #                                                                                     Modulation.OVERRIDE)}}),
 # #                               transfer_mechanism_2])
@@ -552,7 +552,7 @@ class ScratchPadError(Exception):
 # # print(transfer_mechanism_3.run(inputs=[1.0],
 # #                                num_trials=3))
 #
-# my_process = process(pathway=[transfer_mechanism_1,
+# my_process = Process(pathway=[transfer_mechanism_1,
 #                                # {PARAMETER_STATE_PARAMS:{SLOPE:2}}),
 #                               transfer_mechanism_3])
 #
@@ -567,7 +567,7 @@ class ScratchPadError(Exception):
 #
 #
 #
-# # transfer_process = process(pathway = [transfer_mechanism_1])
+# # transfer_process = Process(pathway = [transfer_mechanism_1])
 # # print(transfer_process.execute())
 # print ('Done')
 #
@@ -652,8 +652,8 @@ class ScratchPadError(Exception):
 # c = TransferMechanism(name='c')
 # d = TransferMechanism(name='d')
 #
-# p1 = process(pathway=[a, b, c], name='p1')
-# p2 = process(pathway=[a, b, d], name='p2')
+# p1 = Process(pathway=[a, b, c], name='p1')
+# p2 = Process(pathway=[a, b, d], name='p2')
 #
 # s = system(
 #     processes=[p1, p2],
@@ -673,7 +673,7 @@ class ScratchPadError(Exception):
 # c = TransferMechanism(name='c')
 # d = TransferMechanism(name='d')
 #
-# p1 = process(pathway=[a,
+# p1 = Process(pathway=[a,
 #                       # MappingProjection(matrix=(RANDOM_CONNECTIVITY_MATRIX, LEARNING),
 #                       #                   name="MP-1"),
 #                       b,
@@ -754,11 +754,11 @@ class ScratchPadError(Exception):
 #                            name='Reward')
 #
 # # Processes:
-# TaskExecutionProcess = process(
+# TaskExecutionProcess = Process(
 #     default_variable=[0],
 #     pathway=[Input, IDENTITY_MATRIX, Decision],
 #     name = 'TaskExecutionProcess')
-# RewardProcess = process(
+# RewardProcess = Process(
 #     default_variable=[0],
 #     pathway=[Reward],
 #     name = 'RewardProcess')
@@ -797,7 +797,7 @@ class ScratchPadError(Exception):
 #region TEST INPUT FORMATS
 
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-# from PsyNeuLink.Components.Process import process
+# from PsyNeuLink.Components.Process import Process
 # from PsyNeuLink.Components.System import system
 #
 #
@@ -816,8 +816,8 @@ class ScratchPadError(Exception):
 # print(a.execute([2,2]))
 #
 #
-# p1 = process(pathway=[a, c], name='p1')
-# p2 = process(pathway=[b, c], name='p2')
+# p1 = Process(pathway=[a, c], name='p1')
+# p2 = Process(pathway=[b, c], name='p2')
 #
 # s = system(processes=[p1, p2],
 #            name='Convergent System')
@@ -837,7 +837,7 @@ class ScratchPadError(Exception):
 #region TEST INSTANTATION OF Cyclic and Acyclic Systems @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # from PsyNeuLink.Components.System import system
-# from PsyNeuLink.Components.Process import process
+# from PsyNeuLink.Components.Process import Process
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Process import MappingProjection
 #
@@ -850,8 +850,8 @@ class ScratchPadError(Exception):
 # fb1 = MappingProjection(sender=c, receiver=b, name='fb1')
 # fb2 = MappingProjection(sender=d, receiver=e, name = 'fb2')
 #
-# p1 = process(pathway=[a, b, c, d], name='p1')
-# p2 = process(pathway=[e, b, c, d], name='p2')
+# p1 = Process(pathway=[a, b, c, d], name='p1')
+# p2 = Process(pathway=[e, b, c, d], name='p2')
 #
 # a = system(processes=[p1, p2], name='systsem')
 #
@@ -1034,10 +1034,11 @@ class ScratchPadError(Exception):
 # region TEST RecurrentTransferMechanism @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 import numpy as np
+
 from psyneulink.components.functions.function import Logistic
-from psyneulink.globals.keywords import LEARNING
+from psyneulink.components.process import Process
 from psyneulink.components.system import system
-from psyneulink.components.process import process
+from psyneulink.globals.keywords import LEARNING
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism \
     import RecurrentTransferMechanism
 from psyneulink.components.functions.function import Linear
@@ -1062,7 +1063,7 @@ print ("\nmy_auto.recurrent_projection.matrix:\n",
 print ("\nmy_auto.input_state.path_afferents[0].matrix:\n",
        my_auto.input_state.path_afferents[0].matrix)
 
-my_process = process(pathway=[my_auto])
+my_process = Process(pathway=[my_auto])
 
 my_auto.learning_enabled = False
 print ("\n***INITIAL STATE WITH [1,1,0,0] AS INPUT")
@@ -1115,7 +1116,7 @@ for i in range(4):
 
 # from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA import LCA, LCA_OUTPUT
 # from PsyNeuLink.Components.System import system
-# from PsyNeuLink.Components.Process import process
+# from PsyNeuLink.Components.Process import Process
 # from PsyNeuLink.Globals.Keywords import LEARNING
 #
 # print("TEST LCA")
@@ -1139,15 +1140,15 @@ for i in range(4):
 #
 # # THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
 # #                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection
-# my_process = process(pathway=[my_auto],
+# my_process = Process(pathway=[my_auto],
 #
 # # THIS DOESN'T WORK, AS Process._instantiate_pathway() ONLY CHECKS PROJECTIONS AFTER ENCOUNTERING ANOTHER MECHANISM
-# # my_process = process(pathway=[my_auto, my_auto_matrix],
+# # my_process = Process(pathway=[my_auto, my_auto_matrix],
 #                      target=[0,0,0],
 #                      learning=LEARNING
 #                      )
 #
-# # my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
+# # my_process = Process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
 # #                      learning=LEARNING,
 # #                      target=[0,0,0])
 #
@@ -1179,7 +1180,7 @@ for i in range(4):
 #
 # my_mech = TransferMechanism(function=Linear())
 #
-# my_process = process(pathway=[my_mech])
+# my_process = Process(pathway=[my_mech])
 #
 # my_mech.reportOutputPref = False
 #
@@ -1204,7 +1205,7 @@ for i in range(4):
 #                         receiver=my_mech2,
 #                         matrix=np.ones((1,1)))
 #
-# my_process = process(pathway=[my_mech, my_mech2])
+# my_process = Process(pathway=[my_mech, my_mech2])
 #
 #
 # my_process.execute()
@@ -1258,7 +1259,7 @@ for i in range(4):
 #                         matrix=IDENTITY_MATRIX
 #                        )
 #
-# Stroop_process = process(default_variable=[[1,2.5]],
+# Stroop_process = Process(default_variable=[[1,2.5]],
 #                          pathway=[color_naming, word_reading, verbal_response])
 #
 #
@@ -1664,8 +1665,8 @@ for i in range(4):
 #
 # print ('terminal_mechs: ', terminal_mechs )
 
-# p2 = process(pathway=[e, c, b, d], name='p2')
-# p1e = process(pathway=[a, b, c, d], name='p1e')
+# p2 = Process(pathway=[e, c, b, d], name='p2')
+# p1e = Process(pathway=[a, b, c, d], name='p1e')
 
 # graph = {"B": {"A"},
 #          "C": {"B"},
@@ -2090,13 +2091,13 @@ for i in range(4):
 #region TEST:  PROPERTY GETTER AND SETTER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # ************
-# 
+#
 # EXAMPLE:
-# 
+#
 # class ClassProperty(property):
 #     def __get__(self, cls, owner):
 #         return self.fget.__get__(None, owner)()
-# 
+#
 # class foo(object):
 #     _var=5
 #     def getvar(cls):
@@ -2106,7 +2107,7 @@ for i in range(4):
 #         cls._var=value
 #     setvar=classmethod(setvar)
 #     var=ClassProperty(getvar,setvar)
-# 
+#
 # assert foo.getvar() == 5
 # foo.setvar(4)
 # assert foo.getvar() == 4
@@ -2114,30 +2115,30 @@ for i in range(4):
 # foo.var = 3
 # assert foo.var == 3
 # However, the setters don't actually work:
-# 
+#
 # foo.var = 4
 # assert foo.var == foo._var # raises AssertionError
 # foo._var is unchanged, you've simply overwritten the property with a new value.
-# 
+#
 # You can also use ClassProperty as a decorator:
-# 
+#
 # class Foo(object):
 #     _var = 5
-# 
+#
 #     @ClassProperty
 #     @classmethod
 #     def var(cls):
 #         return cls._var
-# 
+#
 #     @var.setter
 #     @classmethod
 #     def var(cls, value):
 #         cls._var = value
-# 
+#
 # assert foo.var == 5
-# 
+#
 # **************
-# 
+#
 # BETTER EXAMPLE:
 
 # class foo(object):
@@ -2150,7 +2151,7 @@ for i in range(4):
 #     @classmethod
 #     def setvar(cls, value):
 #     	cls._var = value
-# 
+#
 
 # class foo(object):
 #     _var = 5
@@ -2205,22 +2206,22 @@ for i in range(4):
 
 # test = 0
 # class a(object):
-# 
+#
 #     _c_Attrib=5
-# 
+#
 #     @classProperty
 #     @classmethod
 #     def c_Attrib(cls):
 #         test = 1
 #         return cls._c_Attrib
-# 
+#
 #     @c_Attrib.setter
 #     @classmethod
 #     def c_Attrib(cls, value):
 #         test = 1
 #         print ('Did something')
 #         cls._c_Attrib = value
-# 
+#
 
 # test = 0
 # class a(object):
@@ -2233,7 +2234,7 @@ for i in range(4):
 #         def c_Attrib(cls, value):
 #             pass
 #             # cls._c_Attrib = value
-# 
+#
 
 # test = 0
 # class a(object):

@@ -2,7 +2,7 @@ import matplotlib
 
 from psyneulink.components.functions.function import Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.system import system
 
@@ -49,7 +49,7 @@ Output_Weights = MappingProjection(name='Output Weights',
                                    matrix=(np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
                          )
 
-my_process = process(default_variable=[0, 0],
+my_process = Process(default_variable=[0, 0],
                      pathway=[Input_Layer,
                                 Input_Weights,
                               Hidden_Layer_1,

@@ -1,7 +1,7 @@
 # from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 from psyneulink.components.functions.function import Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.system import system
 from psyneulink.scheduling.timescale import TimeScale
@@ -75,7 +75,7 @@ Output_Weights = MappingProjection(name='Output Weights',
                          matrix=Output_Weights_matrix
                          )
 
-z = process(default_variable=[0, 0],
+z = Process(default_variable=[0, 0],
             pathway=[Input_Layer,
                            # The following reference to Input_Weights is needed to use it in the pathway
                            #    since it's sender and receiver args are not specified in its declaration above

@@ -6,18 +6,19 @@ and electrophysiological data (from LC recordings) in non-human primates.
 """
 
 import numpy as np
+
 from psyneulink.components.functions.function import Linear, Logistic
 from psyneulink.components.functions.function import ModulationParam
-from psyneulink.components.system import system
-from psyneulink.components.process import process
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.system import system
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism \
     import RecurrentTransferMechanism
-from psyneulink.library.mechanisms.processing.transfer.lca import LCA
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.globals.keywords import FULL_CONNECTIVITY_MATRIX, PROJECTIONS, VALUE
+from psyneulink.library.mechanisms.processing.transfer.lca import LCA
 from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
-from psyneulink.globals.keywords import FULL_CONNECTIVITY_MATRIX, VALUE, PROJECTIONS
 
 
 input_layer = TransferMechanism(size=2,
@@ -59,14 +60,14 @@ LC = LCControlMechanism(
         name='LC')
 
 # ELICITS WARNING:
-decision_process = process(pathway=[input_layer,
+decision_process = Process(pathway=[input_layer,
                                     input_weights,
                                     decision_layer,
                                     output_weights,
                                     response],
                            name='DECISION PROCESS')
 
-lc_process = process(pathway=[decision_layer,
+lc_process = Process(pathway=[decision_layer,
                               # CAUSES ERROR:
                               # np.array([[1,0],[0,0]]),
                               LC],

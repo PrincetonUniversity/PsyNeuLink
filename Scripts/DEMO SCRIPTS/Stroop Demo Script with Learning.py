@@ -1,7 +1,7 @@
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 
 from psyneulink.components.mechanisms.processing.transfermechanism import *
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.system import system
 from psyneulink.globals.keywords import *
 from psyneulink.library.mechanisms.adaptive import EVCControlMechanism
@@ -25,14 +25,14 @@ Output = TransferMechanism(name='Output',
                                  )
 
 # Processes:
-ColorNamingProcess = process(
+ColorNamingProcess = Process(
         default_variable=[0],
         pathway=[Color_Input, Color_Hidden, Output],
         target=[0],
         learning=LEARNING,
         name = 'Color Naming Process')
 
-WordReadingProcess = process(
+WordReadingProcess = Process(
         default_variable=[0],
         pathway=[Word_Input, Word_Hidden, Output],
         learning=LEARNING,

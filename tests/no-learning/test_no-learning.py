@@ -4,7 +4,7 @@ import numpy as np
 
 from psyneulink.components.functions.function import Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.system import system
 from psyneulink.globals.keywords import SOFT_CLAMP
@@ -54,7 +54,7 @@ class TestNoLearning:
             matrix=Input_Weights_matrix,
         )
 
-        p = process(
+        p = Process(
             default_variable=[0, 0],
             pathway=[
                 Input_Layer,

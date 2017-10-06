@@ -1,5 +1,5 @@
 from psyneulink.components.mechanisms.processing.transfermechanism import *
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.system import system
 from psyneulink.globals.keywords import *
 from psyneulink.mechanismGenerator import mechanismGenerator
@@ -52,7 +52,7 @@ mech1tuple = mechanism1, {PARAMETER_STATE_PARAMS:{FUNCTION_PARAMS:{SLOPE:10.0, I
 mech2tuple = mechanism2, {PARAMETER_STATE_PARAMS:{FUNCTION_PARAMS:{SLOPE:50.0, INTERCEPT: 45.0}}}
 
 path = [mech1tuple, mechanism2, mechanism3, mechanism4, mechanism5]
-process1 = process(default_variable=[100],
+process1 = Process(default_variable=[100],
                  params={PATHWAY:path},
                  prefs={kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
                         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})

@@ -4,7 +4,7 @@ from psyneulink.components.functions.function import BogaczEtAl, Linear, Logisti
 from psyneulink.components.mechanisms.processing.integratormechanism \
     import IntegratorMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.system import system
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
@@ -49,19 +49,19 @@ class TestInit:
         Reward = TransferMechanism(name='Reward')
 
         # Processes:
-        ColorNamingProcess = process(
+        ColorNamingProcess = Process(
             default_variable=[0],
             pathway=[Color_Input, Color_Hidden, Output, Decision],
             name='Color Naming Process',
         )
 
-        WordReadingProcess = process(
+        WordReadingProcess = Process(
             default_variable=[0],
             pathway=[Word_Input, Word_Hidden, Output, Decision],
             name='Word Reading Process',
         )
 
-        RewardProcess = process(
+        RewardProcess = Process(
             default_variable=[0],
             pathway=[Reward],
             name='RewardProcess',
@@ -105,7 +105,7 @@ class TestLinear:
             )
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A],
             name='p'
@@ -147,7 +147,7 @@ class TestLinear:
             function=Linear(slope=2.0),
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, B],
             name='p'
@@ -193,7 +193,7 @@ class TestLinear:
             )
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, B],
             name='p'
@@ -248,13 +248,13 @@ class TestBranching:
             function=Linear(slope=2.0),
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, B],
             name='p'
         )
 
-        q = process(
+        q = Process(
             default_variable=[0],
             pathway=[A, C],
             name='q'
@@ -312,13 +312,13 @@ class TestBranching:
             function=Linear(slope=2.0),
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, B],
             name='p'
         )
 
-        q = process(
+        q = Process(
             default_variable=[0],
             pathway=[A, C],
             name='q'
@@ -379,13 +379,13 @@ class TestBranching:
             function=Linear(slope=2.0),
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, C],
             name='p'
         )
 
-        q = process(
+        q = Process(
             default_variable=[0],
             pathway=[B, C],
             name='q'
@@ -442,13 +442,13 @@ class TestBranching:
             function=Linear(slope=2.0),
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, C],
             name='p'
         )
 
-        q = process(
+        q = Process(
             default_variable=[0],
             pathway=[B, C],
             name='q'
@@ -507,13 +507,13 @@ class TestBranching:
             )
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, C],
             name='p'
         )
 
-        q = process(
+        q = Process(
             default_variable=[0],
             pathway=[B, C],
             name='q'
@@ -583,13 +583,13 @@ class TestBranching:
             function=Linear(slope=1.0),
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, B, D],
             name='p'
         )
 
-        q = process(
+        q = Process(
             default_variable=[0],
             pathway=[A, C, D],
             name='q'
@@ -658,25 +658,25 @@ class TestBranching:
             )
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, C],
             name='p'
         )
 
-        p1 = process(
+        p1 = Process(
             default_variable=[0],
             pathway=[A, D],
             name='p1'
         )
 
-        q = process(
+        q = Process(
             default_variable=[0],
             pathway=[B, C],
             name='q'
         )
 
-        q1 = process(
+        q1 = Process(
             default_variable=[0],
             pathway=[B, D],
             name='q1'
@@ -754,13 +754,13 @@ class TestBranching:
             function=Linear(slope=2.0),
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, C, D],
             name='p'
         )
 
-        q = process(
+        q = Process(
             default_variable=[0],
             pathway=[B, C, E],
             name='q'
@@ -856,42 +856,42 @@ class TestBranching:
         )
 
         p = [
-            process(
+            Process(
                 default_variable=[0],
                 pathway=[A, C, E],
                 name='p'
             ),
-            process(
+            Process(
                 default_variable=[0],
                 pathway=[A, C, F],
                 name='p1'
             ),
-            process(
+            Process(
                 default_variable=[0],
                 pathway=[A, D, E],
                 name='p2'
             ),
-            process(
+            Process(
                 default_variable=[0],
                 pathway=[A, D, F],
                 name='p3'
             ),
-            process(
+            Process(
                 default_variable=[0],
                 pathway=[B, C, E],
                 name='q'
             ),
-            process(
+            Process(
                 default_variable=[0],
                 pathway=[B, C, F],
                 name='q1'
             ),
-            process(
+            Process(
                 default_variable=[0],
                 pathway=[B, D, E],
                 name='q2'
             ),
-            process(
+            Process(
                 default_variable=[0],
                 pathway=[B, D, F],
                 name='q3'

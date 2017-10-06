@@ -1,6 +1,6 @@
 from psyneulink.components.mechanisms.processing.transfermechanism import *
 
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.globals.keywords import *
 
 my_Transfer = TransferMechanism(name='my_Transfer',
@@ -12,7 +12,7 @@ my_Transfer = TransferMechanism(name='my_Transfer',
                        # function=Linear(slope=2, intercept=10)
                        )
 
-z = process(default_variable=[1, 1],
+z = Process(default_variable=[1, 1],
                  params={PATHWAY:[my_Transfer]},
                  prefs={kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
                         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})

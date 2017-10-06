@@ -1,6 +1,6 @@
 from psyneulink.components.functions.function import FHNIntegrator
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.system import system
 from psyneulink.library.subsystems.agt.agtcontrolmechanism import AGTControlMechanism
 from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
@@ -19,9 +19,9 @@ my_AGT = AGTControlMechanism(monitored_output_states=decision_mech,
                       control_signals=(FHNIntegrator.MODE,my_LC),
                       name='ITC')
 
-my_main_process = process(pathway=[decision_mech], name='Decision_process')
-my_AGT_process = process(pathway=[decision_mech, my_AGT], name='AGT_process')
-my_LC_process = process(pathway=[decision_mech, my_LC], name='LC_process')
+my_main_process = Process(pathway=[decision_mech], name='Decision_process')
+my_AGT_process = Process(pathway=[decision_mech, my_AGT], name='AGT_process')
+my_LC_process = Process(pathway=[decision_mech, my_LC], name='LC_process')
 my_system = system(processes=[my_main_process, my_LC_process, my_AGT_process], name='my_system')
 
 my_system.show()

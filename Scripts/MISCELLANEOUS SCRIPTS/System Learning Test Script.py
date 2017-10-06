@@ -54,7 +54,7 @@ Output_Weights = MappingProjection(name='Output Weights',
                          matrix=Output_Weights_matrix
                          )
 
-p = process(default_variable=[0, 0],
+p = Process(default_variable=[0, 0],
             pathway=[Input_Layer,
                            # The following reference to Input_Weights is needed to use it in the pathway
                            #    since it's sender and receiver args are not specified in its declaration above

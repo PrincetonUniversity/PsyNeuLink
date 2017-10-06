@@ -1,7 +1,7 @@
 from psyneulink.components.mechanisms.processing.Deprecated.LinearMechanism import *
 
 from psyneulink.components.functions.function import Exponential, Linear
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.system import System
 from psyneulink.globals.keywords import *
@@ -52,12 +52,12 @@ Decision = DDM(
 
 
 #region Processes
-TaskExecutionProcess = process(default_variable=[0],
+TaskExecutionProcess = Process(default_variable=[0],
                                pathway=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
                                prefs = process_prefs,
                                name = 'TaskExecutionProcess')
 
-RewardProcess = process(default_variable=[0],
+RewardProcess = Process(default_variable=[0],
                         pathway=[(Reward, 1)],
                         prefs = process_prefs,
                         name = 'RewardProcess')

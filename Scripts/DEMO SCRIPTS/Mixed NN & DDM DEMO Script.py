@@ -1,5 +1,5 @@
 from psyneulink.components.mechanisms.processing.transfermechanism import *
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.system import system
 
 myInputLayer = TransferMechanism(name='Input Layer',
@@ -15,7 +15,7 @@ myDDM = DDM(name='My_DDM',
                                 threshold=1,
                                 starting_point=0.0,))
 
-myProcess = process(name='Neural Network DDM Process',
+myProcess = Process(name='Neural Network DDM Process',
                     default_variable=[0, 0],
                     pathway=[myInputLayer,
                                    # RANDOM_CONNECTIVITY_MATRIX,

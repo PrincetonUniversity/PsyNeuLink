@@ -4,7 +4,7 @@ import pytest
 from psyneulink.components.functions.function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.system import system
 from psyneulink.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
@@ -519,7 +519,7 @@ def run_twice_in_system(mech, input1, input2=None):
     if input2 is None:
         input2 = input1
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
-    simple_process = process(size=mech.size[0], pathway=[mech], name='simple_process')
+    simple_process = Process(size=mech.size[0], pathway=[mech], name='simple_process')
     simple_system = system(processes=[simple_process], name='simple_system', prefs=simple_prefs)
 
     first_output = simple_system.run(inputs={mech: input1})
@@ -542,7 +542,7 @@ class TestRecurrentTransferMechanismInProcess:
             size=3,
             function=Linear
         )
-        p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         p.run(inputs=[[[1, 2, 3, 4]]])
         np.testing.assert_allclose(R.value.tolist(), [[1., 2., 3., 4.]])
         np.testing.assert_allclose(T.value.tolist(), [[10., 10., 10.]])
@@ -561,7 +561,7 @@ class TestRecurrentTransferMechanismInProcess:
         T = TransferMechanism(
             size=4,
             function=Linear)
-        p = process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        p = Process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         R.matrix = [[2, 0, 1, 3]] * 4
         p.run(inputs=[[[1, 2, 3, 4]]])
         np.testing.assert_allclose(T.value.tolist(), [[1, 2, 3, 4]])
@@ -580,7 +580,7 @@ class TestRecurrentTransferMechanismInProcess:
         T = TransferMechanism(
             size=4,
             function=Linear)
-        p = process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        p = Process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         R.recurrent_projection.matrix = [[2, 0, 1, 3]] * 4
         p.run(inputs=[[[1, 2, 3, 4]]])
         np.testing.assert_allclose(T.value.tolist(), [[1, 2, 3, 4]])
@@ -604,7 +604,7 @@ class TestRecurrentTransferMechanismInSystem:
         T = TransferMechanism(
             size=3,
             function=Linear)
-        p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = system(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s.run(inputs={R: [1, 2, 3, 4]})
         np.testing.assert_allclose(R.value.tolist(), [[1., 2., 3., 4.]])
@@ -624,7 +624,7 @@ class TestRecurrentTransferMechanismInSystem:
         T = TransferMechanism(
             size=3,
             function=Linear)
-        p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = system(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s.run(inputs={R: [1, 2, 3, 4]})
         np.testing.assert_allclose(R.value.tolist(), [[1., 2., 3., 4.]])
@@ -646,7 +646,7 @@ class TestRecurrentTransferMechanismInSystem:
         T = TransferMechanism(
             size=5,
             function=Linear)
-        p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = system(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s.run(inputs={R: [1, 2, 3, -0.5]})
         np.testing.assert_allclose(R.value.tolist(), [[1., 2., 3., -0.5]])
@@ -668,7 +668,7 @@ class TestRecurrentTransferMechanismInSystem:
         T = TransferMechanism(
             size=5,
             function=Linear)
-        p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = system(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s.run(inputs={R: [1, 2, 3, -0.5]})
         np.testing.assert_allclose(R.value.tolist(), [[1., 2., 3., -0.5]])
@@ -690,7 +690,7 @@ class TestRecurrentTransferMechanismInSystem:
         T = TransferMechanism(
             size=4,
             function=Linear)
-        p = process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        p = Process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = system(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         R.matrix = [[2, 0, 1, 3]] * 4
         s.run(inputs={T: [1, 2, 3, 4]})
@@ -721,7 +721,7 @@ class TestRecurrentTransferMechanismInSystem:
         np.testing.assert_allclose(R.input_state.path_afferents[0].matrix.tolist(), R.matrix.tolist())
 
         # Test that activity is properly computed prior to learning
-        p = process(pathway=[R])
+        p = Process(pathway=[R])
         R.learning_enabled = False
         p.execute([1, 1, 0, 0])
         p.execute([1, 1, 0, 0])
@@ -765,7 +765,7 @@ class TestRecurrentTransferMechanismInSystem:
 #         T = TransferMechanism(
 #             size=3,
 #             function=Linear)
-#         p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismControl.simple_prefs)
+#         p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismControl.simple_prefs)
 #         s = system(processes=[p], prefs=TestRecurrentTransferMechanismControl.simple_prefs, controller = EVCControlMechanism,
 #            enable_controller = True, monitor_for_control = [T.output_state], control_signals=[('auto', R), ('hetero', R)])
 #         s.run(inputs = {R: [1, 3, 2, 5]})

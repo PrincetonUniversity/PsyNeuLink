@@ -193,7 +193,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     B = TransferMechanism(function=Linear(), name='B')
     C = TransferMechanism(function=Linear(), name='C')
 
-    p = process(
+    p = Process(
         pathway=[A, B, C],
         name = 'p'
     )
@@ -217,7 +217,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     A = TransferMechanism(function=Linear(), name='A')
     B = TransferMechanism(function=Linear(), name='B')
 
-    p = process(
+    p = Process(
         pathway=[A, B],
         name = 'p'
     )
@@ -242,11 +242,11 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     B = TransferMechanism(function=Linear(), name='B')
     C = TransferMechanism(function=Linear(), name='C')
 
-    p = process(
+    p = Process(
         pathway=[A, C],
         name = 'p'
     )
-    q = process(
+    q = Process(
         pathway=[B, C],
         name = 'q'
     )

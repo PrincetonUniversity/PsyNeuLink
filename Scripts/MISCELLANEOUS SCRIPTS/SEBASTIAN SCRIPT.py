@@ -1,7 +1,7 @@
 # from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 from psyneulink.components.functions.function import Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.system import system
@@ -50,7 +50,7 @@ Task_Output_Weights = MappingProjection(name='Task-Output Weights',
 
 # set up processes
 
-stimulus_process = process(default_variable=[0, 0, 0, 0],
+stimulus_process = Process(default_variable=[0, 0, 0, 0],
             pathway=[Input_Layer,
                      Input_Hidden_Weights,
                      Hidden_Layer,
@@ -61,13 +61,13 @@ stimulus_process = process(default_variable=[0, 0, 0, 0],
             prefs={VERBOSE_PREF: False,
                    REPORT_OUTPUT_PREF: True})
 
-taskHidden_process = process(default_variable=[0, 0],
+taskHidden_process = Process(default_variable=[0, 0],
                              pathway=[Task_Layer,
                                       Task_Hidden_Weights,
                                       Hidden_Layer],
                              learning=LearningProjection)
 
-taskOutput_process = process(default_variable=[0, 0],
+taskOutput_process = Process(default_variable=[0, 0],
                              pathway=[Task_Layer,
                                       Task_Output_Weights,
                                       Output_Layer],

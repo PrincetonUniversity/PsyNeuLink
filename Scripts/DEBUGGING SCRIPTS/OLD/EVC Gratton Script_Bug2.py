@@ -1,7 +1,7 @@
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 
 from psyneulink.components.mechanisms.processing.transfermechanism import *
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.system import system
 from psyneulink.globals.keywords import *
@@ -72,32 +72,32 @@ Reward = TransferMechanism(name='Reward')
 
 
 # Processes:
-TargetControlProcess = process(
+TargetControlProcess = Process(
     default_variable=[0],
     pathway=[Target_Stim, Target_Rep, Decision],
     prefs = process_prefs,
     name = 'Target Control Process')
 
-Flanker1ControlProcess = process(
+Flanker1ControlProcess = Process(
     default_variable=[0],
     pathway=[Flanker1_Stim, Flanker1_Rep, Decision],
     prefs = process_prefs,
     name = 'Flanker 2 Control Process')
 
-Flanker2ControlProcess = process(
+Flanker2ControlProcess = Process(
     default_variable=[0],
     pathway=[Flanker2_Stim, Flanker2_Rep, Decision],
     prefs = process_prefs,
     name = 'Flanker 1 Control Process')
 
-TargetAutomaticProcess = process(
+TargetAutomaticProcess = Process(
     default_variable=[0],
     pathway=[Target_Stim, Automatic_Component, Decision],
     prefs = process_prefs,
     name = 'Target Automatic Process')
 
 
-RewardProcess = process(
+RewardProcess = Process(
     default_variable=[0],
     pathway=[(Reward, 1)],
     prefs = process_prefs,

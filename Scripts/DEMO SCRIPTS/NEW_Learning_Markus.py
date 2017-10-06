@@ -1,6 +1,6 @@
 #from PsyNeuLink.Components.Functions.Function import Logistic , random_matrix
 # from PsyNeuLink.Components.Functions.Function import Logistic , random_matrix
-from psyneulink.components.functions.function import Logistic, Linear
+from psyneulink.components.functions.function import Linear, Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.system import *
@@ -65,14 +65,14 @@ Task_Hidden_Weights = MappingProjection(name='Task-Hidden Weights',
 process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
-StimulusResponseProcess = process(
+StimulusResponseProcess = Process(
     pathway=[Stimulus_Layer, Stimulus_Hidden_Weights, Hidden_Layer, Hidden_Output_Weights, Output_Layer],
     prefs = process_prefs,
     learning=LearningProjection,
     target = [1, 0],
     name = 'Stimulus Response Process')
 
-TaskHiddenProcess = process(
+TaskHiddenProcess = Process(
     pathway=[Task_Layer, Task_Hidden_Weights, Hidden_Layer],
     prefs = process_prefs,
     learning=LearningProjection,

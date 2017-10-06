@@ -9,22 +9,17 @@
 # ***********************************************  Init ****************************************************************
 import logging
 
-from psyneulink.components.functions.function import BackPropagation, Exponential, FunctionOutputType, Integrator, \
-    Linear, LinearCombination, LinearMatrix, Logistic, SoftMax, UserDefinedFunction
+from psyneulink.components.functions.function import BackPropagation, Exponential, FunctionOutputType, Integrator, Linear, LinearCombination, LinearMatrix, Logistic, SoftMax, UserDefinedFunction
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.globals.keywords import ALL, DEFAULT_MATRIX, EXPONENTS, FULL_CONNECTIVITY_MATRIX, FUNCTION, \
-    FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INITIALIZER, INPUT_STATES, MATRIX, \
-    MAX_INDICATOR, MAX_VAL, MONITOR_FOR_CONTROL, OFFSET, OPERATION, OUTPUT_STATES, PARAMETER_STATES, PROB, SCALE, \
-    WEIGHTS
 from psyneulink.components.shellclasses import System_Base
 from psyneulink.components.system import system
+from psyneulink.globals.keywords import ALL, DEFAULT_MATRIX, EXPONENTS, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INITIALIZER, INPUT_STATES, MATRIX, MAX_INDICATOR, MAX_VAL, MONITOR_FOR_CONTROL, OFFSET, OPERATION, OUTPUT_STATES, PARAMETER_STATES, PROB, SCALE, WEIGHTS
 from psyneulink.library.mechanisms.processing.integrator import ddm
-from psyneulink.library.mechanisms.processing.objective.comparatormechanism import \
-    ComparatorMechanism
+from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.scheduling.timescale import CentralClock
 
 
@@ -54,7 +49,6 @@ for handler in logging.root.handlers:
 
 __all__ = ['System_Base',
            'system',
-           'process',
            'CentralClock',
            'TransferMechanism',
            'IntegratorMechanism',

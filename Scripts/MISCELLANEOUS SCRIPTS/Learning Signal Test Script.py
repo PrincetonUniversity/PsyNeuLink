@@ -1,7 +1,7 @@
 # from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 from psyneulink.components.functions.function import Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
@@ -42,7 +42,7 @@ Learned_Weights = MappingProjection(name='Learned Weights',
                           # params={FUNCTION_PARAMS: {MATRIX: (random_weight_matrix, LEARNING_PROJECTION)}}
                           )
 
-z = process(name="TEST LEARNER",
+z = Process(name="TEST LEARNER",
             default_variable=[0, 0],
             pathway=[Input_Layer, Learned_Weights, Output_Layer],
             learning=LEARNING_PROJECTION,

@@ -2,7 +2,7 @@ import numpy as np
 
 from psyneulink.components.functions.function import BogaczEtAl, Linear, Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.system import system
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES
@@ -47,19 +47,19 @@ def test_danglingControlledMech():
     Reward = TransferMechanism(name='Reward')
 
     # Processes:
-    ColorNamingProcess = process(
+    ColorNamingProcess = Process(
         default_variable=[0],
         pathway=[Color_Input, Color_Hidden, Output, Decision],
         name='Color Naming Process',
     )
 
-    WordReadingProcess = process(
+    WordReadingProcess = Process(
         default_variable=[0],
         pathway=[Word_Input, Word_Hidden, Output, Decision],
         name='Word Reading Process',
     )
 
-    RewardProcess = process(
+    RewardProcess = Process(
         default_variable=[0],
         pathway=[Reward],
         name='RewardProcess',
@@ -113,8 +113,8 @@ class TestGraphAndInput:
         c = TransferMechanism(name='c')
         d = TransferMechanism(name='d')
 
-        p1 = process(pathway=[a, b, c], name='p1')
-        p2 = process(pathway=[a, b, d], name='p2')
+        p1 = Process(pathway=[a, b, c], name='p1')
+        p2 = Process(pathway=[a, b, d], name='p2')
 
         s = system(
             processes=[p1, p2],
@@ -139,8 +139,8 @@ class TestGraphAndInput:
         c = TransferMechanism(name='c')
         d = TransferMechanism(name='d')
 
-        p1 = process(pathway=[a, b, c, d], name='p1')
-        p2 = process(pathway=[a, b, d], name='p2')
+        p1 = Process(pathway=[a, b, c, d], name='p1')
+        p2 = Process(pathway=[a, b, d], name='p2')
 
         s = system(
             processes=[p1, p2],
@@ -166,8 +166,8 @@ class TestGraphAndInput:
         d = TransferMechanism(name='d')
         e = TransferMechanism(name='e')
 
-        p1 = process(pathway=[a, b, c], name='p1')
-        p2 = process(pathway=[c, d, e], name='p2')
+        p1 = Process(pathway=[a, b, c], name='p1')
+        p2 = Process(pathway=[c, d, e], name='p2')
 
         s = system(
             processes=[p1, p2],
@@ -195,8 +195,8 @@ class TestGraphAndInput:
         d = TransferMechanism(name='d')
         e = TransferMechanism(name='e')
 
-        p1 = process(pathway=[a, b, e], name='p1')
-        p2 = process(pathway=[c, d, e], name='p2')
+        p1 = Process(pathway=[a, b, e], name='p1')
+        p2 = Process(pathway=[c, d, e], name='p2')
 
         s = system(
             processes=[p1, p2],
@@ -220,7 +220,7 @@ class TestGraphAndInput:
         a = TransferMechanism(name='a', default_variable=[0, 0])
         b = TransferMechanism(name='b', default_variable=[0, 0])
 
-        p1 = process(pathway=[a, b, a], name='p1')
+        p1 = Process(pathway=[a, b, a], name='p1')
 
         s = system(
             processes=[p1],
@@ -242,8 +242,8 @@ class TestGraphAndInput:
         b = TransferMechanism(name='b', default_variable=[0, 0])
         c = TransferMechanism(name='c', default_variable=[0, 0])
 
-        p1 = process(pathway=[a, b, a], name='p1')
-        p2 = process(pathway=[a, c, a], name='p2')
+        p1 = Process(pathway=[a, b, a], name='p1')
+        p2 = Process(pathway=[a, c, a], name='p2')
 
         s = system(
             processes=[p1, p2],
@@ -269,8 +269,8 @@ class TestGraphAndInput:
         e = TransferMechanism(name='e', default_variable=[0])
         f = TransferMechanism(name='f')
 
-        p1 = process(pathway=[a, b, c, d], name='p1')
-        p2 = process(pathway=[e, c, f, b, d], name='p2')
+        p1 = Process(pathway=[a, b, c, d], name='p1')
+        p2 = Process(pathway=[e, c, f, b, d], name='p2')
 
         s = system(
             processes=[p1, p2],

@@ -1,7 +1,7 @@
 from psyneulink.components.mechanisms.processing.transfermechanism import *
 from psyneulink.components.process import *
 
-# simple_ddm_process = process('Simple DDM Process')
+# simple_ddm_process = Process('Simple DDM Process')
 # simple_ddm_process.execute([1])
 
 my_transfer_mechanism = TransferMechanism(name="My TransferMechanism Mechanism",

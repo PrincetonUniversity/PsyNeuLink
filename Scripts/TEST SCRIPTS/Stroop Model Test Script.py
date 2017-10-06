@@ -22,7 +22,7 @@ response = TransferMechanism(default_variable=[0,0],
                            function=Logistic,
                            name="Response")
 
-color_naming_process = process(
+color_naming_process = Process(
     default_variable=[1, 2.5],
     # pathway=[(colors, 0), FULL_CONNECTIVITY_MATRIX, (response,0)],
     pathway=[colors, FULL_CONNECTIVITY_MATRIX, response],
@@ -32,7 +32,7 @@ color_naming_process = process(
     prefs=process_prefs
 )
 
-word_reading_process = process(
+word_reading_process = Process(
     default_variable=[.5, 3],
     pathway=[words, FULL_CONNECTIVITY_MATRIX, response],
     name='Word Reading',

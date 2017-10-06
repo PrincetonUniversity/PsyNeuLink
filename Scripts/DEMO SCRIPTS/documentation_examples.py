@@ -5,29 +5,24 @@ from psyneulink.components.mechanisms.processing \
 from psyneulink.components.mechanisms.processing \
     .RecurrentTransferMechanism import \
     RecurrentTransferMechanism
-from psyneulink.scheduling.condition import EveryNCalls, Any, AfterNCalls, EveryNPasses
+from psyneulink.scheduling.condition import AfterNCalls, Any, EveryNCalls, EveryNPasses
 
 from psyneulink import ModulationParam
-from psyneulink.components.functions.function import AdaptiveIntegrator, \
-    BogaczEtAl, DriftDiffusionIntegrator, Linear, Logistic, PROB, SoftMax
+from psyneulink.components.functions.function import AdaptiveIntegrator, BogaczEtAl, DriftDiffusionIntegrator, Linear, Logistic, PROB, SoftMax
 from psyneulink.components.mechanisms.adaptive.gating \
     .gatingmechanism import \
     GatingMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import \
-    ComparatorMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import ComparatorMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism \
     import \
     MEAN, RESULT, TransferMechanism, VARIANCE, TRANSFER_OUTPUT
-from psyneulink.components.process import PARAMETER_STATE_PARAMS, \
-    RANDOM_CONNECTIVITY_MATRIX, process
+from psyneulink.components.process import PARAMETER_STATE_PARAMS, RANDOM_CONNECTIVITY_MATRIX, process
 from psyneulink.components.projections.pathway.mappingprojection \
     import MappingProjection
 from psyneulink.components.states.modulatorysignals import controlsignal
 from psyneulink.components.system import system
-from psyneulink.globals.keywords import ENABLED, GAIN, NAME, INDEX, CALCULATE, \
-    INTERCEPT, MECHANISM, MODULATION, GATE
-from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, \
-    NOISE, THRESHOLD, TimeScale
+from psyneulink.globals.keywords import CALCULATE, ENABLED, GAIN, GATE, INDEX, INTERCEPT, MECHANISM, MODULATION, NAME
+from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, NOISE, THRESHOLD, TimeScale
 from psyneulink.scheduling.scheduler import Scheduler
 
 
@@ -41,25 +36,25 @@ def intro():
     input_layer = TransferMechanism(size=5)
     hidden_layer = TransferMechanism(size=2, function=Logistic)
     output_layer = TransferMechanism(size=5, function=Logistic)
-    my_encoder = process(pathway=[input_layer, hidden_layer, output_layer])
+    my_encoder = Process(pathway=[input_layer, hidden_layer, output_layer])
 
     output_layer.execute([0, 2.5, 10.9, 2, 7.6])
 
     my_encoder.run([0, 2.5, 10.9, 2, 7.6])
 
     my_projection_1 = MappingProjection(matrix=(0.2 * np.random.rand(2, 5)))
-    my_encoder = process(
+    my_encoder = Process(
         pathway=[input_layer, my_projection_1, hidden_layer, output_layer])
 
-    my_encoder_2 = process(
+    my_encoder_2 = Process(
         pathway=[input_layer, (0.2 * np.random.rand(2, 5)) + -0.1])
 
     # recurrent projection
-    my_encoder_3 = process(
+    my_encoder_3 = Process(
         pathway=[input_layer, hidden_layer, output_layer, hidden_layer])
 
     # More elaborate configurations
-    my_encoder_4 = process(
+    my_encoder_4 = Process(
         pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
     my_encoder_4.run(
         input=[[0, 0, 0, 0, 0], [1, 0, 0, 0, 0], [0, 0, 1, 0, 0],
@@ -77,11 +72,11 @@ def intro():
     differencing_weights = np.array([[1], [-1]])
     output_layer = TransferMechanism(size=1, name='OUTPUT')
     decision_mech = DDM(name='DECISION')
-    colors_process = process(
+    colors_process = Process(
         pathway=[colors_input_layer, differencing_weights, output_layer])
-    words_process = process(
+    words_process = Process(
         pathway=[words_input_layer, differencing_weights, output_layer])
-    decision_process = process(pathway=[output_layer, decision_mech])
+    decision_process = Process(pathway=[output_layer, decision_mech])
     my_simple_Stroop = system(
         processes=[colors_process, words_process, decision_process])
 
@@ -93,26 +88,26 @@ def processes():
     mechanism_1 = TransferMechanism()
     mechanism_2 = DDM()
     some_params = {PARAMETER_STATE_PARAMS: {THRESHOLD: 2, NOISE: 0.1}}
-    my_process = process(
+    my_process = Process(
         pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params)])
 
     # default projection specification
     mechanism_3 = DDM()
-    my_process_2 = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
+    my_process_2 = Process(pathway=[mechanism_1, mechanism_2, mechanism_3])
 
     # inline projection specification using an existing projection
     projection_A = MappingProjection()
-    my_process_3 = process(
+    my_process_3 = Process(
         pathway=[mechanism_1, projection_A, mechanism_2, mechanism_3])
 
     # inline projection specification using a keyword
-    my_process_4 = process(
+    my_process_4 = Process(
         pathway=[mechanism_1, RANDOM_CONNECTIVITY_MATRIX, mechanism_2,
                  mechanism_3])
 
     # stand-alone projection specification
     projection_A = MappingProjection(sender=mechanism_1, receiver=mechanism_2)
-    my_process_5 = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
+    my_process_5 = Process(pathway=[mechanism_1, mechanism_2, mechanism_3])
 
     # process that implements learning
     mechanism_1 = TransferMechanism(function=Logistic)
@@ -260,8 +255,8 @@ def states():
     my_mech_A = TransferMechanism(function=Logistic)
     my_mech_B = TransferMechanism(function=Linear, output_states=[RESULT, MEAN])
 
-    process_a = process(pathway=[my_mech_A])
-    process_b = process(pathway=[my_mech_B])
+    process_a = Process(pathway=[my_mech_A])
+    process_b = Process(pathway=[my_mech_B])
 
     my_system = system(processes=[process_a, process_b],
                        monitor_for_control=[my_mech_A.output_states[RESULT],
@@ -301,7 +296,7 @@ def scheduler():
     B = TransferMechanism(function=Linear(), name='B')
     C = TransferMechanism(function=Linear(), name='C')
 
-    # p = process(pathway=[A, B, C], name='p')
+    # p = Process(pathway=[A, B, C], name='p')
     # s = system(processes=[p], name='s')
     #
     # sched = Scheduler(system=s)
@@ -312,7 +307,7 @@ def scheduler():
     # print(output)
 
     # alternate basic phasing in a linear process
-    # p = process(pathway=[A, B], name='p')
+    # p = Process(pathway=[A, B], name='p')
     # s = system(processes=[p], name='s')
     #
     # sched = Scheduler(system=s)
@@ -327,7 +322,7 @@ def scheduler():
     # A = TransferMechanism(function=Linear(), name='A')
     # B = TransferMechanism(function=Linear(), name='B')
     #
-    # p = process(
+    # p = Process(
     #     pathway=[A, B],
     #     name='p',
     # )
@@ -347,8 +342,8 @@ def scheduler():
     # print(output)
 
     # basic phasing in two processes
-    p = process(pathway=[A, C], name='p')
-    q = process(pathway=[B, C], name='q')
+    p = Process(pathway=[A, C], name='p')
+    q = Process(pathway=[B, C], name='q')
     s = system(processes=[p, q], name='s')
 
     sched = Scheduler(system=s)

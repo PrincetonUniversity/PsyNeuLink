@@ -1378,7 +1378,7 @@ class TestCallBeforeAfterTimescale:
     #         num_trials=10
     #     )
     #
-    #     # p = process(
+    #     # p = Process(
     #     #     default_variable=[0, 0],
     #     #     pathway=[
     #     #         Input_Layer,

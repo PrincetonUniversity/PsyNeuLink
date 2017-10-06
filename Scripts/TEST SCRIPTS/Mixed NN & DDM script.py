@@ -1,6 +1,6 @@
 from psyneulink.components.functions.function import *
 from psyneulink.components.mechanisms.processing.transfermechanism import *
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.globals.run import run
 from psyneulink.library.mechanisms.processing.integrator.ddm import *
 
@@ -23,7 +23,7 @@ myDDM = DDM(name='My_DDM',
                                 threshold=1,
                                 starting_point=0.0))
 
-myProcess = process(name='Neural Network DDM Process',
+myProcess = Process(name='Neural Network DDM Process',
                     default_variable=[0, 0],
                     pathway=[myInputLayer,
                              random_matrix,

@@ -59,7 +59,7 @@ Projections between Mechanisms can be trained by `specifying them for learning
 Creating a Process
 ------------------
 
-A Process is created by calling the `process` command. The Mechanisms to be included are specified in a list in its
+A Process is created by instantiating the `Process` class. The Mechanisms to be included are specified in a list in its
 **pathway** argument, in the order in which they should be executed by the Process.  The Mechanism entries can be
 separated by `Projections <Projection>` used to connect them.  If no arguments are provided to the **pathway** argument,
 a Process with a single `default_mechanism <Mechanism_Base.default_mechanism>` is created.
@@ -100,8 +100,8 @@ Specifying the Components of a pathway is described in detail below.
 Mechanisms
 ~~~~~~~~~~
 
-The `Mechanisms <Mechanism>` of a Process must be listed explicitly in the **pathway** argument of the `process`
-command, in the order they are to be executed when the Process (or any System to which it belongs) is `executed
+The `Mechanisms <Mechanism>` of a Process must be listed explicitly in the **pathway** argument of the `Process`
+class, in the order they are to be executed when the Process (or any System to which it belongs) is `executed
 <Process_Execution>`.  The first Mechanism in a Process is designated as its `ORIGIN` Mechanism, and is assigned to its
 `origin_mechanism <Process.origin_mechanism>` attribute; it receives as its input any `input
 <Process_Input_And_Output>` provided to the Process' `execute <Process.execute>` or `run <Process.run>`
@@ -126,7 +126,7 @@ are designated as `INTERNAL`.
 
 .. _Process_Mechanism_Specification:
 
-Mechanisms can be specified in the **pathway** argument of the `process` command in one of two ways:
+Mechanisms can be specified in the **pathway** argument of the `Process` class in one of two ways:
 
     * **Directly** -- using any of the ways used to `specify a Mechanism <Mechanism_Creation>`.
     ..
@@ -370,12 +370,12 @@ instance, the second as a default instance of a Mechanism type, and the third in
     mechanism_1 = TransferMechanism()
     mechanism_2 = DDM()
     some_params = {PARAMETER_STATE_PARAMS:{THRESHOLD:2,NOISE:0.1}}
-    my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, my_params)])
+    my_process = Process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, my_params)])
 
 *Default Projection specification:*  The `pathway` for this Process uses default Projection specifications; as a
 result, a `MappingProjection` is automatically instantiated between each of the Mechanisms listed::
 
-    my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
+    my_process = Process(pathway=[mechanism_1, mechanism_2, mechanism_3])
 
 
 *Inline Projection specification using an existing Projection:*  In this `pathway <Process.pathway>`,
@@ -383,19 +383,19 @@ result, a `MappingProjection` is automatically instantiated between each of the 
 created between ``mechanism_2`` and ``mechanism_3``::
 
     projection_A = MappingProjection()
-    my_process = process(pathway=[mechanism_1, projection_A, mechanism_2, mechanism_3])
+    my_process = Process(pathway=[mechanism_1, projection_A, mechanism_2, mechanism_3])
 
 *Inline Projection specification using a keyword:*  In this `pathway <Process.pathway>`, a
 `RANDOM_CONNECTIVITY_MATRIX` is used to specify the Projection between the first and second Mechanisms::
 
-    my_process = process(pathway=[mechanism_1, RANDOM_CONNECTIVITY_MATRIX, mechanism_2, mechanism_3])
+    my_process = Process(pathway=[mechanism_1, RANDOM_CONNECTIVITY_MATRIX, mechanism_2, mechanism_3])
 
 *Stand-alone Projection specification:*  In this `pathway <Process.pathway>`, ``projection_A`` is explicitly
 specified as a Projection between ``mechanism_1`` and ``mechanism_2``, and so is used as the Projection between them
 in ``my_process``; a default Projection is created between ``mechanism_2`` and ``mechanism_3``::
 
     projection_A = MappingProjection(sender=mechanism_1, receiver=mechanism_2)
-    my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
+    my_process = Process(pathway=[mechanism_1, mechanism_2, mechanism_3])
 
 *Process that implements learning:*  This `pathway <Process.pathway>` implements a series of Mechanisms with
 Projections between them, all of which will be learned using `BackPropagation` (the default learning algorithm).
@@ -404,7 +404,7 @@ Note that it uses the `Logistic` function, which is compatible with BackPropagat
     mechanism_1 = TransferMechanism(function=Logistic)
     mechanism_2 = TransferMechanism(function=Logistic)
     mechanism_3 = TransferMechanism(function=Logistic)
-    my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
+    my_process = Process(pathway=[mechanism_1, mechanism_2, mechanism_3],
                          learning=ENABLED,
                          target=[0])
 
@@ -417,7 +417,7 @@ Mechanisms assigned to ``mechanism_2`` and ``mechanism_4`` (that will be listed 
     mechanism_2 = TransferMechanism(function=Logistic)
     mechanism_3 = TransferMechanism(function=Logistic)
     mechanism_4 = TransferMechanism(function=Logistic)
-    my_process = process(pathway=[mechanism_1,
+    my_process = Process(pathway=[mechanism_1,
                                   MappingProjection(matrix=(RANDOM_CONNECTIVITY_MATRIX, LEARNING),
                                   mechanism_2,
                                   mechanism_3,
@@ -445,6 +445,7 @@ import inspect
 import numbers
 import re
 import warnings
+
 from collections import UserList, namedtuple
 
 import numpy as np
@@ -492,177 +493,6 @@ class ProcessError(Exception):
          return repr(self.error_value)
 
 
-# Process factory method:
-@tc.typecheck
-def process(process_spec=None,
-            default_variable=None,
-            size=None,
-            pathway=None,
-            initial_values:dict={},
-            clamp_input:tc.optional(tc.enum(SOFT_CLAMP, HARD_CLAMP))=None,
-            default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
-            learning:tc.optional(_is_learning_spec)=None,
-            learning_rate:tc.optional(parameter_spec)=None,
-            target=None,
-            params=None,
-            name=None,
-            prefs:is_pref_set=None,
-            context=None):
-
-    """
-    process(                                                \
-    process_spec=None,                                      \
-    default_variable=None,                               \
-    pathway=None,                                           \
-    initial_values=None,                                    \
-    clamp_input=None,                                       \
-    default_projection_matrix=None,                         \
-    learning=None,                                          \
-    learning_rate=None                                      \
-    target=None,                                            \
-    params=None,                                            \
-    name=None,                                              \
-    prefs=None)
-
-    Factory method for Process: returns an instance of Process.  If called with no arguments, returns an instance of
-    Process with a single `default_mechanism <Mechanism_Base.default_mechanism>`.  See `Process` for class description.
-
-    Arguments
-    ---------
-
-    process_spec : Optional[str or Dict[param keyword, param value]] : default Process with a single default_mechanism
-        specifies the Process to create.
-        If it is `None`, returns a Process with a single `default_mechanism <Mechanism_Base.default_mechanism>`;
-        if it is a string, uses it as the name for the Process;
-        if it is a dictionary, the key for each entry must be an argument name, and its value the value to assign to
-        the corresponding parameter (these will be used to instantiate the Process, and will override any values
-        assigned directly to the arguments of the `process` command. If a name is not specified, the nth instance
-        created will be named by using the Process' `componentType <Process.componentType>` attribute as the
-        base and adding an indexed suffix: ``componentType-n``.
-
-    default_variable : Optional[List[values] or ndarray] :  default value of default_variable for origin_mechanism
-        specifies the `input <Process_Input_And_Output>` to the Process if none is provided in a call to its `execute
-        <Process.execute>` or `run <Process.run>` methods. This must be the same length as the `variable
-        <Mechanism_Base.variable>` of the `origin_mechanism <Process.origin_mechanism>`.
-
-    pathway : Optional[List[ProcessingMechanism spec[, MappingProjection spec], ProcessingMechanism spec...]] : \
-    default List[default_mechanism]
-        specifies the set of `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`
-        between them to execute when the Process is executed.  ProcessingMechanisms can be specified using any
-        of the ways used to `specify a Mechanism <Mechanism_Creation>`, or a using a `MechanismTuple
-        <Process_Mechanism_Specification>` to include `runtime parameters <Mechanism_Runtime_Parameters>`.
-        MappingProjections can be specified using any of the ways to `specify a Projection
-        <Projection_In_Context_Specification>`, or using a `tuple <Process_Projections>` to `specify it for learning
-        <Process_Learning_Sequence>`.
-
-    initial_values : Optional[Dict[ProcessingMechanism, param value]] : default None
-        specifies the values used to initialize `ProcessingMechanisms <ProcessingMechanism>` designated as
-        `INITIALIZE_CYCLE` whenever the Process' `initialize <Process.initialize>` method is called. The key for
-        each entry must be a ProcessingMechanism `designated <Process_Mechanism_Initialize_Cycle>` `INITIALIZE_CYCLE`,
-        and the value must be a number, list or np.array that is compatible with the format of the ProcessingMechanism's
-        `value <Mechanism_Base.value>` attribute. ProcessingMechanisms designated as `INITIALIZE_CYCLE` but not
-        specified in **initial_values** are initialized with the value of their `default <Mechanism_Base.variable>`
-        attribute (the default input for that Mechanism).
-
-    clamp_input : Optional[keyword] : default None
-        specifies whether the Process' `input <Process.input>` continues to be applied to the `origin_mechanism
-        <Process.origin_mechanism>` after its initial execution. The following keywords can be used:
-
-            * `None`: `input <Process.input>` is used only for the first execution of the `origin_mechanism
-              <Process.origin_mechanism>` in a `PASS` of executions.
-
-            * SOFT_CLAMP: combines the `input <Process.input>` with input from any other Projections to the
-              `origin_mechanism <Process.origin_mechanism>` every time it is executed in a `PASS` of executions.
-
-            * HARD_CLAMP: applies `input <Process.input>` in place of any other sources of input to the
-              `origin_mechanism <Process.origin_mechanism>` every time it is executed in a `PASS` of executions.
-
-    default_projection_matrix : Optional[keyword, list or ndarray] : default DEFAULT_PROJECTION_MATRIX,
-        specifies the type of matrix used for default projections (see `matrix <MappingProjection.matrix>` parameter for
-        `MappingProjection`).
-
-    learning : Optional[learning specification] : default None
-        `specifies learning <Process_Learning_Sequence>` for all eligible Projections in the Process.
-
-        .. note::  If an existing `LearningProjection` or `LearningSignal` or a call to their constructor is used for
-                   the specification, the object itself is **not** be used. Rather it is used as a template (including
-                   any parameters that are specified) to create the corresponding Component and any other `learning
-                   Components <Process_Learning_Components>` needed to implement learning for all of the
-                   `MappingProjections <MappingProjection>` in the Process.
-
-    learning_rate : Optional[float] : default None
-        specifies the `learning_rate <LearningMechanism.learning_rate>` for all `LearningMechanism <LearningMechanism>`
-        associated with the Process (see Process' `learning_rate <Process.learning_rate>` attribute for
-        additional information).
-
-    target : Optional[List or ndarray] : default ndarray of zeroes
-        each item specifies the value of the *TARGET* `InputState <ComparatorMechanism_Structure>` for the
-        `TARGET` `ComparatorMechanism` corresponding to a `learning sequence <Process_Learning_Sequence>`
-        specified for the Process.  Each item must be the same length as the `value <OutputState.value>` of the
-        `OutputState specified for learning <LearningMechanism_Activation_Output>` of the last ProcessingMechanism
-        in the corresponding learning sequence (see `Process_Learning_Sequence` for additional detais).
-
-    params : Optional[Dict[param keyword, param value]
-        a `parameter dictionary <ParameterState_Specification>` that can include any of the parameters above;
-        the parameter's name is used as the keyword for its entry. Values specified for parameters in the dictionary
-        override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default Process-<index>
-        a string used for the name of the Process
-        (see Registry module for conventions used in naming, including for default and duplicate names)
-
-    prefs : PreferenceSet or specification dict : Process.classPreferences
-        the `PreferenceSet` for Process (see ComponentPreferenceSet module for specification of PreferenceSet)
-
-    COMMENT:
-    context : str : default ''None''
-           string used for contextualization of instantiation, hierarchical calls, executions, etc.
-    COMMENT
-
-    Returns
-    -------
-    instance of Process : Process
-
-    """
-
-    # MODIFIED 9/20/16 NEW:  REPLACED IN ARG ABOVE WITH None
-    pathway = pathway or [Mechanism_Base.default_mechanism]
-    # MODIFIED 9/20/16 END
-
-    # # Called with a keyword
-    # if process_spec in ProcessRegistry:
-    #     return ProcessRegistry[process_spec].processSubclass(params=params, context=context)
-    #
-    # Called with a string that is not in the Registry, so return default type with the name specified by the string
-    if isinstance(process_spec, str):
-        return Process(name=process_spec, params=params, context=context)
-
-    # Called with Process specification dict (with type and params as entries within it), so:
-    #    - return a Process instantiated using args passed in process_spec
-    elif isinstance(process_spec, dict):
-        return Process(context=context, **process_spec)
-
-    # Called without a specification, so return Process with default Mechanism
-    elif process_spec is None:
-        return Process(default_variable=default_variable,
-                       size=size,
-                       pathway=pathway,
-                       initial_values=initial_values,
-                       clamp_input=clamp_input,
-                       default_projection_matrix=default_projection_matrix,
-                       learning=learning,
-                       learning_rate=learning_rate,
-                       target=target,
-                       params=params,
-                       name=name,
-                       prefs=prefs,
-                       context=context)
-
-    # Can't be anything else, so return empty
-    else:
-        return None
-
-
 kwProcessInputState = 'ProcessInputState'
 kwTarget = 'target'
 from psyneulink.components.states.outputstate import OutputState
@@ -688,10 +518,6 @@ class Process(Process_Base):
     context=None)
 
     Base class for Process.
-
-    .. note::
-       Process is an abstract class and should NEVER be instantiated by a direct call to its constructor.
-       It should be instantiated using the :class:`process` factory method (see it for description of parameters).
 
     COMMENT:
         Description

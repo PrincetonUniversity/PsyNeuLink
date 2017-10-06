@@ -429,10 +429,12 @@ import math
 import numbers
 import re
 import warnings
+
 from collections import OrderedDict
 
 import numpy as np
 import typecheck as tc
+
 from toposort import toposort, toposort_flatten
 
 from psyneulink.components.component import Component, ExecutionStatus, InitStatus, function_type
@@ -440,7 +442,7 @@ from psyneulink.components.mechanisms.adaptive.control.controlmechanism import C
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 from psyneulink.components.mechanisms.mechanism import MechanismList, MonitoredOutputStatesOption
 from psyneulink.components.mechanisms.processing.objectivemechanism import MonitoredOutputStateTuple, OUTPUT_STATE_INDEX, ObjectiveMechanism
-from psyneulink.components.process import ProcessList, ProcessTuple, Process
+from psyneulink.components.process import Process, ProcessList, ProcessTuple
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CONTROL_SIGNAL_SPECS, CYCLE, EVC_SIMULATION, EXECUTING, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -495,7 +497,7 @@ class SystemError(Exception):
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
 
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 
 # System factory method:
 @tc.typecheck
@@ -621,7 +623,7 @@ def system(default_variable=None,
 
     # Called with descriptor keyword
     if not processes:
-        processes = [process()]
+        processes = [Process()]
 
     return System(default_variable=default_variable,
                   size=size,

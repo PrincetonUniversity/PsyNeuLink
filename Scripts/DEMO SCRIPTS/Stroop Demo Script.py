@@ -1,7 +1,7 @@
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 
 from psyneulink.components.mechanisms.processing.transfermechanism import *
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.system import system
 from psyneulink.library.mechanisms.adaptive import EVCControlMechanism
@@ -29,17 +29,17 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0),
 Reward = TransferMechanism(name='Reward')
 
 # Processes:
-ColorNamingProcess = process(
+ColorNamingProcess = Process(
     default_variable=[0],
     pathway=[Color_Input, Color_Hidden, Output, Decision],
     name = 'Color Naming Process')
 
-WordReadingProcess = process(
+WordReadingProcess = Process(
     default_variable=[0],
     pathway=[Word_Input, Word_Hidden, Output, Decision],
     name = 'Word Reading Process')
 
-RewardProcess = process(
+RewardProcess = Process(
     default_variable=[0],
     pathway=[(Reward, 1)],
     name = 'RewardProcess')

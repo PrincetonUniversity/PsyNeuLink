@@ -3,7 +3,7 @@ import numpy as np
 from psyneulink.components.functions.function import ConstantIntegrator, Logistic
 from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.system import system
 from psyneulink.globals.keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZER, LEARNING, RATE, SOFT_CLAMP, VALUE
@@ -86,7 +86,7 @@ def test_gating():
         matrix=Output_Weights_matrix
     )
 
-    z = process(
+    z = Process(
         # default_variable=[0, 0],
         size=2,
         pathway=[
@@ -116,7 +116,7 @@ def test_gating():
         }
     )
 
-    g = process(
+    g = Process(
         default_variable=[1.0],
         pathway=[Gating_Mechanism]
     )

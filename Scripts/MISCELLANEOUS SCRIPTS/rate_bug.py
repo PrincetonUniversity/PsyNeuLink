@@ -1,7 +1,7 @@
 from pprint import pprint
 
-from psyneulink.components.functions.function import Integrator, BogaczEtAl
-from psyneulink.components.process import process
+from psyneulink.components.functions.function import BogaczEtAl, Integrator
+from psyneulink.components.process import Process
 from psyneulink.library.mechanisms.processing.integrator import ddm
 
 
@@ -17,7 +17,7 @@ def test_DDM_rate_int():
                                   ),
             time_scale=TimeScale.TIME_STEP
            )
-    P = process(pathway=[D])
+    P = Process(pathway=[D])
     # val = float(D.execute(stim)[0])
     print('BEFORE EXECUTION ')
     pprint(D.function_object.__dict__)
@@ -40,7 +40,7 @@ def test_DDM_rate_list_len_1():
         ),
         time_scale=TimeScale.TIME_STEP
     )
-    P_2 = process(pathway=[D_2])
+    P_2 = Process(pathway=[D_2])
     # val = float(D_2.execute(stim)[0])
     print('BEFORE EXECUTION ')
     pprint(D_2.function_object.__dict__)
@@ -56,7 +56,7 @@ def test_DDM_rate_int_bog():
             name='DDM',
             function = BogaczEtAl(drift_rate=5)
            )
-    P_bog = process(pathway=[D_bog])
+    P_bog = Process(pathway=[D_bog])
     # val = float(D.execute(stim)[0])
     print('BEFORE EXECUTION ')
     pprint(D_bog.function_object.__dict__)
@@ -73,7 +73,7 @@ def test_DDM_rate_list_len_1_bog():
         name='DDM',
         function=BogaczEtAl(drift_rate=[5, 5])
     )
-    P_2_bog = process(pathway=[D_2_bog])
+    P_2_bog = Process(pathway=[D_2_bog])
     # val = float(D_2_bog.execute(stim)[0])
     print('BEFORE EXECUTION ')
     pprint(D_2_bog.function_object.__dict__)
