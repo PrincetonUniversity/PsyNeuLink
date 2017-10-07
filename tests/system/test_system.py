@@ -4,7 +4,7 @@ from psyneulink.components.functions.function import BogaczEtAl, Linear, Logisti
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES
 from psyneulink.globals.keywords import CYCLE, INITIALIZE_CYCLE, INTERNAL, ORIGIN, TERMINAL
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
@@ -94,7 +94,7 @@ def test_danglingControlledMech():
     )
 
     # System:
-    mySystem = system(
+    mySystem = System(
         processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
         controller=EVCControlMechanism,
         enable_controller=True,
@@ -116,7 +116,7 @@ class TestGraphAndInput:
         p1 = Process(pathway=[a, b, c], name='p1')
         p2 = Process(pathway=[a, b, d], name='p2')
 
-        s = system(
+        s = System(
             processes=[p1, p2],
             name='Branch System',
             initial_values={a: [1, 1]},
@@ -142,7 +142,7 @@ class TestGraphAndInput:
         p1 = Process(pathway=[a, b, c, d], name='p1')
         p2 = Process(pathway=[a, b, d], name='p2')
 
-        s = system(
+        s = System(
             processes=[p1, p2],
             name='Bypass System',
             initial_values={a: [1, 1]},
@@ -169,7 +169,7 @@ class TestGraphAndInput:
         p1 = Process(pathway=[a, b, c], name='p1')
         p2 = Process(pathway=[c, d, e], name='p2')
 
-        s = system(
+        s = System(
             processes=[p1, p2],
             name='Chain System',
             initial_values={a: [1, 1, 1]},
@@ -198,7 +198,7 @@ class TestGraphAndInput:
         p1 = Process(pathway=[a, b, e], name='p1')
         p2 = Process(pathway=[c, d, e], name='p2')
 
-        s = system(
+        s = System(
             processes=[p1, p2],
             name='Convergent System',
             initial_values={a: [1, 1]},
@@ -222,7 +222,7 @@ class TestGraphAndInput:
 
         p1 = Process(pathway=[a, b, a], name='p1')
 
-        s = system(
+        s = System(
             processes=[p1],
             name='Cyclic System with one Process',
             initial_values={a: [1, 1]},
@@ -245,7 +245,7 @@ class TestGraphAndInput:
         p1 = Process(pathway=[a, b, a], name='p1')
         p2 = Process(pathway=[a, c, a], name='p2')
 
-        s = system(
+        s = System(
             processes=[p1, p2],
             name='Cyclic System with two Processes',
             initial_values={a: [1, 1]},
@@ -272,7 +272,7 @@ class TestGraphAndInput:
         p1 = Process(pathway=[a, b, c, d], name='p1')
         p2 = Process(pathway=[e, c, f, b, d], name='p2')
 
-        s = system(
+        s = System(
             processes=[p1, p2],
             name='Cyclic System with Extended Loop',
             initial_values={a: [1, 1]},

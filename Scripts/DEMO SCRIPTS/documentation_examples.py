@@ -20,7 +20,7 @@ from psyneulink.components.process import PARAMETER_STATE_PARAMS, RANDOM_CONNECT
 from psyneulink.components.projections.pathway.mappingprojection \
     import MappingProjection
 from psyneulink.components.states.modulatorysignals import controlsignal
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import CALCULATE, ENABLED, GAIN, GATE, INDEX, INTERCEPT, MECHANISM, MODULATION, NAME
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, NOISE, THRESHOLD, TimeScale
 from psyneulink.scheduling.scheduler import Scheduler
@@ -77,7 +77,7 @@ def intro():
     words_process = Process(
         pathway=[words_input_layer, differencing_weights, output_layer])
     decision_process = Process(pathway=[output_layer, decision_mech])
-    my_simple_Stroop = system(
+    my_simple_Stroop = System(
         processes=[colors_process, words_process, decision_process])
 
     my_simple_Stroop.show_graph(output_fmt='pdf')
@@ -258,7 +258,7 @@ def states():
     process_a = Process(pathway=[my_mech_A])
     process_b = Process(pathway=[my_mech_B])
 
-    my_system = system(processes=[process_a, process_b],
+    my_system = System(processes=[process_a, process_b],
                        monitor_for_control=[my_mech_A.output_states[RESULT],
                                             my_mech_B.output_states[MEAN]],
                        control_signals=[(GAIN, my_mech_A), {NAME: INTERCEPT,
@@ -297,7 +297,7 @@ def scheduler():
     C = TransferMechanism(function=Linear(), name='C')
 
     # p = Process(pathway=[A, B, C], name='p')
-    # s = system(processes=[p], name='s')
+    # s = System(processes=[p], name='s')
     #
     # sched = Scheduler(system=s)
     # sched.add_condition(B, EveryNCalls(A, 2))
@@ -308,7 +308,7 @@ def scheduler():
 
     # alternate basic phasing in a linear process
     # p = Process(pathway=[A, B], name='p')
-    # s = system(processes=[p], name='s')
+    # s = System(processes=[p], name='s')
     #
     # sched = Scheduler(system=s)
     # sched.add_condition(A, Any(AtPass(0), EveryNCalls(B, 2)))
@@ -326,7 +326,7 @@ def scheduler():
     #     pathway=[A, B],
     #     name='p',
     # )
-    # s = system(
+    # s = System(
     #     processes=[p],
     #     name='s',
     # )
@@ -344,7 +344,7 @@ def scheduler():
     # basic phasing in two processes
     p = Process(pathway=[A, C], name='p')
     q = Process(pathway=[B, C], name='q')
-    s = system(processes=[p, q], name='s')
+    s = System(processes=[p, q], name='s')
 
     sched = Scheduler(system=s)
     sched.add_condition(A, EveryNPasses(1))

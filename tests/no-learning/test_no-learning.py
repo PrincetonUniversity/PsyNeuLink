@@ -6,7 +6,7 @@ from psyneulink.components.functions.function import Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import SOFT_CLAMP
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 
@@ -80,7 +80,7 @@ class TestNoLearning:
             }
         )
 
-        s = system(processes=[p])
+        s = System(processes=[p])
 
         s.reportOutputPref = True
 

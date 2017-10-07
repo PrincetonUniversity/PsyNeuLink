@@ -43,8 +43,8 @@ class ScratchPadError(Exception):
 # # my_process = Process(pathway=[input_layer, hidden_layer, output_layer], target=[0,0,0,0,0], learning=LEARNING)
 # my_process = Process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
 #
-# # my_system = system(processes=[my_process], targets=[0,0,0,0,0])
-# my_system = system(processes=[my_process])
+# # my_system = System(processes=[my_process], targets=[0,0,0,0,0])
+# my_system = System(processes=[my_process])
 # # my_system.show_graph(show_learning=True, direction='TB')
 # my_system.show_graph(show_control=True, direction='TB')
 # # MappingProjection(sender=output_layer,
@@ -73,7 +73,7 @@ class ScratchPadError(Exception):
 # colors_process = Process(pathway=[colors_input_layer, FULL_CONNECTIVITY_MATRIX, output_layer], name='COLOR PROCESS')
 # words_process = Process(pathway=[words_input_layer, FULL_CONNECTIVITY_MATRIX, output_layer], name='WORD PROCESS')
 # decision_process = Process(pathway=[output_layer, FULL_CONNECTIVITY_MATRIX, decision_mech], name='DECISION_PROCESS')
-# my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
+# my_simple_Stroop = System(processes=[colors_process, words_process, decision_process])
 #
 
 # VERSION 2:
@@ -90,7 +90,7 @@ class ScratchPadError(Exception):
 #                         name='WORD PROCESS')
 # decision_process = Process(pathway=[output_layer, decision_mech],
 #                            name='DECISION PROCESS')
-# my_simple_Stroop = system(processes=[colors_process, words_process],
+# my_simple_Stroop = System(processes=[colors_process, words_process],
 #                           targets=[0])
 #
 # my_simple_Stroop.show_graph(direction='LR')
@@ -148,13 +148,13 @@ class ScratchPadError(Exception):
 # my_process = Process()
 # print(my_process.name)
 
-# my_sys = system()
+# my_sys = System()
 # print(my_sys.name)
-# my_sys = system()
+# my_sys = System()
 # print(my_sys.name)
-# my_sys = system()
+# my_sys = System()
 # print(my_sys.name)
-# my_sys = system()
+# my_sys = System()
 # print(my_sys.name)
 
 # my_sys = System()
@@ -385,7 +385,7 @@ class ScratchPadError(Exception):
 #
 # Process_A = Process(pathway=[My_Mech_A])
 # Process_B = Process(pathway=[My_Mech_B])
-# My_System = system(processes=[Process_A, Process_B])
+# My_System = System(processes=[Process_A, Process_B])
 #
 # My_EVC_Mechanism = EVCControlMechanism(system=My_System,
 #                                 monitor_for_control=[My_Mech_A.output_states[RESULT],
@@ -403,7 +403,7 @@ class ScratchPadError(Exception):
 # Process_A = Process(pathway=[My_Mech_A])
 # Process_B = Process(pathway=[My_Mech_B])
 #
-# My_System = system(processes=[Process_A, Process_B],
+# My_System = System(processes=[Process_A, Process_B],
 #                                 monitor_for_control=[My_Mech_A.output_states[RESULT],
 #                                                      My_Mech_B.output_states[MEAN]],
 #                                 control_signals=[(GAIN, My_Mech_A),
@@ -655,7 +655,7 @@ class ScratchPadError(Exception):
 # p1 = Process(pathway=[a, b, c], name='p1')
 # p2 = Process(pathway=[a, b, d], name='p2')
 #
-# s = system(
+# s = System(
 #     processes=[p1, p2],
 #     name='Branch System',
 #     initial_values={a: [1, 1]},
@@ -684,7 +684,7 @@ class ScratchPadError(Exception):
 #              # learning=LEARNING,
 #              name='p1')
 #
-# # s = system(
+# # s = System(
 # #     processes=[p1],
 # #     name='Double Learning System',
 # #     # initial_values={a: [1, 1]},
@@ -764,7 +764,7 @@ class ScratchPadError(Exception):
 #     name = 'RewardProcess')
 #
 # # System:
-# mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
+# mySystem = System(processes=[TaskExecutionProcess, RewardProcess],
 #                   controller=EVCControlMechanism(objective_mechanism=ObjectiveMechanism(monitored_output_states=[
 #                                                      Reward,
 #                                                      Decision.output_states[Decision.PROBABILITY_UPPER_THRESHOLD],
@@ -798,7 +798,7 @@ class ScratchPadError(Exception):
 
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 # from PsyNeuLink.Components.Process import Process
-# from PsyNeuLink.Components.System import system
+# from PsyNeuLink.Components.System import System
 #
 #
 # # UNEQUAL INPUT LENGTHS:
@@ -819,7 +819,7 @@ class ScratchPadError(Exception):
 # p1 = Process(pathway=[a, c], name='p1')
 # p2 = Process(pathway=[b, c], name='p2')
 #
-# s = system(processes=[p1, p2],
+# s = System(processes=[p1, p2],
 #            name='Convergent System')
 #
 # def show_trial_header():
@@ -836,7 +836,7 @@ class ScratchPadError(Exception):
 
 #region TEST INSTANTATION OF Cyclic and Acyclic Systems @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from PsyNeuLink.Components.System import system
+# from PsyNeuLink.Components.System import System
 # from PsyNeuLink.Components.Process import Process
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Process import MappingProjection
@@ -853,7 +853,7 @@ class ScratchPadError(Exception):
 # p1 = Process(pathway=[a, b, c, d], name='p1')
 # p2 = Process(pathway=[e, b, c, d], name='p2')
 #
-# a = system(processes=[p1, p2], name='systsem')
+# a = System(processes=[p1, p2], name='systsem')
 #
 # a.show()
 #
@@ -1037,7 +1037,7 @@ import numpy as np
 
 from psyneulink.components.functions.function import Logistic
 from psyneulink.components.process import Process
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import LEARNING
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism \
     import RecurrentTransferMechanism
@@ -1105,7 +1105,7 @@ for i in range(4):
 #
 # # print(my_process.run(inputs=input_list, targets=target_list, num_trials=5))
 #
-# my_system = system(processes=[my_process],
+# my_system = System(processes=[my_process],
 #                    targets=[0,0,0])
 #
 # print(my_system.run(inputs=input_list,
@@ -1115,7 +1115,7 @@ for i in range(4):
 # region TEST LCA @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA import LCA, LCA_OUTPUT
-# from PsyNeuLink.Components.System import system
+# from PsyNeuLink.Components.System import System
 # from PsyNeuLink.Components.Process import Process
 # from PsyNeuLink.Globals.Keywords import LEARNING
 #
@@ -1162,7 +1162,7 @@ for i in range(4):
 #
 # # print(my_process.run(inputs=input_list, targets=target_list, num_trials=5))
 #
-# my_system = system(processes=[my_process],
+# my_system = System(processes=[my_process],
 #                    targets=[0,0,0])
 #
 # print(my_system.run(inputs=input_list,
@@ -1549,7 +1549,7 @@ for i in range(4):
 #         self.tuples_list = [('mech 1', 1), ('mech 2', 2)]
 #         self.mech_list = mech_list(self)
 #
-# x = system()
+# x = System()
 # print (x.mech_list[1])
 #
 #endregion

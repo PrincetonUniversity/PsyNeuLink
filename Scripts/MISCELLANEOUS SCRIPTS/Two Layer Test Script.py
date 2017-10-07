@@ -1,7 +1,7 @@
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 
@@ -74,7 +74,7 @@ if COMPOSITION is PROCESS:
 
 elif COMPOSITION is SYSTEM:
     # SYSTEM VERSION:
-    x = system(processes=[my_process],
+    x = System(processes=[my_process],
                targets=[0],
                learning_rate=0.1)
 

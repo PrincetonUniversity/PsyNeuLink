@@ -2,7 +2,7 @@
 
 from psyneulink.components.mechanisms.processing.transfermechanism import *
 from psyneulink.components.process import Process
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import *
 from psyneulink.library.mechanisms.adaptive import EVCControlMechanism
 
@@ -41,7 +41,7 @@ WordReadingProcess = Process(
 
 
 # System:
-mySystem = system(processes=[ColorNamingProcess, WordReadingProcess],
+mySystem = System(processes=[ColorNamingProcess, WordReadingProcess],
                   controller=EVCControlMechanism,
                   enable_controller=True,
                   monitor_for_control=[Output],

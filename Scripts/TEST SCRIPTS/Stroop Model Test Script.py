@@ -41,7 +41,7 @@ word_reading_process = Process(
     prefs=process_prefs
 )
 
-mySystem = system(processes=[color_naming_process, word_reading_process],
+mySystem = System(processes=[color_naming_process, word_reading_process],
                   name='Stroop Model',
                   targets=[0,0],
                   prefs=system_prefs,

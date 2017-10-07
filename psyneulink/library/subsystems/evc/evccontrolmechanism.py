@@ -293,7 +293,7 @@ Example
 
 The following example implements a System with an EVCControlMechanism (and two processes not shown)::
 
-    mySystem = system(processes=[myRewardProcess, myDecisionProcess],
+    mySystem = System(processes=[myRewardProcess, myDecisionProcess],
                       controller=EVCControlMechanism,
                       monitor_for_control=[Reward, DDM_DECISION_VARIABLE,(RESPONSE_TIME, 1, -1)],
 

@@ -5,7 +5,7 @@ from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import Gat
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZER, LEARNING, RATE, SOFT_CLAMP, VALUE
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.scheduling.timescale import CentralClock
@@ -145,7 +145,7 @@ def test_gating():
         print('- Middle 2: \n', Hidden_Layer_2.value)
         print('- Output:\n', Output_Layer.value)
 
-    s = system(
+    s = System(
         processes=[z, g],
         targets=[0, 0, 1],
         learning_rate=1.0

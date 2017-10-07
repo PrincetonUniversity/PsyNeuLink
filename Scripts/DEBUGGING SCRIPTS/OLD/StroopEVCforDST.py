@@ -31,8 +31,8 @@ word_process = Process(pathway=[word_input_linear_transfer_mechanism, word_logis
 #added to try to get control?
 Reward = TransferMechanism(name='Reward')
 RewardProcess = Process(default_variable=[1], pathway=[(Reward, 1)], name = 'RewardProcess')
-#mySystem = system(processes = [color_process, word_process])
-mySystem = system(processes = [color_process, word_process, RewardProcess], controller = EVCControlMechanism, enable_controller = True, monitor_for_control=[Reward, (DDM_DECISION_VARIABLE,1,1), (DDM_RESPONSE_TIME, -1, 1)], name='Stroop Model') #output, difference between color / word unit activation  #output_values attribute?
+#mySystem = System(processes = [color_process, word_process])
+mySystem = System(processes = [color_process, word_process, RewardProcess], controller = EVCControlMechanism, enable_controller = True, monitor_for_control=[Reward, (DDM_DECISION_VARIABLE,1,1), (DDM_RESPONSE_TIME, -1, 1)], name='Stroop Model') #output, difference between color / word unit activation  #output_values attribute?
 mySystem.execute(input=[[1],[-1],[1]])
 
 mySystem.controller.show()

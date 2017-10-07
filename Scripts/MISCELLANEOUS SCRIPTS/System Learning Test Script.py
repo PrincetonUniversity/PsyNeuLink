@@ -75,7 +75,7 @@ p = Process(default_variable=[0, 0],
             prefs={VERBOSE_PREF: False,
                    REPORT_OUTPUT_PREF: True})
 
-s = system(processes=[p],
+s = System(processes=[p],
            # controller=EVCControlMechanism,
            # enable_controller=True,
            # monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],

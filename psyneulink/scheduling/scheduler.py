@@ -197,7 +197,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
         pathway=[A, B, C],
         name = 'p'
     )
-    s = system(
+    s = System(
         processes=[p],
         name='s'
     )
@@ -221,7 +221,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
         pathway=[A, B],
         name = 'p'
     )
-    s = system(
+    s = System(
         processes=[p],
         name='s'
     )
@@ -250,7 +250,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
         pathway=[B, C],
         name = 'q'
     )
-    s = system(
+    s = System(
         processes=[p, q],
         name='s'
     )

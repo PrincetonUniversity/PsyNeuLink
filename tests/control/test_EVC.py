@@ -5,7 +5,7 @@ from psyneulink.components.functions.function import BogaczEtAl, DRIFT_RATE, Exp
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, MEAN, RESULT, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpReportOutputPref, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -83,7 +83,7 @@ def test_EVC():
     )
 
     # System:
-    mySystem = system(
+    mySystem = System(
         processes=[TaskExecutionProcess, RewardProcess],
         controller=EVCControlMechanism,
         enable_controller=True,
@@ -321,7 +321,7 @@ def test_EVC_gratton():
     )
 
     # System:
-    mySystem = system(
+    mySystem = System(
         processes=[
             TargetControlProcess,
             FlankerControlProcess,
@@ -519,7 +519,7 @@ def test_laming_validation_specify_control_signals():
     )
 
     # System:
-    mySystem = system(
+    mySystem = System(
         processes=[TaskExecutionProcess, RewardProcess],
         controller=EVCControlMechanism,
         enable_controller=True,

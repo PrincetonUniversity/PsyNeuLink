@@ -6,7 +6,7 @@
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 
 #The following code starts to build a 3 layer neural network
 
@@ -60,7 +60,7 @@ input_direct_to_output_process = Process(default_variable=[0, 0],
                                                  REPORT_OUTPUT_PREF: False})
 
 
-three_layer_net = system(processes=[input_via_hidden_process,
+three_layer_net = System(processes=[input_via_hidden_process,
                                     input_direct_to_output_process],
                          targets=[0],
                          # targets=[[0],[0]],

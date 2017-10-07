@@ -44,34 +44,34 @@ System.
 Creating a System
 -----------------
 
-Systems are created by calling the `system` command.  If no arguments are provided, a System with a single `Process`
+Systems are created by instantiating the `System` class.  If no arguments are provided, a System with a single `Process`
 containing a single `default_mechanism <Mechanism_Base.default_mechanism>` is created.  More commonly, a System is
-created from one or more `Processes <Process>` that are specified in the **processes**  argument of the `system`
-command, and listed in its `processes <System.processes>` attribute.
+created from one or more `Processes <Process>` that are specified in the **processes**  argument of the `System`
+class, and listed in its `processes <System.processes>` attribute.
 
 .. note::
    At present, only `Processes <Process>` can be assigned to a System; `Mechanisms <Mechanism>` cannot be assigned
    directly to a System.  They must be assigned to the `pathway <Process_Pathway>` of a Process, and then that Process
-   must be included in the **processes** argument of the `system` command.
+   must be included in the **processes** argument of the `System` class.
 
 .. _System_Control_Specification:
 
 Specifying Control
 ~~~~~~~~~~~~~~~~~~
 
-A controller can also be specified for the System, in the **controller** argument of the `system`.  This can be an
+A controller can also be specified for the System, in the **controller** argument of the `System`.  This can be an
 existing `ControlMechanism`, a constructor for one, or a class of ControlMechanism in which case a default
 instance of that class will be created.  If an existing ControlMechanism or the constructor for one is used, then
 the `OutputStates it monitors <ControlMechanism_ObjectiveMechanism>` and the `parameters it controls
 <ControlMechanism_Control_Signals>` can be specified using its `objective_mechanism
 <ControlMechanism.objective_mechanism>` and `control_signals <ControlMechanism.control_signals>`
 attributes, respectively.  In addition, these can be specified in the **monitor_for_control** and **control_signal**
-arguments of the `system` command, as described below.
+arguments of the `System` class, as described below.
 
 * **monitor_for_control** argument -- used to specify OutputStates of Mechanisms in the System that be monitored by the
   `ObjectiveMechanism` associated with the System's `controller <System.controller>` (see
   `ControlMechanism_ObjectiveMechanism`);  these are used in addition to any specified for the ControlMechanism or
-  its ObjectiveMechanism.  These can be specified in the **monitor_for_control** argument of the `system` command using
+  its ObjectiveMechanism.  These can be specified in the **monitor_for_control** argument of the `System` class using
   any of the ways used to specify the *monitored_output_states* argument of the constructor for an ObjectiveMechanism (see
   `ObjectiveMechanism_Monitored_Output_States`).  In addition, the **monitor_for_control** argument supports two other forms
   of specification:
@@ -352,7 +352,6 @@ COMMENT
       confusing results.
 
    Module Contents
-   system factory method:  instantiate System
    System: class definition
 COMMENT
 
@@ -364,7 +363,7 @@ Specifying Control for a System
 The following example specifies an `EVCControlMechanism` as the controller for a System with two `Processes <Process>`
 that include two `Mechanisms <Mechanism>` (not shown):
 
-    my_system = system(processes=[TaskExecutionProcess, RewardProcess],
+    my_system = System(processes=[TaskExecutionProcess, RewardProcess],
                        controller=EVCControlMechanism(objective_mechanism=
                                                    ObjectiveMechanism(
                                                        monitored_output_states=[
@@ -388,7 +387,7 @@ argument of the EVCControlMechanism, respectively.
 
 The same configuration can be specified in a more concise, though less "transparent" form, as follows::
 
-    my_system = system(processes=[TaskExecutionProcess, RewardProcess],
+    my_system = System(processes=[TaskExecutionProcess, RewardProcess],
                        controller=EVCControlMechanism(objective_mechanism=[
                                                              Reward,
                                                              Decision.output_states[PROBABILITY_UPPER_THRESHOLD],
@@ -400,7 +399,7 @@ EVCControlMechanism is specified as a list of OutputStates (see `ControlMechanis
 The specification can be made even simpler, but with some additional considerations that must be kept in mind,
 as follows::
 
-    my_system = system(processes=[TaskExecutionProcess, RewardProcess],
+    my_system = System(processes=[TaskExecutionProcess, RewardProcess],
                        controller=EVCControlMechanism,
                        monitor_for_control=[Reward,
                                             PROBABILITY_UPPER_THRESHOLD,
@@ -499,150 +498,6 @@ class SystemError(Exception):
 
 from psyneulink.components.process import Process
 
-# System factory method:
-@tc.typecheck
-def system(default_variable=None,
-           size=None,
-           processes:list=[],
-           scheduler=None,
-           initial_values:dict={},
-           controller=None,
-           enable_controller:bool=False,
-           monitor_for_control:list=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
-           control_signals:tc.optional(list)=None,
-           # learning:tc.optional(_is_learning_spec)=None,
-           learning_rate:tc.optional(parameter_spec)=None,
-           targets:tc.optional(tc.any(list, np.ndarray))=None,
-           params:tc.optional(dict)=None,
-           name:tc.optional(str)=None,
-           prefs:is_pref_set=None,
-           context=None):
-    """
-    system(                                   \
-    default_variable=None,                    \
-    processes=None,                           \
-    scheduler=None,                           \
-    initial_values=None,                      \
-    controller=None,                          \
-    enable_controller=:keyword:False,         \
-    monitor_for_control=None,                 \
-    control_signals=None,                     \
-    learning_rate=None,                       \
-    targets=None,                             \
-    params=None,                              \
-    name=None,                                \
-    prefs=None)
-
-    Factory method for System: returns instance of System.
-
-    If called with no arguments, returns an instance of System with a single default `Process`` and `Mechanism
-    <Mechanism>`; if called with a name string, that is used as the name of the instance of System returned;
-    if a params dictionary is included, it is passed to the instantiated System.
-
-    See :class:`System` for class description
-
-    Arguments
-    ---------
-
-    default_variable : list or ndarray of values : default default input for `ORIGIN` Mechanism of each `Process`
-        the input to the System if None is provided in a call to the `execute <System.execute>` or
-        `run <System.run>` methods. Should contain one item corresponding to the input of each `ORIGIN` Mechanism
-        in the System (listed in its `origin_mechanisms <System.origin_mechanisms>` attribute.
-        COMMENT:
-            REPLACE DefaultProcess BELOW USING Inline markup
-        COMMENT
-
-    processes : List[Process specification] : default List['DefaultProcess']
-        a list of the `Processes <Process>` to include in the System.
-        Each Process specification can be an instance, the class name (creates a default Process), or a specification
-        dictionary (see `Process` for details).
-
-    scheduler : Scheduler : default None
-        a `Scheduler` that handles the ordering of the execution of the System's Components during `processing
-        <System_Execution_Processing>`.
-
-    initial_values : Dict[Mechanism:value] : default None
-        a dictionary of values used to initialize Mechanisms that close recurrent loops (designated as
-        `INITIALIZE_CYCLE`). The key for each entry is a `Mechanism <Mechanism>`, and the value is a number,
-        list or 1d np.array that must be compatible with the format of the first item of the Mechanism's
-        `value <Mechanism_Base.value>` (i.e., Mechanism.value[0]).
-
-    controller : ControlMechanism : default SystemDefaultControlMechanism
-        specifies the `ControlMechanism <ControlMechanism>` used to monitor the `value <OutputState.value>` of the
-        OutputState(s) for Mechanisms specified in **monitor_for_control** and that controls the parameters
-        `specified for control <ControlMechanism_Control_Signals>` in the System.
-
-    enable_controller :  bool : default `False`
-        specifies whether the `controller` is executed during `System execution <System_Execution>`.
-
-    monitor_for_control :  List[OutputState specification] : default None
-        specifies the `OutputStates <OutputState>` of Mechanisms in the System to be monitored by the
-        'objective_mechanism <ControlMechanism.objective_mechanism>` of its `controller` (see
-        `System_Control_Specification` and `ObjectiveMechanism_Monitored_Output_States` for additional details of
-        how to specify the `monitor_for_control` argument).
-
-    COMMENT:
-        learning : [LearningProjection specification]
-            implements `learning <LearningProjection_CreationLearningSignal>` for all Processes in the System.
-    COMMENT
-
-    learning_rate : float : default None
-        sets the `learning_rate <LearningMechanism.learning_rate>` for all `LearningMechanism <LearningMechanism>` in
-        the System (see `learning_rate <System.learning_rate>` attribute for additional information).
-
-    targets : Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes
-        the values assigned to the TARGET input of each `TARGET` Mechanism in the System (listed in its
-        `target_mechanisms` attribute).  There must be the same number of items as there are `target_mechanisms`,
-        and each item of **targets** must have the same format (length and number of elements) as the `value
-        <OutputState.value>` of the `OutputState` that projects to the *SAMPLE* `InputState` of the
-        `ComparatorMechanism` that serves as the `TARGET` Mechanism for (i.e., receives) that target item.
-
-    params : dict : default None
-        a `parameter dictionary <ParameterState_Specification>` that can include any of the parameters above;
-        the parameter's name should be used as the key for its entry. Values specified for parameters in the dictionary
-        override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default System-<index>
-        a string used for the name of the System
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names)
-
-    prefs : PreferenceSet or specification dict : System.classPreferences
-        the `PreferenceSet` for System (see :doc:`ComponentPreferenceSet <LINK>` for specification of PreferenceSet)
-
-    COMMENT:
-    context : str : default None
-        string used for contextualization of instantiation, hierarchical calls, executions, etc.
-    COMMENT
-
-    Returns
-    -------
-    instance of System : System
-
-    """
-
-
-    # Called with descriptor keyword
-    if not processes:
-        processes = [Process()]
-
-    return System(default_variable=default_variable,
-                  size=size,
-                  processes=processes,
-                  controller=controller,
-                  scheduler=scheduler,
-                  initial_values=initial_values,
-                  enable_controller=enable_controller,
-                  monitor_for_control=monitor_for_control,
-                  control_signals=control_signals,
-                  # learning=learning,
-                       learning_rate=learning_rate,
-                  targets=targets,
-                  params=params,
-                  name=name,
-                  prefs=prefs,
-                  context=context)
-
-
 class System(System_Base):
     """
 
@@ -661,10 +516,6 @@ class System(System_Base):
         prefs=None)
 
     Base class for System.
-
-    .. note::
-       System is an abstract class and should NEVER be instantiated by a direct call to its constructor.
-       It should be instantiated using the `system` command (see it for description of parameters).
 
     COMMENT:
         Description

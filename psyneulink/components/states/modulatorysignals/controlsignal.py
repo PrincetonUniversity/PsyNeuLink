@@ -238,7 +238,7 @@ COMMENT:
 
     Process_A = Process(pathway=[My_Mech_A])
     Process_B = Process(pathway=[My_Mech_B])
-    My_System = system(processes=[Process_A, Process_B])
+    My_System = System(processes=[Process_A, Process_B])
 
     My_EVC_Mechanism = EVCControlMechanism(system=My_System,
                                     monitor_for_control=[My_Mech_A.output_states[RESULT],
@@ -260,7 +260,7 @@ the `gain <Logistic.gain>` parameter of the `Logistic` function for ``My_Mech_A`
     Process_A = Process(pathway=[My_Mech_A])
     Process_B = Process(pathway=[My_Mech_B])
 
-    My_System = system(processes=[Process_A, Process_B],
+    My_System = System(processes=[Process_A, Process_B],
                                     monitor_for_control=[My_Mech_A.output_states[RESULT],
                                                          My_Mech_B.output_states[MEAN]],
                                     control_signals=[(GAIN, My_Mech_A),

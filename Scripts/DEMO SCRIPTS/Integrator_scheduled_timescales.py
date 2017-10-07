@@ -59,7 +59,7 @@ q = Process(
     prefs=process_prefs
 )
 
-s = system(
+s = System(
     processes=[p, q],
     name = 's'
 )

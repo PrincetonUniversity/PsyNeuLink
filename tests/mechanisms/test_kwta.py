@@ -4,7 +4,7 @@ from psyneulink.components.component import ComponentError
 from psyneulink.components.functions.function import Linear, Logistic
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.process import Process
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.globals.utilities import UtilitiesError
@@ -212,7 +212,7 @@ class TestKWTARatio:
             size=4
         )
         p = Process(pathway = [K], prefs = TestKWTARatio.simple_prefs)
-        s = system(processes=[p], prefs = TestKWTARatio.simple_prefs)
+        s = System(processes=[p], prefs = TestKWTARatio.simple_prefs)
         s.run(inputs = {K: [2, 4, 1, 6]})
         assert K.value.tolist() == [[0.2689414213699951, 0.7310585786300049, 0.11920292202211755, 0.9525741268224334]]
         s.run(inputs = {K: [1, 2, 3, 4]})
@@ -225,7 +225,7 @@ class TestKWTARatio:
             ratio=1
         )
         p = Process(pathway = [K], prefs = TestKWTARatio.simple_prefs)
-        s = system(processes=[p], prefs = TestKWTARatio.simple_prefs)
+        s = System(processes=[p], prefs = TestKWTARatio.simple_prefs)
         s.run(inputs = {K: [2, 4, 1, 6]})
         assert K.value.tolist() == [[0.5, 0.8807970779778823, 0.2689414213699951, 0.9820137900379085]]
         s.run(inputs = {K: [1, 2, 3, 4]})
@@ -238,7 +238,7 @@ class TestKWTARatio:
             ratio=0
         )
         p = Process(pathway = [K], prefs = TestKWTARatio.simple_prefs)
-        s = system(processes=[p], prefs = TestKWTARatio.simple_prefs)
+        s = System(processes=[p], prefs = TestKWTARatio.simple_prefs)
         s.run(inputs = {K: [2, 4, 1, 6]})
         assert K.value.tolist() == [[0.11920292202211755, 0.5, 0.04742587317756678, 0.8807970779778823]]
         s.run(inputs = {K: [1, 2, 3, 4]})
@@ -253,7 +253,7 @@ class TestKWTARatio:
             ratio=0.3
         )
         p = Process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
-        s = system(processes=[p], prefs=TestKWTARatio.simple_prefs)
+        s = System(processes=[p], prefs=TestKWTARatio.simple_prefs)
         s.run(inputs={K: [2, 4, 1, 6]})
         assert K.value.tolist() == [[0.19781611144141834, 0.6456563062257956, 0.08317269649392241, 0.9308615796566533]]
         s.run(inputs={K: [1, 2, 3, 4]})
@@ -286,7 +286,7 @@ class TestKWTAKValue:
         )
         assert K.k_value == 0.5
         p = Process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
-        s = system(processes=[p], prefs=TestKWTARatio.simple_prefs)
+        s = System(processes=[p], prefs=TestKWTARatio.simple_prefs)
         s.run(inputs={K: [1, 2, 3, 4]})
         assert K.value.tolist() == [[0.18242552380635635, 0.3775406687981454, 0.6224593312018546, 0.8175744761936437]]
 
@@ -297,7 +297,7 @@ class TestKWTAKValue:
         )
         assert K.k_value == 0.5
         p = Process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
-        s = system(processes=[p], prefs=TestKWTARatio.simple_prefs)
+        s = System(processes=[p], prefs=TestKWTARatio.simple_prefs)
         s.run(inputs={K: [1, 2, 2, 3, 3, 4]})
         assert K.value.tolist() == [[0.18242552380635635, 0.3775406687981454, 0.3775406687981454,
                                      0.6224593312018546, 0.6224593312018546, 0.8175744761936437]]
@@ -323,7 +323,7 @@ class TestKWTAKValue:
     #         assert K.k_value == 0.4
     #         assert K.int_k == expected_int_k
     #         p = Process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
-    #         s = system(processes=[p], prefs=TestKWTARatio.simple_prefs)
+    #         s = System(processes=[p], prefs=TestKWTARatio.simple_prefs)
     #         input1 = list(range(size_val))
     #         s.run(inputs={K: input1})
 
@@ -381,7 +381,7 @@ class TestKWTAThreshold:
             threshold=-1
         )
         p = Process(pathway=[K], prefs=TestKWTAThreshold.simple_prefs)
-        s = system(processes=[p], prefs=TestKWTAThreshold.simple_prefs)
+        s = System(processes=[p], prefs=TestKWTAThreshold.simple_prefs)
         s.run(inputs={K: [1, 2, 3, 4]})
         assert K.value.tolist() == [[0.07585818002124355, 0.18242552380635635, 0.3775406687981454, 0.6224593312018546]]
 
@@ -392,7 +392,7 @@ class TestKWTAThreshold:
             threshold=0.5
         )
         p = Process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
-        s = system(processes=[p], prefs=TestKWTARatio.simple_prefs)
+        s = System(processes=[p], prefs=TestKWTARatio.simple_prefs)
         s.run(inputs={K: [1, 2, 3, 3]})
         assert K.value.tolist() == [[0.2689414213699951, 0.5, 0.7310585786300049, 0.7310585786300049]]
 
@@ -415,7 +415,7 @@ class TestKWTALongTerm:
             time_scale=TimeScale.TIME_STEP
         )
         p = Process(pathway=[K], prefs=TestKWTALongTerm.simple_prefs)
-        s = system(processes=[p], prefs=TestKWTALongTerm.simple_prefs)
+        s = System(processes=[p], prefs=TestKWTALongTerm.simple_prefs)
         kwta_input = {K: [-1, -.5, 0, 0, 0, 1, 1, 2, 3, 3]}
         print("")
         for i in range(20):
@@ -449,7 +449,7 @@ class TestKWTAAverageBased:
             average_based=True
         )
         p = Process(pathway=[K], prefs=TestKWTAAverageBased.simple_prefs)
-        s = system(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
+        s = System(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
         kwta_input = {K: [1, 2, 3, 4]}
         s.run(inputs=kwta_input)
         assert K.value.tolist() == [[-1.5, -0.5, 0.5, 1.5]]
@@ -464,7 +464,7 @@ class TestKWTAAverageBased:
             average_based=True
         )
         p = Process(pathway=[K], prefs=TestKWTAAverageBased.simple_prefs)
-        s = system(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
+        s = System(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
         kwta_input = {K: [1, 2, 3, 4]}
         s.run(inputs=kwta_input)
         assert K.value.tolist() == [[-2, -1, 0, 1]]
@@ -480,7 +480,7 @@ class TestKWTAAverageBased:
             average_based=True
         )
         p = Process(pathway=[K], prefs=TestKWTAAverageBased.simple_prefs)
-        s = system(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
+        s = System(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
         kwta_input = {K: [1, 2, 3, 4]}
         s.run(inputs=kwta_input)
         assert K.value.tolist() == [[-2.6, -1.6, -0.6000000000000001, 0.3999999999999999]]
@@ -496,7 +496,7 @@ class TestKWTAAverageBased:
             average_based=True
         )
         p = Process(pathway=[K], prefs=TestKWTAAverageBased.simple_prefs)
-        s = system(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
+        s = System(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
         kwta_input = {K: [1, 2, 3, 4]}
         s.run(inputs=kwta_input)
         assert K.value.tolist() == [[-1.4, -0.3999999999999999, 0.6000000000000001, 1.6]]

@@ -6,7 +6,7 @@ from psyneulink.components.mechanisms.processing.integratormechanism \
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
 from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
 from psyneulink.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan
@@ -68,7 +68,7 @@ class TestInit:
         )
 
         # System:
-        mySystem = system(
+        mySystem = System(
             processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
             controller=EVCControlMechanism,
             enable_controller=True,
@@ -111,7 +111,7 @@ class TestLinear:
             name='p'
         )
 
-        s = system(
+        s = System(
             processes=[p],
             name='s'
         )
@@ -153,7 +153,7 @@ class TestLinear:
             name='p'
         )
 
-        s = system(
+        s = System(
             processes=[p],
             name='s'
         )
@@ -199,7 +199,7 @@ class TestLinear:
             name='p'
         )
 
-        s = system(
+        s = System(
             processes=[p],
             name='s'
         )
@@ -260,7 +260,7 @@ class TestBranching:
             name='q'
         )
 
-        s = system(
+        s = System(
             processes=[p, q],
             name='s'
         )
@@ -324,7 +324,7 @@ class TestBranching:
             name='q'
         )
 
-        s = system(
+        s = System(
             processes=[p, q],
             name='s'
         )
@@ -391,7 +391,7 @@ class TestBranching:
             name='q'
         )
 
-        s = system(
+        s = System(
             processes=[p, q],
             name='s'
         )
@@ -454,7 +454,7 @@ class TestBranching:
             name='q'
         )
 
-        s = system(
+        s = System(
             processes=[p, q],
             name='s'
         )
@@ -519,7 +519,7 @@ class TestBranching:
             name='q'
         )
 
-        s = system(
+        s = System(
             processes=[p, q],
             name='s'
         )
@@ -595,7 +595,7 @@ class TestBranching:
             name='q'
         )
 
-        s = system(
+        s = System(
             processes=[p, q],
             name='s'
         )
@@ -682,7 +682,7 @@ class TestBranching:
             name='q1'
         )
 
-        s = system(
+        s = System(
             processes=[p, p1, q, q1],
             name='s'
         )
@@ -766,7 +766,7 @@ class TestBranching:
             name='q'
         )
 
-        s = system(
+        s = System(
             processes=[p, q],
             name='s'
         )
@@ -898,7 +898,7 @@ class TestBranching:
             )
         ]
 
-        s = system(
+        s = System(
             processes=p,
             name='s'
         )

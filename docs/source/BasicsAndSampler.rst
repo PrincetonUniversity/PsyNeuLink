@@ -154,7 +154,7 @@ output layer, which combines the inputs and projects to a drift diffusion mechan
     decision_process = Process(pathway=[output_layer, decision_mech])
 
     # Construct the System:
-    my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
+    my_simple_Stroop = System(processes=[colors_process, words_process, decision_process])
 
 In this example, ``differencing_weights`` is used to specify a `MappingProjection` between the input layer of the
 `pathway <Process.pathway>` for each Process and the Mechanism (``output_layer``) on which they converge.
@@ -208,7 +208,7 @@ follows::
     recurrent_network = Process(pathway=[hidden_layer, recurrent_layer, hidden_layer])
 
     # Construct the System:
-    full_model = system(processes=[feed_forward_network, recurrent_network])
+    full_model = System(processes=[feed_forward_network, recurrent_network])
 
     # Construct the Scheduler:
     my_scheduler = Scheduler(system=full_model)

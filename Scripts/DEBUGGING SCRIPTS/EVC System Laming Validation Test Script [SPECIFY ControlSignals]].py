@@ -3,7 +3,7 @@
 from psyneulink.components.mechanisms.processing.transfermechanism import *
 from psyneulink.components.process import Process
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import *
 from psyneulink.library.mechanisms.adaptive import EVCControlMechanism
 
@@ -87,7 +87,7 @@ RewardProcess = Process(
 
 
 # System:
-mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
+mySystem = System(processes=[TaskExecutionProcess, RewardProcess],
                   controller=EVCControlMechanism,
                   # controller=EVCControlMechanism(monitor_for_control=[Reward,
                   #                                              Decision.PROBABILITY_UPPER_THRESHOLD,

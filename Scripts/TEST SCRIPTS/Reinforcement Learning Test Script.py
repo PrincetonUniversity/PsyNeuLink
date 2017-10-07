@@ -7,7 +7,7 @@ from psyneulink.components.functions.function import Reinforcement, SoftMax
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.scheduling.timescale import CentralClock
 
 random.seed(0)
@@ -65,7 +65,7 @@ p.run(num_trials=10,
 
 input_list = {input_layer:[[1, 1, 1]]}
 
-s = system(processes=[p],
+s = System(processes=[p],
            # learning_rate=0.05,
            targets=[0])
 

@@ -2,7 +2,7 @@ from psyneulink.components.functions.function import Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.states.outputstate import *
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import *
 from psyneulink.globals.preferences.componentpreferenceset import *
 from psyneulink.scheduling.condition import AfterNCalls
@@ -159,7 +159,7 @@ if COMPOSITION is PROCESS:
 
 elif COMPOSITION is SYSTEM:
     # SYSTEM VERSION:
-    x = system(processes=[z],
+    x = System(processes=[z],
                targets=[0, 0, 1],
                learning_rate=2.0)
 

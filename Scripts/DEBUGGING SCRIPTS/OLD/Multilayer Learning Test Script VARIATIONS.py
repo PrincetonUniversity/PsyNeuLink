@@ -3,7 +3,7 @@ from psyneulink.components.functions.function import Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.scheduling.timescale import TimeScale
 
 Input_Layer = TransferMechanism(name='Input Layer',
@@ -128,7 +128,7 @@ target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
 #       call_after_trial=show_target)
 
 # SYSTEM VERSION:
-x = system(processes=[z],
+x = System(processes=[z],
            targets=[0, 0, 1])
 # x.show_graph()
 x.run(num_trials=10,

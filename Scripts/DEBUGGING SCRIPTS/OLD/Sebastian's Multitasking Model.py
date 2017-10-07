@@ -108,7 +108,7 @@ stim_list_dict = {Stimulus_Layer:[1, 0, 1, 0, 1, 0, 1, 0],
 
 target_list_dict = {Output_Layer:[1, 0, 0, 0,]}
 
-multitaskingModel = system(processes=[StimulusResponseProcess, TaskHiddenProcess, TaskOutputProcess],
+multitaskingModel = System(processes=[StimulusResponseProcess, TaskHiddenProcess, TaskOutputProcess],
                            name='Multitasking Model',
                            prefs=system_prefs)
 

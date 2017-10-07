@@ -91,7 +91,7 @@ stim_list_dict = {Stimulus_Layer:[1, 0, 1, 0],
 
 target_list_dict = {Output_Layer:[1, 0]}
 
-stroop_mode = system(processes=[StimulusResponseProcess, TaskHiddenProcess],
+stroop_mode = System(processes=[StimulusResponseProcess, TaskHiddenProcess],
                   name='stroop_model',
                   targets= [1, 0],
                   prefs=system_prefs)

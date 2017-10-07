@@ -3,7 +3,7 @@
 from psyneulink.components.mechanisms.processing.transfermechanism import *
 from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import *
 from psyneulink.library.mechanisms.adaptive import EVCControlMechanism
 
@@ -103,7 +103,7 @@ RewardProcess = Process(
     name = 'RewardProcess')
 
 # System:
-mySystem = system(processes=[TargetControlProcess, FlankerControlProcess,
+mySystem = System(processes=[TargetControlProcess, FlankerControlProcess,
                              TargetAutomaticProcess, FlankerAutomaticProcess,
                              RewardProcess],
                   controller=EVCControlMechanism,

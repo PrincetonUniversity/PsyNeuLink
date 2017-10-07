@@ -57,8 +57,7 @@ class System_Base(ShellClass):
                  name=None,
                  prefs=None,
                  context=None):
-        if context is None:
-            _attempt_to_call_base_class(self,'system()')
+
         super().__init__(default_variable=default_variable,
                          size=size,
                          param_defaults=param_defaults,

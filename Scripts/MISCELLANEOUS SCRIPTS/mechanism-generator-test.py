@@ -1,6 +1,6 @@
 from psyneulink.components.mechanisms.processing.transfermechanism import *
 from psyneulink.components.process import Process
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import *
 from psyneulink.mechanismGenerator import mechanismGenerator
 
@@ -59,6 +59,6 @@ process1 = Process(default_variable=[100],
 print(process1.runtime_params_dict)
 print(process1.pathway)
 
-system1 = system(processes=[process1], scheduler= mechanismGenerator(path))
+system1 = System(processes=[process1], scheduler= mechanismGenerator(path))
 
 print(system1.execute([[100]]), " = value of executing system with input of 100")

@@ -1,6 +1,6 @@
 from psyneulink.components.mechanisms.processing.transfermechanism import *
 from psyneulink.components.process import Process
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 
 myInputLayer = TransferMechanism(name='Input Layer',
                         function=Linear(),
@@ -34,7 +34,7 @@ input_set = {myInputLayer:[[-1,2],[2,3],[5,5]]}
 myProcess.run(inputs=input_set,
               num_trials=2)
 
-mySystem = system(processes=[myProcess])
+mySystem = System(processes=[myProcess])
 
 mySystem.show_graph()
 

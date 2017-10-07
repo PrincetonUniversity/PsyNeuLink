@@ -16,7 +16,7 @@ from psyneulink.components.projections.modulatory.controlprojection import Contr
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import System_Base
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import ALL, DEFAULT_MATRIX, EXPONENTS, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INITIALIZER, INPUT_STATES, MATRIX, MAX_INDICATOR, MAX_VAL, MONITOR_FOR_CONTROL, OFFSET, OPERATION, OUTPUT_STATES, PARAMETER_STATES, PROB, SCALE, WEIGHTS
 from psyneulink.library.mechanisms.processing.integrator import ddm
 from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
@@ -48,7 +48,6 @@ for handler in logging.root.handlers:
     ))
 
 __all__ = ['System_Base',
-           'system',
            'CentralClock',
            'TransferMechanism',
            'IntegratorMechanism',

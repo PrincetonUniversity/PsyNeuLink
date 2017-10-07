@@ -12,7 +12,7 @@ from psyneulink.components.functions.function import ModulationParam
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism \
     import RecurrentTransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
@@ -73,7 +73,7 @@ lc_process = Process(pathway=[decision_layer,
                               LC],
                            name='LC PROCESS')
 
-task = system(processes=[decision_process, lc_process])
+task = System(processes=[decision_process, lc_process])
 
 # This prints information about the System,
 # including its execution list indicating the order in which the Mechanisms will execute

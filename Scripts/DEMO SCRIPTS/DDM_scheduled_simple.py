@@ -40,7 +40,7 @@ p = Process(
 )
 
 # origin → DDM → terminal
-s = system(
+s = System(
     processes=[p],
     name='s',
 )

@@ -3,7 +3,7 @@
 from psyneulink.components.mechanisms.processing.transfermechanism import *
 from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.library.mechanisms.adaptive import EVCControlMechanism
 
 # Stimulus Mechanisms
@@ -45,7 +45,7 @@ RewardProcess = Process(
     name = 'RewardProcess')
 
 # System:
-mySystem = system(processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
+mySystem = System(processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
                   controller=EVCControlMechanism,
                   enable_controller=True,
                   monitor_for_control=[Reward, (DDM_PROBABILITY_UPPER_THRESHOLD, 1, -1)],

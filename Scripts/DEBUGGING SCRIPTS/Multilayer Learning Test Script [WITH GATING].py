@@ -4,7 +4,7 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.process import Process
 from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.components.states.outputstate import *
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.scheduling.condition import AfterNCalls
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
@@ -220,7 +220,7 @@ if COMPOSITION is PROCESS:
 
 elif COMPOSITION is SYSTEM:
     # SYSTEM VERSION:
-    x = system(processes=[z, g],
+    x = System(processes=[z, g],
                targets=[0, 0, 1],
                learning_rate=1.0)
 

@@ -4,7 +4,7 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 
 # set up layers
 
@@ -77,6 +77,6 @@ taskOutput_process = Process(default_variable=[0, 0],
                                     REPORT_OUTPUT_PREF: False})
 
 # System:
-multitaskingNet = system(processes=[stimulus_process, taskHidden_process, taskOutput_process],
+multitaskingNet = System(processes=[stimulus_process, taskHidden_process, taskOutput_process],
                   enable_controller=False,
                   name='Multitasking Test System')
