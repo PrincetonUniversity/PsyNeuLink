@@ -646,17 +646,6 @@ from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 logger = logging.getLogger(__name__)
 MechanismRegistry = {}
 
-class MonitoredOutputStatesOption(AutoNumber):
-    """Specifies OutputStates to be monitored by a `ControlMechanism <ControlMechanism>`
-    (see `ObjectiveMechanism_Monitored_Output_States` for a more complete description of their meanings."""
-    ONLY_SPECIFIED_OUTPUT_STATES = ()
-    """Only monitor explicitly specified Outputstates."""
-    PRIMARY_OUTPUT_STATES = ()
-    """Monitor only the `primary OutputState <OutputState_Primary>` of a Mechanism."""
-    ALL_OUTPUT_STATES = ()
-    """Monitor all OutputStates <Mechanism_Base.output_states>` of a Mechanism."""
-    NUM_MONITOR_STATES_OPTIONS = ()
-
 
 class MechanismError(Exception):
     def __init__(self, error_value):

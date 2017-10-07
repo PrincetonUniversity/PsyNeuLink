@@ -439,7 +439,7 @@ from toposort import toposort, toposort_flatten
 from PsyNeuLink.Components.Component import Component, ExecutionStatus, InitStatus, function_type
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism, OBJECTIVE_MECHANISM
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import LearningMechanism
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MonitoredOutputStatesOption
+from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Process import ProcessList, ProcessTuple, Process_Base
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
@@ -453,7 +453,8 @@ from PsyNeuLink.Globals.Keywords import \
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.Utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, parameter_spec
+from PsyNeuLink.Globals.Utilities import \
+    ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, parameter_spec, AutoNumber
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
@@ -484,6 +485,17 @@ CONTROL_PROJECTION_RECEIVERS = 'control_projection_receivers'
 SystemRegistry = {}
 
 kwSystemInputState = 'SystemInputState'
+
+class MonitoredOutputStatesOption(AutoNumber):
+    """Specifies OutputStates to be monitored by a `ControlMechanism <ControlMechanism>`
+    (see `ObjectiveMechanism_Monitored_Output_States` for a more complete description of their meanings."""
+    ONLY_SPECIFIED_OUTPUT_STATES = ()
+    """Only monitor explicitly specified Outputstates."""
+    PRIMARY_OUTPUT_STATES = ()
+    """Monitor only the `primary OutputState <OutputState_Primary>` of a Mechanism."""
+    ALL_OUTPUT_STATES = ()
+    """Monitor all OutputStates <Mechanism_Base.output_states>` of a Mechanism."""
+    NUM_MONITOR_STATES_OPTIONS = ()
 
 # Indices for items in tuple format used for specifying monitored_output_states using weights and exponents
 OUTPUT_STATE_INDEX = 0
@@ -2142,9 +2154,6 @@ class System_Base(System):
 
         """
 
-        from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-            import _parse_monitored_output_states
 
         # PARSE SPECS
 

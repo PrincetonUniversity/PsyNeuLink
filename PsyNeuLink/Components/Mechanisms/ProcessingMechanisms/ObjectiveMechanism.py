@@ -333,7 +333,7 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Component import InitStatus
 from PsyNeuLink.Components.Functions.Function import LinearCombination
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.ShellClasses import Mechanism, State
 from PsyNeuLink.Components.States.InputState import InputState
@@ -920,6 +920,7 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
         System._get_monitored_output_states_for_system()
 
     """
+    from PsyNeuLink.Components.System import MonitoredOutputStatesOption
 
     if not isinstance(output_state_list, list):
         output_state_list = [output_state_list]

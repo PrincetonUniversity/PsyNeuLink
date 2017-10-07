@@ -303,7 +303,7 @@ from collections import UserList
 
 from PsyNeuLink.Components.Component import InitStatus
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param, LinearCombination
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import \
            ObjectiveMechanism, ObjectiveMechanismError, _parse_monitored_output_states
@@ -548,6 +548,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         Check that all items in MONITOR_FOR_CONTROL are Mechanisms or OutputStates for Mechanisms in self.system
         Check that all items in CONTROL_SIGNALS are parameters or ParameterStates for Mechanisms in self.system
         """
+        from PsyNeuLink.Components.System import MonitoredOutputStatesOption
 
         super(ControlMechanism, self)._validate_params(request_set=request_set,
                                                                  target_set=target_set,

@@ -119,10 +119,11 @@ Class Reference
 """
 import typecheck as tc
 
+from PsyNeuLink.Components.System import MonitoredOutputStatesOption
 from PsyNeuLink.Components.Functions.Function import AGTUtilityIntegrator, ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import MonitoredOutputStatesOption, ObjectiveMechanism, _parse_monitored_output_states
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism, _parse_monitored_output_states
 from PsyNeuLink.Components.ShellClasses import Mechanism, System
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
