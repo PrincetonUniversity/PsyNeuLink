@@ -429,17 +429,18 @@ import math
 import numbers
 import re
 import warnings
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 
 import numpy as np
 import typecheck as tc
 from toposort import toposort, toposort_flatten
 
+
 from PsyNeuLink.Components.Component import Component, ExecutionStatus, InitStatus, function_type
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism, OBJECTIVE_MECHANISM
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MonitoredOutputStatesOption
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import MonitoredOutputStateTuple, OUTPUT_STATE_INDEX, ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Process import ProcessList, ProcessTuple, Process_Base
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
 from PsyNeuLink.Globals.Keywords import \
@@ -483,6 +484,13 @@ CONTROL_PROJECTION_RECEIVERS = 'control_projection_receivers'
 SystemRegistry = {}
 
 kwSystemInputState = 'SystemInputState'
+
+# Indices for items in tuple format used for specifying monitored_output_states using weights and exponents
+OUTPUT_STATE_INDEX = 0
+WEIGHT_INDEX = 1
+EXPONENT_INDEX = 2
+MATRIX_INDEX = 3
+MonitoredOutputStateTuple = namedtuple("MonitoredOutputStateTuple", "output_state, weight exponent matrix")
 
 
 class SystemWarning(Warning):
@@ -2192,6 +2200,8 @@ class System_Base(System):
                 state_spec = _parse_state_spec(owner=self, state_type=OutputState, state_spec=spec)
             all_specs_extracted_from_tuples.append(state_spec)
         # MODIFIED 10/3/17 END
+        assert(all (isinstance(item, (OutputState, MonitoredOutputStatesOption)) for item in
+                    all_specs_extracted_from_tuples))
 
         # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
         # option_specs = [item for item in all_specs[OUTPUT_STATE_INDEX] if isinstance(item, MonitoredOutputStatesOption)]

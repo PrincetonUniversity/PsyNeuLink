@@ -306,8 +306,7 @@ from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modula
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import \
-           ObjectiveMechanism, ObjectiveMechanismError, _parse_monitored_output_states, \
-           WEIGHT_INDEX, EXPONENT_INDEX, MONITORED_OUTPUT_STATES
+           ObjectiveMechanism, ObjectiveMechanismError, _parse_monitored_output_states
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 from PsyNeuLink.Components.ShellClasses import Mechanism, System
@@ -647,6 +646,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         * self.input_states is the usual ordered dict of states,
             each of which receives a Projection from a corresponding OutputState in self.monitored_output_states
         """
+        from PsyNeuLink.Components.System import WEIGHT_INDEX, EXPONENT_INDEX
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import MONITORED_OUTPUT_STATES
         monitored_output_states = None
 
         # GET OutputStates to Monitor (to specify as or add to ObjectiveMechanism's monitored_output_states attribute

@@ -346,16 +346,9 @@ from PsyNeuLink.Globals.Utilities import ContentAddressableList, is_matrix
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 ROLE = 'role'
+OUTCOME = 'outcome'
 MONITORED_OUTPUT_STATES = 'monitored_output_states'
 MONITORED_OUTPUT_STATE_NAME_SUFFIX = '_Monitor'
-OUTCOME = 'outcome'
-
-# Indices for items in tuple format used for specifying monitored_output_states using weights and exponents
-OUTPUT_STATE_INDEX = 0
-WEIGHT_INDEX = 1
-EXPONENT_INDEX = 2
-MATRIX_INDEX = 3
-MonitoredOutputStateTuple = namedtuple("MonitoredOutputStateTuple", "output_state, weight exponent matrix")
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class OBJECTIVE_OUTPUT():
