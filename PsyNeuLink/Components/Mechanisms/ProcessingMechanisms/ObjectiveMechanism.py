@@ -682,6 +682,15 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         else:
             # If initialized, don't pass self.input_states, as this is now a list of existing InputStates
             input_states = None
+
+        # MODIFIED 10/3/17 NEW:
+        for spec in self.monitored_output_states:
+            monitored_output_state_parse_by_input_states = _parse_state_spec(owner=self,
+                                                                             state_type=InputState,
+                                                                             state_spec=spec,
+                                                                             context=context)
+        # MODIFIED 10/3/17 ENDd
+
         monitored_output_states = monitored_output_states_specs or self.monitored_output_states
         input_state_dicts, output_state_dicts = self._instantiate_monitored_output_states(monitored_output_states=monitored_output_states,
                                                                                    input_states=input_states,
@@ -749,7 +758,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         output_state_dicts = []
         for value in output_state_specs:
             output_state_dict = {}
-            output_state_spec = _parse_state_spec(state_type=OutputState, state_spec=value)
+            output_state_spec = _parse_state_spec(owner=self, state_type=OutputState, state_spec=value)
             if isinstance(output_state_spec, dict):
                 output_state_dict = output_state_spec
             elif isinstance(output_state_spec, State):

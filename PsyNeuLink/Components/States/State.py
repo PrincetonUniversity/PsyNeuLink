@@ -2426,7 +2426,7 @@ def _parse_state_spec(state_type=None,
         if not state.owner is owner:
             raise StateError("The State specified in a call to _instantiate_state ({}) "
                              "does belong to the {} specified in the \'{}\' argument ({})".
-                             format(state.value, owner.name, Mechanism.__name__, OWNER, owner.name))
+                             format(state.name, owner.name, Mechanism.__name__, OWNER, owner.name))
 
         if not iscompatible(reference_value, state.value):
             raise StateError("The value ({}) of the State specified in the call to _instantiate_state for {} ({}) "

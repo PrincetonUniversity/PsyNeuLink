@@ -2173,8 +2173,19 @@ class System_Base(System):
         # FIX: 9/29/17 REDIRECT CALL TO _parse_state_spec AS IN ObjectiveMechanism._instantiate_monitored_output_states
         # Extract references to Mechanisms and/or OutputStates from any tuples
         # Note: leave tuples in all_specs for use in generating weight and exponent arrays below
-        all_specs = _parse_monitored_output_states(self, output_state_list=all_specs)
-        all_specs_extracted_from_tuples = [spec[OUTPUT_STATE_INDEX] for spec in all_specs]
+        # # MODIFIED 10/3/17 OLD:
+        # all_specs = _parse_monitored_output_states(self, output_state_list=all_specs)
+        # all_specs_extracted_from_tuples = [spec[OUTPUT_STATE_INDEX] for spec in all_specs]
+        # MODIFIED 10/3/17 NEW:
+        for spec in all_specs:
+            all_specs_extracted_from_tuples = []
+            from PsyNeuLink.Components.States.State import _parse_state_spec
+            if isinstance(spec, MonitoredOutputStatesOption):
+                state_spec = spec
+            else:
+                state_spec = _parse_state_spec(owner=self, state_type=OutputState, state_spec=spec)
+            all_specs_extracted_from_tuples.append(state_spec)
+        # MODIFIED 10/3/17 END
 
         # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
         option_specs = [item for item in all_specs[OUTPUT_STATE_INDEX] if isinstance(item, MonitoredOutputStatesOption)]

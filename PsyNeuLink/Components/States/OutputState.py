@@ -782,15 +782,25 @@ class OutputState(State_Base):
         INDEX_INDEX = 1
         PROJECTIONS_INDEX = len(tuple_spec)-1
 
-        # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
+        # Specification is a MonitoredOutputStatesOptions (pass from System)
+        if len(tuple_spec)==1:
+            from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
+            if not isinstance(tuple_spec[0], MonitoredOutputStatesOption):
+                raise OutputStateError("Tuple provided in {} specification dictionary for {} has a single item ({})"
+                                       "which should be a value of {}".format(OutputState.__name__,
+                                                                              owner.name,
+                                                                              tuple_spec,
+                                                                              MonitoredOutputStatesOption.__name__))
+            return tuple_spec[0]
+
+        # Note:  first item is assumed to be a specification for the OutputState itself, handled in _parse_state_spec()
         # FIX: TEST FOR LEN OF TUPLE AND RAISE EXCEPTION OF < 2
-        if not len(tuple_spec) in {2,3} :
+        elif not len(tuple_spec) in {2,3} :
             raise OutputStateError("Tuple provided in {0} specification dictionary for {0} of {1} ({2}) must have "
                                    "either 2 ({0} and {3} specification(s) items or 3 (optional additional {4} item)".
-                                   # format(OutputState.__name__, owner.name, tuple_spec, CONNECTIONS, INDEX))
                                    format(OutputState.__name__, owner.name, tuple_spec, PROJECTIONS, INDEX))
 
-        # Get CONNECTIONS (efferent Projection(s)) specification from tuple
+        # Get PROJECTIONS specification (efferents) from tuple
         try:
             projections_spec = tuple_spec[PROJECTIONS_INDEX]
             # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
@@ -805,7 +815,7 @@ class OutputState(State_Base):
             except OutputStateError:
                 raise OutputStateError("Item {} of tuple specification in {} specification dictionary "
                                       "for {} ({}) is not a recognized specification for one or more "
-                                      "{}s, {}s, or {}s that project to it".
+                                      "{}s, {}s, or {}s that project from it".
                                       format(PROJECTIONS_INDEX,
                                              OutputState.__name__,
                                              owner.name,
