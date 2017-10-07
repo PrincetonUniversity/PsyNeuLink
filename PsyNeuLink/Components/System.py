@@ -2363,49 +2363,17 @@ class System_Base(System):
 
         # ASSIGN EXPONENTS, WEIGHTS and MATRICES
 
-        # # MODIFIED 10/3/17 OLD:
-        # # Get and assign specification of weights, exponents and matrices
-        # #    for Mechanisms or OutputStates specified in tuples
-        # output_state_tuples = [MonitoredOutputStateTuple(output_state=item, weight=None, exponent=None, matrix=None)
-        #                        for item in monitored_output_states]
-        # for spec in all_specs:
-        #     if isinstance(spec, MonitoredOutputStateTuple):
-        #         object_spec = spec.output_state
-        #         # For each OutputState in monitored_output_states
-        #         for i, output_state_tuple in enumerate(output_state_tuples):
-        #             output_state = output_state_tuple.output_state
-        #             # If either that OutputState or its owner is the object specified in the tuple
-        #             if (output_state is object_spec
-        #                 or output_state.name is object_spec
-        #                 or output_state.owner is object_spec):
-        #                 # Assign the weight, exponent and matrix specified in the spec to the output_state_tuple
-        #                 # (can't just assign spec, as its output_state entry may be an unparsed string rather than
-        #                 #  an actual OutputState)
-        #                 output_state_tuples[i] = MonitoredOutputStateTuple(output_state=output_state,
-        #                                                                    weight=spec.weight,
-        #                                                                    exponent=spec.exponent,
-        #                                                                    matrix=spec.matrix)
-        # return output_state_tuples
-
-        # MODIFIED 10/3/17 NEW:
-
+        # MODIFIED 10/3/17 OLD:
         # Get and assign specification of weights, exponents and matrices
         #    for Mechanisms or OutputStates specified in tuples
-        # Assign monitored_output_states to State specification dictionaries
-        #    used to specify the InputStates for the controller's ObjectiveMechanism
-        #    (i.e., the InputState to which each specified monitored_output_state should project)
-        input_state_dicts = [{MECHANISM:item.owner,
-                              NAME: item.name,
-                              WEIGHT:None,
-                              EXPONENT:None,
-                              PROJECTION:None}
+        output_state_tuples = [MonitoredOutputStateTuple(output_state=item, weight=None, exponent=None, matrix=None)
                                for item in monitored_output_states]
         for spec in all_specs:
-            if isinstance(spec, dict):
-                object_spec = spec.output_states[spec.name]
+            if isinstance(spec, MonitoredOutputStateTuple):
+                object_spec = spec.output_state
                 # For each OutputState in monitored_output_states
-                for i, input_state_dict in enumerate(input_state_dicts):
-                    output_state = input_state_dict.output_states[input_state_dict.name]
+                for i, output_state_tuple in enumerate(output_state_tuples):
+                    output_state = output_state_tuple.output_state
                     # If either that OutputState or its owner is the object specified in the tuple
                     if (output_state is object_spec
                         or output_state.name is object_spec
@@ -2413,13 +2381,45 @@ class System_Base(System):
                         # Assign the weight, exponent and matrix specified in the spec to the output_state_tuple
                         # (can't just assign spec, as its output_state entry may be an unparsed string rather than
                         #  an actual OutputState)
-                        input_state_dicts[i] = {MECHANISM:output_state.owner,
-                                                NAME: output_state.name,
-                                                WEIGHT:spec.weight,
-                                                EXPONENT:spec.exponent,
-                                                PROJECTION:spec.matrix}
-        return input_state_dicts
-        # MODIFIED 10/3/17 END
+                        output_state_tuples[i] = MonitoredOutputStateTuple(output_state=output_state,
+                                                                           weight=spec.weight,
+                                                                           exponent=spec.exponent,
+                                                                           matrix=spec.matrix)
+        return output_state_tuples
+
+        # # MODIFIED 10/3/17 NEW:
+        # # Get and assign specification of weights, exponents and matrices
+        # #    for Mechanisms or OutputStates specified in tuples
+        # # Assign monitored_output_states to State specification dictionaries
+        # #    used to specify the InputStates for the controller's ObjectiveMechanism
+        # #    (i.e., the InputState to which each specified monitored_output_state should project)
+        # assert(all(isinstance(output_state, OutputState) for output_state in monitored_output_states))
+        # input_state_dicts = [{MECHANISM:item.owner,
+        #                       NAME: item.name,
+        #                       WEIGHT:None,
+        #                       EXPONENT:None,
+        #                       PROJECTION:None}
+        #                        for item in monitored_output_states]
+        # for spec in all_specs:
+        #     if isinstance(spec, dict):
+        #         object_spec = spec.output_states[spec.name]
+        #         # For each OutputState in monitored_output_states
+        #         for i, input_state_dict in enumerate(input_state_dicts):
+        #             output_state = input_state_dict.output_states[input_state_dict.name]
+        #             # If either that OutputState or its owner is the object specified in the tuple
+        #             if (output_state is object_spec
+        #                 or output_state.name is object_spec
+        #                 or output_state.owner is object_spec):
+        #                 # Assign the weight, exponent and matrix specified in the spec to the output_state_tuple
+        #                 # (can't just assign spec, as its output_state entry may be an unparsed string rather than
+        #                 #  an actual OutputState)
+        #                 input_state_dicts[i] = {MECHANISM:output_state.owner,
+        #                                         NAME: output_state.name,
+        #                                         WEIGHT:spec.weight,
+        #                                         EXPONENT:spec.exponent,
+        #                                         PROJECTION:spec.matrix}
+        # return input_state_dicts
+        # # MODIFIED 10/3/17 END
 
 
 
