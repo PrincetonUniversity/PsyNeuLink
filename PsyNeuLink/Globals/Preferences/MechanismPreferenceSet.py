@@ -13,7 +13,7 @@
 import inspect
 
 from PsyNeuLink.Globals.Keywords import NAME
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import kpReportOutputPref, kpRuntimeParamStickyAssignmentPref, kpVerbosePref
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref, kpVerbosePref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Utilities import Modulation
 
@@ -31,6 +31,11 @@ runtimeParamModulationPrefCategoryDefault = PreferenceEntry(False, PreferenceLev
 runtimeParamStickyAssignmentPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 runtimeParamStickyAssignmentPrefTypeDefault = PreferenceEntry(False, PreferenceLevel.TYPE)
 runtimeParamStickyAssignmentPrefCategoryDefault = PreferenceEntry(False, PreferenceLevel.CATEGORY)
+
+reportOutputPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+logPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+verbosePrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+paramValidationPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
 
 class MechanismPreferenceSet(ComponentPreferenceSet):
