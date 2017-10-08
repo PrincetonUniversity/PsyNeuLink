@@ -2407,7 +2407,7 @@ def _parse_state_spec(state_type=None,
             # Validate that State object is same type as one specified in state_type (in call to _instantiate_state)
             if not type(state_specification) is state_type:
                 raise StateError("PROGRAM ERROR: \'{}\' entry in State specification dictionary for {} ({}) "
-                                 "does not the type specified in call to _instantiate_state ({})".
+                                 "does not match the type specified in the call to _instantiate_state ({})".
                                  format(STATE_TYPE, owner.name, state_specification, state_type))
             state = state_specification
 
@@ -2543,10 +2543,11 @@ def _parse_state_spec(state_type=None,
                       format(VARIABLE, state_type, owner.name, state_specification_dict))
             if params and PROJECTIONS in params:
                 #       (E.G., WEIGHTS AND EXPONENTS FOR InputState AND INDEX FOR OutputState)
-                # FIX: 10/3/17 - CONSOLIDATE W/ CALL TO _parse_state_specific_params FOR State specification dict ABOVE
-                state_params = state_type._parse_state_specific_params(state_type,
-                                                                      owner=owner,
-                                                                      state_specific_params=state_specification)
+                # FIX: 10/3/17 - NEED TO IMPLEMENT THIS IN INDIVIDUAL _parse_state_specific_params METHODS
+                # FIX: THIS IS CONSOLIDATE W/ CALL TO _parse_state_specific_params FOR State specification dict ABOVE
+                # state_params = state_type._parse_state_specific_params(state_type,
+                #                                                       owner=owner,
+                #                                                       state_specific_params=state_specification)
                 # Get and parse projection specifications for the State
                 projection_params = []
                 projection_params.append(params[PROJECTIONS])

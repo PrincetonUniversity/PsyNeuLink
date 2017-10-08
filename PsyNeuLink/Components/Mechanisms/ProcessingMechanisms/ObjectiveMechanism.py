@@ -682,7 +682,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                                              state_type=InputState,
                                                                              state_spec=spec,
                                                                              context=context)
-        # MODIFIED 10/3/17 ENDd
+        # MODIFIED 10/3/17 END
 
         monitored_output_states = monitored_output_states_specs or self.monitored_output_states
         input_state_dicts, output_state_dicts = self._instantiate_monitored_output_states(monitored_output_states=monitored_output_states,
@@ -920,7 +920,8 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
         System._get_monitored_output_states_for_system()
 
     """
-    from PsyNeuLink.Components.System import MonitoredOutputStatesOption
+    from PsyNeuLink.Components.System import \
+        MonitoredOutputStatesOption, MonitoredOutputStateTuple, OUTPUT_STATE_INDEX, WEIGHT_INDEX, EXPONENT_INDEX, MATRIX_INDEX
 
     if not isinstance(output_state_list, list):
         output_state_list = [output_state_list]

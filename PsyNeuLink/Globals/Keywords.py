@@ -531,9 +531,9 @@ GATING_POLICY = 'gating_policy'
 #region ----------------------------------------------    STATES  ------------------------------------------------------
 
 STATE = "State"
+STATE_TYPE = "state_type"
 # These are used as keys in State specification dictionaries
 STATES = "STATES"
-STATE_TYPE = "state_type"
 PROJECTIONS = "projections"  # Used to specify projection list to State DEPRECATED;  REPLACED BY CONNECTIONS
 CONNECTIONS = 'CONNECTIONS'
 kwStateName = "StateName"

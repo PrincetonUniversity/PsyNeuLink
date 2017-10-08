@@ -437,15 +437,17 @@ from toposort import toposort, toposort_flatten
 
 
 from PsyNeuLink.Components.Component import Component, ExecutionStatus, InitStatus, function_type
+from PsyNeuLink.Components.Process import ProcessList, ProcessTuple, Process_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism, OBJECTIVE_MECHANISM
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Process import ProcessList, ProcessTuple, Process_Base
+from PsyNeuLink.Components.States.InputState import InputState
+from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
 from PsyNeuLink.Globals.Keywords import \
-    SYSTEM, SYSTEM_INIT, COMPONENT_INIT, INITIALIZED, INITIALIZING, INITIAL_VALUES, EXECUTING, FUNCTION, \
-    MECHANISM, NAME, WEIGHT, EXPONENT, PROJECTION, \
+    NAME, SYSTEM, SYSTEM_INIT, COMPONENT_INIT, INITIALIZED, INITIALIZING, INITIAL_VALUES, EXECUTING, FUNCTION, \
+    PROJECTION, PROJECTIONS, WEIGHT, EXPONENT,\
     ALL, EVC_SIMULATION,  MATRIX, IDENTITY_MATRIX, LEARNING, LEARNING_SIGNAL, TIME_SCALE, \
     ORIGIN, SINGLETON, TERMINAL, INTERNAL, CYCLE, INITIALIZE_CYCLE, \
     CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CONTROL_SIGNAL_SPECS, MONITOR_FOR_CONTROL, SAMPLE, TARGET, \
@@ -2083,8 +2085,9 @@ class System_Base(System):
             #   monitored_output_states for System to specify its objective_mechanism (as list of OutputStates to be monitored)
             #   ControlSignals for System returned by _get_system_control_signals()
             controller = control_mech_spec(
-                          system=self,objective_mechanism=self._get_monitored_output_states_for_system(context=context),
-                          control_signals=self._get_control_signals_for_system(self.control_signals, context=context))
+                    system=self,
+                    objective_mechanism=self._get_monitored_output_states_for_system(context=context),
+                    control_signals=self._get_control_signals_for_system(self.control_signals, context=context))
 
         else:
             raise SystemError("Specification for {} of {} ({}) is not ControlMechanism".
@@ -2193,22 +2196,63 @@ class System_Base(System):
         # If there are none, assign PRIMARY_OUTPUT_STATES as default
         all_specs = controller_specs + system_specs or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
-        # FIX: 9/29/17 REDIRECT CALL TO _parse_state_spec AS IN ObjectiveMechanism._instantiate_monitored_output_states
+        # # MODIFIED 10/3/17 OLD:
         # Extract references to Mechanisms and/or OutputStates from any tuples
         # Note: leave tuples in all_specs for use in generating weight and exponent arrays below
-        # # MODIFIED 10/3/17 OLD:
         # all_specs = _parse_monitored_output_states(self, output_state_list=all_specs)
         # all_specs_extracted_from_tuples = [spec[OUTPUT_STATE_INDEX] for spec in all_specs]
-        # MODIFIED 10/3/17 NEW:
-        for spec in all_specs:
-            all_specs_extracted_from_tuples = []
-            from PsyNeuLink.Components.States.State import _parse_state_spec
+        # # MODIFIED 10/3/17 NEW:
+        # # Extract references to Mechanisms and/or OutputStates from any InputState specification dictionaries
+        # #    since that is what is returned by _get_monitored_states_for_system when specs are initially processed
+        # #    by the System to parse its *monitor_for_control* argument
+        # # Note: leave tuples in all_specs for use in generating weight and exponent arrays below
+        # all_specs_extracted_from_tuples = []
+        # for spec in all_specs:
+        #     if isinstance(spec, MonitoredOutputStatesOption):
+        #         state_spec = spec
+        #     else:
+        #         # Get OutputState from InputState specification dictionary,
+        #         # FIX: 10/3/17 - ??SHOULD PARSE PROJECTION SPEC RATHER THAN REFERENCE ITEM[0] OF FIRST PROJECTION SPEC
+        #         # FIX:           WHAT IF THERE IS MORE THAN ONE PROJECTION?
+        #         state_spec = spec[PROJECTIONS][0][0]
+        #     all_specs_extracted_from_tuples.append(state_spec)
+        # # MODIFIED 10/3/17 NEWER:
+        # # Extract references to Mechanisms and/or OutputStates from all_specs;  should be:
+        # #    - a MonitoredOutputStatesOption (parsed below);
+        # #    - a MonitoredOutputStatesTuple (returned by _get_monitored_states_for_system when
+        # #          specs were initially processed by the System to parse its *monitor_for_control* argument;
+        # #    - a specification for an existing OutputState from the *monitor_for_control* arg of System,
+        # #          which should return a reference to the OutputState when passed to _parse_state_spec
+        # # Note: leave MonitoredOutputStateTuples in all_specs for use in generating weight and exponent arrays below
+        all_specs_extracted_from_tuples = []
+        for i, spec in enumerate(all_specs):
             if isinstance(spec, MonitoredOutputStatesOption):
                 state_spec = spec
+            elif isinstance(spec, MonitoredOutputStateTuple):
+                state_spec = spec[OUTPUT_STATE_INDEX]
             else:
-                state_spec = _parse_state_spec(owner=self, state_type=OutputState, state_spec=spec)
+                # monitored_outout_state specified in *monitor_for_control* arg using InputState specification dict
+                #    (to include weights, exponents, and/or matrix)
+                input_state_spec = _parse_state_spec(owner=self, state_type=InputState, state_spec=spec)
+                # Get OutputState specification, which should be in a projection_spec for the InputState:
+                #    the projection_spec should be the first item of the list of projection in the PROJECTIONS entry
+                #    the OutputState should be the OUTPUT_STATE_INDEX item of the projection_spec (ConnectionTuple)
+                output_state = input_state_spec[PROJECTIONS][0][OUTPUT_STATE_INDEX]
+                # Should be now have the OutputState
+                if isinstance(state_spec, OutputState):
+                    # Replace item in all_specs with MonitoredOutputStateTuple
+                    #    that assigns specified weight, exponent and/or matrix
+                    all_specs[i] = MonitoredOutputStateTuple(output_state=output_state,
+                                                             weight=input_state_spec[WEIGHT],
+                                                             exponent=input_state_spec[EXPONENT],
+                                                             matrix=input_state_spec[PROJECTIONS][0][MATRIX_INDEX])
+                # Raise exception if couldn't retrieve a reference to an existing OutputState
+                else:
+                    raise SystemError("Specification of item in \'{}\' arg in constructor for {} is not an {} ({})".
+                                      format(MONITOR_FOR_CONTROL, self.name, OutputState.__name__, spec))
             all_specs_extracted_from_tuples.append(state_spec)
         # MODIFIED 10/3/17 END
+        # FIX: 10/3/17 - TURN THIS INTO A TRY AND EXCEPT:
         assert(all (isinstance(item, (OutputState, MonitoredOutputStatesOption)) for item in
                     all_specs_extracted_from_tuples))
 
@@ -2438,12 +2482,38 @@ class System_Base(System):
         #                                         EXPONENT:spec.exponent,
         #                                         PROJECTION:spec.matrix}
         # return input_state_dicts
-        # # MODIFIED 10/3/17 END
 
-
-
-
-
+        # # MODIFIED 10/3/17 NEWER:
+        # # Get and assign specification of weights, exponents and matrices specs for each monitored_output_state and
+        # #    assign to the corresponding State specification dictionaries used to specify the InputStates for the
+        # #    controller's ObjectiveMechanism (i.e., the InputState to which each specified monitored_output_state
+        # #    should project)
+        # assert(all(isinstance(output_state, OutputState) for output_state in monitored_output_states))
+        # input_state_dicts = [{NAME: item.name,
+        #                       WEIGHT:None,
+        #                       EXPONENT:None,
+        #                       PROJECTIONS:(item,None)}
+        #                        for item in monitored_output_states]
+        # for spec in all_specs:
+        #     if isinstance(spec, dict):
+        #         # FIX: 10/3/17 - THIS SHOULD NOW USE STATE SPECIFICATION DICT TO GET THE WEIGHTS
+        #         # FIX:           ?? BUT AREN'T THEY ALREADY THERE?
+        #         object_spec = spec.output_states[spec.name]
+        #         # For each OutputState in monitored_output_states
+        #         for i, input_state_dict in enumerate(input_state_dicts):
+        #             output_state = input_state_dict.output_states[input_state_dict.name]
+        #             # If either that OutputState or its owner is the object specified in the tuple
+        #             if (output_state is object_spec
+        #                 or output_state.name is object_spec
+        #                 or output_state.owner is object_spec):
+        #                 # Assign the weight, exponent and matrix specified in the spec to the output_state_tuple
+        #                 # (can't just assign spec, as its output_state entry may be an unparsed string rather than
+        #                 #  an actual OutputState)
+        #                 input_state_dicts[i] = {NAME: output_state.name,
+        #                                         WEIGHT:spec.weight,
+        #                                         EXPONENT:spec.exponent,
+        #                                         PROJECTIONS:(output_state, spec.matrix)}
+        # return input_state_dicts
 
     def _validate_monitored_state_in_system(self, monitored_states, context=None):
         for spec in monitored_states:

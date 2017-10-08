@@ -671,7 +671,6 @@ class InputState(State_Base):
 
         # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
 
-
         # Get connection (afferent Projection(s)) specification from tuple
         PROJECTIONS_INDEX = len(tuple_spec)-1
         try:

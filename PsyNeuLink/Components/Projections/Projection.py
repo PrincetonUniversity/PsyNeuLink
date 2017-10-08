@@ -314,7 +314,12 @@ import warnings
 
 from PsyNeuLink.Components.Component import Component, InitStatus
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
-from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_PROJECTION, GATING, GATING_PROJECTION, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX_KEYWORD_SET, MECHANISM, OUTPUT_STATE, PARAMETER_STATE_PARAMS, PROJECTION, PROJECTION_SENDER, PROJECTION_TYPE, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
+from PsyNeuLink.Globals.Keywords import \
+    MECHANISM, STATES, INPUT_STATE, OUTPUT_STATE, PROJECTION, PROJECTION_SENDER, PROJECTION_TYPE, \
+    PARAMETER_STATE_PARAMS, WEIGHT, EXPONENT, \
+    LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX_KEYWORD_SET, \
+    CONTROL, CONTROL_PROJECTION, GATING, GATING_PROJECTION, \
+    kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Utilities import ContentAddressableList, iscompatible, type_match
@@ -1111,7 +1116,8 @@ def _parse_projection_specs(connectee_state_type,
         BaseSpec = connectee_state_type
 
     # Request for afferent Projections (projection socket is SENDER)
-    if isinstance(owner, Mechanism) and issubclass(connectee_state_type, InputState):
+    # if isinstance(owner, Mechanism) and issubclass(connectee_state_type, InputState):
+    if issubclass(connectee_state_type, InputState):
         ConnectWith = OutputState            # type of State to which the connectee connects
         connect_with_attr = 'output_states'  # attribute that holds the ConnectWith States
         CONNECTIONS_KEYWORD = OUTPUT_STATES  # keyword used in a State specification dictionary for connection specs
@@ -1340,7 +1346,10 @@ def _parse_projection_specs(connectee_state_type,
             # Validate projection specification
             if projection_spec is not None:
                 if _is_projection_spec(projection_spec):
-                    _validate_connection_request(owner, ConnectWith, projection_spec, PROJECTION_SOCKET, connectee_state_type)
+                    _validate_connection_request(owner, ConnectWith,
+                                                 projection_spec,
+                                                 PROJECTION_SOCKET,
+                                                 connectee_state_type)
                 else:
                     raise ProjectionError("Invalid specification of {} ({}) for connection between {} and {} of {}.".
                                      format(Projection.__class__.__name__,
