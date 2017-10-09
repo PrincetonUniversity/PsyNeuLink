@@ -540,7 +540,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        MONITORED_OUTPUT_STATES: None,
+        # MONITORED_OUTPUT_STATES: None,
         TIME_SCALE: TimeScale.TRIAL,
         FUNCTION: LinearCombination,
         })
@@ -550,7 +550,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
-                 monitored_output_states,
                  input_states=None,
                  function=LinearCombination,
                  output_states:tc.optional(tc.any(list, dict))=[OUTCOME],
@@ -560,14 +559,21 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  context=None,
                  **kwargs):
 
-        # FIX:  ADD PARSE OF kwargs HERE TO CAPTURE input_states AS ARG IN KWARGS,
-        #            BUT RAISE EXCEPTION IF *ANY OTHER* ARGS ARE IN KWARGS
-        # FIX:  MAP monitored_output_states TO input_states AND MAKE monitored_output_states A PROPERTY THAT
-        #          GETS/SETS input_states
+        if MONITORED_OUTPUT_STATES in kwargs and kwargs[MONITORED_OUTPUT_STATES] is not None:
+            name_string = name or 'an ' + ObjectiveMechanism.__name__
+            if input_states:
+                warnings.warn("Both \'{}\' and \'{}\' args were specified in constuctor for {}; "
+                              "an attempt will be made to merge them but this may produce unexpected results.".
+                              format(MONITORED_OUTPUT_STATES, INPUT_STATES, name_string))
+                input_states.append(kwargs[MONITORED_OUTPUT_STATES])
+            input_states = kwargs[MONITORED_OUTPUT_STATES]
+            del kwargs[MONITORED_OUTPUT_STATES]
+            if kwargs:
+                raise ObjectiveMechanismError("\'Invalid arguments used in constructor for {}".
+                                              format(kwargs.keys(), name_string))
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(monitored_output_states=monitored_output_states,
-                                                  input_states=input_states,
+        params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   output_states=output_states,
                                                   function=function,
                                                   params=params)
@@ -676,27 +682,39 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             # If initialized, don't pass self.input_states, as this is now a list of existing InputStates
             input_states = None
 
-        # MODIFIED 10/3/17 NEW:
-        for spec in self.monitored_output_states:
-            monitored_output_state_parse_by_input_states = _parse_state_spec(owner=self,
-                                                                             state_type=InputState,
-                                                                             state_spec=spec,
-                                                                             context=context)
-        # MODIFIED 10/3/17 END
+        # MODIFIED 10/8/17 OLD:
 
-        monitored_output_states = monitored_output_states_specs or self.monitored_output_states
-        input_state_dicts, output_state_dicts = self._instantiate_monitored_output_states(monitored_output_states=monitored_output_states,
-                                                                                   input_states=input_states,
-                                                                                   context=context)
+       #  # MODIFIED 10/3/17 NEW:
+       #  for spec in self.monitored_output_states:
+       #      monitored_output_state_parse_by_input_states = _parse_state_spec(owner=self,
+       #                                                                       state_type=InputState,
+       #                                                                       state_spec=spec,
+       #                                                                       context=context)
+       #  # MODIFIED 10/3/17 END
+       #
+       #  monitored_output_states = monitored_output_states_specs or self.monitored_output_states
+       #  input_state_dicts, output_state_dicts = self._instantiate_monitored_output_states(monitored_output_states=monitored_output_states,
+       #                                                                             input_states=input_states,
+       #                                                                             context=context)
+       #
+       # # For each InputState specified by monitored_output_states, add an item to self.variable
+       #  #    - get specified constraint on variable and add item to self.variable
+       #  self.instance_defaults.variable = self.instance_defaults.variable or []
+       #  for i, input_state_dict in enumerate(input_state_dicts):
+       #      self.instance_defaults.variable.append(input_state_dict[VARIABLE])
 
-       # For each InputState specified by monitored_output_states, add an item to self.variable
-        #    - get specified constraint on variable and add item to self.variable
-        self.instance_defaults.variable = self.instance_defaults.variable or []
-        for i, input_state_dict in enumerate(input_state_dicts):
-            self.instance_defaults.variable.append(input_state_dict[VARIABLE])
+        # # Instantiate InputStates corresponding to OutputStates specified in specified monitored_output_states
+        # instantiated_input_states = super()._instantiate_input_states(input_states=input_state_dicts, context=context)
 
-        # Instantiate InputStates corresponding to OutputStates specified in specified monitored_output_states
-        instantiated_input_states = super()._instantiate_input_states(input_states=input_state_dicts, context=context)
+        # MODIFIED 10/8/17 NEW:
+        # Instantiate InputStates corresponding to OutputStates specified in specified
+        #    input_states or monitored_output_states
+        instantiated_input_states = super()._instantiate_input_states(input_states=self.input_states, context=context)
+
+        # MODIFIED 10/8/17 END
+
+
+
 
         # Get any Projections specified in input_states arg, else set to default (AUTO_ASSIGN_MATRIX)
         # Only do this during initialization;  otherwise, self._input_states has actual states, not specifications.
@@ -876,6 +894,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 self.function_object.exponents = [exponent or DEFAULT_EXPONENT for exponent in exponents]
 
     @property
+    def monitored_output_states(self):
+        return self.input_states
+
+    @property
     def monitored_output_states_weights_and_exponents(self):
         if hasattr(self.function_object, WEIGHTS) and self.function_object.weights is not None:
             weights = self.function_object.weights
@@ -968,8 +990,8 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
                                                   "(used to specify it in monitored_output_states for {})".
                                                   format(mech.name, item, source.name))
                 except AttributeError:
-                    raise ObjectiveMechanismError("MECHANISM entry ({}) of monitored_output_states specification dictionary "
-                                                  "for {} does not appear to have an output_states attribute".
+                    raise ObjectiveMechanismError("MECHANISM entry ({}) of monitored_output_states specification "
+                                                  "dictionary for {} seems to be missing an output_states attribute".
                                                   format(mech.name, source.name))
             else:
                 # Specification is an "unbound" string, so pass it along
