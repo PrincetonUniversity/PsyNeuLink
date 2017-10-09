@@ -4861,7 +4861,8 @@ class AdaptiveIntegrator(
 
     def get_param_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
-            noise_ty = ir.ArrayType(ctx.float_ty, len(self.noise)) if hasattr(self.noise, "__len__") else ctx.float_ty
+            noise_is_array = hasattr(self.noise, "__len__") and len(self.noise) != 1
+            noise_ty = ir.ArrayType(ctx.float_ty, len(self.noise)) if noise_is_array else ctx.float_ty
             # rate, offset, noise
             param_type = ir.LiteralStructType([ctx.float_ty, ctx.float_ty, noise_ty])
         return param_type
@@ -4888,7 +4889,8 @@ class AdaptiveIntegrator(
         offset_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         rate = builder.load(rate_p)
         offset = builder.load(offset_p)
-        if hasattr(self.noise, "__len__"):
+        if hasattr(self.noise, "__len__") and len(self.noise) != 1:
+            assert len(self.noise) == self._variable_length
             noise_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), index])
         else:
             noise_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
