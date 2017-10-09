@@ -69,6 +69,7 @@ created directly by calling its constructor, or using the `mechanism() <Mechanis
 RECURRENT_TRANSFER_MECHANISM as its **mech_spec** argument".
 However, the latter method is no longer correct: it instead creates a DDM: the problem is line 590 in Mechanism.py,
 as MechanismRegistry is empty!
+10/9/17 MANTEL: mechanism() factory method is removed
 COMMENT
 
 .. _Recurrent_Transfer_Structure:

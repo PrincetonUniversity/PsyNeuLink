@@ -61,9 +61,6 @@ register_category(entry=DDM,
 
 #region *************************************** ASSIGN DEFAULT MECHANISMS **********************************************
 
-# Use as default Mechanism in Process and in calls to mechanism()
-# Note: this must be a class (i.e., not an instantiated object)
-Mechanism_Base.default_mechanism = MechanismRegistry[Mechanism_Base.default_mechanism].subclass
 
 # Use as DefaultPreferenceSetOwner if owner is not specified for ComponentPreferenceSet (in ComponentPreferenceSet)
 # Note: this must be an instantiated object

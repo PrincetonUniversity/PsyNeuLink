@@ -638,7 +638,7 @@ import typecheck as tc
 from psyneulink.components.component import Component, ExecutionStatus, function_type, method_type
 from psyneulink.components.shellclasses import Function, Mechanism, Projection
 from psyneulink.globals.defaults import timeScaleSystemDefault
-from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, DDM_MECHANISM, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, kwMechanismComponentCategory, kwMechanismExecuteFunction, kwMechanismType, kwProcessDefaultMechanism
+from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
@@ -665,81 +665,6 @@ class MechanismError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
-
-
-def mechanism(mech_spec=None, params=None, context=None):
-    """Factory method for Mechanism; returns the type of Mechanism specified or a `default_mechanism`.
-    If called with no arguments, returns the `default_mechanism <Mechanism_Base.default_mechanism>`.
-
-    Arguments
-    ---------
-
-    mech_spec : Optional[Mechanism subclass, str, or dict]
-        specification for the Mechanism to create.
-        If it is the name of a Mechanism subclass, a default instance of that subclass is returned.
-        If it is string that is the name of a Mechanism subclass registered in the `MechanismRegistry`,
-        an instance of a default Mechanism for *that class* is returned; otherwise, the string is used to name an
-        instance of the `default_mechanism <Mechanism_Base.default_mechanism>.  If it is a dict, it must be a
-        `Mechanism specification dictionary <`Mechanism_Creation>`. If it is `None` or not specified, an instance of
-        the `default Mechanism <Mechanism_Base.default_mechanism>` is returned;
-        the nth instance created will be named by using the Mechanism's `componentType <Mechanism_Base.componentType>`
-        attribute as the base for the name and adding an indexed suffix:  componentType-n.
-
-    params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
-        the Mechanism and/or its function, and/or a custom function and its parameters.  It is passed to the relevant
-        subclass to instantiate the Mechanism. Its entries can be used to specify any attributes relevant to a
-        `Mechanism <Mechanism_Structure>` and/or defined specifically by the subclass being created.  Values specified
-        for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    COMMENT:
-        context : str
-            if it is the keyword VALIDATE, returns `True` if specification would return a valid
-            subclass object; otherwise returns :keyword:`False`.
-    COMMENT
-
-    Returns
-    -------
-
-    Instance of specified type of Mechanism or None : Mechanism
-    """
-
-    # Called with a keyword
-    if mech_spec in MechanismRegistry:
-        return MechanismRegistry[mech_spec].mechanismSubclass(params=params, context=context)
-
-    # Called with a string that is not in the Registry, so return default type with the name specified by the string
-    elif isinstance(mech_spec, str):
-        return Mechanism_Base.default_mechanism(name=mech_spec, params=params, context=context)
-
-    # Called with a Mechanism type, so return instantiation of that type
-    elif isclass(mech_spec) and issubclass(mech_spec, Mechanism):
-        return mech_spec(params=params, context=context)
-
-    # Called with Mechanism specification dict (with type and params as entries within it), so:
-    #    - get mech_type from kwMechanismType entry in dict
-    #    - pass all other entries as params
-    elif isinstance(mech_spec, dict):
-        # Get Mechanism type from kwMechanismType entry of specification dict
-        try:
-            mech_spec = mech_spec[kwMechanismType]
-        # kwMechanismType config_entry is missing (or mis-specified), so use default (and warn if in VERBOSE mode)
-        except (KeyError, NameError):
-            if Mechanism.classPreferences.verbosePref:
-                print("{0} entry missing from mechanisms dict specification ({1}); default ({2}) will be used".
-                      format(kwMechanismType, mech_spec, Mechanism_Base.default_mechanism))
-            return Mechanism_Base.default_mechanism(name=kwProcessDefaultMechanism, context=context)
-        # Instantiate Mechanism using mech_spec dict as arguments
-        else:
-            return mech_spec(context=context, **mech_spec)
-
-    # Called without a specification, so return default type
-    elif mech_spec is None:
-        return Mechanism_Base.default_mechanism(name=kwProcessDefaultMechanism, context=context)
-
-    # Can't be anything else, so return empty
-    else:
-        return None
 
 
 class Mechanism_Base(Mechanism):
@@ -963,10 +888,6 @@ class Mechanism_Base(Mechanism):
     time_scale : TimeScale : default TimeScale.TRIAL
         determines the default value of the `TimeScale` used by the Mechanism when `executed <Mechanism_Execution>`.
 
-    default_mechanism : Mechanism : default DDM
-        type of Mechanism instantiated when the `mechanism` command is called without a specification for its
-        **mech_spec** argument.
-
     name : str : default <Mechanism subclass>-<index>
         the name of the Mechanism.
         Specified in the **name** argument of the constructor for the Mechanism;  if not is specified,
@@ -1012,9 +933,6 @@ class Mechanism_Base(Mechanism):
     #    that is, DO NOT run the full Mechanism execute Process, since some components may not yet be instantiated
     #    (such as OutputStates)
     initMethod = INIT__EXECUTE__METHOD_ONLY
-
-    # IMPLEMENTATION NOTE: move this to a preference
-    default_mechanism = DDM_MECHANISM
 
     # Note:  the following enforce encoding as 2D np.ndarrays,
     #        to accomodate multiple States:  one 1D np.ndarray per state
@@ -1067,12 +985,8 @@ class Mechanism_Base(Mechanism):
 
         # Forbid direct call to base class constructor
         if context is None or (not isinstance(context, type(self)) and not VALIDATE in context):
-            # raise MechanismError("Direct call to abstract class Mechanism() is not allowed; "
-                                 # "use mechanism() or one of the following subclasses: {0}".
-                                 # format(", ".join("{!s}".format(key) for (key) in MechanismRegistry.keys())))
-                                 # format(", ".join("{!s}".format(key) for (key) in MechanismRegistry.keys())))
             raise MechanismError("Direct call to abstract class Mechanism() is not allowed; "
-                                 "use Mechanism() or a subclass")
+                                 "use a subclass")
 
         # IMPLEMENT **kwargs (PER State)
 

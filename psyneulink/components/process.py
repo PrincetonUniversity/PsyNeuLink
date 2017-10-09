@@ -62,7 +62,7 @@ Creating a Process
 A Process is created by instantiating the `Process` class. The Mechanisms to be included are specified in a list in its
 **pathway** argument, in the order in which they should be executed by the Process.  The Mechanism entries can be
 separated by `Projections <Projection>` used to connect them.  If no arguments are provided to the **pathway** argument,
-a Process with a single `default_mechanism <Mechanism_Base.default_mechanism>` is created.
+a Process with an empty pathway is created.
 
 .. _Process_Structure:
 
@@ -526,7 +526,7 @@ class Process(Process_Base):
             It implements a Process that is used to execute a sequence of Mechanisms connected by projections.
             NOTES:
                 * if no pathway or time_scale is provided:
-                    a single Mechanism of Mechanism class default_mechanism and TRIAL are used
+                    no mechanism and TRIAL are used
                 * the input to the Process is assigned as the input to its ORIGIN Mechanism
                 * the output of the Process is taken as the value of the primary OutputState of its TERMINAL Mechanism
 
@@ -539,7 +539,7 @@ class Process(Process_Base):
         classPreference : PreferenceSet : default ProcessPreferenceSet instantiated in __init__()
         classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + ClassDefaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
-        + paramClassDefaults = {PATHWAY: [Mechanism_Base.default_mechanism],
+        + paramClassDefaults = {PATHWAY: [],
                                 TIME_SCALE: TimeScale.TRIAL}
 
         Class methods
@@ -824,7 +824,7 @@ class Process(Process_Base):
                                '_isControllerProcess': False
                                })
 
-    default_pathway = [Mechanism_Base.default_mechanism]
+    default_pathway = []
 
     @tc.typecheck
     def __init__(self,
@@ -942,7 +942,7 @@ class Process(Process_Base):
             self.value = self.pathway[-1].output_state.value
 
 # DOCUMENTATION:
-#         Uses paramClassDefaults[PATHWAY] == [Mechanism_Base.default_mechanism] as default
+
 #         1) ITERATE THROUGH CONFIG LIST TO PARSE AND INSTANTIATE EACH MECHANISM ITEM
 #             - RAISE EXCEPTION IF TWO PROJECTIONS IN A ROW
 #         2) ITERATE THROUGH CONFIG LIST AND ASSIGN PROJECTIONS (NOW THAT ALL MECHANISMS ARE INSTANTIATED)
@@ -1151,11 +1151,7 @@ class Process(Process_Base):
 
             # Entry is NOT already a Mechanism object
             if not isinstance(mech, Mechanism):
-                # Note: need full pathname for mechanism factory method, as "mechanism" is used as local variable below
-                mech = PsyNeuLink.Components.Mechanisms.Mechanism.mechanism(mech, context=context)
-                if not mech:
-                    raise ProcessError("Entry {0} ({1}) is not a recognized form of Mechanism specification".
-                                       format(i, mech))
+                raise ProcessError("Entry {0} ({1}) is not a recognized form of Mechanism specification".format(i, mech))
                 # Params in mech tuple must be a dict or None
                 # if params and not isinstance(params, dict):
                 #     raise ProcessError("Params entry ({0}) of tuple in item {1} of pathway for {2} is not a dict".
