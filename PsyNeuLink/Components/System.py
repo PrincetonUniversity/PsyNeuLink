@@ -443,7 +443,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.Learn
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.States.InputState import InputState
-from PsyNeuLink.Components.States.State import _parse_state_spec
+from PsyNeuLink.Components.States.State import State, _parse_state_spec
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
 from PsyNeuLink.Globals.Keywords import \
     NAME, SYSTEM, SYSTEM_INIT, COMPONENT_INIT, INITIALIZED, INITIALIZING, INITIAL_VALUES, EXECUTING, FUNCTION, \
@@ -2217,11 +2217,11 @@ class System_Base(System):
         #         state_spec = spec[PROJECTIONS][0][0]
         #     all_specs_extracted_from_tuples.append(state_spec)
         # # MODIFIED 10/3/17 NEWER:
-        # # Extract references to Mechanisms and/or OutputStates from all_specs;  should be:
+        # # Extract references to Mechanisms and/or OutputStates from all_specs;  should be one of the following:
         # #    - a MonitoredOutputStatesOption (parsed below);
         # #    - a MonitoredOutputStatesTuple (returned by _get_monitored_states_for_system when
         # #          specs were initially processed by the System to parse its *monitor_for_control* argument;
-        # #    - a specification for an existing OutputState from the *monitor_for_control* arg of System,
+        # #    - a specification for an existing Mechanism or OutputState from the *monitor_for_control* arg of System,
         # #          which should return a reference to the OutputState when passed to _parse_state_spec
         # # Note: leave MonitoredOutputStateTuples in all_specs for use in generating weight and exponent arrays below
         all_specs_extracted_from_tuples = []
@@ -2231,9 +2231,17 @@ class System_Base(System):
             elif isinstance(spec, MonitoredOutputStateTuple):
                 state_spec = spec[OUTPUT_STATE_INDEX]
             else:
-                # monitored_outout_state specified in *monitor_for_control* arg using InputState specification dict
+                # monitored_output_state specified in *monitor_for_control* arg using InputState specification dict
                 #    (to include weights, exponents, and/or matrix)
-                input_state_spec = _parse_state_spec(owner=self, state_type=InputState, state_spec=spec)
+                # If spec is Mechanism or State, use the Mechanism as owner
+                if isinstance(spec, Mechanism):
+                    owner=spec
+                elif isinstance(spec, State):
+                    owner=spec.owner
+                # Otherwise, use self (System) as place-marker
+                else:
+                    owner = self
+                input_state_spec = _parse_state_spec(owner=owner, state_type=InputState, state_spec=spec)
                 # Get OutputState specification, which should be in a projection_spec for the InputState:
                 #    the projection_spec should be the first item of the list of projection in the PROJECTIONS entry
                 #    the OutputState should be the OUTPUT_STATE_INDEX item of the projection_spec (ConnectionTuple)

@@ -2429,7 +2429,7 @@ def _parse_state_spec(state_type=None,
                              "does belong to the {} specified in the \'{}\' argument ({})".
                              format(state.name, owner.name, Mechanism.__name__, OWNER, owner.name))
 
-        if not iscompatible(reference_value, state.value):
+        if reference_value is not None and not iscompatible(reference_value, state.value):
             raise StateError("The value ({}) of the State specified in the call to _instantiate_state for {} ({}) "
                              "does not match the type specified in the \'{}\' argument ({})".
                              format(state.value, owner.name, state.name, REFERENCE_VALUE, reference_value))
