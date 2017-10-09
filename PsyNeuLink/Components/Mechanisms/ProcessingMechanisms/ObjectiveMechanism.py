@@ -733,17 +733,19 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         instantiated_input_states = super()._instantiate_input_states(input_states=self.input_states, context=context)
         # MODIFIED 10/3/17 END
 
-
-
-
         # Get any Projections specified in input_states arg, else set to default (AUTO_ASSIGN_MATRIX)
         # Only do this during initialization;  otherwise, self._input_states has actual states, not specifications.
         if self.init_status is InitStatus.UNSET:
             input_state_projection_specs = []
+            output_states = []
             for i, state in enumerate(self.input_states):
-                input_state_projection_specs.append(state.params[PROJECTIONS] or [AUTO_ASSIGN_MATRIX])
-                # input_state_projection_specs.extend(state.params[PROJECTIONS] or [AUTO_ASSIGN_MATRIX])
-        # FIX: END DIFF
+                for projection_spec in state.params[PROJECTIONS]:
+                    input_state_projection_specs.extend(projection_spec.projection or [AUTO_ASSIGN_MATRIX])
+                    output_states.append(projection_spec.state)
+                    # FIX: 10/3/17 - CAN ConnectionTuple.state EVER BE NONE?  IF SO, THEN NEED TO CHECK FOR THAT HERE
+
+        # FIX: 10/3/17 -  ??UNDER WHAT CONDITIONS DOES self.init_status != InitStatus.UNSET (IN TEST ABOVE)
+        # FIX:            SINCE IN THAT CASE input_state_projection_specs and output_states won't be assigned
 
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # # MODIFIED 10/3/17 OLD:
@@ -755,13 +757,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         #                                         receiver_projection_specs=input_state_projection_specs,
         #                                         context=context)
         # MODIFIED 10/3/17 NEW:
-        output_states = [proj_spec.state for proj_spec in input_state_projection_specs]
-        if output_states:
-            _instantiate_monitoring_projections(owner=self,
-                                                sender_list=output_states,
-                                                receiver_list=instantiated_input_states,
-                                                receiver_projection_specs=input_state_projection_specs,
-                                                context=context)
+        _instantiate_monitoring_projections(owner=self,
+                                            sender_list=output_states,
+                                            receiver_list=instantiated_input_states,
+                                            receiver_projection_specs=input_state_projection_specs,
+                                            context=context)
         # MODIFIED 10/3/17 END
 
     def _instantiate_monitored_output_states(self, monitored_output_states, input_states=None, context=None):

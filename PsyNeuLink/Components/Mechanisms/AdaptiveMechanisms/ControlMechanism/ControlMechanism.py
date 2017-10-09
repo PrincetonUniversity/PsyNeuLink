@@ -314,9 +314,9 @@ from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import \
-    OWNER, NAME, VARIABLE, REFERENCE_VALUE, PROJECTIONS, PARAMS, INIT__EXECUTE__METHOD_ONLY, \
-    SYSTEM, PRODUCT, OBJECTIVE_MECHANISM, AUTO_ASSIGN_MATRIX, \
-    CONTROL, CONTROLLED_PARAM, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS
+    OWNER, NAME, VARIABLE, REFERENCE_VALUE, PARAMS, INIT__EXECUTE__METHOD_ONLY, SYSTEM, PRODUCT, OBJECTIVE_MECHANISM, \
+    PROJECTIONS, RECEIVER, AUTO_ASSIGN_MATRIX, \
+    CONTROL, CONTROLLED_PARAM, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, CONTROL_SIGNAL_SPECS
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
@@ -840,22 +840,26 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # FIX:      SHOULD JUST CALL: _instantiate_state(owner=self, state_type=GatingSignal, state_spec=control_signal)
         # FIX:      _instantiate_state WILL CALL _parse_state_specific_specs TO HANDLE STATE-SPECIFIC SPECS
         # PARSE control_signal SPECIFICATION -----------------------------------------------------------------------
-        # # MODIFIED 10/2/17 OLD:
+        # # MODIFIED 10/3/17 OLD:
         # control_signal_spec = _parse_control_signal_spec(owner=self, control_signal_spec=control_signal)
         # param_name = control_signal_spec[NAME]
         # control_signal_params = control_signal_spec[PARAMS]
         # control_projection = control_signal_spec[CONTROL_PROJECTION]
         # parameter_state = control_signal_spec[PARAMETER_STATE]
-        # MODIFIED 10/2/17 NEW:
         control_signal_spec = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
         param_name = control_signal_spec[NAME]
-        # FIX: NEED TO REINSTATE THE FUNCTIONALIY OF THE FOLLOWING LINE:
+        # MODIFIED 10/3/17 OLD:
         # control_projection = control_signal_spec[CONTROL_PROJECTION]
-        parameter_state = control_signal_spec[PARAMS][PROJECTIONS][0].state
-        # control_signal_params = control_signal_spec[PARAMS]
+        # parameter_state = control_signal_spec[PARAMS][PROJECTIONS][0].state
+        # MODIFIED 10/3/17 NEW:
+        # FIX: 10/3/17 - FIX THIS TO MORE DIRECTLY ACCESS PARAMETER STATSE FROM CONTROL_SIGNAL_SPECS
+        # FIX:           OR TEST FOR init STATUS AND DEAL WITH INITIALIZED AS WELL AS DEFERRED INIT
+        # FIX:           AND DEAL WITH MULTIPLE PROJECTIONS??  ?? parameter_state -> parameter_states AND HANDLE BELOW??
+        parameter_state = control_signal_spec[PARAMS][CONTROL_SIGNAL_SPECS][0].init_args[RECEIVER]
+        # control_signal_params = control_signal_spec[PARAMS]0
         control_signal_params = {}
         control_projection = None
-        # MODIFIED 10/2/17 END
+        # MODIFIED 10/3/17 END
 
         default_name = param_name + '_' + ControlSignal.__name__
 

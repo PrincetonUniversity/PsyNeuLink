@@ -2542,18 +2542,19 @@ def _parse_state_spec(state_type=None,
             if not VARIABLE in state_specification_dict and owner.prefs.verbosePref:
                 print("{} missing from specification dict for {} of {};  default ({}) will be used".
                       format(VARIABLE, state_type, owner.name, state_specification_dict))
-            if params and PROJECTIONS in params:
-                #       (E.G., WEIGHTS AND EXPONENTS FOR InputState AND INDEX FOR OutputState)
-                # FIX: 10/3/17 - NEED TO IMPLEMENT THIS IN INDIVIDUAL _parse_state_specific_params METHODS
-                # FIX: THIS IS CONSOLIDATE W/ CALL TO _parse_state_specific_params FOR State specification dict ABOVE
-                # state_params = state_type._parse_state_specific_params(state_type,
-                #                                                       owner=owner,
-                #                                                       state_specific_params=state_specification)
-                # Get and parse projection specifications for the State
-                projection_params = []
-                projection_params.append(params[PROJECTIONS])
-                if projection_params:
-                    params[PROJECTIONS] = _parse_projection_specs(state_type, owner, projection_params)
+            if params is not None:
+                if PROJECTIONS in params and params[PROJECTIONS] is not None:
+                    #       (E.G., WEIGHTS AND EXPONENTS FOR InputState AND INDEX FOR OutputState)
+                    # FIX: 10/3/17 - NEED TO IMPLEMENT THIS IN INDIVIDUAL _parse_state_specific_params METHODS
+                    # FIX: THIS IS CONSOLIDATE W/ CALL TO _parse_state_specific_params FOR State specification dict ABOVE
+                    # state_params = state_type._parse_state_specific_params(state_type,
+                    #                                                       owner=owner,
+                    #                                                       state_specific_params=state_specification)
+                    # Get and parse projection specifications for the State
+                    projection_params = []
+                    projection_params.append(params[PROJECTIONS])
+                    if projection_params:
+                        params[PROJECTIONS] = _parse_projection_specs(state_type, owner, projection_params)
                 # Update state_dict[PARAMS] with params
                 if state_dict[PARAMS] is None:
                     state_dict[PARAMS] = {}
