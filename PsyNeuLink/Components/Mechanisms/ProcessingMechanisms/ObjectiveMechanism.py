@@ -556,7 +556,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None,
                  **kwargs):
 
         if MONITORED_OUTPUT_STATES in kwargs and kwargs[MONITORED_OUTPUT_STATES] is not None:
@@ -602,21 +601,22 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """Validate that default_variable (if specified) matches in number of values the monitored_output_states
 
         """
-        # NOTE 6/29/17: (CW)
-        # This is a very questionable check. The problem is that TransferMechanism (if default_variable is passed as
-        # None) expects variable to be initialized to ClassDefaults.variable ([[0]]) while ObjectiveMechanism expects
-        # variable to be initialized to ClassDefaults.variable ([[0]]) AFTER this check has occurred. The problem is,
-        # my solution to this has been to write (in each subclass of ProcessingMechanism) specific behavior on how to
-        # react if both variable and size are None. This is fine but potentially cumbersome for future developers.
-        # We should consider deleting this check entirely, and allowing ProcessingMechanism (or a further parent class)
-        # to always set variable to ClassDefaults.variable if variable and size are both None.
-        # IMPLEMENTATION NOTE:  use self.user_params (i.e., values specified in constructor)
-        #                       since params have not yet been validated and so self.params is not yet available
-        if variable is not None and len(variable) != len(self.user_params[MONITORED_OUTPUT_STATES]):
-            raise ObjectiveMechanismError("The number of items specified for the default_variable arg ({}) of {} "
-                                          "must match the number of items specified for its monitored_output_states arg ({})".
-                                          format(len(variable), self.name, len(self.user_params[MONITORED_OUTPUT_STATES])))
-        # MODIFIED 6/29/17 END
+        # # MODIFIED 10/8/17 OLD: [OBVIATED BY ALIASING OF monitored_output_states TO input_states]
+        # # NOTE 6/29/17: (CW)
+        # # This is a very questionable check. The problem is that TransferMechanism (if default_variable is passed as
+        # # None) expects variable to be initialized to ClassDefaults.variable ([[0]]) while ObjectiveMechanism expects
+        # # variable to be initialized to ClassDefaults.variable ([[0]]) AFTER this check has occurred. The problem is,
+        # # my solution to this has been to write (in each subclass of ProcessingMechanism) specific behavior on how to
+        # # react if both variable and size are None. This is fine but potentially cumbersome for future developers.
+        # # We should consider deleting this check entirely, and allowing ProcessingMechanism (or a further parent class)
+        # # to always set variable to ClassDefaults.variable if variable and size are both None.
+        # # IMPLEMENTATION NOTE:  use self.user_params (i.e., values specified in constructor)
+        # #                       since params have not yet been validated and so self.params is not yet available
+        # if variable is not None and len(variable) != len(self.user_params[MONITORED_OUTPUT_STATES]):
+        #     raise ObjectiveMechanismError("The number of items specified for the default_variable arg ({}) of {} "
+        #                                   "must match the number of items specified for its monitored_output_states arg ({})".
+        #                                   format(len(variable), self.name, len(self.user_params[MONITORED_OUTPUT_STATES])))
+        # MODIFIED 10/8/17 END
 
         return super()._validate_variable(variable=variable, context=context)
 
@@ -682,7 +682,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             # If initialized, don't pass self.input_states, as this is now a list of existing InputStates
             input_states = None
 
-        # MODIFIED 10/8/17 OLD:
+        # MODIFIED 10/3/17 OLD:
 
        #  # MODIFIED 10/3/17 NEW:
        #  for spec in self.monitored_output_states:
@@ -706,12 +706,32 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # # Instantiate InputStates corresponding to OutputStates specified in specified monitored_output_states
         # instantiated_input_states = super()._instantiate_input_states(input_states=input_state_dicts, context=context)
 
-        # MODIFIED 10/8/17 NEW:
-        # Instantiate InputStates corresponding to OutputStates specified in specified
-        #    input_states or monitored_output_states
-        instantiated_input_states = super()._instantiate_input_states(input_states=self.input_states, context=context)
+        # MODIFIED 10/3/17 NEW:
 
-        # MODIFIED 10/8/17 END
+        # PARSE input_states (=monitored_output_states) specifications into InputState specification dictionaries
+        # and ASSIGN self.variable
+
+        # For each spec in input_state:
+        #    - parse into InputState specification dictionary
+        #    - get specified item for variable
+        input_state_variables = []
+        for i, input_state in enumerate(self.input_states):
+            input_state_dict = _parse_state_spec(owner=self, state_type=InputState, state_spec=input_state)
+            input_state_variables.append(input_state_dict[VARIABLE])
+
+        # If variable argument of ObjectiveMechanism constructor was specified,
+        #    use that as reference_value for InputStates (i.e, give it precedence over InputState specifications);
+        #    this is so that a different shape can be specified for an InputState of the ObjectiveMechanism
+        #    than that of the OutputState from which it receives a projection
+        #    (e.g., ComparatorMechanism for RL:  OutputState that projects to SAMPLE InputState can be a vector,
+        #     but the ObjectiveMechanism's InputState must be a scalar).
+        # If variable was *NOT* specified, then it is OK to get it from the InputState specifications
+        if self.variable is None:
+            self.instance_defaults.variable = self.instance_defaults.variable or input_state_variables
+
+        # Instantiate InputStates corresponding to OutputStates specified in specified
+        instantiated_input_states = super()._instantiate_input_states(input_states=self.input_states, context=context)
+        # MODIFIED 10/3/17 END
 
 
 
@@ -720,18 +740,28 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # Only do this during initialization;  otherwise, self._input_states has actual states, not specifications.
         if self.init_status is InitStatus.UNSET:
             input_state_projection_specs = []
-            for i, state in enumerate(self._input_states):
-                input_state_projection_specs.append(state.params[PROJECTIONS] or [AUTO_ASSIGN_MATRIX])
+            for i, state in enumerate(self.input_states):
+                input_state_projection_specs.extend(state.params[PROJECTIONS] or [AUTO_ASSIGN_MATRIX])
         # FIX: END DIFF
 
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        output_states = [monitored_output_state[OUTPUT_STATE] for monitored_output_state in output_state_dicts]
+        # # MODIFIED 10/3/17 OLD:
+        # output_states = [monitored_output_state[OUTPUT_STATE] for monitored_output_state in output_state_dicts]
+        # if output_states:
+        #     _instantiate_monitoring_projections(owner=self,
+        #                                         sender_list=output_states,
+        #                                         receiver_list=instantiated_input_states,
+        #                                         receiver_projection_specs=input_state_projection_specs,
+        #                                         context=context)
+        # MODIFIED 10/3/17 NEW:
+        output_states = [proj_spec.state for proj_spec in input_state_projection_specs]
         if output_states:
             _instantiate_monitoring_projections(owner=self,
                                                 sender_list=output_states,
                                                 receiver_list=instantiated_input_states,
                                                 receiver_projection_specs=input_state_projection_specs,
                                                 context=context)
+        # MODIFIED 10/3/17 END
 
     def _instantiate_monitored_output_states(self, monitored_output_states, input_states=None, context=None):
         """Parse monitored_output_state specs and instantiate monitored_output_states attribute
@@ -948,9 +978,6 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
     if not isinstance(output_state_list, list):
         output_state_list = [output_state_list]
 
-    # output_states = np.array([None] * len(output_state_list))
-    # weights = output_states.copy()
-    # exponents = weights.copy()
     output_states = []
     weights = []
     exponents = []
@@ -1143,6 +1170,7 @@ def _instantiate_monitoring_projections(owner,
 
     from PsyNeuLink.Components.States.OutputState import OutputState
     from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+    from PsyNeuLink.Components.Projections.Projection import ConnectionTuple
 
     receiver_projection_specs = receiver_projection_specs or [DEFAULT_MATRIX] * len(sender_list)
 
@@ -1163,12 +1191,16 @@ def _instantiate_monitoring_projections(owner,
         # IMPLEMENTATION NOTE:  If there is more than one Projection specified for a receiver, only the 1st is used;
         #                           (there should only be one if a 2-item tuple was used to specify the InputState,
         #                            however other forms of specifications could produce more)
-        if len(recvr_projs) > 1 and owner.verbosePref:
+        if isinstance(recvr_projs,list) and len(recvr_projs) > 1 and owner.verbosePref:
             warnings.warn("{} projections were specified for InputState ({}) of {} ;"
                           "only the first ({}) will be used".
-                          format(len(recvr_projs), receiver.name, owner.name))
-        projection_spec = recvr_projs[0]
+                          format(len(recvr_projs), receiver.name, owner.name, recvr_projs[0].state.name))
+            projection_spec = recvr_projs[0]
+        else:
+            projection_spec = recvr_projs
 
+        if isinstance(projection_spec, ConnectionTuple):
+            projection_spec = projection_spec.projection
 
         # IMPLEMENTATION NOTE:  This may not handle situations properly in which the OutputState is specified
         #                           by a 2-item tuple (i.e., with a Projection specification as its second item)
@@ -1179,7 +1211,10 @@ def _instantiate_monitoring_projections(owner,
                     raise ObjectiveMechanismError("PROGRAM ERROR: {} of {} already has an afferent projection "
                                                   "implemented and initialized ({})".
                                                   format(receiver.name, owner.name, receiver.aferents[0].name))
-                if not receiver.path_afferents[0].function_params[MATRIX] is projection_spec:
+                # FIX: 10/3/17 - IS IT OK TO IGNORE projection_spec IF IT IS None?  SHOULD IT HAVE BEEN SPECIFIED
+                #                RUN IN DEVEL TO SEE WHAT ENDS UP HERE
+                if (projection_spec and
+                        not receiver.path_afferents[0].function_params[MATRIX] is projection_spec):
                     raise ObjectiveMechanismError("PROGRAM ERROR: Projection specification for {} of {} ({}) "
                                                   "does not match matrix already assigned ({})".
                                                   format(receiver.name,

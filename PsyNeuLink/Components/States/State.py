@@ -1809,8 +1809,8 @@ def _instantiate_state_list(owner,
                            state_list,              # list of State specs, (state_spec, params) tuples, or None
                            state_type,              # StateType subclass
                            state_param_identifier,  # used to specify state_type State(s) in params[]
-                           reference_value,       # value(s) used as default for State and to check compatibility
-                           reference_value_name,  # name of reference_value type (e.g. variable, output...)
+                           reference_value,         # value(s) used as default for State and to check compatibility
+                           reference_value_name,    # name of reference_value type (e.g. variable, output...)
                            context=None):
     """Instantiate and return a ContentAddressableList of States specified in state_list
 
@@ -2358,7 +2358,8 @@ def _parse_state_spec(state_type=None,
         if isinstance(state_spec[STATE_SPEC_ARG], dict):
             # Use the value of any standard args specified in the State specification dictionary
             #    to replace those explicitly specified in the call to _instantiate_state (i.e., passed in standard_args)
-            state_specific_args = state_spec[STATE_SPEC_ARG]
+            #    (use copy so that items in state_spec dict are not deleted during call from _validate_params)
+            state_specific_args = state_spec[STATE_SPEC_ARG].copy()
             standard_args.update({key: state_specific_args[key] for key in state_specific_args if key in standard_args})
             # Delete them from the State specification dictionary, leaving only state-specific items there
             for key in standard_args:

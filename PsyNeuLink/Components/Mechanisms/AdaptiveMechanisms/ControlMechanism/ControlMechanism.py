@@ -313,9 +313,10 @@ from PsyNeuLink.Components.ShellClasses import Mechanism, System
 from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import OWNER, NAME, REFERENCE_VALUE, PROJECTIONS, PARAMS, INIT__EXECUTE__METHOD_ONLY, \
-                                        SYSTEM, MECHANISM, PRODUCT, OBJECTIVE_MECHANISM, AUTO_ASSIGN_MATRIX, \
-                                        CONTROL, CONTROLLED_PARAM, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS
+from PsyNeuLink.Globals.Keywords import \
+    OWNER, NAME, VARIABLE, REFERENCE_VALUE, PROJECTIONS, PARAMS, INIT__EXECUTE__METHOD_ONLY, \
+    SYSTEM, PRODUCT, OBJECTIVE_MECHANISM, AUTO_ASSIGN_MATRIX, \
+    CONTROL, CONTROLLED_PARAM, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
@@ -699,6 +700,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 if isinstance(item, MonitoredOutputStateTuple):
                     # Create InputState specification dictionary:
                     monitored_output_states[i] = {NAME: item.output_state.name,
+                                                  VARIABLE: item.output_state.value,
                                                   WEIGHT:item.weight,
                                                   EXPONENT:item.exponent,
                                                   PROJECTIONS:(item.output_state, item.matrix)}
