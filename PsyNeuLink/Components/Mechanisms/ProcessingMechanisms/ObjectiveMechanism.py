@@ -741,7 +741,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if self.init_status is InitStatus.UNSET:
             input_state_projection_specs = []
             for i, state in enumerate(self.input_states):
-                input_state_projection_specs.extend(state.params[PROJECTIONS] or [AUTO_ASSIGN_MATRIX])
+                input_state_projection_specs.append(state.params[PROJECTIONS] or [AUTO_ASSIGN_MATRIX])
+                # input_state_projection_specs.extend(state.params[PROJECTIONS] or [AUTO_ASSIGN_MATRIX])
         # FIX: END DIFF
 
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
