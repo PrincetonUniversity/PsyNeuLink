@@ -144,8 +144,8 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   name='EVC Test System')
 
 # Show characteristics of system:
-mySystem.show()
-mySystem.controller.show()
+# mySystem.show()
+# mySystem.controller.show()
 # mySystem.show_graph(show_control=True)
 # mySystem.show_graph()
 

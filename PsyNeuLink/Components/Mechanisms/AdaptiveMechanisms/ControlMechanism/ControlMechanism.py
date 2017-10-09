@@ -846,16 +846,18 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # control_signal_params = control_signal_spec[PARAMS]
         # control_projection = control_signal_spec[CONTROL_PROJECTION]
         # parameter_state = control_signal_spec[PARAMETER_STATE]
-        control_signal_spec = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
-        param_name = control_signal_spec[NAME]
-        # MODIFIED 10/3/17 OLD:
+        # param_name = control_signal_spec[NAME]
         # control_projection = control_signal_spec[CONTROL_PROJECTION]
         # parameter_state = control_signal_spec[PARAMS][PROJECTIONS][0].state
         # MODIFIED 10/3/17 NEW:
-        # FIX: 10/3/17 - FIX THIS TO MORE DIRECTLY ACCESS PARAMETER STATSE FROM CONTROL_SIGNAL_SPECS
-        # FIX:           OR TEST FOR init STATUS AND DEAL WITH INITIALIZED AS WELL AS DEFERRED INIT
-        # FIX:           AND DEAL WITH MULTIPLE PROJECTIONS??  ?? parameter_state -> parameter_states AND HANDLE BELOW??
+        # FIX: 10/3/17 - * SHOULD MORE DIRECTLY ACCESS PARAMETER STATSE FROM CONTROL_SIGNAL_SPECS
+        # FIX:           * SHOULD TEST FOR init STATUS AND DEAL WITH INITIALIZED AS WELL AS DEFERRED INIT
+        # FIX:           * SHOULD DEAL WITH MULTIPLE PROJECTIONS: ??parameter_state -> parameter_states & HANDLE BELOW??
+        # FIX:           * allocation_samples NOT GETTING ASSIGNED TO CONTROL_SIGNAL_SPECS (AS IN devel)
+        control_signal_spec = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
         parameter_state = control_signal_spec[PARAMS][CONTROL_SIGNAL_SPECS][0].init_args[RECEIVER]
+        param_name = parameter_state.name
+
         # control_signal_params = control_signal_spec[PARAMS]0
         control_signal_params = {}
         control_projection = None
@@ -1019,6 +1021,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
             for projection in state.path_afferents:
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner
+                # FIX: 10/3/17 - self.monitored_output_states IS A LIST OF INPUT_STATES,
+                # FIX:            BUT monitored_state IS AN INPUT_STATE
+                # FIX:            * ??USE monitored_state.name,
+                # FIX:              BUT THEN NEED TO UPDATE index METHOD OF
+                # ContentAddressableList
                 monitored_state_index = self.monitored_output_states.index(monitored_state)
 
                 weight = self.monitored_output_states_weights_and_exponents[monitored_state_index][0]
