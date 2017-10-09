@@ -662,10 +662,13 @@ class LCControlMechanism(ControlMechanism):
                     context=None):
         """Updates LCControlMechanism's ControlSignal based on input and mode parameter value
         """
-        return self.function(variable=variable,
+        output_values = self.function(variable=variable,
                              params=runtime_params,
                              time_scale=time_scale,
                              context=context)
+        gain_t = 3*output_values[1] + 0.5
+        return gain_t, gain_t, output_values[0], output_values[1], output_values[2]
+
 
     @tc.typecheck
     def add_modulated_mechanisms(self, mechanisms:list):
