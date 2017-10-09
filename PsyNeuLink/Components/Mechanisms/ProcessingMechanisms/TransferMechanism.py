@@ -126,6 +126,11 @@ from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, Prefer
 from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
+import functools
+import ctypes
+import PsyNeuLink.llvm as pnlvm
+from llvmlite import ir
+
 # TransferMechanism parameter keywords:
 RANGE = "range"
 TIME_CONSTANT = "time_constant"
@@ -419,6 +424,13 @@ class TransferMechanism(ProcessingMechanism_Base):
         if default_variable is None and size is None:
             default_variable = [[0]]
 
+        def nested_len(x):
+            try:
+                return sum(nested_len(y) for y in x)
+            except:
+                return 1
+        self._variable_length = nested_len(default_variable)
+
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
                                                   input_states=input_states,
@@ -443,6 +455,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                 name=name,
                                                 prefs=prefs,
                                                 context=self)
+        self.nv_state = None
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate FUNCTION and Mechanism params
@@ -604,6 +617,145 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         if self.initial_value is None:
             self.initial_value = self.instance_defaults.variable
+
+    def get_param_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            param_type_list = [self.function_object.get_param_struct_type()]
+            if self.integrator_mode:
+                assert self.integrator_function is not None
+                param_type_list.append(self.integrator_function.get_param_struct_type())
+
+            return ir.LiteralStructType(param_type_list)
+
+
+    def get_context_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            context_type_list = [self.function_object.get_context_struct_type()]
+            if self.integrator_mode:
+                assert self.integrator_function is not None
+                context_type_list.append(self.integrator_function.get_context_struct_type())
+
+            context_type = ir.LiteralStructType(context_type_list)
+            return context_type
+
+
+    def get_output_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
+            output_type = ir.LiteralStructType([vec_ty])
+            return output_type
+
+
+    def get_input_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
+            input_type = ir.LiteralStructType([vec_ty])
+            return input_type
+
+
+    def __gen_llvm_clamp(self, builder, index, ctx, vo, min_val, max_val):
+        ptri = builder.gep(vo, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        val = builder.load(ptri)
+        val = pnlvm.helpers.fclamp_const(builder, val, min_val, max_val)
+
+        builder.store(val, ptro)
+        pass
+
+    def _gen_llvm_function(self):
+        func_name = None
+        llvm_func = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            func_ty = ir.FunctionType(ir.VoidType(),
+                (self.get_param_struct_type().as_pointer(),
+                 self.get_context_struct_type().as_pointer(),
+                 self.get_input_struct_type().as_pointer(),
+                 self.get_output_struct_type().as_pointer()))
+
+            func_name = ctx.module.get_unique_name("integrator_machanism")
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            params, state, si, so = llvm_func.args
+            for p in params, state, si, so:
+                p.attributes.add('nonnull')
+                p.attributes.add('noalias')
+
+            # Create entry block
+            block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(block)
+            vi = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vo = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+            mf_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            if self.integrator_mode:
+                assert self.integrator_function is not None
+                integrator_function = ctx.get_llvm_function(self.integrator_function.llvmSymbolName)
+                output_param = integrator_function.args[3]
+                vtmp = builder.alloca(output_param.type.gep(ctx.int32_ty(0)), 1)
+                if_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+                if_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+                builder.call(integrator_function, [if_params, if_state, vi, vtmp])
+
+                # We know that TransferFunction is not stateful, but a consistent interface would be nicer
+                builder.call(main_function, [mf_params, vtmp, vo])
+            else:
+                # We know that TransferFunction is not stateful, but a consistent interface would be nicer
+                builder.call(main_function, [mf_params, vi, vo])
+
+            if self.range is not None:
+                kwargs = {"ctx":ctx, "vo":vo, "min_val":self.range[0], "max_val":self.range[1]}
+                inner = functools.partial(self.__gen_llvm_clamp, **kwargs)
+
+                vector_length = ctx.int32_ty(self._variable_length)
+                builder = pnlvm.helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
+
+            builder.ret_void()
+        return func_name
+
+
+    def _bin_execute(self,
+                 variable=None,
+                 runtime_params=None,
+                 clock=CentralClock,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+
+        transfer_params = self.function_object.get_param_initializer()
+
+        if self.integrator_mode:
+            assert self.integrator_function is not None
+            integrator_params = self.integrator_function.get_param_initializer()
+        else:
+            integrator_params = tuple()
+
+        bf = self._llvmBinFunction
+
+        def nested_len(x):
+            try:
+                return sum(nested_len(y) for y in x)
+            except:
+                return 1
+        ret = np.zeros(nested_len(variable))
+        par_struct_ty, context_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
+
+        if self.nv_state is None:
+            initializer_t = self.function_object.get_context_initializer()
+            initializer_i = self.integrator_function.get_context_initializer()
+            self.nv_state = context_struct_ty(initializer_t, initializer_i)
+        ct_context = self.nv_state
+        ct_param = par_struct_ty(transfer_params, integrator_params)
+
+        variable = np.asarray(variable)
+        # This is bit hacky because numpy can't cast to arrays
+        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
+        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
+
+        bf(ct_param, ct_context, ct_vi, ct_vo)
+
+        return ret
+
 
     def _execute(self,
                  variable=None,
