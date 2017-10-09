@@ -1212,7 +1212,7 @@ def _instantiate_monitoring_projections(owner,
                                                   "implemented and initialized ({})".
                                                   format(receiver.name, owner.name, receiver.aferents[0].name))
                 # FIX: 10/3/17 - IS IT OK TO IGNORE projection_spec IF IT IS None?  SHOULD IT HAVE BEEN SPECIFIED
-                #                RUN IN DEVEL TO SEE WHAT ENDS UP HERE
+                # FIX:           IN DEVEL, projection_spec HAS BEEN PROPERLY ASSIGNED
                 if (projection_spec and
                         not receiver.path_afferents[0].function_params[MATRIX] is projection_spec):
                     raise ObjectiveMechanismError("PROGRAM ERROR: Projection specification for {} of {} ({}) "
