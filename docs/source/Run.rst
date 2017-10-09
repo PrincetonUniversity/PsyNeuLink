@@ -1,6 +1,6 @@
 Run
 ===
 
-.. automodule:: Run
+.. automodule:: Environment
    :members:
    :exclude-members: random

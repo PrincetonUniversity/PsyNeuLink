@@ -1,7 +1,7 @@
 from psyneulink.components.functions.function import *
 from psyneulink.components.mechanisms.processing.transfermechanism import *
 from psyneulink.components.process import Process
-from psyneulink.globals.run import run
+from psyneulink.globals.environment import run
 from psyneulink.library.mechanisms.processing.integrator.ddm import *
 
 # import random

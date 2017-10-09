@@ -2132,7 +2132,7 @@ class Process(Process_Base):
             context = EXECUTING + " " + PROCESS + " " + self.name
             self.execution_status = ExecutionStatus.EXECUTING
 
-        from psyneulink.globals.run import _get_unique_id
+        from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
         for mech in self.mechanisms:
             mech._execution_id = self._execution_id
@@ -2378,7 +2378,7 @@ class Process(Process_Base):
         if initial_values is None and self.initial_values:
             initial_values = self.initial_values
 
-        from psyneulink.globals.run import run
+        from psyneulink.globals.environment import run
         return run(self,
                    inputs=inputs,
                    num_trials=num_trials,

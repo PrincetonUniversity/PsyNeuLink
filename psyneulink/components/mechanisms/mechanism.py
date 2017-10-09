@@ -1757,7 +1757,7 @@ class Mechanism_Base(Mechanism):
             <Mechanism_OutputStates>` for each execution of the Mechanism.
 
         """
-        from psyneulink.globals.run import run
+        from psyneulink.globals.environment import run
         return run(self,
                    inputs=inputs,
                    num_trials=num_trials,

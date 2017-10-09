@@ -2332,7 +2332,7 @@ class System(System_Base):
             self.execution_status = ExecutionStatus.EXECUTING
 
         # Update execution_id for self and all mechanisms in graph (including learning) and controller
-        from psyneulink.globals.run import _get_unique_id
+        from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
         # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
         # self.learningexecution_list
@@ -2709,7 +2709,7 @@ class System(System_Base):
 
         logger.debug(inputs)
 
-        from psyneulink.globals.run import run
+        from psyneulink.globals.environment import run
         return run(self,
                    inputs=inputs,
                    num_trials=num_trials,
