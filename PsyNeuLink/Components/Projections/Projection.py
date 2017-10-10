@@ -1065,7 +1065,10 @@ def _parse_projection_specs(connectee_state_type,
         #         - the fourth (optional) must resolve to an ConnectWith specification
         #           (parsed in a recursive call to _parse_state_specific_entries)
 
-    Returns list of ConnectionTuples
+    Returns list of ConnectionTuples, each of which specifies:
+        - the state to be connected with
+        - weight and exponent for that connection (assigned to the projection)
+        - projection specification
 
     """
 
@@ -1193,6 +1196,9 @@ def _parse_projection_specs(connectee_state_type,
 
     for connection in connections:
 
+        # FIX: 10/3/17 - IF IT IS ALREADY A PROJECTION OF THE CORRECT TYPE FOR THE CONNECTEE:
+        # FIX:               ?? RETURN AS IS, AND/OR PARSE INTO DICT??
+
         # If a Mechanism, State, or str (name) is used to specify the connection on its own (i.e., w/o dict or tuple)
         #     put in tuple with default values of other specs, and call _parse_projection_specs recursively
         #     to validate the state spec and append ConnectionTuple to connect_with_states
@@ -1200,8 +1206,8 @@ def _parse_projection_specs(connectee_state_type,
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, DEFAULT_PROJECTION)
             connect_with_states.extend(_parse_projection_specs(connectee_state_type, owner, connection_tuple))
 
-        # If a projection specification is used to specify the connection:
-        #  assign the projection specification to the projection_specification item of the tuple,
+        # If a Projection specification is used to specify the connection:
+        #  assign the Projection specification to the projection_specification item of the tuple,
         #  but also leave it is as the connection specification (it will get resolved to a State reference when the
         #    tuple is created in the recursive call to _parse_projection_specs below).
         if _is_projection_spec(connection, include_matrix_spec=False):
@@ -1425,7 +1431,9 @@ def _validate_connection_request(
                 # Projection's socket has been assigned to a State
                 if projection_socket_state:
                     # Validate that the State is same class as connect_with_state
-                    if issubclass(projection_socket_state, connect_with_state):
+                    if (isinstance(projection_socket_state, connect_with_state) or
+                            (inspect.isclass(projection_socket_state)
+                             and issubclass(projection_socket_state, connect_with_state))):
                         return True
                 else:
                     _validate_projection_type(projection_spec.__class__)

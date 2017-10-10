@@ -1551,7 +1551,7 @@ class State_Base(State):
         raise StateError("PROGRAM ERROR: {} does not implement _get_primary_state method".
                          format(self.__class__.__name__))
 
-    def _parse_state_specific_params(self, owner, state_specific_params):
+    def _parse_state_specific_params(self, owner, state_spec_dict, state_specific_params):
         # FIX: MODIFY THIS TO HANDLE STANDARD FORM (state_spec, projection_spec); SUBCLASSES SHOULD OVERRIDE
         #       IF THEY ALLOW ANYTHING OR THAN IT, BUT SHOULD CALL THIS WHERE THEY WANT TO TRY THE STANDARD FORM
         # FIX:  ??ADD VERSION OF THIS TO PROJECT (FOR _parse_projection_specific_tuple)??
@@ -2507,8 +2507,9 @@ def _parse_state_spec(state_type=None,
         # FIX:           NEEDS TO MOVE REFERENCE_VALUE ENTRY FROM STATE_PARAMS INTO STATE_DICT
         # Get state-specific params from tuple
         state_params = state_type._parse_state_specific_params(state_type,
-                                                              owner=owner,
-                                                              state_specific_params=state_specification)
+                                                               owner=owner,
+                                                               state_dict=state_dict,
+                                                               state_specific_params=state_specification)
 
         # Re-parse standard_args using 1st item of tuple as the state_spec
         state_dict = _parse_state_spec(context=context, state_spec=state_specification[0], **standard_args)
@@ -2520,39 +2521,44 @@ def _parse_state_spec(state_type=None,
 
     # State specification dictionary
     else:
-        state_specification_dict = state_dict
+        state_dict = state_dict
         # Dict has a single entry in which the key is not a recognized keyword,
         #    so assume it is of the form {<STATE_NAME>:<STATE_SPECIFICATION_DICT>}:
         #    - assign STATE_NAME as name,
         #    - recursively call _parse_state_spec
-        #    - which returns parsed state_specification_dict (with key as value of the NAME entry)
-        if len(state_specification_dict) == 1:
-            name, state_spec = list(state_specification_dict.items())[0]
+        #    - which returns parsed state_dict (with key as value of the NAME entry)
+        if len(state_dict) == 1:
+            name, state_spec = list(state_dict.items())[0]
             if name not in (state_keywords | STANDARD_STATE_ARGS):
                 # Use name specified as key in initial state_specification
                 #     (overrides one in State specification dict if specified)
                 #    and assign its value as the new state_spec
                 # Recursively call _parse_state_spec
-                state_specification_dict['name']=name
-                state_dict = _parse_state_spec(context=context, state_spec=state_spec, **state_specification_dict, )
+                state_dict['name']=name
+                state_dict = _parse_state_spec(context=context, state_spec=state_spec, **state_dict, )
 
         # Standard state specification dict
         else:
             # Warn if VARIABLE was not in dict
-            if not VARIABLE in state_specification_dict and owner.prefs.verbosePref:
+            if not VARIABLE in state_dict and owner.prefs.verbosePref:
                 print("{} missing from specification dict for {} of {};  default ({}) will be used".
-                      format(VARIABLE, state_type, owner.name, state_specification_dict))
+                      format(VARIABLE, state_type, owner.name, state_dict))
             if params is not None:
+
+                # FIX: 10/3/17 - NEED TO IMPLEMENT THIS IN INDIVIDUAL _parse_state_specific_params METHODS
+                # FIX: THIS IS CONSOLIDATE W/ CALL TO _parse_state_specific_params FOR State specification dict ABOVE
+                # FIX: XXX ADD state_params TO params?? OR BELOW??
+                params = state_type._parse_state_specific_params(state_type,
+                                                                 owner=owner,
+                                                                 state_dict=state_dict,
+                                                                 state_specific_params=params)
+
+                # FIX: IS ALL OF THIS NECESSARY?
                 if PROJECTIONS in params and params[PROJECTIONS] is not None:
                     #       (E.G., WEIGHTS AND EXPONENTS FOR InputState AND INDEX FOR OutputState)
-                    # FIX: 10/3/17 - NEED TO IMPLEMENT THIS IN INDIVIDUAL _parse_state_specific_params METHODS
-                    # FIX: THIS IS CONSOLIDATE W/ CALL TO _parse_state_specific_params FOR State specification dict ABOVE
-                    # state_params = state_type._parse_state_specific_params(state_type,
-                    #                                                       owner=owner,
-                    #                                                       state_specific_params=state_specification)
                     # Get and parse projection specifications for the State
                     projection_params = []
-                    projection_params.append(params[PROJECTIONS])
+                    projection_params.extend(params[PROJECTIONS])
                     if projection_params:
                         params[PROJECTIONS] = _parse_projection_specs(state_type, owner, projection_params)
                 # Update state_dict[PARAMS] with params

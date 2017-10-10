@@ -643,7 +643,7 @@ class InputState(State_Base):
 
 # MODIFIED 9/30/17 NEW:
     @tc.typecheck
-    def _parse_state_specific_params(self, owner, state_specific_params):
+    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
         """Get weights, exponents and/or any connections specified in an InputState specification tuple
         
         Tuple specification can be:
@@ -667,54 +667,63 @@ class InputState(State_Base):
         from PsyNeuLink.Globals.Keywords import CONNECTIONS        
 
         params_dict = {}
-        tuple_spec = state_specific_params
 
-        # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
+        if isinstance(state_specific_params, dict):
+            pass
 
-        # Get connection (afferent Projection(s)) specification from tuple
-        PROJECTIONS_INDEX = len(tuple_spec)-1
-        try:
-            projections_spec = tuple_spec[PROJECTIONS_INDEX]
-        except IndexError:
-            projections_spec = None
+        elif isinstance(state_specific_params, tuple):
 
-        if projections_spec:
+            tuple_spec = state_specific_params
+            # Note: 1s item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
+
+            # Get connection (afferent Projection(s)) specification from tuple
+            PROJECTIONS_INDEX = len(tuple_spec)-1
             try:
-                params_dict[PROJECTIONS] = _parse_projection_specs(self.__class__,
-                                                                   owner=owner,
-                                                                   connections={projections_spec})
-            except InputStateError:
-                raise InputStateError("Item {} of tuple specification in {} specification dictionary "
-                                      "for {} ({}) is not a recognized specification for one or more "
-                                      "{}s, {}s, or {}s that project to it".
-                                      format(PROJECTIONS_INDEX,
-                                             InputState.__name__,
-                                             owner.name,
-                                             projections_spec,
-                                             Mechanism.__name__,
-                                             OutputState.__name__,
-                                             Projection.__name))
-    
-        # Tuple is (spec, weights, exponents<, afferent_source_spec>), 
-        #    for specification of weights and exponents,  + connection(s) (afferent projection(s)) to InputState
-        if len(tuple_spec) in {3, 4}:
+                projections_spec = tuple_spec[PROJECTIONS_INDEX]
+            except IndexError:
+                projections_spec = None
 
-            weight = tuple_spec[WEIGHT_INDEX]
-            exponent = tuple_spec[EXPONENT_INDEX]
+            if projections_spec:
+                try:
+                    params_dict[PROJECTIONS] = _parse_projection_specs(self.__class__,
+                                                                       owner=owner,
+                                                                       connections={projections_spec})
+                except InputStateError:
+                    raise InputStateError("Item {} of tuple specification in {} specification dictionary "
+                                          "for {} ({}) is not a recognized specification for one or more "
+                                          "{}s, {}s, or {}s that project to it".
+                                          format(PROJECTIONS_INDEX,
+                                                 InputState.__name__,
+                                                 owner.name,
+                                                 projections_spec,
+                                                 Mechanism.__name__,
+                                                 OutputState.__name__,
+                                                 Projection.__name))
 
-            if weight is not None and not isinstance(weight, numbers.Number):
-                raise InputStateError("Specification of the weight ({}) in tuple of {} specification dictionary "
-                                      "for {} must be a number".format(weight, InputState.__name__, owner.name))
-            params_dict[WEIGHT] = weight
+            # Tuple is (spec, weights, exponents<, afferent_source_spec>),
+            #    for specification of weights and exponents,  + connection(s) (afferent projection(s)) to InputState
+            if len(tuple_spec) in {3, 4}:
 
-            if exponent is not None and not isinstance(exponent, numbers.Number):
-                raise InputStateError("Specification of the exponent ({}) in tuple of {} specification dictionary "
-                                      "for {} must be a number".format(exponent, InputState.__name__, owner.name))
-            params_dict[EXPONENT] = exponent
+                weight = tuple_spec[WEIGHT_INDEX]
+                exponent = tuple_spec[EXPONENT_INDEX]
 
-        else:
-            raise StateError("Tuple provided as state_spec for {} of {} ({}) must have either 2, 3 or 4 items".
-                             format(InputState.__name__, owner.name, tuple_spec))
+                if weight is not None and not isinstance(weight, numbers.Number):
+                    raise InputStateError("Specification of the weight ({}) in tuple of {} specification dictionary "
+                                          "for {} must be a number".format(weight, InputState.__name__, owner.name))
+                params_dict[WEIGHT] = weight
+
+                if exponent is not None and not isinstance(exponent, numbers.Number):
+                    raise InputStateError("Specification of the exponent ({}) in tuple of {} specification dictionary "
+                                          "for {} must be a number".format(exponent, InputState.__name__, owner.name))
+                params_dict[EXPONENT] = exponent
+
+            else:
+                raise StateError("Tuple provided as state_spec for {} of {} ({}) must have either 2, 3 or 4 items".
+                                 format(InputState.__name__, owner.name, tuple_spec))
+
+        elif state_specific_params is not None:
+            raise InputStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
+                                  format(self.__class__.__name__, state_specific_params))
 
         return params_dict
 # MODIFIED 9/30/17 END

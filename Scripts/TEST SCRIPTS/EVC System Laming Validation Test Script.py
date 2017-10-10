@@ -4,6 +4,7 @@ from PsyNeuLink.Components.System import MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
@@ -36,10 +37,10 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                                                                           ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)},
                                                                       )),
 
-                                   threshold=(1.0, ControlProjection(function=Linear,
-                                                                     control_signal_params={
-                                                                         ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
-                                                                     )),
+                                   # threshold=(1.0, ControlProjection(function=Linear,
+                                   #                                   control_signal_params={
+                                   #                                       ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
+                                   #                                   )),
 
                                    # threshold=(1.0, ControlProjection(function=Linear,
                                    #                                   control_signal_params={
@@ -47,8 +48,8 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                                    #                                       MODULATION:ModulationParam.ADDITIVE}
                                    #                                   )),
 
-                                   # threshold=(1.0, ControlSignal(function=Linear,
-                                   #                               allocation_samples=np.arange(0.1, 1.01, 0.3))),
+                                   threshold=(1.0, ControlSignal(function=Linear,
+                                                                 allocation_samples=np.arange(0.1, 1.01, 0.3))),
 
                                    # threshold={VALUE: 1.0,
                                    #            CONTROL_PROJECTION: ControlProjection(function=Linear,

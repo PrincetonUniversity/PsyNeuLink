@@ -753,7 +753,7 @@ class OutputState(State_Base):
 
 # MODIFIED 9/30/17 NEW:
     @tc.typecheck
-    def _parse_state_specific_params(self, owner, state_specific_params):
+    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
         """Get index and/or connections specified in an OutputState specification tuple
 
         Tuple specification can be:
@@ -778,61 +778,71 @@ class OutputState(State_Base):
         from PsyNeuLink.Globals.Keywords import CONNECTIONS, PROJECTIONS
 
         params_dict = {}
-        tuple_spec = state_specific_params
-        INDEX_INDEX = 1
-        PROJECTIONS_INDEX = len(tuple_spec)-1
 
-        # Specification is a MonitoredOutputStatesOptions (pass from System)
-        if len(tuple_spec)==1:
-            from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-            if not isinstance(tuple_spec[0], MonitoredOutputStatesOption):
-                raise OutputStateError("Tuple provided in {} specification dictionary for {} has a single item ({})"
-                                       "which should be a value of {}".format(OutputState.__name__,
-                                                                              owner.name,
-                                                                              tuple_spec,
-                                                                              MonitoredOutputStatesOption.__name__))
-            return tuple_spec[0]
+        if isinstance(state_specific_params, dict):
+            pass
 
-        # Note:  first item is assumed to be a specification for the OutputState itself, handled in _parse_state_spec()
-        # FIX: TEST FOR LEN OF TUPLE AND RAISE EXCEPTION OF < 2
-        elif not len(tuple_spec) in {2,3} :
-            raise OutputStateError("Tuple provided in {0} specification dictionary for {0} of {1} ({2}) must have "
-                                   "either 2 ({0} and {3} specification(s) items or 3 (optional additional {4} item)".
-                                   format(OutputState.__name__, owner.name, tuple_spec, PROJECTIONS, INDEX))
+        elif isinstance(state_specific_params, tuple):
 
-        # Get PROJECTIONS specification (efferents) from tuple
-        try:
-            projections_spec = tuple_spec[PROJECTIONS_INDEX]
-            # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
-        except IndexError:
-            projections_spec = None
-        if projections_spec:
+            tuple_spec = state_specific_params
+            INDEX_INDEX = 1
+            PROJECTIONS_INDEX = len(tuple_spec)-1
+
+            # Specification is a MonitoredOutputStatesOptions (pass from System)
+            if len(tuple_spec)==1:
+                from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
+                if not isinstance(tuple_spec[0], MonitoredOutputStatesOption):
+                    raise OutputStateError("Tuple provided in {} specification dictionary for {} has a single item ({})"
+                                           "which should be a value of {}".format(OutputState.__name__,
+                                                                                  owner.name,
+                                                                                  tuple_spec,
+                                                                                  MonitoredOutputStatesOption.__name__))
+                return tuple_spec[0]
+
+            # Note:  first item is assumed to be a specification for the OutputState itself, handled in _parse_state_spec()
+            # FIX: TEST FOR LEN OF TUPLE AND RAISE EXCEPTION OF < 2
+            elif not len(tuple_spec) in {2,3} :
+                raise OutputStateError("Tuple provided in {0} specification dictionary for {0} of {1} ({2}) must have "
+                                       "either 2 ({0} and {3} specification(s) items or 3 (optional additional {4} item)".
+                                       format(OutputState.__name__, owner.name, tuple_spec, PROJECTIONS, INDEX))
+
+            # Get PROJECTIONS specification (efferents) from tuple
             try:
-                # params_dict[CONNECTIONS] = _parse_projection_specs(self.__class__,
-                params_dict[PROJECTIONS] = _parse_projection_specs(self.__class__,
-                                                                   owner=owner,
-                                                                   connections={projections_spec})
-            except OutputStateError:
-                raise OutputStateError("Item {} of tuple specification in {} specification dictionary "
-                                      "for {} ({}) is not a recognized specification for one or more "
-                                      "{}s, {}s, or {}s that project from it".
-                                      format(PROJECTIONS_INDEX,
-                                             OutputState.__name__,
-                                             owner.name,
-                                             projections_spec,
-                                             Mechanism.__name__,
-                                             OutputState.__name__,
-                                             Projection.__name))
+                projections_spec = tuple_spec[PROJECTIONS_INDEX]
+                # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
+            except IndexError:
+                projections_spec = None
+            if projections_spec:
+                try:
+                    # params_dict[CONNECTIONS] = _parse_projection_specs(self.__class__,
+                    params_dict[PROJECTIONS] = _parse_projection_specs(self.__class__,
+                                                                       owner=owner,
+                                                                       connections={projections_spec})
+                except OutputStateError:
+                    raise OutputStateError("Item {} of tuple specification in {} specification dictionary "
+                                          "for {} ({}) is not a recognized specification for one or more "
+                                          "{}s, {}s, or {}s that project from it".
+                                          format(PROJECTIONS_INDEX,
+                                                 OutputState.__name__,
+                                                 owner.name,
+                                                 projections_spec,
+                                                 Mechanism.__name__,
+                                                 OutputState.__name__,
+                                                 Projection.__name))
 
-        # Get INDEX specification from (state_spec, index, connections) tuple:
-        if len(tuple_spec) == 3:
+            # Get INDEX specification from (state_spec, index, connections) tuple:
+            if len(tuple_spec) == 3:
 
-            index = tuple_spec[INDEX_INDEX]
+                index = tuple_spec[INDEX_INDEX]
 
-            if index is not None and not isinstance(index, numbers.Number):
-                raise OutputStateError("Specification of the index ({}) in tuple of {} specification dictionary "
-                                       "for {} must be a number".format(index, OutputState.__name__, owner.name))
-            params_dict[INDEX] = index
+                if index is not None and not isinstance(index, numbers.Number):
+                    raise OutputStateError("Specification of the index ({}) in tuple of {} specification dictionary "
+                                           "for {} must be a number".format(index, OutputState.__name__, owner.name))
+                params_dict[INDEX] = index
+
+        elif state_specific_params is not None:
+            raise OutputStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
+                                  format(self.__class__.__name__, state_specific_params))
 
         return params_dict
 # MODIFIED 9/30/17 END

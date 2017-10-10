@@ -2551,7 +2551,7 @@ class System_Base(System):
                     # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
                     if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
                         proj_control_signal_specs = projection.control_signal_params or {}
-                        proj_control_signal_specs.update({CONTROL_SIGNAL_SPECS: [projection]})
+                        proj_control_signal_specs.update({PROJECTIONS: [projection]})
                         control_signal_specs.append(proj_control_signal_specs)
         return control_signal_specs
 

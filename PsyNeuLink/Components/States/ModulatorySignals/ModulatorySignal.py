@@ -413,7 +413,7 @@ class ModulatorySignal(OutputState):
 
 # MODIFIED 9/30/17 NEW:
 # FIX: THIS IS GENERIC FOR MODULATORY SIGNALS, BUT SHOULD BE IMPLEMENTED FOR EACH SUBCLASS
-    def _parse_state_specific_params(self, owner, state_specific_params):
+def _parse_state_specific_params(self, owner, state_spec_dict, state_specific_params):
         """Get connections specified in a ParameterState specification tuple
 
         Tuple specification can be:
@@ -427,30 +427,39 @@ class ModulatorySignal(OutputState):
         from PsyNeuLink.Globals.Keywords import CONNECTIONS, PROJECTIONS
 
         params_dict = {}
-        tuple_spec = state_specific_params
 
-        # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
+        if isinstance(state_specific_params, dict):
+            pass
 
-        # Get connection (afferent Projection(s)) specification from tuple
-        PROJECTIONS_INDEX = len(tuple_spec)-1
-        try:
-            projections_spec = tuple_spec[PROJECTIONS_INDEX]
-        except IndexError:
-            projections_spec = None
+        if isinstance(state_specific_params, tuple):
 
-        if projections_spec:
+            tuple_spec = state_specific_params
+
+            # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
+
+            # Get connection (afferent Projection(s)) specification from tuple
+            PROJECTIONS_INDEX = len(tuple_spec)-1
             try:
-                # params_dict[CONNECTIONS] = _parse_projection_specs(self.__class__,
-                params_dict[PROJECTIONS] = _parse_projection_specs(self,
-                                                                   owner=owner,
-                                                                   connections={projections_spec})
-            except ModulatorySignalError:
-                raise ModulatorySignalError("Item {} of tuple specification in {} specification dictionary "
-                                            "for {} ({}) is not a recognized specification".
-                                            format(PROJECTIONS_INDEX,
-                                                   ModulatorySignalError.__name__,
-                                                   owner.name,
-                                                   projections_spec))
+                projections_spec = tuple_spec[PROJECTIONS_INDEX]
+            except IndexError:
+                projections_spec = None
 
+            if projections_spec:
+                try:
+                    # params_dict[CONNECTIONS] = _parse_projection_specs(self.__class__,
+                    params_dict[PROJECTIONS] = _parse_projection_specs(self,
+                                                                       owner=owner,
+                                                                       connections={projections_spec})
+                except ModulatorySignalError:
+                    raise ModulatorySignalError("Item {} of tuple specification in {} specification dictionary "
+                                                "for {} ({}) is not a recognized specification".
+                                                format(PROJECTIONS_INDEX,
+                                                       ModulatorySignalError.__name__,
+                                                       owner.name,
+                                                       projections_spec))
+
+        elif state_specific_params is not None:
+            raise ModulatorySignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
+                                        format(self.__class__.__name__, state_specific_params))
         return params_dict
 # MODIFIED 9/30/17 END

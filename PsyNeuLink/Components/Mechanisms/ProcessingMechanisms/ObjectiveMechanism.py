@@ -729,7 +729,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if self.variable is None:
             self.instance_defaults.variable = self.instance_defaults.variable or input_state_variables
 
-        # Instantiate InputStates corresponding to OutputStates specified in specified
+        # Instantiate InputStates corresponding to OutputStates specified in monitored_output_states
         instantiated_input_states = super()._instantiate_input_states(input_states=self.input_states, context=context)
         # MODIFIED 10/3/17 END
 

@@ -290,12 +290,17 @@ from PsyNeuLink.Components.Functions.Function import CombinationFunction, Expone
     LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
 from PsyNeuLink.Components.ShellClasses import Function, Mechanism
 from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
-from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
 from PsyNeuLink.Components.States.State import State_Base
+from PsyNeuLink.Components.States.ParameterState import _get_parameter_state
+from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
+from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _parse_projection_specs, ConnectionTuple
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAM, CONTROL_PROJECTION, EXECUTING, \
-    FUNCTION, FUNCTION_PARAMS, INTERCEPT, OFF, ON, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, SEPARATOR_BAR, \
-    SLOPE, SUM, kwAssign
+from PsyNeuLink.Globals.Keywords import\
+    NAME, FUNCTION, FUNCTION_PARAMS, PARAMS, EXECUTING, SEPARATOR_BAR, OFF, ON, AUTO, SUM, SLOPE, INTERCEPT, \
+    MECHANISM, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE, \
+    PROJECTION_TYPE, SENDER, RECEIVER, WEIGHT, EXPONENT,\
+    CONTROL_SIGNAL, CONTROL_SIGNAL_SPECS, CONTROLLED_PARAM, CONTROL_PROJECTION, ALLOCATION_SAMPLES, kwAssign
 from PsyNeuLink.Globals.Log import LogEntry, LogLevel
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -970,7 +975,8 @@ class ControlSignal(ModulatorySignal):
 
 
 # MODIFIED 9/30/17 NEW:
-    def d_specific_params(self, owner, state_specific_params):
+
+    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
 
         Tuple specification can be:
@@ -987,41 +993,170 @@ class ControlSignal(ModulatorySignal):
 
         params_dict = {}
 
-        try:
-            param_name, mech = state_specific_params
-        except:
-            raise ControlSignalError("Illegal {} specification tuple for {} ({});  "
-                                     "it must contain two items: (<param_name>, <{}>)".
-                                     format(ControlSignal.__name__, owner.name,
-                                            state_specific_params, Mechanism.__name__))
-        if not isinstance(mech, Mechanism):
-            raise ControlSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
-                                     format(ControlSignal.__name__, owner.name, mech, mech.name))
-        if not isinstance(param_name, str):
-            raise ControlSignalError("First item of the {} specification tuple for {} ({}) must be a string "
-                                     "that is the name of a parameter of its second item ({})".
-                                     format(ControlSignal.__name__, owner.name, param_name, mech.name))
-        try:
-            parameter_state = mech._parameter_states[param_name]
-        except KeyError:
-            raise ControlSignalError("No {} found for {} param of {} in {} specificadtion tuple for {}".
-                                     format(ParameterState.__name__, param_name, mech.name,
-                                            ControlSignal.__name__, owner.name))
-        except AttributeError:
-            raise ControlSignalError("{} does not have any {} specified, so can't"
-                                     "assign {} specified for {} ({})".
-                                     format(mech.name, ParameterState.__name__, ControlSignal.__name__,
-                                            owner.name, state_specific_params))
+        if PROJECTIONS in state_specific_params:
+            params_dict[PROJECTIONS] = state_specific_params[PROJECTIONS]
+        else:
+            params_dict[PROJECTIONS] = []
 
-        # Assign connection specs to PROJECTIONS entry of params dict
-        try:
-            # params_dict[CONNECTIONS] = _parse_projection_specs(self.__class__,
-            params_dict[PROJECTIONS] = _parse_projection_specs(self,
-                                                               owner=owner,
-                                                               connections=parameter_state)
-        except ControlSignalError:
-            raise ControlSignalError("Unable to parse {} specification dictionary for {} ({})".
-                                        format(ControlSignal.__name__, owner.name, state_specific_params))
+        if isinstance(state_specific_params, dict):
+
+            # control_signal was a Control specification dictionary,
+            #     with the Mechanism to which the parameter belongs in the MECHANISM entry,
+            #     and the name of the parameter in the NAME entry
+            # if all(key in state_dict for key in {MECHANISM, NAME}):
+            if MECHANISM in state_dict:
+                mech = state_dict[MECHANISM]
+                param_name = state_dict[NAME]
+                # Delete MECHANISM entry as it is not a parameter of ControlSignal
+                #     (which will balk at it in ControlSignal._validate_params)
+                del state_dict[MECHANISM]
+                parameter_state = _get_parameter_state(owner, CONTROL_SIGNAL, param_name, mech)
+                params_dict[PROJECTIONS].append(parameter_state)
+
+            # # Specification was originally a tuple, either in parameter specification or control_signal arg;
+            # #    1st item was either assigned to the NAME entry of the control_signal_spec dict
+            # #        (if tuple was a (param_name, Mechanism tuple) for control_signal arg;
+            # #        or used as param value, if it was a parameter specification tuple
+            # #    2nd item was placed in CONTROL_SIGNAL_PARAMS entry of params dict in control_signal_spec dict,
+            # #        so parse:
+            # if (state_specific_params and
+            #         any(key in state_specific_params for key in {CONTROL_SIGNAL_SPECS, PROJECTIONS})):
+            #
+            #     # FIX: NEED TO FIND ALLOCATION_SAMPLES HERE TOO??  LOOK HOW IT HAPPENS IN _parse_control_signal IN devel
+            #
+            #     #    CONTROL_SIGNAL_SPECS is used by _parse_control_signal_spec,
+            #     #                         to pass specification from a parameter specification tuple
+            #     #    PROJECTIONS is used by:
+            #     #        State._parse_state_spec()
+            #     #                to place the 2nd item of any tuple in params dict;
+            #     #                here, the tuple comes from a (param, Mechanism) specification in control_signal arg
+            #     #        System._get_control_signals_for_system()
+            #     #                to pass ControlProjections specified for any Mechanisms in the System
+            #     #    Delete whichever one it was, as neither is a recognized ControlSignal param
+            #     #        (which will balk at it in ControlSignal._validate_params)
+            #     if CONTROL_SIGNAL_SPECS in state_specific_params:
+            #         params_dict.update(state_specific_params[CONTROL_SIGNAL_SPECS])
+            #         del state_specific_params[CONTROL_SIGNAL_SPECS]
+            #
+            #     if PROJECTIONS in state_specific_params:
+            #         projection_specs.extend(state_specific_params[PROJECTIONS])
+            #         del state_specific_params[PROJECTIONS]
+            #
+            #     # Parse the specs in PROJECTIONS into ConnectionTuples
+            #     connection_tuples = []
+            #     for projection_spec in projection_specs:
+            #
+            #         # ConnectionTuple:
+            #         #    - append to connection_tuples
+            #         if isinstance(projection_spec, ConnectionTuple):
+            #             connection_tuples.append(projection_spec)
+            #
+            #         # ControlProjection:
+            #         #    - get ParameterState, and weight and exponent if assigned,
+            #         #    - place in ConnectionTuple
+            #         #    - append to connection_tuples
+            #         elif isinstance(projection_spec, ControlProjection):
+            #             # Get receiver mech
+            #             # ControlProjection is in DEFERRED_INIT state
+            #             if projection_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+            #                 parameter_state = projection_spec.init_args[RECEIVER]
+            #                 weight = projection_spec.init_args[WEIGHT]
+            #                 exponent = projection_spec.init_args[EXPONENT]
+            #                 # ControlProjection was created in response to specification of ControlSignal
+            #                 #     (in a 2-item tuple where the parameter was specified),
+            #                 #     so get ControlSignal spec
+            #                 if SENDER in projection_spec.init_args:
+            #                     control_signal_spec = projection_spec.init_args[SENDER]
+            #                     if control_signal_spec and not isinstance(control_signal_spec, ControlSignal):
+            #                         raise ControlSignalError("PROGRAM ERROR: "
+            #                                                     "Sender of {} for {} {} of {} is not a {}".
+            #                                                     format(CONTROL_PROJECTION,
+            #                                                            parameter_state.name,
+            #                                                            PARAMETER_STATE,
+            #                                                            parameter_state.owner.name,
+            #                                                            CONTROL_SIGNAL))
+            #                     # FIX: SHOULD SOMETHING BE DONE WITH control_signal_spec HERE??
+            #             else:
+            #                 parameter_state = projection_spec.receiver
+            #                 weight = projection_spec.weight
+            #                 exponent = projection_spec.exponent
+            #             connection_tuples.append(ConnectionTuple(state=parameter_state,
+            #                                                      weight=weight,
+            #                                                      exponent=exponent,
+            #                                                      projection=projection_spec))
+            #
+            #         # Other form of Projection specification:
+            #         #    - parse into ConnectionTuple
+            #         #    - append to connection_tuples
+            #         elif _is_projection_spec(projection_spec):
+            #            connection_tuples.append(_parse_projection_specs(ControlSignal, owner, projection_spec))
+            #
+            #         else:
+            #             raise ControlSignalError("PROGRAM ERROR: failure to parse specification of {} in {} for {}: {}".
+            #                                         format(CONTROL_PROJECTION,
+            #                                                CONTROL_SIGNAL,
+            #                                                owner.name,
+            #                                                projection_spec))
+            #
+            #     params_dict[PROJECTIONS] = connection_tuples
+            #
+            # else:
+            #     raise ControlSignalError("PROGRAM ERROR: No entry found in {} params dict for {} "
+            #                              "with specification of parameter's Mechanism or ControlProjection(s) to it".
+            #                                 format(CONTROL_SIGNAL, owner.name))
+            #
+            # # MODIFIED 10/3/17 OLD:
+            # # if isinstance(control_signal_spec, ControlSignal):
+            # #     control_signal = control_signal_spec
+            # # else:
+            # #     control_signal = None
+
+        elif isinstance(state_specific_params, tuple):
+
+            try:
+                param_name, mech = state_specific_params
+            except:
+                raise ControlSignalError("Illegal {} specification tuple for {} ({});  "
+                                         "it must contain two items: (<param_name>, <{}>)".
+                                         format(ControlSignal.__name__, owner.name,
+                                                state_specific_params, Mechanism.__name__))
+            if not isinstance(mech, Mechanism):
+                raise ControlSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
+                                         format(ControlSignal.__name__, owner.name, mech, mech.name))
+            if not isinstance(param_name, str):
+                raise ControlSignalError("First item of the {} specification tuple for {} ({}) must be a string "
+                                         "that is the name of a parameter of its second item ({})".
+                                         format(ControlSignal.__name__, owner.name, param_name, mech.name))
+            try:
+                parameter_state = mech._parameter_states[param_name]
+            except KeyError:
+                raise ControlSignalError("No {} found for {} param of {} in {} specificadtion tuple for {}".
+                                         format(ParameterState.__name__, param_name, mech.name,
+                                                ControlSignal.__name__, owner.name))
+            except AttributeError:
+                raise ControlSignalError("{} does not have any {} specified, so can't"
+                                         "assign {} specified for {} ({})".
+                                         format(mech.name, ParameterState.__name__, ControlSignal.__name__,
+                                                owner.name, state_specific_params))
+
+            # Assign connection specs to PROJECTIONS entry of params dict
+            try:
+                # params_dict[CONNECTIONS] = _parse_projection_specs(self.__class__,
+                params_dict[PROJECTIONS] = _parse_projection_specs(self,
+                                                                   owner=owner,
+                                                                   connections=parameter_state)
+            except ControlSignalError:
+                raise ControlSignalError("Unable to parse {} specification dictionary for {} ({})".
+                                            format(ControlSignal.__name__, owner.name, state_specific_params))
+
+        elif state_specific_params is not None:
+            raise ControlSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
+                                  format(self.__class__.__name__, state_specific_params))
+
+        if params_dict[PROJECTIONS] is None:
+            raise ControlSignalError("PROGRAM ERROR: No entry found in {} params dict for {} "
+                                     "with specification of parameter's Mechanism or ControlProjection(s) to it".
+                                        format(CONTROL_SIGNAL, owner.name))
 
         return params_dict
 # MODIFIED 9/30/17 END
@@ -1219,166 +1354,166 @@ class ControlSignal(ModulatorySignal):
 
 # FIX: Refactor to function like _parse_gating_signal_spec,
 # FIX:     then combine the two into a single _parse_modulatory_signal_spec
-def _parse_control_signal_spec(owner, control_signal_spec, context=None):
-    """Take specifications for one or more parameters to be controlled and return ControlSignal specification dictionary
-
-    THIS DOCUMENTATION IS TAKEN FROM _parse_gating_signal AS A TEMPLATE FOR HOW _parse_control_signal_spec
-    SHOULD FUNCTION, BUT NOT ALL OF IT HAS BEEN IMPLEMENTED
-
-    control_signal_spec can take any of the following forms:
-        - an existing ControlSignal
-        - an existing Parameter for a parameter of Mechanisms in self.system
-        - a list of state specifications (see below)
-        - a dictionary that contains either a:
-            - single state specification:
-                NAME:str - contains the name of a ParameterState belonging to MECHANISM
-                MECHANISM:Mechanism - contains a reference to a Mechanism in self.system that owns NAME'd state
-                <PARAM_KEYWORD>:<ControlSignal param value>
-            - multiple state specification:
-                NAME:str - used as name of ControlSignal
-                STATES:List[tuple, dict] - each item must be state specification tuple or dict
-                <PARAM_KEYWORD>:<ControlSignal param value>
-
-    Each state specification must be a:
-        - (str, Mechanism) tuple
-        - {NAME:str, MECHANISM:Mechanism} dict
-        where:
-            str is the name of a ParameterState of the Mechanism,
-            Mechanism is a reference to an existing Mechanism that belongs to self.system
-
-    Checks for duplicate state specifications within state_spec or with any existing ControlSignal of the owner
-        (i.e., states that will receive more than one ControlProjection from the owner)
-
-    If state_spec is already a ControlSignal, it is returned (in the CONTROL_SIGNAL entry) along with its parsed
-    elements
-
-    Returns dictionary with the following entries:
-        NAME:str - name of either the Parameter to be controlled (if there is only one) or the ControlSignal
-        STATES:list - list of ParameterStates to be controlled
-        CONTROL_SIGNAL:ControlSignal or None
-        PARAMS:dict - params dict if any were included in the state_spec
-    """
-    from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-    from PsyNeuLink.Components.States.State import _parse_state_spec
-    from PsyNeuLink.Components.States.ParameterState import ParameterState, _get_parameter_state
-    from PsyNeuLink.Globals.Keywords import NAME, PARAMS, \
-                                            CONTROL_SIGNAL, CONTROL_SIGNAL_SPECS, PARAMETER_STATE, \
-                                            MECHANISM, PROJECTIONS, SENDER, RECEIVER
-
-    mech = None
-    param_name = None
-    control_projection = None
-    control_signal_params = None
-    parameter_state = None
-    control_signal = None
-
-    control_signal_dict = _parse_state_spec(owner=owner,
-                                            state_type=ControlSignal,
-                                            state_spec=control_signal_spec,
-                                            context=context)
-
-    # Specification is a ParameterState
-    if isinstance(control_signal_dict, ParameterState):
-        mech = control_signal_spec.owner
-        param_name = control_signal_spec.name
-        parameter_state = _get_parameter_state(owner, CONTROL_SIGNAL, param_name, mech)
-
-    # Specification was tuple or dict, now parsed into a dict
-    elif isinstance(control_signal_dict, dict):
-        param_name = control_signal_dict[NAME]
-        control_signal_params = control_signal_dict[PARAMS]
-
-        # control_signal was a specification dict, with MECHANISM as an entry (and parameter as NAME)
-        if control_signal_params and MECHANISM in control_signal_params:
-            mech = control_signal_params[MECHANISM]
-            # Delete MECHANISM entry as it is not a parameter of ControlSignal
-            #     (which will balk at it in ControlSignal._validate_params)
-            del control_signal_params[MECHANISM]
-            parameter_state = _get_parameter_state(owner, CONTROL_SIGNAL, param_name, mech)
-
-        # Specification was originally a tuple, either in parameter specification or control_signal arg;
-        #    1st item was either assigned to the NAME entry of the control_signal_spec dict
-        #        (if tuple was a (param_name, Mechanism tuple) for control_signal arg;
-        #        or used as param value, if it was a parameter specification tuple
-        #    2nd item was placed in CONTROL_SIGNAL_PARAMS entry of params dict in control_signal_spec dict,
-        #        so parse:
-        elif (control_signal_params and
-                any(kw in control_signal_dict[PARAMS] for kw in {CONTROL_SIGNAL_SPECS, PROJECTIONS})):
-
-            # IMPLEMENTATION NOTE:
-            #    CONTROL_SIGNAL_SPECS is used by _parse_control_signal_spec,
-            #                         to pass specification from a parameter specification tuple
-            #    PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
-            #                      here, the tuple comes from a (param, Mechanism) specification in control_signal arg
-            #    Delete whichever one it was, as neither is a recognized ControlSignal param
-            #        (which will balk at it in ControlSignal._validate_params)
-            if CONTROL_SIGNAL_SPECS in control_signal_dict[PARAMS]:
-                spec = control_signal_params[CONTROL_SIGNAL_SPECS]
-                del control_signal_params[CONTROL_SIGNAL_SPECS]
-            elif PROJECTIONS in control_signal_dict[PARAMS]:
-                spec = control_signal_params[PROJECTIONS]
-                del control_signal_params[PROJECTIONS]
-
-            # ControlSignal
-            if isinstance(spec, ControlSignal):
-                # Note: don't specify mech since ControlSignal could project to more than one ParameterState
-                control_signal_dict = spec
-
-            else:
-                # Mechanism
-                # IMPLEMENTATION NOTE: Mechanism was placed in list in PROJECTIONS entry by _parse_state_spec
-                if isinstance(spec, list) and isinstance(spec[0], Mechanism):
-                    mech = spec[0]
-                    parameter_state = _get_parameter_state(owner, CONTROL_SIGNAL, param_name, mech)
-
-                # Projection (in a list)
-                elif isinstance(spec, list):
-                    control_projection = spec[0]
-                    if not isinstance(control_projection, ControlProjection):
-                        raise ControlSignalError("PROGRAM ERROR: list in {} entry of params dict for {} of {} "
-                                                    "must contain a single ControlProjection".
-                                                    format(CONTROL_SIGNAL_SPECS, CONTROL_SIGNAL, owner.name))
-                    if len(spec)>1:
-                        raise ControlSignalError("PROGRAM ERROR: Multiple ControlProjections are not "
-                                                    "currently supported in specification of a ControlSignal")
-                    # Get receiver mech
-                    if control_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                        parameter_state = control_projection.init_args[RECEIVER]
-                        # ControlProjection was created in response to specification of ControlSignal
-                        #     (in a 2-item tuple where the parameter was specified),
-                        #     so get ControlSignal spec
-                        if SENDER in control_projection.init_args:
-                            control_signal_spec = control_projection.init_args[SENDER]
-                            if control_signal_spec and not isinstance(control_signal_spec, ControlSignal):
-                                raise ControlSignalError("PROGRAM ERROR: "
-                                                            "Sender of {} for {} {} of {} is not a {}".
-                                                            format(CONTROL_PROJECTION,
-                                                                   parameter_state.name,
-                                                                   PARAMETER_STATE,
-                                                                   parameter_state.owner.name,
-                                                                   CONTROL_SIGNAL))
-                    else:
-                        parameter_state = control_projection.receiver
-                    param_name = parameter_state.name
-                    mech = parameter_state.owner
-
-                else:
-                    raise ControlSignalError("PROGRAM ERROR: failure to parse specification of {} for {}".
-                                                format(CONTROL_SIGNAL, owner.name))
-        else:
-            raise ControlSignalError("PROGRAM ERROR: No entry found in params dict with specification of "
-                                        "parameter's Mechanism or ControlProjection for {} of {}".
-                                        format(CONTROL_SIGNAL, owner.name))
-
-        if isinstance(control_signal_spec, ControlSignal):
-            control_signal = control_signal_spec
-        else:
-            control_signal = None
-
-    return {MECHANISM: mech,
-            NAME: param_name,
-            PARAMS: control_signal_params,
-            PARAMETER_STATE: parameter_state,
-            CONTROL_PROJECTION: control_projection,
-            CONTROL_SIGNAL: control_signal}
-
+# def _parse_control_signal_spec(owner, control_signal_spec, context=None):
+#     """Take specifications for one or more parameters to be controlled and return ControlSignal specification dictionary
+#
+#     THIS DOCUMENTATION IS TAKEN FROM _parse_gating_signal AS A TEMPLATE FOR HOW _parse_control_signal_spec
+#     SHOULD FUNCTION, BUT NOT ALL OF IT HAS BEEN IMPLEMENTED
+#
+#     control_signal_spec can take any of the following forms:
+#         - an existing ControlSignal
+#         - an existing Parameter for a parameter of Mechanisms in self.system
+#         - a list of state specifications (see below)
+#         - a dictionary that contains either a:
+#             - single state specification:
+#                 NAME:str - contains the name of a ParameterState belonging to MECHANISM
+#                 MECHANISM:Mechanism - contains a reference to a Mechanism in self.system that owns NAME'd state
+#                 <PARAM_KEYWORD>:<ControlSignal param value>
+#             - multiple state specification:
+#                 NAME:str - used as name of ControlSignal
+#                 STATES:List[tuple, dict] - each item must be state specification tuple or dict
+#                 <PARAM_KEYWORD>:<ControlSignal param value>
+#
+#     Each state specification must be a:
+#         - (str, Mechanism) tuple
+#         - {NAME:str, MECHANISM:Mechanism} dict
+#         where:
+#             str is the name of a ParameterState of the Mechanism,
+#             Mechanism is a reference to an existing Mechanism that belongs to self.system
+#
+#     Checks for duplicate state specifications within state_spec or with any existing ControlSignal of the owner
+#         (i.e., states that will receive more than one ControlProjection from the owner)
+#
+#     If state_spec is already a ControlSignal, it is returned (in the CONTROL_SIGNAL entry) along with its parsed
+#     elements
+#
+#     Returns dictionary with the following entries:
+#         NAME:str - name of either the Parameter to be controlled (if there is only one) or the ControlSignal
+#         STATES:list - list of ParameterStates to be controlled
+#         CONTROL_SIGNAL:ControlSignal or None
+#         PARAMS:dict - params dict if any were included in the state_spec
+#     """
+#     from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+#     from PsyNeuLink.Components.States.State import _parse_state_spec
+#     from PsyNeuLink.Components.States.ParameterState import ParameterState, _get_parameter_state
+#     from PsyNeuLink.Globals.Keywords import NAME, PARAMS, \
+#                                             CONTROL_SIGNAL, CONTROL_SIGNAL_SPECS, PARAMETER_STATE, \
+#                                             MECHANISM, PROJECTIONS, SENDER, RECEIVER
+#
+#     mech = None
+#     param_name = None
+#     control_projection = None
+#     control_signal_params = None
+#     parameter_state = None
+#     control_signal = None
+#
+#     control_signal_dict = _parse_state_spec(owner=owner,
+#                                             state_type=ControlSignal,
+#                                             state_spec=control_signal_spec,
+#                                             context=context)
+#
+#     # Specification is a ParameterState
+#     if isinstance(control_signal_dict, ParameterState):
+#         mech = control_signal_spec.owner
+#         param_name = control_signal_spec.name
+#         parameter_state = _get_parameter_state(owner, CONTROL_SIGNAL, param_name, mech)
+#
+#     # Specification was tuple or dict, now parsed into a dict
+#     elif isinstance(control_signal_dict, dict):
+#         param_name = control_signal_dict[NAME]
+#         control_signal_params = control_signal_dict[PARAMS]
+#
+#         # control_signal was a specification dict, with MECHANISM as an entry (and parameter as NAME)
+#         if control_signal_params and MECHANISM in control_signal_params:
+#             mech = control_signal_params[MECHANISM]
+#             # Delete MECHANISM entry as it is not a parameter of ControlSignal
+#             #     (which will balk at it in ControlSignal._validate_params)
+#             del control_signal_params[MECHANISM]
+#             parameter_state = _get_parameter_state(owner, CONTROL_SIGNAL, param_name, mech)
+#
+#         # Specification was originally a tuple, either in parameter specification or control_signal arg;
+#         #    1st item was either assigned to the NAME entry of the control_signal_spec dict
+#         #        (if tuple was a (param_name, Mechanism tuple) for control_signal arg;
+#         #        or used as param value, if it was a parameter specification tuple
+#         #    2nd item was placed in CONTROL_SIGNAL_PARAMS entry of params dict in control_signal_spec dict,
+#         #        so parse:
+#         elif (control_signal_params and
+#                 any(kw in control_signal_dict[PARAMS] for kw in {CONTROL_SIGNAL_SPECS, PROJECTIONS})):
+#
+#             # IMPLEMENTATION NOTE:
+#             #    CONTROL_SIGNAL_SPECS is used by _parse_control_signal_spec,
+#             #                         to pass specification from a parameter specification tuple
+#             #    PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
+#             #                      here, the tuple comes from a (param, Mechanism) specification in control_signal arg
+#             #    Delete whichever one it was, as neither is a recognized ControlSignal param
+#             #        (which will balk at it in ControlSignal._validate_params)
+#             if CONTROL_SIGNAL_SPECS in control_signal_dict[PARAMS]:
+#                 spec = control_signal_params[CONTROL_SIGNAL_SPECS]
+#                 del control_signal_params[CONTROL_SIGNAL_SPECS]
+#             elif PROJECTIONS in control_signal_dict[PARAMS]:
+#                 spec = control_signal_params[PROJECTIONS]
+#                 del control_signal_params[PROJECTIONS]
+#
+#             # ControlSignal
+#             if isinstance(spec, ControlSignal):
+#                 # Note: don't specify mech since ControlSignal could project to more than one ParameterState
+#                 control_signal_dict = spec
+#
+#             else:
+#                 # Mechanism
+#                 # IMPLEMENTATION NOTE: Mechanism was placed in list in PROJECTIONS entry by _parse_state_spec
+#                 if isinstance(spec, list) and isinstance(spec[0], Mechanism):
+#                     mech = spec[0]
+#                     parameter_state = _get_parameter_state(owner, CONTROL_SIGNAL, param_name, mech)
+#
+#                 # Projection (in a list)
+#                 elif isinstance(spec, list):
+#                     control_projection = spec[0]
+#                     if not isinstance(control_projection, ControlProjection):
+#                         raise ControlSignalError("PROGRAM ERROR: list in {} entry of params dict for {} of {} "
+#                                                     "must contain a single ControlProjection".
+#                                                     format(CONTROL_SIGNAL_SPECS, CONTROL_SIGNAL, owner.name))
+#                     if len(spec)>1:
+#                         raise ControlSignalError("PROGRAM ERROR: Multiple ControlProjections are not "
+#                                                     "currently supported in specification of a ControlSignal")
+#                     # Get receiver mech
+#                     if control_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+#                         parameter_state = control_projection.init_args[RECEIVER]
+#                         # ControlProjection was created in response to specification of ControlSignal
+#                         #     (in a 2-item tuple where the parameter was specified),
+#                         #     so get ControlSignal spec
+#                         if SENDER in control_projection.init_args:
+#                             control_signal_spec = control_projection.init_args[SENDER]
+#                             if control_signal_spec and not isinstance(control_signal_spec, ControlSignal):
+#                                 raise ControlSignalError("PROGRAM ERROR: "
+#                                                             "Sender of {} for {} {} of {} is not a {}".
+#                                                             format(CONTROL_PROJECTION,
+#                                                                    parameter_state.name,
+#                                                                    PARAMETER_STATE,
+#                                                                    parameter_state.owner.name,
+#                                                                    CONTROL_SIGNAL))
+#                     else:
+#                         parameter_state = control_projection.receiver
+#                     param_name = parameter_state.name
+#                     mech = parameter_state.owner
+#
+#                 else:
+#                     raise ControlSignalError("PROGRAM ERROR: failure to parse specification of {} for {}".
+#                                                 format(CONTROL_SIGNAL, owner.name))
+#         else:
+#             raise ControlSignalError("PROGRAM ERROR: No entry found in params dict with specification of "
+#                                         "parameter's Mechanism or ControlProjection for {} of {}".
+#                                         format(CONTROL_SIGNAL, owner.name))
+#
+#         if isinstance(control_signal_spec, ControlSignal):
+#             control_signal = control_signal_spec
+#         else:
+#             control_signal = None
+#
+#     return {MECHANISM: mech,
+#             NAME: param_name,
+#             PARAMS: control_signal_params,
+#             PARAMETER_STATE: parameter_state,
+#             CONTROL_PROJECTION: control_projection,
+#             CONTROL_SIGNAL: control_signal}
+#

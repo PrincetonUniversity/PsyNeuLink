@@ -634,7 +634,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
             from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-            from PsyNeuLink.Globals.Keywords import STATE_TYPE
             if not isinstance(target_set[CONTROL_SIGNALS], list):
                 target_set[CONTROL_SIGNALS] = [target_set[CONTROL_SIGNALS]]
             for control_signal in target_set[CONTROL_SIGNALS]:
@@ -644,7 +643,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 # from PsyNeuLink.Components.Projections.Projection import _parse_projection_specs
                 # _parse_projection_specs(ControlSignal, self, control_signal)
                 # _parse_state_spec(self, ControlSignal, control_signal)
-                _parse_state_spec(state_type=ControlSignal, state_spec=control_signal)
+                _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=control_signal)
                 # MODIFIED 10/2/17 END
 
 
@@ -854,6 +853,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # FIX:           * SHOULD TEST FOR init STATUS AND DEAL WITH INITIALIZED AS WELL AS DEFERRED INIT
         # FIX:           * SHOULD DEAL WITH MULTIPLE PROJECTIONS: ??parameter_state -> parameter_states & HANDLE BELOW??
         # FIX:           * allocation_samples NOT GETTING ASSIGNED TO CONTROL_SIGNAL_SPECS (AS IN devel)
+        # FIX:           √ PARSE ConnectionTuples RETURNED IN control_signal_spec[PARAMS][PROJECTIONS]
         control_signal_spec = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
         parameter_state = control_signal_spec[PARAMS][CONTROL_SIGNAL_SPECS][0].init_args[RECEIVER]
         param_name = parameter_state.name
