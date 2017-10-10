@@ -2235,6 +2235,8 @@ class System_Base(System):
                 #    (to include weights, exponents, and/or matrix)
                 # If spec is Mechanism or State, use the Mechanism as owner
                 if isinstance(spec, Mechanism):
+                    # FIX: 10/3/17 - ?? USE PRIMARY OutputState...
+                    # FIX:              BUT THEN WHAT IF MECHANISM HAS MonitoredOutputStateOption set?  HANDLED BELOW?
                     owner=spec
                 elif isinstance(spec, State):
                     owner=spec.owner
