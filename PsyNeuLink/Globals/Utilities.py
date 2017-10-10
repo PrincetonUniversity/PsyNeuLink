@@ -593,9 +593,9 @@ def convert_to_np_array(value, dimension):
 def type_match(value, value_type):
     if isinstance(value, value_type):
         return value
-    if value_type in {int, np.int64}:
+    if value_type in {int, np.integer, np.int64, np.int32}:
         return int(value)
-    if value_type in {float, np.float64}:
+    if value_type in {float, np.float, np.float64, np.float32}:
         return float(value)
     if value_type is np.ndarray:
         return np.array(value)
