@@ -780,7 +780,7 @@ class OutputState(State_Base):
         params_dict = {}
 
         if isinstance(state_specific_params, dict):
-            pass
+            return state_specific_params
 
         elif isinstance(state_specific_params, tuple):
 

@@ -2545,9 +2545,8 @@ def _parse_state_spec(state_type=None,
                       format(VARIABLE, state_type, owner.name, state_dict))
             if params is not None:
 
-                # FIX: 10/3/17 - NEED TO IMPLEMENT THIS IN INDIVIDUAL _parse_state_specific_params METHODS
+                # FIX: 10/3/17 -
                 # FIX: THIS IS CONSOLIDATE W/ CALL TO _parse_state_specific_params FOR State specification dict ABOVE
-                # FIX: XXX ADD state_params TO params?? OR BELOW??
                 params = state_type._parse_state_specific_params(state_type,
                                                                  owner=owner,
                                                                  state_dict=state_dict,
@@ -2656,7 +2655,15 @@ def _get_existing_state(owner,
                              connect_with_state=state_type,
                              projection_spec=state_spec,
                              projection_socket=projection_socket)
-        state = state_type
+        # MODIFIED 10/3/17 NEW:
+        if isinstance(state_spec, Projection):
+            state = state_spec.socket_assignments[projection_socket]
+            if state is None:
+                state = state_type
+        else:
+        # MODIFIED 10/3/17 END
+            state = state_type
+
 
     else:
         if state_spec is None:

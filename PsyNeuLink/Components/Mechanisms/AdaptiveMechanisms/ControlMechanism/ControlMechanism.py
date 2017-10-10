@@ -836,8 +836,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
 
         # FIX: 10/3/17 - THIS NO LONGER BE NEEDED;
-        # FIX:      SHOULD JUST CALL: _instantiate_state(owner=self, state_type=GatingSignal, state_spec=control_signal)
-        # FIX:      _instantiate_state WILL CALL _parse_state_specific_specs TO HANDLE STATE-SPECIFIC SPECS
+        # FIX:    SHOULD JUST CALL: _instantiate_state(owner=self, state_type=ControlSignal,state_spec=control_signal)
+        # FIX:    _instantiate_state WILL CALL _parse_state_specific_specs TO HANDLE STATE-SPECIFIC SPECS
         # PARSE control_signal SPECIFICATION -----------------------------------------------------------------------
         # # MODIFIED 10/3/17 OLD:
         # control_signal_spec = _parse_control_signal_spec(owner=self, control_signal_spec=control_signal)
@@ -849,14 +849,15 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # control_projection = control_signal_spec[CONTROL_PROJECTION]
         # parameter_state = control_signal_spec[PARAMS][PROJECTIONS][0].state
         # MODIFIED 10/3/17 NEW:
-        # FIX: 10/3/17 - * SHOULD MORE DIRECTLY ACCESS PARAMETER STATSE FROM CONTROL_SIGNAL_SPECS
-        # FIX:           * SHOULD TEST FOR init STATUS AND DEAL WITH INITIALIZED AS WELL AS DEFERRED INIT
+        # FIX: 10/3/17 - * SHOULD TEST FOR init STATUS AND DEAL WITH INITIALIZED AS WELL AS DEFERRED INIT
         # FIX:           * SHOULD DEAL WITH MULTIPLE PROJECTIONS: ??parameter_state -> parameter_states & HANDLE BELOW??
         # FIX:           * allocation_samples NOT GETTING ASSIGNED TO CONTROL_SIGNAL_SPECS (AS IN devel)
-        # FIX:           √ PARSE ConnectionTuples RETURNED IN control_signal_spec[PARAMS][PROJECTIONS]
+        # FIX:           * PARSE ConnectionTuples RETURNED IN control_signal_spec[PARAMS][PROJECTIONS]
+        # FIX:   !! ConnetionTuple IN PROEJCTIONS BEING RETURNED WITH ParameterState CLASS RATHER THAN STATE
         control_signal_spec = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
-        parameter_state = control_signal_spec[PARAMS][CONTROL_SIGNAL_SPECS][0].init_args[RECEIVER]
-        param_name = parameter_state.name
+        for projection_spec in control_signal_spec[PARAMS][PROJECTIONS]:
+            parameter_state = projection_spec.state
+            param_name = parameter_state.name
 
         # control_signal_params = control_signal_spec[PARAMS]0
         control_signal_params = {}

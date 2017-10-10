@@ -429,7 +429,7 @@ def _parse_state_specific_params(self, owner, state_spec_dict, state_specific_pa
         params_dict = {}
 
         if isinstance(state_specific_params, dict):
-            pass
+            return state_specific_params
 
         if isinstance(state_specific_params, tuple):
 

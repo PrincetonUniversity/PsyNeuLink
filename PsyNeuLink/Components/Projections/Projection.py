@@ -315,7 +315,8 @@ import warnings
 from PsyNeuLink.Components.Component import Component, InitStatus
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
 from PsyNeuLink.Globals.Keywords import \
-    MECHANISM, STATES, INPUT_STATE, OUTPUT_STATE, PROJECTION, PROJECTION_SENDER, PROJECTION_TYPE, \
+    MECHANISM, STATES, INPUT_STATE, OUTPUT_STATE, DEFERRED_INITIALIZATION, \
+    PROJECTION, PROJECTION_SENDER, PROJECTION_TYPE, SENDER, RECEIVER, \
     PARAMETER_STATE_PARAMS, WEIGHT, EXPONENT, \
     LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX_KEYWORD_SET, \
     CONTROL, CONTROL_PROJECTION, GATING, GATING_PROJECTION, \
@@ -899,6 +900,21 @@ class Projection_Base(Projection):
         #    but averts exception when setting paramsCurrent in Component (around line 850)
         pass
 
+    # FIX: 10/3/17 - replace with @property on Projection for receiver and sender
+    @property
+    def socket_assignments(self):
+
+        if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+            sender = self.init_args[SENDER]
+            receiver = self.init_args[RECEIVER]
+        else:
+            sender = self.sender
+            receiver = self.receiver
+
+        return {SENDER:sender,
+                RECEIVER:receiver}
+
+
 def _is_projection_spec(spec, include_matrix_spec=True):
     """Evaluate whether spec is a valid Projection specification
 
@@ -1427,7 +1443,7 @@ def _validate_connection_request(
             # Try to get the State to which the Projection will be connected when fully initialized
             #     as positive confirmation that it is the correct type for state_type
             try:
-                projection_socket_state = projection_spec.init_args[projection_socket]
+                projection_socket_state = projection_spec.socket_assignments[RECEIVER]
                 # Projection's socket has been assigned to a State
                 if projection_socket_state:
                     # Validate that the State is same class as connect_with_state
@@ -1440,7 +1456,7 @@ def _validate_connection_request(
                     return True
             # State for projection's socket couldn't be determined
             except KeyError:
-                # Us Projection's type for validation
+                # Use Projection's type for validation
                 # At least validate that Projection's type can connect with the class of connect_with_state
                     _validate_projection_type(projection_spec.__class__)
                     return True
