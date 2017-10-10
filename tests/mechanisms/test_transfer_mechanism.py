@@ -11,6 +11,8 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Globals.Utilities import UtilitiesError
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
+VECTOR_SIZE=4
+
 
 class TestTransferMechanismInputs:
     # VALID INPUTS
@@ -21,12 +23,12 @@ class TestTransferMechanismInputs:
 
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             integrator_mode=True
         )
-        val = T.execute([10, 10, 10, 10]).tolist()
-        assert val == [[10.0, 10.0, 10.0, 10.0]]
-        assert len(T.size) == 1 and T.size[0] == 4 and type(T.size[0]) == np.int64
+        val = T.execute([10 for i in range(VECTOR_SIZE)]).tolist()
+        assert val == [[10.0 for i in range(VECTOR_SIZE)]]
+        assert len(T.size) == 1 and T.size[0] == VECTOR_SIZE and type(T.size[0]) == np.int64
         # this test assumes size is returned as a 1D array: if it's not, then several tests in this file must be changed
 
     @pytest.mark.mechanism
@@ -35,11 +37,11 @@ class TestTransferMechanismInputs:
 
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             integrator_mode=True
         )
-        val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
-        assert val == [[10.0, 10.0, 10.0, 10.0]]
+        val = T.execute([10.0 for i in range(VECTOR_SIZE)]).tolist()
+        assert val == [[10.0 for i in range(VECTOR_SIZE)]]
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -118,14 +120,14 @@ class TestTransferMechanismNoise:
 
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(),
             noise=5.0,
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[5.0, 5.0, 5.0, 5.0]]
+        val = T.execute([0 for i in range(VECTOR_SIZE)]).tolist()
+        assert val == [[5.0 for i in range(VECTOR_SIZE)]]
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -163,14 +165,14 @@ class TestTransferMechanismNoise:
 
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(),
-            noise=[5.0, 5.0, 5.0, 5.0],
+            noise=[5.0 for i in range(VECTOR_SIZE)],
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[5.0, 5.0, 5.0, 5.0]]
+        val = T.execute([0 for i in range(VECTOR_SIZE)]).tolist()
+        assert val == [[5.0 for i in range(VECTOR_SIZE)]]
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -290,13 +292,13 @@ class TestTransferMechanismFunctions:
 
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Logistic(),
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[0.5, 0.5, 0.5, 0.5]]
+        val = T.execute([0 for i in range(VECTOR_SIZE)]).tolist()
+        assert val == [[0.5 for i in range(VECTOR_SIZE)]]
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -304,13 +306,13 @@ class TestTransferMechanismFunctions:
 
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Exponential(),
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[1.0, 1.0, 1.0, 1.0]]
+        val = T.execute([0 for i in range(VECTOR_SIZE)]).tolist()
+        assert val == [[1.0 for i in range(VECTOR_SIZE)]]
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -318,13 +320,13 @@ class TestTransferMechanismFunctions:
 
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             function=SoftMax(),
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[1.0, 1.0, 1.0, 1.0]]
+        val = T.execute([0 for i in range(VECTOR_SIZE)]).tolist()
+        assert val == [[1.0 for i in range(VECTOR_SIZE)]]
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -390,15 +392,15 @@ class TestTransferMechanismTimeConstant:
     def test_transfer_mech_time_constant_0_8(self):
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(),
             time_constant=0.8,
             integrator_mode=True
         )
-        val = T.execute([1, 1, 1, 1]).tolist()
-        assert val == [[0.8, 0.8, 0.8, 0.8]]
-        val = T.execute([1, 1, 1, 1]).tolist()
-        assert val == [[0.96, 0.96, 0.96, 0.96]]
+        val = T.execute([1 for i in range(VECTOR_SIZE)]).tolist()
+        assert val == [[0.8 for i in range(VECTOR_SIZE)]]
+        val = T.execute([1 for i in range(VECTOR_SIZE)]).tolist()
+        assert val == [[0.96 for i in range(VECTOR_SIZE)]]
 
 
     @pytest.mark.mechanism
@@ -406,13 +408,13 @@ class TestTransferMechanismTimeConstant:
     def test_transfer_mech_time_constant_1_0(self):
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(),
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([1, 1, 1, 1]).tolist()
-        assert val == [[1.0, 1.0, 1.0, 1.0]]
+        val = T.execute([1 for i in range(VECTOR_SIZE)]).tolist()
+        assert val == [[1.0 for i in range(VECTOR_SIZE)]]
 
 
     @pytest.mark.mechanism
@@ -420,13 +422,13 @@ class TestTransferMechanismTimeConstant:
     def test_transfer_mech_time_constant_0_0(self):
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(),
             time_constant=0.0,
             integrator_mode=True
         )
-        val = T.execute([1, 1, 1, 1]).tolist()
-        assert val == [[0.0, 0.0, 0.0, 0.0]]
+        val = T.execute([1 for i in range(VECTOR_SIZE)]).tolist()
+        assert val == [[0.0 for i in range(VECTOR_SIZE)]]
 
 
     @pytest.mark.mechanism
@@ -551,10 +553,10 @@ class TestTransferMechanismSize:
     def test_transfer_mech_size_int_inputs_floats(self):
         T = TransferMechanism(
             name='T',
-            size=4
+            size=VECTOR_SIZE
         )
-        val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
-        assert val == [[10.0, 10.0, 10.0, 10.0]]
+        val = T.execute([10.0 for i in range(VECTOR_SIZE)]).tolist()
+        assert val == [[10.0 for i in range(VECTOR_SIZE)]]
 
     # ------------------------------------------------------------------------------------------------
     # TEST 4
