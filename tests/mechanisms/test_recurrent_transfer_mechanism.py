@@ -1,18 +1,15 @@
+import numpy as np
 import pytest
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism import \
-    RecurrentTransferError,  RecurrentTransferMechanism
 
-from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, \
-    Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError, TransferMechanism
+from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
-from PsyNeuLink.Globals.Keywords import RANDOM_CONNECTIVITY_MATRIX
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError, TransferMechanism
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.System import system
+from PsyNeuLink.Globals.Keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
-from PsyNeuLink.Globals.Utilities import *
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
-
+from PsyNeuLink.Globals.Utilities import UtilitiesError
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism import RecurrentTransferError, RecurrentTransferMechanism
 
 class TestRecurrentTransferMechanismInputs:
 
