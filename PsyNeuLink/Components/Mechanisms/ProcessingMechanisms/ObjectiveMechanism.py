@@ -738,11 +738,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if self.init_status is InitStatus.UNSET:
             input_state_projection_specs = []
             output_states = []
+            # If InputStates have any PROJECTIONS specifications,
+            #    parse to get OutputStates (senders) and projection specs for instantiating Projections below
             for i, state in enumerate(self.input_states):
-                for projection_spec in state.params[PROJECTIONS]:
-                    input_state_projection_specs.extend(projection_spec.projection or [AUTO_ASSIGN_MATRIX])
-                    output_states.append(projection_spec.state)
-                    # FIX: 10/3/17 - CAN ConnectionTuple.state EVER BE NONE?  IF SO, THEN NEED TO CHECK FOR THAT HERE
+                if state.params[PROJECTIONS] is not None:
+                    for projection_spec in state.params[PROJECTIONS]:
+                        # Assume that projection_specs are all ConnectionTuples
+                        input_state_projection_specs.extend(projection_spec.projection or [AUTO_ASSIGN_MATRIX])
+                        output_states.append(projection_spec.state)
 
         # FIX: 10/3/17 -  ??UNDER WHAT CONDITIONS DOES self.init_status != InitStatus.UNSET (IN TEST ABOVE)
         # FIX:            SINCE IN THAT CASE input_state_projection_specs and output_states won't be assigned
