@@ -11,6 +11,7 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_
 from PsyNeuLink.Globals.Utilities import UtilitiesError
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism import RecurrentTransferError, RecurrentTransferMechanism
 
+
 class TestRecurrentTransferMechanismInputs:
 
     def test_recurrent_mech_empty_spec(self):
@@ -112,6 +113,7 @@ class TestRecurrentTransferMechanismInputs:
             )
             R.execute([1, 2, 3, 4, 5]).tolist()
         assert "does not match required length" in str(error_text.value)
+
 
 class TestRecurrentTransferMechanismMatrix:
 
@@ -264,7 +266,7 @@ class TestRecurrentTransferMechanismMatrix:
         R = RecurrentTransferMechanism(
             name='R',
             size=4,
-            auto = [1, 3, 5, 7],
+            auto=[1, 3, 5, 7],
             hetero=np.array([[-4, -3, -2, -1]] * 4),
             matrix=[[1, 2, 3, 4]] * 4
         )
@@ -279,7 +281,7 @@ class TestRecurrentTransferMechanismMatrix:
         R = RecurrentTransferMechanism(
             name='R',
             size=4,
-            auto = [3],
+            auto=[3],
             hetero=np.array([[-4, -3, -2, -1]] * 4),
             matrix=[[1, 2, 3, 4]] * 4
         )
@@ -294,7 +296,7 @@ class TestRecurrentTransferMechanismMatrix:
         R = RecurrentTransferMechanism(
             name='R',
             size=4,
-            auto = [3],
+            auto=[3],
             hetero=2,
             matrix=[[1, 2, 3, 4]] * 4
         )
@@ -353,14 +355,15 @@ class TestRecurrentTransferMechanismMatrix:
 
     def test_recurrent_mech_matrix_none_auto_none(self):
         for a in [None, 1, [1, 2, 5]]:
-                with pytest.raises(RecurrentTransferError) as error_text:
-                    R = RecurrentTransferMechanism(
-                        name = 'R',
-                        size = 3,
-                        matrix = None,
-                        auto = a
-                    )
-                assert "failed to produce a suitable matrix" in str(error_text.value)
+            with pytest.raises(RecurrentTransferError) as error_text:
+                R = RecurrentTransferMechanism(
+                    name='R',
+                    size=3,
+                    matrix=None,
+                    auto=a
+                )
+            assert "failed to produce a suitable matrix" in str(error_text.value)
+
 
 class TestRecurrentTransferMechanismFunction:
 
@@ -438,6 +441,7 @@ class TestRecurrentTransferMechanismFunction:
             R.execute([0, 0, 0, 0]).tolist()
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
 
+
 class TestRecurrentTransferMechanismTimeConstant:
 
     def test_recurrent_mech_time_constant_0_8(self):
@@ -465,7 +469,7 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([1, 1, 1, 1]).tolist()
         np.testing.assert_allclose(val, [[0.9, 0.9, 0.9, 0.9]])
         val = R.execute([1, 2, 3, 4]).tolist()
-        np.testing.assert_allclose(val, [[.98, 1.78, 2.5800000000000005, 3.3800000000000003]]) # due to inevitable floating point errors
+        np.testing.assert_allclose(val, [[.98, 1.78, 2.5800000000000005, 3.3800000000000003]])  # due to inevitable floating point errors
 
     def test_recurrent_mech_time_constant_0_8_initial_1_8(self):
         R = RecurrentTransferMechanism(
@@ -480,34 +484,36 @@ class TestRecurrentTransferMechanismTimeConstant:
         np.testing.assert_allclose(val, [[1.16, 1.16, 1.16, 1.16]])
         val = R.execute([2, 2, 2, 2]).tolist()
         np.testing.assert_allclose(val, [[1.832, 1.832, 1.832, 1.832]])
-        val = R.execute([-4, -3,0, 1]).tolist()
+        val = R.execute([-4, -3, 0, 1]).tolist()
         np.testing.assert_allclose(val, [[-2.8336, -2.0336000000000003, .36639999999999995, 1.1663999999999999]])
 
     def test_recurrent_mech_time_constant_0_8_initial_1_2(self):
         R = RecurrentTransferMechanism(
             name='R',
-            default_variable=[ 0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0],
             function=Linear(),
             time_constant=0.8,
             initial_value=np.array([[-1, 1, -2, 2]]),
             integrator_mode=True
         )
-        val = R.execute([3, 2,1, 0]).tolist()
-        np.testing.assert_allclose(val, [[2.2,1.8, .40000000000000013, .3999999999999999]])
+        val = R.execute([3, 2, 1, 0]).tolist()
+        np.testing.assert_allclose(val, [[2.2, 1.8, .40000000000000013, .3999999999999999]])
 
 # (7/28/17 CW): the below are used because it's good to test System and Process anyways, and because the recurrent
 # projection won't get executed if we only use the execute() method of Mechanism: thus, to test it we must use a System
+
 
 def run_twice_in_system(mech, input1, input2=None):
     if input2 is None:
         input2 = input1
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
-    simple_process = process(size = mech.size[0], pathway = [mech], name = 'simple_process')
-    simple_system = system(processes = [simple_process], name='simple_system', prefs = simple_prefs)
+    simple_process = process(size=mech.size[0], pathway=[mech], name='simple_process')
+    simple_system = system(processes=[simple_process], name='simple_system', prefs=simple_prefs)
 
-    first_output = simple_system.run(inputs = {mech: input1})
-    second_output = simple_system.run(inputs = {mech: input2})
-    return second_output[ 1][0].tolist()
+    first_output = simple_system.run(inputs={mech: input1})
+    second_output = simple_system.run(inputs={mech: input2})
+    return second_output[1][0].tolist()
+
 
 class TestRecurrentTransferMechanismInProcess:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
@@ -545,10 +551,10 @@ class TestRecurrentTransferMechanismInProcess:
             function=Linear)
         p = process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         R.matrix = [[2, 0, 1, 3]] * 4
-        p.run(inputs = [[[1, 2, 3, 4]]])
+        p.run(inputs=[[[1, 2, 3, 4]]])
         np.testing.assert_allclose(T.value.tolist(), [[1, 2, 3, 4]])
         np.testing.assert_allclose(R.value.tolist(), [[1, 2, 3, 4]])
-        p.run(inputs = {T: [1, 3, 2, 5]})
+        p.run(inputs={T: [1, 3, 2, 5]})
         np.testing.assert_allclose(R.recurrent_projection.matrix.tolist(), [[2, 0, 1, 3]] * 4)
         np.testing.assert_allclose(T.value.tolist(), [[1, 3, 2, 5]])
         np.testing.assert_allclose(R.value.tolist(), [[21, 3, 12, 35]])
@@ -564,14 +570,13 @@ class TestRecurrentTransferMechanismInProcess:
             function=Linear)
         p = process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         R.recurrent_projection.matrix = [[2, 0, 1, 3]] * 4
-        p.run(inputs = [[[1, 2, 3, 4]]])
+        p.run(inputs=[[[1, 2, 3, 4]]])
         np.testing.assert_allclose(T.value.tolist(), [[1, 2, 3, 4]])
         np.testing.assert_allclose(R.value.tolist(), [[1, 2, 3, 4]])
-        p.run(inputs = {T: [1, 3, 2, 5]})
+        p.run(inputs={T: [1, 3, 2, 5]})
         np.testing.assert_allclose(R.recurrent_projection.matrix.tolist(), [[2, 0, 1, 3]] * 4)
         np.testing.assert_allclose(T.value.tolist(), [[1, 3, 2, 5]])
         np.testing.assert_allclose(R.value.tolist(), [[21, 3, 12, 35]])
-
 
 
 class TestRecurrentTransferMechanismInSystem:
@@ -585,14 +590,14 @@ class TestRecurrentTransferMechanismInSystem:
             auto=0,
             hetero=-1)
         T = TransferMechanism(
-            size = 3,
-            function = Linear)
-        p = process(size = 4, pathway = [R, T], prefs = TestRecurrentTransferMechanismInSystem.simple_prefs)
-        s = system(processes = [p], prefs = TestRecurrentTransferMechanismInSystem.simple_prefs)
-        s.run(inputs = {R: [1, 2, 3, 4]})
+            size=3,
+            function=Linear)
+        p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        s = system(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        s.run(inputs={R: [1, 2, 3, 4]})
         np.testing.assert_allclose(R.value.tolist(), [[1., 2., 3., 4.]])
         np.testing.assert_allclose(T.value.tolist(), [[10., 10., 10.]])
-        s.run(inputs = {R: [5, 6, 7, 8]})
+        s.run(inputs={R: [5, 6, 7, 8]})
         np.testing.assert_allclose(R.value.tolist(), [[-4, -2, 0, 2]])
         np.testing.assert_allclose(T.value.tolist(), [[-4, -4, -4]])
         s.run(inputs={R: [-1, 2, -2, 5.5]})
@@ -617,7 +622,7 @@ class TestRecurrentTransferMechanismInSystem:
         np.testing.assert_allclose(R.value.tolist(), [[-4, -2, 0, 2]])
         np.testing.assert_allclose(T.value.tolist(), [[-4, -4, -4]])
         R.recurrent_projection.auto = [1, 1, 2, 4]
-        s.run(inputs={R: [12, 11, 10,9]})
+        s.run(inputs={R: [12, 11, 10, 9]})
         np.testing.assert_allclose(R.value.tolist(), [[8, 11, 14, 23]])
         np.testing.assert_allclose(T.value.tolist(), [[56, 56, 56]])
 
@@ -639,7 +644,7 @@ class TestRecurrentTransferMechanismInSystem:
         np.testing.assert_allclose(R.value.tolist(), [[-.5, 4, 10, 0]])
         np.testing.assert_allclose(T.value.tolist(), [[13.5, 13.5, 13.5, 13.5, 13.5]])
         R.hetero = [[-1, 2, 3, 1.5]] * 4
-        s.run(inputs={R: [12, 11, 10,9]})
+        s.run(inputs={R: [12, 11, 10, 9]})
         np.testing.assert_allclose(R.value.tolist(), [[-2.5, 38, 50.5, 29.25]])
         np.testing.assert_allclose(T.value.tolist(), [[115.25, 115.25, 115.25, 115.25, 115.25]])
 
@@ -661,7 +666,7 @@ class TestRecurrentTransferMechanismInSystem:
         np.testing.assert_allclose(R.value.tolist(), [[-.5, 4, 10, 0]])
         np.testing.assert_allclose(T.value.tolist(), [[13.5, 13.5, 13.5, 13.5, 13.5]])
         R.auto = [0, 0, 0, 0]
-        s.run(inputs={R: [12, 11, 10,9]})
+        s.run(inputs={R: [12, 11, 10, 9]})
         np.testing.assert_allclose(R.value.tolist(), [[12, 11, 10, 9]])
         np.testing.assert_allclose(T.value.tolist(), [[42, 42, 42, 42, 42]])
 
@@ -676,10 +681,10 @@ class TestRecurrentTransferMechanismInSystem:
         p = process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = system(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         R.matrix = [[2, 0, 1, 3]] * 4
-        s.run(inputs = {T: [1, 2, 3, 4]})
+        s.run(inputs={T: [1, 2, 3, 4]})
         np.testing.assert_allclose(T.value.tolist(), [[1, 2, 3, 4]])
         np.testing.assert_allclose(R.value.tolist(), [[1, 2, 3, 4]])
-        s.run(inputs = {T: [1, 3, 2, 5]})
+        s.run(inputs={T: [1, 3, 2, 5]})
         np.testing.assert_allclose(R.recurrent_projection.matrix.tolist(), [[2, 0, 1, 3]] * 4)
         np.testing.assert_allclose(T.value.tolist(), [[1, 3, 2, 5]])
         np.testing.assert_allclose(R.value.tolist(), [[21, 3, 12, 35]])
@@ -687,17 +692,17 @@ class TestRecurrentTransferMechanismInSystem:
     def test_recurrent_mech_with_learning(self):
         R = RecurrentTransferMechanism(size=4,
                                        function=Linear,
-                                       matrix=np.full((4,4), 0.1),
+                                       matrix=np.full((4, 4), 0.1),
                                        enable_learning=True
-                                     )
+                                       )
         # Test that all of these are the same:
         np.testing.assert_allclose(
             R.matrix.tolist(),
             [
-                [ 0.1,  0.1, 0.1, 0.1],
-                [ 0.1, 0.1, 0.1, 0.1],
-                [ 0.1, 0.1, 0.1, 0.1],
-                [ 0.1, 0.1, 0.1, 0.1]
+                [0.1,  0.1, 0.1, 0.1],
+                [0.1, 0.1, 0.1, 0.1],
+                [0.1, 0.1, 0.1, 0.1],
+                [0.1, 0.1, 0.1, 0.1]
             ]
         )
         np.testing.assert_allclose(R.recurrent_projection.matrix.tolist(), R.matrix.tolist())
@@ -706,14 +711,14 @@ class TestRecurrentTransferMechanismInSystem:
         # Test that activity is properly computed prior to learning
         p = process(pathway=[R])
         R.learning_enabled = False
-        p.execute([1,1,0,0])
-        p.execute([1,1,0,0])
-        np.testing.assert_allclose(R.value.tolist(), [[1.2,1.2,0.2,0.2]])
+        p.execute([1, 1, 0, 0])
+        p.execute([1, 1, 0, 0])
+        np.testing.assert_allclose(R.value.tolist(), [[1.2, 1.2, 0.2, 0.2]])
 
         # Test that activity and weight changes are properly computed with learning
         R.learning_enabled = True
-        p.execute([1,1,0,0])
-        np.testing.assert_allclose(R.value.tolist(), [[1.28,1.28,0.28,0.28]])
+        p.execute([1, 1, 0, 0])
+        np.testing.assert_allclose(R.value.tolist(), [[1.28, 1.28, 0.28, 0.28]])
         np.testing.assert_allclose(
             R.matrix.tolist(),
             [
@@ -723,8 +728,8 @@ class TestRecurrentTransferMechanismInSystem:
                 [0.11792000000000001, 0.11792000000000001, 0.10392000000000001, 0.10392000000000001]
             ]
         )
-        p.execute([1,1,0,0])
-        np.testing.assert_allclose(R.value.tolist(), [[ 1.5317504, 1.5317504, 0.3600704, 0.3600704]])
+        p.execute([1, 1, 0, 0])
+        np.testing.assert_allclose(R.value.tolist(), [[1.5317504, 1.5317504, 0.3600704, 0.3600704]])
         np.testing.assert_allclose(
             R.matrix.tolist(),
             [
