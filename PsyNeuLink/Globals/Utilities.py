@@ -52,9 +52,11 @@ KVO
 
 * observe_value_at_keypath
 
+
 OTHER
 ~~~~~
 * `get_args`
+* `recursive_update`
 * `merge_param_dicts`
 * `multi_getattr`
 * `np_array_less_that_2d`
@@ -461,6 +463,22 @@ def get_args(frame):
     """
     args, _, _, values = inspect.getargvalues(frame)
     return dict((key, value) for key, value in values.items() if key in args)
+
+
+from collections import Mapping
+
+def recursive_update(d, u):
+    """Recursively update entries of dictionary d with dictionary u
+    From: https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
+    """
+    for k, v in u.items():
+        if isinstance(v, Mapping):
+            r = recursive_update(d.get(k, {}), v)
+            d[k] = r
+        else:
+            d[k] = u[k]
+    return d
+
 
 def merge_param_dicts(source, specific, general):
     """Search source dict for specific and general dicts, merge specific with general, and return merged

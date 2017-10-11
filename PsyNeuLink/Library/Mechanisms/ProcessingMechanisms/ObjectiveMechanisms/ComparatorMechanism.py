@@ -323,60 +323,45 @@ class ComparatorMechanism(ObjectiveMechanism):
                                     CALCULATE:lambda x: np.sum(x*x)/len(x)}])
 
     # MODIFIED 10/10/17 OLD:
-    # MODIFIED 10/10/17 NEW:
-    # @tc.typecheck
-    # def __init__(self,
-    #              sample:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=SAMPLE,
-    #              target:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=TARGET,
-    #              # input_states=[SAMPLE, TARGET],
-    #              function=LinearCombination(weights=[[-1], [1]]),
-    #              output_states:tc.optional(tc.any(list, dict))=[OUTCOME, MSE],
-    #              params=None,
-    #              name=None,
-    #              prefs:is_pref_set=None,
-    #              context=None):
-    #
-    #     # Parse items of input_states arg for validation (in _validate_params)
-    #     # input_states = input_states or [None] * 2
-    #     from PsyNeuLink.Components.States.State import _parse_state_spec
-    #     sample_input = _parse_state_spec(owner=self,
-    #                                      name=SAMPLE,
-    #                                      state_type=InputState,
-    #                                      # state_spec=input_states[0],
-    #                                      state_spec=sample,
-    #                                      value=None)
-    #     target_input = _parse_state_spec(owner=self,
-    #                                      name=TARGET,
-    #                                      state_type=InputState,
-    #                                      # state_spec=input_states[1],
-    #                                      state_spec=target,
-    #                                      value=None)
-    #
-    #     # IMPLEMENTATION NOTE: The following prevents the default from being updated by subsequent assignment
-    #     #                     (in this case, to [OUTCOME, {NAME= MSE}]), but fails to expose default in IDE
-    #     # output_states = output_states or [OUTCOME, MSE]
-    #
-    #     # Create a StandardOutputStates object from the list of stand_output_states specified for the class
-    #     if not isinstance(self.standard_output_states, StandardOutputStates):
-    #         self.standard_output_states = StandardOutputStates(self,
-    #                                                            self.standard_output_states,
-    #                                                            indices=PRIMARY_OUTPUT_STATE)
-    #
-    #     super().__init__(input_states = [sample_input, target_input],
-    #                      # monitored_output_states=[sample, target],
-    #                      function=function,
-    #                      output_states=output_states.copy(), # prevent default from getting overwritten by later assign
-    #                      params=params,
-    #                      name=name,
-    #                      prefs=prefs,
-    #                      context=self)
-    # MODIFIED 10/10/17 END
+    @tc.typecheck
+    def __init__(self,
+                 sample:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
+                 target:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
+                 function=LinearCombination(weights=[[-1], [1]]),
+                 output_states:tc.optional(tc.any(list, dict))=[OUTCOME, MSE],
+                 params=None,
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None,
+                 **input_states # IMPLEMENTATION NOTE: this is for backward compatibility
+                 ):
+
+        input_states = self._merge_legacy_constructor_args(sample, target, input_states)
+
+        # IMPLEMENTATION NOTE: The following prevents the default from being updated by subsequent assignment
+        #                     (in this case, to [OUTCOME, {NAME= MSE}]), but fails to expose default in IDE
+        # output_states = output_states or [OUTCOME, MSE]
+
+        # Create a StandardOutputStates object from the list of stand_output_states specified for the class
+        if not isinstance(self.standard_output_states, StandardOutputStates):
+            self.standard_output_states = StandardOutputStates(self,
+                                                               self.standard_output_states,
+                                                               indices=PRIMARY_OUTPUT_STATE)
+
+        super().__init__(# monitored_output_states=[sample, target],
+                         input_states = input_states,
+                         function=function,
+                         output_states=output_states.copy(), # prevent default from getting overwritten by later assign
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=self)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """If sample and target values are specified, validate that they are compatible
         """
 
-        if INPUT_STATES in request_set:
+        if INPUT_STATES in request_set and request_set[INPUT_STATES] is not None:
             input_states = request_set[INPUT_STATES]
 
             # Validate that there are exactly two input_states (for sample and target)
@@ -447,3 +432,46 @@ class ComparatorMechanism(ObjectiveMechanism):
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
                                  context=context)
+
+    def _merge_legacy_constructor_args(self, sample, target, input_states):
+
+        from PsyNeuLink.Components.States.State import _parse_state_spec
+        from PsyNeuLink.Globals.Utilities import recursive_update
+        # USE sample and target TO CREATE AN InputState specfication dictionary for each;
+        # DO SAME FOR InputStates argument, USE TO OVERWRITE ANY SPECIFICATIONS IN sample AND target DICTS
+        # TRY tuple format AS WAY OF PROVIDED CONSOLIDATED variable AND OutputState specifications
+
+        sample_dict = _parse_state_spec(owner=self,
+                                        state_type=InputState,
+                                        state_spec=sample,
+                                        name=SAMPLE)
+
+        target_dict = _parse_state_spec(owner=self,
+                                        state_type=InputState,
+                                        state_spec=target,
+                                        name=TARGET)
+
+        # If input_states arg is provided, parse it and use it to upate sample and target dicts
+        if input_states:
+
+            if len(input_states) != 2:
+                raise ComparatorMechanismError("If an \'input_states\' arg is included in the constructor for a {}"
+                                               "it must be a list with exactly two items (not {})".
+                                               format(ComparatorMechanism.__name__, len(input_states)))
+
+            sample_input_state_dict = _parse_state_spec(owner=self,
+                                                        state_type=InputState,
+                                                        state_spec=input_states[0],
+                                                        name=SAMPLE,
+                                                        value=None)
+
+            target_input_state_dict = _parse_state_spec(owner=self,
+                                                        state_type=InputState,
+                                                        state_spec=input_states[1],
+                                                        name=TARGET,
+                                                        value=None)
+
+            sample_dict = recursive_update(sample_dict, sample_input_state_dict)
+            target_dict = recursive_update(target_dict, target_input_state_dict)
+
+        return [sample_dict, target_dict]

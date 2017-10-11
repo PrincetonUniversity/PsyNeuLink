@@ -2051,8 +2051,8 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
 
         # FIX: 10/3/17 - DO THIS STUFF: ---------------------------------
-        reference_value = state_spec_dict[REFERENCE_VALUE]
-        variable = state_spec_dict[VARIABLE]
+        reference_value = state[REFERENCE_VALUE]
+        variable = state[VARIABLE]
 
         # FIX: FINISH THIS UP FOR REMAINIING STANDARD ARGS: REFERENCE_VALUE, PARAMS, PREFS
         if variable:
@@ -2109,6 +2109,8 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     #                             state_spec_dict[OWNER].name))
     # MODIFIED 10/3/17 OLD:
     #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
+    if state_spec_dict[REFERENCE_VALUE] is None:
+        state_spec_dict[REFERENCE_VALUE] = state_spec_dict[VARIABLE]
     state_spec_dict[REFERENCE_VALUE] = convert_to_np_array(state_spec_dict[REFERENCE_VALUE],1)
     # MODIFIED 10/3/17 END
 
@@ -2131,73 +2133,6 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 #     setattr(owner, state.name+'.value', state.value)
 
     return state
-
-# def _check_parameter_state_value(owner, param_name, value):
-#     """Check that parameter value (<ParameterState>.value) is compatible with value in paramClassDefault
-#
-#     :param param_name: (str)
-#     :param value: (value)
-#     :return: (value)
-#     """
-#     default_value = owner.paramClassDefaults[param_name]
-#     if iscompatible(value, default_value):
-#         return value
-#     else:
-#         if owner.prefs.verbosePref:
-#             print("Format is incorrect for value ({0}) of {1} in {2};  default ({3}) will be used.".
-#                   format(value, param_name, owner.name, default_value))
-#         return default_value
-
-# def _check_state_ownership(owner, param_name, mechanism_state):
-#     """Check whether State's owner is owner and if not offer options how to handle it
-#
-#     If State's owner is not owner, options offered to:
-#     - reassign it to owner
-#     - make a copy and assign to owner
-#     - return None => caller should assign default
-#
-#     :param param_name: (str)
-#     :param mechanism_state: (State)
-#     :param context: (str)
-#     :return: (State or None)
-#     """
-#
-#     if mechanism_state.owner != owner:
-#         reassign = input("\nState for \'{0}\' parameter, assigned to {1} in {2}, already belongs to {3}. "
-#                          "You can reassign it (r), copy it (c), or assign default (d):".
-#                          format(mechanism_state.name, param_name, owner.name,
-#                                 mechanism_state.owner.name))
-#         while reassign != 'r' and reassign != 'c' and reassign != 'd':
-#             reassign = input("\nReassign (r), copy (c), or default (d):".
-#                              format(mechanism_state.name, param_name, owner.name,
-#                                     mechanism_state.owner.name))
-#
-#             if reassign == 'r':
-#                 while reassign != 'y' and reassign != 'n':
-#                     reassign = input("\nYou are certain you want to reassign it {0}? (y/n):".
-#                                      format(param_name))
-#                 if reassign == 'y':
-#                     # Note: assumed that parameters have already been checked for compatibility with assignment
-#                     return mechanism_state
-#
-#         # Make copy of state
-#         if reassign == 'c':
-#             import copy
-#             # # MODIFIED 10/28/16 OLD:
-#             # mechanism_state = copy.deepcopy(mechanism_state)
-#             # MODIFIED 10/28/16 NEW:
-#             # if owner.verbosePref:
-#                 # warnings.warn("WARNING: at present, 'deepcopy' can be used to copy States, "
-#                 #               "so some components of {} might be missing".format(mechanism_state.name))
-#             print("WARNING: at present, 'deepcopy' can be used to copy states, "
-#                   "so some Components of {} assigned to {} might be missing".
-#                   format(mechanism_state.name, append_type_to_name(owner)))
-#             mechanism_state = copy.copy(mechanism_state)
-#             # MODIFIED 10/28/16 END
-#
-#         # Assign owner to chosen state
-#         mechanism_state.owner = owner
-#     return mechanism_state
 
 
 # FIX: 10/3/17 - MOVE TO PROJECTIONS / INTEGRATE WITH _parse_projection_spec
