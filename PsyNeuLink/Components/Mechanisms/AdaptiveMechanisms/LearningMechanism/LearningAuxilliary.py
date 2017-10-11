@@ -144,7 +144,9 @@ from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.ShellClasses import Function
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Globals.Keywords import BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, WEIGHT
+from PsyNeuLink.Globals.Keywords import \
+    BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, \
+    MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, WEIGHT, PROJECTIONS
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism import ComparatorMechanism
 
 
@@ -486,25 +488,51 @@ def _instantiate_learning_components(learning_projection, context=None):
             #    this will induce a simple subtraction of target-sample (i.e., implement a comparator)
             sample_input = target_input = error_output
 
-            objective_mechanism = ComparatorMechanism(sample=lc.activation_mech_output,
-                                                      target=TARGET,
+            # MODIFIED 10/10/17 OLD:
+            # objective_mechanism = ComparatorMechanism(sample=lc.activation_mech_output,
+            #                                           target=TARGET,
+            #                                           # input_states=[sample_input, target_input],
+            #                                           # FOR TESTING: ALTERNATIVE specifications of input_states arg:
+            #                                           # input_states=[(sample_input, FULL_CONNECTIVITY_MATRIX),
+            #                                           #               target_input],
+            #                                           # input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
+            #                                           #               target_input],
+            #                                           input_states=[{NAME:SAMPLE,
+            #                                                          VARIABLE:sample_input,
+            #                                                          WEIGHT:-1
+            #                                                          },
+            #                                                         {NAME:TARGET,
+            #                                                          VARIABLE:target_input,
+            #                                                          # WEIGHT:1
+            #                                                          }],
+            #                                           name="{} {}".format(lc.activation_mech.name,
+            #                                                               COMPARATOR_MECHANISM),
+            #                                           context=context)
+            # MODIFIED 10/10/17 NEW:
+            objective_mechanism = ComparatorMechanism(sample={NAME:SAMPLE,
+                                                              VARIABLE:sample_input,
+                                                              PROJECTIONS:[lc.activation_mech_output],
+                                                              WEIGHT:-1},
+                                                      target={NAME:TARGET,
+                                                              VARIABLE:target_input},
                                                       # input_states=[sample_input, target_input],
                                                       # FOR TESTING: ALTERNATIVE specifications of input_states arg:
                                                       # input_states=[(sample_input, FULL_CONNECTIVITY_MATRIX),
                                                       #               target_input],
                                                       # input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
                                                       #               target_input],
-                                                      input_states=[{NAME:SAMPLE,
-                                                                     VARIABLE:sample_input,
-                                                                     WEIGHT:-1
-                                                                     },
-                                                                    {NAME:TARGET,
-                                                                     VARIABLE:target_input,
-                                                                     # WEIGHT:1
-                                                                     }],
+                                                      # input_states=[{NAME:SAMPLE,
+                                                      #                VARIABLE:sample_input,
+                                                      #                WEIGHT:-1
+                                                      #                },
+                                                      #               {NAME:TARGET,
+                                                      #                VARIABLE:target_input,
+                                                      #                # WEIGHT:1
+                                                      #                }],
                                                       name="{} {}".format(lc.activation_mech.name,
                                                                           COMPARATOR_MECHANISM),
                                                       context=context)
+            # MODIFIED 10/10/17 END
 
             # # FOR TESTING: ALTERNATIVE to Direct call to ObjectiveMechanism
             # #              (should produce identical result to use of ComparatorMechanism above)

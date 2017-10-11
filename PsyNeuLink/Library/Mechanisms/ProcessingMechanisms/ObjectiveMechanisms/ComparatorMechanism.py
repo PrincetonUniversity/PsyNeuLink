@@ -322,50 +322,55 @@ class ComparatorMechanism(ObjectiveMechanism):
                                    {NAME:MSE,
                                     CALCULATE:lambda x: np.sum(x*x)/len(x)}])
 
-    @tc.typecheck
-    def __init__(self,
-                 sample:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
-                 target:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
-                 input_states=[SAMPLE, TARGET],
-                 function=LinearCombination(weights=[[-1], [1]]),
-                 output_states:tc.optional(tc.any(list, dict))=[OUTCOME, MSE],
-                 params=None,
-                 name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
-
-        # Parse items of input_states arg for validation (in _validate_params)
-        input_states = input_states or [None] * 2
-        from PsyNeuLink.Components.States.State import _parse_state_spec
-        sample_input = _parse_state_spec(owner=self,
-                                         state_type=InputState,
-                                         state_spec=input_states[0],
-                                         name=SAMPLE,
-                                         value=None)
-        target_input = _parse_state_spec(owner=self,
-                                         state_type=InputState,
-                                         state_spec=input_states[1],
-                                         name=TARGET,
-                                         value=None)
-
-        # IMPLEMENTATION NOTE: The following prevents the default from being updated by subsequent assignment
-        #                     (in this case, to [OUTCOME, {NAME= MSE}]), but fails to expose default in IDE
-        # output_states = output_states or [OUTCOME, MSE]
-
-        # Create a StandardOutputStates object from the list of stand_output_states specified for the class
-        if not isinstance(self.standard_output_states, StandardOutputStates):
-            self.standard_output_states = StandardOutputStates(self,
-                                                               self.standard_output_states,
-                                                               indices=PRIMARY_OUTPUT_STATE)
-
-        super().__init__(monitored_output_states=[sample, target],
-                         input_states = [sample_input, target_input],
-                         function=function,
-                         output_states=output_states.copy(), # prevent default from getting overwritten by later assign
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         context=self)
+    # MODIFIED 10/10/17 OLD:
+    # MODIFIED 10/10/17 NEW:
+    # @tc.typecheck
+    # def __init__(self,
+    #              sample:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=SAMPLE,
+    #              target:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=TARGET,
+    #              # input_states=[SAMPLE, TARGET],
+    #              function=LinearCombination(weights=[[-1], [1]]),
+    #              output_states:tc.optional(tc.any(list, dict))=[OUTCOME, MSE],
+    #              params=None,
+    #              name=None,
+    #              prefs:is_pref_set=None,
+    #              context=None):
+    #
+    #     # Parse items of input_states arg for validation (in _validate_params)
+    #     # input_states = input_states or [None] * 2
+    #     from PsyNeuLink.Components.States.State import _parse_state_spec
+    #     sample_input = _parse_state_spec(owner=self,
+    #                                      name=SAMPLE,
+    #                                      state_type=InputState,
+    #                                      # state_spec=input_states[0],
+    #                                      state_spec=sample,
+    #                                      value=None)
+    #     target_input = _parse_state_spec(owner=self,
+    #                                      name=TARGET,
+    #                                      state_type=InputState,
+    #                                      # state_spec=input_states[1],
+    #                                      state_spec=target,
+    #                                      value=None)
+    #
+    #     # IMPLEMENTATION NOTE: The following prevents the default from being updated by subsequent assignment
+    #     #                     (in this case, to [OUTCOME, {NAME= MSE}]), but fails to expose default in IDE
+    #     # output_states = output_states or [OUTCOME, MSE]
+    #
+    #     # Create a StandardOutputStates object from the list of stand_output_states specified for the class
+    #     if not isinstance(self.standard_output_states, StandardOutputStates):
+    #         self.standard_output_states = StandardOutputStates(self,
+    #                                                            self.standard_output_states,
+    #                                                            indices=PRIMARY_OUTPUT_STATE)
+    #
+    #     super().__init__(input_states = [sample_input, target_input],
+    #                      # monitored_output_states=[sample, target],
+    #                      function=function,
+    #                      output_states=output_states.copy(), # prevent default from getting overwritten by later assign
+    #                      params=params,
+    #                      name=name,
+    #                      prefs=prefs,
+    #                      context=self)
+    # MODIFIED 10/10/17 END
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """If sample and target values are specified, validate that they are compatible
