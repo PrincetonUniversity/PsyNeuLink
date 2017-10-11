@@ -306,7 +306,7 @@ from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modula
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import \
-           ObjectiveMechanism, ObjectiveMechanismError, _parse_monitored_output_states
+           ObjectiveMechanism, ObjectiveMechanismError
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 from PsyNeuLink.Components.ShellClasses import Mechanism, System
