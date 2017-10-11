@@ -190,6 +190,653 @@
             
   <div class="section" id="kwta">
 <h1>KWTA<a class="headerlink" href="#kwta" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-psyneulink.library.mechanisms.processing.transfer.kwta"></span><div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A KWTA is a subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that implements a k-winners-take-all (kWTA) constraint on the
+number of elements of the Mechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> that are above a specified threshold.  The
+implementation is based on the one  described in <a class="reference external" href="https://grey.colorado.edu/CompCogNeuro/index.php/CCNBook/Networks/kWTA_Equations">O’Reilly and Munakata, 2012</a>.</p>
+</div>
+<div class="section" id="creating-a-kwta">
+<span id="kwta-creation"></span><h2>Creating a KWTA<a class="headerlink" href="#creating-a-kwta" title="Permalink to this headline">¶</a></h2>
+<p>A KWTA Mechanism can be created directly by calling its constructor. The <strong>k_value</strong>, <strong>threshold</strong>,
+and <strong>ratio</strong> arguments can be used to specify the function of the KWTA Mechanism, and default to a condition
+in which half of the elements in the KWTA Mechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (<strong>k_value</strong> = 0.5) are above 0 and
+half are below (<strong>threshold</strong> = 0), achieved using an intermediate degree of value displacement (<strong>ratio</strong> = 0.5).</p>
+</div>
+<div class="section" id="structure">
+<span id="kwta-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>The KWTA calculates an offset to apply to all elements of the Mechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> array so that it
+has a specified number of the elements that are at or above a specified threshold value.  Typically, this constraint
+can be satisfied in a number of ways;  how it is satisfied is determined by three parameters and two options of the
+KWTA:</p>
+<ul class="simple" id="kwta-k-value">
+<li><a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> parameter – determines the number of elements of its <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> that should
+be at or above the specified <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>.  A value between 0 and 1 specifies the <em>proportion</em> of
+elements that should be at or above the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>, while a positive integer specifies the
+<em>number</em> of elements that should be at or above the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>.  A negative integer specifies the
+number of elements that should be below the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>.  Whether or not the exact specification
+is achieved depends on the settings of the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> and <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.inhibition_only" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.inhibition_only"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition_only</span></code></a> options (see below).</li>
+</ul>
+<ul class="simple" id="kwta-threshold">
+<li><a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> parameter – determines the value at or above which the KTWA seeks to assign
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements of its <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+</ul>
+<ul class="simple" id="kwta-ratio">
+<li><a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> parameter – determines how the offset applied to the elements of the KWTA’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is selected from the scope of possible values;  the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> must be a number
+between 0 and 1.  An offset is picked that is above the low end of the scope by a proportion of the scope
+equal to the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> parameter.  How the scope is calculated is determined by the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> option, as described below.</li>
+</ul>
+<ul id="kwta-average-based">
+<li><p class="first"><a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> option – determines how the scope of values is calculated from which the
+offset applied to the elements of the KWTA’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is selected;  If <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> is <code class="xref any docutils literal"><span class="pre">False</span></code>, the low end of the scope is the offset that sets the k-th highest element exactly at
+at the threshold (that is, the smallest value that insures that <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements are at or above the
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>;  the high end of the scope is the offset that sets the k+1-th highest element exactly at
+the threshold (that is, the largest possible value, such that the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements but no more are
+above the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> (i.e., the next one is exactly at it). With this setting, all values of offset
+within the scope generate exactly <code class="xref any docutils literal"><span class="pre">k_value</span></code> elements at or above the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>.  If
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, the low end of the scope is the offset that places the <em>average</em> of
+the elements with the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> highest values at the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>, and the high end of
+the scope is the offset that places the average of the remaining elements at the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>.  In
+this case, the lowest values of offset within the scope may produce fewer than <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements at or
+above the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>, while the highest values within the scope may produce more.  An offset is
+picked from the scope as specified by the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> parameter (see <a class="reference internal" href="#kwta-ratio"><span class="std std-ref">above</span></a>).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> option is <code class="xref any docutils literal"><span class="pre">False</span></code> (the default), the KWTA’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+is guaranteed to have exactly <code class="xref any docutils literal"><span class="pre">k_value</span></code> elements at or above the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> (that
+is, for <em>any</em> value of the <code class="xref any docutils literal"><span class="pre">ratio</span></code>).  However, if <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, this
+guarantee does not hold;  <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> may have fewer than <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements at or
+above the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> (if the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> is low), or more than <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a>
+(if the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> is high).</p>
+</div>
+<p>Although setting the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> option to <code class="xref any docutils literal"><span class="pre">True</span></code> does not guarantee that <em>exactly</em> <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements will be above the threshold, the additional flexibility it affords in the Mechanism’s
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute  can be useful in some settings – for example, when training hidden layers
+in a <a class="reference internal" href="LearningMechanism.html#learningmechanism-multilayer-learning"><span class="std std-ref">multilayered network</span></a>, which may require different numbers of elements
+to be above the specified <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> for different input-target pairings.</p>
+</li>
+</ul>
+<ul id="kwta-inhibition-only">
+<li><p class="first"><a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.inhibition_only" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.inhibition_only"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition_only</span></code></a> option – determines whether the offset applied to the elements of the
+KWTA’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is allowed to be positive (i.e., whether the KWTA can increase the value of any
+elements of its <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>).  If set to <code class="xref any docutils literal"><span class="pre">False</span></code>, the KWTA will use any offset value determined by
+the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> parameter from the scope determined by the <code class="xref any docutils literal"><span class="pre">average_based</span></code> option
+(including positive offsets). If <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.inhibition_only" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.inhibition_only"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition_only</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, then any positive offset
+selected is “clipped” at (i.e re-assigned a value of) 0.  This ensures that the values of the elements of the KWTA’s
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> are never increased.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.inhibition_only" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.inhibition_only"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition_only</span></code></a> option is set to <code class="xref any docutils literal"><span class="pre">True</span></code>, the number of elements at or above the
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> may fall below <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a>; and, if the input to the KWTA is sufficiently
+low, the value of all elements may decay to 0 (depending on the value of the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.decay" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a> parameter.</p>
+</div>
+</li>
+</ul>
+<p>In all other respects, a KWTA has the same attributes and is specified in the same way as a standard
+<a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>.</p>
+</div>
+<div class="section" id="execution">
+<span id="kwta-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>When a KTWA is executed, it first determines its <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> as follows:</p>
+<ul class="simple">
+<li>First, like every <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>, it combines the input it receives from its recurrent
+<a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a> (see <code class="xref any docutils literal"><span class="pre">Recurrent_Transfer_Structure</span></code>) with the input
+from any other <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> it receives, and assigns this to its <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute.</li>
+</ul>
+<ul>
+<li><p class="first">Then it modifies its <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, by calculating and assigning an offset to its elements, so that
+as close to <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements as possible are at or above the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>.  The
+offset is determined by carrying out the following steps in each execution of the KTWA:</p>
+<ul class="simple">
+<li>calculate the scope of offsets that will satisfy the constraint; how this is done is determined by the
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> attribute (see <a class="reference internal" href="#kwta-average-based"><span class="std std-ref">above</span></a>);</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li>select an offset from the scope based on the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> option (see <a class="reference internal" href="#kwta-ratio"><span class="std std-ref">above</span></a>);</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li>constrain the offset to be 0 or negative if the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.inhibition_only" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.inhibition_only"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition_only</span></code></a> option is set (see <a class="reference internal" href="#kwta-inhibition-only"><span class="std std-ref">above</span></a>;</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li>apply the offset to all elements of the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+</ul>
+</li>
+</ul>
+<p>The modified <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is then passed to the KWTA’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to determine its
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
+</div>
+<div class="section" id="class-reference">
+<span id="kwta-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA">
+<em class="property">class </em><code class="descclassname">psyneulink.library.mechanisms.processing.transfer.kwta.</code><code class="descname">KWTA</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>function=Logistic</em>, <em>matrix=None</em>, <em>auto=None</em>, <em>hetero=None</em>, <em>initial_value=None</em>, <em>decay=1.0</em>, <em>noise=0.0</em>, <em>time_constant=1.0</em>, <em>k_value=0.5</em>, <em>threshold=0</em>, <em>ratio=0.5</em>, <em>average_based=False</em>, <em>inhibition_only=True</em>, <em>range=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that dynamically regulates its input relative to a given threshold.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the input to the mechanism to use if none is provided in a call to its
+<a class="reference internal" href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.execute" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.run" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method;
+also serves as a template to specify the length of <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a>
+of the mechanism.</li>
+<li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints</em>) – specifies variable as array(s) of zeros if <strong>variable</strong> is not passed as an argument;
+if <strong>variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.</li>
+<li><strong>function</strong> (<em>TransferFunction : default Linear</em>) – specifies the function used to transform the input;  can be <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Linear" title="psyneulink.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>, <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>, <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Exponential" title="psyneulink.components.functions.function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>,
+or a custom function.</li>
+<li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><em>matrix keyword</em><em>, or </em><em>AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX</em>) – specifies the matrix to use for creating a <code class="xref any docutils literal"><span class="pre">recurrent</span> <span class="pre">AutoAssociativeProjection</span></code>,
+or a AutoAssociativeProjection to use. If <strong>auto</strong> or <strong>hetero</strong> arguments are specified, the <strong>matrix</strong> argument
+will be ignored in favor of those arguments.</li>
+<li><strong>auto</strong> (<em>number</em><em>, </em><em>1D array</em><em>, or </em><em>None : default None</em>) – specifies matrix as a diagonal matrix with diagonal entries equal to <strong>auto</strong>, if <strong>auto</strong> is not None;
+If <strong>auto</strong> and <strong>hetero</strong> are both specified, then matrix is the sum of the two matrices from <strong>auto</strong> and
+<strong>hetero</strong>. For example, setting <strong>auto</strong> to 1 and <strong>hetero</strong> to -1 would set matrix to have a diagonal of
+1 and all non-diagonal entries -1. if the <strong>matrix</strong> argument is specified, it will be overwritten by
+<strong>auto</strong> and/or <strong>hetero</strong>, if either is specified. <strong>auto</strong> can be specified as a 1D array with length equal
+to the size of the mechanism, if a non-uniform diagonal is desired. Can be modified by control.</li>
+<li><strong>hetero</strong> (<em>number</em><em>, </em><em>2D array</em><em>, or </em><em>None : default None</em>) – specifies matrix as a hollow matrix with all non-diagonal entries equal to <strong>hetero</strong>, if <strong>hetero</strong> is not None;
+If <strong>auto</strong> and <strong>hetero</strong> are both specified, then matrix is the sum of the two matrices from <strong>auto</strong> and
+<strong>hetero</strong>. For example, setting <strong>auto</strong> to 1 and <strong>hetero</strong> to -1 would set matrix to have a diagonal of
+1 and all non-diagonal entries -1. if the <strong>matrix</strong> argument is specified, it will be overwritten by
+<strong>auto</strong> and/or <strong>hetero</strong>, if either is specified. <strong>hetero</strong> can be specified as a 2D array with dimensions
+equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.</li>
+<li><strong>initial_value</strong> (<a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the starting value for time-averaged input (only relevant if
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.time_constant" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a> is not 1.0).</li>
+<li><strong>decay</strong> (<em>number : default 1.0</em>) – specifies the amount by which to decrement its <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.previous_input" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.previous_input"><code class="xref any py py-attr docutils literal"><span class="pre">previous_input</span></code></a> each time it is executed.</li>
+<li><strong>noise</strong> (<em>float</em><em> or </em><em>function : default 0.0</em>) – specifies a stochastically-sampled value added to the result of the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
+if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
+if it is a function, it must return a scalar value.</li>
+<li><strong>time_constant</strong> (<em>float : default 1.0</em>) – <p>the time constant for exponential time averaging of input when <code class="xref any docutils literal"><span class="pre">integrator_mode</span></code> is set
+to True</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">current</span> <span class="nb">input</span><span class="p">)</span> <span class="o">+</span>
+<span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">result</span> <span class="n">on</span> <span class="n">previous</span> <span class="n">time_step</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><strong>k_value</strong> (<em>number : default 0.5</em>) – specifies the proportion or number of the elements of <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> that should be at or above
+the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>. A value between 0 and 1 specifies the proportion of elements that should be at
+or above the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>, while a positive integer specifies the number of values that should
+be at or above the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>. A negative integer specifies the number of elements that should
+be below the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>.</li>
+<li><strong>threshold</strong> (<em>number : default 0</em>) – specifies the threshold at or above which the KTWA seeks to assign <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements of its
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><strong>ratio</strong> (<em>number : default 0.5</em>) – specifies the offset used to adjust the elements of <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> so that there are the number
+specified by <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> at or above the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>;  it must be a
+number from 0 to 1 (see <a class="reference internal" href="#kwta-ratio"><span class="std std-ref">ratio</span></a> for additional information).</li>
+<li><strong>average_based</strong> (<em>boolean : default False</em>) – specifies whether the average-based scaling is used to determine the scope of offsets (see <a class="reference internal" href="#kwta-average-based"><span class="std std-ref">average_based</span></a> for additional information).</li>
+<li><strong>inhibition_only</strong> (<em>boolean : default True</em>) – specifies whether positive offsets can be applied to the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> in an effort to achieve
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements at or above the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>.  If set to <code class="xref any docutils literal"><span class="pre">False</span></code>, any offset
+is allowed, including positive offsets;  if set to <code class="xref any docutils literal"><span class="pre">True</span></code>, a positive offset will be re-assigned the value of 0
+(see <a class="reference internal" href="#kwta-inhibition-only"><span class="std std-ref">inhibition_only</span></a> for additional information).</li>
+<li><strong>range</strong> (<em>Optional</em><em>[</em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em>) – specifies the allowable range for the result of <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
+the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
+any element of the result that exceeds the specified minimum or maximum value is set to the value of
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.range" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> that it exceeds.</li>
+<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
+the dictionary override any assigned to those parameters in arguments of the constructor.</li>
+<li><strong>name</strong> (<em>str : default KWTA-&lt;index&gt;</em>) – a string used for the name of the mechanism.
+If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
+(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
+<li><strong>prefs</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : Mechanism.classPreferences</em><em>]</em>) – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for mechanism.
+If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
+<li><strong>context</strong> (<em>str : default componentType+INITIALIZING</em>) – string used for contextualization of instantiation, hierarchical calls, executions, etc.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>value</em> – the input to Mechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function">
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Function</em> – the Function used to transform the input.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.matrix">
+<code class="descname">matrix</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> – the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.recurrent_projection" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a> for the Mechanism.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.recurrent_projection">
+<code class="descname">recurrent_projection</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.recurrent_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>AutoAssociativeProjection</em> – an <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a> that projects from the Mechanism’s <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a>
+back to its <a class="reference internal" href="Mechanism.html#mechanism-inputstates"><span class="std std-ref">primary inputState</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.decay">
+<code class="descname">decay</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> – determines the amount by which to multiply the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.previous_input" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.previous_input"><code class="xref any py py-attr docutils literal"><span class="pre">previous_input</span></code></a> value
+each time it is executed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.initial_value">
+<code class="descname">initial_value</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.initial_value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>value, list or np.ndarray : Transfer_DEFAULT_BIAS</em> – determines the starting value for time-averaged input
+(only relevant if <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.time_constant" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a> parameter is not 1.0).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.noise">
+<code class="descname">noise</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.noise" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or function : default 0.0</em> – a stochastically-sampled value added to the output of the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
+if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
+if it is a function, it must return a scalar value.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.time_constant">
+<code class="descname">time_constant</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.time_constant" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – the time constant for exponential time averaging of input when <code class="xref any docutils literal"><span class="pre">integrator_mode</span></code> is set
+to True:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">current</span> <span class="nb">input</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">result</span> <span class="n">on</span> <span class="n">previous</span> <span class="n">time_step</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value">
+<code class="descname">k_value</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number</em> – determines the number or proportion of elements of <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> that should be above the
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> of the KWTA (see <a class="reference internal" href="#kwta-k-value"><span class="std std-ref">k_value</span></a> for additional information).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold">
+<code class="descname">threshold</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number</em> – determines the threshold at or above which the KTWA seeks to assign <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements of its
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio">
+<code class="descname">ratio</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.ratio" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number</em> – determines the offset used to adjust the elements of <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> so that there are <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements at or above the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> (see <a class="reference internal" href="#kwta-ratio"><span class="std std-ref">ratio</span></a> for additional
+information).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based">
+<code class="descname">average_based</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.average_based" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>boolean : default False</em> – determines the way in which the scope of offsets is determined, from which the one is selected that is applied
+to the elements of the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="#kwta-average-based"><span class="std std-ref">average_based</span></a> for additional
+information).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.inhibition_only">
+<code class="descname">inhibition_only</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.inhibition_only" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>boolean : default True</em> – determines whether a positive offset is allowed;  if it is <code class="xref any docutils literal"><span class="pre">True</span></code>, then the value of the offset is
+“clipped” at (that is, any positive value is replaced by) 0.  Otherwise, any offset is allowed (see
+<a class="reference internal" href="#kwta-inhibition-only"><span class="std std-ref">inhibition_only</span></a> for additional information).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.range">
+<code class="descname">range</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.range" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Tuple[float, float]</em> – determines the allowable range of the result: the first value specifies the minimum allowable value
+and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
+is set to the value of <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.range" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> it exceeds.  If <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+is <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>, <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.range" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> is set by default to (0,1).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.previous_input">
+<code class="descname">previous_input</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.previous_input" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array of floats</em> – the value of the input on the previous execution, including the value of <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.recurrent_projection" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.value">
+<code class="descname">value</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array [array(float64)]</em> – result of executing <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>; same value as first item of
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.output_values" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.output_states">
+<code class="descname">output_states</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.output_states" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[str, OutputState]</em> – an OrderedDict with the following <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>:</p>
+<ul class="simple">
+<li><code class="xref any docutils literal"><span class="pre">TRANSFER_RESULT</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the <strong>result</strong> of <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;</li>
+<li><code class="xref any docutils literal"><span class="pre">TRANSFER_MEAN</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the mean of the result;</li>
+<li><code class="xref any docutils literal"><span class="pre">TRANSFER_VARIANCE</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the variance of the result;</li>
+<li><code class="xref any docutils literal"><span class="pre">ENERGY</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the energy of the result,
+calculated using the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Stability" title="psyneulink.components.functions.function.Stability"><code class="xref any py py-class docutils literal"><span class="pre">Stability</span></code></a> Function with the ENERGY metric;</li>
+<li><code class="xref any docutils literal"><span class="pre">ENTROPY</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the entropy of the result,
+calculated using the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Stability" title="psyneulink.components.functions.function.Stability"><code class="xref any py py-class docutils literal"><span class="pre">Stability</span></code></a> Function with the ENTROPY metric;
+note:  this is only present if the mechanism’s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> is bounded between 0 and 1
+(e.g., the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function).</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.output_values">
+<code class="descname">output_values</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.output_values" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[array(float64), float, float]</em> – a list with the following items:</p>
+<ul class="simple">
+<li><strong>result</strong> of the <code class="docutils literal"><span class="pre">function</span></code> calculation (value of TRANSFER_RESULT OutputState);</li>
+<li><strong>mean</strong> of the result (<code class="docutils literal"><span class="pre">value</span></code> of TRANSFER_MEAN OutputState)</li>
+<li><strong>variance</strong> of the result (<code class="docutils literal"><span class="pre">value</span></code> of TRANSFER_VARIANCE OutputState);</li>
+<li><strong>energy</strong> of the result (<code class="docutils literal"><span class="pre">value</span></code> of ENERGY OutputState);</li>
+<li><strong>entropy</strong> of the result (if the ENTROPY OutputState is present).</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.name">
+<code class="descname">name</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str : default KWTA-&lt;index&gt;</em> – the name of the Mechanism.
+Specified in the <strong>name</strong> argument of the constructor for the Projection;
+if not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
+(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for Mechanism.
+Specified in the <strong>prefs</strong> argument of the constructor for the Mechanism;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>instance of KWTA</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA">KWTA</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism">
+<em class="property">class </em><code class="descclassname">psyneulink.library.mechanisms.processing.transfer.kwta.</code><code class="descname">RecurrentTransferMechanism</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>function=Linear</em>, <em>matrix=FULL_CONNECTIVITY_MATRIX</em>, <em>auto=None</em>, <em>hetero=None</em>, <em>initial_value=None</em>, <em>decay=None</em>, <em>noise=0.0</em>, <em>time_constant=1.0</em>, <em>range=(float:min</em>, <em>float:max)</em>, <em>learning_rate=None</em>, <em>learning_function=Hebbian</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that implements a single-layer auto-recurrent network.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the input to the Mechanism to use if none is provided in a call to its
+<a class="reference internal" href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.execute" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.run" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method;
+also serves as a template to specify the length of <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.function" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a>
+of the Mechanism.</li>
+<li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints</em>) – specifies variable as array(s) of zeros if <strong>variable</strong> is not passed as an argument;
+if <strong>variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.</li>
+<li><strong>function</strong> (<em>TransferFunction : default Linear</em>) – specifies the function used to transform the input;  can be <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Linear" title="psyneulink.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>, <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>, <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Exponential" title="psyneulink.components.functions.function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>,
+or a custom function.</li>
+<li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><em>matrix keyword</em><em>, or </em><em>AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX</em>) – specifies the matrix to use for creating a <code class="xref any docutils literal"><span class="pre">recurrent</span> <span class="pre">AutoAssociativeProjection</span></code>,
+or an AutoAssociativeProjection to use. If <strong>auto</strong> or <strong>hetero</strong> arguments are specified, the <strong>matrix</strong>
+argument will be ignored in favor of those arguments.</li>
+<li><strong>auto</strong> (<em>number</em><em>, </em><em>1D array</em><em>, or </em><em>None : default None</em>) – specifies matrix as a diagonal matrix with diagonal entries equal to <strong>auto</strong>, if <strong>auto</strong> is not None;
+If <strong>auto</strong> and <strong>hetero</strong> are both specified, then matrix is the sum of the two matrices from <strong>auto</strong> and
+<strong>hetero</strong>. For example, setting <strong>auto</strong> to 1 and <strong>hetero</strong> to -1 would set matrix to have a diagonal of
+1 and all non-diagonal entries -1. If the <strong>matrix</strong> argument is specified, it will be overwritten by
+<strong>auto</strong> and/or <strong>hetero</strong>, if either is specified. <strong>auto</strong> can be specified as a 1D array with length equal
+to the size of the Mechanism, if a non-uniform diagonal is desired. Can be modified by control.</li>
+<li><strong>hetero</strong> (<em>number</em><em>, </em><em>2D array</em><em>, or </em><em>None : default None</em>) – specifies matrix as a hollow matrix with all non-diagonal entries equal to <strong>hetero</strong>, if <strong>hetero</strong> is not None;
+If <strong>auto</strong> and <strong>hetero</strong> are both specified, then matrix is the sum of the two matrices from <strong>auto</strong> and
+<strong>hetero</strong>. For example, setting <strong>auto</strong> to 1 and <strong>hetero</strong> to -1 would set matrix to have a diagonal of
+1 and all non-diagonal entries -1. If the <strong>matrix</strong> argument is specified, it will be overwritten by
+<strong>auto</strong> and/or <strong>hetero</strong>, if either is specified. <strong>hetero</strong> can be specified as a 2D array with dimensions
+equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.</li>
+<li><strong>initial_value</strong> (<a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the starting value for time-averaged input (only relevant if
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.time_constant" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a> is not 1.0).</li>
+<li><strong>decay</strong> (<em>number : default 1.0</em>) – specifies the amount by which to decrement its <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.previous_input" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.previous_input"><code class="xref any py py-attr docutils literal"><span class="pre">previous_input</span></code></a>
+each time it is executed.</li>
+<li><strong>noise</strong> (<em>float</em><em> or </em><em>function : default 0.0</em>) – a stochastically-sampled value added to the result of the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.function" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
+if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
+if it is a function, it must return a scalar value.</li>
+<li><strong>time_constant</strong> (<em>float : default 1.0</em>) – <p>the time constant for exponential time averaging of input when <code class="xref any docutils literal"><span class="pre">integrator_mode</span></code> is set to True:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">current</span> <span class="nb">input</span><span class="p">)</span> <span class="o">+</span>
+<span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">result</span> <span class="n">on</span> <span class="n">previous</span> <span class="n">time_step</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><strong>range</strong> (<em>Optional</em><em>[</em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em>) – specifies the allowable range for the result of <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.function" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
+the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
+any element of the result that exceeds the specified minimum or maximum value is set to the value of
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.range" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> that it exceeds.</li>
+<li><strong>enable_learning</strong> (<em>boolean : default False</em>) – specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
+cannot be enabled until it is configured for learning by calling the Mechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.configure_learning" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.configure_learning"><code class="xref any py py-meth docutils literal"><span class="pre">configure_learning</span></code></a> method.</li>
+<li><strong>learning_rate</strong> (<em>scalar</em><em>, or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.array</em><em>, or </em><em>np.matrix of numeric values: default False</em>) – specifies the learning rate used by its <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_function" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_function"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span> <span class="pre">function</span></code></a>.
+If it is <code class="xref any docutils literal"><span class="pre">None</span></code>, the <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-rate"><span class="std std-ref">default learning_rate for a LearningMechanism</span></a> is
+used; if it is assigned a value, that is used as the learning_rate (see <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_rate" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for details).</li>
+<li><strong>learning_function</strong> (<em>function : default Hebbian</em>) – specifies the function for the LearningMechanism if <code class="xref any docutils literal"><span class="pre">learning</span> <span class="pre">has</span> <span class="pre">been</span> <span class="pre">specified</span></code> for the RecurrentTransferMechanism.  It can be any function so long as it
+takes a list or 1d array of numeric values as its <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Function_Base.variable" title="psyneulink.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and returns a sqaure
+matrix of numeric values with the same dimensions as the length of the input.</li>
+<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
+the dictionary override any assigned to those parameters in arguments of the constructor.</li>
+<li><strong>name</strong> (<em>str : default RecurrentTransferMechanism-&lt;index&gt;</em>) – a string used for the name of the Mechanism.
+If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
+(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
+<li><strong>prefs</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : Mechanism.classPreferences</em><em>]</em>) – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for Mechanism.
+If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
+<li><strong>context</strong> (<em>str : default componentType+INITIALIZING</em>) – string used for contextualization of instantiation, hierarchical calls, executions, etc.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>value</em> – the input to Mechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.variable" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.function">
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Function</em> – the Function used to transform the input.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.matrix">
+<code class="descname">matrix</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> – the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a> for the Mechanism.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.recurrent_projection">
+<code class="descname">recurrent_projection</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.recurrent_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>AutoAssociativeProjection</em> – an <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a> that projects from the Mechanism’s <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a>
+back to its <a class="reference internal" href="Mechanism.html#mechanism-inputstates"><span class="std std-ref">primary inputState</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.decay">
+<code class="descname">decay</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> – determines the amount by which to multiply the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.previous_input" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.previous_input"><code class="xref any py py-attr docutils literal"><span class="pre">previous_input</span></code></a>
+value each time it is executed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.initial_value">
+<code class="descname">initial_value</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.initial_value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>value, list or np.ndarray : Transfer_DEFAULT_BIAS</em> – determines the starting value for time-averaged input (only relevant if <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.time_constant" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a> parameter is not 1.0).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.noise">
+<code class="descname">noise</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.noise" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or function : default 0.0</em> – a stochastically-sampled value added to the output of the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.function" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
+if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
+if it is a function, it must return a scalar value.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.time_constant">
+<code class="descname">time_constant</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.time_constant" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – the time constant for exponential time averaging of input when <code class="xref any docutils literal"><span class="pre">integrator_mode</span></code> is set to True:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">current</span> <span class="nb">input</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">result</span> <span class="n">on</span> <span class="n">previous</span> <span class="n">time_step</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.range">
+<code class="descname">range</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.range" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Tuple[float, float]</em> – determines the allowable range of the result: the first value specifies the minimum allowable value
+and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
+is set to the value of <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.range" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> it exceeds.  If
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.function" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+is <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>, <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.range" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> is set by default to (0,1).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.previous_input">
+<code class="descname">previous_input</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.previous_input" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array of floats</em> – the value of the input on the previous execution, including the value of <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_enabled">
+<code class="descname">learning_enabled</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool : default False</em> – indicates whether learning has been enabled for the RecurrentTransferMechanism.  It is set to <code class="xref any docutils literal"><span class="pre">True</span></code> if
+<code class="xref any docutils literal"><span class="pre">learning</span> <span class="pre">is</span> <span class="pre">specified</span></code> at the time of construction (i.e., if the
+<strong>enable_learning</strong> argument of the Mechanism’s constructor is assigned <code class="xref any docutils literal"><span class="pre">True</span></code>, or when it is configured for
+learning using the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.configure_learning" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.configure_learning"><code class="xref any py py-meth docutils literal"><span class="pre">configure_learning</span></code></a> method.  Once learning
+has been configured, <code class="xref any docutils literal"><span class="pre">learning_enabled</span></code> can be toggled at any time to
+enable or disable learning; however, if the Mechanism has not been configured for learning, an attempt to
+set <code class="xref any docutils literal"><span class="pre">learning_enabled</span></code> to <code class="xref any docutils literal"><span class="pre">True</span></code> elicits a warning and is then
+ignored.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_rate">
+<code class="descname">learning_rate</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float, 1d or 2d np.array, or np.matrix of numeric values : default None</em> – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_function" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_function"><code class="xref any py py-attr docutils literal"><span class="pre">learning_function</span></code></a>
+of the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_mechanism" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">learning_mechanism</span></code></a> (see <code class="xref any docutils literal"><span class="pre">learning_rate</span></code> for details concerning specification and default value
+assignement).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_function">
+<code class="descname">learning_function</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>function : default Hebbian</em> – the function used by the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_mechanism" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">learning_mechanism</span></code></a> to train the
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a> if <code class="xref any docutils literal"><span class="pre">learning</span> <span class="pre">is</span> <span class="pre">specified</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_mechanism">
+<code class="descname">learning_mechanism</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.learning_mechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>LearningMechanism</em> – created automatically if <code class="xref any docutils literal"><span class="pre">learning</span> <span class="pre">is</span> <span class="pre">specified</span></code>, and used to train the
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.value">
+<code class="descname">value</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array [array(float64)]</em> – result of executing <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.function" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>; same value as first item of
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.output_values" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.output_states">
+<code class="descname">output_states</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.output_states" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[str, OutputState]</em> – an OrderedDict with the following <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>:</p>
+<ul class="simple">
+<li><code class="xref any docutils literal"><span class="pre">TRANSFER_RESULT</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the <strong>result</strong> of <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.function" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;</li>
+<li><code class="xref any docutils literal"><span class="pre">TRANSFER_MEAN</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the mean of the result;</li>
+<li><code class="xref any docutils literal"><span class="pre">TRANSFER_VARIANCE</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the variance of the result;</li>
+<li><code class="xref any docutils literal"><span class="pre">ENERGY</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the energy of the result,
+calculated using the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Stability" title="psyneulink.components.functions.function.Stability"><code class="xref any py py-class docutils literal"><span class="pre">Stability</span></code></a> Function with the ENERGY metric;</li>
+<li><code class="xref any docutils literal"><span class="pre">ENTROPY</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the entropy of the result,
+calculated using the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Stability" title="psyneulink.components.functions.function.Stability"><code class="xref any py py-class docutils literal"><span class="pre">Stability</span></code></a> Function with the ENTROPY metric;
+note:  this is only present if the Mechanism’s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> is bounded between 0 and 1
+(e.g., the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function).</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.output_values">
+<code class="descname">output_values</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.output_values" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[array(float64), float, float]</em> – a list with the following items:</p>
+<ul class="simple">
+<li><strong>result</strong> of the <code class="docutils literal"><span class="pre">function</span></code> calculation (value of TRANSFER_RESULT OutputState);</li>
+<li><strong>mean</strong> of the result (<code class="docutils literal"><span class="pre">value</span></code> of TRANSFER_MEAN OutputState)</li>
+<li><strong>variance</strong> of the result (<code class="docutils literal"><span class="pre">value</span></code> of TRANSFER_VARIANCE OutputState);</li>
+<li><strong>energy</strong> of the result (<code class="docutils literal"><span class="pre">value</span></code> of ENERGY OutputState);</li>
+<li><strong>entropy</strong> of the result (if the ENTROPY OutputState is present).</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.name">
+<code class="descname">name</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str : default RecurrentTransferMechanism-&lt;index&gt;</em> – the name of the Mechanism.
+Specified in the <strong>name</strong> argument of the constructor for the Projection;
+if not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
+(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for Mechanism.
+Specified in the <strong>prefs</strong> argument of the constructor for the Mechanism;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>instance of RecurrentTransferMechanism</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism">RecurrentTransferMechanism</a></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.configure_learning">
+<code class="descname">configure_learning</code><span class="sig-paren">(</span><em>learning_function=None</em>, <em>learning_rate=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.configure_learning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure RecurrentTransferMechanism for learning. Creates the following Components:</p>
+<ul class="simple">
+<li>an <a class="reference internal" href="AutoAssociativeLearningMechanism.html"><span class="doc">AutoAssociativeMechanism</span></a> – if the <strong>learning_function</strong> and/or <strong>learning_rate</strong> arguments are
+specified, they are used to construct the LearningMechanism, otherwise the values specified in the
+RecurrentTransferMechanism’s constructor are used;</li>
+</ul>
+<ul class="simple">
+<li>a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the RecurrentTransferMechanism’s <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a>
+to the AutoAssociativeLearningMechanism’s <em>ACTIVATION_INPUT</em> InputState;</li>
+</ul>
+<ul class="simple">
+<li>a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> from the AutoAssociativeLearningMechanism’s <em>LEARNING_SIGNAL</em> OutputState to
+the RecurrentTransferMechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.mechanisms.processing.transfer.kwta.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>.</li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 </div>
 
 

@@ -209,12 +209,12 @@ and Compositions (combinations of Components that implement a model).</p>
 <span id="definitions-components"></span><h3><a class="reference internal" href="Component.html"><span class="doc">Components</span></a><a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h3>
 <p>Components are objects that perform a specific function. Every Component has a:</p>
 <ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">function</span></code> - performs the core computation of the Component;</li>
-<li><code class="xref any docutils literal"><span class="pre">variable</span></code> - the input to the Component’s <code class="xref any docutils literal"><span class="pre">function</span></code>;</li>
-<li><em>parameter(s)</em> - determine how a Component’s <code class="xref any docutils literal"><span class="pre">function</span></code> operates
-(listed in its <code class="xref any docutils literal"><span class="pre">user_params</span></code> dictionary);</li>
-<li><code class="xref any docutils literal"><span class="pre">value</span></code> - represents the result of the Component’s <code class="xref any docutils literal"><span class="pre">function</span></code>;</li>
-<li><code class="xref any docutils literal"><span class="pre">name</span></code> - string label that uniquely identifies the Component.</li>
+<li><a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> - performs the core computation of the Component;</li>
+<li><a class="reference internal" href="Component.html#psyneulink.components.component.Component.variable" title="psyneulink.components.component.Component.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> - the input to the Component’s <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;</li>
+<li><em>parameter(s)</em> - determine how a Component’s <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> operates
+(listed in its <a class="reference internal" href="Component.html#psyneulink.components.component.Component.user_params" title="psyneulink.components.component.Component.user_params"><code class="xref any py py-attr docutils literal"><span class="pre">user_params</span></code></a> dictionary);</li>
+<li><a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> - represents the result of the Component’s <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;</li>
+<li><a class="reference internal" href="Component.html#psyneulink.components.component.Component.name" title="psyneulink.components.component.Component.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> - string label that uniquely identifies the Component.</li>
 </ul>
 <p>Two types of Components are the basic building blocks of PsyNeuLink models, Mechanisms and Projections:</p>
 <ul class="simple">
@@ -328,7 +328,7 @@ that modify the parameter(s) of the State’s function, and thereby the value of
 <dt><a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a></dt>
 <dd>Represents an output of the Mechanism.
 Takes an item of the Mechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code> as the <code class="xref any docutils literal"><span class="pre">variable</span></code> for the State’s
-<code class="xref any docutils literal"><span class="pre">function</span></code>, assigns the result as the State’s <code class="xref any docutils literal"><span class="pre">value</span></code>, and provides that
+<code class="xref any docutils literal"><span class="pre">function</span></code>, assigns the result as the State’s <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, and provides that
 to one or more efferent PathwayProjections.  It can also receive one or more modulatory
 <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>, that modify the parameter(s) of the State’s function, and thereby the
 State’s <code class="xref any docutils literal"><span class="pre">value</span></code>.</dd>
@@ -360,7 +360,7 @@ but they can also be constructed directly from Mechanisms and Projections.</p>
 <a class="reference internal image-reference" href="_images/System_simple_fig.jpg"><img alt="Overview of major PsyNeuLink Components" src="_images/System_simple_fig.jpg" style="width: 498.0px; height: 571.5px;" /></a>
 <p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a> are shown, both belonging to the same <a class="reference internal" href="System.html"><span class="doc">System</span></a>.  Each Process has a
 series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
-that converge on a common final ProcessingMechanism (see <code class="xref any docutils literal"><span class="pre">figure</span> <span class="pre">in</span> <span class="pre">System</span></code> for a more
+that converge on a common final ProcessingMechanism (see <a class="reference internal" href="System.html#system-full-fig"><span class="std std-ref">figure in System</span></a> for a more
 complete example, that includes Components responsible for learning, control and gating).</span></p>
 </div>
 </div>
