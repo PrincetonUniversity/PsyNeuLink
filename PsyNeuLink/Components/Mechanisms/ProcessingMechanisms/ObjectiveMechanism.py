@@ -710,6 +710,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if self.init_status is InitStatus.UNSET:
             input_state_projection_specs = []
             output_states = []
+
+            # # MODIFIED 10/3/17 OLD:
+            # output_states = [monitored_output_state[OUTPUT_STATE] for monitored_output_state in output_state_dicts]
+            # # MODIFIED 10/3/17 END
+
             # If InputStates have any PROJECTIONS specifications,
             #    parse to get OutputStates (senders) and projection specs for instantiating Projections below
             for i, state in enumerate(self.input_states):
@@ -718,13 +723,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                         # Assume that projection_specs are all ConnectionTuples
                         input_state_projection_specs.extend(projection_spec.projection or [AUTO_ASSIGN_MATRIX])
                         output_states.append(projection_spec.state)
-
-            # FIX: 10/3/17 - IF AN InputState DOESN'T HAVE A PROJECTION YET (E.G., TARGET FOR RL)
-            # FIX:           IT WON'T BE INCLUDED IN self.montored_output_states --
-            # FIX:           ?? MAKE IT A PROPERTY?  BUT THEN IT WON'T BE CONTENT ADDRESSABLE (NEEDED FOR SHOW METHOD)
-        self.monitored_output_states = ContentAddressableList(component_type=OutputState,
-                                                              list=output_states,
-                                                              name=self.name+'.monitored_output_states')
+                else:
+                    output_states.append(state.name)
 
         # FIX: 10/3/17 -  ??UNDER WHAT CONDITIONS DOES self.init_status != InitStatus.UNSET (IN TEST ABOVE)
         # FIX:            SINCE IN THAT CASE input_state_projection_specs and output_states won't be assigned
@@ -749,7 +749,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # FIX: NEEDS TO RETURN output_states (?IN ADDITION TO input_states) SO THAT IF CALLED BY ControlMechanism THAT
         # FIX:  BELONGS TO A SYSTEM, THE ControlMechanism CAN CALL System._validate_monitored_state_in_system
         # FIX:  ON THE output_states ADDED
-        return self._instantiate_input_states(monitored_output_states_specs=monitored_output_states_specs, context=context)
+        return self._instantiate_input_states(monitored_output_states_specs=monitored_output_states_specs,
+                                              context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
         """Assign InputState weights and exponents to ObjectiveMechanism's function
@@ -778,8 +779,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     # @property
     # def monitored_output_states(self):
-    #     return self.input_states
-    #
+    #     return ContentAddressableList(component_type=OutputState,
+    #                                   list=[projection.sender for projection in [input_state.pathafferents for
+    #                                                                              input_state in self.input_states]])
+
     @property
     def monitored_output_states_weights_and_exponents(self):
         if hasattr(self.function_object, WEIGHTS) and self.function_object.weights is not None:
