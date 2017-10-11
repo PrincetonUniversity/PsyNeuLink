@@ -779,11 +779,19 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             if any(exponent is not None for exponent in exponents):
                 self.function_object.exponents = [exponent or DEFAULT_EXPONENT for exponent in exponents]
 
-    # @property
-    # def monitored_output_states(self):
-    #     return ContentAddressableList(component_type=OutputState,
-    #                                   list=[projection.sender for projection in [input_state.pathafferents for
-    #                                                                              input_state in self.input_states]])
+    @property
+    def monitored_output_states(self):
+        if not isinstance(self.input_states, ContentAddressableList):
+            return None
+        else:
+            monitored_output_states = []
+            for input_state in self.input_states:
+                for projection in input_state.path_afferents:
+                    monitored_output_states.append(projection.sender)
+
+            return ContentAddressableList(component_type=OutputState,
+                                          list=[projection.sender for input_state in self.input_states
+                                                for projection in input_state.path_afferents])
 
     @property
     def monitored_output_states_weights_and_exponents(self):
