@@ -725,6 +725,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                         output_states.append(projection_spec.state)
                 else:
                     output_states.append(state.name)
+                    input_state_projection_specs.extend([AUTO_ASSIGN_MATRIX])
 
         # FIX: 10/3/17 -  ??UNDER WHAT CONDITIONS DOES self.init_status != InitStatus.UNSET (IN TEST ABOVE)
         # FIX:            SINCE IN THAT CASE input_state_projection_specs and output_states won't be assigned
@@ -735,6 +736,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                             receiver_list=instantiated_input_states,
                                             receiver_projection_specs=input_state_projection_specs,
                                             context=context)
+        TEST = True
 
     def add_monitored_output_states(self, monitored_output_states_specs, context=None):
         """Instantiate `OutputStates <OutputState>` to be monitored by the ObjectiveMechanism.

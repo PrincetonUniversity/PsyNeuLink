@@ -1748,7 +1748,6 @@ class Component(object):
 
         # if request_set has been passed or created then validate and, if OK, assign params to target_set
         if request_set:
-            # MODIFIED 4/18/17 NEW:
             # For params that are a 2-item tuple, extract the value
             #    both for validation and assignment (tuples are left intact in user_params_for_instantiation dict
             #    which is used it instantiate the specified Components in the 2nd item of the tuple)
@@ -1759,11 +1758,15 @@ class Component(object):
                 if isinstance(param_value, tuple):
                     param_value = self._get_param_value_from_tuple(param_value)
                     request_set[param_name] = param_value
-            # MODIFIED 4/18/17 END NEW
             try:
-                self._validate_params(variable=variable, request_set=request_set, target_set=target_set, context=context)
+                self._validate_params(variable=variable,
+                                      request_set=request_set,
+                                      target_set=target_set,
+                                      context=context)
             except TypeError:
-                self._validate_params(request_set=request_set, target_set=target_set, context=context)
+                self._validate_params(request_set=request_set,
+                                      target_set=target_set,
+                                      context=context)
 
     def assign_params(self, request_set=None, context=None):
         """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary
