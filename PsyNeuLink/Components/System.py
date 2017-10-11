@@ -2227,9 +2227,13 @@ class System_Base(System):
         all_specs_extracted_from_tuples = []
         for i, spec in enumerate(all_specs.copy()):
 
-            # Leave MonitoredOutputStatesOption or MonitoredOutputStatesTuple spec in place;
-            #    these are parsed later one
-            if isinstance(spec, (MonitoredOutputStatesOption, MonitoredOutputStateTuple)):
+            # Leave MonitoredOutputStatesOption and MonitoredOutputStatesTuple spec in place;
+            #    these are parsed later on
+            if isinstance(spec, MonitoredOutputStatesOption):
+                all_specs_extracted_from_tuples.append(spec)
+                continue
+            if isinstance(spec, MonitoredOutputStateTuple):
+                all_specs_extracted_from_tuples.append(spec.output_state)
                 continue
 
             # spec is from *monitor_for_control* arg, so convert/parse into MonitoredOutputStateTuple(s)
@@ -2287,12 +2291,14 @@ class System_Base(System):
 
             all_specs_extracted_from_tuples.extend([item.output_state for item in monitored_output_state_tuples])
         # MODIFIED 10/3/17 END
+
         # FIX: 10/3/17 - TURN THIS INTO A TRY AND EXCEPT:
         assert(all (isinstance(item, (OutputState, MonitoredOutputStatesOption)) for item in
                     all_specs_extracted_from_tuples))
 
         # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
-        option_specs = [item for item in all_specs_extracted_from_tuples if isinstance(item, MonitoredOutputStatesOption)]
+        option_specs = [item for item in all_specs_extracted_from_tuples
+                        if isinstance(item, MonitoredOutputStatesOption)]
         if not option_specs:
             ctlr_or_sys_option_spec = None
         elif len(option_specs) == 1:
