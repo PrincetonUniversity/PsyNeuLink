@@ -350,6 +350,10 @@ OUTCOME = 'outcome'
 MONITORED_OUTPUT_STATES = 'monitored_output_states'
 MONITORED_OUTPUT_STATE_NAME_SUFFIX = '_Monitor'
 
+DEFAULT_MONITORED_STATE_WEIGHT = None
+DEFAULT_MONITORED_STATE_EXPONENT = None
+DEFAULT_MONITORED_STATE_MATRIX = None
+
 # This is a convenience class that provides list of standard_output_state names in IDE
 class OBJECTIVE_OUTPUT():
     """
@@ -682,32 +686,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             # If initialized, don't pass self.input_states, as this is now a list of existing InputStates
             input_states = None
 
-        # MODIFIED 10/3/17 OLD:
-
-       #  # MODIFIED 10/3/17 NEW:
-       #  for spec in self.monitored_output_states:
-       #      monitored_output_state_parse_by_input_states = _parse_state_spec(owner=self,
-       #                                                                       state_type=InputState,
-       #                                                                       state_spec=spec,
-       #                                                                       context=context)
-       #  # MODIFIED 10/3/17 END
-       #
-       #  monitored_output_states = monitored_output_states_specs or self.monitored_output_states
-       #  input_state_dicts, output_state_dicts = self._instantiate_monitored_output_states(monitored_output_states=monitored_output_states,
-       #                                                                             input_states=input_states,
-       #                                                                             context=context)
-       #
-       # # For each InputState specified by monitored_output_states, add an item to self.variable
-       #  #    - get specified constraint on variable and add item to self.variable
-       #  self.instance_defaults.variable = self.instance_defaults.variable or []
-       #  for i, input_state_dict in enumerate(input_state_dicts):
-       #      self.instance_defaults.variable.append(input_state_dict[VARIABLE])
-
-        # # Instantiate InputStates corresponding to OutputStates specified in specified monitored_output_states
-        # instantiated_input_states = super()._instantiate_input_states(input_states=input_state_dicts, context=context)
-
-        # MODIFIED 10/3/17 NEW:
-
         # PARSE input_states (=monitored_output_states) specifications into InputState specification dictionaries
         # and ASSIGN self.variable
 
@@ -715,7 +693,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         #    - parse into InputState specification dictionary
         #    - get specified item for variable
         input_state_variables = []
-        for i, input_state in enumerate(self.input_states):
+        # for i, input_state in enumerate(self.input_states):
+        for i, input_state in enumerate(input_states):
             input_state_dict = _parse_state_spec(owner=self, state_type=InputState, state_spec=input_state)
             input_state_variables.append(input_state_dict[VARIABLE])
 
@@ -730,7 +709,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             self.instance_defaults.variable = self.instance_defaults.variable or input_state_variables
 
         # Instantiate InputStates corresponding to OutputStates specified in monitored_output_states
-        instantiated_input_states = super()._instantiate_input_states(input_states=self.input_states, context=context)
+        # instantiated_input_states = super()._instantiate_input_states(input_states=self.input_states, context=context)
+        instantiated_input_states = super()._instantiate_input_states(input_states=input_states, context=context)
         # MODIFIED 10/3/17 END
 
         # Get any Projections specified in input_states arg, else set to default (AUTO_ASSIGN_MATRIX)
@@ -751,21 +731,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # FIX:            SINCE IN THAT CASE input_state_projection_specs and output_states won't be assigned
 
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        # # MODIFIED 10/3/17 OLD:
-        # output_states = [monitored_output_state[OUTPUT_STATE] for monitored_output_state in output_state_dicts]
-        # if output_states:
-        #     _instantiate_monitoring_projections(owner=self,
-        #                                         sender_list=output_states,
-        #                                         receiver_list=instantiated_input_states,
-        #                                         receiver_projection_specs=input_state_projection_specs,
-        #                                         context=context)
-        # MODIFIED 10/3/17 NEW:
         _instantiate_monitoring_projections(owner=self,
                                             sender_list=output_states,
                                             receiver_list=instantiated_input_states,
                                             receiver_projection_specs=input_state_projection_specs,
                                             context=context)
-        # MODIFIED 10/3/17 END
 
     def _instantiate_monitored_output_states(self, monitored_output_states, input_states=None, context=None):
         """Parse monitored_output_state specs and instantiate monitored_output_states attribute
@@ -986,9 +956,6 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
     weights = []
     exponents = []
     matrices = []
-    DEFAULT_WEIGHT = None
-    DEFAULT_EXPONENT = None
-    DEFAULT_MATRIX = None
 
     for item in output_state_list:
 

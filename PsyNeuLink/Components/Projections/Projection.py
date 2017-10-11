@@ -1198,8 +1198,6 @@ def _parse_projection_specs(connectee_state_type,
     # FIX: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-    from PsyNeuLink.Globals.Keywords import MECHANISMS
-
     DEFAULT_WEIGHT = None
     DEFAULT_EXPONENT = None
     # DEFAULT_PROJECTION = PROJECTION_TYPE

@@ -441,13 +441,14 @@ from PsyNeuLink.Components.Process import ProcessList, ProcessTuple, Process_Bas
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism, OBJECTIVE_MECHANISM
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import \
+    ObjectiveMechanism, DEFAULT_MONITORED_STATE_WEIGHT, DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.State import State, _parse_state_spec
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
 from PsyNeuLink.Globals.Keywords import \
-    NAME, SYSTEM, SYSTEM_INIT, COMPONENT_INIT, INITIALIZED, INITIALIZING, INITIAL_VALUES, EXECUTING, FUNCTION, \
-    PROJECTION, PROJECTIONS, WEIGHT, EXPONENT,\
+    PARAMS, SYSTEM, SYSTEM_INIT, COMPONENT_INIT, INITIALIZED, INITIALIZING, INITIAL_VALUES, EXECUTING, FUNCTION, \
+    PROJECTIONS, WEIGHT, EXPONENT,\
     ALL, EVC_SIMULATION,  MATRIX, IDENTITY_MATRIX, LEARNING, LEARNING_SIGNAL, TIME_SCALE, \
     ORIGIN, SINGLETON, TERMINAL, INTERNAL, CYCLE, INITIALIZE_CYCLE, \
     CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CONTROL_SIGNAL_SPECS, MONITOR_FOR_CONTROL, SAMPLE, TARGET, \
@@ -2153,10 +2154,9 @@ class System_Base(System):
         * controller.input_states is the usual ordered dict of states,
             each of which receives a Projection from a corresponding OutputState in controller.monitored_output_states
 
-        Returns list of tuples, each of which is a monitored_output_state (OutputState, weight, exponent) tuple.
+        Returns list of tuples, each of which is a MonitoredOutputStateTuple: (OutputState, weight, exponent, matrix)
 
         """
-
 
         # PARSE SPECS
 
@@ -2217,57 +2217,81 @@ class System_Base(System):
         #         state_spec = spec[PROJECTIONS][0][0]
         #     all_specs_extracted_from_tuples.append(state_spec)
         # # MODIFIED 10/3/17 NEWER:
-        # # Extract references to Mechanisms and/or OutputStates from all_specs;  should be one of the following:
-        # #    - a MonitoredOutputStatesOption (parsed below);
-        # #    - a MonitoredOutputStatesTuple (returned by _get_monitored_states_for_system when
-        # #          specs were initially processed by the System to parse its *monitor_for_control* argument;
-        # #    - a specification for an existing Mechanism or OutputState from the *monitor_for_control* arg of System,
-        # #          which should return a reference to the OutputState when passed to _parse_state_spec
-        # # Note: leave MonitoredOutputStateTuples in all_specs for use in generating weight and exponent arrays below
+        # Convert references to Mechanisms and/or OutputStates in all_specs to MonitoredOutputStateTuples;
+        # Each spec to be converted should be one of the following:
+        #    - a MonitoredOutputStatesOption (parsed below);
+        #    - a MonitoredOutputStatesTuple (returned by _get_monitored_states_for_system when
+        #          specs were initially processed by the System to parse its *monitor_for_control* argument;
+        #    - a specification for an existing Mechanism or OutputState from the *monitor_for_control* arg of System,
+        #          which should return a reference to the OutputState when passed to _parse_state_spec
         all_specs_extracted_from_tuples = []
-        for i, spec in enumerate(all_specs):
-            if isinstance(spec, MonitoredOutputStatesOption):
-                state_spec = spec
-            elif isinstance(spec, MonitoredOutputStateTuple):
-                state_spec = spec[OUTPUT_STATE_INDEX]
+        for i, spec in enumerate(all_specs.copy()):
+
+            # Leave MonitoredOutputStatesOption or MonitoredOutputStatesTuple spec in place;
+            #    these are parsed later one
+            if isinstance(spec, (MonitoredOutputStatesOption, MonitoredOutputStateTuple)):
+                continue
+
+            # spec is from *monitor_for_control* arg, so convert/parse into MonitoredOutputStateTuple(s)
+            # Note:  assign parsed spec(s) to a list, as there may be more than one (that will be added to all_specs)
+            monitored_output_state_tuples = []
+
+            if (spec, (OutputState, Mechanism)):
+                # spec is an OutputState, so use it
+                if isinstance(spec, OutputState):
+                    output_states = [spec]
+                # spec is Mechanism, so use the State's owner, and get the relevant OutputState(s)
+                elif isinstance(spec, Mechanism):
+                    if (MONITOR_FOR_CONTROL in spec.params
+                        and spec.params[MONITOR_FOR_CONTROL] is MonitoredOutputStatesOption.ALL_OUTPUT_STATES):
+                        output_states = spec.output_states
+                    else:
+                        output_states = [spec.output_state]
+                for output_state in output_states:
+                    monitored_output_state_tuples.extend([MonitoredOutputStateTuple(
+                                                                            output_state=output_state,
+                                                                            weight=DEFAULT_MONITORED_STATE_WEIGHT,
+                                                                            exponent=DEFAULT_MONITORED_STATE_EXPONENT,
+                                                                            matrix=DEFAULT_MONITORED_STATE_MATRIX)])
+
+            # Otherwise, use self (System) as place-marker and try to parse spec as InputState specification
+            #     (i.e., a dict or tuple containing weight, exponent and/or matrix specs)
             else:
-                # monitored_output_state specified in *monitor_for_control* arg using InputState specification dict
-                #    (to include weights, exponents, and/or matrix)
-                # If spec is Mechanism or State, use the Mechanism as owner
-                if isinstance(spec, Mechanism):
-                    # FIX: 10/3/17 - ?? USE PRIMARY OutputState...
-                    # FIX:              BUT THEN WHAT IF MECHANISM HAS MonitoredOutputStateOption set?  HANDLED BELOW?
-                    owner=spec
-                elif isinstance(spec, State):
-                    owner=spec.owner
-                # Otherwise, use self (System) as place-marker
-                else:
-                    owner = self
-                input_state_spec = _parse_state_spec(owner=owner, state_type=InputState, state_spec=spec)
-                # Get OutputState specification, which should be in a projection_spec for the InputState:
-                #    the projection_spec should be the first item of the list of projection in the PROJECTIONS entry
-                #    the OutputState should be the OUTPUT_STATE_INDEX item of the projection_spec (ConnectionTuple)
-                output_state = input_state_spec[PROJECTIONS][0][OUTPUT_STATE_INDEX]
-                # Should be now have the OutputState
-                if isinstance(state_spec, OutputState):
-                    # Replace item in all_specs with MonitoredOutputStateTuple
-                    #    that assigns specified weight, exponent and/or matrix
-                    all_specs[i] = MonitoredOutputStateTuple(output_state=output_state,
-                                                             weight=input_state_spec[WEIGHT],
-                                                             exponent=input_state_spec[EXPONENT],
-                                                             matrix=input_state_spec[PROJECTIONS][0][MATRIX_INDEX])
-                # Raise exception if couldn't retrieve a reference to an existing OutputState
-                else:
+                try:
+                    input_state_spec = _parse_state_spec(owner=self,
+                                                         state_type=InputState,
+                                                         state_spec=spec)
+                except:
                     raise SystemError("Specification of item in \'{}\' arg in constructor for {} is not an {} ({})".
                                       format(MONITOR_FOR_CONTROL, self.name, OutputState.__name__, spec))
-            all_specs_extracted_from_tuples.append(state_spec)
+
+
+                # Get OutputState(s), and matrix specified for Projection to each,
+                #    from the ConnectionTuple in the PROJECTIONS entry of the PARMS dict.
+                # However, use weight and exponent entries for InputState, rather than any specified for
+                #    for each Projection (in its projection_spec).
+                # The InputState weight and exponent are used in the MonitoredOutputStateTuple
+                #    as they specify the how the InputState should be weighted;
+                # Any weight(s) and/or exponent(s) specified in the projection_spec(s) (a ConnectionTuple)
+                #    are used for individual Projections to the InputState when it is  actually instantiated.
+                for projection_spec in input_state_spec[PARAMS][PROJECTIONS]:
+                    monitored_output_state_tuples.extend([MonitoredOutputStateTuple(
+                                                                        output_state=projection_spec.state,
+                                                                        weight=input_state_spec[WEIGHT],
+                                                                        exponent=input_state_spec[EXPONENT],
+                                                                        matrix=projection_spec.matrix)])
+
+            # Delete original item of all_specs, and assign ones parsed into monitored_output_state_tuple(s)
+            del all_specs[i]
+            all_specs.insert(i, monitored_output_state_tuples)
+
+            all_specs_extracted_from_tuples.extend([item.output_state for item in monitored_output_state_tuples])
         # MODIFIED 10/3/17 END
         # FIX: 10/3/17 - TURN THIS INTO A TRY AND EXCEPT:
         assert(all (isinstance(item, (OutputState, MonitoredOutputStatesOption)) for item in
                     all_specs_extracted_from_tuples))
 
         # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
-        # option_specs = [item for item in all_specs[OUTPUT_STATE_INDEX] if isinstance(item, MonitoredOutputStatesOption)]
         option_specs = [item for item in all_specs_extracted_from_tuples if isinstance(item, MonitoredOutputStatesOption)]
         if not option_specs:
             ctlr_or_sys_option_spec = None
