@@ -560,14 +560,15 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
+                 context=None,
                  **kwargs):
 
         if MONITORED_OUTPUT_STATES in kwargs and kwargs[MONITORED_OUTPUT_STATES] is not None:
             name_string = name or 'an ' + ObjectiveMechanism.__name__
             if input_states:
-                warnings.warn("Both \'{}\' and \'{}\' args were specified in constuctor for {}; "
-                              "an attempt will be made to merge them but this may produce unexpected results.".
-                              format(MONITORED_OUTPUT_STATES, INPUT_STATES, name_string))
+                # warnings.warn("Both \'{}\' and \'{}\' args were specified in constuctor for {}; "
+                #               "an attempt will be made to merge them but this may produce unexpected results.".
+                #               format(MONITORED_OUTPUT_STATES, INPUT_STATES, name_string))
                 input_states.append(kwargs[MONITORED_OUTPUT_STATES])
             input_states = kwargs[MONITORED_OUTPUT_STATES]
             del kwargs[MONITORED_OUTPUT_STATES]
