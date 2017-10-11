@@ -3616,7 +3616,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         # Handle list or array for rate specification
         if RATE in request_set:
             rate = request_set[RATE]
-            if isinstance(rate, (list, np.ndarray)) and not iscompatible(rate, self.instance_defaults.variable):
+            if isinstance(rate, (list, np.ndarray)) and not iscompatible(rate, self.instance_defaults.variable) and len(rate) != 1:
                 if len(rate) != np.array(self.instance_defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign ClassDefaults.variable accordingly
@@ -4169,7 +4169,7 @@ class LCAIntegrator(
 
         # execute noise if it is a function
         noise = self._try_execute_param(self.noise, variable)
-        
+
         # try:
         #     previous_value = self._initializer
         # except (TypeError, KeyError):
