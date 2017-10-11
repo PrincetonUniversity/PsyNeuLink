@@ -10,7 +10,19 @@ from PsyNeuLink.Globals.Keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVI
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from PsyNeuLink.Globals.Utilities import UtilitiesError
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism import RecurrentTransferError, RecurrentTransferMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA import LCA
 
+# class TestLCA:
+#     def test_lca(self):
+#         L = LCA(
+#             size=3,
+#             integrator_mode=True,
+#             function=Linear(slope=2.0),
+#             beta=[0.75, 0.75, 0.75]
+#         )
+#         p=process(pathway=[L])
+#         s=system(processes=[p])
+#         s.run(inputs={L: [1.0, 2.0, 3.0]}, num_trials=5)
 
 class TestRecurrentTransferMechanismInputs:
 

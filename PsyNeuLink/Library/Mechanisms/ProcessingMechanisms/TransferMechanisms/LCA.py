@@ -7,7 +7,7 @@
 
 # NOTES:
 #  * COULD NOT IMPLEMENT integrator_function in paramClassDefaults (see notes below)
-#  * NOW THAT NOISE AND TIME_CONSTANT ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
+#  * NOW THAT NOISE AND BETA ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
 
@@ -81,10 +81,11 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Functions.Function import Logistic, max_vs_avg, max_vs_next
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
-from PsyNeuLink.Globals.Keywords import CALCULATE, ENERGY, ENTROPY, INITIALIZING, LCA, MEAN, MEDIAN, NAME, RESULT, STANDARD_DEVIATION, VARIANCE
+from PsyNeuLink.Globals.Keywords import BETA, INITIALIZER, NOISE, RATE, CALCULATE, ENERGY, ENTROPY, INITIALIZING, LCA, MEAN, MEDIAN, NAME, RESULT, STANDARD_DEVIATION, VARIANCE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
+from PsyNeuLink.Components.Functions.Function import LCAIntegrator
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 
@@ -179,7 +180,7 @@ class LCA(RecurrentTransferMechanism):
         decay=1.0,                         \
         inhibition=1.0,                    \
         noise=0.0,                         \
-        time_constant=1.0,                 \
+        beta=1.0,                 \
         range=(float:min, float:max),      \
         params=None,                       \
         name=None,                         \
@@ -224,7 +225,7 @@ class LCA(RecurrentTransferMechanism):
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
-        `time_constant <TransferMechanism.time_constant>` is not 1.0).
+        `beta <TransferMechanism.beta>` is not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
@@ -234,11 +235,11 @@ class LCA(RecurrentTransferMechanism):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    time_constant : float : default 1.0
+    beta : float : default 1.0
         the time constant for exponential time averaging of input when `integrator_mode <LCA.integrator_mode>` is set
         to True::
 
-        `result = (time_constant * current input) + (1-time_constant * result on previous time_step)`
+        `result = (beta * current input) + (1-beta * result on previous time_step)`
 
     range : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <TransferMechanism.function>`:
@@ -295,7 +296,7 @@ class LCA(RecurrentTransferMechanism):
     COMMENT
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
         determines the starting value for time-averaged input
-        (only relevant if `time_constant <TransferMechanism.time_constant>` parameter is not 1.0).
+        (only relevant if `beta <TransferMechanism.beta>` parameter is not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
@@ -305,11 +306,11 @@ class LCA(RecurrentTransferMechanism):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    time_constant : float
+    beta : float
         the time constant for exponential time averaging of input when `integrator_mode <LCA.integrator_mode>` is set
         to True::
 
-          result = (time_constant * current input) + (1-time_constant * result on previous time_step)
+          result = (beta * current input) + (1-beta * result on previous time_step)
 
     range : Tuple[float, float]
         determines the allowable range of the result: the first value specifies the minimum allowable value
@@ -380,7 +381,11 @@ class LCA(RecurrentTransferMechanism):
     componentType = LCA
 
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
-
+    paramClassDefaults.update({
+        NOISE: None,
+        # RATE: None,
+        BETA: None
+    })
     class ClassDefaults(RecurrentTransferMechanism.ClassDefaults):
         variable = [[0]]
 
@@ -405,7 +410,8 @@ class LCA(RecurrentTransferMechanism):
                  decay:tc.optional(tc.any(int, float))=1.0,
                  inhibition:tc.optional(tc.any(int, float))=1.0,
                  noise:is_numeric_or_none=0.0,
-                 time_constant:is_numeric_or_none=1.0,
+                 beta=1.0,
+                 integrator_mode=True,
                  range=None,
                  output_states:tc.optional(tc.any(list, dict))=[RESULT],
                  time_scale=TimeScale.TRIAL,
@@ -423,6 +429,8 @@ class LCA(RecurrentTransferMechanism):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   inhibition=inhibition,
+                                                  beta=beta,
+                                                  integrator_mode=integrator_mode,
                                                   output_states=output_states,
                                                   params=params)
 
@@ -441,7 +449,6 @@ class LCA(RecurrentTransferMechanism):
                          initial_value=initial_value,
                          decay=decay,
                          noise=noise,
-                         time_constant=time_constant,
                          range=range,
                          output_states=output_states,
                          time_scale=time_scale,
@@ -450,6 +457,116 @@ class LCA(RecurrentTransferMechanism):
                          prefs=prefs,
                          context=context)
 
+    def _execute(self,
+                 variable=None,
+                 runtime_params=None,
+                 clock=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        """Execute TransferMechanism function and return transform of input
+
+        Execute TransferMechanism function on input, and assign to output_values:
+            - Activation value for all units
+            - Mean of the activation values across units
+            - Variance of the activation values across units
+        Return:
+            value of input transformed by TransferMechanism function in outputState[TransferOuput.RESULT].value
+            mean of items in RESULT outputState[TransferOuput.MEAN].value
+            variance of items in RESULT outputState[TransferOuput.VARIANCE].value
+
+        Arguments:
+
+        # CONFIRM:
+        variable (float): set to self.value (= self.input_value)
+        - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
+            + NOISE (float)
+            + BETA (float)
+            + RANGE ([float, float])
+        - context (str)
+
+        Returns the following values in self.value (2D np.array) and in
+            the value of the corresponding outputState in the self.output_states list:
+            - activation value (float)
+            - mean activation value (float)
+            - standard deviation of activation values (float)
+
+        :param self:
+        :param variable (float)
+        :param params: (dict)
+        :param context: (str)
+        :rtype self.outputState.value: (number)
+        """
+
+        # FIX: ??CALL check_args()??
+
+        # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
+        # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
+        # Use self.instance_defaults.variable to initialize state of input
+
+        # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
+        time_scale = self.time_scale
+        integrator_mode = self.integrator_mode
+
+        #region ASSIGN PARAMETER VALUES
+
+        beta = self.beta
+        range = self.range
+        noise = self.noise
+
+        #endregion
+        #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
+
+        # FIX: NOT UPDATING self.previous_input CORRECTLY
+        # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
+
+        # Update according to time-scale of integration
+        if integrator_mode:
+        # if time_scale is TimeScale.TIME_STEP:
+
+            if not self.integrator_function:
+
+                self.integrator_function = LCAIntegrator(
+                                            variable,
+                                            initializer = self.initial_value,
+                                            noise = self.noise,
+                                            rate = self.beta,
+                                            owner = self)
+
+            current_input = self.integrator_function.execute(variable,
+                                                        # Should we handle runtime params?
+                                                              params={INITIALIZER: self.initial_value,
+                                                                      NOISE: self.noise,
+                                                                      RATE: self.beta},
+                                                              context=context
+
+                                                             )
+        else:
+        # elif time_scale is TimeScale.TRIAL:
+            noise = self._try_execute_param(self.noise, variable)
+            # formerly: current_input = self.input_state.value + noise
+            # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
+            # when the input is given as a string.
+            if (np.array(noise) != 0).any():
+                current_input = variable[0] + noise
+            else:
+
+                current_input = self.variable[0]
+
+        # self.previous_input = current_input
+
+        # Apply TransferMechanism function
+        output_vector = self.function(variable=current_input, params=runtime_params)
+        # # MODIFIED  OLD:
+        # if list(range):
+        # MODIFIED  NEW:
+        if range is not None:
+        # MODIFIED  END
+            minCapIndices = np.where(output_vector < range[0])
+            maxCapIndices = np.where(output_vector > range[1])
+            output_vector[minCapIndices] = np.min(range)
+            output_vector[maxCapIndices] = np.max(range)
+
+        return output_vector
     @property
     def inhibition(self):
         return self.hetero
