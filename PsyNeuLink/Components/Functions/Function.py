@@ -4169,7 +4169,7 @@ class LCAIntegrator(
 
         # execute noise if it is a function
         noise = self._try_execute_param(self.noise, variable)
-
+        
         # try:
         #     previous_value = self._initializer
         # except (TypeError, KeyError):
