@@ -1,3 +1,9 @@
+'''
+This module provides utilities used to schedule the execution of psyneulink components
+
+https://princetonuniversity.github.io/PsyNeuLink/Scheduling.html
+'''
+
 from . import condition
 from . import scheduler
 from . import timescale

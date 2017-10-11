@@ -1,3 +1,9 @@
+'''
+This module provides implementations of theory using the core components of psyneulink
+
+https://princetonuniversity.github.io/PsyNeuLink/Library.html
+'''
+
 from . import mechanisms
 from . import projections
 from . import subsystems
