@@ -1,5 +1,5 @@
-ObjectiveMechanisms
-===================
+Objective Mechanisms
+====================
 
 **Base class**:
 
