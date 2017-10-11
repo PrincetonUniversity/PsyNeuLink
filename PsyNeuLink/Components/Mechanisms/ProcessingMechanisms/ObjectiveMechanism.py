@@ -713,12 +713,15 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             # If InputStates have any PROJECTIONS specifications,
             #    parse to get OutputStates (senders) and projection specs for instantiating Projections below
             for i, state in enumerate(self.input_states):
-                # if state.params[PROJECTIONS] is not None:
-                for projection_spec in state.params[PROJECTIONS]:
-                    # Assume that projection_specs are all ConnectionTuples
-                    input_state_projection_specs.extend(projection_spec.projection or [AUTO_ASSIGN_MATRIX])
-                    output_states.append(projection_spec.state)
+                if state.params[PROJECTIONS] is not None:
+                    for projection_spec in state.params[PROJECTIONS]:
+                        # Assume that projection_specs are all ConnectionTuples
+                        input_state_projection_specs.extend(projection_spec.projection or [AUTO_ASSIGN_MATRIX])
+                        output_states.append(projection_spec.state)
 
+            # FIX: 10/3/17 - IF AN InputState DOESN'T HAVE A PROJECTION YET (E.G., TARGET FOR RL)
+            # FIX:           IT WON'T BE INCLUDED IN self.montored_output_states --
+            # FIX:           ?? MAKE IT A PROPERTY?  BUT THEN IT WON'T BE CONTENT ADDRESSABLE (NEEDED FOR SHOW METHOD)
         self.monitored_output_states = ContentAddressableList(component_type=OutputState,
                                                               list=output_states,
                                                               name=self.name+'.monitored_output_states')
@@ -806,7 +809,7 @@ def _objective_mechanism_role(mech, role):
     else:
         return False
 
-# IMPLEMENTATION NOTE: THIS IS A PLACEMARKER FOR A METHOD TO BE IMPLEMENTED IN THE Composition CLASS
+# IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 #                      ??MAYBE INTEGRATE INTO State MODULE (IN _instantate_state)
 @tc.typecheck
 def _instantiate_monitoring_projections(owner,
