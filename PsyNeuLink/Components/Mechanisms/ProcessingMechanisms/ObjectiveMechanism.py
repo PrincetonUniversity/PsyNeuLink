@@ -639,27 +639,17 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         if (INPUT_STATES in target_set and target_set[INPUT_STATES] is not None and
                 not all(input_state is None for input_state in target_set[INPUT_STATES])):
-            # FIX: 10/3/17 - ??ARE THESE DOING ANYTHING:
+            # FIX: 10/3/17 - ??ARE THESE DOING ANYTHING:  INTEGRATE THEM... HERE OR BELOW (IN _instantiate_input_states)
             if MONITORED_OUTPUT_STATES in target_set:
                 monitored_output_states = target_set[MONITORED_OUTPUT_STATES]
             elif hasattr(self, 'monitored_output_states'):
                 monitored_output_states = self.monitored_output_states
             else:
-                raise ObjectiveMechanismError("PROGRAM ERROR: monitored_output_states not instantiated as param or attirb")
+                pass
 
-            # if len(target_set[INPUT_STATES]) != len(monitored_output_states):
-            #     raise ObjectiveMechanismError("The number of items in the \'{}\'arg for {} ({}) "
-            #                                   "must equal of the number in the \'{}\' arg ({})".
-            #                          format(INPUT_STATES,
-            #                                 self.name,
-            #                                 len(target_set[INPUT_STATES]),
-            #                                 MONITORED_OUTPUT_STATES,
-            #                             len(target_set[MONITORED_OUTPUT_STATES])))
-
+        # FIX: 10/3/17 ->
         if MONITORED_OUTPUT_STATES in target_set and target_set[MONITORED_OUTPUT_STATES] is not None:
-            _parse_monitored_output_states(source=self,
-                                           output_state_list=target_set[MONITORED_OUTPUT_STATES],
-                                           context=context)
+            pass
 
 
     def _instantiate_input_states(self, monitored_output_states_specs=None, context=None):
@@ -728,6 +718,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                     input_state_projection_specs.extend(projection_spec.projection or [AUTO_ASSIGN_MATRIX])
                     output_states.append(projection_spec.state)
 
+        self.monitored_output_states = ContentAddressableList(component_type=OutputState,
+                                                              list=output_states,
+                                                              name=self.name+'.monitored_output_states')
+
         # FIX: 10/3/17 -  ??UNDER WHAT CONDITIONS DOES self.init_status != InitStatus.UNSET (IN TEST ABOVE)
         # FIX:            SINCE IN THAT CASE input_state_projection_specs and output_states won't be assigned
 
@@ -778,10 +772,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             if any(exponent is not None for exponent in exponents):
                 self.function_object.exponents = [exponent or DEFAULT_EXPONENT for exponent in exponents]
 
-    @property
-    def monitored_output_states(self):
-        return self.input_states
-
+    # @property
+    # def monitored_output_states(self):
+    #     return self.input_states
+    #
     @property
     def monitored_output_states_weights_and_exponents(self):
         if hasattr(self.function_object, WEIGHTS) and self.function_object.weights is not None:
