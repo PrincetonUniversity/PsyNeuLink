@@ -2382,7 +2382,7 @@ def _parse_state_spec(state_type=None,
             raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
                              "class of state being instantiated ({})".format(state_specification, state_type_name))
 
-   # Projection class, object, or keyword:
+    # Projection specification (class, object, or matrix/keyword:
     #    set variable to Projection's value and assign projection specification to PROJECTIONS entry in params
     #    FIX: 10/3/17 - HANDLE THIS IN _parse_projection_specs?? (USING projection_socket)?? (ALSO TO VALIDATE?)
     #    IMPLEMENTATION NOTE:  It is the caller's responsibility to assign the value arg
