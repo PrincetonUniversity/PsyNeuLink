@@ -921,7 +921,7 @@ def _is_projection_spec(spec, include_matrix_spec=True):
     Return `True` if spec is any of the following:
     + Projection class (or keyword string constant for one):
     + Projection object:
-    + 2-item tuple of which the second is a projection_spec (checked recursively with thi method):
+    + 2-item tuple of which the second is a projection_spec (checked recursively with this method):
     + specification dict containing:
         + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
     + valid matrix specification (if include_matrix_spec is set to `True`)
