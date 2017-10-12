@@ -552,8 +552,11 @@ class LCA(RecurrentTransferMechanism):
                 current_input = variable[0] + noise
             else:
 
-                current_input = self.variable[0]
-
+                current_input = variable[0]
+        print("==================================================")
+        print(context)
+        print("variable = ", variable)
+        print("after integrator = ", current_input)
         # self.previous_input = current_input
 
         # Apply TransferMechanism function
@@ -567,7 +570,7 @@ class LCA(RecurrentTransferMechanism):
             maxCapIndices = np.where(output_vector > range[1])
             output_vector[minCapIndices] = np.min(range)
             output_vector[maxCapIndices] = np.max(range)
-
+        print("output_vector = ", output_vector)
         return output_vector
     @property
     def inhibition(self):

@@ -18,7 +18,7 @@ from psyneulink.library.mechanisms.processing.transfer.lca import LCA
 #             size=3,
 #             integrator_mode=True,
 #             function=Linear(slope=2.0),
-#             beta=[0.75, 0.75, 0.75]
+#             beta=0.1
 #         )
 #         p=process(pathway=[L])
 #         s=system(processes=[p])
