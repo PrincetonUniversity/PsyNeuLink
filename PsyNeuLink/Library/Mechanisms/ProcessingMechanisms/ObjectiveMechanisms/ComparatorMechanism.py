@@ -312,9 +312,7 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     # ComparatorMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        TIME_SCALE: TimeScale.TRIAL,
-        MONITORED_OUTPUT_STATES: None})
+    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
 
     standard_output_states = ObjectiveMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME:SSE,

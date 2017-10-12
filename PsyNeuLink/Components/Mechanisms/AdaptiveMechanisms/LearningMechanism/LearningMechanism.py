@@ -527,6 +527,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism im
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection \
     import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
+from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
 from PsyNeuLink.Components.ShellClasses import Mechanism, Projection
 from PsyNeuLink.Globals.Keywords import NAME, PARAMS, PROJECTION, PROJECTIONS, FUNCTION_PARAMS, \
                                         INPUT_STATES, OUTPUT_STATES, PARAMETER_STATE, MAPPING_PROJECTION, MATRIX, \
@@ -822,6 +823,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
     className = componentType
     suffix = " " + className
 
+    output_state_type = LearningSignal
+
     classPreferenceLevel = PreferenceLevel.TYPE
 
     # ClassDefaults.variable = None
@@ -1067,7 +1070,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             for i, learning_signal in enumerate(self.learning_signals):
                 # Instantiate LearningSignal
                 ls = self._instantiate_learning_signal(learning_signal=learning_signal, context=context)
-                # Add LearningSignal to ouput_states list
+                # Add LearningSignal to output_states list
                 self._output_states.append(ls)
                 # Replace spec in learning_signals list with actual LearningSignal
                 self.learning_signals[i] = ls
@@ -1140,7 +1143,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         mapping_projection = None
         learning_signal_params = None
 
-        learning_signal_spec = _parse_state_spec(self, LearningSignal, state_spec=learning_signal)
+        learning_signal_spec = _parse_state_spec(owner=self, state_type=LearningSignal, state_spec=learning_signal)
 
         # Specification is a ParameterState
         if isinstance(learning_signal_spec, ParameterState):

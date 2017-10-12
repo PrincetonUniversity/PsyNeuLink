@@ -297,6 +297,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
     initMethod = INIT__EXECUTE__METHOD_ONLY
 
+    output_state_type = GatingSignal
+
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically

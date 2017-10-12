@@ -1346,7 +1346,7 @@ class Mechanism_Base(Mechanism):
         # INPUT_STATES is specified, so validate:
         if INPUT_STATES in params and params[INPUT_STATES] is not None:
             for state_spec in params[INPUT_STATES]:
-                _parse_state_spec(owner=self, state_type=InputState, state_spec=state_spec.copy)
+                _parse_state_spec(owner=self, state_type=InputState, state_spec=state_spec)
         # INPUT_STATES is not specified
         else:
             # pass if call is from assign_params (i.e., not from an init method)

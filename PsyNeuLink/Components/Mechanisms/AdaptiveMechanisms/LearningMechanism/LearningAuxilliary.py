@@ -518,7 +518,6 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                       # input_states=[sample_input, target_input],
                                                       # FOR TESTING: ALTERNATIVE specifications of input_states arg:
                                                       # input_states=[(sample_input, FULL_CONNECTIVITY_MATRIX),
-                                                      #               target_input],
                                                       # input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
                                                       #               target_input],
                                                       # input_states=[{NAME:SAMPLE,

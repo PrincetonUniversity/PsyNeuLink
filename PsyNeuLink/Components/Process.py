@@ -1737,8 +1737,8 @@ class Process_Base(Process):
                         else:
                             matrix_spec = item
                         projection = MappingProjection(sender=sender_mech,
-                                             receiver=receiver_mech,
-                                             matrix=matrix_spec)
+                                                       receiver=receiver_mech,
+                                                       matrix=matrix_spec)
                     else:
                         raise ProcessError("Item {0} ({1}) of pathway for {2} is not "
                                            "a valid Mechanism or Projection specification".format(i, item, self.name))
