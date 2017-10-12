@@ -566,15 +566,14 @@ class ParameterState(State_Base):
         """Get connections specified in a ParameterState specification tuple
 
         Tuple specification can be:
-            (state_spec, connections)
+            (state_spec, projections)
         Assumes that state_spec has already been extracted and used by _parse_state_spec
 
-        Returns params dict with CONNECTIONS entries if any of these was specified.
+        Returns params dict with PROJECTIONS entries if any of these was specified.
 
         """
         from PsyNeuLink.Components.Projections.Projection import _parse_projection_specs
-        from PsyNeuLink.Components.Projections.Projection import Projection
-        from PsyNeuLink.Globals.Keywords import CONNECTIONS, PROJECTIONS
+        from PsyNeuLink.Globals.Keywords import PROJECTIONS
 
         params_dict = {}
 

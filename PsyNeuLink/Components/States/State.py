@@ -315,7 +315,7 @@ from PsyNeuLink.Components.Functions.Function import LinearCombination, Modulati
     get_param_value_for_function, get_param_value_for_keyword
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection \
-    import _is_projection_spec, _validate_connection_request, _parse_projection_specs
+    import _is_projection_spec, _validate_connection_request, _parse_projection_specs, _parse_projection_ref
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
 from PsyNeuLink.Globals.Keywords import VARIABLE, SIZE, VALUE, NAME, OWNER, PARAMS, PREFS_ARG, CONTEXT, \
     EXECUTING, MECHANISM, FUNCTION_PARAMS,  REFERENCE_VALUE, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, \
@@ -340,7 +340,6 @@ state_keywords = component_keywords.copy()
 state_keywords.update({MECHANISM,
                        STATE_VALUE,
                        STATE_PARAMS,
-                       # PROJECTIONS,
                        PATHWAY_PROJECTIONS,
                        MODULATORY_PROJECTIONS,
                        PROJECTION_TYPE,
@@ -1066,8 +1065,8 @@ class State_Base(State):
                                      default_projection_type.__class__.__name__))
                 else:
                     # IMPLEMENTATION NOTE:  can add more informative reporting here about reason for failure
-                    projection_type, error_str = self._parse_projection_ref(projection_spec=projection_type,
-                                                                           context=self)
+                    projection_type, error_str = _parse_projection_ref(projection_spec=projection_type,
+                                                                       context=self)
                     if error_str and self.prefs.verbosePref:
                         warnings.warn("{0}{1} {2}; default {4} will be assigned".
                               format(item_prefix_string,
@@ -1093,7 +1092,7 @@ class State_Base(State):
             # Note: this gets projection_type but does NOT instantiate the projection (that happens below),
             #       so projection is NOT yet in self.path_afferents list
             else:
-                projection_type, err_str = self._parse_projection_ref(projection_spec=projection_spec,context=self)
+                projection_type, err_str = _parse_projection_ref(projection_spec=projection_spec,context=self)
                 if err_str and self.verbosePref:
                     warnings.warn("{0}{1} {2}; default {4} will be assigned".
                           format(item_prefix_string,
@@ -1302,8 +1301,8 @@ class State_Base(State):
                                  default_projection_type.__class__.__name__))
             else:
                 # IMPLEMENTATION NOTE:  can add more informative reporting here about reason for failure
-                projection_type, error_str = self._parse_projection_ref(projection_spec=projection_type,
-                                                                       context=self)
+                projection_type, error_str = _parse_projection_ref(projection_spec=projection_type,
+                                                                   context=self)
                 if error_str:
                     print("{0}{1} {2}; default {4} will be assigned".
                           format(item_prefix_string,
@@ -1329,7 +1328,7 @@ class State_Base(State):
         # Note: this gets projection_type but does NOT instantiate the projection,
         #       so projection is NOT yet in self.efferents list
         else:
-            projection_type, err_str = self._parse_projection_ref(projection_spec=projection_spec,context=self)
+            projection_type, err_str = _parse_projection_ref(projection_spec=projection_spec,context=self)
             if err_str:
                 print("{0}{1} {2}; default {4} will be assigned".
                       format(item_prefix_string,
@@ -1492,60 +1491,6 @@ class State_Base(State):
 
         return (projection_spec, None)
 
-    def _parse_projection_ref(self,
-                             projection_spec,
-                             # messages=NotImplemented,
-                             context=None):
-        """Take projection ref and return ref to corresponding type or, if invalid, to  default for context
-
-        Arguments:
-        - projection_spec (Projection subclass or str):  str must be a keyword constant for a Projection subclass
-                                                         or an alias for one:  LEARNING = LEARNING_PROJECTION
-                                                                               CONTROL = CONTROL_PROJECTION
-                                                                               GATING = GATING_PROJECTION
-        - context (str):
-
-        Returns tuple: (Projection subclass or None, error string)
-
-        :param projection_spec: (Projection subclass or str)
-        :param messages: (list)
-        :param context: (State object)
-        :return: (Projection subclass, string)
-        """
-        try:
-            # Try projection spec as class ref
-            is_projection_class = issubclass(projection_spec, Projection)
-        except TypeError:
-            # Try projection spec as keyword string constant
-            if isinstance(projection_spec, str):
-
-                # de-alias convenience keywords:
-                if projection_spec is LEARNING:
-                    projection_spec = LEARNING_PROJECTION
-                if projection_spec is CONTROL:
-                    projection_spec = CONTROL_PROJECTION
-                if projection_spec is GATING:
-                    projection_spec = GATING_PROJECTION
-
-                try:
-                    from PsyNeuLink.Components.Projections.Projection import ProjectionRegistry
-                    projection_spec = ProjectionRegistry[projection_spec].subclass
-                except KeyError:
-                    # projection_spec was not a recognized key
-                    return (None, "not found in ProjectionRegistry")
-                # projection_spec was legitimate keyword
-                else:
-                    return (projection_spec, None)
-            # projection_spec was neither a class reference nor a keyword
-            else:
-                return (None, "neither a class reference nor a keyword")
-        else:
-            # projection_spec was a legitimate class
-            if is_projection_class:
-                return (projection_spec, None)
-            # projection_spec was class but not Projection
-            else:
-                return (None, "not a Projection subclass")#
 
     def _get_primary_state(self, mechanism):
         raise StateError("PROGRAM ERROR: {} does not implement _get_primary_state method".
@@ -2545,17 +2490,30 @@ def _get_existing_state(owner,
 
     IMPLEMENTATION NOTES:
     Currently does not support State specification dict (referenced State must be instantiated)
-    Currently does not support Projection specification using class, keyword or Projection specification dict
+    Currently does not support Projection specification using class or Projection specification dict
         (Projection must be instantiated, or in deferred_init status with projection_socket assigned)
 
-    Returns State or State's type (if State has not yet been instantiated)
+    Returns State or State's type (if State has not yet been instantiated or it is specified by a keyword)
     """
 
+    # return State itself if it is an instantiate State
     if isinstance(state_spec, State):
-        state = state_spec
+        return state_spec
+
+    # return Class if state_spec is:
+    #    - a State class or
+    #    - a projection keyword (e.g., 'LEARNING' or 'CONTROL', and it is consistent with state_type
+    ref, err_str = _parse_projection_ref(state_spec)
+    if ref :
+        if state_type.__name__ in getattr(ref.sockets, projection_socket):
+            return state_type
+        else:
+            raise StateError("PROGRAM ERROR: A projection class or keyword ({}) was used to specify a Projection"
+                             "to a {}, but {}".format(state_spec, state_type, err_str))
 
     # Get state by name
     elif isinstance(state_spec, str):
+
         if mech is None:
             raise StateError("PROGRAM ERROR: A {} must be specified to specify its {} ({}) by name".
                              format(Mechanism.__name__, State.__name__, state_spec))
@@ -2627,4 +2585,3 @@ def _is_legal_state_spec_tuple(owner, state_spec, state_type_name=None):
         raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a specification "
                          "for a Mechanism, State, or Projection".
                          format(state_type_name, owner.__class__.__name__, state_spec[1]))
-

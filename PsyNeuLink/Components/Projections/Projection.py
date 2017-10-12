@@ -945,7 +945,7 @@ def _is_projection_spec(spec, include_matrix_spec=True):
             return True
     if isinstance(spec, tuple) and len(spec) == 2:
         # Call recursively on first item, which should be a standard projection spec
-        if _is_projection_spec(spec[0]):
+        if _is_projection_spec(spec[0], include_matrix_spec=include_matrix_spec):
             # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
             if _is_projection_subclass(spec[1], MAPPING_PROJECTION):
                 return True
@@ -1324,7 +1324,7 @@ def _parse_projection_specs(connectee_state_type,
         #     (state_spec, weight, exponent, projection_spec)
         # Note:  this is NOT the same as the State specification tuple (which can have a similar format);
         #        the weights and exponents here specify *individual* Projections to a particular state,
-        #            (vs. weights and exponents for an entire state (as for InputState);
+        #            (vs. weights and exponents for an entire state, such as for InputState);
         #        State specification tuple is handled in the _parse_state_specific_params() method of State subclasses
 
         elif isinstance(connection, tuple):
@@ -1384,6 +1384,62 @@ def _parse_projection_specs(connectee_state_type,
         raise ProjectionError("PROGRAM ERROR: Not all items are ConnectionTuples for {}".format(owner.name))
 
     return connect_with_states
+
+
+def _parse_projection_ref(projection_spec,
+                          # messages=NotImplemented,
+                          context=None):
+    """Take projection ref and return ref to corresponding type or, if invalid, to  default for context
+
+    Arguments:
+    - projection_spec (Projection subclass or str):  str must be a keyword constant for a Projection subclass
+                                                     or an alias for one:  LEARNING = LEARNING_PROJECTION
+                                                                           CONTROL = CONTROL_PROJECTION
+                                                                           GATING = GATING_PROJECTION
+    - context (str):
+
+    Returns tuple: (Projection subclass or None, error string)
+
+    :param projection_spec: (Projection subclass or str)
+    :param messages: (list)
+    :param context: (State object)
+    :return: (Projection subclass, string)
+    """
+    try:
+        # Try projection spec as class ref
+        is_projection_class = issubclass(projection_spec, Projection)
+    except TypeError:
+        # Try projection spec as keyword string constant
+        if isinstance(projection_spec, str):
+
+            # de-alias convenience keywords:
+            if projection_spec is LEARNING:
+                projection_spec = LEARNING_PROJECTION
+            elif projection_spec is CONTROL:
+                projection_spec = CONTROL_PROJECTION
+            elif projection_spec is GATING:
+                projection_spec = GATING_PROJECTION
+
+            try:
+                from PsyNeuLink.Components.Projections.Projection import ProjectionRegistry
+                projection_spec = ProjectionRegistry[projection_spec].subclass
+            except KeyError:
+                # projection_spec was not a recognized key
+                return (None, "not found in ProjectionRegistry")
+            # projection_spec was legitimate keyword
+            else:
+                return (projection_spec, None)
+        # projection_spec was neither a class reference nor a keyword
+        else:
+            return (None, "neither a class reference nor a keyword")
+    else:
+        # projection_spec was a legitimate class
+        if is_projection_class:
+            return (projection_spec, None)
+        # projection_spec was class but not Projection
+        else:
+            return (None, "not a Projection subclass")#
+
 
 @tc.typecheck
 def _validate_connection_request(
