@@ -2293,7 +2293,7 @@ def _parse_state_spec(state_type=None,
         if isinstance(state_spec[STATE_SPEC_ARG], dict):
             # Use the value of any standard args specified in the State specification dictionary
             #    to replace those explicitly specified in the call to _instantiate_state (i.e., passed in standard_args)
-            #    (use copy so that items in state_spec dict are not deleted during call from _validate_params)
+            #    (use copy so that items in state_spec dict are not deleted when called from _validate_params)
             state_specific_args = state_spec[STATE_SPEC_ARG].copy()
             standard_args.update({key: state_specific_args[key] for key in state_specific_args if key in standard_args})
             # Delete them from the State specification dictionary, leaving only state-specific items there
