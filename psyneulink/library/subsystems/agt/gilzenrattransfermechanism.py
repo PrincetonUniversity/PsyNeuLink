@@ -18,23 +18,15 @@ import numbers
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Functions.Function import Hebbian, Linear, Stability, get_matrix, is_function_type
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
-from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
-from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Components.States.State import _instantiate_state
-from PsyNeuLink.Globals.Keywords import INITIALIZER, RATE, NOISE, AUTO, COMMAND_LINE, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, HETERO, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, VARIANCE
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Utilities import is_numeric_or_none, parameter_spec
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism import AutoAssociativeLearningMechanism
-from PsyNeuLink.Library.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
-from PsyNeuLink.Components.Functions.Function import GilzenratIntegrator
+from psyneulink.components.functions.function import Hebbian, Linear, is_function_type, GilzenratIntegrator
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE, StandardOutputStates
+from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
+from psyneulink.globals.keywords import GILZENRAT_INTEGRATOR_FUNCTION, INITIALIZER, NOISE, RATE, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MEAN, MEDIAN, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
+from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
+from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
 class GilzenratTransferError(Exception):
     def __init__(self, error_value):
@@ -512,7 +504,6 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
         # Apply TransferMechanism function
         output_vector = self.function(variable=current_input,
                                       params=runtime_params)
-
         # # MODIFIED  OLD:
         # if list(range):
         # MODIFIED  NEW:
