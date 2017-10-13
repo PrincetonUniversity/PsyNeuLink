@@ -951,36 +951,27 @@ class State_Base(State):
         state_name_string = self.name
         item_prefix_string = ""
         item_suffix_string = state_name_string + " ({} for {})".format(self.__class__.__name__, self.owner.name,)
-        default_string = ""
-        kwDefault = "default "
+        default_string = "default "
 
         default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
 
-        # Instantiate each projection specification in the projection_list, and
-        # - insure it is in self.path_afferents
-        # - insure the output of its function is compatible with self.value
-        for projection_spec in projection_list:
+        # FIX: 10/3/17 - MAKE SURE THAT _parse_projection_specs DOES EVERYTHING UNDER HERE:
+        # Parse each projection specification, using self as connectee_state and instantiate each projection, insuring:
+        # - it is in self.path_afferents
+        # - the output of its function is compatible with self.value
+        connection_tuples = _parse_projection_specs(self.__class__, self.owner, projection_list)
+        for connection in connection_tuples:
+            sender, weight, exponent, projection_spec = connection
 
             # If there is more than one projection specified, construct messages for use in case of failure
-            if len(projection_list) > 1:
+            if len(connection_tuples) > 1:
                 item_prefix_string = "Item {0} of projection list for {1}: ".\
                     format(projection_list.index(projection_spec)+1, state_name_string)
                 item_suffix_string = ""
 
-# FIX: 10/3/17 -
-# FIX:      MOVE THIS TO _parse_projection_specs
-# FIX:      ADD ASSIGNMENT OF PROJECTION WEIGHT AND EXPONENT
-
-# FIX: FROM HERE TO BOTTOM OF METHOD SHOULD ALL BE HANDLED IN __init__() FOR PROJECTION_SPEC
-# FIX: OR A _parse_projection_spec METHOD
             projection_object = None # flags whether projection object has been instantiated; doesn't store object
             projection_type = None   # stores type of projection to instantiate
-            sender = None
             projection_params = {}
-
-            # PARSE AND INSTANTIATE PROJECTION_SPEC --------------------------------------------------------------------
-
-            connection_tuple = _parse_projection_specs(self.__class__, self.owner, projection_spec)
 
             # If projection_spec is a Projection object:
             # - call _check_projection_receiver() to check that receiver is self; if not, it:
@@ -1008,6 +999,7 @@ class State_Base(State):
                         # FIX: REINSTATE:
                         # projection_spec.init_args['context'] = context
                         projection_spec._deferred_init()
+                # FIX: 10/3/17 - DEPRECATE
                 projection_object, default_class_name = self._check_projection_receiver(
                                                                                     projection_spec=projection_spec,
                                                                                     messages=[item_prefix_string,
@@ -1019,7 +1011,6 @@ class State_Base(State):
                     # projection_object.name = projection_object.name.replace(default_class_name, self.name)
                     projection_object.name = self.name + '_' + projection_object.name
                     # Used for error message
-                    default_string = kwDefault
 # FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
 
             # If projection_spec is a State or State class
@@ -1064,7 +1055,6 @@ class State_Base(State):
                     _check_projection_sender_compatability(self, default_projection_type, projection_type)
                 except KeyError:
                     projection_type = default_projection_type
-                    default_string = kwDefault
                     if self.prefs.verbosePref:
                         warnings.warn("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
                               format(item_prefix_string,
@@ -1125,7 +1115,6 @@ class State_Base(State):
             #       projection is NOT yet in self.path_afferents list
             if not projection_object and not projection_type:
                     projection_type = default_projection_type
-                    default_string = kwDefault
                     if self.prefs.verbosePref:
                         warnings.warn("{0}{1} is not a Projection object or specification for one{2}; "
                               "default {3} will be assigned".
@@ -1238,8 +1227,6 @@ class State_Base(State):
         state_name_string = self.name
         item_prefix_string = ""
         item_suffix_string = state_name_string + " ({} for {})".format(self.__class__.__name__, self.owner.name,)
-        default_string = ""
-        kwDefault = "default "
 
         default_projection_type = ProjectionRegistry[self.paramClassDefaults[PROJECTION_TYPE]].subclass
 
@@ -1294,8 +1281,6 @@ class State_Base(State):
             if default_class_name:
                 # projection_object.name = projection_object.name.replace(default_class_name, self.name)
                 projection_object.name = self.name + '_' + projection_object.name
-                # Used for error message
-                default_string = kwDefault
 # FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
 
         # If projection_spec is a dict:
@@ -1309,7 +1294,6 @@ class State_Base(State):
                 projection_type = projection_spec[PROJECTION_TYPE]
             except KeyError:
                 projection_type = default_projection_type
-                default_string = kwDefault
                 if self.prefs.verbosePref:
                     print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
                           format(item_prefix_string,
@@ -1361,7 +1345,6 @@ class State_Base(State):
         #       projection is NOT yet in self.path_afferents list
         if not projection_object and not projection_type:
                 projection_type = default_projection_type
-                default_string = kwDefault
                 if self.prefs.verbosePref:
                     print("{0}{1} is not a Projection object or specification for one{2}; "
                           "default {3} will be assigned".
@@ -1402,6 +1385,7 @@ class State_Base(State):
             if not projection_spec in self.efferents:
                 self.efferents.append(projection_spec)
 
+# FIX: 10/3/17 - Depracate:
     def _check_projection_receiver(self, projection_spec, messages=None, context=None):
         """Check whether Projection object references State as receiver and, if not, return default Projection object
 
@@ -1455,6 +1439,8 @@ class State_Base(State):
 
         return (projection_spec, None)
 
+
+# FIX: 10/3/17 - Depracate:
     def _check_projection_sender(self, projection_spec, receiver, messages=None, context=None):
         """Check whether Projection object references State as sender and, if not, return default Projection object
 

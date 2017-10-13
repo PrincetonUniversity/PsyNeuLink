@@ -1328,7 +1328,7 @@ def _parse_projection_specs(connectee_state_type,
 
         elif isinstance(connection, tuple):
         # Notes:
-        #    - first item is assumed to always be a specification for the State itself
+        #    - first item is assumed to always be a specification for the State being connected with
 
             if len(connection) == 2:
                 state_spec, projection_spec = connection
