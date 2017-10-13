@@ -991,16 +991,13 @@ class State_Base(State):
                         # Assign receiver to init_args and call _deferred_init for projection
                         projection_spec.init_args['name'] = self.owner.name+' '+self.name+' '+projection_spec.className
                         projection_spec.init_args[RECEIVER] = self
-                        projection_spec.init_args[WEIGHT] = weight
-                        projection_spec.init_args[EXPONENT] = weight
-                        # FIX: REINSTATE:
+                        # FIX: ??REINSTATE:
                         # projection_spec.init_args['context'] = context
-                        projection_spec._deferred_init()
-                        # FIX: REINSTATE:  MAY NEED TO ASSIGN DEFAULT PROJECTION HERE FOR test_danglingControlledMech
-                        projection_object = projection_spec
+                        projection_object = projection_spec._deferred_init()
 
 # FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
 
+            # FIX: 10/3/17 - CHECK WHETHER THIS IS DONE BY _parse_projection_spec
             # If projection_spec is a State or State class
             # - check that it is appropriate for the type of projection
             # - create default instance if it is a class (it will use deferred_init since owner is not yet known)
@@ -1011,7 +1008,7 @@ class State_Base(State):
                 # If it is State, get its type (for check below)
                 if isinstance(projection_spec, State):
                     state_type = type(projection_spec)
-                # If it is State class, instantiate default
+                # If it is State class, instantiate default State
                 else:
                     projection_spec = projection_spec()
                 # Check appropriateness of State

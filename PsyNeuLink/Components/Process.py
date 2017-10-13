@@ -2005,7 +2005,7 @@ class Process_Base(Process):
 
             # For each ParameterState of the mechanism
             for parameter_state in mech._parameter_states:
-                parameter_state._deferred_init() # XXX
+                parameter_state._deferred_init()
                 # MODIFIED 5/2/17 OLD:
                 # self._instantiate__deferred_init_projections(parameter_state.path_afferents)
                 # MODIFIED 5/2/17 NEW:

@@ -888,8 +888,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 control_signal_spec.init_args[NAME] = control_signal_spec.init_args[NAME] or default_name
                 # control_signal_spec.init_args[REFERENCE_VALUE] = output_state_reference_value
                 control_signal_spec.init_args[REFERENCE_VALUE] = defaultControlAllocation
-                control_signal_spec._deferred_init(context=context)
-                control_signal = control_signal_spec
+                control_signal = control_signal_spec._deferred_init(context=context)
             elif not control_signal_spec.owner is self:
                 raise ControlMechanismError("Attempt to assign ControlSignal to {} ({}) that is already owned by {}".
                                             format(self.name, control_signal_spec.name, control_signal_spec.owner.name))
