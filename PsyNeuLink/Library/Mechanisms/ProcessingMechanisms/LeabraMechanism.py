@@ -74,7 +74,7 @@ class LeabraFunction(Function_Base):
                                                   params=params)
 
         if default_variable is None:
-            default_variable = np.zeros(self.network.layers[0].size)  # self.network.layers[0].size is the size of the input layer
+            default_variable = np.zeros(len(self.network.layers[0].units))  # len(self.network.layers[0].units) is the size of the input layer
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -87,8 +87,8 @@ class LeabraFunction(Function_Base):
             raise LeabraError("Input Error: the input variable ({}) was of type {}, but instead should be a list, "
                               "numpy array, or number.".format(variable, type(variable)))
 
-        input_size = self.network.layers[0].size
-        output_size = self.network.layers[-1].size
+        input_size = len(self.network.layers[0].units)
+        output_size = len(self.network.layers[-1].units)
         if (not hasattr(self, "owner")) or (not hasattr(self.owner, "training_flag")) or self.owner.training_flag is False:
             if len(convert_to_2d_input(variable)[0]) != input_size:
                 # convert_to_2d_input(variable[0]) is just in case variable is a 2D array rather than a vector
@@ -122,11 +122,11 @@ class LeabraFunction(Function_Base):
                 raise LeabraError("Input Error: the input given ({}) for training was not the right format: the input "
                                   "should be a 2D array containing two vectors, corresponding to the input and the "
                                   "training target.".format(variable))
-            if len(variable[0]) != self.network.layers[0].size or len(variable[1]) != self.network.layers[-1].size:
+            if len(variable[0]) != len(self.network.layers[0].units) or len(variable[1]) != len(self.network.layers[-1].units):
                 raise LeabraError("Input Error: the input given ({}) was not the right format: it should be a 2D array "
                                   "containing two vectors, corresponding to the input (which should be length {}) and "
                                   "the training target (which should be length {})".
-                                  format(variable, self.network.layers[0], self.network.layers[-1].size))
+                                  format(variable, self.network.layers[0], len(self.network.layers[-1].units)))
             return train_network(self.network, input_pattern=variable[0], output_pattern=variable[1])
 
 class LeabraMechanism(ProcessingMechanism_Base):
@@ -225,7 +225,8 @@ def build_network(n_input, n_output, n_hidden, hidden_sizes=None):
         layers.append(hidden_layer)
         connections.append(hidden_conn)
 
-    last_conn  = leabra.Connection(layers[-1],  output_layer, spec=conn_spec)
+    last_conn = leabra.Connection(layers[-1],  output_layer, spec=conn_spec)
+    connections.append(last_conn)
     layers.append(output_layer)
 
     network_spec = leabra.NetworkSpec(quarter_size=50)
