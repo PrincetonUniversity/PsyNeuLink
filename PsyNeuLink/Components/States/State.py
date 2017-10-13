@@ -999,18 +999,8 @@ class State_Base(State):
                         # FIX: REINSTATE:
                         # projection_spec.init_args['context'] = context
                         projection_spec._deferred_init()
-                # FIX: 10/3/17 - DEPRECATE
-                projection_object, default_class_name = self._check_projection_receiver(
-                                                                                    projection_spec=projection_spec,
-                                                                                    messages=[item_prefix_string,
-                                                                                              item_suffix_string,
-                                                                                              state_name_string],
-                                                                                    context=self)
-                # If projection's name has not been assigned, base it on State's name:
-                if default_class_name:
-                    # projection_object.name = projection_object.name.replace(default_class_name, self.name)
-                    projection_object.name = self.name + '_' + projection_object.name
-                    # Used for error message
+                projection_object = projection_spec
+
 # FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
 
             # If projection_spec is a State or State class
