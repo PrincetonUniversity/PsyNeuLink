@@ -2365,6 +2365,9 @@ class Linear(TransferFunction):  # ---------------------------------------------
             param_type = ir.LiteralStructType((ctx.float_ty, ctx.float_ty))
         return param_type
 
+    def get_param_initializer(self):
+        return tuple([self.slope, self.intercept])
+
     def __gen_llvm_linear(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
@@ -2634,6 +2637,9 @@ class Exponential(TransferFunction):  # ----------------------------------------
             param_type = ir.LiteralStructType((ctx.float_ty, ctx.float_ty))
         return param_type
 
+    def get_param_initializer(self):
+        return tuple([self.rate, self.scale])
+
     def __gen_llvm_exponential(self, builder, index, ctx, vi, vo, rate, scale):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
@@ -2863,6 +2869,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
             param_type = ir.LiteralStructType((ctx.float_ty, ctx.float_ty))
         return param_type
 
+
+    def get_param_initializer(self):
+        return tuple([self.gain, self.bias])
 
     def __gen_llvm_logistic(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -3107,6 +3116,8 @@ class SoftMax(TransferFunction):
             param_type = ir.LiteralStructType([ctx.float_ty])
         return param_type
 
+    def get_param_initializer(self):
+        return tuple([self.gain])
 
     def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, vo, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -4846,6 +4857,9 @@ class AdaptiveIntegrator(
             # rate, offset, noise
             param_type = ir.LiteralStructType([ctx.float_ty, ctx.float_ty, noise_ty])
         return param_type
+
+    def get_param_initializer(self):
+        return tuple([self.rate, self.offset, self.noise])
 
 
     def get_context_struct_type(self):
