@@ -1135,7 +1135,6 @@ def _parse_projection_specs(connectee_state_type,
         BaseSpec = connectee_state_type
 
     # Request for afferent Projections (projection socket is SENDER)
-    # if isinstance(owner, Mechanism) and issubclass(connectee_state_type, InputState):
     if issubclass(connectee_state_type, InputState):
         ConnectWith = OutputState            # type of State to which the connectee connects
         connect_with_attr = 'output_states'  # attribute that holds the ConnectWith States
@@ -1519,7 +1518,8 @@ def _validate_connection_request(
         else:
             # Compare the State to which the Projection's socket has been assigned with connect_with_state
             projection_socket_state = getattr(projection_spec, projection_socket)
-            if projection_socket_state is connect_with_state:
+            # if projection_socket_state is connect_with_state:
+            if  issubclass(projection_socket_state.__class__, connect_with_state):
                 return True
 
         # None of the above worked, so must be incompatible

@@ -980,6 +980,8 @@ class State_Base(State):
 
             # PARSE AND INSTANTIATE PROJECTION_SPEC --------------------------------------------------------------------
 
+            connection_tuple = _parse_projection_specs(self.__class__, self.owner, projection_spec)
+
             # If projection_spec is a Projection object:
             # - call _check_projection_receiver() to check that receiver is self; if not, it:
             #     returns object with receiver reassigned to self if chosen by user
@@ -2561,9 +2563,9 @@ def _get_existing_state(owner,
     # Get state from Projection specification (exclude matrix spec in test as it can't be used to determine the state)
     elif _is_projection_spec(state_spec, include_matrix_spec=False):
         _validate_connection_request(owner=owner,
-                             connect_with_state=state_type,
-                             projection_spec=state_spec,
-                             projection_socket=projection_socket)
+                                     connect_with_state=state_type,
+                                     projection_spec=state_spec,
+                                     projection_socket=projection_socket)
         # MODIFIED 10/3/17 NEW:
         if isinstance(state_spec, Projection):
             state = state_spec.socket_assignments[projection_socket]
