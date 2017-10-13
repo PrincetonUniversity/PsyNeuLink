@@ -314,13 +314,15 @@ from PsyNeuLink.Components.Component import Component, ComponentError, InitStatu
 from PsyNeuLink.Components.Functions.Function import LinearCombination, ModulationParam, _get_modulated_param, \
     get_param_value_for_function, get_param_value_for_keyword
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.Projection \
-    import _is_projection_spec, _validate_connection_request, _parse_projection_specs, _parse_projection_ref
+from PsyNeuLink.Components.Projections.Projection import \
+    _is_projection_spec, _parse_projection_specs, _parse_projection_ref, \
+    _validate_connection_request, ConnectionTuple, WEIGHT, EXPONENT
+
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
 from PsyNeuLink.Globals.Keywords import VARIABLE, SIZE, VALUE, NAME, OWNER, PARAMS, PREFS_ARG, CONTEXT, \
     EXECUTING, MECHANISM, FUNCTION_PARAMS,  REFERENCE_VALUE, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, \
     STANDARD_ARGS, STANDARD_OUTPUT_STATES,\
-    PROJECTIONS, PATHWAY_PROJECTIONS, PROJECTION_PARAMS,  PROJECTION_TYPE, RECEIVER, SENDER, CONNECTIONS,\
+    PROJECTIONS, PATHWAY_PROJECTIONS, PROJECTION_PARAMS,  PROJECTION_TYPE, PROJECTION, RECEIVER, SENDER,\
     MAPPING_PROJECTION_PARAMS, MATRIX, MATRIX_KEYWORD_SET, \
     MODULATION, MODULATORY_SIGNAL, MODULATORY_PROJECTIONS, \
     LEARNING, LEARNING_PROJECTION, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
@@ -924,6 +926,7 @@ class State_Base(State):
             dict must contain:
                 + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
                 + PROJECTION_PARAMS:<dict> - must be dict of params for PROJECTION_TYPE
+        + ConnectionTuple, in which the method is called recursively with the projection item in the projections arg
         If any of the conditions above fail:
             a default projection is instantiated using self.paramsCurrent[PROJECTION_TYPE]
         For each projection:
@@ -963,6 +966,10 @@ class State_Base(State):
                 item_prefix_string = "Item {0} of projection list for {1}: ".\
                     format(projection_list.index(projection_spec)+1, state_name_string)
                 item_suffix_string = ""
+
+# FIX: 10/3/17 -
+# FIX:      MOVE THIS TO _parse_projection_specs
+# FIX:      ADD ASSIGNMENT OF PROJECTION WEIGHT AND EXPONENT
 
 # FIX: FROM HERE TO BOTTOM OF METHOD SHOULD ALL BE HANDLED IN __init__() FOR PROJECTION_SPEC
 # FIX: OR A _parse_projection_spec METHOD
@@ -1088,7 +1095,16 @@ class State_Base(State):
                                      item_suffix_string,
                                      default_projection_type.__class__.__name__))
 
-            # Check if projection_spec is class ref or keyword string constant for one
+            # FIX: 10/3/17: ADD CHECK FOR ConnectionTuple HERE AND, IF SO:
+            # FIX:      ??CALL _instantiate_projection recursively?? OR AT LEAST PARSE
+            # FIX:      ??ASSIGN WEIGHT & EXPONENT
+            elif isinstance(projection_spec, ConnectionTuple):
+                self._instantiate_projections([{SENDER: projection_spec.state,
+                                                WEIGHT: projection_spec.weight,
+                                                EXPONENT: projection_spec.exponent,
+                                                PROJECTION:projection_spec.projection}])
+
+            # Check if projection_spec is class ref or keyword (string constant) for one
             # Note: this gets projection_type but does NOT instantiate the projection (that happens below),
             #       so projection is NOT yet in self.path_afferents list
             else:
