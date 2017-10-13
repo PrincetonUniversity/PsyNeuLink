@@ -5141,10 +5141,7 @@ class GilzenratIntegrator(
         new_value = variable
 
         # if X equation in gilzenrat paper represents change in state of unit i over time
-        value = previous_value + self.rate*(-previous_value + variable)*self.time_step_size + noise
-
-        # if X equation in gilzenrat paper represents state of unit i
-        # value = -previous_value + variable + noise
+        value = previous_value + (-previous_value + variable)*self.time_step_size + noise
 
         adjusted_value = value + offset
         # If this NOT an initialization run, update the old value
