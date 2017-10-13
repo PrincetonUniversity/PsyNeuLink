@@ -1368,35 +1368,45 @@ class System(System_Base):
             #       if it receives any projections from any other mechanisms in the system (including other processes)
             #       other than ones in processes for which it is also their ORIGIN
             # * This does allow a mechanism to be the ORIGIN (but *only* the ORIGIN) for > 1 process in the system
-            if all(
-                    all(
-                            # All projections must be from a process (i.e., ProcessInputState) to which it belongs
-                            # # MODIFIED 2/8/17 OLD:
-                            # #          [THIS CHECKED FOR PROCESS IN SYSTEM'S LIST OF PROCESSES
-                            # #           IT CRASHED IF first_mech WAS ASSIGNED TO ANY PROCESS THAT WAS NOT ALSO
-                            # #           ASSIGNED TO THE SYSTEM TO WHICH THE first_mech BELONGS
-                            #  projection.sender.owner in sorted_processes or
-                            # MODIFIED 2/8/17 NEW:
-                            #          [THIS CHECKS THAT PROJECTION IS FROM A PROCESS IN first_mech's LIST OF PROCESSES]
-                            #           PROBABLY ISN"T NECESSARY, AS IT SHOULD BE COVERED BY INITIAL ASSIGNMENT OF PROJ]
-                            projection.sender.owner in first_mech.processes or
-                            # MODIFIED 2/8/17 END
-                            # or from mechanisms within its own process (e.g., [a, b, a])
-                            projection.sender.owner in list(process.mechanisms) or
-                            # or from mechanisms in other processes for which it is also an ORIGIN ([a,b,a], [a,c,a])
-                            all(ORIGIN in first_mech.processes[proc]
-                                for proc in projection.sender.owner.processes
-                                if isinstance(projection.sender.owner,Mechanism))
-                        # For all the projections to each InputState
-                        for projection in input_state.path_afferents)
-                    # For all input_states for the first_mech
-                    for input_state in first_mech.input_states):
-                # Assign its set value as empty, marking it as a "leaf" in the graph
-                object_item = first_mech
-                self.graph[object_item] = set()
-                self.execution_graph[object_item] = set()
-                first_mech.systems[self] = ORIGIN
-
+            try:
+                if all(
+                        all(
+                                # All projections must be from a process (i.e., ProcessInputState) to which it belongs
+                                # # MODIFIED 2/8/17 OLD:
+                                # #          [THIS CHECKED FOR PROCESS IN SYSTEM'S LIST OF PROCESSES
+                                # #           IT CRASHED IF first_mech WAS ASSIGNED TO ANY PROCESS THAT WAS NOT ALSO
+                                # #           ASSIGNED TO THE SYSTEM TO WHICH THE first_mech BELONGS
+                                #  projection.sender.owner in sorted_processes or
+                                # MODIFIED 2/8/17 NEW:
+                                #          [THIS CHECKS THAT PROJECTION IS FROM A PROCESS IN first_mech's LIST OF PROCESSES]
+                                #           PROBABLY ISN"T NECESSARY, AS IT SHOULD BE COVERED BY INITIAL ASSIGNMENT OF PROJ]
+                                projection.sender.owner in first_mech.processes or
+                                # MODIFIED 2/8/17 END
+                                # or from mechanisms within its own process (e.g., [a, b, a])
+                                projection.sender.owner in list(process.mechanisms) or
+                                # or from mechanisms in other processes for which it is also an ORIGIN ([a,b,a], [a,c,a])
+                                all(ORIGIN in first_mech.processes[proc]
+                                    for proc in projection.sender.owner.processes
+                                    if isinstance(projection.sender.owner,Mechanism))
+                            # For all the projections to each InputState
+                            for projection in input_state.path_afferents)
+                        # For all input_states for the first_mech
+                        for input_state in first_mech.input_states):
+                    # Assign its set value as empty, marking it as a "leaf" in the graph
+                    object_item = first_mech
+                    self.graph[object_item] = set()
+                    self.execution_graph[object_item] = set()
+                    first_mech.systems[self] = ORIGIN
+            except KeyError as e:
+                # IMPLEMENTATION NOTE:
+                # This occurs if a Mechanism belongs to one (or more) Process(es) in the System but not ALL of them;
+                #    it is because each Mechanism in the test above ("ORIGIN in first_mech.processes[proc]")
+                #     is examined for all Processes in the System);
+                # FIX: this should be factored into the tests above so that the exception does not occur
+                if isinstance(e.args[0], Process_Base):
+                    pass
+                else:
+                    raise SystemError(e)
             build_dependency_sets_by_traversing_projections(first_mech)
 
         # Print graph
