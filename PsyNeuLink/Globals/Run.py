@@ -1041,16 +1041,16 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
             else:
                 raise RunError("PROGRAM ERROR: Unexpected shape of inputs: {}".format(inputs.shape))
 
-        if inputs.ndim != expected_dim:
-            raise RunError("inputs arg in call to {}.run() must be a {}d np.array or comparable list".
-                              format(object.name, expected_dim))
-
-        if np.size(inputs,PROCESSES_DIM) != len(object.origin_mechanisms):
-            raise RunError("The number of inputs for each execution ({}) in the call to {}.run() "
-                              "does not match the number of Processes in the System ({})".
-                              format(np.size(inputs,PROCESSES_DIM),
-                                     object.name,
-                                     len(object.origin_mechanisms)))
+        # if inputs.ndim != expected_dim:
+        #     raise RunError("inputs arg in call to {}.run() must be a {}d np.array or comparable list".
+        #                       format(object.name, expected_dim))
+        #
+        # if np.size(inputs,PROCESSES_DIM) != len(object.origin_mechanisms):
+        #     raise RunError("The number of inputs for each execution ({}) in the call to {}.run() "
+        #                       "does not match the number of Processes in the System ({})".
+        #                       format(np.size(inputs,PROCESSES_DIM),
+        #                              object.name,
+        #                              len(object.origin_mechanisms)))
 
         # Check that length of each input matches length of corresponding origin mechanism over all executions and phases
         if is_target:
