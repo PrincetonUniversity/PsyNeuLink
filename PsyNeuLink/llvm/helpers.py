@@ -43,3 +43,14 @@ def for_loop_zero_inc(builder, stop, body_func, id):
     start = stop.type(0)
     inc = stop.type(1)
     return for_loop(builder, start, stop, inc, body_func, id)
+
+def fclamp(builder, val, min_val, max_val):
+    cond = builder.fcmp_unordered("<", val, min_val)
+    tmp = builder.select(cond, min_val, val)
+    cond = builder.fcmp_unordered(">", tmp, max_val)
+    return builder.select(cond, max_val, tmp)
+
+def fclamp_const(builder, val, min_val, max_val):
+    minval = val.type(min_val)
+    maxval = val.type(max_val)
+    return fclamp(builder, val, minval, maxval)
