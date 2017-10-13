@@ -1,5 +1,5 @@
-ModulatoryProjections
-=====================
+Modulatory Projections
+======================
 
 .. _ModulatoryProjection_Subtypes:
 
@@ -10,6 +10,6 @@ ModulatoryProjections
    ControlProjection
    GatingProjection
 
-.. automodule:: ModulatoryProjections.ModulatoryProjection
+.. automodule:: psyneulink.components.projections.modulatory.modulatoryprojection
    :members:
    :exclude-members: ModulatoryProjection_Base, Linear, random

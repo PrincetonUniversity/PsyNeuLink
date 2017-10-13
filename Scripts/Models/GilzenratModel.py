@@ -6,18 +6,19 @@ and electrophysiological data (from LC recordings) in non-human primates.
 """
 
 import numpy as np
-from PsyNeuLink.Components.Functions.Function import Linear, Logistic
-from PsyNeuLink.Components.Functions.Function import ModulationParam
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism \
+
+from psyneulink.components.functions.function import Linear, Logistic
+from psyneulink.components.functions.function import ModulationParam
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.system import System
+from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism \
     import RecurrentTransferMechanism
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA import LCA
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Library.Subsystems.AGT.LCControlMechanism import LCControlMechanism
-from PsyNeuLink.Globals.Keywords import FULL_CONNECTIVITY_MATRIX, VALUE, PROJECTIONS
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.globals.keywords import FULL_CONNECTIVITY_MATRIX, PROJECTIONS, VALUE
+from psyneulink.library.mechanisms.processing.transfer.lca import LCA
+from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
 
 
 input_layer = TransferMechanism(size=2,
@@ -59,20 +60,20 @@ LC = LCControlMechanism(
         name='LC')
 
 # ELICITS WARNING:
-decision_process = process(pathway=[input_layer,
+decision_process = Process(pathway=[input_layer,
                                     input_weights,
                                     decision_layer,
                                     output_weights,
                                     response],
                            name='DECISION PROCESS')
 
-lc_process = process(pathway=[decision_layer,
+lc_process = Process(pathway=[decision_layer,
                               # CAUSES ERROR:
                               # np.array([[1,0],[0,0]]),
                               LC],
                            name='LC PROCESS')
 
-task = system(processes=[decision_process, lc_process])
+task = System(processes=[decision_process, lc_process])
 
 # This prints information about the System,
 # including its execution list indicating the order in which the Mechanisms will execute

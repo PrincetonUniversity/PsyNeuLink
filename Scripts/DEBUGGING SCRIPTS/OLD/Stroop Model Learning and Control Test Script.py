@@ -1,9 +1,9 @@
-from PsyNeuLink.Components.Functions.Function import Linear, Logistic
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import *
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Library.Subsystems.EVC.EVCControlMechanism import EVCControlMechanism
+from psyneulink.components.functions.function import Linear, Logistic
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.system import *
+from psyneulink.globals.keywords import *
+from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
 
 process_prefs = {REPORT_OUTPUT_PREF: True,
                  VERBOSE_PREF: False}
@@ -45,7 +45,7 @@ HO_Weights = MappingProjection(name='Hidden-Output Weights',
                         matrix=HO_Weights_matrix
                         )
 
-color_naming_process = process(
+color_naming_process = Process(
     default_variable=[1, 2.5],
     pathway=[colors, CH_Weights, hidden, HO_Weights, response],
     learning=LEARNING,
@@ -53,7 +53,7 @@ color_naming_process = process(
     name='Color Naming',
     prefs=process_prefs)
 
-word_reading_process = process(
+word_reading_process = Process(
     default_variable=[.5, 3],
     pathway=[words, WH_Weights, hidden],
     name='Word Reading',
@@ -64,7 +64,7 @@ word_reading_process = process(
 color_naming_process.execute()
 word_reading_process.execute()
 
-mySystem = system(processes=[color_naming_process, word_reading_process],
+mySystem = System(processes=[color_naming_process, word_reading_process],
                   targets=[0,0],
                   controller=EVCControlMechanism,
                   enable_controller=True,

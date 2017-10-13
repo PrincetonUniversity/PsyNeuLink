@@ -1,6 +1,6 @@
 import pytest
 
-from PsyNeuLink.Composition import Graph, Vertex
+from psyneulink.composition import Graph, Vertex
 
 
 @pytest.mark.skip

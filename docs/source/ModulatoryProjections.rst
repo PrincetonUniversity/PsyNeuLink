@@ -1,5 +1,5 @@
-ModulatoryProjections
-=====================
+Modulatory Projections
+======================
 
 .. _ModulatoryProjection_Subtypes:
 

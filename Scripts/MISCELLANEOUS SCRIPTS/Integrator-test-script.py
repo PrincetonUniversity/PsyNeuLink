@@ -1,5 +1,5 @@
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Globals.Keywords import *
+from psyneulink.components.mechanisms.processing.transfermechanism import *
+from psyneulink.globals.keywords import *
 
 run_DDM_tests = True
 run_transfer_tests = True
