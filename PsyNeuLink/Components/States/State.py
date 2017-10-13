@@ -974,19 +974,13 @@ class State_Base(State):
             projection_params = {}
 
             # If projection_spec is a Projection object:
-            # - call _check_projection_receiver() to check that receiver is self; if not, it:
-            #     returns object with receiver reassigned to self if chosen by user
-            #     else, returns new (default) PROJECTION_TYPE object with self as receiver
-            #     note: in that case, projection will be in self.path_afferents list
             if isinstance(projection_spec, Projection_Base):
                 if projection_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
                     if isinstance(projection_spec, ModulatoryProjection_Base):
                         # Assign projection to mod_afferents
                         self.mod_afferents.append(projection_spec)
                         projection_spec.init_args[RECEIVER] = self
-                        # Skip any further initialization for now
-                        #   (remainder will occur as part of deferred init for
-                        #    ControlProjection or GatingProjection)
+                        # Skip any further initialization for now; remainder will occur as part of deferred init
                         continue
 
                     # Complete init for other (presumably Mapping) projections
@@ -994,12 +988,14 @@ class State_Base(State):
                         # Assume init was deferred because receiver could not be determined previously
                         #  (e.g., specified in function arg for receiver object, or as standalone projection in script)
                         # Assign receiver to init_args and call _deferred_init for projection
-                        projection_spec.init_args[RECEIVER] = self
                         projection_spec.init_args['name'] = self.owner.name+' '+self.name+' '+projection_spec.className
+                        projection_spec.init_args[RECEIVER] = self
+                        projection_spec.init_args[WEIGHT] = weight
+                        projection_spec.init_args[EXPONENT] = weight
                         # FIX: REINSTATE:
                         # projection_spec.init_args['context'] = context
                         projection_spec._deferred_init()
-                projection_object = projection_spec
+                        projection_object = projection_spec
 
 # FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
 
@@ -1374,60 +1370,6 @@ class State_Base(State):
             #    and assigned projection to self.efferents list)
             if not projection_spec in self.efferents:
                 self.efferents.append(projection_spec)
-
-# FIX: 10/3/17 - Depracate:
-    def _check_projection_receiver(self, projection_spec, messages=None, context=None):
-        """Check whether Projection object references State as receiver and, if not, return default Projection object
-
-        Arguments:
-        - projection_spec (Projection object)
-        - message (list): list of three strings - prefix and suffix for error/warning message, and State name
-        - context (object): ref to State object; used to identify PROJECTION_TYPE and name
-
-        Returns: tuple (Projection object, str); second value is name of default projection, else None
-
-        :param self:
-        :param projection_spec: (Projection object)
-        :param messages: (list)
-        :param context: (State object)
-        :return: (tuple) Projection object, str) - second value is false if default was returned
-        """
-
-        prefix = 0
-        suffix = 1
-        name = 2
-        if messages is None:
-            messages = ["","","",context.__class__.__name__]
-        message = "{}{} is a projection of the correct type for {}, but its receiver is not assigned to {}." \
-                  " \nReassign (r) or use default projection (d)?:".format(messages[prefix],
-                                                                           projection_spec.name,
-                                                                           projection_spec.receiver.name,
-                                                                           messages[suffix])
-
-        if projection_spec.receiver is not self:
-            reassign = input(message)
-            while reassign != 'r' and reassign != 'd':
-                reassign = input("Reassign {0} to {1} or use default (r/d)?:".
-                                 format(projection_spec.name, messages[name]))
-            # User chose to reassign, so return projection object with State as its receiver
-            if reassign == 'r':
-                projection_spec.receiver = self
-                # IMPLEMENTATION NOTE: allow the following, since it is being carried out by State itself
-                self.path_afferents.append(projection_spec)
-                if self.prefs.verbosePref:
-                    print("{0} reassigned to {1}".format(projection_spec.name, messages[name]))
-                return (projection_spec, None)
-            # User chose to assign default, so return default projection object
-            elif reassign == 'd':
-                print("Default {0} will be used for {1}".
-                      format(projection_spec.name, messages[name]))
-                return (self.paramsCurrent[PROJECTION_TYPE](receiver=self),
-                        self.paramsCurrent[PROJECTION_TYPE].className)
-                #     print("{0} reassigned to {1}".format(projection_spec.name, messages[name]))
-            else:
-                raise StateError("Program error:  reassign should be r or d")
-
-        return (projection_spec, None)
 
 
 # FIX: 10/3/17 - Depracate:
