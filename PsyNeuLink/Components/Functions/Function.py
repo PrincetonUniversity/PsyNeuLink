@@ -2392,6 +2392,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
                 (self.get_param_struct_type().as_pointer(),
                  vec_ty.as_pointer(), vec_ty.as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            llvm_func.attributes.add('alwaysinline')
             params, vi, vo = llvm_func.args
             for a in params, vi, vo:
                 a.attributes.add('nonnull')
@@ -2662,6 +2664,8 @@ class Exponential(TransferFunction):  # ----------------------------------------
                 (self.get_param_struct_type().as_pointer(),
                 vec_ty.as_pointer(), vec_ty.as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            llvm_func.attributes.add('alwaysinline')
             params, vi, vo = llvm_func.args
             for a in params, vi, vo:
                 a.attributes.add('nonnull')
@@ -2902,6 +2906,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
                 (self.get_param_struct_type().as_pointer(),
                  vec_ty.as_pointer(), vec_ty.as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            llvm_func.attributes.add('alwaysinline')
             params, vi, vo = llvm_func.args
             for a in params, vi, vo:
                 a.attributes.add('nonnull')
@@ -3171,6 +3177,8 @@ class SoftMax(TransferFunction):
                 vec_ty.as_pointer(), vec_ty.as_pointer()))
             vector_length = ctx.int32_ty(self._variable_length)
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            llvm_func.attributes.add('alwaysinline')
             params, vi, vo = llvm_func.args
             for a in params, vi, vo:
                 a.attributes.add('nonnull')
@@ -4918,6 +4926,8 @@ class AdaptiveIntegrator(
             vector_length = ctx.int32_ty(self._variable_length)
 
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            llvm_func.attributes.add('alwaysinline')
             params, state, vi, vo = llvm_func.args
             for p in vi, vo:
                 p.attributes.add('nonnull')
@@ -8090,6 +8100,8 @@ class Distance(ObjectiveFunction):
             func_ty = ir.FunctionType(ctx.float_ty, (double_ptr_ty, double_ptr_ty))
             vector_length = ctx.int32_ty(self._variable_length)
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            llvm_func.attributes.add('alwaysinline')
             v1, v2 = llvm_func.args
             for a in v1,v2:
                 a.attributes.add('nonnull')
