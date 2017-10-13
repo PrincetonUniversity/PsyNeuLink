@@ -1437,7 +1437,6 @@ decision_process = process(pathway=[output_layer, decision_mech])
 my_simple_Stroop = system(processes=[colors_process, words_process,
                                      color_task_process, word_task_process, decision_process])
 
-
 # endregion
 
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
