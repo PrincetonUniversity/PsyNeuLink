@@ -1000,7 +1000,7 @@ class State_Base(State):
                 # If projection's name has not been assigned, base it on State's name:
                 if default_class_name:
                     # projection_object.name = projection_object.name.replace(default_class_name, self.name)
-                    assert(False)
+                    assert False
                     projection_object.name = self.name + '_' + projection_object.name
                     # Used for error message
                     default_string = kwDefault
@@ -1019,6 +1019,7 @@ class State_Base(State):
                 # If it is State class, instantiate default
                 else:
                     projection_spec = projection_spec()
+                    assert False
                 # Check appropriateness of State
                 _check_projection_sender_compatability(self, default_projection_type, state_type)
                 # Assign State as projections's sender (for use below)
