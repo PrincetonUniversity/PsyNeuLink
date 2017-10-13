@@ -18,16 +18,16 @@ from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechan
 # --------------------------------- Global Variables ----------------------------------------
 
 # Mode ("coherence")
-C = 0.55
+C = 0.95
 # Uncorrelated Activity
 d = 0.5
 
 # Initial values
-initial_h_of_v = 0.2
+initial_h_of_v = 0.07
 # initial_h_of_v = 0.07
 initial_v = (initial_h_of_v - (1-C)*d)/C
 # initial_w = 0.14
-initial_w=0.2
+initial_w=0.14
 
 # g(t) = G + k*w(t)
 
@@ -56,12 +56,11 @@ input_weights = np.array([[1, .33],[.33, 1]])
 # Implement self-excitatory (auto) and mutually inhibitory (hetero) connections within the decision layer
 decision_layer = GilzenratTransferMechanism(size=2,
                                             matrix=np.matrix([[1,0],[0,-1]]),
-                                            initial_value=np.array([[0.5, 0.5]]),
                                             #auto=1.0,
                                             #hetero=-1.0,
                                             time_step_size=time_step_size,
                                             noise=NormalDist(mean=0.0,standard_dev=standard_deviation).function,
-                                            function=Logistic,
+                                            function=Logistic(bias=0.0),
                                             name='DECISION LAYER')
 
 # Implement connection from target but not distractor unit in decision layer to response
@@ -70,7 +69,7 @@ output_weights = np.array([[1.84], [0]])
 # Implement response layer with a single, self-excitatory connection
 #To do Markus: specify recurrent self-connrection weight for response unit to 2.00
 response = GilzenratTransferMechanism(size=1,
-                                      initial_value=np.array([[0.5]]),
+                                      matrix=np.matrix([[2.0]]),
                                       function=Logistic(bias=2),
                                       time_step_size=time_step_size,
                                       noise=NormalDist(mean=0.0,standard_dev=standard_deviation).function,

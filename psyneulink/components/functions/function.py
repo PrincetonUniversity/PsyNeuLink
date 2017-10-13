@@ -5136,13 +5136,12 @@ class GilzenratIntegrator(
         #     previous_value = params[INITIALIZER]
         # except (TypeError, KeyError):
         previous_value = self.previous_value
-
+        
         previous_value = np.atleast_2d(previous_value)
         new_value = variable
 
         # if X equation in gilzenrat paper represents change in state of unit i over time
         value = previous_value + (-previous_value + variable)*self.time_step_size + noise
-
         adjusted_value = value + offset
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
