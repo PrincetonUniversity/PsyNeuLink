@@ -1000,6 +1000,7 @@ class State_Base(State):
                 # If projection's name has not been assigned, base it on State's name:
                 if default_class_name:
                     # projection_object.name = projection_object.name.replace(default_class_name, self.name)
+                    assert(False)
                     projection_object.name = self.name + '_' + projection_object.name
                     # Used for error message
                     default_string = kwDefault
