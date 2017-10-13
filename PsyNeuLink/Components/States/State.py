@@ -961,6 +961,7 @@ class State_Base(State):
         # - the output of its function is compatible with self.value
         connection_tuples = _parse_projection_specs(self.__class__, self.owner, projection_list)
         for connection in connection_tuples:
+
             sender, weight, exponent, projection_spec = connection
 
             # If there is more than one projection specified, construct messages for use in case of failure
@@ -995,6 +996,7 @@ class State_Base(State):
                         # FIX: REINSTATE:
                         # projection_spec.init_args['context'] = context
                         projection_spec._deferred_init()
+                        # FIX: REINSTATE:  MAY NEED TO ASSIGN DEFAULT PROJECTION HERE FOR test_danglingControlledMech
                         projection_object = projection_spec
 
 # FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
