@@ -615,7 +615,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                             #    presumes that the monitored_output_state is the first in the list of projection_specs
                             #    in the InputState state specification dictionary returned from the parse,
                             #    and that it is specified as a projection_spec (parsed into that in the call
-                            #    to _parse_projection_spec by _parse_state_spec)
+                            #    to _parse_connection_specs by _parse_state_spec)
 
                             spec = spec[PROJECTIONS][0][0]
                         # MODIFIED 9/16/17 END

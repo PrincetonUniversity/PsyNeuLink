@@ -929,9 +929,9 @@ def _is_projection_spec(spec, include_matrix_spec=True):
     Otherwise, return :keyword:`False`
     """
 
-    if inspect.isclass(spec) and issubclass(spec, Projection):
+    if isinstance(spec, (Projection, State)):
         return True
-    if isinstance(spec, Projection):
+    if inspect.isclass(spec) and issubclass(spec, (Projection, State)):
         return True
     if isinstance(spec, dict) and any(key in spec for key in {PROJECTION_TYPE, SENDER, RECEIVER, MATRIX}):
         return True
@@ -1222,7 +1222,7 @@ def _parse_connection_specs(connectee_state_type,
         # If a Mechanism, State, or str (name) is used to specify the connection on its own (i.e., w/o dict or tuple)
         #     put in tuple with default values of other specs, and call _parse_connection_specs recursively
         #     to validate the state spec and append ConnectionTuple to connect_with_states
-        if isinstance(connection, (Mechanism, State)):
+        if isinstance(connection, (Mechanism, State, type)):
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, DEFAULT_PROJECTION)
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
 
@@ -1230,7 +1230,7 @@ def _parse_connection_specs(connectee_state_type,
         #  assign the Projection specification to the projection_specification item of the tuple,
         #  but also leave it is as the connection specification (it will get resolved to a State reference when the
         #    tuple is created in the recursive call to _parse_connection_specs below).
-        if _is_projection_spec(connection, include_matrix_spec=False):
+        elif _is_projection_spec(connection, include_matrix_spec=False):
             projection_spec = connection
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
@@ -1410,6 +1410,10 @@ def _parse_connection_specs(connectee_state_type,
 
             connect_with_states.extend([ConnectionTuple(state, weight, exponent, projection_spec)])
 
+        else:
+            raise ProjectionError("Invalid or insufficient specification of connection for {}: {}".
+                                  format(owner.name, connection))
+
     if not all(isinstance(connection_tuple, ConnectionTuple) for connection_tuple in connect_with_states):
         raise ProjectionError("PROGRAM ERROR: Not all items are ConnectionTuples for {}".format(owner.name))
 
@@ -1561,7 +1565,25 @@ def _validate_connection_request(
                                      projection_socket, Projection.__name__, projection_spec))
 
     # Projection class
-    elif inspect.isclass(projection_spec):
+    elif inspect.isclass(projection_spec) and issubclass(projection_spec, State):
+        if issubclass(projection_spec, connect_with_state):
+            return True
+        raise ProjectionError("{} type specified to be connected with{} {} ({}) "
+                              "is not compatible with the {} of the specified {} ({})".
+                              format(State.__name__, connectee_str, owner.name,  projection_spec.__name__,
+                                     projection_socket, Projection.__name__, connect_with_state.__name__))
+
+    # State
+    elif isinstance(projection_spec, State):
+        if isinstance(projection_spec, connect_with_state):
+            return True
+        raise ProjectionError("{} specified to be connected with{} {} ({}) "
+                              "is not compatible with the {} of the specified {} ({})".
+                              format(State.__name__, connectee_str, owner.name,  projection_spec,
+                                     projection_socket, Projection.__name__, connect_with_state.__name__))
+
+    # State class
+    elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
         _validate_projection_type(projection_spec)
         return True
 
@@ -1579,7 +1601,7 @@ def _validate_connection_request(
                 raise ProjectionError("{} ({}) specified to be connected with{} {} is not compatible "
                                       "with the {} ({}) in the specification dict for the {}.".
                                       format(State.__name__,
-                                             connect_with_state,
+                                             connect_with_state.__name__,
                                              connectee_str,
                                              owner.name,
                                              projection_socket,
@@ -1595,7 +1617,7 @@ def _validate_connection_request(
         warnings.warn("Specification of {} ({}) for connection between {} and{} {} "
                       "cannot be fully validated.".format(Projection.__class__.__name__,
                                                           projection_spec,
-                                                          connect_with_state.name,
+                                                          connect_with_state.__name__,
                                                           connectee_str,
                                                           owner.name))
     return False
