@@ -1032,37 +1032,18 @@ class State_Base(State):
                 except KeyError:
                     projection_type = default_projection_type
                 # Get projection params from specification dict
-                try:
+                if PROJECTION_PARAMS in projection_spec:
                     projection_params = projection_spec[PROJECTION_PARAMS]
-                except KeyError:
-                    if self.prefs.verbosePref:
-                        warnings.warn("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
-                              format(item_prefix_string,
-                                     PROJECTION_PARAMS,
-                                     PROJECTIONS, state_name_string,
-                                     item_suffix_string,
-                                     default_projection_type.__class__.__name__))
-
-            # Check if projection_spec is class ref or keyword (string constant) for one
-            # Note: this gets projection_type but does NOT instantiate the projection (that happens below),
-            #       so projection is NOT yet in self.path_afferents list
-            elif isinstance(projection_spec, str):
-                projection_type, err_str = _parse_projection_keyword(projection_spec=projection_spec,context=self)
-                if err_str and self.verbosePref:
-                    warnings.warn("{0}{1} {2}; default {4} will be assigned".
-                          format(item_prefix_string,
-                                 PROJECTION_TYPE,
-                                 err_str,
-                                 PROJECTIONS,
-                                 item_suffix_string,
-                                 default_projection_type.__class__.__name__))
+                    assert False, "PROJECTION_PARAMS ({}) passed in projection_spec dict in ConnectionTuple for {}. " \
+                                  "Reinstate the following line".format(projection_params, projecion_spec, self.name)
+                    projection_spec[PARAMS].update(projection_params)
 
             # FIX: ----------------------------------------------------------------------------------------
 
 
             # INSTANTIATE Projection
 
-             # Projection is specified:
+             # Projection is specified
             if isinstance(projection_spec, Projection):
 
                 # If it is in deferred_init:
@@ -1104,10 +1085,10 @@ class State_Base(State):
             elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
                 kwargs = {RECEIVER:self,
                           SENDER: sender,
-                          NAME:self.owner.name+' '+self.name+' '+projection_type.className,
+                          NAME:self.owner.name+' '+self.name+' '+projection_spec.className,
                           WEIGHT: weight,
                           EXPONENT: exponent,
-                          PARAMS:projection_params,
+                          # PARAMS:projection_params,
                           CONTEXT:context}
                 # If the projection_spec was a State (see above) and assigned as the sender, assign to SENDER arg
                 if sender:
