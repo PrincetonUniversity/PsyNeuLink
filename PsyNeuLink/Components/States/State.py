@@ -1013,6 +1013,8 @@ class State_Base(State):
             # - default projection itself will be created below
             elif (isinstance(projection_spec, State) or
                           inspect.isclass(projection_spec) and issubclass(projection_spec, State)):
+                assert False, "State passed back as projection_spec in ConnectionTuple for {}. " \
+                              "Reinstate the following lines".format(self.name)
                 # If it is State, get its type (for check below)
                 if isinstance(projection_spec, State):
                     state_type = type(projection_spec)
@@ -1029,6 +1031,8 @@ class State_Base(State):
             # - check compatibility with projection's type
             # - default projection itself will be created below
             elif isinstance(projection_spec, Mechanism):
+                assert False, "Mechanism passed back as projection_spec in ConnectionTuple for {}. " \
+                              "Reinstate the following lines".format(self.name)
                 _check_projection_sender_compatability(self, default_projection_type, type(projection_spec))
                 # If Mechanism is a ProcessingMechanism, assign its primary OutputState as the sender
                 # (for ModulatoryProjections, don't assign sender, which will defer initialization)
@@ -1044,6 +1048,8 @@ class State_Base(State):
             #       projection is NOT yet in self.path_afferents list
             elif isinstance(projection_spec, dict):
                 # Get projection type from specification dict
+                assert False, "Dict passed back as projection_spec in ConnectionTuple for {}. " \
+                              "Reinstate the following lines".format(self.name)
                 try:
                     projection_type = projection_spec[PROJECTION_TYPE]
                     _check_projection_sender_compatability(self, default_projection_type, projection_type)
