@@ -1027,7 +1027,7 @@ def _parse_projection_specs(connectee_state_type,
                 so calling the method "_parse_projections" would be misleading.
 
     This method deals with CONNECTION specifications that are made in one of the following places/ways:
-        - *CONNECTIONS* entry of a State specification dict [SYNONYM: *PROJECTIONS* - for backward compatiability];
+        - *PROJECTIONS* entry of a State specification dict [SYNONYM: *PROJECTIONS* - for backward compatiability];
         - last item of a State specification tuple.
 
     In both cases, the CONNECTION specification can be a single (stand-alone) item or a list of them.

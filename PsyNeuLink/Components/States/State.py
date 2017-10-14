@@ -974,9 +974,15 @@ class State_Base(State):
             projection_type = None   # stores type of projection to instantiate
             projection_params = {}
 
-            # If projection_spec is a Projection object:
+            # projection_spec is a Projection object:
             if isinstance(projection_spec, Projection_Base):
+
+                # If it is in deferred_init
                 if projection_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+
+                    # ModulatoryProjections: leave as deferred, but:
+                    #    - assign to mod_afferents,
+                    #    - assign self as receiver
                     if isinstance(projection_spec, ModulatoryProjection_Base):
                         # Assign projection to mod_afferents
                         self.mod_afferents.append(projection_spec)
@@ -984,7 +990,7 @@ class State_Base(State):
                         # Skip any further initialization for now; remainder will occur as part of deferred init
                         continue
 
-                    # Complete init for other (presumably Mapping) projections
+                    # MappingProjections: complete initialization
                     else:
                         # Assume init was deferred because receiver could not be determined previously
                         #  (e.g., specified in function arg for receiver object, or as standalone projection in script)
@@ -999,34 +1005,28 @@ class State_Base(State):
 
             # FIX: 10/3/17 - CHECK WHETHER THIS IS DONE BY _parse_projection_spec
             # If projection_spec is a State or State class
-            # - check that it is appropriate for the type of projection
             # - create default instance if it is a class (it will use deferred_init since owner is not yet known)
             # - Assign to sender (for assignment as projection's sender below)
             # - default projection itself will be created below
             elif (isinstance(projection_spec, State) or
                           inspect.isclass(projection_spec) and issubclass(projection_spec, State)):
-                # If it is State, get its type (for check below)
-                    # FIX: 10/3/17 - ?? NEEDED??
-                if isinstance(projection_spec, State):
-                    state_type = type(projection_spec)
+                assert False, "State passed back as projection_spec in ConnectionTuple for {}. " \
+                              "Reinstate the following lines".format(self.name)
                 # If it is State class, instantiate default State
-                else:
-                    # FIX: 10/3/17 - DEPRECATE
+                if inspect.isclass(projection_spec) and issubclass(projection_spec, State):
                     projection_spec = projection_spec()
-                # Check appropriateness of State
-                _check_projection_sender_compatability(self, default_projection_type, state_type)
-                # Assign State as projections's sender (for use below)
                 sender = projection_spec
 
             # If projection_spec is a Mechanism:
             # - check compatibility with projection's type
             # - default projection itself will be created below
             elif isinstance(projection_spec, Mechanism):
-                _check_projection_sender_compatability(self, default_projection_type, type(projection_spec))
                 # If Mechanism is a ProcessingMechanism, assign its primary OutputState as the sender
                 # (for ModulatoryProjections, don't assign sender, which will defer initialization)
                 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism \
                 #     import ProcessingMechanism_Base
+                assert False, "Mechanism passed back as projection_spec in ConnectionTuple for {}. " \
+                              "Reinstate the following lines".format(self.name)
                 if isinstance(projection_spec, ProcessingMechanism_Base):
                     sender = projection_spec.output_state
 
@@ -1036,6 +1036,8 @@ class State_Base(State):
             # Note: this gets projection_type but does NOT not instantiate projection; so,
             #       projection is NOT yet in self.path_afferents list
             elif isinstance(projection_spec, dict):
+                assert False, "Dict passed back as projection_spec in ConnectionTuple for {}. " \
+                              "Reinstate the following lines".format(self.name)
                 # Get projection type from specification dict
                 try:
                     projection_type = projection_spec[PROJECTION_TYPE]
@@ -2020,31 +2022,6 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 #     setattr(owner, state.name+'.value', state.value)
 
     return state
-
-
-# FIX: 10/3/17 - MOVE TO PROJECTIONS / INTEGRATE WITH _parse_projection_spec
-def _check_projection_sender_compatability(owner, projection_type, sender_type):
-    from PsyNeuLink.Components.States.OutputState import OutputState
-    from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
-    from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-    from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal
-    from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-    from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-    from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
-    from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-
-    if issubclass(projection_type, MappingProjection) and issubclass(sender_type, (OutputState,
-                                                                                   ProcessingMechanism_Base)):
-        return
-    if issubclass(projection_type, LearningProjection) and issubclass(sender_type, LearningSignal):
-        return
-    if issubclass(projection_type, ControlProjection) and issubclass(sender_type, ControlSignal):
-        return
-    if issubclass(projection_type, GatingProjection) and issubclass(sender_type, GatingSignal):
-        return
-    else:
-        raise StateError("Illegal specification of a {} for {} of {}".
-                         format(sender_type, owner.__class__.__name__, owner.owner.name))
 
 
 def _parse_state_type(owner, state_spec):
