@@ -315,7 +315,7 @@ from PsyNeuLink.Components.Functions.Function import LinearCombination, Modulati
     get_param_value_for_function, get_param_value_for_keyword
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import \
-    _is_projection_spec, _parse_projection_specs, _parse_projection_ref, \
+    _is_projection_spec, _parse_connection_specs, _parse_projection_keyword, \
     _validate_connection_request, ConnectionTuple, WEIGHT, EXPONENT
 
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
@@ -886,6 +886,13 @@ class State_Base(State):
                 )
             )
 
+    # FIX: 10/3/17 - MOVE THESE TO Projection, WITH self (State) AS ADDED ARG
+    # FIX:           BOTH _instantiate_projections_to_state AND _instantiate_projections_to_state
+    # FIX:               CAN USE self AS connectee STATE, since _parse_connection_specs USES SOCKET TO RESOLVE
+    # FIX:           ALTERNATIVE: BREAK STATE FIELD OF ConnectionTuple INTO sender AND receiver FIELDS, THEN COMBINE
+    # FIX:               _instantiate_projections_to_state AND _instantiate_projections_to_state INTO ONE METHOD
+    # FIX:               MAKING CORRESPONDING ASSIGNMENTS TO send AND receiver FIELDS (WOULD BE CLEARER)
+
     def _instantiate_projections(self, projections, context=None):
         """Implement any Projection(s) to/from State specified in PROJECTIONS entry of params arg
 
@@ -955,20 +962,15 @@ class State_Base(State):
 
         default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
 
-        # PARSE Projection SPECIFICATIONS
+        # Parse each Projection specification in projection_list using self as connectee_state:
+        # - validates that Projection specification is compatible with its sender and self
+        # - returns ConnectionTuple for each Projection in projection_list
+        connection_tuples = _parse_connection_specs(self.__class__, self.owner, projection_list)
 
-        # Parse each projection specification, using self as connectee_state and instantiate each projection, insuring:
-        # - it is in self.path_afferents
-        # - the output of its function is compatible with self.value
-        proj_dict = {}
-        proj_dict[SENDER] = projection_list[0].sender.owner
-        proj_dict[RECEIVER] = projection_list[0].receiver.owner
-        proj_dict[MATRIX] = projection_list[0].matrix
-        proj_dict[WEIGHT] = 3
-        proj_dict[EXPONENT] = 5
-        # proj_dict[PROJECTION_TYPE] = MappingProjection
-        projection_list= [proj_dict]
-        connection_tuples = _parse_projection_specs(self.__class__, self.owner, projection_list)
+        # For Projection in each ConnectionTuple:
+        # - instantiate it, if necessary
+        # - assign it to self.path_afferents
+        # - insure its value is compatible with self.value
         for connection in connection_tuples:
 
             # Get projection, weight, exponent and sender State for each projection specification
@@ -981,20 +983,25 @@ class State_Base(State):
                 item_suffix_string = ""
 
             # FIX: 10/3/17 - DELETE ALL OF STUFF FOLLOWING STUFF IF ASSERTS ARE NEVER TRIGGERED: ------------------
+            #                MOVE TO _instantiate_projection METHOD IN Projection
 
             # projection_object = None # flags whether projection object has been instantiated; doesn't store object
             # projection_type = None   # stores type of projection to instantiate
             # projection_params = {}
+
+            # Projection object
+            if isinstance(projection_spec, Projection):
+                pass
 
             # FIX: 10/3/17 - CHECK WHETHER THIS IS DONE BY _parse_projection_spec
             # If projection_spec is a State or State class
             # - create default instance if it is a class (it will use deferred_init since owner is not yet known)
             # - Assign to sender (for assignment as projection's sender below)
             # - default projection itself will be created below
-            if (isinstance(projection_spec, State) or
+            elif (isinstance(projection_spec, State) or
                           inspect.isclass(projection_spec) and issubclass(projection_spec, State)):
-                assert False, "State passed back as projection_spec in ConnectionTuple for {}. " \
-                              "Reinstate the following lines".format(self.name)
+                assert False, "State ({}) passed back as projection_spec in ConnectionTuple for {}. " \
+                              "Reinstate the following lines".format(projection_spec, self.name)
                 # If it is State class, instantiate default State
                 if inspect.isclass(projection_spec) and issubclass(projection_spec, State):
                     projection_spec = projection_spec()
@@ -1008,45 +1015,22 @@ class State_Base(State):
                 # (for ModulatoryProjections, don't assign sender, which will defer initialization)
                 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism \
                 #     import ProcessingMechanism_Base
-                assert False, "Mechanism passed back as projection_spec in ConnectionTuple for {}. " \
-                              "Reinstate the following lines".format(self.name)
+                assert False, "Mechanism  ({}) passed back as projection_spec in ConnectionTuple for {}. " \
+                              "Reinstate the following lines".format(projection_spec, self.name)
                 if isinstance(projection_spec, ProcessingMechanism_Base):
                     sender = projection_spec.output_state
 
             # If projection_spec is a dict:
-            # - get projection_type
+            # - get projection_type; if it is not specified, use default for requesting State
             # - get projection_params
             # Note: this gets projection_type but does NOT not instantiate projection; so,
             #       projection is NOT yet in self.path_afferents list
             elif isinstance(projection_spec, dict):
-                assert False, "Dict passed back as projection_spec in ConnectionTuple for {}. " \
-                              "Reinstate the following lines".format(self.name)
                 # Get projection type from specification dict
                 try:
                     projection_type = projection_spec[PROJECTION_TYPE]
-                    _check_projection_sender_compatability(self, default_projection_type, projection_type)
                 except KeyError:
                     projection_type = default_projection_type
-                    if self.prefs.verbosePref:
-                        warnings.warn("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
-                              format(item_prefix_string,
-                                     PROJECTION_TYPE,
-                                     PROJECTIONS,
-                                     item_suffix_string,
-                                     default_projection_type.__class__.__name__))
-                else:
-                    # IMPLEMENTATION NOTE:  can add more informative reporting here about reason for failure
-                    projection_type, error_str = _parse_projection_ref(projection_spec=projection_type,
-                                                                       context=self)
-                    if error_str and self.prefs.verbosePref:
-                        warnings.warn("{0}{1} {2}; default {4} will be assigned".
-                              format(item_prefix_string,
-                                     PROJECTION_TYPE,
-                                     error_str,
-                                     PROJECTIONS,
-                                     item_suffix_string,
-                                     default_projection_type.__class__.__name__))
-
                 # Get projection params from specification dict
                 try:
                     projection_params = projection_spec[PROJECTION_PARAMS]
@@ -1062,11 +1046,8 @@ class State_Base(State):
             # Check if projection_spec is class ref or keyword (string constant) for one
             # Note: this gets projection_type but does NOT instantiate the projection (that happens below),
             #       so projection is NOT yet in self.path_afferents list
-            else:
-                assert False, "class ref or keyword passed back as projection_spec in ConnectionTuple for {}. " \
-                              "Reinstate the following lines".format(self.name)
-                # FIX: 10/3/17 - MOVE THIS TO _parse_projection_ref ??
-                projection_type, err_str = _parse_projection_ref(projection_spec=projection_spec,context=self)
+            elif isinstance(projection_spec, str):
+                projection_type, err_str = _parse_projection_keyword(projection_spec=projection_spec,context=self)
                 if err_str and self.verbosePref:
                     warnings.warn("{0}{1} {2}; default {4} will be assigned".
                           format(item_prefix_string,
@@ -1313,7 +1294,7 @@ class State_Base(State):
                                  default_projection_type.__class__.__name__))
             else:
                 # IMPLEMENTATION NOTE:  can add more informative reporting here about reason for failure
-                projection_type, error_str = _parse_projection_ref(projection_spec=projection_type,
+                projection_type, error_str = _parse_projection_keyword(projection_spec=projection_type,
                                                                    context=self)
                 if error_str:
                     print("{0}{1} {2}; default {4} will be assigned".
@@ -1340,7 +1321,7 @@ class State_Base(State):
         # Note: this gets projection_type but does NOT instantiate the projection,
         #       so projection is NOT yet in self.efferents list
         else:
-            projection_type, err_str = _parse_projection_ref(projection_spec=projection_spec,context=self)
+            projection_type, err_str = _parse_projection_keyword(projection_spec=projection_spec,context=self)
             if err_str:
                 print("{0}{1} {2}; default {4} will be assigned".
                       format(item_prefix_string,
@@ -2264,7 +2245,7 @@ def _parse_state_spec(state_type=None,
 
     # Projection specification (class, object, or matrix/keyword:
     #    set variable to Projection's value and assign projection specification to PROJECTIONS entry in params
-    #    FIX: 10/3/17 - HANDLE THIS IN _parse_projection_specs?? (USING projection_socket)?? (ALSO TO VALIDATE?)
+    #    FIX: 10/3/17 - HANDLE THIS IN _parse_connection_specs?? (USING projection_socket)?? (ALSO TO VALIDATE?)
     #    IMPLEMENTATION NOTE:  It is the caller's responsibility to assign the value arg
     #                          appropriately for the state being requested, for:
     #                              InputState, projection's value;
@@ -2374,7 +2355,7 @@ def _parse_state_spec(state_type=None,
                     projection_params = []
                     projection_params.extend(params[PROJECTIONS])
                     if projection_params:
-                        params[PROJECTIONS] = _parse_projection_specs(state_type, owner, projection_params)
+                        params[PROJECTIONS] = _parse_connection_specs(state_type, owner, projection_params)
                 # Update state_dict[PARAMS] with params
                 if state_dict[PARAMS] is None:
                     state_dict[PARAMS] = {}
@@ -2438,7 +2419,7 @@ def _get_existing_state(owner,
     # return Class if state_spec is:
     #    - a State class or
     #    - a projection keyword (e.g., 'LEARNING' or 'CONTROL', and it is consistent with state_type
-    ref, err_str = _parse_projection_ref(state_spec)
+    ref, err_str = _parse_projection_keyword(state_spec)
     if ref :
         if state_type.__name__ in getattr(ref.sockets, projection_socket):
             return state_type

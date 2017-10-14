@@ -569,7 +569,7 @@ CALCULATE = 'calculate'
 
 # Attributes / KVO keypaths / Params
 PROJECTION = "Projection"
-PROJECTION_TYPE = "ProjectionType"
+PROJECTION_TYPE = "PROJECTION_TYPE"
 PROJECTION_PARAMS = "ProjectionParams"
 MAPPING_PROJECTION_PARAMS = "MappingProjectionParams"
 LEARNING_PROJECTION_PARAMS = 'LearningProjectionParams'

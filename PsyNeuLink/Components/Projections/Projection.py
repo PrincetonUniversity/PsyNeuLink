@@ -318,7 +318,7 @@ from PsyNeuLink.Globals.Keywords import \
     MECHANISM, STATES, INPUT_STATE, OUTPUT_STATE, DEFERRED_INITIALIZATION, \
     PROJECTION, PROJECTION_SENDER, PROJECTION_TYPE, SENDER, RECEIVER, \
     PARAMETER_STATE_PARAMS, WEIGHT, EXPONENT, \
-    LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX_KEYWORD_SET, \
+    LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
     CONTROL, CONTROL_PROJECTION, GATING, GATING_PROJECTION, \
     kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -933,7 +933,7 @@ def _is_projection_spec(spec, include_matrix_spec=True):
         return True
     if isinstance(spec, Projection):
         return True
-    if isinstance(spec, dict) and PROJECTION_TYPE in spec:
+    if isinstance(spec, dict) and any(key in spec for key in {PROJECTION_TYPE, SENDER, RECEIVER, MATRIX}):
         return True
     if isinstance(spec, str) and spec in PROJECTION_SPEC_KEYWORDS:
         return True
@@ -1011,8 +1011,8 @@ def _is_projection_subclass(spec, keyword):
 #          (NOTE: THESE ARE DISTINCT FROM THE WEIGHT AND EXPONENT FOR THE InputState ITSELF)
 #      THIS WOULD ALLOW TWO LEVELS OF HIEARCHICAL NESTING OF ALGEBRAIC COMBINATIONS OF INPUT VALUES TO A MECHANISM
 # @tc.typecheck
-# def _parse_projection_specs(connectee_state_type:_is_state_class,
-def _parse_projection_specs(connectee_state_type,
+# def _parse_connection_specs(connectee_state_type:_is_state_class,
+def _parse_connection_specs(connectee_state_type,
                             owner,
                             # connections:tc.any(State, Mechanism, dict, tuple, ConnectionTuple)):
                             connections):
@@ -1031,6 +1031,13 @@ def _parse_projection_specs(connectee_state_type,
         - last item of a State specification tuple.
 
     In both cases, the CONNECTION specification can be a single (stand-alone) item or a list of them.
+
+    Projection(s) in connection(s) can be specified in any of the ways a Projection can be specified;
+        * Mechanism specifications are resolved to a primary InputState or OutputState, as appropriate
+        * State specifications are assumed to be for connect_with State,
+            and checked for compatibilty of assignment (using projection_socket)
+        * keyword specifications are resolved to corresponding Projection class
+        * Class assignments are checked for compatiblity with connectee_state_type and connect_with State
 
     Each CONNECTION specification can, itself, be one of the following:
         * State - must be an instantiated State;
@@ -1213,32 +1220,31 @@ def _parse_projection_specs(connectee_state_type,
         # FIX:               ?? RETURN AS IS, AND/OR PARSE INTO DICT??
 
         # If a Mechanism, State, or str (name) is used to specify the connection on its own (i.e., w/o dict or tuple)
-        #     put in tuple with default values of other specs, and call _parse_projection_specs recursively
+        #     put in tuple with default values of other specs, and call _parse_connection_specs recursively
         #     to validate the state spec and append ConnectionTuple to connect_with_states
         if isinstance(connection, (Mechanism, State)):
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, DEFAULT_PROJECTION)
-            connect_with_states.extend(_parse_projection_specs(connectee_state_type, owner, connection_tuple))
+            connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
 
         # If a Projection specification is used to specify the connection:
         #  assign the Projection specification to the projection_specification item of the tuple,
         #  but also leave it is as the connection specification (it will get resolved to a State reference when the
-        #    tuple is created in the recursive call to _parse_projection_specs below).
+        #    tuple is created in the recursive call to _parse_connection_specs below).
         if _is_projection_spec(connection, include_matrix_spec=False):
             projection_spec = connection
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
-            connect_with_states.extend(_parse_projection_specs(connectee_state_type, owner, connection_tuple))
+            connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
 
         # Dict of one or more Mechanism specifications, used to specify individual States of (each) Mechanism;
-        #   convert all entries to tuples and call _parse_projection_specs recursively to generate ConnectionTuples;
+        #   convert all entries to tuples and call _parse_connection_specs recursively to generate ConnectionTuples;
         #   main purpose of this is to resolve any str references to name of state (using context of owner Mechanism)
         elif isinstance(connection, dict):
 
             # Check that dict has at least one entry with a Mechanism as the key
             if (not any(isinstance(spec, Mechanism) for spec in connection) and
                     not any(spec == STATES for spec in connection)):
-                raise ProjectionError("There are no {}, {} or {} entries "
-                                      "in the connection specification dictionary for {}".
-                                 format(Mechanism.__name__, STATES, PROJECTION_TYPE, owner.name))
+                raise ProjectionError("There are no {} or {} entries in the connection specification dictionary for {}".
+                                 format(MECHANISM, STATES, owner.name))
 
             # Add default WEIGHT, EXPONENT, and/or PROJECTION specification for any that are not aleady in the dict
             #    (used as the default values for all the States of all Mechanisms specified for this dict;
@@ -1315,8 +1321,8 @@ def _parse_projection_specs(connectee_state_type,
                         # Reassign to new tuple
                         state_connect_spec = tuple(state_connect_spec_tuple_items)
 
-                    # Recusively call _parse_projection_specs to get ConnectionTuple and append to connect_with_states
-                    connect_with_states.extend(_parse_projection_specs(connectee_state_type, owner, state_connect_spec))
+                    # Recusively call _parse_connection_specs to get ConnectionTuple and append to connect_with_states
+                    connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, state_connect_spec))
 
         # Process tuple, including final validation of State specification
         # Tuple could be:
@@ -1363,9 +1369,33 @@ def _parse_projection_specs(connectee_state_type,
                                              state_spec.name,
                                              ConnectWith.__name__))
 
+            # Resolve any projection keywords
             # Validate projection specification
             if projection_spec is not None:
                 if _is_projection_spec(projection_spec):
+                    if isinstance(projection_spec, str):
+                        projection_spec, err_str = _parse_projection_keyword(projection_spec)
+
+                        # FIX: 10/3/17 - REINSTATE APPROPRIATE ERROR HANDLING HERE,
+                        # FIX:           OR DELETE ERROR HANDLING FROM _parse_projection_keyword
+                        #     if self.prefs.verbosePref:
+                        #         warnings.warn("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
+                        #               format(item_prefix_string,
+                        #                      PROJECTION_TYPE,
+                        #                      PROJECTIONS,
+                        #                      item_suffix_string,
+                        #                      default_projection_type.__class__.__name__))
+                        # else:
+                        #     projection_type, error_str = _parse_projection_keyword(projection_spec=projection_type,
+                        #                                                        context=self)
+                        #     if error_str and self.prefs.verbosePref:
+                        #         warnings.warn("{0}{1} {2}; default {4} will be assigned".
+                        #               format(item_prefix_string,
+                        #                      PROJECTION_TYPE,
+                        #                      error_str,
+                        #                      PROJECTIONS,
+                        #                      item_suffix_string,
+                        #                      default_projection_type.__class__.__name__))
                     _validate_connection_request(owner, ConnectWith,
                                                  projection_spec,
                                                  PROJECTION_SOCKET,
@@ -1386,7 +1416,7 @@ def _parse_projection_specs(connectee_state_type,
     return connect_with_states
 
 
-def _parse_projection_ref(projection_spec,
+def _parse_projection_keyword(projection_spec,
                           # messages=NotImplemented,
                           context=None):
     """Take projection ref and return ref to corresponding type or, if invalid, to  default for context
@@ -1420,6 +1450,7 @@ def _parse_projection_ref(projection_spec,
             elif projection_spec is GATING:
                 projection_spec = GATING_PROJECTION
 
+            # get class for keyword in registry
             try:
                 from PsyNeuLink.Components.Projections.Projection import ProjectionRegistry
                 projection_spec = ProjectionRegistry[projection_spec].subclass
@@ -1438,7 +1469,7 @@ def _parse_projection_ref(projection_spec,
             return (projection_spec, None)
         # projection_spec was class but not Projection
         else:
-            return (None, "not a Projection subclass")#
+            return (None, "not a Projection subclass")
 
 
 @tc.typecheck
@@ -1538,15 +1569,22 @@ def _validate_connection_request(
     elif isinstance(projection_spec, dict):
         # Try to validate using entry for projection_socket
         if projection_socket in projection_spec and projection_spec[projection_socket] is not None:
-            if projection_spec[projection_socket] is connect_with_state:
+            # Specification for the [projection_socket] entry (i.e., SENDER or RECEIVER)
+            #    should be either of the correct class or a Mechanism
+            #    (which assumes it will get properly resolved in context when the Projection is instantiated)
+            if (projection_spec[projection_socket] is connect_with_state or
+                    isinstance(projection_spec[projection_socket], Mechanism)):
                 return True
             else:
-                raise ProjectionError("{} specified to be connected with{} {} is not compatible "
-                                      "with the {} in the specification dict for the {} ({})".
-                                      format(State.__name__, connectee_str, owner.name,
+                raise ProjectionError("{} ({}) specified to be connected with{} {} is not compatible "
+                                      "with the {} ({}) in the specification dict for the {}.".
+                                      format(State.__name__,
+                                             connect_with_state,
+                                             connectee_str,
+                                             owner.name,
                                              projection_socket,
-                                             Projection.__name__,
-                                             projection_spec[projection_socket]))
+                                             projection_spec[projection_socket],
+                                             Projection.__name__))
         # Try to validate using entry for Projection' type
         elif PROJECTION_TYPE in projection_spec and projection_spec[PROJECTION_TYPE] is not None:
             _validate_projection_type(projection_spec[PROJECTION_TYPE])

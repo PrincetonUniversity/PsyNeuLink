@@ -293,7 +293,7 @@ from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import Modu
 from PsyNeuLink.Components.States.State import State_Base
 from PsyNeuLink.Components.States.ParameterState import _get_parameter_state
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
-from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _parse_projection_specs, ConnectionTuple
+from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _parse_connection_specs, ConnectionTuple
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import\
@@ -988,7 +988,7 @@ class ControlSignal(ModulatorySignal):
         """
         from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
         from PsyNeuLink.Components.States.ParameterState import ParameterState
-        from PsyNeuLink.Components.Projections.Projection import _parse_projection_specs
+        from PsyNeuLink.Components.Projections.Projection import _parse_connection_specs
         from PsyNeuLink.Globals.Keywords import CONNECTIONS, PROJECTIONS
 
         params_dict = {}
@@ -1043,8 +1043,8 @@ class ControlSignal(ModulatorySignal):
 
             # Assign connection specs to PROJECTIONS entry of params dict
             try:
-                # params_dict[CONNECTIONS] = _parse_projection_specs(self.__class__,
-                params_dict[PROJECTIONS] = _parse_projection_specs(self,
+                # params_dict[CONNECTIONS] = _parse_connection_specs(self.__class__,
+                params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                    owner=owner,
                                                                    connections=parameter_state)
             except ControlSignalError:

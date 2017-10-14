@@ -662,7 +662,7 @@ class InputState(State_Base):
         #      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
 
-        from PsyNeuLink.Components.States.State import _parse_projection_specs
+        from PsyNeuLink.Components.States.State import _parse_connection_specs
         from PsyNeuLink.Components.Projections.Projection import Projection
         from PsyNeuLink.Globals.Keywords import CONNECTIONS        
 
@@ -685,7 +685,7 @@ class InputState(State_Base):
 
             if projections_spec:
                 try:
-                    params_dict[PROJECTIONS] = _parse_projection_specs(self.__class__,
+                    params_dict[PROJECTIONS] = _parse_connection_specs(self.__class__,
                                                                        owner=owner,
                                                                        connections={projections_spec})
                 except InputStateError:

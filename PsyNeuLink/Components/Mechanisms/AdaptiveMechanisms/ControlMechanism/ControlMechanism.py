@@ -640,8 +640,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 # # MODIFIED 10/2/17 OLD:
                 # _parse_control_signal_spec(self, control_signal, context=context)
                 # MODIFIED 10/2/17 NEW:
-                # from PsyNeuLink.Components.Projections.Projection import _parse_projection_specs
-                # _parse_projection_specs(ControlSignal, self, control_signal)
+                # from PsyNeuLink.Components.Projections.Projection import _parse_connection_specs
+                # _parse_connection_specs(ControlSignal, self, control_signal)
                 # _parse_state_spec(self, ControlSignal, control_signal)
                 _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=control_signal)
                 # MODIFIED 10/2/17 END

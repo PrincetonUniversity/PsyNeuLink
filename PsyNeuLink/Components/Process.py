@@ -1602,7 +1602,7 @@ class Process_Base(Process):
                     # FIX: PARSE/VALIDATE ALL FORMS OF PROJECTION SPEC (ITEM PART OF TUPLE) HERE:
                     # FIX:                                                          CLASS, OBJECT, DICT, STR, TUPLE??
                     # IMPLEMENT: MOVE State._instantiate_projections_to_state(), _check_projection_receiver()
-                    #            and _parse_projection_ref() all to Projection_Base.__init__() and call that
+                    #            and _parse_projection_keyword() all to Projection_Base.__init__() and call that
                     #           VALIDATION OF PROJECTION OBJECT:
                     #                MAKE SURE IT IS A MappingProjection
                     #                CHECK THAT SENDER IS pathway[i-1][OBJECT_ITEM]
