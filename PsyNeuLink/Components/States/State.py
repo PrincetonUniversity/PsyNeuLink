@@ -955,60 +955,43 @@ class State_Base(State):
 
         default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
 
-        # FIX: 10/3/17 - MAKE SURE THAT _parse_projection_specs DOES EVERYTHING UNDER HERE:
+        # PARSE Projection SPECIFICATIONS
+
         # Parse each projection specification, using self as connectee_state and instantiate each projection, insuring:
         # - it is in self.path_afferents
         # - the output of its function is compatible with self.value
+        proj_dict = {}
+        proj_dict[SENDER] = projection_list[0].sender.owner
+        proj_dict[RECEIVER] = projection_list[0].receiver.owner
+        proj_dict[MATRIX] = projection_list[0].matrix
+        proj_dict[WEIGHT] = 3
+        proj_dict[EXPONENT] = 5
+        # proj_dict[PROJECTION_TYPE] = MappingProjection
+        projection_list= [proj_dict]
         connection_tuples = _parse_projection_specs(self.__class__, self.owner, projection_list)
         for connection in connection_tuples:
 
+            # Get projection, weight, exponent and sender State for each projection specification
             sender, weight, exponent, projection_spec = connection
 
             # If there is more than one projection specified, construct messages for use in case of failure
             if len(connection_tuples) > 1:
                 item_prefix_string = "Item {0} of projection list for {1}: ".\
-                    format(projection_list.index(projection_spec)+1, state_name_string)
+                    format(projection_list.index(projection)+1, state_name_string)
                 item_suffix_string = ""
 
-            projection_object = None # flags whether projection object has been instantiated; doesn't store object
-            projection_type = None   # stores type of projection to instantiate
-            projection_params = {}
+            # FIX: 10/3/17 - DELETE ALL OF STUFF FOLLOWING STUFF IF ASSERTS ARE NEVER TRIGGERED: ------------------
 
-            # projection_spec is a Projection object:
-            if isinstance(projection_spec, Projection_Base):
-
-                # If it is in deferred_init
-                if projection_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
-
-                    # ModulatoryProjections: leave as deferred, but:
-                    #    - assign to mod_afferents,
-                    #    - assign self as receiver
-                    if isinstance(projection_spec, ModulatoryProjection_Base):
-                        # Assign projection to mod_afferents
-                        self.mod_afferents.append(projection_spec)
-                        projection_spec.init_args[RECEIVER] = self
-                        # Skip any further initialization for now; remainder will occur as part of deferred init
-                        continue
-
-                    # MappingProjections: complete initialization
-                    else:
-                        # Assume init was deferred because receiver could not be determined previously
-                        #  (e.g., specified in function arg for receiver object, or as standalone projection in script)
-                        # Assign receiver to init_args and call _deferred_init for projection
-                        projection_spec.init_args['name'] = self.owner.name+' '+self.name+' '+projection_spec.className
-                        projection_spec.init_args[RECEIVER] = self
-                        # FIX: ??REINSTATE:
-                        # projection_spec.init_args['context'] = context
-                        projection_object = projection_spec._deferred_init()
-
-# FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
+            # projection_object = None # flags whether projection object has been instantiated; doesn't store object
+            # projection_type = None   # stores type of projection to instantiate
+            # projection_params = {}
 
             # FIX: 10/3/17 - CHECK WHETHER THIS IS DONE BY _parse_projection_spec
             # If projection_spec is a State or State class
             # - create default instance if it is a class (it will use deferred_init since owner is not yet known)
             # - Assign to sender (for assignment as projection's sender below)
             # - default projection itself will be created below
-            elif (isinstance(projection_spec, State) or
+            if (isinstance(projection_spec, State) or
                           inspect.isclass(projection_spec) and issubclass(projection_spec, State)):
                 assert False, "State passed back as projection_spec in ConnectionTuple for {}. " \
                               "Reinstate the following lines".format(self.name)
@@ -1076,19 +1059,13 @@ class State_Base(State):
                                      item_suffix_string,
                                      default_projection_type.__class__.__name__))
 
-            # FIX: 10/3/17: ADD CHECK FOR ConnectionTuple HERE AND, IF SO:
-            # FIX:      ??CALL _instantiate_projection recursively?? OR AT LEAST PARSE
-            # FIX:      ??ASSIGN WEIGHT & EXPONENT
-            elif isinstance(projection_spec, ConnectionTuple):
-                self._instantiate_projections([{SENDER: projection_spec.state,
-                                                WEIGHT: projection_spec.weight,
-                                                EXPONENT: projection_spec.exponent,
-                                                PROJECTION:projection_spec.projection}])
-
             # Check if projection_spec is class ref or keyword (string constant) for one
             # Note: this gets projection_type but does NOT instantiate the projection (that happens below),
             #       so projection is NOT yet in self.path_afferents list
             else:
+                assert False, "class ref or keyword passed back as projection_spec in ConnectionTuple for {}. " \
+                              "Reinstate the following lines".format(self.name)
+                # FIX: 10/3/17 - MOVE THIS TO _parse_projection_ref ??
                 projection_type, err_str = _parse_projection_ref(projection_spec=projection_spec,context=self)
                 if err_str and self.verbosePref:
                     warnings.warn("{0}{1} {2}; default {4} will be assigned".
@@ -1099,32 +1076,56 @@ class State_Base(State):
                                  item_suffix_string,
                                  default_projection_type.__class__.__name__))
 
+            # FIX: ----------------------------------------------------------------------------------------
 
 
-            # ----------------------------------------------------------------------------------------
+            # INSTANTIATE Projection
 
+             # Projection is specified:
+            if isinstance(projection_spec, Projection):
 
-            # If neither projection_object nor projection_type have been assigned, assign default type
-            # Note: this gets projection_type but does NOT instantiate projection; so,
-            #       projection is NOT yet in self.path_afferents list
-            if not projection_object and not projection_type:
-                    projection_type = default_projection_type
-                    if self.prefs.verbosePref:
-                        warnings.warn("{0}{1} is not a Projection object or specification for one{2}; "
-                              "default {3} will be assigned".
-                              format(item_prefix_string,
-                                     projection_spec.name,
-                                     item_suffix_string,
-                                     default_projection_type.__class__.__name__))
+                # If it is in deferred_init:
+                #  for ModulatoryProjections:
+                #    - assign self as receiver,
+                #    - assign projection to mod_afferents,
+                #    - exit
+                #  for MappingProjection:
+                #    - assign self as receiver,
+                #    - assign name
+                #    - initialize and assign to projection_spec
+                if projection_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
 
-            # If projection_object has not been assigned, instantiate projection_type
+                    # ModulatoryProjections: leave as deferred
+                    if isinstance(projection_spec, ModulatoryProjection_Base):
+                        projection_spec.init_args[RECEIVER] = self
+                        self.mod_afferents.append(projection_spec)
+                        # Skip any further initialization for now; remainder will occur as part of deferred init
+                        continue
+
+                    # MappingProjections: complete initialization
+                    else:
+                        # Assume init was deferred because receiver could not be determined previously
+                        #  (e.g., specified in function arg for receiver object, or as standalone projection in script)
+                        # Assign receiver to init_args and call _deferred_init for projection
+                        projection_spec.init_args['name'] = self.owner.name+' '+self.name+' '+projection_spec.className
+                        projection_spec.init_args[RECEIVER] = self
+                        # FIX: ??REINSTATE:
+                        # projection_spec.init_args['context'] = context
+                        projection_object = projection_spec._deferred_init()
+
+# FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
+
+            # If Projection class was specified, instantiate a default of that type
             # Note: this automatically assigns projection to self.path_afferents and to it's sender's efferents list;
-            #       when a projection is instantiated, it assigns itself to:
+            #       when the Projection is instantiated, it assigns itself to:
             #           its receiver's .path_afferents attribute (in Projection._instantiate_receiver)
             #           its sender's .efferents attribute (in Projection._instantiate_sender)
-            if not projection_object:
+            elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
                 kwargs = {RECEIVER:self,
+                          SENDER: sender,
                           NAME:self.owner.name+' '+self.name+' '+projection_type.className,
+                          WEIGHT: weight,
+                          EXPONENT: exponent,
                           PARAMS:projection_params,
                           CONTEXT:context}
                 # If the projection_spec was a State (see above) and assigned as the sender, assign to SENDER arg
@@ -1142,6 +1143,21 @@ class State_Base(State):
                           isinstance(projection_spec, ModulationParam)):
                     kwargs[PARAMS].update({MODULATION:projection_spec})
                 projection_spec = projection_type(**kwargs)
+
+
+            # If Projection was not specified:
+            #    - assign default type
+            # Note: this gets projection_type but does NOT instantiate projection; so,
+            #       projection is NOT yet in self.path_afferents list
+            else:
+                    projection_type = default_projection_type
+                    if self.prefs.verbosePref:
+                        warnings.warn("{0}{1} is not a Projection object or specification for one{2}; "
+                              "default {3} will be assigned".
+                              format(item_prefix_string,
+                                     projection_spec.name,
+                                     item_suffix_string,
+                                     default_projection_type.__class__.__name__))
 
             # Check that output of projection's function (projection_spec.value is compatible with
             #    variable of the State to which it projects;  if it is not, raise exception:

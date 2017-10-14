@@ -1236,8 +1236,9 @@ def _parse_projection_specs(connectee_state_type,
             # Check that dict has at least one entry with a Mechanism as the key
             if (not any(isinstance(spec, Mechanism) for spec in connection) and
                     not any(spec == STATES for spec in connection)):
-                raise ProjectionError("There are no {} or {} entries in the connection specification dictionary for {}".
-                                 format(Mechanism.__name__, STATES, owner.name))
+                raise ProjectionError("There are no {}, {} or {} entries "
+                                      "in the connection specification dictionary for {}".
+                                 format(Mechanism.__name__, STATES, PROJECTION_TYPE, owner.name))
 
             # Add default WEIGHT, EXPONENT, and/or PROJECTION specification for any that are not aleady in the dict
             #    (used as the default values for all the States of all Mechanisms specified for this dict;
