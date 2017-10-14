@@ -1006,10 +1006,12 @@ class State_Base(State):
             elif (isinstance(projection_spec, State) or
                           inspect.isclass(projection_spec) and issubclass(projection_spec, State)):
                 # If it is State, get its type (for check below)
+                    # FIX: 10/3/17 - ?? NEEDED??
                 if isinstance(projection_spec, State):
                     state_type = type(projection_spec)
                 # If it is State class, instantiate default State
                 else:
+                    # FIX: 10/3/17 - DEPRECATE
                     projection_spec = projection_spec()
                 # Check appropriateness of State
                 _check_projection_sender_compatability(self, default_projection_type, state_type)
@@ -1094,6 +1096,11 @@ class State_Base(State):
                                  PROJECTIONS,
                                  item_suffix_string,
                                  default_projection_type.__class__.__name__))
+
+
+
+            # ----------------------------------------------------------------------------------------
+
 
             # If neither projection_object nor projection_type have been assigned, assign default type
             # Note: this gets projection_type but does NOT instantiate projection; so,
