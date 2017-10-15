@@ -965,9 +965,11 @@ class State_Base(State):
         # # FIX: 10/3/17 - FOR DEBUGGING:
         # from PsyNeuLink.Components.States.InputState import InputState
         # from PsyNeuLink.Components.States.OutputState import OutputState
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         # # projection_list[0] = OutputState
         # projection_list[0] = projection_list[0].sender.owner
-        projection_list[0] = 'LEARNING'
+        # projection_list[0] = 'LEARNING'
+        projection_list[0] = LearningProjection
         # # FIX: RE-RERUN THE FOLLOWING LINE AT SOME POINT TO CLEAN UP ERROR MESSAGE IT GENERATES
         # projection_list[0] = projection_list[0].receiver
         # # FIX: ------------------------
@@ -993,6 +995,9 @@ class State_Base(State):
             if isinstance(projection_spec, Projection):
                 projection = projection_spec
                 projection_type = projection.__class__
+
+            if inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
+                projection_type = projection_spec
 
             # FIX: 10/3/17 - SHOULD PARSE THIS INTO Projection specification dict in _parse_connection_specs
             if is_numeric(projection_spec):
@@ -2406,6 +2411,8 @@ def _get_existing_state(owner,
     Returns State or State's type (if State has not yet been instantiated or it is specified by a keyword)
     """
 
+    from PsyNeuLink.Components.Projections.Projection import ProjectionRegistry
+
     # return State itself if it is an instantiate State
     if isinstance(state_spec, State):
         return state_spec
@@ -2414,19 +2421,25 @@ def _get_existing_state(owner,
     #    - a State class or
     #    - a projection keyword (e.g., 'LEARNING' or 'CONTROL', and it is consistent with state_type
     ref, err_str = _parse_projection_keyword(state_spec)
-    if ref :
-        if state_type.__name__ in getattr(ref.sockets, projection_socket):
+    if ref:
+        projection_socket_state_names = getattr(ref.sockets, projection_socket)
+        projection_socket_state_types = [ProjectionRegistry[name].subclass for name in projection_socket_state_names]
+        if state_type in projection_socket_state_types:
             return state_type
         elif err_str is not None:
             raise StateError("PROGRAM ERROR: A projection class or keyword ({}) was used to specify a Projection "
                              "to a {}, but {}".format(state_spec, state_type, err_str))
         # FIX: 10/3/17 - ??IS THE FOLLOWING CORRECT:
+        elif inspect.isclass(state_spec) and issubclass(state_spec, Projection):
+            state = getattr(state_spec.sockets, projection_socket)
+            if state is None:
+                state = state_type
         else:
-            raise StateError("\'{}\' was used to specify a Projection to a(n) {}."
-                             .format(state_spec, state_type.__name__, err_str))
+            assert False
+            # return state_type
 
     # Get state by name
-    elif isinstance(state_spec, str):
+    if isinstance(state_spec, str):
 
         if mech is None:
             raise StateError("PROGRAM ERROR: A {} must be specified to specify its {} ({}) by name".
