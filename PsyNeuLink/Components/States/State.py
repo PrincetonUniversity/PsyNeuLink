@@ -965,11 +965,13 @@ class State_Base(State):
         # # FIX: 10/3/17 - FOR DEBUGGING:
         # from PsyNeuLink.Components.States.InputState import InputState
         # from PsyNeuLink.Components.States.OutputState import OutputState
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-        # # projection_list[0] = OutputState
+        # from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+        from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
+        # projection_list[0] = OutputState
         # projection_list[0] = projection_list[0].sender.owner
         # projection_list[0] = 'LEARNING'
-        projection_list[0] = LearningProjection
+        # projection_list[0] = LearningSignal
+        # projection_list[0] = LearningProjection
         # # FIX: RE-RERUN THE FOLLOWING LINE AT SOME POINT TO CLEAN UP ERROR MESSAGE IT GENERATES
         # projection_list[0] = projection_list[0].receiver
         # # FIX: ------------------------
@@ -2389,17 +2391,18 @@ def _parse_state_spec(state_type=None,
 # FIX: REPLACE mech_state_attribute WITH DETERMINATION FROM state_type
 # FIX:          ONCE STATE CONNECTION CHARACTERISTICS HAVE BEEN IMPLEMENTED IN REGISTRY
 @tc.typecheck
-def _get_existing_state(owner,
+def _get_state_for_socket(owner,
                         state_spec:tc.optional(tc.any(str, State, Mechanism, _is_projection_spec))=None,
-                        state_type:tc.optional(_is_state_class)=None,
+                        state_type:tc.optional(tc.any(_is_state_class, list))=None,
                         mech:tc.optional(Mechanism)=None,
                         mech_state_attribute:tc.optional(str)=None,
                         projection_socket:tc.optional(str)=None):
-    """Take Mechanism, state name (string), or Projection and return specified State
+    """Take some combination of Mechanism, state name (string), Projection, and projection_socket, and return
+    specified State(s)
 
     If state_spec is:
-        State name (str), *mech* and *mech_state_attribute* args and must be specified
-        Mechanism, *state_spec* must be a Mechanism, and *state_type* must be specified; primary State is returned
+        State name (str), then *mech* and *mech_state_attribute* args must be specified
+        Mechanism, then *state_spec* must be a Mechanism, and *state_type* must be specified; primary State is returned
         Projection, *projection_socket* arg must be specified;
                     Projection must be instantiated or in deferred_init, with projection_socket attribute assigned
 
@@ -2408,32 +2411,41 @@ def _get_existing_state(owner,
     Currently does not support Projection specification using class or Projection specification dict
         (Projection must be instantiated, or in deferred_init status with projection_socket assigned)
 
-    Returns State or State's type (if State has not yet been instantiated or it is specified by a keyword)
+    Returns a State if it can be resolved, or list of allowed State types if not.
     """
 
-    from PsyNeuLink.Components.Projections.Projection import ProjectionRegistry
+    if not isinstance(state_type, list):
+        state_type = [state_type]
+    state_type_names = ",".join([s.__name__ for s in state_type])
 
-    # return State itself if it is an instantiate State
+    # Return State itself if it is an instantiate State
     if isinstance(state_spec, State):
         return state_spec
 
-    # return Class if state_spec is:
-    #    - a State class or
-    #    - a projection keyword (e.g., 'LEARNING' or 'CONTROL', and it is consistent with state_type
+    # Return state_type (Class) if state_spec is:
+    #    - an allowable State type for the projection_socket
+    #    - a projection keyword (e.g., 'LEARNING' or 'CONTROL', and it is consistent with projection_socket
+    # Otherwise, return list of allowable State types for projection_socket (if state_spec is a Projection type)
     ref, err_str = _parse_projection_keyword(state_spec)
     if ref:
-        projection_socket_state_names = getattr(ref.sockets, projection_socket)
-        projection_socket_state_types = [ProjectionRegistry[name].subclass for name in projection_socket_state_names]
-        if state_type in projection_socket_state_types:
-            return state_type
-        elif err_str is not None:
+        # if state_type.__name__ in getattr(ref.sockets, projection_socket):
+        s = next((s for s in state_type if s.__name__ in getattr(ref.sockets, projection_socket)), None)
+        if s:
+            return s
+        elif err_str:
             raise StateError("PROGRAM ERROR: A projection class or keyword ({}) was used to specify a Projection "
-                             "to a {}, but {}".format(state_spec, state_type, err_str))
+                             "to one of the following: {}; but {}".format(state_spec, state_type_names, err_str))
         # FIX: 10/3/17 - ??IS THE FOLLOWING CORRECT:
-        elif inspect.isclass(state_spec) and issubclass(state_spec, Projection):
-            state = getattr(state_spec.sockets, projection_socket)
-            if state is None:
-                state = state_type
+        elif inspect.isclass(ref) and issubclass(ref, Projection):
+            # state = getattr(state_spec.sockets, projection_socket)
+            # if state is None:
+            #     state = state_type
+            # return ref
+            # return getattr(state_spec.sockets, projection_socket)
+            projection_socket_state_names = getattr(ref.sockets, projection_socket)
+            # projection_socket_state_types = [ProjectionRegistry[name].subclass for name in projection_socket_state_names]
+            projection_socket_state_types = [StateRegistry[name].subclass for name in projection_socket_state_names]
+            return projection_socket_state_types
         else:
             assert False
             # return state_type
@@ -2463,6 +2475,12 @@ def _get_existing_state(owner,
         if state_type is None:
             raise StateError("PROGRAM ERROR: The type of State requested for {} must be specified "
                              "to get its primary State".format(state_spec.name))
+        if len(state_type) > 1:
+            raise StateError("PROGRAM ERROR: More than one State type specified ({}) for Mechanism ({})".
+                             format(state_type_names, state_spec.name))
+        else:
+            state_type = state_type[0]
+
         try:
             state = state_type._get_primary_state(state_type, state_spec)
         except StateError:
@@ -2472,7 +2490,7 @@ def _get_existing_state(owner,
     # Get state from Projection specification (exclude matrix spec in test as it can't be used to determine the state)
     elif _is_projection_spec(state_spec, include_matrix_spec=False):
         _validate_connection_request(owner=owner,
-                                     connect_with_state=state_type,
+                                     connect_with_states=state_type,
                                      projection_spec=state_spec,
                                      projection_socket=projection_socket)
         # MODIFIED 10/3/17 NEW:
@@ -2482,8 +2500,8 @@ def _get_existing_state(owner,
                 state = state_type
         else:
         # MODIFIED 10/3/17 END
-            state = state_type
-
+        #     state = state_type
+            return state_spec
 
     else:
         if state_spec is None:
