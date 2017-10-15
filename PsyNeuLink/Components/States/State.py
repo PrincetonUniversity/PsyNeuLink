@@ -2422,9 +2422,8 @@ def _get_existing_state(owner,
                              "to a {}, but {}".format(state_spec, state_type, err_str))
         # FIX: 10/3/17 - ??IS THE FOLLOWING CORRECT:
         else:
-            return ref
-        #     raise StateError("{} was used to specify a Projection to a(n) {}."
-        #                      .format(state_spec, state_type.__name__, err_str))
+            raise StateError("\'{}\' was used to specify a Projection to a(n) {}."
+                             .format(state_spec, state_type.__name__, err_str))
 
     # Get state by name
     elif isinstance(state_spec, str):
