@@ -1231,6 +1231,11 @@ def _parse_connection_specs(connectee_state_type,
         #  but also leave it is as the connection specification (it will get resolved to a State reference when the
         #    tuple is created in the recursive call to _parse_connection_specs below).
         elif _is_projection_spec(connection, include_matrix_spec=False):
+            # FIX: 10/3/17:  RENAME _parse_projection_keyword to _parse_projection_spec
+            # FIX:           MODIFY _parse_projection_keyword to TO ACTUALLY RESOLVE IT INTO A Projection Specification Dict
+            # FIX:           CALL _parse_projection_keyword HERE AND ASSIGN RESULT TO project_spec
+            # FIX:           ONLY ASSIGN ORIGINAL CONNECTION SPEC TO connection IF IT IS A State OR Mechanism SPEC
+            # FIX:           (i.e., NOT IF IT IS A VALUE OR STRING)
             projection_spec = connection
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
@@ -1372,6 +1377,11 @@ def _parse_connection_specs(connectee_state_type,
             # Resolve any projection keywords
             # Validate projection specification
             if projection_spec is not None:
+                # FIX: 10/3/17:  RENAME _parse_projection_keyword to _parse_projection_spec
+                # FIX:           MODIFY _parse_projection_keyword to TO ACTUALLY RESOLVE IT INTO A Project. specif. dict
+                # FIX:           CALL _parse_projection_keyword HERE AND ASSIGN RESULT TO project_spec
+                # FIX:           ONLY ASSIGN ORIGINAL CONNECTION SPEC TO connection IF IT IS A State OR Mechanism SPEC
+                # FIX:           (i.e., NOT IF IT IS A VALUE OR STRING)
                 if _is_projection_spec(projection_spec):
                     if isinstance(projection_spec, str):
                         projection_spec, err_str = _parse_projection_keyword(projection_spec)

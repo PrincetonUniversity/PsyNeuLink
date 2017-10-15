@@ -967,7 +967,7 @@ class State_Base(State):
         # from PsyNeuLink.Components.States.OutputState import OutputState
         # # projection_list[0] = OutputState
         # projection_list[0] = projection_list[0].sender.owner
-        projection_list[0] = 3
+        projection_list[0] = 'LEARNING'
         # # FIX: RE-RERUN THE FOLLOWING LINE AT SOME POINT TO CLEAN UP ERROR MESSAGE IT GENERATES
         # projection_list[0] = projection_list[0].receiver
         # # FIX: ------------------------
@@ -1104,7 +1104,7 @@ class State_Base(State):
                 if sender:
                     kwargs.update({SENDER:sender})
 
-                # FIX: 10/3/17 - ??MOVE THIS STUFF TO _parse_projection_ref??
+                # FIX: 10/3/17 - ??MOVE THIS STUFF TO _parse_projection_keyword??
                 # If the projection was specified with a keyword or attribute value
                 #     then move it to the relevant entry of the params dict for the projection
                 # If projection_spec was in the form of a matrix keyword, move it to a matrix entry in the params dict
@@ -2417,9 +2417,14 @@ def _get_existing_state(owner,
     if ref :
         if state_type.__name__ in getattr(ref.sockets, projection_socket):
             return state_type
-        else:
-            raise StateError("PROGRAM ERROR: A projection class or keyword ({}) was used to specify a Projection"
+        elif err_str is not None:
+            raise StateError("PROGRAM ERROR: A projection class or keyword ({}) was used to specify a Projection "
                              "to a {}, but {}".format(state_spec, state_type, err_str))
+        # FIX: 10/3/17 - ??IS THE FOLLOWING CORRECT:
+        else:
+            return ref
+        #     raise StateError("{} was used to specify a Projection to a(n) {}."
+        #                      .format(state_spec, state_type.__name__, err_str))
 
     # Get state by name
     elif isinstance(state_spec, str):
