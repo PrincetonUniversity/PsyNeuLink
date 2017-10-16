@@ -1101,21 +1101,20 @@ class State_Base(State):
                 #        its receiver's .path_afferents attribute (in Projection._instantiate_receiver)
                 #        its sender's .efferents attribute (in Projection._instantiate_sender)
                 kwargs = {RECEIVER:self,
-                          # SENDER: sender,
                           NAME:self.owner.name + ' ' + self.name + ' ' + projection_spec.className,
                           WEIGHT: weight,
                           EXPONENT: exponent,
                           # PARAMS:projection_params,
                           CONTEXT:context}
-                # If the projection_spec was a State (see above) and assigned as the sender, assign to SENDER arg
-                if sender:
-                    # MODIFIED 10/3/17 NEW:
-                    # If sender returned in ConnectionTuple was a class,create default instance
-                    #     (it will use deferred_init since owner is not yet known)
-                    if inspect.isclass(sender):
-                        sender = sender()
-                    # MODIFIED 10/3/17 END
-                    kwargs.update({SENDER:sender})
+                # # If the projection_spec was a State (see above) and assigned as the sender, assign to SENDER arg
+                # if sender:
+                #     # MODIFIED 10/3/17 NEW:
+                #     # If sender returned in ConnectionTuple was a class,create default instance
+                #     #     (it will use deferred_init since owner is not yet known)
+                #     if inspect.isclass(sender):
+                #         sender = sender()
+                #     # MODIFIED 10/3/17 END
+                #     kwargs.update({SENDER:sender})
 
                 # FIX: 10/3/17 - ??MOVE THIS STUFF TO _parse_projection_keyword??
                 # If the projection was specified with a keyword or attribute value
