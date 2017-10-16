@@ -23,7 +23,7 @@ https://princetonuniversity.github.io/PsyNeuLink/Component.html
 
 import inspect
 
-from psyneulink.globals.keywords import DEFAULT_PROCESSING_MECHANISM, PROJECTION_SENDER, PROJECTION_TYPE
+from psyneulink.globals.keywords import PROJECTION_SENDER, PROJECTION_TYPE
 from psyneulink.globals.registry import register_category
 
 from . import functions
@@ -90,11 +90,6 @@ register_category(entry=DDM,
 #endregion
 
 #region *************************************** ASSIGN DEFAULT MECHANISMS **********************************************
-
-
-# Use as DefaultPreferenceSetOwner if owner is not specified for ComponentPreferenceSet (in ComponentPreferenceSet)
-# Note: this must be an instantiated object
-DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=DEFAULT_PROCESSING_MECHANISM)
 
 # Specifies subclass used to instantiate a ControlMechanism if it is not specified for a System being instantiated
 # Note: must be a class
