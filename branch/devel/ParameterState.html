@@ -230,7 +230,7 @@ assigned to the argument for the parameter in the Component’s constructor.</li
 <li>In the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.assign_params" title="psyneulink.components.component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method for the Component.</li>
 </ul>
 <ul class="simple">
-<li>In the <strong>runtime_params</strong> argument of a call to component’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method.</li>
+<li>In the <strong>runtime_params</strong> argument of a call to component’s <a class="reference internal" href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.execute" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method.</li>
 </ul>
 </div></blockquote>
 <p id="parameterstate-value-specification">The specification of the initial value of a parameter can take any of the following forms:</p>
@@ -273,7 +273,7 @@ is assigned as the <code class="xref any docutils literal"><span class="pre">rec
 <p class="first admonition-title">Note</p>
 <p class="last">Currently, the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a Component, although it can be specified as a parameter
 value, cannot be assigned a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> or modified in the <strong>runtime_params</strong>
-argument of a call to a Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method. This may change in the future.</p>
+argument of a call to a Mechanism’s <a class="reference internal" href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.execute" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method. This may change in the future.</p>
 </div>
 </li>
 </ul>
@@ -286,7 +286,7 @@ of a parameter named <em>param</em> is assigned to an attribute named <code clas
 <div class="admonition note" id="parameterstates-suppression">
 <p class="first admonition-title">Note</p>
 <p class="last">If the value of a parameter is specified as <code class="xref any docutils literal"><span class="pre">NotImplemented</span></code>, or any non-numeric value that is not one of those
-listed above, then no ParameterState is created and the parameter cannot be modified by a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> or in the <strong>runtime_params</strong> argument of a call to a Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method.</p>
+listed above, then no ParameterState is created and the parameter cannot be modified by a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> or in the <strong>runtime_params</strong> argument of a call to a Mechanism’s <a class="reference internal" href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.execute" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method.</p>
 </div>
 <p class="rubric" id="parameterstate-specification-examples">Examples</p>
 <p>In the following example, a Mechanism is created by specifying two of its parameters, as well as its
