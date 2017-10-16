@@ -1106,15 +1106,15 @@ class State_Base(State):
                           EXPONENT: exponent,
                           # PARAMS:projection_params,
                           CONTEXT:context}
-                # # If the projection_spec was a State (see above) and assigned as the sender, assign to SENDER arg
-                # if sender:
-                #     # MODIFIED 10/3/17 NEW:
-                #     # If sender returned in ConnectionTuple was a class,create default instance
-                #     #     (it will use deferred_init since owner is not yet known)
-                #     if inspect.isclass(sender):
-                #         sender = sender()
-                #     # MODIFIED 10/3/17 END
-                #     kwargs.update({SENDER:sender})
+                # If the projection_spec was a State (see above) and assigned as the sender, assign to SENDER arg
+                if sender and isinstance(sender, State):
+                    # # MODIFIED 10/3/17 NEW:
+                    # # If sender returned in ConnectionTuple was a class,create default instance
+                    # #     (it will use deferred_init since owner is not yet known)
+                    # if inspect.isclass(sender):
+                    #     sender = sender()
+                    # # MODIFIED 10/3/17 END
+                    kwargs.update({SENDER:sender})
 
                 # FIX: 10/3/17 - ??MOVE THIS STUFF TO _parse_projection_keyword??
                 # If the projection was specified with a keyword or attribute value
@@ -1137,14 +1137,14 @@ class State_Base(State):
             # Note: this gets projection_type but does NOT instantiate projection; so,
             #       projection is NOT yet in self.path_afferents list
             else:
-                    projection_type = default_projection_type
-                    if self.prefs.verbosePref:
-                        warnings.warn("{0}{1} is not a Projection object or specification for one{2}; "
-                              "default {3} will be assigned".
-                              format(item_prefix_string,
-                                     projection_spec.name,
-                                     item_suffix_string,
-                                     default_projection_type.__class__.__name__))
+                projection_type = default_projection_type
+                if self.prefs.verbosePref:
+                    warnings.warn("{0}{1} is not a Projection object or specification for one{2}; "
+                          "default {3} will be assigned".
+                          format(item_prefix_string,
+                                 projection_spec.name,
+                                 item_suffix_string,
+                                 default_projection_type.__class__.__name__))
 
             # Check that output of projection's function (projection_spec.value is compatible with
             #    variable of the State to which it projects;  if it is not, raise exception:
