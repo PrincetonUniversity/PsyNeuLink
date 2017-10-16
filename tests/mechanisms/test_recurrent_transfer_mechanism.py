@@ -39,7 +39,7 @@ class TestLCA:
             print()
 
         s.run(inputs={L: [1.0, 2.0, 3.0]}, num_trials=5, call_after_trial=after_trial)
-        
+
 class TestRecurrentTransferMechanismInputs:
 
     def test_recurrent_mech_empty_spec(self):

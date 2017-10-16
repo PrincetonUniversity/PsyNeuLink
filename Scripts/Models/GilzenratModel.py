@@ -45,7 +45,7 @@ standard_deviation = 0.22*(time_step_size**0.5)
 
 # --------------------------------------------------------------------------------------------
 
-input_layer = TransferMechanism(default_variable=np.array([[1,0]]),
+input_layer = TransferMechanism(default_variable=np.array([[0,0]]),
                                 name='INPUT LAYER')
 
 # Implement projections from inputs to decision layer with weak cross-talk connections
@@ -104,7 +104,6 @@ LC = LCControlMechanism(
         ),
         modulated_mechanisms=[decision_layer, response],
         name='LC')
-from pprint import pprint
 
 for signal in LC._control_signals:
     signal._intensity = k*initial_w + G
