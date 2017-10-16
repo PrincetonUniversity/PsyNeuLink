@@ -3619,7 +3619,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         if RATE in request_set:
             rate = request_set[RATE]
             if isinstance(rate, (list, np.ndarray)) and not iscompatible(rate, self.instance_defaults.variable):
-                if len(rate) != np.array(self.instance_defaults.variable).size:
+                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign ClassDefaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
@@ -4111,6 +4111,7 @@ class LCAIntegrator(
                  noise=0.0,
                  offset=None,
                  initializer=ClassDefaults.variable,
+                 time_step_size=0.1,
                  params: tc.optional(dict)=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -4120,6 +4121,7 @@ class LCAIntegrator(
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   noise=noise,
+                                                  time_step_size=time_step_size,
                                                   offset=offset,
                                                   params=params)
 
@@ -4186,7 +4188,7 @@ class LCAIntegrator(
 
         # Compute function based on integration_type param
 
-        value = rate*previous_value + new_value + noise
+        value = previous_value + (rate*previous_value + new_value)*self.time_step_size # + noise?
 
         adjusted_value = value + offset
         # If this NOT an initialization run, update the old value
