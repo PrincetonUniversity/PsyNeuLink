@@ -1013,8 +1013,8 @@ class State_Base(State):
             # - default projection itself will be created below
             elif (isinstance(projection_spec, State) or
                           inspect.isclass(projection_spec) and issubclass(projection_spec, State)):
-                assert False, "State passed back as projection_spec in ConnectionTuple for {}. " \
-                              "Reinstate the following lines".format(self.name)
+                # assert False, "State passed back as projection_spec in ConnectionTuple for {}. " \
+                #               "Reinstate the following lines".format(self.name)
                 # If it is State, get its type (for check below)
                 if isinstance(projection_spec, State):
                     state_type = type(projection_spec)
