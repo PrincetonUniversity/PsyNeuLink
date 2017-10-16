@@ -1,5 +1,6 @@
 
-# PsyNeuLink Sytle Conventions
+# PsyNeuLink Coding and Documentation Conventions
+
 
 ### NAMING:
 
@@ -28,6 +29,18 @@ DEPRECATED:
 DEPRECATED:
     - internal keywords:
         prepend kw followed by camelCase [kwKeyword]
+
+####Errors and Warnings:
+
+warnings.warn("WARNING:..."):
+  - user's input/action may produce an unexpected outcome/behavior
+  
+raise \<Class\>Error("PROGRAM ERROR:..."):  
+  - disallowed coding practice
+  
+Assertion:  
+  - as yet unresolved/unhandled condition;  can be in devel but NOT in master (except in test scripts)
+
 
 ### GRAMMATICAL:
 

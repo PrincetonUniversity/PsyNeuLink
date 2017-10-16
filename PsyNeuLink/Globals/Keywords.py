@@ -300,6 +300,8 @@ AUTOASSOCIATIVE_LEARNING_MECHANISM = 'AutoAssociativeLearningMechanism'
 
 # States:
 INPUT_STATE = "InputState"
+PROCESS_INPUT_STATE = "ProcessInputState"
+SYSTEM_INPUT_STATE = "SystemInputState"
 PARAMETER_STATE = "ParameterState"
 OUTPUT_STATE = "OutputState"
 MODULATORY_SIGNAL = 'ModulatorySignal'
