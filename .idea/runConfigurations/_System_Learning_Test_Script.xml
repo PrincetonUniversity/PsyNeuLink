@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" factoryName="Python" folderName="OTHER CONFIGS" name="&#8226; System Learning Test Script" singleton="true" type="PythonConfigurationType">
+  <configuration default="false" name="• System Learning Test Script" type="PythonConfigurationType" factoryName="Python" folderName="OTHER CONFIGS" singleton="true">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
@@ -10,7 +10,7 @@
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <module name="" />
+    <module name="PsyNeuLink (Dropbox)" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" runner="coverage.py" sample_coverage="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Scripts/MISCELLANEOUS SCRIPTS/System Learning Test Script.py" />
     <option name="PARAMETERS" value="" />

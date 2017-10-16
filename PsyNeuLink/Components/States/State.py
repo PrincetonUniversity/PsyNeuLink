@@ -987,7 +987,7 @@ class State_Base(State):
         # - insure its value is compatible with self.value
         for connection in connection_tuples:
 
-            # Get projection, weight, exponent and sender State for each projection specification
+            # Get sender State, weight, exponent and projection for each projection specification
             sender, weight, exponent, projection_spec = connection
 
             projection = None
@@ -1096,7 +1096,14 @@ class State_Base(State):
             # Projection class
             elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
 
-                # Construct a Projection specification dicitionary using specifications in ConnectionTuple
+                # MODIFIED 10/3/17 NEW:
+                # If sender returned in ConnectionTuple was a class,create default instance
+                #     (it will use deferred_init since owner is not yet known)
+                if inspect.isclass(sender):
+                    sender = sender()
+                # MODIFIED 10/3/17 END
+
+                # Construct a Projection specification dictionary using specifications in ConnectionTuple
                 # Note:  when the Projection is instantiated, it assigns itself to
                 #        its receiver's .path_afferents attribute (in Projection._instantiate_receiver)
                 #        its sender's .efferents attribute (in Projection._instantiate_sender)

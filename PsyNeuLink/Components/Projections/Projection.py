@@ -1374,9 +1374,12 @@ def _parse_connection_specs(connectee_state_type,
                                           projection_socket=PROJECTION_SOCKET)
 
             # Check compatibility with any State(s) returned by _get_state_for_socket
-            if not isinstance(state, list):
-                state = [state]
-            for state_spec in state:
+
+            if isinstance(state, list):
+                states = state
+            else:
+                states = [state]
+            for state_spec in states:
                 if inspect.isclass(state_spec):
                     state_type = state_spec
                 else:
@@ -1546,7 +1549,8 @@ def _validate_connection_request(
     # Used below
     def _validate_projection_type(projection_class):
         # Validate that Projection's type can connect with a class in connect_with_states
-        if any(state.__name__ for state in getattr(projection_class.sockets, projection_socket)):
+        if any(state.__name__ in getattr(projection_class.sockets, projection_socket)
+               for state in connect_with_states):
             if owner.verbosePref:
                 warnings.warn("{0} specified to be connected with{1} {2} is compatible with the {3} of the "
                               "specified {4} ({5}), but the initialization of the {4} is not yet complete so "

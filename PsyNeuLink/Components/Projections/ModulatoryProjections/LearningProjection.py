@@ -428,7 +428,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
     @tc.typecheck
     def __init__(self,
-                 sender:tc.optional(tc.any(OutputState, LearningMechanism))=None,
+                 sender:tc.optional(tc.any(LearningSignal, LearningMechanism))=None,
                  receiver:tc.optional(tc.any(ParameterState, MappingProjection))=None,
                  learning_function:tc.optional(is_function_type)=BackPropagation,
                  learning_rate:tc.optional(tc.any(parameter_spec))=None,
