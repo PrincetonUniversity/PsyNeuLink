@@ -139,9 +139,9 @@ If you have trouble installing the package, or run into other problems, please c
 Tutorial
 --------
 
-:download:`Download PsyNeuLink Tutorial.ipynb <../../PsyNeuLink Tutorial.ipynb>`
+:download:`Download PsyNeuLink Tutorial.ipynb <../../tutorial/PsyNeuLink Tutorial.ipynb>`
 
-PsyNeuLink includes a tutorial, available :download:`here <../../PsyNeuLink Tutorial.ipynb>`, that provides examples of how to create basic Components
+PsyNeuLink includes a tutorial, available :download:`here <../../tutorial/PsyNeuLink Tutorial.ipynb>`, that provides examples of how to create basic Components
 in PsyNeuLink, and combine them into Processes and a System.  The examples include construction of a simple
 decision making process using a Drift Diffusion Model, a neural network model of the Stroop effect, and a
 backpropagation network for learning the XOR problem.
@@ -160,7 +160,7 @@ or if you downloaded the source:
 
 
 To access the tutorial, make sure you fulfill the requirements
-mentioned above, download the :download:`tutorial notebook <../../PsyNeuLink Tutorial.ipynb>`, then run the terminal command
+mentioned above, download the :download:`tutorial notebook <../../tutorial/PsyNeuLink Tutorial.ipynb>`, then run the terminal command
 
 ::
 
