@@ -940,6 +940,11 @@ class State_Base(State):
             if it is a MappingProjection, it is added to self.path_afferents
             if it is a LearningProjection, ControlProjection, or GatingProjection, it is added to self.mod_afferents
         If kwMStateProjections is absent or empty, no projections are created
+
+        Note:  when the Projection is instantiated, it assigns itself to
+               its receiver's .path_afferents attribute (in Projection._instantiate_receiver)
+               its sender's .efferents attribute (in Projection._instantiate_sender)
+
         """
 
         from PsyNeuLink.Components.Projections.Projection import Projection_Base, _is_projection_spec
@@ -978,17 +983,25 @@ class State_Base(State):
 
         # Parse each Projection specification in projection_list using self as connectee_state:
         # - validates that Projection specification is compatible with its sender and self
+        # - parses various other references (e.g., FIX: ADD LIST HERE XXX)
         # - returns ConnectionTuple for each Projection in projection_list
         connection_tuples = _parse_connection_specs(self.__class__, self.owner, projection_list)
 
         # For Projection in each ConnectionTuple:
-        # - instantiate it, if necessary
+        # - parse spec if necessary and instantiate the Projection
         # - assign it to self.path_afferents
         # - insure its value is compatible with self.value
         for connection in connection_tuples:
 
             # Get sender State, weight, exponent and projection for each projection specification
             sender, weight, exponent, projection_spec = connection
+
+            proj_spec_dict = {RECEIVER:self,
+                              NAME:self.owner.name + ' ' + self.name + ' ' + projection_spec.className,
+                              WEIGHT: weight,
+                              EXPONENT: exponent,
+                              CONTEXT:context}
+
 
             projection = None
             projection_type = None
@@ -998,70 +1011,7 @@ class State_Base(State):
                 projection = projection_spec
                 projection_type = projection.__class__
 
-            if inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
-                projection_type = projection_spec
-
-            # FIX: 10/3/17 - SHOULD PARSE THIS INTO Projection specification dict in _parse_connection_specs
-            if is_numeric(projection_spec):
-                pass
-
-            # FIX: 10/3/17 - SHOULD PARSE THIS INTO Projection specification dict in _parse_connection_specs
-            # State object
-            # - Assign to sender (for assignment as projection's sender below)
-            # - Projection itself will be created below
-            if isinstance(projection_spec, State):
-                # - create default instance (it will use deferred_init since owner is not yet known)
-                # - Assign to sender (for assignment as projection's sender below)
-                # - Projection itself will be created below
-                sender = projection_spec
-                # FIX: 10/3/17 - GET PROJECTION'S TYPE FROM ITS STATE AND ASSIGN AS PROJECTION_TYPE
-                # FIX:         - CREATE SPECIFICATION DICTIONARY, OR PASS IT TO HANDLING OF DICT SPEC BELOW??
-
-            # FIX: 10/3/17 - SHOULD PARSE THIS INTO Projection specification dict in _parse_connection_specs
-            # State class
-            elif inspect.isclass(projection_spec) and issubclass(projection_spec, State):
-                # - create default instance (it will use deferred_init since owner is not yet known)
-                # - Assign to sender (for assignment as projection's sender below)
-                # - Projection itself will be created below
-                sender = projection_spec()
-                # FIX: 10/3/17 - GET PROJECTION'S TYPE FROM ITS STATE AND ASSIGN AS PROJECTION_TYPE
-                # FIX:         - CREATE SPECIFICATION DICTIONARY, OR PASS IT TO HANDLING OF DICT SPEC BELOW??
-
-            # Mechanism [PROGRAM ERROR]
-            elif isinstance(projection_spec, Mechanism):
-                # If Mechanism is a ProcessingMechanism, assign its primary OutputState as the sender
-                # (for ModulatoryProjections, don't assign sender, which will defer initialization)
-                # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism \
-                #     import ProcessingMechanism_Base
-                raise StateError("Mechanism ({}) passed back as projection_spec in ConnectionTuple for {}; "
-                                 "should have been parsed into a primary State in _parse_connection_specs.".
-                                 format(projection_spec, self.name))
-                # if isinstance(projection_spec, ProcessingMechanism_Base):
-                #     sender = projection_spec.output_state
-
-            # If projection_spec is a dict:
-            # - get projection_type; if it is not specified, use default for requesting State
-            # - get projection_params
-            # Note: this gets projection_type but does NOT not instantiate projection; so,
-            #       projection is NOT yet in self.path_afferents list
-            elif isinstance(projection_spec, dict):
-                # Get projection type from specification dict
-                try:
-                    projection_type = projection_spec[PROJECTION_TYPE]
-                except KeyError:
-                    projection_type = default_projection_type
-                # Get projection params from specification dict
-                if PROJECTION_PARAMS in projection_spec:
-                    projection_params = projection_spec[PROJECTION_PARAMS]
-                    projection_spec[PARAMS].update(projection_params)
-                    assert False, "PROJECTION_PARAMS ({}) passed in projection_spec dict in ConnectionTuple for {}. ".\
-                        format(projection_params, projection_spec, self.name)
-
-            # INSTANTIATE Projection
-
-             # Projection object
-            if isinstance(projection_spec, Projection):
-
+                # FIX: FROM BELOW
                 # If it is in deferred_init:
                 #  for ModulatoryProjections:
                 #    - assign self as receiver,
@@ -1091,30 +1041,73 @@ class State_Base(State):
                         # projection_spec.init_args['context'] = context
                         projection_object = projection_spec._deferred_init()
 
+            # INSTANTIATE Projection
+
+            # Parse projection_spec and fill in relevant entries of Projection specification dictionary
+            else:
+
+                projection_type = default_projection_type
+
+                # Mechanism [PROGRAM ERROR]
+                if isinstance(projection_spec, Mechanism):
+                    # # If Mechanism is a ProcessingMechanism, assign its primary OutputState as the sender
+                    # # (for ModulatoryProjections, don't assign sender, which will defer initialization)
+                    # # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism \
+                    # #     import ProcessingMechanism_Base
+                    # Mechanism should hae been parsed into primary State in _parse_connection_specs
+                    raise StateError("Mechanism ({}) passed back as projection_spec in ConnectionTuple for {}; "
+                                     "should have been parsed into a primary State in _parse_connection_specs.".
+                                     format(projection_spec, self.name))
+
+                # Projection class
+                elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
+                    projection_type = projection_spec
+
+                # Numeric value
+                # FIX: 10/3/17 - SHOULD PARSE THIS INTO Projection specification dict in _parse_connection_specs
+                elif is_numeric(projection_spec):
+                    assert False, 'Need to handle numeric value for Projection specification'
+
+                # State object
+                if isinstance(projection_spec, State):
+                    # Assign State as sender
+                    proj_spec_dict.update({SENDER:projection_spec})
+                    # FIX: 10/3/17 - GET PROJECTION'S TYPE FROM ITS STATE AND ASSIGN AS PROJECTION_TYPE
+                    # FIX:         - CREATE SPECIFICATION DICTIONARY, OR PASS IT TO HANDLING OF DICT SPEC BELOW??
+
+                # State class
+                elif inspect.isclass(projection_spec) and issubclass(projection_spec, State):
+                    # Create default instance of state and assign as sender
+                    #    (it will use deferred_init since owner is not yet known)
+                    proj_spec_dict.update({SENDER:projection_spec()})
+                    # FIX: 10/3/17 - GET PROJECTION'S TYPE FROM ITS STATE AND ASSIGN AS PROJECTION_TYPE
+                    # FIX:         - CREATE SPECIFICATION DICTIONARY, OR PASS IT TO HANDLING OF DICT SPEC BELOW??
+
+                # Dict
+                elif isinstance(projection_spec, dict):
+                    # Get/parse entries needed to call the Projection's constructor
+
+                    # FIX: FILTER THIS TO ONLY ADD STANDARD_ARGS
+                    proj_spec_dict.update(projection_spec)
+
+                    # Get projection type from specification dict
+                    if PROJECTION_TYPE in projection_spec:
+                        projection_type = projection_spec[PROJECTION_TYPE]
+
+                    # Get projection params from specification dict
+                    if PROJECTION_PARAMS in projection_spec:
+                        projection_params = projection_spec[PROJECTION_PARAMS]
+                        # projection_spec[PARAMS].update(projection_params)
+                        assert False, "PROJECTION_PARAMS ({}) passed in spec dict in ConnectionTuple for {}. ".\
+                            format(projection_params, projection_spec, self.name)
+
+
+
 # FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
 
+            # FIX: INTEGRATE WITH ABOVE:
             # Projection class
             elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
-
-                # Construct a Projection specification dictionary using specifications in ConnectionTuple
-                # Note:  when the Projection is instantiated, it assigns itself to
-                #        its receiver's .path_afferents attribute (in Projection._instantiate_receiver)
-                #        its sender's .efferents attribute (in Projection._instantiate_sender)
-                kwargs = {RECEIVER:self,
-                          NAME:self.owner.name + ' ' + self.name + ' ' + projection_spec.className,
-                          WEIGHT: weight,
-                          EXPONENT: exponent,
-                          # PARAMS:projection_params,
-                          CONTEXT:context}
-                # If the projection_spec was a State (see above) and assigned as the sender, assign to SENDER arg
-                if sender and isinstance(sender, State):
-                    # # MODIFIED 10/3/17 NEW:
-                    # # If sender returned in ConnectionTuple was a class,create default instance
-                    # #     (it will use deferred_init since owner is not yet known)
-                    # if inspect.isclass(sender):
-                    #     sender = sender()
-                    # # MODIFIED 10/3/17 END
-                    kwargs.update({SENDER:sender})
 
                 # FIX: 10/3/17 - ??MOVE THIS STUFF TO _parse_projection_keyword??
                 # If the projection was specified with a keyword or attribute value
@@ -1129,9 +1122,6 @@ class State_Base(State):
                           isinstance(projection_spec, ModulationParam)):
                     kwargs[PARAMS].update({MODULATION:projection_spec})
 
-                projection_spec = projection_type(**kwargs)
-
-
             # If Projection was not specified:
             #    - assign default type
             # Note: this gets projection_type but does NOT instantiate projection; so,
@@ -1145,6 +1135,9 @@ class State_Base(State):
                                  projection_spec.name,
                                  item_suffix_string,
                                  default_projection_type.__class__.__name__))
+
+                projection_spec = projection_type(**proj_spec_dict)
+
 
             # Check that output of projection's function (projection_spec.value is compatible with
             #    variable of the State to which it projects;  if it is not, raise exception:
