@@ -80,7 +80,7 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import LCAIntegrator, Logistic, max_vs_avg, max_vs_next
 from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE, StandardOutputStates
-from psyneulink.globals.keywords import BETA, CALCULATE, ENERGY, ENTROPY, INITIALIZER, INITIALIZING, LCA, MEAN, MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, VARIANCE
+from psyneulink.globals.keywords import TIME_STEP_SIZE, BETA, CALCULATE, ENERGY, ENTROPY, INITIALIZER, INITIALIZING, LCA, MEAN, MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
@@ -414,6 +414,7 @@ class LCA(RecurrentTransferMechanism):
                  noise:is_numeric_or_none=0.0,
                  beta=1.0,
                  integrator_mode=True,
+                 time_step_size=0.1,
                  range=None,
                  output_states:tc.optional(tc.any(list, dict))=[RESULT],
                  time_scale=TimeScale.TRIAL,
@@ -433,6 +434,7 @@ class LCA(RecurrentTransferMechanism):
                                                   inhibition=inhibition,
                                                   beta=beta,
                                                   integrator_mode=integrator_mode,
+                                                  time_step_size=time_step_size,
                                                   output_states=output_states,
                                                   params=params)
 
@@ -514,6 +516,7 @@ class LCA(RecurrentTransferMechanism):
         beta = self.beta
         range = self.range
         noise = self.noise
+        time_step_size = self.time_step_size
 
         #endregion
         #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
@@ -529,16 +532,18 @@ class LCA(RecurrentTransferMechanism):
 
                 self.integrator_function = LCAIntegrator(
                                             variable,
-                                            initializer = self.initial_value,
-                                            noise = self.noise,
-                                            rate = self.beta,
-                                            owner = self)
+                                            initializer=self.initial_value,
+                                            noise=self.noise,
+                                            time_step_size=self.time_step_size,
+                                            rate=self.beta,
+                                            owner=self)
 
             current_input = self.integrator_function.execute(variable,
                                                         # Should we handle runtime params?
                                                               params={INITIALIZER: self.initial_value,
                                                                       NOISE: self.noise,
-                                                                      RATE: self.beta},
+                                                                      RATE: self.beta,
+                                                                      TIME_STEP_SIZE: self.time_step_size},
                                                               context=context
 
                                                              )
