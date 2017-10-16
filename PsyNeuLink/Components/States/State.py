@@ -960,18 +960,13 @@ class State_Base(State):
         if not isinstance(projection_list, list):
             projection_list = [projection_list]
 
-        state_name_string = self.name
-        item_prefix_string = ""
-        item_suffix_string = state_name_string + " ({} for {})".format(self.__class__.__name__, self.owner.name,)
-        default_string = "default "
-
         default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
 
         # # FIX: 10/3/17 - FOR DEBUGGING:
         # from PsyNeuLink.Components.States.InputState import InputState
         # from PsyNeuLink.Components.States.OutputState import OutputState
         # from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-        from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
+        # from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
         # projection_list[0] = OutputState
         # projection_list[0] = projection_list[0].sender.owner
         # projection_list[0] = 'LEARNING'
@@ -980,6 +975,7 @@ class State_Base(State):
         # # FIX: RE-RERUN THE FOLLOWING LINE AT SOME POINT TO CLEAN UP ERROR MESSAGE IT GENERATES
         # projection_list[0] = projection_list[0].receiver
         # # FIX: ------------------------
+
 
         # Parse each Projection specification in projection_list using self as connectee_state:
         # - validates that Projection specification is compatible with its sender and self
@@ -996,56 +992,54 @@ class State_Base(State):
             # Get sender State, weight, exponent and projection for each projection specification
             sender, weight, exponent, projection_spec = connection
 
-            proj_spec_dict = {RECEIVER:self,
-                              NAME:self.owner.name + ' ' + self.name + ' ' + projection_spec.className,
-                              WEIGHT: weight,
-                              EXPONENT: exponent,
-                              CONTEXT:context}
-
-
-            projection = None
-            projection_type = None
-
             # Projection object
             if isinstance(projection_spec, Projection):
+
                 projection = projection_spec
-                projection_type = projection.__class__
 
                 # If it is in deferred_init:
-                #  for ModulatoryProjections:
-                #    - assign self as receiver,
-                #    - assign projection to mod_afferents,
-                #    - exit
-                #  for MappingProjection:
-                #    - assign self as receiver,
-                #    - assign name
-                #    - initialize and assign to projection_spec
-                if projection_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+
+                    projection.init_args[RECEIVER] = self
+
+                    projection.init_args['name'] = self.owner.name + ' ' + self.name + ' ' + projection.className
 
                     # ModulatoryProjections: leave as deferred
-                    if isinstance(projection_spec, ModulatoryProjection_Base):
-                        projection_spec.init_args[RECEIVER] = self
-                        self.mod_afferents.append(projection_spec)
+                    #    - assign self as receiver,
+                    #    - assign projection to mod_afferents,
+                    #    - exit
+                    if isinstance(projection, ModulatoryProjection_Base):
+                        self.mod_afferents.append(projection)
                         # Skip any further initialization for now; remainder will occur as part of deferred init
                         continue
 
                     # MappingProjections: complete initialization
+                    #    - assign self as receiver,
+                    #    - assign name
+                    #    - initialize and assign to projection_spec
                     else:
+                        # FIX: TEST WHETHER THIS CAN BE LEFT AS DEFERRED;  IF SO, MOVE TO ABOVE
                         # Assume init was deferred because receiver could not be determined previously
                         #  (e.g., specified in function arg for receiver object, or as standalone projection in script)
                         # Assign receiver to init_args and call _deferred_init for projection
-                        projection_spec.init_args['name'] = self.owner.name+' '+self.name+' '+projection_spec.className
-                        projection_spec.init_args[RECEIVER] = self
                         # FIX: ??REINSTATE:
                         # projection_spec.init_args['context'] = context
-                        projection_object = projection_spec._deferred_init()
+                        projection = projection._deferred_init()
 
-            # INSTANTIATE Projection
+                # FIX: 10/3/17 - INTEGRATE weight and exponent INTO ANY THE Projection MAY ALREADY HAVE
+                # FIX: 10/3/17 - MAKE SURE THIS WORKS (??ARE WT & EXP ALREADY ADDED TO PROJ IN _parse_connection_specs?)
+                # FIX:           WHICH SHOULD TAKE PRECEDENCE??
+
 
             # Parse projection_spec and fill in relevant entries of Projection specification dictionary
             else:
 
                 projection_type = default_projection_type
+                proj_spec_dict = {RECEIVER:self,
+                                  NAME:self.owner.name + ' ' + self.name + ' ' + projection_spec.className,
+                                  WEIGHT: weight,
+                                  EXPONENT: exponent,
+                                  CONTEXT:context}
 
                 # Mechanism [PROGRAM ERROR]
                 if isinstance(projection_spec, Mechanism):
@@ -1062,29 +1056,27 @@ class State_Base(State):
                 elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
                     projection_type = projection_spec
 
-                # FIX: INTEGRATE WITH ABOVE: -----------------------------------------
-                # Projection class
-                elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
-
-                    # FIX: 10/3/17 - ??MOVE THIS STUFF TO _parse_projection_keyword??
-                    # If the projection was specified with a keyword or attribute value
-                    #     then move it to the relevant entry of the params dict for the projection
-                    # If projection_spec was in the form of a matrix keyword, move it to a matrix entry in the params dict
-                    if (issubclass(projection_type, PathwayProjection_Base)
-                        and (is_numeric(projection_spec) or projection_spec in MATRIX_KEYWORD_SET)):
-                        kwargs.update({MATRIX:projection_spec})
-                    # If projection_spec was in the form of a ModulationParam value,
-                    #    move it to a MODULATION entry in the params dict
-                    elif (issubclass(projection_type, ModulatoryProjection_Base) and
-                              isinstance(projection_spec, ModulationParam)):
-                        kwargs[PARAMS].update({MODULATION:projection_spec})
-                # FIX: -----------------------------------------------------------------
 
                 # Numeric value
                 # FIX: INTEGRATE WITH ABOVE??
                 # FIX: 10/3/17 - SHOULD PARSE THIS INTO Projection specification dict in _parse_connection_specs
                 elif is_numeric(projection_spec):
                     assert False, 'Need to handle numeric value for Projection specification'
+
+                    # FIX: INTEGRATE WITH ABOVE: -----------------------------------------
+                    # FIX: 10/3/17 - ??MOVE THIS STUFF TO _parse_projection_keyword??
+                    # If the projection was specified with a keyword or attribute value
+                    #     then move it to the relevant entry of the params dict for the projection
+                    # If projection_spec was in the form of a matrix keyword, move it to a matrix entry in the params dict
+                    if (issubclass(projection_type, PathwayProjection_Base)
+                        and (is_numeric(projection_spec) or projection_spec in MATRIX_KEYWORD_SET)):
+                        proj_spec_dict.update({MATRIX:projection_spec})
+                    # If projection_spec was in the form of a ModulationParam value,
+                    #    move it to a MODULATION entry in the params dict
+                    elif (issubclass(projection_type, ModulatoryProjection_Base) and
+                              isinstance(projection_spec, ModulationParam)):
+                        kwargs[PARAMS].update({MODULATION:projection_spec})
+                    # FIX: -----------------------------------------------------------------
 
                 # State object
                 if isinstance(projection_spec, State):
@@ -1116,9 +1108,6 @@ class State_Base(State):
                             format(projection_params, projection_spec, self.name)
 
 
-
-
-
 # FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
 
                 # FIX: ??CORRECT ??INTEGRATE WITH ABOVE
@@ -1127,15 +1116,10 @@ class State_Base(State):
                 # Note: this gets projection_type but does NOT instantiate projection; so,
                 #       projection is NOT yet in self.path_afferents list
                 else:
-                    projection_type = default_projection_type
                     if self.prefs.verbosePref:
-                        warnings.warn("{0}{1} is not a Projection object or specification for one{2}; "
-                              "default {3} will be assigned".
-                              format(item_prefix_string,
-                                     projection_spec.name,
-                                     item_suffix_string,
-                                     default_projection_type.__class__.__name__))
-
+                        warnings.warn("Unrecognized specification for a Projection ({}) to {} of {}; "
+                                      "default {} will be assigned".
+                                      format(projection_spec, self.name, owner.name, default_projection_type.__name__))
 
                 projection_spec = projection_type(**proj_spec_dict)
 
