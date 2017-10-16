@@ -1011,7 +1011,6 @@ class State_Base(State):
                 projection = projection_spec
                 projection_type = projection.__class__
 
-                # FIX: FROM BELOW
                 # If it is in deferred_init:
                 #  for ModulatoryProjections:
                 #    - assign self as receiver,
@@ -1063,7 +1062,26 @@ class State_Base(State):
                 elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
                     projection_type = projection_spec
 
+                # FIX: INTEGRATE WITH ABOVE: -----------------------------------------
+                # Projection class
+                elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
+
+                    # FIX: 10/3/17 - ??MOVE THIS STUFF TO _parse_projection_keyword??
+                    # If the projection was specified with a keyword or attribute value
+                    #     then move it to the relevant entry of the params dict for the projection
+                    # If projection_spec was in the form of a matrix keyword, move it to a matrix entry in the params dict
+                    if (issubclass(projection_type, PathwayProjection_Base)
+                        and (is_numeric(projection_spec) or projection_spec in MATRIX_KEYWORD_SET)):
+                        kwargs.update({MATRIX:projection_spec})
+                    # If projection_spec was in the form of a ModulationParam value,
+                    #    move it to a MODULATION entry in the params dict
+                    elif (issubclass(projection_type, ModulatoryProjection_Base) and
+                              isinstance(projection_spec, ModulationParam)):
+                        kwargs[PARAMS].update({MODULATION:projection_spec})
+                # FIX: -----------------------------------------------------------------
+
                 # Numeric value
+                # FIX: INTEGRATE WITH ABOVE??
                 # FIX: 10/3/17 - SHOULD PARSE THIS INTO Projection specification dict in _parse_connection_specs
                 elif is_numeric(projection_spec):
                     assert False, 'Need to handle numeric value for Projection specification'
@@ -1072,16 +1090,12 @@ class State_Base(State):
                 if isinstance(projection_spec, State):
                     # Assign State as sender
                     proj_spec_dict.update({SENDER:projection_spec})
-                    # FIX: 10/3/17 - GET PROJECTION'S TYPE FROM ITS STATE AND ASSIGN AS PROJECTION_TYPE
-                    # FIX:         - CREATE SPECIFICATION DICTIONARY, OR PASS IT TO HANDLING OF DICT SPEC BELOW??
 
                 # State class
                 elif inspect.isclass(projection_spec) and issubclass(projection_spec, State):
                     # Create default instance of state and assign as sender
                     #    (it will use deferred_init since owner is not yet known)
                     proj_spec_dict.update({SENDER:projection_spec()})
-                    # FIX: 10/3/17 - GET PROJECTION'S TYPE FROM ITS STATE AND ASSIGN AS PROJECTION_TYPE
-                    # FIX:         - CREATE SPECIFICATION DICTIONARY, OR PASS IT TO HANDLING OF DICT SPEC BELOW??
 
                 # Dict
                 elif isinstance(projection_spec, dict):
@@ -1103,41 +1117,31 @@ class State_Base(State):
 
 
 
+
+
 # FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
 
-            # FIX: INTEGRATE WITH ABOVE:
-            # Projection class
-            elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
+                # FIX: ??CORRECT ??INTEGRATE WITH ABOVE
+                # If Projection was not specified:
+                #    - assign default type
+                # Note: this gets projection_type but does NOT instantiate projection; so,
+                #       projection is NOT yet in self.path_afferents list
+                else:
+                    projection_type = default_projection_type
+                    if self.prefs.verbosePref:
+                        warnings.warn("{0}{1} is not a Projection object or specification for one{2}; "
+                              "default {3} will be assigned".
+                              format(item_prefix_string,
+                                     projection_spec.name,
+                                     item_suffix_string,
+                                     default_projection_type.__class__.__name__))
 
-                # FIX: 10/3/17 - ??MOVE THIS STUFF TO _parse_projection_keyword??
-                # If the projection was specified with a keyword or attribute value
-                #     then move it to the relevant entry of the params dict for the projection
-                # If projection_spec was in the form of a matrix keyword, move it to a matrix entry in the params dict
-                if (issubclass(projection_type, PathwayProjection_Base)
-                    and (is_numeric(projection_spec) or projection_spec in MATRIX_KEYWORD_SET)):
-                    kwargs.update({MATRIX:projection_spec})
-                # If projection_spec was in the form of a ModulationParam value,
-                #    move it to a MODULATION entry in the params dict
-                elif (issubclass(projection_type, ModulatoryProjection_Base) and
-                          isinstance(projection_spec, ModulationParam)):
-                    kwargs[PARAMS].update({MODULATION:projection_spec})
-
-            # If Projection was not specified:
-            #    - assign default type
-            # Note: this gets projection_type but does NOT instantiate projection; so,
-            #       projection is NOT yet in self.path_afferents list
-            else:
-                projection_type = default_projection_type
-                if self.prefs.verbosePref:
-                    warnings.warn("{0}{1} is not a Projection object or specification for one{2}; "
-                          "default {3} will be assigned".
-                          format(item_prefix_string,
-                                 projection_spec.name,
-                                 item_suffix_string,
-                                 default_projection_type.__class__.__name__))
 
                 projection_spec = projection_type(**proj_spec_dict)
 
+
+
+            # VALIDATE Projection's VALUE
 
             # Check that output of projection's function (projection_spec.value is compatible with
             #    variable of the State to which it projects;  if it is not, raise exception:
