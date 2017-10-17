@@ -1,17 +1,6 @@
 import numpy as np
-import pytest
+import psyneulink as pnl
 
-from PsyNeuLink.Components.Functions.Function import BogaczEtAl, DRIFT_RATE, Exponential, Linear, THRESHOLD
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.States.OutputState import *
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, MEAN, RESULT, VARIANCE
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet, kpReportOutputPref, kpVerbosePref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, DECISION_VARIABLE, PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
-from PsyNeuLink.Library.Subsystems.EVC.EVCControlMechanism import EVCControlMechanism
 
 def test_search_function(controller=None, **kwargs):
     result = np.array(controller.allocationPolicy).reshape(len(controller.allocationPolicy), -1)
@@ -24,47 +13,47 @@ def test_outcome_function(**kwargs):
 
 
 # Preferences:
-mechanism_prefs = ComponentPreferenceSet(
+mechanism_prefs = pnl.ComponentPreferenceSet(
     prefs={
-        kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-        kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)
+        pnl.VERBOSE_PREF: pnl.PreferenceEntry(False, pnl.PreferenceLevel.INSTANCE),
+        pnl.REPORT_OUTPUT_PREF: pnl.PreferenceEntry(True, pnl.PreferenceLevel.INSTANCE)
     }
 )
 
-process_prefs = ComponentPreferenceSet(
-    reportOutput_pref=PreferenceEntry(False, PreferenceLevel.INSTANCE),
-    verbose_pref=PreferenceEntry(True, PreferenceLevel.INSTANCE)
+process_prefs = pnl.ComponentPreferenceSet(
+    reportOutput_pref=pnl.PreferenceEntry(False, pnl.PreferenceLevel.INSTANCE),
+    verbose_pref=pnl.PreferenceEntry(True, pnl.PreferenceLevel.INSTANCE)
 )
 
 # Control Parameters
 signalSearchRange = np.arange(0.8, 2.0, 0.2)
 
 # Stimulus Mechanisms
-Target_Stim = TransferMechanism(name='Target Stimulus', function=Linear(slope=0.3324))
-Flanker_Stim = TransferMechanism(name='Flanker Stimulus', function=Linear(slope=0.3545221843))
+Target_Stim = pnl.TransferMechanism(name='Target Stimulus', function=pnl.Linear(slope=0.3324))
+Flanker_Stim = pnl.TransferMechanism(name='Flanker Stimulus', function=pnl.Linear(slope=0.3545221843))
 
 # Processing Mechanisms (Control)
-Target_Rep = TransferMechanism(
+Target_Rep = pnl.TransferMechanism(
     name='Target Representation',
-    function=Linear(
+    function=pnl.Linear(
         slope=(
             1.0,
-            ControlProjection(
-                function=Linear,
-                control_signal_params={ALLOCATION_SAMPLES: signalSearchRange}
+            pnl.ControlProjection(
+                function=pnl.Linear,
+                control_signal_params={pnl.ALLOCATION_SAMPLES: signalSearchRange}
             )
         )
     ),
     prefs=mechanism_prefs
 )
-Flanker_Rep = TransferMechanism(
+Flanker_Rep = pnl.TransferMechanism(
     name='Flanker Representation',
-    function=Linear(
+    function=pnl.Linear(
         slope=(
             1.0,
-            ControlProjection(
-                function=Linear,
-                control_signal_params={ALLOCATION_SAMPLES: signalSearchRange}
+            pnl.ControlProjection(
+                function=pnl.Linear,
+                control_signal_params={pnl.ALLOCATION_SAMPLES: signalSearchRange}
             )
         )
     ),
@@ -72,15 +61,15 @@ Flanker_Rep = TransferMechanism(
 )
 
 # Processing Mechanism (Automatic)
-Automatic_Component = TransferMechanism(
+Automatic_Component = pnl.TransferMechanism(
     name='Automatic Component',
-    function=Linear(slope=(1.0)),
+    function=pnl.Linear(slope=(1.0)),
     prefs=mechanism_prefs
 )
 
 # Decision Mechanisms
-Decision = DDM(
-    function=BogaczEtAl(
+Decision = pnl.DDM(
+    function=pnl.BogaczEtAl(
         drift_rate=(1.0),
         threshold=(0.2645),
         noise=(0.5),
@@ -90,48 +79,50 @@ Decision = DDM(
     prefs=mechanism_prefs,
     name='Decision',
     output_states=[
-        DECISION_VARIABLE,
-        RESPONSE_TIME,
-        PROBABILITY_UPPER_THRESHOLD,
-        {NAME: 'OFFSET RT',
-         INDEX: 2,
-         CALCULATE: Linear(0, slope=0.3, intercept=1).function}
+        pnl.DECISION_VARIABLE,
+        pnl.RESPONSE_TIME,
+        pnl.PROBABILITY_UPPER_THRESHOLD,
+        {
+            pnl.NAME: 'OFFSET RT',
+            pnl.INDEX: 2,
+            pnl.CALCULATE: pnl.Linear(0, slope=0.3, intercept=1).function
+        }
     ],
 )
 
 # Outcome Mechanisms:
-Reward = TransferMechanism(name='Reward')
+Reward = pnl.TransferMechanism(name='Reward')
 
 # Processes:
-TargetControlProcess = process(
+TargetControlProcess = pnl.Process(
     default_variable=[0],
     pathway=[Target_Stim, Target_Rep, Decision],
     prefs=process_prefs,
     name='Target Control Process'
 )
 
-FlankerControlProcess = process(
+FlankerControlProcess = pnl.Process(
     default_variable=[0],
     pathway=[Flanker_Stim, Flanker_Rep, Decision],
     prefs=process_prefs,
     name='Flanker Control Process'
 )
 
-TargetAutomaticProcess = process(
+TargetAutomaticProcess = pnl.Process(
     default_variable=[0],
     pathway=[Target_Stim, Automatic_Component, Decision],
     prefs=process_prefs,
     name='Target Automatic Process'
 )
 
-FlankerAutomaticProcess = process(
+FlankerAutomaticProcess = pnl.Process(
     default_variable=[0],
     pathway=[Flanker_Stim, Automatic_Component, Decision],
     prefs=process_prefs,
     name='Flanker1 Automatic Process'
 )
 
-RewardProcess = process(
+RewardProcess = pnl.Process(
     default_variable=[0],
     pathway=[Reward],
     prefs=process_prefs,
@@ -139,7 +130,7 @@ RewardProcess = process(
 )
 
 # System:
-mySystem = system(
+mySystem = pnl.System(
     processes=[
         TargetControlProcess,
         FlankerControlProcess,
@@ -147,7 +138,7 @@ mySystem = system(
         FlankerAutomaticProcess,
         RewardProcess
     ],
-    controller=EVCControlMechanism,
+    controller=pnl.EVCControlMechanism,
     enable_controller=True,
     monitor_for_control=[
         Reward,
@@ -163,8 +154,8 @@ mySystem.show()
 mySystem.controller.show()
 
 # configure EVC components
-mySystem.controller.control_signals[0].intensity_cost_function = Exponential(rate=0.8046).function
-mySystem.controller.control_signals[1].intensity_cost_function = Exponential(rate=0.8046).function
+mySystem.controller.control_signals[0].intensity_cost_function = pnl.Exponential(rate=0.8046).function
+mySystem.controller.control_signals[1].intensity_cost_function = pnl.Exponential(rate=0.8046).function
 
 for mech in mySystem.controller.prediction_mechanisms.mechanisms:
     if mech.name == 'Flanker Stimulus Prediction Mechanism' or mech.name == 'Target Stimulus Prediction Mechanism':
@@ -199,101 +190,16 @@ rewardList = reward
 # flankerInputList = np.random.choice(flankerFeatures, nTrials).tolist()
 # rewardList = (np.ones(nTrials) * reward).tolist() #np.random.choice(reward, nTrials).tolist()
 
-stim_list_dict = {Target_Stim: targetInputList,
-                  Flanker_Stim: flankerInputList,
-                  Reward: rewardList}
+stim_list_dict = {
+    Target_Stim: targetInputList,
+    Flanker_Stim: flankerInputList,
+    Reward: rewardList
+}
 
 mySystem.controller.reportOutputPref = True
 
-expected_results_array = [
-    0.2645, 0.32257753, 0.94819408, 100.,
-    0.2645, 0.31663196, 0.95508757, 100.,
-    0.2645, 0.31093566, 0.96110142, 100.,
-    0.2645, 0.30548947, 0.96633839, 100.,
-    0.2645, 0.30029103, 0.97089165, 100.,
-    0.2645, 0.3169957, 0.95468427, 100.,
-    0.2645, 0.31128378, 0.9607499, 100.,
-    0.2645, 0.30582202, 0.96603252, 100.,
-    0.2645, 0.30060824, 0.9706259, 100.,
-    0.2645, 0.29563774, 0.97461444, 100.,
-    0.2645, 0.31163288, 0.96039533, 100.,
-    0.2645, 0.30615555, 0.96572397, 100.,
-    0.2645, 0.30092641, 0.97035779, 100.,
-    0.2645, 0.2959409, 0.97438178, 100.,
-    0.2645, 0.29119255, 0.97787196, 100.,
-    0.2645, 0.30649004, 0.96541272, 100.,
-    0.2645, 0.30124552, 0.97008732, 100.,
-    0.2645, 0.29624499, 0.97414704, 100.,
-    0.2645, 0.29148205, 0.97766847, 100.,
-    0.2645, 0.28694892, 0.98071974, 100.,
-    0.2645, 0.30156558, 0.96981445, 100.,
-    0.2645, 0.29654999, 0.97391021, 100.,
-    0.2645, 0.29177245, 0.97746315, 100.,
-    0.2645, 0.28722523, 0.98054192, 100.,
-    0.2645, 0.28289958, 0.98320731, 100.,
-    0.2645, 0.28289958, 0.98320731, 100.,
-    0.2645, 0.42963678, 0.47661181, 100.,
-    0.2645, 0.42846471, 0.43938586, 100.,
-    -0.2645, 0.42628176, 0.40282965, 100.,
-    0.2645, 0.42314468, 0.36732207, 100.,
-    -0.2645, 0.41913221, 0.333198, 100.,
-    0.2645, 0.42978939, 0.51176048, 100.,
-    0.2645, 0.42959394, 0.47427693, 100.,
-    -0.2645, 0.4283576, 0.43708106, 100.,
-    0.2645, 0.4261132, 0.40057958, 100.,
-    -0.2645, 0.422919, 0.36514906, 100.,
-    0.2645, 0.42902209, 0.54679323, 100.,
-    0.2645, 0.42980788, 0.50942101, 100.,
-    -0.2645, 0.42954704, 0.47194318, 100.,
-    -0.2645, 0.42824656, 0.43477897, 100.,
-    0.2645, 0.42594094, 0.3983337, 100.,
-    -0.2645, 0.42735293, 0.58136855, 100.,
-    -0.2645, 0.42910149, 0.54447221, 100.,
-    0.2645, 0.42982229, 0.50708112, 100.,
-    -0.2645, 0.42949608, 0.46961065, 100.,
-    -0.2645, 0.42813159, 0.43247968, 100.,
-    -0.2645, 0.42482049, 0.61516258, 100.,
-    0.2645, 0.42749136, 0.57908829, 100.,
-    0.2645, 0.42917687, 0.54214925, 100.,
-    -0.2645, 0.42983261, 0.50474093, 100.,
-    -0.2645, 0.42944107, 0.46727945, 100.,
-    -0.2645, 0.42944107, 0.46727945, 100.,
-    0.2645, 0.32257753, 0.94819408, 100.,
-    0.2645, 0.31663196, 0.95508757, 100.,
-    0.2645, 0.31093566, 0.96110142, 100.,
-    0.2645, 0.30548947, 0.96633839, 100.,
-    0.2645, 0.30029103, 0.97089165, 100.,
-    0.2645, 0.3169957, 0.95468427, 100.,
-    0.2645, 0.31128378, 0.9607499, 100.,
-    0.2645, 0.30582202, 0.96603252, 100.,
-    0.2645, 0.30060824, 0.9706259, 100.,
-    0.2645, 0.29563774, 0.97461444, 100.,
-    0.2645, 0.31163288, 0.96039533, 100.,
-    0.2645, 0.30615555, 0.96572397, 100.,
-    0.2645, 0.30092641, 0.97035779, 100.,
-    0.2645, 0.2959409, 0.97438178, 100.,
-    0.2645, 0.29119255, 0.97787196, 100.,
-    0.2645, 0.30649004, 0.96541272, 100.,
-    0.2645, 0.30124552, 0.97008732, 100.,
-    0.2645, 0.29624499, 0.97414704, 100.,
-    0.2645, 0.29148205, 0.97766847, 100.,
-    0.2645, 0.28694892, 0.98071974, 100.,
-    0.2645, 0.30156558, 0.96981445, 100.,
-    0.2645, 0.29654999, 0.97391021, 100.,
-    0.2645, 0.29177245, 0.97746315, 100.,
-    0.2645, 0.28722523, 0.98054192, 100.,
-    0.2645, 0.28289958, 0.98320731, 100.,
-    0.2645, 0.28289958, 0.98320731, 100.,
-]
 
 mySystem.run(
     num_trials=nTrials,
     inputs=stim_list_dict,
-)
-
-np.testing.assert_allclose(
-    pytest.helpers.expand_np_ndarray(mySystem.results),
-    expected_results_array,
-    atol=1e-08,
-    verbose=True,
 )
