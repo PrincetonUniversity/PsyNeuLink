@@ -969,7 +969,7 @@ class State_Base(State):
         # from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
         # projection_list[0] = OutputState
         # projection_list[0] = projection_list[0].sender.owner
-        # projection_list[0] = 'LEARNING'
+        projection_list[0] = 'LEARNING'
         # projection_list[0] = LearningSignal
         # projection_list[0] = LearningProjection
         # # FIX: RE-RERUN THE FOLLOWING LINE AT SOME POINT TO CLEAN UP ERROR MESSAGE IT GENERATES
