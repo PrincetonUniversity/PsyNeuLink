@@ -36,7 +36,7 @@ warnings.warn("WARNING:..."):
   - user's input/action may produce an unexpected outcome/behavior
   
 raise \<Class\>Error("PROGRAM ERROR:..."):  
-  - disallowed coding practice
+  - disallowed coding practice or PsyNeuLink problem
   
 Assertion:  
   - as yet unresolved/unhandled condition;  can be in devel but NOT in master (except in test scripts)

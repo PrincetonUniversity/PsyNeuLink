@@ -974,6 +974,7 @@ class State_Base(State):
         # projection_list[0] = LearningProjection
         # # FIX: RE-RERUN THE FOLLOWING LINE AT SOME POINT TO CLEAN UP ERROR MESSAGE IT GENERATES
         # projection_list[0] = projection_list[0].receiver
+        # projection_list[0] = 3
         # # FIX: ------------------------
 
 
@@ -997,48 +998,43 @@ class State_Base(State):
 
                 projection = projection_spec
 
+                # FIX: Not sure which to give precedent, spec in instantiated Projection or ConnectionTuple:
+                if ((weight is not None and projection.weight is not None) or
+                    (exponent is not None and projection.exponent is not None)):
+                    assert False, "Conflict in weight and/or exponent specs between Projection and ConnectionTuple"
+                projection.weight = weight or projection.weight
+                projection.exponent = exponent or projection.exponent
+
                 # If it is in deferred_init:
                 if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
 
                     projection.init_args[RECEIVER] = self
-
-                    projection.init_args['name'] = self.owner.name + ' ' + self.name + ' ' + projection.className
-
-                    # ModulatoryProjections: leave as deferred
-                    #    - assign self as receiver,
-                    #    - assign projection to mod_afferents,
-                    #    - exit
-                    if isinstance(projection, ModulatoryProjection_Base):
+                    projection.init_args['name'] = projection.init_args['name'] or \
+                                                   self.owner.name + ' ' + self.name + ' ' + projection.className
+                    if isinstance(projection, PathwayProjection_Base):
                         self.mod_afferents.append(projection)
-                        # Skip any further initialization for now; remainder will occur as part of deferred init
-                        continue
-
-                    # MappingProjections: complete initialization
-                    #    - assign self as receiver,
-                    #    - assign name
-                    #    - initialize and assign to projection_spec
+                    elif isinstance(projection, ModulatoryProjection_Base):
+                        self.mod_afferents.append(projection)
                     else:
-                        # FIX: TEST WHETHER THIS CAN BE LEFT AS DEFERRED;  IF SO, MOVE TO ABOVE
-                        # Assume init was deferred because receiver could not be determined previously
-                        #  (e.g., specified in function arg for receiver object, or as standalone projection in script)
-                        # Assign receiver to init_args and call _deferred_init for projection
-                        # FIX: ??REINSTATE:
-                        # projection_spec.init_args['context'] = context
-                        projection = projection._deferred_init()
-
-                # FIX: 10/3/17 - INTEGRATE weight and exponent INTO ANY THE Projection MAY ALREADY HAVE
-                # FIX: 10/3/17 - MAKE SURE THIS WORKS (??ARE WT & EXP ALREADY ADDED TO PROJ IN _parse_connection_specs?)
-                # FIX:           WHICH SHOULD TAKE PRECEDENCE??
-
+                        raise StateError("PROGRAM ERROR: Projection type ({}) is not {} or {}".
+                                         format(projection.__class__.__name__,
+                                                PathwayProjection_Base.__name__,
+                                                ModulatoryProjection_Base))
+                    # Skip any further initialization for now; remainder will occur as part of deferred init
+                    continue
 
             # Parse projection_spec and fill in relevant entries of Projection specification dictionary
             else:
 
+                # FIX: 10/3/17 - ALL OF THE BELOW SHOULD BE IN _parse_projection_spec,
+                # FIX:           AND CALLED IN _parse_connection_specs
+
+                # Assign defaults
                 projection_type = default_projection_type
                 proj_spec_dict = {RECEIVER:self,
-                                  NAME:self.owner.name + ' ' + self.name + ' ' + projection_spec.className,
                                   WEIGHT: weight,
                                   EXPONENT: exponent,
+                                  NAME: self.owner.name + ' ' + self.name + ' ' + projection_type.__name__,
                                   CONTEXT:context}
 
                 # Mechanism [PROGRAM ERROR]
@@ -1055,11 +1051,11 @@ class State_Base(State):
                 # Projection class
                 elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
                     projection_type = projection_spec
-
+                    proj_spec_dict[NAME] = self.owner.name + ' ' + self.name + ' ' + projection_spec.__name__
 
                 # Numeric value
                 # FIX: INTEGRATE WITH ABOVE??
-                # FIX: 10/3/17 - SHOULD PARSE THIS INTO Projection specification dict in _parse_connection_specs
+                # FIX: 10/3/17 - SHOULD BE PARSED IN _parse_connection_specs IN CALL TO _parse_projection_spec
                 elif is_numeric(projection_spec):
                     assert False, 'Need to handle numeric value for Projection specification'
 
@@ -1078,11 +1074,13 @@ class State_Base(State):
                         kwargs[PARAMS].update({MODULATION:projection_spec})
                     # FIX: -----------------------------------------------------------------
 
+                # FIX: 10/3/17 - SHOULD BE PARSED IN _parse_connection_specs IN CALL TO _parse_projection_spec
                 # State object
-                if isinstance(projection_spec, State):
+                elif isinstance(projection_spec, State):
                     # Assign State as sender
                     proj_spec_dict.update({SENDER:projection_spec})
 
+                # FIX: 10/3/17 - SHOULD BE PARSED IN _parse_connection_specs IN CALL TO _parse_projection_spec
                 # State class
                 elif inspect.isclass(projection_spec) and issubclass(projection_spec, State):
                     # Create default instance of state and assign as sender
@@ -1178,6 +1176,7 @@ class State_Base(State):
                                     projection_spec.value,
                                     item_suffix_string,
                                     self.value))
+        TEST = True
 
     def _instantiate_projection_from_state(self, projection_spec, receiver, context=None):
         """Instantiate outgoing projection from a State and assign it to self.efferents

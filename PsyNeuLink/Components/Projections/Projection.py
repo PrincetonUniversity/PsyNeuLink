@@ -315,7 +315,7 @@ import warnings
 from PsyNeuLink.Components.Component import Component, InitStatus
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
 from PsyNeuLink.Globals.Keywords import \
-    MECHANISM, STATES, INPUT_STATE, OUTPUT_STATE, DEFERRED_INITIALIZATION, \
+    NAME, CONTEXT, MECHANISM, STATES, INPUT_STATE, OUTPUT_STATE, DEFERRED_INITIALIZATION, \
     PROJECTION, PROJECTION_SENDER, PROJECTION_TYPE, SENDER, RECEIVER, \
     PARAMETER_STATE_PARAMS, WEIGHT, EXPONENT, \
     LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
@@ -515,7 +515,7 @@ class Projection_Base(Projection):
         This is an abstract class, and can only be called from a subclass;
            it must be called by the subclass with a context value
 
-# DOCUMENT:  MOVE TO ABOVE, UNDER INSTANTIATION
+        # DOCUMENT:  MOVE TO ABOVE, UNDER INSTANTIATION
         Initialization arguments:
             - sender (Mechanism, State or dict):
                 specifies source of input to Projection (default: senderDefault)
@@ -581,11 +581,15 @@ class Projection_Base(Projection):
                           registry=self._stateRegistry,
                           context=context)
 
+        params = self._assign_args_to_param_dicts(weight=weight,
+                                                  exponent=exponent,
+                                                  params=params)
+
         try:
             if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
                 self.init_args = locals().copy()
-                self.init_args['context'] = self
-                self.init_args['name'] = name
+                self.init_args[CONTEXT] = self
+                self.init_args[NAME] = name
 
                 # remove local imports
                 del self.init_args['ParameterState']
@@ -604,6 +608,7 @@ class Projection_Base(Projection):
 
         self.sender = sender
         self.receiver = receiver
+
 
 # MODIFIED 6/12/16:  VARIABLE & SENDER ASSIGNMENT MESS:
         # ADD _validate_variable, THAT CHECKS FOR SENDER?
@@ -1388,12 +1393,12 @@ def _parse_connection_specs(connectee_state_type,
                 if not any(issubclass(connects_with_state, state_type) for connects_with_state in ConnectsWith):
                     spec = projection_spec or state_type.__name__
                     raise ProjectionError("Projection specification (\'{}\') for an incompatible connection: "
-                                          "{} with {} of {} ; should be a(n) {}".
+                                          "{} with {} of {} ; should be one of the following: {}".
                                           format(spec,
                                                  state_type.__name__,
                                                  connectee_state_type.__name__,
                                                  owner.name,
-                                                 ",".join([c.__name__ for c in connect_with_states])))
+                                                 ", ".join([c.__name__ for c in ConnectsWith])))
 
             # Resolve any projection keywords
             # Validate projection specification
@@ -1443,7 +1448,7 @@ def _parse_connection_specs(connectee_state_type,
             connect_with_states.extend([ConnectionTuple(state, weight, exponent, projection_spec)])
 
         else:
-            raise ProjectionError("Invalid or insufficient specification of connection for {}: {}".
+            raise ProjectionError("Invalid or insufficient specification of connection for {}: \'{}\'".
                                   format(owner.name, connection))
 
     if not all(isinstance(connection_tuple, ConnectionTuple) for connection_tuple in connect_with_states):
@@ -1544,7 +1549,7 @@ def _validate_connection_request(
         connectee_str =  ""
 
     connect_with_states = tuple(connect_with_states)
-    connect_with_state_names = ",".join([c.__name__ for c in connect_with_states])
+    connect_with_state_names = ", ".join([c.__name__ for c in connect_with_states])
 
     # Used below
     def _validate_projection_type(projection_class):
