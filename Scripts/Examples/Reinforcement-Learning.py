@@ -1,80 +1,76 @@
-import random
-
+import functools
 import numpy as np
+import psyneulink as pnl
 
-from psyneulink.components.functions.function import PROB
-from psyneulink.components.functions.function import Reinforcement, SoftMax
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-from psyneulink.components.system import System
-from psyneulink.scheduling.timescale import CentralClock
+input_layer = pnl.TransferMechanism(
+    default_variable=[0, 0, 0],
+    name='Input Layer'
+)
 
-random.seed(0)
-np.random.seed(0)
+action_selection = pnl.TransferMechanism(
+    default_variable=[0, 0, 0],
+    function=pnl.SoftMax(
+        output=pnl.PROB,
+        gain=1.0
+    ),
+    name='Action Selection'
+)
 
-input_layer = TransferMechanism(default_variable=[0,0,0],
-                       name='Input Layer')
+p = pnl.Process(
+    default_variable=[0, 0, 0],
+    pathway=[input_layer, action_selection],
+    learning=pnl.LearningProjection(learning_function=pnl.Reinforcement(learning_rate=0.05)),
+    target=0
+)
 
-action_selection = TransferMechanism(default_variable=[0,0,0],
-                            function=SoftMax(output=PROB,
-                                             gain=1.0),
-                            name='Action Selection')
-
-p = Process(default_variable=[0, 0, 0],
-            pathway=[input_layer,action_selection],
-            # learning=LearningProjection(learning_function=Reinforcement()),
-            # learning=LearningProjection(learning_function=Reinforcement(learning_rate=None)),
-            # learning=LearningProjection(learning_function=Reinforcement(learning_rate=0.0)),
-            learning=LearningProjection(learning_function=Reinforcement(learning_rate=0.05)),
-            target=0)
-
-print ('reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
-print ('target_mechanism weights: \n', action_selection.output_state.efferents[0].matrix)
+print('reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
+print('target_mechanism weights: \n', action_selection.output_state.efferents[0].matrix)
 
 actions = ['left', 'middle', 'right']
-# reward_values = [15, 7, 13]
-reward_values =[10, 10, 10]
-# reward_values = [2.4, 0.1, 1.5]
+reward_values = [10, 10, 10]
 first_reward = 0
 
 # Must initialize reward (won't be used, but needed for declaration of lambda function)
 action_selection.output_state.value = [0, 0, 1]
 # Get reward value for selected action)
-reward = lambda : [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
 
-def print_header():
-    print("\n\n**** TRIAL: ", CentralClock.trial)
+
+def reward():
+    return [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
+
+
+def print_header(system):
+    print("\n\n**** TRIAL: ", system.scheduler_processing.times[pnl.TimeScale.RUN][pnl.TimeScale.TRIAL])
+
 
 def show_weights():
-    # print ('\nreward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
-    # print ('action selected: ', action_selection.outputState.value)
-    print ('Reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
-    print ('\nAction selected:  {}; predicted reward: {}'.
-           format(np.nonzero(action_selection.output_state.value)[0][0],
-           action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]))
+    print('Reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
+    print(
+        '\nAction selected:  {}; predicted reward: {}'.format(
+            np.nonzero(action_selection.output_state.value)[0][0],
+            action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]
+        )
+    )
 
-p.run(num_trials=10,
-      inputs=[[[1, 1, 1]]],
-      # inputs=[ [ [1, 1, 1] ],[ [.2, 1, .2] ]],
-      # inputs={input_layer:[[1, 1, 1],[.2, 1, .2]]},
-      targets=reward,
-      call_before_trial=print_header,
-      call_after_trial=show_weights
-      )
 
-input_list = {input_layer:[[1, 1, 1]]}
+p.run(
+    num_trials=10,
+    inputs=[[[1, 1, 1]]],
+    targets=reward,
+    call_after_trial=show_weights
+)
 
-s = System(processes=[p],
-           # learning_rate=0.05,
-           targets=[0])
+input_list = {input_layer: [[1, 1, 1]]}
 
-s.run(num_trials=10,
-      # inputs=[[1, 1, 1]],
-      # inputs=[[1, 1, 1],[.2, 1, .2 ]],
-      # inputs=[ [[1, 1, 1] ],[ [.2, 1, .2] ]],
-      inputs=input_list,
-      targets=reward,
-      call_before_trial=print_header,
-      call_after_trial=show_weights
-      )
+s = pnl.System(
+    processes=[p],
+    targets=[0]
+)
+
+s.run(
+    num_trials=10,
+    inputs=input_list,
+    targets=reward,
+    call_before_trial=functools.partial(print_header, s),
+    call_after_trial=show_weights
+)

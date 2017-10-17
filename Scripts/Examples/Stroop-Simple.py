@@ -1,119 +1,138 @@
+import functools
 import numpy as np
-from psyneulink.components.process import Process
-from psyneulink.components.functions.function import Linear, Logistic
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.system import *
-from psyneulink.globals.keywords import *
-from psyneulink.globals.environment import CentralClock
-from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
+import psyneulink as pnl
 
-process_prefs = {REPORT_OUTPUT_PREF: True,
-                 VERBOSE_PREF: False}
+# NOTE:  This implements the two stimulus processing pathways (color naming and word reading)
+#        but not an "attention" mechanism that selects between them... stay tuned!
 
-system_prefs = {REPORT_OUTPUT_PREF: True,
-                VERBOSE_PREF: False}
+process_prefs = {
+    pnl.REPORT_OUTPUT_PREF: True,
+    pnl.VERBOSE_PREF: False
+}
 
-colors = TransferMechanism(default_variable=[0,0],
-                        function=Linear,
-                        name="Colors")
+system_prefs = {
+    pnl.REPORT_OUTPUT_PREF: True,
+    pnl.VERBOSE_PREF: False
+}
 
-words = TransferMechanism(default_variable=[0,0],
-                        function=Linear,
-                        name="Words")
+colors = pnl.TransferMechanism(
+    default_variable=[0, 0],
+    function=pnl.Linear,
+    name="Colors"
+)
 
-hidden = TransferMechanism(default_variable=[0,0],
-                           function=Logistic,
-                           name="Hidden")
+words = pnl.TransferMechanism(
+    default_variable=[0, 0],
+    function=pnl.Linear,
+    name="Words"
+)
 
-response = TransferMechanism(default_variable=[0,0],
-                           function=Logistic(),
-                           name="Response")
+hidden = pnl.TransferMechanism(
+    default_variable=[0, 0],
+    function=pnl.Logistic,
+    name="Hidden"
+)
 
-output = TransferMechanism(default_variable=[0,0],
-                           function=Logistic,
-                           name="Output")
+response = pnl.TransferMechanism(
+    default_variable=[0, 0],
+    function=pnl.Logistic(),
+    name="Response"
+)
 
-CH_Weights_matrix = np.arange(4).reshape((2,2))
-WH_Weights_matrix = np.arange(4).reshape((2,2))
-HO_Weights_matrix = np.arange(4).reshape((2,2))
+output = pnl.TransferMechanism(
+    default_variable=[0, 0],
+    function=pnl.Logistic,
+    name="Output"
+)
 
-CH_Weights = MappingProjection(name='Color-Hidden Weights',
-                        matrix=CH_Weights_matrix
-                        )
-WH_Weights = MappingProjection(name='Word-Hidden Weights',
-                        matrix=WH_Weights_matrix
-                        )
-HO_Weights = MappingProjection(name='Hidden-Output Weights',
-                        matrix=HO_Weights_matrix
-                        )
+CH_Weights_matrix = np.arange(4).reshape((2, 2))
+WH_Weights_matrix = np.arange(4).reshape((2, 2))
+HO_Weights_matrix = np.arange(4).reshape((2, 2))
 
-color_naming_process = Process(
+CH_Weights = pnl.MappingProjection(
+    name='Color-Hidden Weights',
+    matrix=CH_Weights_matrix
+)
+WH_Weights = pnl.MappingProjection(
+    name='Word-Hidden Weights',
+    matrix=WH_Weights_matrix
+)
+HO_Weights = pnl.MappingProjection(
+    name='Hidden-Output Weights',
+    matrix=HO_Weights_matrix
+)
+
+color_naming_process = pnl.Process(
     default_variable=[1, 2.5],
     pathway=[colors, CH_Weights, hidden, HO_Weights, response],
-    learning=LEARNING,
-    target=[2,2],
+    learning=pnl.LEARNING,
+    target=[2, 2],
     name='Color Naming',
-    prefs=process_prefs)
+    prefs=process_prefs
+)
 
-word_reading_process = Process(
+word_reading_process = pnl.Process(
     default_variable=[.5, 3],
     pathway=[words, WH_Weights, hidden],
     name='Word Reading',
-    learning=LEARNING,
-    target=[3,3],
-    prefs=process_prefs)
+    learning=pnl.LEARNING,
+    target=[3, 3],
+    prefs=process_prefs
+)
 
 # color_naming_process.execute()
 # word_reading_process.execute()
 
-mySystem = System(processes=[color_naming_process, word_reading_process],
-                  targets=[20,20],
-                  name='Stroop Model',
-                  prefs=system_prefs)
+mySystem = pnl.System(processes=[color_naming_process, word_reading_process],
+                      targets=[20, 20],
+                      name='Stroop Model',
+                      prefs=system_prefs)
 
-# mySystem.show_graph_with_learning()
+mySystem.show_graph(
+    # show_learning=True
+)
 
-def print_header():
-    print("\n\n**** TRIAL: ", CentralClock.trial)
+
+def print_header(system):
+    print("\n\n**** TRIAL: ", system.scheduler_processing.times[pnl.TimeScale.RUN][pnl.TimeScale.TRIAL])
+
 
 def show_target():
-    print ('\nColor Naming\n\tInput: {}\n\tTarget: {}'.
-           format(colors.input_states.values_as_lists, mySystem.targets))
-    print ('Wording Reading:\n\tInput: {}\n\tTarget: {}\n'.
-           # format(word_reading_process.input, word_reading_process.target))
-           format(words.input_states.values_as_lists, mySystem.targets))
-    print ('Response: \n', response.output_values[0])
-    print ('Hidden-Output:')
-    print (HO_Weights.matrix)
-    print ('Color-Hidden:')
-    print (CH_Weights.matrix)
-    print ('Word-Hidden:')
-    print (WH_Weights.matrix)
+    print('\nColor Naming\n\tInput: {}\n\tTarget: {}'.
+          format(colors.input_states.values_as_lists, mySystem.targets))
+    print('Wording Reading:\n\tInput: {}\n\tTarget: {}\n'.
+          # format(word_reading_process.input, word_reading_process.target))
+          format(words.input_states.values_as_lists, mySystem.targets))
+    print('Response: \n', response.output_values[0])
+    print('Hidden-Output:')
+    print(HO_Weights.matrix)
+    print('Color-Hidden:')
+    print(CH_Weights.matrix)
+    print('Word-Hidden:')
+    print(WH_Weights.matrix)
 
 
-stim_list_dict = {colors:[[1, 1]],
-                  words:[[-2, -2]]}
+stim_list_dict = {
+    colors: [[1, 1]],
+    words: [[-2, -2]]
+}
 
-target_list_dict = {response:[[1, 1]]}
+target_list_dict = {response: [[1, 1]]}
 
 # mySystem.show_graph(show_learning=True)
 
-mySystem.run(num_trials=2,
-            inputs=stim_list_dict,
-            targets=target_list_dict,
-            call_before_trial=print_header,
-            call_after_trial=show_target)
+mySystem.run(
+    num_trials=2,
+    inputs=stim_list_dict,
+    targets=target_list_dict,
+    call_before_trial=functools.partial(print_header, mySystem),
+    call_after_trial=show_target
+)
 
-# print()
-# for m in mySystem.learningexecution_list:
-#     print (m.name)
-#
 # PsyNeuLink response & weights after 1st trial:
 #
-# Response [NOTE: I THINK THIS IS FROM LAST TRIAL -- JDC]:
+# Response:
 #  [ 0.50899214  0.54318254]
-# [NOTE: THESE ARE DEFINITELY FROM THE CURRENT TRIAL]:
 # Hidden-Output:
 # [[ 0.01462766  1.01351195]
 #  [ 2.00220713  3.00203878]]
@@ -124,7 +143,7 @@ mySystem.run(num_trials=2,
 # [[-0.02380258  0.9793176 ]
 #  [ 1.97619742  2.9793176 ]]
 
-# Correct response & weights after 1st trial:
+# Matlab validated response & weights after 1st trial:
 #
 # response
 #     0.5090    0.5432
