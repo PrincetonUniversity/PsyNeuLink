@@ -916,6 +916,8 @@ class State_Base(State):
     def _instantiate_projections_to_state(self, projections, context=None):
         """Instantiate projections to a State and assign them to self.path_afferents
 
+        Parses specifications in projection_list into ConnectionTuples (State, weight, exponent, projection_spec)
+        If the
         For each spec in projections arg:
             - if it is a Projection,
 
@@ -995,24 +997,30 @@ class State_Base(State):
         for connection in connection_tuples:
 
             # Get sender State, weight, exponent and projection for each projection specification
+            #    note: weight and exponent for connection have been assigned to Projection in _parse_connection_specs
             sender, weight, exponent, projection_spec = connection
 
             projection_spec = _parse_projection_spec(projection_spec, receiver=self)
+
+            # GET Projection --------------------------------------------------------
 
             # Projection object
             if isinstance(projection_spec, Projection):
 
                 projection = projection_spec
 
-                # If it is in deferred_init:
+                # Deferred init
                 if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
 
+                    # FIX: 10/3/17 ELIMINATE ONCE ModulatorySignal.__init__ CAN TAKE STATE CLASS AS SPEC FOR SENDER
+                    if isinstance(sender, State):
+                        projection.init_args[SENDER] = sender
                     projection.init_args[RECEIVER] = self
                     projection.init_args['name'] = projection.init_args['name'] or \
                                                    self.owner.name + ' ' + self.name + ' ' + projection.className
-                    if isinstance(projection, PathwayProjection_Base):
-                        self.mod_afferents.append(projection)
-                    elif isinstance(projection, ModulatoryProjection_Base):
+                    if isinstance(projection, PathwayProjection_Base) and not projection in self.path_afferents:
+                        self.path_afferents.append(projection)
+                    elif isinstance(projection, ModulatoryProjection_Base) and not projection in self.mod_afferents:
                         self.mod_afferents.append(projection)
                     else:
                         raise StateError("PROGRAM ERROR: Projection type ({}) is not {} or {}".
@@ -1022,10 +1030,13 @@ class State_Base(State):
                     # Skip any further initialization for now; remainder will occur as part of deferred init
                     continue
 
-            # Parse projection_spec and fill in relevant entries of Projection specification dictionary
+            # Projection specification dictionary:
+            #    instantiate Projection
             elif isinstance(projection_spec, dict):
+
+                # Parse projection_spec and fill in relevant entries of Projection specification dictionary
                 projection_type = projection_spec.pop(PROJECTION_TYPE, None) or default_projection_type
-                # FIX: 10/3/17 REINSTATE WHEN ModulatorySignal CONSTRUTORS CAN TAKE STATE CLASS AS SPEC FOR SENDER
+                # FIX: 10/3/17 ELIMINATE ONCE ModulatorySignal.__init__ CAN TAKE STATE CLASS AS SPEC FOR SENDER
                 # projection_spec[SENDER] = sender
                 if isinstance(sender, State):
                     projection_spec[SENDER] = sender
@@ -1039,8 +1050,11 @@ class State_Base(State):
                     raise StateError("SENDER of {} to {} of {} is neither a State or State class".
                                      format(projection_type.__name__, self.name, self.owner.name))
                 projection_spec[NAME] = projection_type.__name__ + " from " + sender_name + " to " + self.owner.name
+
                 projection = projection_type(**projection_spec)
-                TEST = True
+
+                if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                    continue
 
             else:
                 raise StateError("PROGRAM ERROR: Unrecognized {} specification ({}) returned "
@@ -1052,43 +1066,33 @@ class State_Base(State):
                                         self.owner.name))
 
 
-            # FIX: 10/3/17 - ADD: [FROM ABOVE]:
-            #         if isinstance(projection, PathwayProjection_Base):
-            #             self.mod_afferents.append(projection)
-            #         elif isinstance(projection, ModulatoryProjection_Base):
-            #             self.mod_afferents.append(projection)
-            #         else:
-            #             raise StateError("PROGRAM ERROR: Projection type ({}) is not {} or {}".
-            #                              format(projection.__class__.__name__,
-            #                                     PathwayProjection_Base.__name__,
-            #                                     ModulatoryProjection_Base))
+            # VALIDATE AND ASSIGN Projection --------------------------------------------------------
 
-
-
-            # VALIDATE Projection's VALUE
-
-            # Check that output of projection's function (projection_spec.value is compatible with
-            #    variable of the State to which it projects;  if it is not, raise exception:
-            # The buck stops here; can't modify projection's function to accommodate the State,
-            #    or there would be an unmanageable regress of reassigning projections,
-            #    requiring reassignment or modification of sender OutputStates, etc.
-
-            # Initialization of projection is deferred
-            if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                # Assign instantiated "stub" so it is found on deferred initialization pass (see Process)
-                if isinstance(projection, ModulatoryProjection_Base):
-                    self.mod_afferents.append(projection)
-                else:
-                    self.path_afferents.append(projection)
-                continue
-
-            # Projection was instantiated, so:
-            #    - validate value
+            # Validate value:
+            #    - check that output of projection's function (projection_spec.value) is compatible with
+            #        variable of the State to which it projects;  if it is not, raise exception:
+            #        the buck stops here; can't modify projection's function to accommodate the State,
+            #        or there would be an unmanageable regress of reassigning projections,
+            #        requiring reassignment or modification of sender OutputStates, etc.
             #    - assign to State's path_afferents or mod_afferents list
-            # If it is a ModualatoryProjection:
+
+            # PathwayProjection:
+            #    - check that projection's value is compatible with the State's variable
+            #    - assign projection to path_afferents
+            if isinstance(projection, PathwayProjection_Base):
+                if iscompatible(self.instance_defaults.variable, projection.value):
+                    # This is needed to avoid duplicates, since instantiation of projection may have already
+                    #    called this method and assigned Projection to self.path_afferents list
+                    if not projection in self.path_afferents:
+                        self.path_afferents.append(projection)
+                else:
+                    raise StateError("Output of function for {} ({}) is not compatible with value of {} ({}).".
+                                     format(projection.name, projection.value, self.name, self.value))
+
+            # ModualatoryProjection:
             #    - check that projection's value is compatible with value of the function param being modulated
             #    - assign projection to mod_afferents
-            if isinstance(projection, ModulatoryProjection_Base):
+            elif isinstance(projection, ModulatoryProjection_Base):
                 function_param_value = _get_modulated_param(self, projection).function_param_val
                 # Match the projection's value with the value of the function parameter
                 mod_proj_spec_value = type_match(projection.value, type(function_param_value))
@@ -1098,24 +1102,16 @@ class State_Base(State):
                     #    may have already called this method and assigned projection to self.mod_afferents
                     if not projection in self.mod_afferents:
                         self.mod_afferents.append(projection)
-                    continue
-            # Otherwise:
-            #    - check that projection's value is compatible with the State's variable
-            #    - assign projection to path_afferents
+                else:
+                    raise StateError("Output of function for {} ({}) is not compatible with value of {} ({}).".
+                                         format(projection.name, projection.value, self.name, self.value))
+
             else:
-                if iscompatible(self.instance_defaults.variable, projection.value):
-                    # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlProjection)
-                    #    may have already called this method and assigned projection to self.path_afferents list
-                    if not projection in self.path_afferents:
-                        self.path_afferents.append(projection)
-                    continue
+                raise StateError("PROGRAM ERROR: Projection type ({}) is not {} or {}".
+                                 format(projection.__class__.__name__,
+                                        PathwayProjection_Base.__name__,
+                                        ModulatoryProjection_Base))
 
-            # Projection specification is not valid
-            raise StateError("Output of function for {} ({}) is not compatible with value of {} ({}).".
-                             format(projection.name, projection.value, self.name, self.value))
-
-        # FIX: 10/3/17 - REMOVE WHEN DONE DEBUGGING
-        TEST = True
 
     def _instantiate_projection_from_state(self, projection_spec, receiver, context=None):
         """Instantiate outgoing projection from a State and assign it to self.efferents
