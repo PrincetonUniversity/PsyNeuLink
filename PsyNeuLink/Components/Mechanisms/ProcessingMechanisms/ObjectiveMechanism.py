@@ -720,14 +720,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             for i, state in enumerate(self.input_states):
                 if state.params[PROJECTIONS] is not None:
                     for projection_spec in state.params[PROJECTIONS]:
-                        # Assume that projection_specs are all in ConnectionTuples
-                        #    and are lists containing either Projections or Projection specification dictionaries
-                        # MODIFIED 10/3/17 OLD:
-                        # input_state_projection_specs.append(projection_spec.projection or [AUTO_ASSIGN_MATRIX])
-                        # MODIFIED 10/3/17 NEW:
-                        # MODIFIED 10/3/17 END
-
-                        matrix_spec = projection_spec.projection[MATRIX] or AUTO_ASSIGN_MATRIX
+                        # Assume that projection_specs are all ConnectionTuples
                         input_state_projection_specs.append(projection_spec.projection or [AUTO_ASSIGN_MATRIX])
                         output_states.append(projection_spec.state)
                 else:
