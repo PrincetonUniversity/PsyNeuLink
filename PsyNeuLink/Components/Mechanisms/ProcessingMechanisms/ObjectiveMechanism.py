@@ -720,7 +720,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             for i, state in enumerate(self.input_states):
                 if state.params[PROJECTIONS] is not None:
                     for projection_spec in state.params[PROJECTIONS]:
-                        # Assume that projection_specs are all ConnectionTuples
+                        # Assume that projection_specs are all in ConnectionTuples
+                        #    and are lists containing either Projections or Projection specification dictionaries
+                        # MODIFIED 10/3/17 OLD:
+                        # input_state_projection_specs.append(projection_spec.projection or [AUTO_ASSIGN_MATRIX])
+                        # MODIFIED 10/3/17 NEW:
+                        # MODIFIED 10/3/17 END
+                        matrix_spec = projection_spec.projection[MATRIX] or AUTO_ASSIGN_MATRIX
                         input_state_projection_specs.append(projection_spec.projection or [AUTO_ASSIGN_MATRIX])
                         output_states.append(projection_spec.state)
                 else:
@@ -874,7 +880,7 @@ def _instantiate_monitoring_projections(owner,
                     raise ObjectiveMechanismError("PROGRAM ERROR: {} of {} already has an afferent projection "
                                                   "implemented and initialized ({})".
                                                   format(receiver.name, owner.name, receiver.aferents[0].name))
-                # FIX: 10/3/17 - IS IT OK TO IGNORE projection_spec IF IT IS None?  SHOULD IT HAVE BEEN SPECIFIED
+                # FIX: 10/3/17 - IS IT OK TO IGNORE projection_spec IF IT IS None?  SHOULD IT HAVE BEEN SPECIFIED??
                 # FIX:           IN DEVEL, projection_spec HAS BEEN PROPERLY ASSIGNED
                 if (projection_spec and
                         not receiver.path_afferents[0].function_params[MATRIX] is projection_spec):
