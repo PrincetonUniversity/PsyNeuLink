@@ -1119,7 +1119,7 @@ class State_Base(State):
                                       "default {} will be assigned".
                                       format(projection_spec, self.name, owner.name, default_projection_type.__name__))
 
-                projection_spec = projection_type(**proj_spec_dict)
+                projection = projection_type(**proj_spec_dict)
 
 
 
@@ -1132,12 +1132,12 @@ class State_Base(State):
             #    requiring reassignment or modification of sender OutputStates, etc.
 
             # Initialization of projection is deferred
-            if projection_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+            if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
                 # Assign instantiated "stub" so it is found on deferred initialization pass (see Process)
-                if isinstance(projection_spec, ModulatoryProjection_Base):
-                    self.mod_afferents.append(projection_spec)
+                if isinstance(projection, ModulatoryProjection_Base):
+                    self.mod_afferents.append(projection)
                 else:
-                    self.path_afferents.append(projection_spec)
+                    self.path_afferents.append(projection)
                 continue
 
             # Projection was instantiated, so:
@@ -1146,34 +1146,34 @@ class State_Base(State):
             # If it is a ModualatoryProjection:
             #    - check that projection's value is compatible with value of the function param being modulated
             #    - assign projection to mod_afferents
-            if isinstance(projection_spec, ModulatoryProjection_Base):
-                function_param_value = _get_modulated_param(self, projection_spec).function_param_val
+            if isinstance(projection, ModulatoryProjection_Base):
+                function_param_value = _get_modulated_param(self, projection).function_param_val
                 # Match the projection's value with the value of the function parameter
-                mod_proj_spec_value = type_match(projection_spec.value, type(function_param_value))
+                mod_proj_spec_value = type_match(projection.value, type(function_param_value))
                 # If the match was successful (i.e., they are compatible), assign the projection to mod_afferents
                 if function_param_value is None or iscompatible(function_param_value, mod_proj_spec_value):
                     # Avoid duplicates, since instantiation of projection (e.g, by Mechanism)
                     #    may have already called this method and assigned projection to self.mod_afferents
-                    if not projection_spec in self.mod_afferents:
-                        self.mod_afferents.append(projection_spec)
+                    if not projection in self.mod_afferents:
+                        self.mod_afferents.append(projection)
                     continue
             # Otherwise:
             #    - check that projection's value is compatible with the State's variable
             #    - assign projection to path_afferents
             else:
-                if iscompatible(self.instance_defaults.variable, projection_spec.value):
+                if iscompatible(self.instance_defaults.variable, projection.value):
                     # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlProjection)
                     #    may have already called this method and assigned projection to self.path_afferents list
-                    if not projection_spec in self.path_afferents:
-                        self.path_afferents.append(projection_spec)
+                    if not projection in self.path_afferents:
+                        self.path_afferents.append(projection)
                     continue
 
             # Projection specification is not valid
             raise StateError("{}Output of function for {}{} ( ({})) is not compatible with value of {} ({})".
                              format(item_prefix_string,
                                     default_string,
-                                    projection_spec.name,
-                                    projection_spec.value,
+                                    projection.name,
+                                    projection.value,
                                     item_suffix_string,
                                     self.value))
         TEST = True
