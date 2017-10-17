@@ -721,7 +721,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 if state.params[PROJECTIONS] is not None:
                     for projection_spec in state.params[PROJECTIONS]:
                         # Assume that projection_specs are all ConnectionTuples
-                        input_state_projection_specs.extend(projection_spec.projection or [AUTO_ASSIGN_MATRIX])
+                        input_state_projection_specs.append(projection_spec.projection or [AUTO_ASSIGN_MATRIX])
                         output_states.append(projection_spec.state)
                 else:
                     output_states.append(state.name)

@@ -977,7 +977,7 @@ class State_Base(State):
 
         # Parse each Projection specification in projection_list using self as connectee_state:
         # - validates that Projection specification is compatible with its sender and self
-        # - parses various other references (e.g., FIX: ADD LIST HERE XXX)
+        # - parses various other references (e.g., FIX: ADD LIST OF EXAMPLES OF OTHER REFERENCES HERE XXX)
         # - returns ConnectionTuple for each Projection in projection_list
         connection_tuples = _parse_connection_specs(self.__class__, self.owner, projection_list)
 
@@ -989,6 +989,8 @@ class State_Base(State):
 
             # Get sender State, weight, exponent and projection for each projection specification
             sender, weight, exponent, projection_spec = connection
+
+            projection_spec = _parse_projection_spec(projection_spec, receiver=self)
 
             # Projection object
             if isinstance(projection_spec, Projection):
@@ -1016,12 +1018,41 @@ class State_Base(State):
             # Parse projection_spec and fill in relevant entries of Projection specification dictionary
             elif isinstance(projection_spec, dict):
                 projection_type = projection_spec.pop(PROJECTION_TYPE, None) or default_projection_type
+                projection_spec[RECEIVER] = self
+                # FIX: 10/3/17 - ??ASSIGN NAME HERE OR DEFER UNTIL SENDER IS KNOWN IF DEFERRED_INIT??:
+                if isinstance(connection.state, State):
+                    sender_name = sender.name
+                elif inspect.isclass(sender) and issubclass(sender, State):
+                    sender_name = sender.__name__
+                else:
+                    raise StateError("SENDER of {} to {} of {} is neither a State or State class".
+                                     format(projection_type.__name__, self.name, self.owner.name))
+                sender_name = projection_spec[SENDER] or sender_name
+                projection_spec[NAME] = projection_type.__name__+ " from " + sender_name + " to " + self.owner.name
                 projection = projection_type(**projection_spec)
 
             else:
-                raise StateError("PROGRAM ERROR: Unrecognized {} specification returned "
+                raise StateError("PROGRAM ERROR: Unrecognized {} specification ({}) returned "
                                  "from _parse_connection_specs for connection from {} to {} of {}".
-                                 format(Projection.__name__, projection_spec, sender.name, self.name, self.owner.name))
+                                 format(Projection.__name__,
+                                        projection_spec,
+                                        sender.__name__,
+                                        self.name,
+                                        self.owner.name))
+
+
+            # FIX: 10/3/17 - ADD: [FROM ABOVE]:
+            #         if isinstance(projection, PathwayProjection_Base):
+            #             self.mod_afferents.append(projection)
+            #         elif isinstance(projection, ModulatoryProjection_Base):
+            #             self.mod_afferents.append(projection)
+            #         else:
+            #             raise StateError("PROGRAM ERROR: Projection type ({}) is not {} or {}".
+            #                              format(projection.__class__.__name__,
+            #                                     PathwayProjection_Base.__name__,
+            #                                     ModulatoryProjection_Base))
+
+
 
             # VALIDATE Projection's VALUE
 
@@ -1069,13 +1100,10 @@ class State_Base(State):
                     continue
 
             # Projection specification is not valid
-            raise StateError("{}Output of function for {}{} ( ({})) is not compatible with value of {} ({})".
-                             format(item_prefix_string,
-                                    default_string,
-                                    projection.name,
-                                    projection.value,
-                                    item_suffix_string,
-                                    self.value))
+            raise StateError("Output of function for {} ({}) is not compatible with value of {} ({}).".
+                             format(projection.name, projection.value, self.name, self.value))
+
+        # FIX: 10/3/17 - REMOVE WHEN DONE DEBUGGING
         TEST = True
 
     def _instantiate_projection_from_state(self, projection_spec, receiver, context=None):
@@ -1180,8 +1208,8 @@ class State_Base(State):
                                  default_projection_type.__class__.__name__))
             else:
                 # IMPLEMENTATION NOTE:  can add more informative reporting here about reason for failure
-                projection_type, error_str = _parse_projection_spec(projection_spec=projection_type,
-                                                                   context=self)
+                projection_type = _parse_projection_spec(projection_spec=projection_type,
+                                                         context=self)
                 if error_str:
                     print("{0}{1} {2}; default {4} will be assigned".
                           format(item_prefix_string,
@@ -2229,6 +2257,8 @@ def _parse_state_spec(state_type=None,
 
                 # FIX: 10/3/17 -
                 # FIX: THIS IS CONSOLIDATE W/ CALL TO _parse_state_specific_params FOR State specification dict ABOVE
+                # FIX: OR MAKE _parse_state_specs A METHOD ON State
+                # FIX:    AND OVERRIDE BY SUBCLASSES TO PARSE CLASS-SPECIFIC PARAMS FIRST (AS PER _parse_projectio_spec)
                 params = state_type._parse_state_specific_params(state_type,
                                                                  owner=owner,
                                                                  state_dict=state_dict,
@@ -2242,6 +2272,8 @@ def _parse_state_spec(state_type=None,
                     projection_params.extend(params[PROJECTIONS])
                     if projection_params:
                         params[PROJECTIONS] = _parse_connection_specs(state_type, owner, projection_params)
+                        for projection in [connection.projection for connection in params[PROJECTIONS]]:
+                            projection[RECEIVER] = owner
                 # Update state_dict[PARAMS] with params
                 if state_dict[PARAMS] is None:
                     state_dict[PARAMS] = {}
@@ -2311,24 +2343,21 @@ def _get_state_for_socket(owner,
     #    - an allowable State type for the projection_socket
     #    - a projection keyword (e.g., 'LEARNING' or 'CONTROL', and it is consistent with projection_socket
     # Otherwise, return list of allowable State types for projection_socket (if state_spec is a Projection type)
-    ref, err_str = _parse_projection_spec(state_spec)
-    if ref:
-        # if state_type.__name__ in getattr(ref.sockets, projection_socket):
-        s = next((s for s in state_type if s.__name__ in getattr(ref.sockets, projection_socket)), None)
+    if _is_projection_spec(state_spec):
+        # Get Projection's type (class)
+        proj_spec = _parse_projection_spec(state_spec)
+        if isinstance(proj_spec, Projection):
+            proj_type = proj_spec.__class__
+        else:
+            proj_type = proj_spec[PROJECTION_TYPE]
+        # Get State type if it is appropriate for the specified socket of the Projection's type
+        s = next((s for s in state_type if s.__name__ in getattr(proj_type.sockets, projection_socket)), None)
         if s:
             return s
-        elif err_str:
-            raise StateError("PROGRAM ERROR: A projection class or keyword ({}) was used to specify a Projection "
-                             "to one of the following: {}; but {}".format(state_spec, state_type_names, err_str))
-        # FIX: 10/3/17 - ??IS THE FOLLOWING CORRECT:
-        elif inspect.isclass(ref) and issubclass(ref, Projection):
-            # state = getattr(state_spec.sockets, projection_socket)
-            # if state is None:
-            #     state = state_type
-            # return ref
-            # return getattr(state_spec.sockets, projection_socket)
-            projection_socket_state_names = getattr(ref.sockets, projection_socket)
-            # projection_socket_state_types = [ProjectionRegistry[name].subclass for name in projection_socket_state_names]
+        # FIX: 10/3/17 - ??IS THE FOLLOWING CORRECT:  ??HOW IS IT DIFFERENT FROM ABOVE?
+        # Otherwise, get State types that are allowable for that projection_socket
+        elif inspect.isclass(proj_type) and issubclass(proj_type, Projection):
+            projection_socket_state_names = getattr(proj_type.sockets, projection_socket)
             projection_socket_state_types = [StateRegistry[name].subclass for name in projection_socket_state_names]
             return projection_socket_state_types
         else:

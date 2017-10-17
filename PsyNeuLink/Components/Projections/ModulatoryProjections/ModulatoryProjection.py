@@ -207,3 +207,17 @@ class ModulatoryProjection_Base(Projection_Base):
                          name=name,
                          prefs=prefs,
                          context=context)
+
+
+def _parse_projection_spec(projection_spec, proj_spec_dict):
+
+    from PsyNeuLink.Globals.Keywords import PARAMS, MODULATION
+    from PsyNeuLink.Components.Functions.Function import ModulationParam
+
+    # If projection_spec is in the form of a ModulationParam value,
+    #    move it to a MODULATION entry in the params dict
+    if isinstance(projection_spec, ModulationParam):
+        proj_spec_dict[PARAMS].update({MODULATION:projection_spec})
+        return True
+
+    return False

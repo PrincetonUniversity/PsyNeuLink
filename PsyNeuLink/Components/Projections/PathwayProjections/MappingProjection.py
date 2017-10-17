@@ -692,3 +692,16 @@ class MappingProjection(PathwayProjection_Base):
 
         else:
             self.paramsCurrent[FUNCTION_PARAMS].__additem__(MATRIX, value)
+
+
+def _parse_projection_spec(projection_spec, proj_spec_dict):
+
+    from PsyNeuLink.Globals.Utilities import is_numeric
+    from PsyNeuLink.Globals.Keywords import MATRIX_KEYWORD_SET
+
+    # If projection_spec is in the form of a matrix keyword, move it to the matrix entry in the specification dict
+    if is_numeric(projection_spec) or projection_spec in MATRIX_KEYWORD_SET:
+        proj_spec_dict.update({MATRIX:projection_spec})
+        return True
+
+    return False
