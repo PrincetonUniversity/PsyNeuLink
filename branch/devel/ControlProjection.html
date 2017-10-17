@@ -188,9 +188,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="controlprojection">
-<h1>ControlProjection<a class="headerlink" href="#controlprojection" title="Permalink to this headline">¶</a></h1>
-<span class="target" id="module-psyneulink.components.projections.modulatory.controlprojection"></span><div class="section" id="overview">
+  <div class="section" id="module-psyneulink.components.projections.modulatory.controlprojection">
+<span id="controlprojection"></span><h1>ControlProjection<a class="headerlink" href="#module-psyneulink.components.projections.modulatory.controlprojection" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
 <span id="controlprojection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A ControlProjection is a type of <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that projects to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>. It takes the <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a
 <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> and uses it to  modify the value of the parameter associated
@@ -338,80 +338,6 @@ if not is specified, a default is assigned by ProjectionRegistry
 <dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for ControlProjection.
 Specified in the <strong>prefs</strong> argument of the constructor for the ControlProjection;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="psyneulink.components.projections.modulatory.controlprojection.Projection_Base">
-<em class="property">class </em><code class="descclassname">psyneulink.components.projections.modulatory.controlprojection.</code><code class="descname">Projection_Base</code><span class="sig-paren">(</span><em>receiver</em>, <em>sender=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.projections.modulatory.controlprojection.Projection_Base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for all Projections.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Projection is an abstract class and should NEVER be instantiated by a direct call to its constructor.
-It should be created by calling the constructor for a subclass` or by using any of the other methods for
-<a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">specifying a Projection</span></a>.</p>
-</div>
-<dl class="attribute">
-<dt id="psyneulink.components.projections.modulatory.controlprojection.Projection_Base.variable">
-<code class="descname">variable</code><a class="headerlink" href="#psyneulink.components.projections.modulatory.controlprojection.Projection_Base.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value</em> – input to Projection, received from OutputState.value of sender.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.projections.modulatory.controlprojection.Projection_Base.sender">
-<code class="descname">sender</code><a class="headerlink" href="#psyneulink.components.projections.modulatory.controlprojection.Projection_Base.sender" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>State</em> – State from which Projection receives its input.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.projections.modulatory.controlprojection.Projection_Base.receiver">
-<code class="descname">receiver</code><a class="headerlink" href="#psyneulink.components.projections.modulatory.controlprojection.Projection_Base.receiver" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>State</em> – State (of a Mechanism or Projection)
-State to which Projection sends its output.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.projections.modulatory.controlprojection.Projection_Base.value">
-<code class="descname">value</code><a class="headerlink" href="#psyneulink.components.projections.modulatory.controlprojection.Projection_Base.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value</em> – Output of Projection, transmitted as variable to InputState of receiver.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.projections.modulatory.controlprojection.Projection_Base.parameter_states">
-<code class="descname">parameter_states</code><a class="headerlink" href="#psyneulink.components.projections.modulatory.controlprojection.Projection_Base.parameter_states" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ContentAddressableList[str, ParameterState]</em> – a list of the Projection’s <code class="xref any docutils literal"><span class="pre">ParameterStates</span></code>, one for each of its specifiable
-parameters and those of its <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (i.e., the ones for which there are
-arguments in their constructors).  The value of the parameters of the Projection are also accessible as
-attributes of the Projection (using the name of the parameter); the function parameters are listed in the
-Projection’s <code class="xref any docutils literal"><span class="pre">function_params</span></code> attribute, and as attributes of the <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a>
-assigned to its <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function_object" title="psyneulink.components.component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">parameter_states</code></dt>
-<dd><p><em>ContentAddressableList[str, ParameterState]</em> – a read-only list of the Projection’s <a class="reference internal" href="Mechanism.html#mechanism-parameterstates"><span class="std std-ref">ParameterStates</span></a>, one for each of its
-<a class="reference internal" href="ParameterState.html#parameterstate-configurable-parameters"><span class="std std-ref">configurable parameters</span></a>, including those of its <code class="xref any docutils literal"><span class="pre">function</span></code>.  The value of the parameters of the Projection and its <code class="xref any docutils literal"><span class="pre">function</span></code> are also accessible as (and can be modified using) attributes of the Projection,
-in the same manner as they can for a <a class="reference internal" href="Mechanism.html#mechanism-parameterstates"><span class="std std-ref">Mechanism</span></a>).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.projections.modulatory.controlprojection.Projection_Base.name">
-<code class="descname">name</code><a class="headerlink" href="#psyneulink.components.projections.modulatory.controlprojection.Projection_Base.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default &lt;Projection subclass&gt;-&lt;index&gt;</em> – the name of the Projection.
-Specified in the <strong>name</strong> argument of the constructor for the Projection;  if not is specified,
-a default is assigned by ProjectionRegistry based on the Projection’s subclass
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.projections.modulatory.controlprojection.Projection_Base.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.components.projections.modulatory.controlprojection.Projection_Base.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Projection.
-Specified in the <strong>prefs</strong> argument of the constructor for the Projection;  if it is not specified, a default is
-assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 

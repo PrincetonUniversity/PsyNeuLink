@@ -190,13 +190,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="controlsignal">
-<h1>ControlSignal<a class="headerlink" href="#controlsignal" title="Permalink to this headline">¶</a></h1>
-<span class="target" id="module-psyneulink.components.states.modulatorysignals.controlsignal"></span><div class="section" id="overview">
+  <div class="section" id="module-psyneulink.components.states.modulatorysignals.controlsignal">
+<span id="controlsignal"></span><h1>ControlSignal<a class="headerlink" href="#module-psyneulink.components.states.modulatorysignals.controlsignal" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A ControlSignal is a type of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> that is specialized for use with a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> and one or more <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>, to modify the parameter(s) of one or more
 <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>. A ControlSignal receives an <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> value from the
-ControlMechanism to which it belongs, and uses that to compute an <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> (also referred to as a <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.control_signal" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a>)
+ControlMechanism to which it belongs, and uses that to compute an <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> (also referred to as a <a class="reference internal" href="ControlProjection.html#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.control_signal" title="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a>)
 that is assigned as the <code class="xref any docutils literal"><span class="pre">value</span></code> of its ControlProjections. Each
 ControlProjection conveys its value to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the parameter it controls, which uses that value to
 <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulate</span></a> the <a class="reference internal" href="ParameterState.html#psyneulink.components.states.parameterstate.ParameterState.value" title="psyneulink.components.states.parameterstate.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the parameter.  A ControlSignal also
@@ -298,7 +298,7 @@ and is used by its <a class="reference internal" href="#psyneulink.components.st
 ControlSignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>. However, another <a class="reference internal" href="Function.html#psyneulink.components.functions.function.TransferFunction" title="psyneulink.components.functions.function.TransferFunction"><code class="xref any py py-class docutils literal"><span class="pre">TransferFunction</span></code></a> can be assigned
 (e.g., <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Exponential" title="psyneulink.components.functions.function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>), or any other function that takes and returns a scalar value or 1d array.</p>
 <p><em>Intensity (value)</em>. The result of the function is assigned as the value of the ControlSignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>
-attribute, which serves as the ControlSignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (also referred to as <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.control_signal" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a>).
+attribute, which serves as the ControlSignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (also referred to as <a class="reference internal" href="ControlProjection.html#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.control_signal" title="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a>).
 The <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> is used by its <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> to modulate the parameter(s) for which the
 ControlSignal is responsible. The ControlSignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> attribute  reflects its value for the current <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>;
 its value from the previous <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is assigned to the <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.last_intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.last_intensity"><code class="xref any py py-attr docutils literal"><span class="pre">last_intensity</span></code></a> attribute.</p>
@@ -754,105 +754,6 @@ Assign intensity to value of ControlSignal (done in setter property for value)</
 <dt id="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.get_costs">
 <code class="descname">get_costs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.get_costs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return three-element list with the values of <code class="docutils literal"><span class="pre">intensity_cost</span></code>, <code class="docutils literal"><span class="pre">adjustment_cost</span></code> and <code class="docutils literal"><span class="pre">duration_cost</span></code></p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal">
-<em class="property">class </em><code class="descclassname">psyneulink.components.states.modulatorysignals.controlsignal.</code><code class="descname">ModulatorySignal</code><span class="sig-paren">(</span><em>owner</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>modulation=ModulationParam.MULTIPLICATIVE           projections=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> used by an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> to modulate the value
-of one more <a class="reference internal" href="State.html"><span class="doc">States</span></a>.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">ModulatorySignal is an abstract class and should NEVER be instantiated by a call to its constructor.
-It should be instantiated using the constructor for a <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-subtypes"><span class="std std-ref">subclass</span></a>.</p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> (<a class="reference internal" href="GatingMechanism.html#psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism" title="psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism"><em>GatingMechanism</em></a>) – specifies the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which to assign the ModulatorySignal.</li>
-<li><strong>function</strong> (<em>Function</em><em> or </em><em>method : default Linear</em>) – specifies the function used to determine the value of the ModulatorySignal from the value of its
-<code class="xref any docutils literal"><span class="pre">owner</span></code>.</li>
-<li><strong>modulation</strong> (<em>ModulationParam : default ModulationParam.MULTIPLICATIVE</em>) – specifies the type of modulation the ModulatorySignal uses to determine the value of the State(s) it modulates.</li>
-<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
-the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
-override any assigned to those parameters in arguments of the constructor.</li>
-<li><strong>name</strong> (<em>str : default OutputState-&lt;index&gt;</em>) – a string used for the name of the OutputState.
-If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
-belongs (see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : State.classPreferences</em><em>]</em>) – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the OutputState.
-If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.owner">
-<code class="descname">owner</code><a class="headerlink" href="#psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>AdaptiveMechanism</em> – the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> to which the ModulatorySignal belongs.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.variable">
-<code class="descname">variable</code><a class="headerlink" href="#psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number, list or np.ndarray</em> – value assigned by the ModulatorySignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.owner" title="psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>, and used by the ModulatorySignal’s
-<a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.function" title="psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to compute its <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.value" title="psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.function">
-<code class="descname">function</code><a class="headerlink" href="#psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TransferFunction :  default Linear(slope=1, intercept=0)</em> – provides the ModulatorySignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.value" title="psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>; the default is an identity function that
-assigns <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.variable" title="psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> as ModulatorySignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.value" title="psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.value">
-<code class="descname">value</code><a class="headerlink" href="#psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number, list or np.ndarray</em> – result of <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.function" title="psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, used to determine the <a class="reference internal" href="State.html#psyneulink.components.states.state.State_Base.value" title="psyneulink.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the
-State(s) being modulated.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.modulation">
-<code class="descname">modulation</code><a class="headerlink" href="#psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.modulation" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ModulationParam</em> – determines how the output of the ModulatorySignal is used to modulate the value of the state(s) being modulated.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.efferents">
-<code class="descname">efferents</code><a class="headerlink" href="#psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.efferents" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>[List[GatingProjection]]</em> – a list of the <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> assigned to the ModulatorySignal.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.name">
-<code class="descname">name</code><a class="headerlink" href="#psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default &lt;ModulatorySignal&gt;-&lt;index&gt;</em> – name of the ModulatorySignal.
-Specified in the <strong>name</strong> argument of the constructor for the ModulatorySignal.  If not is specified, a default
-is assigned by the StateRegistry of the Mechanism to which the ModulatorySignal belongs
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Unlike other PsyNeuLink components, State names are “scoped” within a Mechanism, meaning that States with
-the same name are permitted in different Mechanisms.  However, they are <em>not</em> permitted in the same
-Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
-creation.</p>
-</div>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.components.states.modulatorysignals.controlsignal.ModulatorySignal.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : State.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the ModulatorySignal.
-Specified in the <strong>prefs</strong> argument of the constructor for the ModulatorySignal;
-if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
 </dd></dl>

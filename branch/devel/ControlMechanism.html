@@ -188,9 +188,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="control-mechanism">
-<h1>Control Mechanism<a class="headerlink" href="#control-mechanism" title="Permalink to this headline">¶</a></h1>
-<span class="target" id="module-psyneulink.components.mechanisms.adaptive.control.controlmechanism"></span><div class="section" id="overview">
+  <div class="section" id="module-psyneulink.components.mechanisms.adaptive.control.controlmechanism">
+<span id="control-mechanism"></span><h1>Control Mechanism<a class="headerlink" href="#module-psyneulink.components.mechanisms.adaptive.control.controlmechanism" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A ControlMechanism is an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> that modifies the parameter(s) of one or more
 <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>, in response to an evaluative signal received from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>.  The
@@ -206,7 +206,7 @@ Components in the <a class="reference internal" href="System.html"><span class="
 parameters controlled by the ControlMechanism can be listed using its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.show" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.show"><code class="xref any py py-meth docutils literal"><span class="pre">show</span></code></a> method.</p>
 <div class="section" id="controlmechanisms-and-a-system">
 <span id="controlmechanism-system-controller"></span><h3>ControlMechanisms and a System<a class="headerlink" href="#controlmechanisms-and-a-system" title="Permalink to this headline">¶</a></h3>
-<p>A ControlMechanism can be assigned to and executed within one or more Systems (listed in its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.systems" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.systems"><code class="xref any py py-attr docutils literal"><span class="pre">systems</span></code></a> attribute), just like any other Mechanism.  It also be assigned as the <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, that has a special relation to the System: it is used to control any and all
+<p>A ControlMechanism can be assigned to and executed within one or more Systems (listed in its <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.systems" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.systems"><code class="xref any py py-attr docutils literal"><span class="pre">systems</span></code></a> attribute), just like any other Mechanism.  It also be assigned as the <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, that has a special relation to the System: it is used to control any and all
 parameters that have been <a class="reference internal" href="#controlmechanism-control-signals"><span class="std std-ref">specified for control</span></a> in that System.  A
 ControlMechanism can be the <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> for only one System, and a System can have only one
 one <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.  The System’s <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is executed after all
@@ -241,7 +241,7 @@ can be specified in the <strong>objective_mechanism</strong> argument of its con
 <li>an existing <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, or a constructor for one;  in this case the <strong>monitored_output_states</strong> argument
 of the ObjectiveMechanism’s constructor is used to specify the OutputStates to be <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitored-output-states"><span class="std std-ref">monitored and evaluated</span></a> (see <a class="reference internal" href="#controlmechanism-examples"><span class="std std-ref">Examples</span></a>); note that, in this case, the
 default values for the attributes of the ObjectiveMechanism override any that ControlMechanism uses for its
-default <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, including those of its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-objective-mechanism-function-note"><span class="std std-ref">note</span></a> in EVCControlMechanism for
+default <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, including those of its <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-objective-mechanism-function-note"><span class="std std-ref">note</span></a> in EVCControlMechanism for
 an example);</li>
 </ul>
 <ul class="simple">
@@ -264,7 +264,7 @@ argument for the ObjectiveMechanism’s constructor (see <a class="reference int
 <p>In all cases, the ObjectiveMechanism is assigned to the ControlMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> attribute, and a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created that projects from the
 ObjectiveMechanism’s <em>OUTCOME</em> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-output"><span class="std std-ref">OutputState</span></a> to the ControlMechanism’s <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary
 InputState</span></a>.</p>
-<p>OutputStates to be monitored can be added to an existing ControlMechanism by using the <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.add_monitored_output_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.add_monitored_output_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_monitored_output_states</span></code></a> method of the ControlMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>.</p>
+<p>OutputStates to be monitored can be added to an existing ControlMechanism by using the <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.add_monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.add_monitored_output_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_monitored_output_states</span></code></a> method of the ControlMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>.</p>
 </div>
 <div class="section" id="specifying-parameters-to-control">
 <span id="controlmechanism-control-signals"></span><h3>Specifying Parameters to Control<a class="headerlink" href="#specifying-parameters-to-control" title="Permalink to this headline">¶</a></h3>
@@ -302,7 +302,7 @@ input to the ControlMechanism’s <a class="reference internal" href="#psyneulin
 via a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the <em>OUTCOME</em> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-output"><span class="std std-ref">OutputState</span></a> of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>.
 The Objective Mechanism is specified in the <strong>objective_mechanism</strong> argument of its constructor, and listed in its
 <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.objective_mechanism" title="psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> attribute.  The OutputStates monitored by the
-ObjectiveMechanism (listed in its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>
+ObjectiveMechanism (listed in its <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>
 attribute) are also listed in the <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.monitored_output_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>
 of the ControlMechanism (see <a class="reference internal" href="#controlmechanism-objectivemechanism"><span class="std std-ref">ObjectiveMechanism and Monitored OutputStates</span></a> for how the ObjectiveMechanism and the
 OutputStates it monitors are specified).  The OutputStates monitored by the ControlMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> can be displayed using its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.show" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.show"><code class="xref any py py-meth docutils literal"><span class="pre">show</span></code></a> method.
@@ -337,7 +337,7 @@ ControlSignal’s <a class="reference internal" href="ControlProjection.html"><s
 <p>A ControlMechanism that is a System’s <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is always the last <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to be executed in a
 <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> for that System (see <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">System Control</span></a> and <a class="reference internal" href="System.html#system-execution"><span class="std std-ref">Execution</span></a>).  The
 ControlMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> takes as its input the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
-its <em>ERROR_SIGNAL</em> <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_state" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_state"><code class="xref any py py-attr docutils literal"><span class="pre">input_state</span></code></a>, and uses that to determine its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> which specifies the value assigned to the <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of each of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  Each ControlSignal uses that value to
+its <em>ERROR_SIGNAL</em> <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_state" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_state"><code class="xref any py py-attr docutils literal"><span class="pre">input_state</span></code></a>, and uses that to determine its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> which specifies the value assigned to the <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of each of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  Each ControlSignal uses that value to
 calculate its <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>, which is used by its <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a>
 to modulate the value of the ParameterState(s) for the parameter(s) it controls, which are then used in the
 subsequent <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution.</p>
@@ -436,7 +436,7 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.system">
 <code class="descname">system</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.system" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>System_Base</em> – The <a class="reference internal" href="System.html"><span class="doc">System</span></a> for which the ControlMechanism is a <a class="reference internal" href="System.html"><span class="doc">controller</span></a>.  Note that this is distinct from
-a Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.systems" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.systems"><code class="xref any py py-attr docutils literal"><span class="pre">systems</span></code></a> attribute, which lists all of the Systems to which a
+a Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.systems" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.systems"><code class="xref any py py-attr docutils literal"><span class="pre">systems</span></code></a> attribute, which lists all of the Systems to which a
 <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> belongs – a ControlMechanism can belong to but not be the <a class="reference internal" href="#controlmechanism-system-controller"><span class="std std-ref">controller of a System</span></a>.</p>
 </dd></dl>
 
@@ -445,7 +445,7 @@ a Mechanism’s <a class="reference internal" href="#psyneulink.components.mecha
 <code class="descname">objective_mechanism</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>ObjectiveMechanism</em> – <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that monitors and evaluates the values specified in the ControlMechanism’s
 <strong>objective_mechanism</strong> argument, and transmits the result to the ControlMechanism’s <em>ERROR_SIGNAL</em>
-<a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_state" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_state"><code class="xref any py py-attr docutils literal"><span class="pre">input_state</span></code></a>.</p>
+<a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_state" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_state"><code class="xref any py py-attr docutils literal"><span class="pre">input_state</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -453,7 +453,7 @@ a Mechanism’s <a class="reference internal" href="#psyneulink.components.mecha
 <code class="descname">monitored_output_states</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.monitored_output_states" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[OutputState]</em> – each item is an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> monitored by the ObjectiveMechanism listed in the ControlMechanism’s
 <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> attribute;  it is the same as that
-ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute
+ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute
 (see <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitored-output-states"><span class="std std-ref">Monitored OutputStates</span></a> for specification).  The <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
 of the OutputStates listed are used by the ObjectiveMechanism to generate the ControlMechanism’s <a class="reference internal" href="#controlmechanism-input"><span class="std std-ref">input</span></a>.</p>
 </dd></dl>
@@ -463,7 +463,7 @@ of the OutputStates listed are used by the ObjectiveMechanism to generate the Co
 <code class="descname">monitored_output_states_weights_and_exponents</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.monitored_output_states_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[Tuple(float, float)]</em> – each tuple in the list contains the weight and exponent associated with a corresponding item of
 <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.monitored_output_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>;  these are the same as those in
-the <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.monitored_output_states_weights_and_exponents" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.monitored_output_states_weights_and_exponents"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states_weights_and_exponents</span></code></a> attribute of the <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, and are used by the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to parametrize the contribution made to its output by each of the values that
+the <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states_weights_and_exponents" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states_weights_and_exponents"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states_weights_and_exponents</span></code></a> attribute of the <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, and are used by the ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to parametrize the contribution made to its output by each of the values that
 it monitors (see <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-function"><span class="std std-ref">ObjectiveMechanism Function</span></a>).</p>
 </dd></dl>
 
@@ -480,7 +480,7 @@ it monitors (see <a class="reference internal" href="ObjectiveMechanism.html#obj
 <code class="descname">allocation_policy</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>2d np.array</em> – each item is the value assigned as the <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> for the corresponding
 ControlSignal listed in the <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a> attribute;  the allocation_policy is the same as the
-ControlMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute).</p>
+ControlMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -488,7 +488,7 @@ ControlMechanism’s <a class="reference internal" href="#psyneulink.components.
 <code class="descname">control_signals</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[ControlSignal]</em> – list of the <code class="xref any docutils literal"><span class="pre">ControlSignals</span></code> for the ControlMechanism, including any inherited from a
 <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.system" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a> for which it is a <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> (same as
-ControlMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute); each sends a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>
+ControlMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute); each sends a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>
 to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the parameter it controls</p>
 </dd></dl>
 
@@ -527,467 +527,6 @@ the ControlMechanism.</p>
 <p><strong>system</strong> must be a System for which the ControlMechanism should be assigned as the <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>;  if the specified System already has a <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>,
 it will be replaced by the current one;  if the current one is already the <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>
 for another System, it will be disabled for that System.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.AdaptiveMechanism_Base">
-<em class="property">class </em><code class="descclassname">psyneulink.components.mechanisms.adaptive.control.controlmechanism.</code><code class="descname">AdaptiveMechanism_Base</code><span class="sig-paren">(</span><em>variable</em>, <em>size</em>, <em>modulation</em>, <em>params</em>, <em>name</em>, <em>prefs</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.AdaptiveMechanism_Base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that modulates the value(s) of one or more other <a class="reference internal" href="Component.html"><span class="doc">Component(s)</span></a>.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">AdaptiveMechanism is an abstract class and should NEVER be instantiated by a call to its constructor.
-They should be instantiated using the constructor for a <a class="reference internal" href="AdaptiveMechanism.html#adaptivemechanism-subtypes"><span class="std std-ref">subclass</span></a>.</p>
-</div>
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.AdaptiveMechanism_Base.modulation">
-<code class="descname">modulation</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.AdaptiveMechanism_Base.modulation" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ModulationParam</em> – determines how the output of the AdaptiveMechanism’s <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal(s)</span></a> are used to
-modulate the value of the State(s) to which their <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection(s)</span></a> project.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base">
-<em class="property">class </em><code class="descclassname">psyneulink.components.mechanisms.adaptive.control.controlmechanism.</code><code class="descname">Mechanism_Base</code><span class="sig-paren">(</span><em>variable=None</em>, <em>size=None</em>, <em>input_states=None</em>, <em>output_states=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for Mechanism.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Mechanism is an abstract class and should <strong>never</strong> be instantiated by a direct call to its constructor.
-It should be instantiated using the <code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code> command (see it for description of parameters),
-by calling the constructor for a subclass, or using other methods for specifying a Mechanism in context
-(see <a class="reference internal" href="Mechanism.html#mechanism-creation"><span class="std std-ref">Creating a Mechanism</span></a>).</p>
-</div>
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.variable">
-<code class="descname">variable</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ndarray : default self.instance_defaults.variable</em> – used as input to the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  It is always at least a 2d np.array,
-with each item of axis 0 corresponding to a <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of one of the Mechanism’s <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> (in the order they are listed in its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute), and
-the first item (i.e., item 0) corresponding to the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a>.  When specified in the <strong>variable</strong> argument of the constructor for the Mechanism,
-it is used as a template to define the format (shape and type of elements) of the input the Mechanism’s
-<a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_state">
-<code class="descname">input_state</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_state" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>InputState : default default InputState</em> – <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> for the Mechanism;  same as first entry of its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute.  Its <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is assigned as the first item of the
-Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.variable" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_states">
-<code class="descname">input_states</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_states" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ContentAddressableList[str, InputState]</em> – a list of the Mechanism’s <a class="reference internal" href="Mechanism.html#mechanism-inputstates"><span class="std std-ref">InputStates</span></a>. The first (and possibly only) entry is always
-the Mechanism’s <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> (i.e., the one in the its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_state" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_state"><code class="xref any py py-attr docutils literal"><span class="pre">input_state</span></code></a> attribute).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_values">
-<code class="descname">input_values</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[List or 1d np.array] : default self.instance_defaults.variable</em> – each item in the list corresponds to the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of one of the Mechanism’s <a class="reference internal" href="Mechanism.html#mechanism-inputstates"><span class="std std-ref">InputStates</span></a> listed in its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute.  The value of
-each item is the same as the corresponding item in the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.variable" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
-attribute.  The latter is a 2d np.array; the <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_values" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_values"><code class="xref any py py-attr docutils literal"><span class="pre">input_values</span></code></a> attribute provides
-this information in a simpler list format.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.parameter_states">
-<code class="descname">parameter_states</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.parameter_states" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ContentAddressableList[str, ParameterState]</em> – a read-only list of the Mechanism’s <a class="reference internal" href="Mechanism.html#mechanism-parameterstates"><span class="std std-ref">ParameterStates</span></a>, one for each of its
-<a class="reference internal" href="ParameterState.html#parameterstate-configurable-parameters"><span class="std std-ref">configurable parameters</span></a>, including those of its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  The value of the parameters of the Mechanism and its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> are also accessible as (and can be modified using) attributes of the Mechanism
-(see <a class="reference internal" href="Mechanism.html#mechanism-parameterstates"><span class="std std-ref">ParameterStates and Parameters</span></a>).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function">
-<code class="descname">function</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Function, function or method</em> – the primary function for the Mechanism, called when it is <a class="reference internal" href="Mechanism.html#mechanism-execution"><span class="std std-ref">executed</span></a>.  It takes the
-Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.variable" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute as its input, and its result is assigned to the
-Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function_params">
-<code class="descname">function_params</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function_params" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Dict[str, value]</em> – contains the parameters for the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  The key of each entry is the
-name of a parameter of the function, and its value is the parameter’s value.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value">
-<code class="descname">value</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ndarray : default None</em> – output of the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  It is always at least a 2d np.array, with the
-items of axis 0 corresponding to the values referenced by the corresponding <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.index" title="psyneulink.components.states.outputstate.OutputState.index"><code class="xref any py py-attr docutils literal"><span class="pre">index</span></code></a>
-attribute of the Mechanism’s <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>.  The first item is generally referenced by the
-Mechanism’s <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> (i.e., the one in the its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_state" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_state"><code class="xref any py py-attr docutils literal"><span class="pre">output_state</span></code></a> attribute).  The <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is <code class="xref any docutils literal"><span class="pre">None</span></code> until the Mechanism
-has been executed at least once.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">the <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a Mechanism is not necessarily the same as its
-<a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_values" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> attribute, which lists the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s
-of its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">OutputStates</span></code></a>.</p>
-</div>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.default_value">
-<code class="descname">default_value</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.default_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ndarray : default None</em> – set equal to the <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute when the Mechanism is first initialized; maintains
-its value even when <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is reset to None when (re-)initialized prior to execution.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_state">
-<code class="descname">output_state</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_state" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OutputState : default default OutputState</em> – <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> for the Mechanism;  same as first entry of its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_states">
-<code class="descname">output_states</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_states" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ContentAddressableList[str, OutputState]</em> – list of the Mechanism’s <a class="reference internal" href="Mechanism.html#mechanism-outputstates"><span class="std std-ref">OutputStates</span></a>.</p>
-<p>There is always
-at least one entry, which identifies the Mechanism’s <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a>.</p>
-<p>a list of the Mechanism’s <a class="reference internal" href="Mechanism.html#mechanism-outputstates"><span class="std std-ref">OutputStates</span></a>. The first (and possibly only) entry is always
-the Mechanism’s <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> (i.e., the one in the its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_state" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_state"><code class="xref any py py-attr docutils literal"><span class="pre">output_state</span></code></a> attribute).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_values">
-<code class="descname">output_values</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[value] : default Mechanism_Base.function(instance_defaults.variable)</em> – each item in the list corresponds to the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of one of the Mechanism’s <a class="reference internal" href="Mechanism.html#mechanism-outputstates"><span class="std std-ref">OutputStates</span></a> listed in its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_values" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> of a Mechanism is not necessarily the same as its
-<a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute, since an OutputState’s
-<code class="xref any docutils literal"><span class="pre">function</span></code> and/or its <code class="xref any docutils literal"><span class="pre">calculate</span></code>
-attribute may use the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> to generate a derived quantity for
-the <code class="xref any docutils literal"><span class="pre">value</span></code> of that OutputState (and its corresponding item in the
-the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_values" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> attribute).</p>
-</div>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.is_finished">
-<code class="descname">is_finished</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.is_finished" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool : default False</em> – set by a Mechanism to signal completion of its <a class="reference internal" href="Mechanism.html#mechanism-execution"><span class="std std-ref">execution</span></a>; used by <a class="reference internal" href="Condition.html#conditions-component-based"><span class="std std-ref">Component-based
-Conditions</span></a> to predicate the execution of one or more other Components on the
-Mechanism.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.processes">
-<code class="descname">processes</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.processes" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Dict[Process, str]:</em> – a dictionary of the <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a> to which the Mechanism belongs, that designates its  <a class="reference internal" href="Mechanism.html#mechanism-role-in-processes-and-systems"><span class="std std-ref">role</span></a> in each.  The key of each entry is a Process to which the Mechansim
-belongs, and its value is the Mechanism’s <a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">role in that Process</span></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.systems">
-<code class="descname">systems</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.systems" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Dict[System, str]:</em> – a dictionary of the <a class="reference internal" href="System.html"><span class="doc">Systems</span></a> to which the Mechanism belongs, that designates its <a class="reference internal" href="Mechanism.html#mechanism-role-in-processes-and-systems"><span class="std std-ref">role</span></a> in each. The key of each entry is a System to which the Mechanism
-belongs, and its value is the Mechanism’s <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">role in that System</span></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.time_scale">
-<code class="descname">time_scale</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.time_scale" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TimeScale : default TimeScale.TRIAL</em> – determines the default value of the <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> used by the Mechanism when <a class="reference internal" href="Mechanism.html#mechanism-execution"><span class="std std-ref">executed</span></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.name">
-<code class="descname">name</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default &lt;Mechanism subclass&gt;-&lt;index&gt;</em> – the name of the Mechanism.
-Specified in the <strong>name</strong> argument of the constructor for the Mechanism;  if not is specified,
-a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code> based on the Mechanism’s subclass
-(see <code class="xref any docutils literal"><span class="pre">Registry</span></code> for conventions used in naming, including for default and duplicate names).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Mechanism.
-Specified in the <strong>prefs</strong> argument of the constructor for the Mechanism;
-if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.add_states">
-<code class="descname">add_states</code><span class="sig-paren">(</span><em>states</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.add_states" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add one or more <a class="reference internal" href="State.html"><span class="doc">States</span></a> to the Mechanism.  Only <code class="xref any docutils literal"><span class="pre">InputStates</span></code> can be added; <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterStates</span></a> cannot be added to a Mechanism after it has
-been constructed.</p>
-<p>If the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.State_Base.owner" title="psyneulink.components.states.inputstate.State_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> of a State specified in the <strong>states</strong> argument is not the same as the
-Mechanism to which it is being added, the user is given the option of reassigning the State to the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.State_Base.owner" title="psyneulink.components.states.inputstate.State_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>, making a copy of the State and assigning that to the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.State_Base.owner" title="psyneulink.components.states.inputstate.State_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>, or
-aborting.  If the name of a specified State is the same as an existing one with the same name, an index is
-appended to its name, and incremented for each State subsequently added with the same name
-(see <span class="xref std std-ref">naming conventions</span>).</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Adding States to a Mechanism changes the size of its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.variable" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute,
-which may produce an incompatibility with its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see
-<a class="reference internal" href="InputState.html#inputstates-mechanism-variable-and-function"><span class="std std-ref">InputStates</span></a> for a more detailed explanation).</p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>states</strong> (<em>State</em><em> or </em><em>List</em><em>[</em><em>State</em><em>]</em>) – one more <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> to be added to the Mechanism.
-State specification(s) can be an InputState or OutputState object, class reference, class keyword, or
-<a class="reference internal" href="State.html#state-specification"><span class="std std-ref">State specification dictionary</span></a> (the latter must have a <em>STATE_TYPE</em> entry
-specifying the class or keyword for InputState or OutputState).</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.execute">
-<code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>runtime_params=None</em>, <em>clock=&lt;psyneulink.scheduling.timescale.Clock object&gt;</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em>, <em>ignore_execution_id=False</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.execute" title="Permalink to this definition">¶</a></dt>
-<dd><p>Carry out a single <a class="reference internal" href="Mechanism.html#mechanism-execution"><span class="std std-ref">execution</span></a> of the Mechanism.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>input</strong> (<em>List</em><em>[</em><a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><em>value</em></a><em>] or </em><em>ndarray : default self.instance_defaults.variable</em>) – input to use for execution of the Mechanism.
-This must be consistent with the format of the Mechanism’s <a class="reference internal" href="Mechanism.html#mechanism-inputstates"><span class="std std-ref">InputState(s)</span></a>:
-the number of items in the  outermost level of the list, or axis 0 of the ndarray, must equal the number
-of the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a>, and each item must be compatible with the
-format (number and type of elements) of the <code class="xref any docutils literal"><span class="pre">variable</span></code> of the
-corresponding InputState (see <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">Run Inputs</span></a> for details of input
-specification formats).</li>
-<li><strong>runtime_params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><em>value</em></a><em>]</em><em>]</em><em>]</em><em>]</em><em>:</em>) – a dictionary that can include any of the parameters used as arguments to instantiate the Mechanism,
-its function, or <a class="reference internal" href="State.html#state-projections"><span class="std std-ref">Projection(s) to any of its States</span></a>.  Any value assigned to a
-parameter will override the current value of that parameter for the (and only the current) execution of
-the Mechanism, and will return to its previous value following execution (unless the
-<a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.ComponentPreferenceSet.runtimeParamStickyAssignmentPref" title="psyneulink.globals.preferences.ComponentPreferenceSet.runtimeParamStickyAssignmentPref"><code class="xref any py py-attr docutils literal"><span class="pre">runtimeParamStickyAssignmentPref</span></code></a> is set for the Component to which the parameter belongs).  See
-<a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">runtime_params</span></a> above for details concerning specification.</li>
-<li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) – specifies whether the Mechanism is executed for a single <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TIME_STEP" title="psyneulink.scheduling.timescale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> or a <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Mechanism’s output_values</strong> – list with the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of the Mechanism’s <a class="reference internal" href="Mechanism.html#mechanism-outputstates"><span class="std std-ref">OutputStates</span></a> after either one <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TIME_STEP" title="psyneulink.scheduling.timescale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> or a <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[<a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value">value</a>]</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.initialize">
-<code class="descname">initialize</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.initialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assign an initial value to the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute and update its
-<a class="reference internal" href="Mechanism.html#mechanism-outputstates"><span class="std std-ref">OutputStates</span></a>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>List</em><em>[</em><a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><em>value</em></a><em>] or </em><em>1d ndarray</em>) – value used to initialize the first item of the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.plot">
-<code class="descname">plot</code><span class="sig-paren">(</span><em>x_range=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.plot" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate a plot of the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> using the specified parameter values
-(see <a class="reference internal" href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.plot" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.plot"><code class="xref any py py-meth docutils literal"><span class="pre">DDM.plot</span></code></a> for details of the animated DDM plot).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x_range</strong> (<em>List</em>) – <p>specify the range over which the <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> should be plotted. x_range must be
-provided as a list containing two floats: lowest value of x and highest value of x.  Default values
-depend on the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
-<ul class="simple">
-<li>Logistic Function: default x_range = [-5.0, 5.0]</li>
-<li>Exponential Function: default x_range = [0.1, 5.0]</li>
-<li>All Other Functions: default x_range = [-10.0, 10.0]</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Plot of Mechanism’s `function &lt;Mechanism_Base.function&gt;`</strong> – Matplotlib window of the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> plotted with specified parameters
-over the specified x_range</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">Matplotlib window</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.run">
-<code class="descname">run</code><span class="sig-paren">(</span><em>inputs</em>, <em>num_trials=None</em>, <em>call_before_execution=None</em>, <em>call_after_execution=None</em>, <em>time_scale=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.Mechanism_Base.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run a sequence of <a class="reference internal" href="Mechanism.html#mechanism-execution"><span class="std std-ref">executions</span></a>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>inputs</strong> (<em>List</em><em>[</em><a class="reference internal" href="Process.html#psyneulink.components.process.Process.input" title="psyneulink.components.process.Process.input"><em>input</em></a><em>] or </em><em>ndarray</em><em>(</em><a class="reference internal" href="Process.html#psyneulink.components.process.Process.input" title="psyneulink.components.process.Process.input"><em>input</em></a><em>) </em><em>: default default_variable</em>) – the inputs used for each in a sequence of executions of the Mechanism (see <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">Inputs</span></a> for a detailed
-description of formatting requirements and options).</li>
-<li><strong>num_trials</strong> (<em>int</em>) – number of trials to execute.</li>
-<li><strong>call_before_execution</strong> (<em>function : default None</em>) – called before each execution of the Mechanism.</li>
-<li><strong>call_after_execution</strong> (<em>function : default None</em>) – called after each execution of the Mechanism.</li>
-<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) – specifies whether the Mechanism is executed for a single <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TIME_STEP" title="psyneulink.scheduling.timescale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> or a <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Mechanism’s output_values</strong> – list with the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of the Mechanism’s <a class="reference internal" href="Mechanism.html#mechanism-outputstates"><span class="std std-ref">OutputStates</span></a> for each execution of the Mechanism.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[<a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value">value</a>]</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.MonitoredOutputStatesOption">
-<em class="property">class </em><code class="descclassname">psyneulink.components.mechanisms.adaptive.control.controlmechanism.</code><code class="descname">MonitoredOutputStatesOption</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.MonitoredOutputStatesOption" title="Permalink to this definition">¶</a></dt>
-<dd><p>Specifies OutputStates to be monitored by a <a class="reference internal" href="#"><span class="doc">ControlMechanism</span></a>
-(see <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitored-output-states"><span class="std std-ref">Monitored OutputStates</span></a> for a more complete description of their meanings.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.components.mechanisms.adaptive.control.controlmechanism.</code><code class="descname">ObjectiveMechanism</code><span class="sig-paren">(</span><em>                       monitored_output_states,              input_states=None,                    function=LinearCombination,           output_states=[OUTCOME],              params=None,                          name=None,                            prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that evaluates the value(s)
-of one or more <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>monitored_output_states</strong> (List[<a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, str, value, dict, <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.MonitoredOutputStatesOption" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.MonitoredOutputStatesOption"><code class="xref any py py-class docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code></a>] or Dict) – specifies the OutputStates, the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of which will be monitored, and evaluated by
-the ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">function</span></a> (see <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitored-output-states"><span class="std std-ref">Monitored OutputStates</span></a>
-for details of specification).</li>
-<li><strong>input_states</strong> (<em>List</em><em>[</em><a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState" title="psyneulink.components.states.inputstate.InputState"><em>InputState</em></a><em>, </em><a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default None</em>) – specifies the names and/or formats to use for the values of the InputStates that receive the input from the
-OutputStates specified in the monitored_output_states** argument; if specified, there must be one for each item
-specified in the <strong>monitored_output_states</strong> argument.</li>
-<li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><em>ObjectiveFunction</em><em>, </em><a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.function"><em>function</em></a><em> or </em><em>method : default LinearCombination</em>) – specifies the function used to evaluate the values listed in <code class="xref std std-keyword docutils literal"><span class="pre">monitored_output_states</span></code>
-(see <a class="reference internal" href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function" title="psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for details.</li>
-<li><strong>output_states</strong> (<em>List</em><em>[</em><a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState" title="psyneulink.components.states.outputstate.OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>OUTCOME</em><em>]</em>) – specifies the OutputStates for the Mechanism;</li>
-<li><strong>role</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.LEARNING" title="psyneulink.globals.keywords.MechanismRoles.LEARNING"><em>LEARNING</em></a><em>, </em><em>CONTROL</em><em>]</em>) – specifies if the ObjectiveMechanism is being used for learning or control (see <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.role" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.role"><code class="xref any py py-attr docutils literal"><span class="pre">role</span></code></a> for details).</li>
-<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
-the Mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
-the dictionary override any assigned to those parameters in arguments of the
-constructor.</li>
-<li><strong>name</strong> (<em>str : default ObjectiveMechanism-&lt;index&gt;</em>) – a string used for the name of the Mechanism.
-If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : Mechanism.classPreferences</em><em>]</em>) – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for Mechanism.
-If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.monitored_output_states">
-<code class="descname">monitored_output_states</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.monitored_output_states" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ContentAddressableList[OutputState]</em> – determines the OutputStates, the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of which are monitored, and evaluated by the
-ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  Each item in the list refers to an
-<a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> containing the value to be monitored, with a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from it to the
-corresponding <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> listed in the <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.input_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.monitored_output_states_weights_and_exponents">
-<code class="descname">monitored_output_states_weights_and_exponents</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.monitored_output_states_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[Tuple(float, float)]</em> – each tuple in the list contains a weight and exponent associated with a corresponding InputState listed in the
-ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.input_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute;  these are used by its
-<a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to parametrize the contribution that the values of each of the
-OuputStates monitored by the ObjectiveMechanism makes to its output (see <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-function"><span class="std std-ref">Function</span></a>)</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.input_states">
-<code class="descname">input_states</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.input_states" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ContentAddressableList[InputState]</em> – contains the InputStates of the ObjectiveMechanism, each of which receives a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the
-OutputStates specified in its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.function">
-<code class="descname">function</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>CombinationFunction, ObjectiveFunction, function, or method</em> – the function used to compare evaluate the values monitored by the ObjectiveMechanism.  The function can be
-any PsyNeuLink <code class="xref any docutils literal"><span class="pre">CombinationFunction</span></code> or a Python function that takes a 2d array with an arbitrary number of
-items or a number equal to the number of items in the ObjectiveMechanism’s variable (and its number of
-input_states), and returns a 1d array.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.role">
-<code class="descname">role</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.role" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>None, LEARNING or CONTROL</em> – specifies whether the ObjectiveMechanism is used for learning in a Process or System (in conjunction with a
-<a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>), or for control in a System (in conjunction with a <a class="reference internal" href="#"><span class="doc">ControlMechanism</span></a>).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.value">
-<code class="descname">value</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> – the output of the evaluation carried out by the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.output_state">
-<code class="descname">output_state</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.output_state" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OutputState</em> – contains the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> of the ObjectiveMechanism; the default is
-its <em>OUTCOME</em> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-output"><span class="std std-ref">OutputState</span></a>, the value of which is equal to the
-<a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.value" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute of the ObjectiveMechanism.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.output_states">
-<code class="descname">output_states</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.output_states" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ContentAddressableList[OutputState]</em> – by default, contains only the <em>OUTCOME</em> (<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary</span></a>) OutputState of the ObjectiveMechanism.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.output_values">
-<code class="descname">output_values</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.output_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> – contains one item that is the value of the <em>OUTCOME</em> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-output"><span class="std std-ref">OutputState</span></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.name">
-<code class="descname">name</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default ObjectiveMechanism-&lt;index&gt;</em> – the name of the Mechanism.
-Specified in the <strong>name</strong> argument of the constructor for the Mechanism;
-if not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for Mechanism.
-Specified in the <strong>prefs</strong> argument of the constructor for the Mechanism;
-if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.add_monitored_output_states">
-<code class="descname">add_monitored_output_states</code><span class="sig-paren">(</span><em>monitored_output_states_specs</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ObjectiveMechanism.add_monitored_output_states" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> to be monitored by the ObjectiveMechanism.</p>
-<p>Used by other Components to add a <a class="reference internal" href="State.html"><span class="doc">States</span></a> or list of States to be monitored by the ObjectiveMechanism.
-The <strong>monitored_output_states_spec</strong> can be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-outputstate-tuple"><span class="std std-ref">monitored_output_states tuple</span></a>, or list with any of these.  If item is a Mechanism, its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary
-OutputState</span></a> is used.</p>
 </dd></dl>
 
 </dd></dl>
