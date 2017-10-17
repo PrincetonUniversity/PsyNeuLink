@@ -1053,8 +1053,8 @@ class State_Base(State):
 
                 projection = projection_type(**projection_spec)
 
-                if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                    continue
+                # if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                #     continue
 
             else:
                 raise StateError("PROGRAM ERROR: Unrecognized {} specification ({}) returned "
