@@ -431,6 +431,8 @@ class LearningProjection(ModulatoryProjection_Base):
                  sender:tc.optional(tc.any(LearningSignal, LearningMechanism))=None,
                  receiver:tc.optional(tc.any(ParameterState, MappingProjection))=None,
                  learning_function:tc.optional(is_function_type)=BackPropagation,
+                 # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
+                 # learning_signal_params:tc.optional(dict)=None,
                  learning_rate:tc.optional(tc.any(parameter_spec))=None,
                  weight=None,
                  exponent=None,
@@ -447,14 +449,22 @@ class LearningProjection(ModulatoryProjection_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(learning_function=learning_function,
                                                   learning_rate=learning_rate,
+                                                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
+                                                  # learning_signal_params=learning_signal_params,
+                                                  weight=weight,
+                                                  exponent=exponent,
                                                   params=params)
 
+        # IMPLEMENTATION NOTE:
+        #    LearningProjection ALWAYS uses deferred_init, so:
+        #        assign init_args here
+        #        don't both calling super()
         # Store args for deferred initialization
         self.init_args = locals().copy()
         self.init_args['context'] = self
         self.init_args['name'] = name
-        self.init_args['weight'] = weight
-        self.init_args['exponent'] = exponent
+        # self.init_args['weight'] = weight
+        # self.init_args['exponent'] = exponent
         del self.init_args['learning_function']
         del self.init_args['learning_rate']
 
