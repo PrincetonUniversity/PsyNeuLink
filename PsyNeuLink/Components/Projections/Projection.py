@@ -315,10 +315,11 @@ import warnings
 from PsyNeuLink.Components.Component import Component, InitStatus
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
 from PsyNeuLink.Globals.Keywords import \
-    NAME, CONTEXT, MECHANISM, STATE, STATES, INPUT_STATE, OUTPUT_STATE, DEFERRED_INITIALIZATION, \
-    PROJECTION, PROJECTION_SENDER, PROJECTION_TYPE, SENDER, RECEIVER, \
+    NAME, PARAMS, CONTEXT, STANDARD_ARGS, MECHANISM, \
+    STATE, STATES, INPUT_STATE, OUTPUT_STATE, \
+    PROJECTION, PROJECTION_SENDER, PROJECTION_TYPE, PROJECTION_PARAMS, SENDER, RECEIVER, \
     PARAMETER_STATE_PARAMS, WEIGHT, EXPONENT, \
-    LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
+    LEARNING, LEARNING_PROJECTION, PATHWAY, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
     CONTROL, CONTROL_PROJECTION, GATING, GATING_PROJECTION, \
     kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -331,10 +332,12 @@ kpProjectionTimeScaleLogEntry = "Projection TimeScale"
 
 projection_keywords = set()
 
-PROJECTION_SPEC_KEYWORDS = {MAPPING_PROJECTION,
-                            LEARNING, LEARNING_PROJECTION,
-                            CONTROL, CONTROL_PROJECTION,
-                            GATING, GATING_PROJECTION}
+PROJECTION_ARGS = {PROJECTION_TYPE, SENDER, RECEIVER, WEIGHT, EXPONENT} | STANDARD_ARGS
+
+PROJECTION_SPEC_KEYWORDS = {PATHWAY: MAPPING_PROJECTION,
+                            LEARNING: LEARNING_PROJECTION,
+                            CONTROL: CONTROL_PROJECTION,
+                            GATING: GATING_PROJECTION}
 
 from collections import namedtuple
 ConnectionTuple = namedtuple("ConnectionTuple", "state, weight, exponent, projection")
@@ -1410,7 +1413,7 @@ def _parse_connection_specs(connectee_state_type,
                 # FIX:           (i.e., NOT IF IT IS A VALUE OR STRING)
                 if _is_projection_spec(projection_spec):
                     if isinstance(projection_spec, str):
-                        projection_spec, err_str = _parse_projection_keyword(projection_spec)
+                        projection_spec, err_str = _parse_projection_spec(projection_spec)
 
                         # FIX: 10/3/17 - REINSTATE APPROPRIATE ERROR HANDLING HERE,
                         # FIX:           OR DELETE ERROR HANDLING FROM _parse_projection_keyword
@@ -1457,16 +1460,132 @@ def _parse_connection_specs(connectee_state_type,
     return connect_with_states
 
 
-def _parse_projection_keyword(projection_spec,
-                          # messages=NotImplemented,
-                          context=None):
-    """Take projection ref and return ref to corresponding type or, if invalid, to  default for context
 
-    Arguments:
-    - projection_spec (Projection subclass or str):  str must be a keyword constant for a Projection subclass
-                                                     or an alias for one:  LEARNING = LEARNING_PROJECTION
-                                                                           CONTROL = CONTROL_PROJECTION
-                                                                           GATING = GATING_PROJECTION
+def _parse_projection_spec(projection_spec, state=None, socket=None, **kwargs):
+
+    """Return either Projection object or Projection specification dict for projection_spec
+
+    All keys in kwargs must be from PROJECTION_ARGS
+
+    If projection_spec is or resolves to a Projection object, returns State object.
+    Otherwise, return State specification dictionary using any arguments provided as defaults
+    """
+
+    bad_arg = next((key for key in kwargs if key in PROJECTION_ARGS), None)
+    if bad_arg:
+        raise ProjectionError("Illegal argument in call to _parse_state_spec: {}".format(bad_arg))
+
+    from collections import defaultdict
+    proj_spec_dict = defaultdict()
+    proj_spec_dict.update(kwargs)
+
+
+    # Construct default name:
+    direction_str = defaultdict({RECEIVER: '_to_', SENDER: '_from_'})[socket]
+    # FIX: 10/3/17 - THE FOLLOWING NEEDS WORK: TEST THAT:
+    # FIX:                    socket HAS BEEN PASSED
+    # FIX:                    state HAS BEEN PASSED
+    # FIX:                    PROJECTION_TYPE HAS BEEN DETERMINED
+    default_name = proj_spec_dict[PROJECTION_TYPE] + direction_str + state.name
+
+    # Projection object
+    if isinstance(projection_spec, Projection):
+        projection = projection_spec
+        # IMPLEMENTATION NOTE: Not sure which to give precedence, spec in ConnectionTuple or instantiated Projection:
+        if ((proj_spec_dict[WEIGHT] is not None and projection.weight is not None) or
+            (proj_spec_dict[EXPONENT] is not None and projection.exponent is not None)):
+            assert False, "Conflict in weight and/or exponent specs between Projection and ConnectionTuple"
+        projection.weight = proj_spec_dict[WEIGHT] or projection.weight
+        projection.exponent = proj_spec_dict[EXPONENT] or projection.exponent
+        projection.name = projection.name or default_name
+        return projection
+
+    # Projection class
+    elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
+        proj_spec_dict[PROJECTION_TYPE] = projection_spec
+
+    elif isinstance(projection_spec, str):
+
+        # get class for keyword in registry
+        try:
+            from PsyNeuLink.Components.Projections.Projection import ProjectionRegistry
+            projection_type = ProjectionRegistry[PROJECTION_SPEC_KEYWORDS[projection_spec]].subclass
+        except KeyError:
+            # projection_spec was not a recognized key
+            raise ProjectionError("{} is not a recognized {} keyword".format(projection_spec, Projection.__name__))
+        # projection_spec was legitimate keyword
+        else:
+            proj_spec_dict[PROJECTION_TYPE] = projection_type
+
+    # FIX: 10/3/17 - DEAL WITH NUMERIC SPECIFICATOIN OR MATRIX KEYWORD FOR MAPPING PROJECTION HERE
+    # FIX:           ?? CREATE AND CALL _parse_projectio_specific_spec ??
+    # # If the projection was specified with a keyword or attribute value
+    # #     then move it to the relevant entry of the params dict for the projection
+    # # If projection_spec was in the form of a matrix keyword, move it to a matrix entry in the params dict
+    # if (issubclass(projection_type, PathwayProjection_Base)
+    #     and (is_numeric(projection_spec) or projection_spec in MATRIX_KEYWORD_SET)):
+    #     proj_spec_dict.update({MATRIX:projection_spec})
+    # # If projection_spec was in the form of a ModulationParam value,
+    # #    move it to a MODULATION entry in the params dict
+    # elif (issubclass(projection_type, ModulatoryProjection_Base) and
+    #           isinstance(projection_spec, ModulationParam)):
+    #     kwargs[PARAMS].update({MODULATION:projection_spec})
+
+    # State object
+    elif isinstance(projection_spec, State):
+        # FIX: ??WHICH:  DETERMINE FROM CONNECTION INFO PASSED IN:
+        proj_spec_dict.update({SENDER:projection_spec})
+        proj_spec_dict.update({RECEIVER:projection_spec})
+
+    # State class
+    elif inspect.isclass(projection_spec) and issubclass(projection_spec, State):
+        # Create default instance of state and assign as ??sender or ??receiver
+        #    (it may use deferred_init since owner may not yet be known)
+        # FIX: ??WHICH:  DETERMINE FROM CONNECTION INFO PASSED IN:
+        proj_spec_dict.update({SENDER:projection_spec()})
+        proj_spec_dict.update({RECEIVER:projection_spec()})
+
+    # Dict
+    elif isinstance(projection_spec, dict):
+
+        proj_spec_dict = projection_spec
+
+        # Get projection params from specification dict
+        if PROJECTION_PARAMS in proj_spec_dict:
+            proj_spec_dict[PARAMS].update = proj_spec_dict[PROJECTION_PARAMS]
+            # projection_spec[PARAMS].update(projection_params)
+            assert False, "PROJECTION_PARAMS ({}) passed in spec dict in ConnectionTuple for {}.".\
+                           format(proj_spec_dict[PROJECTION_PARAMS], projection_spec, proj_spec_dict[NAME])
+
+
+    # FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
+    # FIX: 10/3/17 - USE STATE AND SOCKET TO APPEND STATE'S AND AND TO/FROM BASED ON SOCKET
+
+    # FIX: ??CORRECT ??INTEGRATE WITH ABOVE
+    # If Projection was not specified:
+    #    - assign default type
+    # Note: this gets projection_type but does NOT instantiate projection; so,
+    #       projection is NOT yet in self.path_afferents list
+    else:
+        if self.prefs.verbosePref:
+            warnings.warn("Unrecognized specification for a Projection ({}) to {} of {}; "
+                          "default {} will be assigned".
+                          format(projection_spec, self.name, owner.name, default_projection_type.__name__))
+
+    return proj_spec_dict
+
+
+def _parse_projection_spec(projection_spec,
+                           context=None):
+    """Take projection ref and return Projection specification dictionary (including PROJECTION_TYPE entry)
+
+    projection_spec must be a:
+        - Projection or Projection class
+        - value
+        - str (keyword): 'LEARNING' = LEARNING_PROJECTION
+                         'CONTROL' = CONTROL_PROJECTION
+                         'GATING' = GATING_PROJECTION
+
     - context (str):
 
     Returns tuple: (Projection subclass or None, error string)
