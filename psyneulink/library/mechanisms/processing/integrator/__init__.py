@@ -2,4 +2,4 @@ from . import ddm
 
 from .ddm import *
 
-__all__ = ddm.__all__
+__all__ = list(ddm.__all__)

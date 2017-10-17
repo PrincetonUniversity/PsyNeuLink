@@ -2,4 +2,4 @@ from . import autoassociativelearningmechanism
 
 from .autoassociativelearningmechanism import *
 
-__all__ = autoassociativelearningmechanism.__all__
+__all__ = list(autoassociativelearningmechanism.__all__)

@@ -8,7 +8,7 @@ from .gating import *
 from .learning import *
 
 
-__all__ = control.__all__
+__all__ = list(control.__all__)
 __all__.extend(gating.__all__)
 __all__.extend(learning.__all__)
 __all__.extend(adaptivemechanism.__all__)
