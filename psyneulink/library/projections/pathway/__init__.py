@@ -2,4 +2,4 @@ from . import autoassociativeprojection
 
 from .autoassociativeprojection import *
 
-__all__ = autoassociativeprojection.__all__
+__all__ = list(autoassociativeprojection.__all__)

@@ -370,6 +370,7 @@ FHN_INTEGRATOR_FUNCTION = "FHNIntegrator Function"
 UTILITY_INTEGRATOR_FUNCTION = "AGTUtilityIntegrator Function"
 ACCUMULATOR_INTEGRATOR = "AccumulatorIntegrator"  # (7/19/17 CW) added for MappingProjection.py
 ADAPTIVE_INTEGRATOR_FUNCTION = "AdaptiveIntegrator Function"
+GILZENRAT_INTEGRATOR_FUNCTION = "GilzenratDecisionIntegrator Function"
 DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
 ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU Integrator Function"
 LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"

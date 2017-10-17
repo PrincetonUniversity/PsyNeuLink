@@ -656,7 +656,6 @@ class LCControlMechanism(ControlMechanism):
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
                 self._control_signals.append((mult_param_name, mech))
         # MODIFIED 9/3/17 END
-
         super()._instantiate_output_states(context=context)
 
     def _execute(self,

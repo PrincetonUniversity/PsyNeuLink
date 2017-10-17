@@ -488,7 +488,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  hetero=None,
                  initial_value=None,
                  decay: is_numeric_or_none=None,
-                 noise: is_numeric_or_none=0.0,
+                 noise=0.0,
                  time_constant: is_numeric_or_none=1.0,
                  integrator_mode=False,
                  range=None,
@@ -538,6 +538,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                          initial_value=initial_value,
                          noise=noise,
                          integrator_mode=integrator_mode,
+
                          time_constant=time_constant,
                          range=range,
                          output_states=output_states,

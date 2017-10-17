@@ -12,7 +12,7 @@ from .objectivemechanism import *
 from .processingmechanism import *
 from .transfermechanism import *
 
-__all__ = compositioninterfacemechanism.__all__
+__all__ = list(compositioninterfacemechanism.__all__)
 __all__.extend(defaultprocessingmechanism.__all__)
 __all__.extend(integratormechanism.__all__)
 __all__.extend(objectivemechanism.__all__)

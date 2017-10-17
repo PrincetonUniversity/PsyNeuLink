@@ -2,4 +2,4 @@ from . import lcmechanism
 
 from .lcmechanism import *
 
-__all__ = lcmechanism.__all__
+__all__ = list(lcmechanism.__all__)

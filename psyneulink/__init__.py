@@ -36,7 +36,7 @@ from .globals import *
 from .library import *
 from .scheduling import *
 
-__all__ = components.__all__
+__all__ = list(components.__all__)
 __all__.extend(composition.__all__)
 __all__.extend(globals.__all__)
 __all__.extend(library.__all__)

@@ -16,7 +16,7 @@ from .preferences import *
 from .registry import *
 from .utilities import *
 
-__all__ = defaults.__all__
+__all__ = list(defaults.__all__)
 __all__.extend(kvo.__all__)
 __all__.extend(log.__all__)
 __all__.extend(preferences.__all__)

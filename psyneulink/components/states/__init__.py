@@ -10,7 +10,7 @@ from .outputstate import *
 from .parameterstate import *
 from .state import *
 
-__all__ = inputstate.__all__
+__all__ = list(inputstate.__all__)
 __all__.extend(modulatorysignals.__all__)
 __all__.extend(outputstate.__all__)
 __all__.extend(parameterstate.__all__)

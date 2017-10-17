@@ -314,7 +314,7 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
-
+from psyneulink.components.functions.function import Integrator
 __all__ = [
     'ALLOCATION_POLICY', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
 ]
@@ -916,8 +916,14 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # UPDATE output_states AND control_projections -------------------------------------------------------------
 
+        # TBI: For control mechanisms that accumulate, starting output must be equal to the initial "previous value"
+        # so that modulation that occurs BEFORE the control mechanism executes is computed appropriately
+        # if (isinstance(self.function_object, Integrator)):
+        #     control_signal._intensity = function_object.initializer
+
         try:
             self._output_states[control_signal.name] = control_signal
+
         except (AttributeError, TypeError):
             from psyneulink.components.states.state import State_Base
             self._output_states = ContentAddressableList(component_type=State_Base,
@@ -926,10 +932,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # Add index assignment to OutputState
         control_signal.index = output_state_index
-
         # (Re-)assign control_signals attribute to output_states
         self._control_signals = self.output_states
-
         return control_signal
 
     def _execute(self,

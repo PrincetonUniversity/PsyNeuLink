@@ -1,4 +1,4 @@
 from . import gatingmechanism
 from .gatingmechanism import *
 
-__all__ = gatingmechanism.__all__
+__all__ = list(gatingmechanism.__all__)
