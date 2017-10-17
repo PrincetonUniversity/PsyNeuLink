@@ -700,6 +700,7 @@ class State_Base(State):
                                          context=context.__class__.__name__)
 
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
+        # FIX: 10/3/17 - SHOULD THIS BE HANDLED BY COMPOSITION INSTEAD OF STATE ITSELF
         if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
             self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
         else:
@@ -911,8 +912,14 @@ class State_Base(State):
                          format(self.__class__.__name__,
                                 self.name))
 
+    # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED??
     def _instantiate_projections_to_state(self, projections, context=None):
         """Instantiate projections to a State and assign them to self.path_afferents
+
+        For each spec in projections arg:
+            - if it is a Projection,
+
+
 
         For each spec in projections arg, check that it is one or a list of any of the following:
         + Projection class (or keyword string constant for one):
@@ -1018,18 +1025,22 @@ class State_Base(State):
             # Parse projection_spec and fill in relevant entries of Projection specification dictionary
             elif isinstance(projection_spec, dict):
                 projection_type = projection_spec.pop(PROJECTION_TYPE, None) or default_projection_type
+                # FIX: 10/3/17 REINSTATE WHEN ModulatorySignal CONSTRUTORS CAN TAKE STATE CLASS AS SPEC FOR SENDER
+                # projection_spec[SENDER] = sender
+                if isinstance(sender, State):
+                    projection_spec[SENDER] = sender
                 projection_spec[RECEIVER] = self
                 # FIX: 10/3/17 - ??ASSIGN NAME HERE OR DEFER UNTIL SENDER IS KNOWN IF DEFERRED_INIT??:
-                if isinstance(connection.state, State):
+                if isinstance(sender, State):
                     sender_name = sender.name
                 elif inspect.isclass(sender) and issubclass(sender, State):
                     sender_name = sender.__name__
                 else:
                     raise StateError("SENDER of {} to {} of {} is neither a State or State class".
                                      format(projection_type.__name__, self.name, self.owner.name))
-                sender_name = projection_spec[SENDER] or sender_name
-                projection_spec[NAME] = projection_type.__name__+ " from " + sender_name + " to " + self.owner.name
+                projection_spec[NAME] = projection_type.__name__ + " from " + sender_name + " to " + self.owner.name
                 projection = projection_type(**projection_spec)
+                TEST = True
 
             else:
                 raise StateError("PROGRAM ERROR: Unrecognized {} specification ({}) returned "

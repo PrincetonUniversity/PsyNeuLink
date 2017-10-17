@@ -720,6 +720,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             for i, state in enumerate(self.input_states):
                 if state.params[PROJECTIONS] is not None:
                     for projection_spec in state.params[PROJECTIONS]:
+                    # FIX: 10/3/17 -  SHOULD THIS STILL GET DONE, NOW THAT PROJECTIONS ARE ALREADY INSTANTIATED??
                         # Assume that projection_specs are all in ConnectionTuples
                         #    and are in lists containing either Projections or Projection specification dictionaries
                         # MODIFIED 10/3/17 OLD:
@@ -727,22 +728,21 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                         # MODIFIED 10/3/17 NEW:
                         # MODIFIED 10/3/17 END
                         matrix_spec = projection_spec.projection[MATRIX] or AUTO_ASSIGN_MATRIX
-                        input_state_projection_specs.append(projection_spec.projection or [AUTO_ASSIGN_MATRIX])
+                        input_state_projection_specs.append([matrix_spec])
                         output_states.append(projection_spec.state)
                 else:
                     output_states.append(state.name)
-                    input_state_projection_specs.extend([AUTO_ASSIGN_MATRIX])
+                    input_state_projection_specs.append([AUTO_ASSIGN_MATRIX])
 
         # FIX: 10/3/17 -  ??UNDER WHAT CONDITIONS DOES self.init_status != InitStatus.UNSET (IN TEST ABOVE)
         # FIX:            SINCE IN THAT CASE input_state_projection_specs and output_states won't be assigned
 
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        _instantiate_monitoring_projections(owner=self,
-                                            sender_list=output_states,
-                                            receiver_list=instantiated_input_states,
-                                            receiver_projection_specs=input_state_projection_specs,
-                                            context=context)
-        TEST = True
+        # _instantiate_monitoring_projections(owner=self,
+        #                                     sender_list=output_states,
+        #                                     receiver_list=instantiated_input_states,
+        #                                     receiver_projection_specs=input_state_projection_specs,
+        #                                     context=context)
 
     def add_monitored_output_states(self, monitored_output_states_specs, context=None):
         """Instantiate `OutputStates <OutputState>` to be monitored by the ObjectiveMechanism.
@@ -879,7 +879,7 @@ def _instantiate_monitoring_projections(owner,
                 if not receiver.path_afferents[0].init_status is InitStatus.DEFERRED_INITIALIZATION:
                     raise ObjectiveMechanismError("PROGRAM ERROR: {} of {} already has an afferent projection "
                                                   "implemented and initialized ({})".
-                                                  format(receiver.name, owner.name, receiver.aferents[0].name))
+                                                  format(receiver.name, owner.name, receiver.afferents[0].name))
                 # FIX: 10/3/17 - IS IT OK TO IGNORE projection_spec IF IT IS None?  SHOULD IT HAVE BEEN SPECIFIED??
                 # FIX:           IN DEVEL, projection_spec HAS BEEN PROPERLY ASSIGNED
                 if (projection_spec and

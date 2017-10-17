@@ -1103,8 +1103,7 @@ def _parse_projection_spec(projection_spec, state=None, socket=None, **kwargs):
     #       projection is NOT yet in self.path_afferents list
     else:
         # FIX: 10/3/17 - NOT YET DONE
-        _parse_projection_spec
-
+        assert False
 
         if self.prefs.verbosePref:
             warnings.warn("Unrecognized specification for a Projection ({}) to {} of {}; "
