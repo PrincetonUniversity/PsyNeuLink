@@ -1283,7 +1283,8 @@ def _parse_connection_specs(connectee_state_type,
     if issubclass(connectee_state_type, InputState):
         ConnectsWith = [OutputState,          # types of States to which the connectee can connect
                        ProcessInputState,
-                       SystemInputState]
+                       SystemInputState,
+                       GatingSignal]
         connect_with_attr = 'output_states'  # attribute that holds the ConnectsWith States
         CONNECTIONS_KEYWORD = OUTPUT_STATES  # keyword used in a State specification dictionary for connection specs
         PROJECTION_SOCKET = SENDER           # socket of the Projection that connects to the ConnectsWith State

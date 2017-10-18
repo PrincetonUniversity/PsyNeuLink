@@ -3642,13 +3642,13 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                             )
                     else:
                         raise FunctionError(
-                            "The length ({}) of the array specified for the rate parameter ({}) of {} "
-                            "must match the length ({}) of the default input ({})".format(
+                            "The length of the array specified for the rate parameter of {} ({})"
+                            "must match the length of the default input ({}).".format(
                                 len(rate),
-                                rate,
+                                # rate,
                                 self.name,
                                 np.array(self.instance_defaults.variable).size,
-                                self.instance_defaults.variable,
+                                # self.instance_defaults.variable,
                             )
                         )
                 # OLD:
