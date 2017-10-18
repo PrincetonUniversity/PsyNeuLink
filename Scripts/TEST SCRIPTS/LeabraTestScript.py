@@ -21,7 +21,7 @@ hidden_layers=4
 hidden_sizes=[2, 3, 4, 5]
 input_pattern = [[0, 1, 3, 4]]
 training_pattern = [[0, 1]]
-num_trials = 1000
+num_trials = 100
 
 L3 = LeabraMechanism(input_size=input_size, output_size=output_size, hidden_layers=hidden_layers, hidden_sizes=hidden_sizes, name='L', training_flag=True)
 
