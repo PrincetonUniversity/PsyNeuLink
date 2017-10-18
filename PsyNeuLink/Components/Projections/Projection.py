@@ -685,6 +685,9 @@ class Projection_Base(Projection):
         #     raise ProjectionError("Program error: required param \'{0}\' missing in {1}".
         #                           format(PROJECTION_SENDER, self.name))
 
+        # FIX: 10/3/17 SHOULD ADD CHECK THAT RECEIVER/SENDER SOCKET SPECIFICATIONS ARE CONSISTENT WITH
+        # FIX:         PROJECTION_TYPE TYPE SPECIFIED BY THE CORRESPONDING STATE TYPES
+
         if PROJECTION_SENDER in target_set:
             sender_param = target_set[PROJECTION_SENDER]
             # PROJECTION_SENDER is either an instance or class of Mechanism or State:
@@ -954,15 +957,16 @@ def _is_projection_spec(spec, include_matrix_spec=True):
     if isinstance(spec, tuple) and len(spec) == 2:
         # Call recursively on first item, which should be a standard projection spec
         if _is_projection_spec(spec[0], include_matrix_spec=include_matrix_spec):
-            # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
-            if _is_projection_subclass(spec[1], MAPPING_PROJECTION):
-                return True
-            if _is_projection_subclass(spec[1], LEARNING_PROJECTION):
-                return True
-            if _is_projection_subclass(spec[1], CONTROL_PROJECTION):
-                return True
-            if _is_projection_subclass(spec[1], GATING_PROJECTION):
-                return True
+            if spec[1] is not None:
+                # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
+                if _is_projection_subclass(spec[1], MAPPING_PROJECTION):
+                    return True
+                if _is_projection_subclass(spec[1], LEARNING_PROJECTION):
+                    return True
+                if _is_projection_subclass(spec[1], CONTROL_PROJECTION):
+                    return True
+                if _is_projection_subclass(spec[1], GATING_PROJECTION):
+                    return True
     return False
 
 
@@ -1002,7 +1006,11 @@ def _is_projection_subclass(spec, keyword):
     return False
 
 
-def _parse_projection_spec(projection_spec, state=None, socket=None, **kwargs):
+def _parse_projection_spec(projection_spec,
+                           owner = None,       # Used only for error message
+                           state_type = None,  # Used only for default assignment
+                           # socket=None,
+                           **kwargs):
 
     """Return either Projection object or Projection specification dict for projection_spec
 
@@ -1020,44 +1028,41 @@ def _parse_projection_spec(projection_spec, state=None, socket=None, **kwargs):
     proj_spec_dict = defaultdict(lambda :None)
     proj_spec_dict.update(kwargs)
 
-    # Construct default name:
-    direction_str = defaultdict(lambda :None, {RECEIVER: '_to_', SENDER: '_from_'})[socket]
-    # FIX: 10/3/17 - THE FOLLOWING NEEDS WORK: TEST THAT:
-    # FIX:                    socket HAS BEEN PASSED
-    # FIX:                    state HAS BEEN PASSED
-    # FIX:                    PROJECTION_TYPE HAS BEEN DETERMINED
-    # FIX:                    APPEND INDEX IF NAME EXISTS ALREADY (CHECK REGISTRY FOR TYPE)
-    if state:
-        state_name = state.name
-    else:
-        state_name = ""
-    proj_type = proj_spec_dict[PROJECTION_TYPE]
-    if proj_type:
-        proj_name = proj_type.__name__
-    else:
-        proj_name = ""
-    direction_str = direction_str or ""
-
-    default_name = proj_name + direction_str + state_name
+    # # Construct default name:
+    # direction_str = defaultdict(lambda :None, {RECEIVER: '_to_', SENDER: '_from_'})[socket]
+    # # FIX: 10/3/17 - THE FOLLOWING NEEDS WORK: TEST THAT:
+    # # FIX:                    socket HAS BEEN PASSED
+    # # FIX:                    state HAS BEEN PASSED
+    # # FIX:                    PROJECTION_TYPE HAS BEEN DETERMINED
+    # # FIX:                    APPEND INDEX IF NAME EXISTS ALREADY (CHECK REGISTRY FOR TYPE)
+    # if state:
+    #     state_name = state.name
+    # else:
+    #     state_name = ""
+    # proj_type = proj_spec_dict[PROJECTION_TYPE]
+    # if proj_type:
+    #     proj_name = proj_type.__name__
+    # else:
+    #     proj_name = ""
+    # direction_str = direction_str or ""
+    #
+    # default_name = proj_name + direction_str + state_name
 
     # Projection object
     if isinstance(projection_spec, Projection):
         projection = projection_spec
-        # IMPLEMENTATION NOTE: Not sure which to give precedence, spec in ConnectionTuple or instantiated Projection:
+        # FIX: NOT SURE WHICH TO GIVE PRECEDENCE: SPEC IN ConnectionTuple OR INSTANTIATED Projection:
         if ((proj_spec_dict[WEIGHT] is not None and projection.weight is not None) or
             (proj_spec_dict[EXPONENT] is not None and projection.exponent is not None)):
             assert False, "Conflict in weight and/or exponent specs between Projection and ConnectionTuple"
-        projection.weight = proj_spec_dict[WEIGHT] or projection.weight
-        projection.exponent = proj_spec_dict[EXPONENT] or projection.exponent
-        projection.name = projection.name or default_name
+        projection._weight = proj_spec_dict[WEIGHT] or projection.weight
+        projection._exponent = proj_spec_dict[EXPONENT] or projection.exponent
+        projection.name = projection.name or None
         return projection
 
     # Projection class
     elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
         proj_spec_dict[PROJECTION_TYPE] = projection_spec
-        # # FIX: ??WHICH:  DETERMINE FROM CONNECTION INFO PASSED IN:
-        # proj_spec_dict.update({SENDER:???})
-        # proj_spec_dict.update({RECEIVER:???})
 
     # Projection keyword
     elif isinstance(projection_spec, str):
@@ -1065,20 +1070,15 @@ def _parse_projection_spec(projection_spec, state=None, socket=None, **kwargs):
 
     # State object
     elif isinstance(projection_spec, State):
-        # proj_spec_dict[PROJECTION_TYPE] = ???
         proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
-        # FIX: 10/3/17 - ??WHICH:  DETERMINE FROM CONNECTION INFO PASSED IN:
-        # proj_spec_dict.update({SENDER:projection_spec})
-        # proj_spec_dict.update({RECEIVER:projection_spec})
 
     # State class
     elif inspect.isclass(projection_spec) and issubclass(projection_spec, State):
         # Create default instance of state and assign as ??sender or ??receiver
         #    (it may use deferred_init since owner may not yet be known)
+        # FIX: 10/3/17 - INSTANTIATING A STATE DOESN"T CURRENTLY WORK:
+        # proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]()
         proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
-        # FIX: 10/3/17 - ??WHICH:  DETERMINE FROM CONNECTION INFO PASSED IN:
-        # proj_spec_dict.update({SENDER:projection_spec()})
-        # proj_spec_dict.update({RECEIVER:projection_spec()})
 
     # Dict
     elif isinstance(projection_spec, dict):
@@ -1092,23 +1092,18 @@ def _parse_projection_spec(projection_spec, state=None, socket=None, **kwargs):
             assert False, "PROJECTION_PARAMS ({}) passed in spec dict in ConnectionTuple for {}.".\
                            format(proj_spec_dict[PROJECTION_PARAMS], projection_spec, proj_spec_dict[NAME])
 
-
-    # FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
-    # FIX: 10/3/17 - USE STATE AND SOCKET TO APPEND STATE'S AND AND TO/FROM BASED ON SOCKET
-
-    # FIX: ??CORRECT ??INTEGRATE WITH ABOVE
-    # If Projection was not specified:
-    #    - assign default type
-    # Note: this gets projection_type but does NOT instantiate projection; so,
-    #       projection is NOT yet in self.path_afferents list
+    # None
     else:
-        # FIX: 10/3/17 - NOT YET DONE
-        assert False
+        # Assign default type
+        proj_spec_dict[PROJECTION_TYPE] = state_type.paramClassDefaults[PROJECTION_TYPE]
 
-        if self.prefs.verbosePref:
-            warnings.warn("Unrecognized specification for a Projection ({}) to {} of {}; "
-                          "default {} will be assigned".
-                          format(projection_spec, self.name, owner.name, default_projection_type.__name__))
+        if owner.prefs.verbosePref:
+            warnings.warn("Unrecognized specification ({}) for a Projection for {} of {}; "
+                          "default {} has been assigned".
+                          format(projection_spec,
+                                 state_type.__class__.__name__,
+                                 owner.name,
+                                 proj_spec_dict[PROJECTION_TYPE]))
 
     return proj_spec_dict
 
@@ -1537,26 +1532,27 @@ def _parse_connection_specs(connectee_state_type,
                                                  owner.name,
                                                  ", ".join([c.__name__ for c in ConnectsWith])))
 
-            # Resolve any projection keywords
+            # Parse projection specification into Projection specification dictionary
             # Validate projection specification
-            if projection_spec is not None:
-                if _is_projection_spec(projection_spec):
+            if _is_projection_spec(projection_spec) or projection_spec is None:
 
-                    # FIX: 10/3/17 - NEED TO SPECIFY Projection Type HERE OR IN CALL FROM _parse_state_spec
-                    projection_spec = _parse_projection_spec(projection_spec)
+                # FIX: 10/3/17 - NEED TO SPECIFY Projection Type HERE OR IN CALL FROM _parse_state_spec
+                projection_spec = _parse_projection_spec(projection_spec,
+                                                         owner=owner,
+                                                         state_type=connectee_state_type)
 
-                    _validate_connection_request(owner,
-                                                 ConnectsWith,
-                                                 projection_spec,
-                                                 PROJECTION_SOCKET,
-                                                 connectee_state_type)
-                else:
-                    raise ProjectionError("Invalid specification of {} ({}) for connection between {} and {} of {}.".
-                                     format(Projection.__class__.__name__,
-                                            projection_spec,
-                                            state.name,
-                                            connectee_state_type.__name__,
-                                            owner.name))
+                _validate_connection_request(owner,
+                                             ConnectsWith,
+                                             projection_spec,
+                                             PROJECTION_SOCKET,
+                                             connectee_state_type)
+            else:
+                raise ProjectionError("Invalid specification of {} ({}) for connection between {} and {} of {}.".
+                                 format(Projection.__class__.__name__,
+                                        projection_spec,
+                                        state.name,
+                                        connectee_state_type.__name__,
+                                        owner.name))
 
             connect_with_states.extend([ConnectionTuple(state, weight, exponent, projection_spec)])
 

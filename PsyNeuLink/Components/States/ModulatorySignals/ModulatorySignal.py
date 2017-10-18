@@ -198,6 +198,7 @@ Class Reference
 
 from PsyNeuLink.Components.Component import InitStatus, component_keywords
 from PsyNeuLink.Components.ShellClasses import Mechanism, State
+from PsyNeuLink.Components.Projections.Projection import ConnectionTuple
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.State import StateError, State_Base
 from PsyNeuLink.Globals.Keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL
@@ -400,11 +401,11 @@ class ModulatorySignal(OutputState):
             import ModulatoryProjection_Base
 
         modulatory_projection_specs = [proj for proj in projections
-                                  if isinstance(proj, (ModulatoryProjection_Base, Mechanism, State))]
+                                  if isinstance(proj, (ModulatoryProjection_Base, Mechanism, State, ConnectionTuple))]
         excluded_specs = [spec for spec in projections if not spec in modulatory_projection_specs]
         if excluded_specs:
             raise StateError("The following are not allowed as a specification for a {} from a {}: {}".
-                             format(ModulatoryProjection_Base.componentName,
+                             format(ModulatoryProjection_Base.componentCategory,
                                     self.__class__.__name__,
                                     excluded_specs))
 

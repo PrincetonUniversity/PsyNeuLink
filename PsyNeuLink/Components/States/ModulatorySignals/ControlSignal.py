@@ -998,6 +998,9 @@ class ControlSignal(ModulatorySignal):
         else:
             params_dict[PROJECTIONS] = []
 
+        if ALLOCATION_SAMPLES in state_specific_params:
+            params_dict[ALLOCATION_SAMPLES] = state_specific_params[ALLOCATION_SAMPLES]
+
         if isinstance(state_specific_params, dict):
 
             # control_signal was a Control specification dictionary,

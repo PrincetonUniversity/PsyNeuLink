@@ -315,7 +315,7 @@ from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import \
     OWNER, NAME, VARIABLE, REFERENCE_VALUE, PARAMS, INIT__EXECUTE__METHOD_ONLY, SYSTEM, PRODUCT, OBJECTIVE_MECHANISM, \
-    PROJECTIONS, RECEIVER, AUTO_ASSIGN_MATRIX, \
+    PROJECTIONS, RECEIVER, AUTO_ASSIGN_MATRIX, STATE_TYPE, \
     CONTROL, CONTROLLED_PARAM, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, CONTROL_SIGNAL_SPECS
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -702,7 +702,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                   VARIABLE: item.output_state.value,
                                                   WEIGHT:item.weight,
                                                   EXPONENT:item.exponent,
-                                                  PROJECTIONS:(item.output_state, item.matrix)}
+                                                  PROJECTIONS:[(item.output_state, item.matrix)]}
             # MODIFIED 10/3/17 END
 
         # INSTANTIATE ObjectiveMechanism
@@ -838,33 +838,34 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # FIX: 10/3/17 - THIS NO LONGER BE NEEDED;
         # FIX:    SHOULD JUST CALL: _instantiate_state(owner=self, state_type=ControlSignal,state_spec=control_signal)
         # FIX:    _instantiate_state WILL CALL _parse_state_specific_specs TO HANDLE STATE-SPECIFIC SPECS
-        # PARSE control_signal SPECIFICATION -----------------------------------------------------------------------
-        # # MODIFIED 10/3/17 OLD:
-        # control_signal_spec = _parse_control_signal_spec(owner=self, control_signal_spec=control_signal)
-        # param_name = control_signal_spec[NAME]
-        # control_signal_params = control_signal_spec[PARAMS]
-        # control_projection = control_signal_spec[CONTROL_PROJECTION]
-        # parameter_state = control_signal_spec[PARAMETER_STATE]
-        # param_name = control_signal_spec[NAME]
-        # control_projection = control_signal_spec[CONTROL_PROJECTION]
-        # parameter_state = control_signal_spec[PARAMS][PROJECTIONS][0].state
-        # MODIFIED 10/3/17 NEW:
         # FIX: 10/3/17 - * SHOULD TEST FOR init STATUS AND DEAL WITH INITIALIZED AS WELL AS DEFERRED INIT
-        # FIX:           * SHOULD DEAL WITH MULTIPLE PROJECTIONS: ??parameter_state -> parameter_states & HANDLE BELOW??
-        # FIX:           * allocation_samples NOT GETTING ASSIGNED TO CONTROL_SIGNAL_SPECS (AS IN devel)
-        # FIX:           * PARSE ConnectionTuples RETURNED IN control_signal_spec[PARAMS][PROJECTIONS]
-        # FIX:   !! ConnetionTuple IN PROEJCTIONS BEING RETURNED WITH ParameterState CLASS RATHER THAN STATE
         control_signal_spec = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
         for projection_spec in control_signal_spec[PARAMS][PROJECTIONS]:
             parameter_state = projection_spec.state
             param_name = parameter_state.name
+
+
+        # FIX: *********************************************************************************
+        # FIX: NEW MOVE TO BELOW
+        # FIX: *** DEAL WTIH MULTIPLE PROJECTIONS
+        # FIX: *** CALL super()._instantiate_output_states
+        state_type = control_signal_spec.pop(STATE_TYPE, None)
+        control_signal_spec[OWNER] = self
+        control_signal_spec[VARIABLE] = defaultControlAllocation
+        control_signal_spec[REFERENCE_VALUE] = defaultControlAllocation
+        # control_signal_spec[NAME] = control_signal_spec.init_args[NAME] or default_name
+        control_signal = state_type(**control_signal_spec)
+        # FIX: *********************************************************************************
+
 
         # control_signal_params = control_signal_spec[PARAMS]0
         control_signal_params = {}
         control_projection = None
         # MODIFIED 10/3/17 END
 
-        default_name = param_name + '_' + ControlSignal.__name__
+        # MODIFIED 10/3/17 OLD: FIX: NEED TO RESTORE OR PUT SOMEWHERE
+        # default_name = param_name + '_' + ControlSignal.__name__
+        # MODIFIED 10/3/17 END
 
         # MODIFIED 9/11/17 OLD:
         # # Get constraint for ControlSignal value
