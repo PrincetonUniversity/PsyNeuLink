@@ -336,8 +336,12 @@ PROJECTION_ARGS = {PROJECTION_TYPE, SENDER, RECEIVER, WEIGHT, EXPONENT} | STANDA
 
 PROJECTION_SPEC_KEYWORDS = {PATHWAY: MAPPING_PROJECTION,
                             LEARNING: LEARNING_PROJECTION,
+                            LEARNING_PROJECTION: LEARNING_PROJECTION,
                             CONTROL: CONTROL_PROJECTION,
-                            GATING: GATING_PROJECTION}
+                            CONTROL_PROJECTION: CONTROL_PROJECTION,
+                            GATING: GATING_PROJECTION,
+                            GATING_PROJECTION: GATING_PROJECTION
+                            }
 
 from collections import namedtuple
 ConnectionTuple = namedtuple("ConnectionTuple", "state, weight, exponent, projection")
@@ -1057,7 +1061,11 @@ def _parse_projection_spec(projection_spec,
             assert False, "Conflict in weight and/or exponent specs between Projection and ConnectionTuple"
         projection._weight = proj_spec_dict[WEIGHT] or projection.weight
         projection._exponent = proj_spec_dict[EXPONENT] or projection.exponent
-        projection.name = projection.name or None
+        if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+            projection.init_args[NAME] = proj_spec_dict[NAME] or projection.init_args[NAME]
+        else:
+            projection.name = proj_spec_dict[NAME] or projection.name
+
         return projection
 
     # Projection class

@@ -1075,6 +1075,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 # Replace spec in learning_signals list with actual LearningSignal
                 self.learning_signals[i] = ls
 
+        # FIX: 10/3/17 - ??PUT IN CALL ABOVE TO _instantiate_learning_signal:
         super()._instantiate_output_states(context=context)
 
     def _instantiate_learning_signal(self, learning_signal=None, context=None):

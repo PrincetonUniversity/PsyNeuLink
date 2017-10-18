@@ -312,6 +312,7 @@ from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 from PsyNeuLink.Components.ShellClasses import Mechanism, System
 from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Components.States.InputState import InputState
+from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import \
     OWNER, NAME, VARIABLE, REFERENCE_VALUE, PARAMS, INIT__EXECUTE__METHOD_ONLY, SYSTEM, PRODUCT, OBJECTIVE_MECHANISM, \
@@ -816,6 +817,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         Returns ControlSignal (OutputState)
         """
         from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
         # from PsyNeuLink.Components.States.ParameterState import _get_parameter_state
         # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 
@@ -834,6 +836,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.value = self.allocation_policy
         self._default_value = self.value
 
+        default_name = self.name + " " + ControlSignal.__name__
+
 
         # FIX: 10/3/17 - THIS NO LONGER BE NEEDED;
         # FIX:    SHOULD JUST CALL: _instantiate_state(owner=self, state_type=ControlSignal,state_spec=control_signal)
@@ -841,7 +845,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # FIX: 10/3/17 - * SHOULD TEST FOR init STATUS AND DEAL WITH INITIALIZED AS WELL AS DEFERRED INIT
         control_signal_spec = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
         for projection_spec in control_signal_spec[PARAMS][PROJECTIONS]:
-            parameter_state = projection_spec.state
+            parameter_state = control_signal_spec[PARAMS][PROJECTIONS][0].projection.init_args[RECEIVER]
+            parameter_state_owner_name = parameter_state.owner.name
             param_name = parameter_state.name
 
 
@@ -911,7 +916,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # Instantiate OutputState for ControlSignal
         else:
-            control_signal_name = default_name
+            control_signal_name = parameter_state_owner_name + " " + param_name + " " + ControlSignal.__name__
 
             from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
             from PsyNeuLink.Components.States.State import _instantiate_state
@@ -932,7 +937,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # VALIDATE OR INSTANTIATE ControlProjection(s) TO ControlSignal  -------------------------------------------
 
         # Validate control_projection (if specified) and get receiver's name
-        control_projection_name = parameter_state.name + ' ' + 'control signal'
+        if isinstance(parameter_state, ParameterState):
+            parameter_state_name = parameter_state.name
+        else:
+            assert False, "parameter_state for {} has not been assigned".format(control_signal.name)
+        control_projection_name = parameter_state_name + ' ' + ControlProjection.__name__
         if control_projection:
             _validate_receiver(self, control_projection, Mechanism, CONTROL_SIGNAL, context=context)
 

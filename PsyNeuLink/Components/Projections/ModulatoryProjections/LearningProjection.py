@@ -197,6 +197,8 @@ def _is_learning_spec(spec):
     """
     if spec in {LEARNING, ENABLED}:
         return True
+    elif isinstance(spec, LearningSignal):
+        return True
     else:
         return _is_projection_spec(spec)
 
