@@ -866,7 +866,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # control_signal_params = control_signal_spec[PARAMS]0
         control_signal_params = {}
         control_projection = None
-        # MODIFIED 10/3/17 END
 
         # MODIFIED 10/3/17 OLD: FIX: NEED TO RESTORE OR PUT SOMEWHERE
         # default_name = param_name + '_' + ControlSignal.__name__
@@ -875,7 +874,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # MODIFIED 9/11/17 OLD:
         # # Get constraint for ControlSignal value
         # #    - get ControlMechanism's value
-        # self._update_value(context=context)
+        self._update_value(context=context)
         # MODIFIED 9/11/17 END
 
         # - get OutputState's index
