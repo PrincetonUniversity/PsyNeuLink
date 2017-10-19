@@ -290,7 +290,7 @@ from psyneulink.components.functions.function import CombinationFunction, Expone
     LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
 from psyneulink.components.shellclasses import Function, Mechanism
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.components.shellclasses import State
+from psyneulink.components.states.state import State_Base
 from psyneulink.components.states.parameterstate import _get_parameter_state
 from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE
 from psyneulink.components.projections.projection import _is_projection_spec, _parse_connection_specs, ConnectionTuple

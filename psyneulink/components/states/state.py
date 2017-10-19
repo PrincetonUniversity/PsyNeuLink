@@ -319,7 +319,8 @@ from psyneulink.components.projections.projection import \
 
 from psyneulink.components.shellclasses import Mechanism, Process, Projection, State
 from psyneulink.globals.keywords import VARIABLE, SIZE, VALUE, NAME, OWNER, PARAMS, PREFS_ARG, CONTEXT, \
-    EXECUTING, MECHANISM, FUNCTION_PARAMS,  REFERENCE_VALUE, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, \
+    EXECUTING, MECHANISM, FUNCTION_PARAMS,  REFERENCE_VALUE, REFERENCE_VALUE_NAME, \
+    STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, \
     STANDARD_ARGS, STANDARD_OUTPUT_STATES,\
     PROJECTIONS, PATHWAY_PROJECTIONS, PROJECTION_PARAMS,  PROJECTION_TYPE, PROJECTION, RECEIVER, SENDER,\
     MAPPING_PROJECTION_PARAMS, MATRIX, MATRIX_KEYWORD_SET, \
@@ -1105,7 +1106,6 @@ class State_Base(State):
                so, need to test for prior assignment to avoid duplicates.
         """
 
-        from psyneulink.components.projections.projection import Projection_Base, ProjectionRegistry
         from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 
@@ -1887,7 +1887,11 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from ComponentPreferenceSet)
     # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its owner;
     state_type = state_spec_dict.pop(STATE_TYPE, None)
-    del state_spec_dict[REFERENCE_VALUE_NAME]
+    if REFERENCE_VALUE_NAME in state_spec_dict:
+        del state_spec_dict[REFERENCE_VALUE_NAME]
+    if state_spec_dict[PARAMS] and  REFERENCE_VALUE_NAME in state_spec_dict[PARAMS]:
+        del state_spec_dict[PARAMS][REFERENCE_VALUE_NAME]
+
     # Implement default State
     state = state_type(**state_spec_dict, context=context)
 
@@ -2052,7 +2056,9 @@ def _parse_state_spec(state_type=None,
     if state_spec:
         # print('Args other than standard args and state_spec were in _instantiate_state ({})'.
         #       format(state_spec))
-        state_specific_args.update(state_spec)
+        # state_specific_args.update(state_spec)
+        # FIX: 10/3/17: REMOVE REFERENCE_VALUE_NAME HERE?
+        pass
 
     # state_dict = defaultdict(lambda: None)
     # state_dict.update(standard_args)
@@ -2202,7 +2208,6 @@ def _parse_state_spec(state_type=None,
 
     # State specification dictionary
     else:
-        state_dict = state_dict
         # Dict has a single entry in which the key is not a recognized keyword,
         #    so assume it is of the form {<STATE_NAME>:<STATE_SPECIFICATION_DICT>}:
         #    - assign STATE_NAME as name,

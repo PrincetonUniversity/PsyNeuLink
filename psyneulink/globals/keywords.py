@@ -546,6 +546,7 @@ kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism._add_projection_f
 FULL = 'FULL'
 OWNER = 'owner'
 REFERENCE_VALUE = 'reference_value'
+REFERENCE_VALUE_NAME = 'reference_value_name'
 
 # InputStates:
 PRIMARY = 'Primary'

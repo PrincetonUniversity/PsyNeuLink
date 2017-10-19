@@ -289,8 +289,13 @@ import typecheck as tc
 
 from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination
+from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT
+from psyneulink.components.states.outputstate import OutputState
+from psyneulink.components.projections.projection import Projection, _parse_connection_specs
+from psyneulink.globals.keywords import \
+    EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, \
+    MAPPING_PROJECTION, SUM, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
