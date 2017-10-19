@@ -1,4 +1,5 @@
 
+from psyneulink.components.functions.function import BogaczEtAl, Linear
 from psyneulink.components.mechanisms.processing.transfermechanism import *
 from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
@@ -9,17 +10,20 @@ from psyneulink.globals.preferences.componentpreferenceset import *
 from psyneulink.library.mechanisms.processing.integrator.ddm import *
 from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
 
-random.seed(0)
-np.random.seed(0)
+import numpy as np
+# import random
+
+# random.seed(0)
+# np.random.seed(0)
 
 # Preferences:
-DDM_prefs = ComponentPreferenceSet(
-                prefs = {
-                    kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
-                    kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
-
-process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
-                                      verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
+# DDM_prefs = ComponentPreferenceSet(
+#                 prefs = {
+#                     kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
+#                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
+#
+# process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
+#                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
 
 # Mechanisms:
@@ -64,7 +68,7 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                               RESPONSE_TIME,
                               PROBABILITY_UPPER_THRESHOLD],
                # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.ALL_OUTPUT_STATES]},
-               prefs = DDM_prefs,
+               # prefs = DDM_prefs,
                name='Decision')
 
 # TEST = Decision._parameter_states[DRIFT_RATE].execute()
