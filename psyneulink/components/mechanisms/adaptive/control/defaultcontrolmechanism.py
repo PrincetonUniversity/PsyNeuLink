@@ -39,13 +39,16 @@ import typecheck as tc
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPUT_STATES, INTERCEPT, MODULATION, NAME, OBJECTIVE_MECHANISM, SLOPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
+
+__all__ = [
+    'DefaultControlMechanism', 'DefaultControlMechanismError'
+]
 
 
 class DefaultControlMechanismError(Exception):
@@ -151,6 +154,7 @@ class DefaultControlMechanism(ControlMechanism):
     def _instantiate_control_signal(self, control_signal, context=None):
         """Instantiate requested ControlSignal, ControlProjection and associated InputState
         """
+        from psyneulink.components.states.parameterstate import ParameterState
 
         if isinstance(control_signal, dict):
             if CONTROL in control_signal:

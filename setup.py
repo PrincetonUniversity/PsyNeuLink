@@ -1,5 +1,5 @@
 # Always prefer setuptools over distutils
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 # To use a consistent encoding
 from codecs import open
 from os import path
@@ -7,7 +7,7 @@ from os import path
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
@@ -18,7 +18,7 @@ setup(
     # https://packaging.python.org/en/latest/single_source_version.html
     version='0.3.4',
 
-    description='Integrated Cognitive Modeling Environment',
+    description='A block modeling system for cognitive neuroscience',
     long_description=long_description,
 
     # Github address.
@@ -43,13 +43,12 @@ setup(
         'Topic :: Software Development :: Build Tools',
 
         # This project is liscensed as follows
-        'License :: OSI Approved :: Apache License, Version 2.0',
+        'License :: OSI Approved :: Apache Software License',
 
         # Supported Python Versions
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 
     # What does your project relate to?
@@ -63,10 +62,27 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['toposort==1.4', 'numpy', 'typecheck-decorator==1.2'], #mpi4py only if MPI_IMPLEMENTATION becomes True
-    tests_require=[
-        'pytest',
-        'pytest-profiling',
-        'pytest-helpers-namespace',
-    ]
+    install_requires=[
+        'toposort',
+        'numpy',
+        'typecheck-decorator==1.2',
+        # mpi4py only if MPI_IMPLEMENTATION becomes True
+    ],
+
+    extras_require={
+        'dev': [
+            'pytest',
+            'pytest-profiling',
+            'pytest-helpers-namespace',
+            'jupyter',
+            'sphinx',
+            'sphinx_rtd_theme',
+            'matplotlib',
+            'ipykernel>=4.6.1',
+        ],
+        'tutorial': [
+            'jupyter',
+            'matplotlib',
+        ]
+    }
 )

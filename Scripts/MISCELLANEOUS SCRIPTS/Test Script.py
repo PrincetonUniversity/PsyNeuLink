@@ -1,7 +1,7 @@
-from psyneulink.components.process import Process_Base
+from psyneulink.components.process import Process
 from psyneulink.globals.keywords import *
 
-# x = Process_Base()
+# x = Process()
 # x.execute(10.0)
 
 
@@ -106,7 +106,7 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_PROJECTION),
 # # process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
 # #                                        verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM))
 # from Components.Function import LinearCombination
-# y = Process_Base(params={PATHWAY:[(myMechanism,
+# y = Process(params={PATHWAY:[(myMechanism,
 #                                            {
 #                                                # INPUT_STATE_PARAMS:{},
 #                                                PARAMETER_STATE_PARAMS:
@@ -149,10 +149,10 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_PROJECTION),
 # # y.execute(1.0)
 #endregion
 
-# z = Process_Base(params={PATHWAY:[myMechanism]})
-z = Process_Base(params={PATHWAY:[myMechanism, myMechanism]})
-# z = Process_Base(params={PATHWAY:[DDM, DDM, DDM]})
-# z = Process_Base(params={PATHWAY:[mechanism()]})
+# z = Process(params={PATHWAY:[myMechanism]})
+z = Process(params={PATHWAY:[myMechanism, myMechanism]})
+# z = Process(params={PATHWAY:[DDM, DDM, DDM]})
+# z = Process(params={PATHWAY:[mechanism()]})
 z.execute(30)
 # #
 

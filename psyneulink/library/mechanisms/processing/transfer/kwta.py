@@ -22,8 +22,7 @@ implementation is based on the one  described in `O'Reilly and Munakata, 2012
 Creating a KWTA
 ---------------
 
-A KWTA Mechanism can be created directly by calling its constructor, or by using the `mechanism()
-<Mechanism.mechanism>` command and specifying KWTA as its **mech_spec** argument. The **k_value**, **threshold**,
+A KWTA Mechanism can be created directly by calling its constructor. The **k_value**, **threshold**,
 and **ratio** arguments can be used to specify the function of the KWTA Mechanism, and default to a condition
 in which half of the elements in the KWTA Mechanism's `variable <KWTA.variable>` (**k_value** = 0.5) are above 0 and
 half are below (**threshold** = 0), achieved using an intermediate degree of value displacement (**ratio** = 0.5).
@@ -160,8 +159,11 @@ from psyneulink.globals.keywords import INITIALIZING, KWTA, K_VALUE, RATIO, RESU
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
-from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
+
+__all__ = [
+    'KWTA', 'KWTAError',
+]
 
 logger = logging.getLogger(__name__)
 

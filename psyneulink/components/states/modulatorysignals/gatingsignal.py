@@ -237,6 +237,10 @@ from psyneulink.globals.keywords import GATE, GATING_PROJECTION, GATING_SIGNAL, 
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
+__all__ = [
+    'gating_signal_keywords', 'GatingSignal', 'GatingSignalError',
+]
+
 
 class GatingSignalError(Exception):
     def __init__(self, error_value):

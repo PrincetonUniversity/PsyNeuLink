@@ -28,7 +28,7 @@ LearningMechanism can be used to train multiple MappingProjections, by assigning
 
 All of the MappingProjection(s) modified by a LearningMechanism must project from one `ProcessingMechanism
 <ProcessingMechanism>` to another in same `System` or `Process`. The learning components of a System can be displayed
-using the System's `show_graph <System_Base.show_graph>` method with its **show_learning** argument assigned `True`.
+using the System's `show_graph <System.show_graph>` method with its **show_learning** argument assigned `True`.
 LearningMechanisms are executed after all of the ProcessingMechanisms in a System or Process have been executed,
 and before any `ControlMechanisms <ControlMechanism>` of the System have been executed (see `System Execution
 <System_Execution>`).
@@ -317,13 +317,13 @@ refer to the Components being learned and/or its operation:
   LearningMechanism's `function <LearningMechanism.function>`, which uses it to multiply the weight change matrix
   before returning it as the `learning_signal <LearningMechanism.learning_signal>`.  This can be specified in the
   **learning_rate** argument of the LearningMechanism's constructor (or the constructor for its `function
-  <LearningMechanism.function>`;  doing so supersedes specification of the `learning_rate <Process_Base.learning_rate>`
-  for any `Process`, and/or the `learning_rate <System_Base.learning_rate>` for any `System` to which the
+  <LearningMechanism.function>`;  doing so supersedes specification of the `learning_rate <Process.learning_rate>`
+  for any `Process`, and/or the `learning_rate <System.learning_rate>` for any `System` to which the
   LearningMechanism belongs.  The default value for a LearningMechanism's `learning_rate
   <LearningMechanism.learning_rate>` attribute is `None`, in which case the LearningMechanism (and its `function
-  <LearningMechanism.function>`) inherit the specification of the `learning_rate <Process_Base.learning_rate>` for
+  <LearningMechanism.function>`) inherit the specification of the `learning_rate <Process.learning_rate>` for
   the `Process` in which the LearningMechanism is executed. If that is `None`, then it inherits the `learning_rate
-  <System_Base.learning_rate>` specification of the `System` in which it is executed.  If that is also `None`, then it
+  <System.learning_rate>` specification of the `System` in which it is executed.  If that is also `None`, then it
   uses the value of the `default_learning_rate <LearningFunction.default_learning_rate>` parameter of its `function
   <LearningMechanism.function>`. A :keyword:`learning_rate` parameter can also be specified for individual
   `LearningSignals <LearningSignal>` and/or their associated `LearningProjections <LearningProjection>`.  Those have
@@ -344,9 +344,9 @@ When learning is specified for a `MappingProjection <Mapping_Matrix_Specificatio
 <Process_Learning_Sequence>`, or a `System <System_Execution_Learning>`, all of the Components required for learning are
 created automatically. The types of Components that are generated depend on the `LearningFunction <LearningFunction>`
 specified, and the configuration of the `Composition <Composition>`, as described below.  If learning is `specified for
-individual Projections <Process_Learning_Specification>` in the `pathway <Process_Base.pathway>` of a Process, it takes
-effect only if that Process is executed on its own (i.e., using the Process' `execute <Process_Base.execute>` or `run
-<Process_Base.run>` methods.  For the learning Components associated with a Process to be implemented by a System,
+individual Projections <Process_Learning_Specification>` in the `pathway <Process.pathway>` of a Process, it takes
+effect only if that Process is executed on its own (i.e., using the Process' `execute <Process.execute>` or `run
+<Process.run>` methods.  For the learning Components associated with a Process to be implemented by a System,
 learning must be `specified for the entire Process <Process_Learning_Specification>`.  All of the learning Components
 of a System can be displayed using the System's `show_graph` method with its **show_learning** argument assigned `True`.
 
@@ -397,7 +397,7 @@ Multilayer learning
 ^^^^^^^^^^^^^^^^^^^
 
 This configuration occurs when a set of `MappingProjections <MappingProjection>` being learned are in a sequence (such
-as the `pathway <Process_Base.pathway>` of a `Process`); that is, in which each projects to a `ProcessingMechanism
+as the `pathway <Process.pathway>` of a `Process`); that is, in which each projects to a `ProcessingMechanism
 <ProcessingMechanism>` that is the `sender <MappingProjection.sender>` for the next MappingProjection in the sequence
 (see the `figure <LearningMechanism_Multilayer_Learning_Figure>` below). This requires the use of a learning function
 that can calculate the influence that each MappingProjection and its output have on the error that the LearningMechanism
@@ -524,23 +524,23 @@ from psyneulink.components.component import InitStatus, parameter_keywords
 from psyneulink.components.functions.function import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.globals.keywords import CONTROL_PROJECTIONS, FUNCTION_PARAMS, IDENTITY_MATRIX, INDEX, INITIALIZING, \
-    INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, PARAMETER_STATE, PARAMS, PROJECTION, \
-    PROJECTIONS
+from psyneulink.globals.keywords import CONTROL_PROJECTIONS, FUNCTION_PARAMS, IDENTITY_MATRIX, INDEX, INITIALIZING, INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, PARAMETER_STATE, PARAMS, PROJECTION, PROJECTIONS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, parameter_spec
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
+__all__ = [
+    'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX',
+    'DefaultTrainingMechanism', 'ERROR_OUTPUT_INDEX', 'ERROR_SIGNAL', 'ERROR_SIGNAL_INDEX', 'ERROR_SOURCE',
+    'LearningMechanism', 'LearningMechanismError', 'input_state_names', 'output_state_names'
+]
+
 # Params:
 
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
-projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
 def _is_learning_spec(spec):
     """Evaluate whether spec is a valid learning specification
@@ -549,6 +549,8 @@ def _is_learning_spec(spec):
     Otherwise, return :keyword:`False`
 
     """
+    from psyneulink.components.projections.projection import _is_projection_spec
+
     if spec is LEARNING:
         return True
     else:
@@ -827,7 +829,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     # ClassDefaults.variable = None
 
-    paramClassDefaults = Projection_Base.paramClassDefaults.copy()
+    paramClassDefaults = AdaptiveMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
         INPUT_STATES:input_state_names,
@@ -907,6 +909,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         """
 
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
+
+        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.components.projections.projection import _validate_receiver
 
         if ERROR_SOURCE in target_set:
             if not isinstance(target_set[ERROR_SOURCE], (ObjectiveMechanism, LearningMechanism)):
@@ -1119,6 +1124,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         from psyneulink.components.states.state import _parse_state_spec
         from psyneulink.components.states.parameterstate import ParameterState, _get_parameter_state
         from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
+        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.components.projections.projection import _validate_receiver
 
         # FIX: NEED TO CHARACTERIZE error_signal FOR BELOW
         # # EXTEND error_signals TO ACCOMMODATE NEW LearningSignal -------------------------------------------------
@@ -1408,6 +1415,7 @@ def _instantiate_error_signal_projection(sender, receiver):
     Uses and IDENTITY_MATRIX for the MappingProjection, so requires that the sender be the same length as the receiver.
 
     """
+    from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 
     if isinstance(sender, ObjectiveMechanism):
         sender = sender.output_states[OUTCOME]

@@ -12,7 +12,7 @@ I = integratormechanism(
         context="EXECUTING",
         time_scale=TimeScale.TIME_STEP
     )
-# P = process(pathway=[I])
+# P = Process(pathway=[I])
 
 #  returns previous_value + rate*variable + noise
 # so in this case, returns 10.0
@@ -33,7 +33,7 @@ print([val, val2] == [10.0, 5.0])
 #         time_scale=TimeScale.TIME_STEP
 #     )
 # # val = float(I.execute(10)[0])
-# P = process(pathway=[I2])
+# P = Process(pathway=[I2])
 # val = float(P.execute(10))
 # I2.context = None
 # print("after setting context to None [1/2] ", I2.context)
@@ -54,7 +54,7 @@ print([val, val2] == [10.0, 5.0])
 #         time_scale=TimeScale.TIME_STEP
 #     )
 # # val = float(I.execute(10)[0])
-# # P = process(pathway=[T])
+# # P = Process(pathway=[T])
 # val = float(T.execute(10))
 # # returns (rate)*variable + (1-rate*previous_value) + noise
 # # rate = 1, noise = 0, so in this case, returns 10.0

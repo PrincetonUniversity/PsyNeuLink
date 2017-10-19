@@ -140,6 +140,10 @@ from psyneulink.globals.preferences.preferenceset import PreferenceEntry, Prefer
 from psyneulink.globals.utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, recursive_update
 from psyneulink.scheduling.timescale import TimeScale
 
+__all__ = [
+    'COMPARATOR_OUTPUT', 'ComparatorMechanism', 'ComparatorMechanismError', 'MSE', 'SSE',
+]
+
 SSE = 'SSE'
 MSE = 'MSE'
 

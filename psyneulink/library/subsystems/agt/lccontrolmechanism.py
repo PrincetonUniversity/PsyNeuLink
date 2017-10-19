@@ -305,7 +305,7 @@ Execution
 ---------
 
 An LCControlMechanism executes within a `Composition` at a point specified in the Composition's `Scheduler` or, if it is the
-`controller <System_Base>` for a `Composition`, after all of the other Mechanisms in the Composition have `executed
+`controller <System>` for a `Composition`, after all of the other Mechanisms in the Composition have `executed
 <Composition_Execution>` in a `TRIAL`. It's `function <LCControlMechanism.function>` takes the `value <InputState.value>` of
 the LCControlMechanism's `primary InputState <InputState_Primary>` as its input, and generates a response -- under the
 influence of its `mode <FHNIntegrator.mode>` parameter -- that is assigned as the `allocation
@@ -333,12 +333,17 @@ from psyneulink.components.mechanisms.adaptive.adaptivemechanism import Adaptive
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.components.shellclasses import Mechanism, System
+from psyneulink.components.shellclasses import Mechanism, System_Base
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
+
+__all__ = [
+    'CONTROL_SIGNAL_NAME', 'ControlMechanismRegistry', 'LCControlMechanism', 'LCControlMechanismError',
+    'MODULATED_MECHANISMS',
+]
 
 MODULATED_MECHANISMS = 'modulated_mechanisms'
 CONTROL_SIGNAL_NAME = 'LCControlMechanism_ControlSignal'
@@ -368,7 +373,7 @@ class LCControlMechanism(ControlMechanism):
     ---------
 
     system : System : default None
-        specifies the `System` for which the LCControlMechanism should serve as a `controller <System_Base.controller>`;
+        specifies the `System` for which the LCControlMechanism should serve as a `controller <System.controller>`;
         the LCControlMechanism will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
         argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
@@ -406,8 +411,8 @@ class LCControlMechanism(ControlMechanism):
     Attributes
     ----------
 
-    system : System
-        the `System` for which LCControlMechanism is the `controller <System_Base.controller>`;
+    system : System_Base
+        the `System` for which LCControlMechanism is the `controller <System.controller>`;
         the LCControlMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
         argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
@@ -493,7 +498,7 @@ class LCControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 system:tc.optional(System)=None,
+                 system:tc.optional(System_Base)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  # modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
                  modulated_mechanisms=None,
@@ -651,7 +656,6 @@ class LCControlMechanism(ControlMechanism):
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
                 self._control_signals.append((mult_param_name, mech))
         # MODIFIED 9/3/17 END
-
         super()._instantiate_output_states(context=context)
 
     def _execute(self,

@@ -17,6 +17,15 @@ from psyneulink.globals.log import LogLevel
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.utilities import Modulation
 
+__all__ = [
+    'CategoryDefaultPreferencesDict', 'ComponentDefaultPrefDicts', 'ComponentPreferenceSet', 'ComponentPreferenceSetPrefs',
+    'InstanceDefaultPreferencesDict', 'is_pref', 'is_pref_set', 'kwCategoryDefaultPreferences',
+    'kwInstanceDefaultPreferences', 'kwSubtypeDefaultPreferences', 'kwSystemDefaultPreferences', 'kwTypeDefaultPreferences',
+    'LOG_PREF', 'PARAM_VALIDATION_PREF', 'REPORT_OUTPUT_PREF', 'RUNTIME_PARAM_MODULATION_PREF',
+    'RUNTIME_PARAM_STICKY_ASSIGNMENT_PREF', 'SubtypeDefaultPreferencesDict', 'SystemDefaultPreferencesDict',
+    'TypeDefaultPreferencesDict', 'VERBOSE_PREF',
+]
+
 # Keypaths for preferences:
 REPORT_OUTPUT_PREF = kpReportOutputPref = '_report_output_pref'
 LOG_PREF = kpLogPref = '_log_pref'

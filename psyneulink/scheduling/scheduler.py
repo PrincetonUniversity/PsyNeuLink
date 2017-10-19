@@ -43,7 +43,7 @@ COMMENT:
 COMMENT
 
 * a `System` in the **system** argument - if a System is specified,
-  the Scheduler is created using the Components in the System's `execution_list <System_Base.execution_list>` and an
+  the Scheduler is created using the Components in the System's `execution_list <System.execution_list>` and an
   order of execution specified by the dependencies among the Components in its `execution_graph
   <System.execution_graph>`.
 
@@ -193,11 +193,11 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     B = TransferMechanism(function=Linear(), name='B')
     C = TransferMechanism(function=Linear(), name='C')
 
-    p = process(
+    p = Process(
         pathway=[A, B, C],
         name = 'p'
     )
-    s = system(
+    s = System(
         processes=[p],
         name='s'
     )
@@ -217,11 +217,11 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     A = TransferMechanism(function=Linear(), name='A')
     B = TransferMechanism(function=Linear(), name='B')
 
-    p = process(
+    p = Process(
         pathway=[A, B],
         name = 'p'
     )
-    s = system(
+    s = System(
         processes=[p],
         name='s'
     )
@@ -242,15 +242,15 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     B = TransferMechanism(function=Linear(), name='B')
     C = TransferMechanism(function=Linear(), name='C')
 
-    p = process(
+    p = Process(
         pathway=[A, C],
         name = 'p'
     )
-    q = process(
+    q = Process(
         pathway=[B, C],
         name = 'q'
     )
-    s = system(
+    s = System(
         processes=[p, q],
         name='s'
     )
@@ -279,6 +279,10 @@ from toposort import toposort
 
 from psyneulink.scheduling.condition import AllHaveRun, Always, ConditionSet, Never
 from psyneulink.scheduling.timescale import TimeScale
+
+__all__ = [
+    'Scheduler', 'SchedulerError',
+]
 
 logger = logging.getLogger(__name__)
 

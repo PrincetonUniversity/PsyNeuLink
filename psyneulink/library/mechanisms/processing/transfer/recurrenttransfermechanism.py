@@ -69,6 +69,7 @@ created directly by calling its constructor, or using the `mechanism() <Mechanis
 RECURRENT_TRANSFER_MECHANISM as its **mech_spec** argument".
 However, the latter method is no longer correct: it instead creates a DDM: the problem is line 590 in Mechanism.py,
 as MechanismRegistry is empty!
+10/9/17 MANTEL: mechanism() factory method is removed
 COMMENT
 
 .. _Recurrent_Transfer_Structure:
@@ -144,8 +145,11 @@ from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, FUL
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
-from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
+
+__all__ = [
+    'DECAY', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
+]
 
 
 class RecurrentTransferError(Exception):
@@ -484,7 +488,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  hetero=None,
                  initial_value=None,
                  decay: is_numeric_or_none=None,
-                 noise: is_numeric_or_none=0.0,
+                 noise=0.0,
                  time_constant: is_numeric_or_none=1.0,
                  integrator_mode=False,
                  range=None,
@@ -534,6 +538,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                          initial_value=initial_value,
                          noise=noise,
                          integrator_mode=integrator_mode,
+
                          time_constant=time_constant,
                          range=range,
                          output_states=output_states,
@@ -546,6 +551,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of auto, hetero, matrix and decay.
         """
+        from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -689,6 +695,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY OutputStates
         """
+        from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
+
 
         super()._instantiate_attributes_after_function(context=context)
 
@@ -797,6 +805,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     # single flag to check whether to get matrix from auto and hetero?
     @property
     def matrix(self):
+        from psyneulink.library.projections.pathway.autoassociativeprojection import get_auto_matrix, get_hetero_matrix
+
         if hasattr(self, '_parameter_states') \
                 and 'auto' in self._parameter_states and 'hetero' in self._parameter_states:
             if not hasattr(self, 'size'):
@@ -874,6 +884,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         """Instantiate a AutoAssociativeProjection from Mechanism to itself
 
         """
+
+        from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
         if isinstance(matrix, str):
             size = len(mech.instance_defaults.variable[0])

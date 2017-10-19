@@ -1,9 +1,9 @@
 
 from psyneulink.components.mechanisms.processing.transfermechanism import *
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.components.system import MonitoredOutputStatesOption, system
+from psyneulink.components.system import MonitoredOutputStatesOption, System
 from psyneulink.globals.keywords import *
 from psyneulink.globals.preferences.componentpreferenceset import *
 from psyneulink.library.mechanisms.processing.integrator.ddm import *
@@ -77,20 +77,20 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
 # TEST
 
 # Processes:
-TaskExecutionProcess = process(
+TaskExecutionProcess = Process(
     default_variable=[0],
     pathway=[Input, IDENTITY_MATRIX, Decision],
     prefs = process_prefs,
     name = 'TaskExecutionProcess')
 
-RewardProcess = process(
+RewardProcess = Process(
     default_variable=[0],
     pathway=[Reward],
     prefs = process_prefs,
     name = 'RewardProcess')
 
 # System:
-mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
+mySystem = System(processes=[TaskExecutionProcess, RewardProcess],
 
                   # WORKS:
                   controller=EVCControlMechanism,

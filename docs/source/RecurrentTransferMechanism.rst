@@ -1,6 +1,6 @@
 RecurrentTransferMechanism
 ==========================
 
-.. automodule:: Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism
+.. automodule:: psyneulink.library.mechanisms.processing.transfermechanisms.recurrenttransfermechanism
    :members:
    :exclude-members: random

@@ -74,6 +74,10 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, k
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.scheduling.timescale import TimeScale
 
+__all__ = [
+    'DEFAULT_RATE', 'IntegratorMechanism', 'IntegratorMechanismError'
+]
+
 # IntegratorMechanism parameter keywords:
 DEFAULT_RATE = 0.5
 

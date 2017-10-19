@@ -19,7 +19,7 @@ to the *MATRIX* `ParameterState` of a `MappingProjection`.  It takes the `value 
 `LearningSignal` of a `LearningMechanism`, and uses it to modify the value of the `matrix <MappingProjection.matrix>`
 parameter of that MappingProjection.  All of the LearningProjections in a System, along with its other `learning
 components <LearningMechanism_Learning_Configurations>`, can be displayed using the System's `show_graph
-<System_Base.show_graph>` method with its **show_learning** argument assigned as `True`.
+<System.show_graph>` method with its **show_learning** argument assigned as `True`.
 
 .. _LearningProjection_Creation:
 
@@ -180,6 +180,10 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import iscompatible, parameter_spec
 from psyneulink.scheduling.timescale import CentralClock
+
+__all__ = [
+    'DefaultTrainingMechanism', 'LearningProjection', 'LearningProjectionError', 'WT_MATRIX_RECEIVERS_DIM', 'WT_MATRIX_SENDER_DIM',
+]
 
 # Params:
 

@@ -83,6 +83,10 @@ Class Reference
 from psyneulink.components.projections.projection import Projection_Base
 from psyneulink.globals.keywords import MODULATORY_PROJECTION
 
+__all__ = [
+    'MODULATORY_SIGNAL_PARAMS'
+]
+
 MODULATORY_SIGNAL_PARAMS = 'modulatory_signal_params'
 
 class ModulatoryProjection_Base(Projection_Base):

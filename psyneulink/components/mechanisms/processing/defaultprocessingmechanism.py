@@ -23,6 +23,8 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
 # **************************************** DefaultProcessingMechanism ******************************************************
 
+__all__ = []
+
 
 # class DefaultProcessingMechanism_Base(ProcessingMechanism_Base):
 class DefaultProcessingMechanism_Base(Mechanism_Base):

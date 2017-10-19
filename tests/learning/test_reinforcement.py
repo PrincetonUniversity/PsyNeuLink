@@ -4,9 +4,9 @@ import pytest
 from psyneulink.components.functions.function import PROB
 from psyneulink.components.functions.function import Reinforcement, SoftMax
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.scheduling.timescale import CentralClock
 
 
@@ -25,7 +25,7 @@ def test_reinforcement():
         name='Action Selection',
     )
 
-    p = process(
+    p = Process(
         default_variable=[0, 0, 0],
         size=3,
         pathway=[input_layer, action_selection],
@@ -55,7 +55,7 @@ def test_reinforcement():
 
     input_list = {input_layer: [[1, 1, 1]]}
 
-    s = system(
+    s = System(
         processes=[p],
         # learning_rate=0.05,
         targets=[0],

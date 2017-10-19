@@ -40,7 +40,7 @@ Monitored OutputStates
 The **monitored_output_states** argument of the constructor specifies the OutputStates it monitors.  The assignment of
 the OutputStates to be monitored can also be passed from the **objective_mechanism** argument of the constructor for a
 `ControlMechanism`, or the **monitor_for_control** argument of a `System` for which the ControlMechanism is a
-`controller <System_Base.controller>`.  The **monitored_output_states** argument can be specified using a  list
+`controller <System.controller>`.  The **monitored_output_states** argument can be specified using a  list
 containing any of the following:
 
 COMMENT:
@@ -325,9 +325,7 @@ Class Reference
 ---------------
 
 """
-import numbers
 import warnings
-from collections import namedtuple
 
 import typecheck as tc
 
@@ -335,15 +333,20 @@ from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.components.shellclasses import Mechanism, State
-from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY_OUTPUT_STATE, standard_output_states
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, DEFAULT_MATRIX, EXPONENT, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, MECHANISM, NAME, OBJECTIVE_MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PROJECTIONS, SENDER, TIME_SCALE, VALUE, VARIABLE, WEIGHT, WEIGHTS, kwPreferenceSetName
+from psyneulink.globals.keywords import CONTROL, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, OBJECTIVE_MECHANISM, SENDER, TIME_SCALE, VARIABLE, WEIGHTS, kwPreferenceSetName, DEFAULT_MATRIX
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.globals.utilities import ContentAddressableList, is_matrix
+from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.scheduling.timescale import TimeScale
+
+__all__ = [
+    'DEFAULT_MONITORED_STATE_WEIGHT', 'DEFAULT_MONITORED_STATE_EXPONENT', 'DEFAULT_MONITORED_STATE_MATRIX',
+    'MONITORED_OUTPUT_STATE_NAME_SUFFIX', 'MONITORED_OUTPUT_STATES',
+    'OBJECTIVE_OUTPUT', 'ObjectiveMechanism', 'ObjectiveMechanismError', 'OUTCOME',
+    'ROLE'
+]
 
 ROLE = 'role'
 OUTCOME = 'outcome'
@@ -669,7 +672,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         Call _instantiate_monitoring_projection() to instantiate MappingProjection to InputState
             if an OutputState has been specified.
         """
-
+        from psyneulink.components.states.inputstate import InputState
         # If call is for initialization
         if self.init_status is InitStatus.UNSET:
             # Pass self.input_states (containing specs from **input_states** arg of constructor)

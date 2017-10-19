@@ -301,6 +301,11 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, k
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
+__all__ = [
+    'DDM', 'DDM_OUTPUT', 'DDM_standard_output_states', 'DDMError', 'DECISION_VARIABLE', 'PROBABILITY_LOWER_THRESHOLD',
+    'PROBABILITY_UPPER_THRESHOLD', 'RESPONSE_TIME', 'RT_CORRECT_MEAN', 'RT_CORRECT_VARIANCE',
+]
+
 logger = logging.getLogger(__name__)
 
 DECISION_VARIABLE='DECISION_VARIABLE'

@@ -12,7 +12,7 @@ States
    OutputState
    ModulatorySignals <ModulatorySignal>
 
-.. automodule:: State
+.. automodule:: psyneulink.components.states.state
    :members:
    :exclude-members: random, update
 

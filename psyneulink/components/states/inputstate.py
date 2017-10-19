@@ -31,9 +31,9 @@ Creating an InputState
 
 An InputState can be created by calling its constructor, but in general this is not necessary as a Mechanism can
 usually automatically create the InputState(s) it needs when it is created.  For example, if the Mechanism is
-being created within the `pathway <Process_Base.pathway` of a `Process`, its InputState will be created and  assigned
+being created within the `pathway <Process.pathway` of a `Process`, its InputState will be created and  assigned
 as the `receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding `Mechanism <Mechanism>` in
-the `pathway <Process_Base.pathway>`.
+the `pathway <Process.pathway>`.
 
 .. _InputState_Deferred_Initialization:
 
@@ -294,6 +294,10 @@ from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_S
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
+
+__all__ = [
+    'InputState', 'InputStateError', 'state_type_keywords',
+]
 state_type_keywords = state_type_keywords.update({INPUT_STATE})
 
 # InputStatePreferenceSet = ComponentPreferenceSet(log_pref=logPrefTypeDefault,

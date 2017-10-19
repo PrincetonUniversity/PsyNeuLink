@@ -83,6 +83,16 @@ import numpy as np
 
 from psyneulink.globals.keywords import DISTANCE_METRICS, MATRIX_KEYWORD_VALUES, NAME, VALUE
 
+__all__ = [
+    'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array', 'get_class_attributes',
+    'get_modulationOperation_name', 'get_value_from_array', 'is_distance_metric', 'is_matrix', 'is_matrix_spec',
+    'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
+    'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
+    'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
+    'MODULATION_OVERRIDE', 'multi_getattr', 'np_array_less_than_2d', 'optional_parameter_spec', 'parameter_spec',
+    'random_matrix', 'ReadOnlyOrderedDict', 'TEST_CONDTION', 'type_match', 'underscore_to_camelCase', 'UtilitiesError',
+]
+
 # THE FOLLOWING CAUSES ALL WARNINGS TO GENERATE AN EXCEPTION:
 warnings.filterwarnings("error")
 

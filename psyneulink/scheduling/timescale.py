@@ -10,6 +10,9 @@ from enum import Enum
 
 from psyneulink.globals.keywords import CENTRAL_CLOCK
 
+__all__ = [
+    'TimeScale'
+]
 
 # ********************************************* TimeScale ***************************************************************
 

@@ -7,7 +7,6 @@ import numpy as np
 import pytest
 
 from psyneulink.components.functions.function import Linear, SimpleIntegrator
-from psyneulink.components.mechanisms.mechanism import mechanism
 from psyneulink.components.mechanisms.processing import integratormechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
@@ -56,16 +55,16 @@ class TestAddMechanism:
 
     def test_add_once(self):
         comp = Composition()
-        comp.add_mechanism(mechanism())
+        comp.add_mechanism(TransferMechanism())
 
     def test_add_twice(self):
         comp = Composition()
-        comp.add_mechanism(mechanism())
-        comp.add_mechanism(mechanism())
+        comp.add_mechanism(TransferMechanism())
+        comp.add_mechanism(TransferMechanism())
 
     def test_add_same_twice(self):
         comp = Composition()
-        mech = mechanism()
+        mech = TransferMechanism()
         comp.add_mechanism(mech)
         comp.add_mechanism(mech)
 
@@ -77,9 +76,9 @@ class TestAddMechanism:
     )
     def test_timing_stress(self, count):
         t = timeit(
-            'comp.add_mechanism(mechanism())',
+            'comp.add_mechanism(TransferMechanism())',
             setup='''
-from psyneulink.components.mechanisms.mechanism import mechanism
+from psyNeuLink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.composition import Composition
 comp = Composition()
 ''',
@@ -463,7 +462,7 @@ class TestGetMechanismsByRole:
     def test_multiple_roles(self):
 
         comp = Composition()
-        mechs = [mechanism() for x in range(4)]
+        mechs = [TransferMechanism() for x in range(4)]
 
         for mech in mechs:
             comp.add_mechanism(mech)
@@ -1378,7 +1377,7 @@ class TestCallBeforeAfterTimescale:
     #         num_trials=10
     #     )
     #
-    #     # p = process(
+    #     # p = Process(
     #     #     default_variable=[0, 0],
     #     #     pathway=[
     #     #         Input_Layer,

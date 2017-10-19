@@ -1,5 +1,5 @@
 GatingProjections
-==================
+=================
 
 **Base class**:
 

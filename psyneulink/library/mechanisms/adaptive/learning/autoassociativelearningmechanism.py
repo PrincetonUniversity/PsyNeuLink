@@ -90,6 +90,11 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, parameter_spec
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
+__all__ = [
+    'AutoAssociativeLearningMechanism', 'AutoAssociativeLearningMechanismError', 'DefaultTrainingMechanism',
+    'input_state_names', 'output_state_names',
+]
+
 # Params:
 
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
@@ -228,9 +233,9 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* `InputState <AutoAssociativeLearningMechanism_Structure>`,
         allowing the contribution of individual *units* to be scaled). If specified, the value supersedes the
         learning_rate assigned to any `Process` or `System` to which the AutoAssociativeLearningMechanism belongs.
-        If it is `None`, then the `learning_rate <Process_Base.learning_rate>` specified for the Process to which the
+        If it is `None`, then the `learning_rate <Process.learning_rate>` specified for the Process to which the
         AutoAssociativeLearningMechanism belongs belongs is used;  and, if that is `None`, then the `learning_rate
-        <System_Base.learning_rate>` for the System to which it belongs is used. If all are `None`, then the
+        <System.learning_rate>` for the System to which it belongs is used. If all are `None`, then the
         `default_learning_rate <LearningFunction.default_learning_rate>` for the `function
         <AutoAssociativeLearningMechanism.function>` is used (see `learning_rate <LearningMechanism_Learning_Rate>`
         for additional details).

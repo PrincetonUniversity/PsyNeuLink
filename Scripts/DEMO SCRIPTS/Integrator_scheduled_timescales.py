@@ -46,20 +46,20 @@ D = TransferMechanism(
     prefs={REPORT_OUTPUT_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE)}
 )
 
-p = process(
+p = Process(
     default_variable = [0],
     pathway = [A, B, D],
     name = 'p'
 )
 
-q = process(
+q = Process(
     default_variable = [0],
     pathway = [A, C, D],
     name = 'q',
     prefs=process_prefs
 )
 
-s = system(
+s = System(
     processes=[p, q],
     name = 's'
 )

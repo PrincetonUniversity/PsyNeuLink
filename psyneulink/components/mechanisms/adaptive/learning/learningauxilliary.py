@@ -147,7 +147,10 @@ from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.globals.keywords import \
     BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, \
     MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, WEIGHT, PROJECTIONS
-from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+
+__all__ = [
+    'LearningAuxilliaryError'
+]
 
 
 class LearningAuxilliaryError(Exception):
@@ -217,6 +220,8 @@ def _instantiate_learning_components(learning_projection, context=None):
     #                      - WILL REQUIRE MORE EXTENSIVE CHECKING AND VALIDATION
     #                              (E.G., OF WHETHER ANY LearningMechanism IDENTIFIED HAVE A PROJECTION FROM AN
     #                               APPROPRIATE ObjectiveMechanism, etc.
+    from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+
     if not learning_projection.name in context:
         raise LearningAuxilliaryError("PROGRAM ERROR".format("_instantiate_learning_components only supports "
                                                              "calls from a LearningProjection._instantiate_sender()"))
