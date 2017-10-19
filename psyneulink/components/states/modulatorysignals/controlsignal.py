@@ -282,24 +282,31 @@ from enum import IntEnum
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus, function_type, method_type
+from PsyNeuLink.Components.Component import InitStatus, function_type, method_type
 # import Components
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
-from psyneulink.components.functions.function import CombinationFunction, Exponential, IntegratorFunction, Linear, LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
-from psyneulink.components.projections.projection import _parse_connection_specs
-from psyneulink.components.shellclasses import Function, Mechanism
-from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE
-from psyneulink.components.states.parameterstate import ParameterState, _get_parameter_state
-from psyneulink.components.states.state import State_Base
-from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAM, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, MECHANISM, NAME, OFF, ON, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, SEPARATOR_BAR, SLOPE, SUM, kwAssign
-from psyneulink.globals.log import LogEntry, LogLevel
-from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
-from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
-from psyneulink.scheduling.timescale import CurrentTime, TimeScale
+from PsyNeuLink.Components.Functions.Function import CombinationFunction, Exponential, IntegratorFunction, Linear, \
+    LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
+from PsyNeuLink.Components.ShellClasses import Function, Mechanism
+from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
+from PsyNeuLink.Components.States.State import State_Base
+from PsyNeuLink.Components.States.ParameterState import _get_parameter_state
+from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
+from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _parse_connection_specs, ConnectionTuple
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+from PsyNeuLink.Globals.Defaults import defaultControlAllocation
+from PsyNeuLink.Globals.Keywords import\
+    NAME, FUNCTION, FUNCTION_PARAMS, PARAMS, EXECUTING, SEPARATOR_BAR, OFF, ON, AUTO, SUM, SLOPE, INTERCEPT, \
+    MECHANISM, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE, MODULATION, \
+    PROJECTION_TYPE, SENDER, RECEIVER, WEIGHT, EXPONENT,\
+    CONTROL_SIGNAL, CONTROL_SIGNAL_SPECS, CONTROLLED_PARAMS, CONTROL_PROJECTION, ALLOCATION_SAMPLES, kwAssign
+from PsyNeuLink.Globals.Log import LogEntry, LogLevel
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Globals.Utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, \
+    kwCompatibilityType
+from PsyNeuLink.Scheduling.TimeScale import CurrentTime, TimeScale
 
 # class OutputStateLog(IntEnum):
 #     NONE            = 0
@@ -314,6 +321,8 @@ from psyneulink.scheduling.timescale import CurrentTime, TimeScale
 #     TEST_MODE = 240
 # defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
 DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.3)
+
+STATE_SPECIFIC_PARAMS = {ALLOCATION_SAMPLES, MODULATION}
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
@@ -611,7 +620,7 @@ class ControlSignal(ModulatorySignal):
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_TYPE: CONTROL_PROJECTION,
-        CONTROLLED_PARAM:None
+        CONTROLLED_PARAMS:None
     })
     #endregion
 
@@ -977,6 +986,10 @@ class ControlSignal(ModulatorySignal):
         Returns params dict with CONNECTIONS entries if any of these was specified.
 
         """
+        from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        from PsyNeuLink.Components.Projections.Projection import _parse_connection_specs
+        from PsyNeuLink.Globals.Keywords import CONNECTIONS, PROJECTIONS
 
         params_dict = {}
 
@@ -985,8 +998,9 @@ class ControlSignal(ModulatorySignal):
         else:
             params_dict[PROJECTIONS] = []
 
-        if ALLOCATION_SAMPLES in state_specific_params:
-            params_dict[ALLOCATION_SAMPLES] = state_specific_params[ALLOCATION_SAMPLES]
+        for param in STATE_SPECIFIC_PARAMS:
+            if param in state_specific_params:
+                params_dict[param] = state_specific_params[param]
 
         if isinstance(state_specific_params, dict):
 
@@ -1283,10 +1297,10 @@ class ControlSignal(ModulatorySignal):
 #         CONTROL_SIGNAL:ControlSignal or None
 #         PARAMS:dict - params dict if any were included in the state_spec
 #     """
-#     from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-#     from psyneulink.components.states.state import _parse_state_spec
-#     from psyneulink.components.states.parameterstate import ParameterState, _get_parameter_state
-#     from psyneulink.globals.keywords import NAME, PARAMS, \
+#     from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+#     from PsyNeuLink.Components.States.State import _parse_state_spec
+#     from PsyNeuLink.Components.States.ParameterState import ParameterState, _get_parameter_state
+#     from PsyNeuLink.Globals.Keywords import NAME, PARAMS, \
 #                                             CONTROL_SIGNAL, CONTROL_SIGNAL_SPECS, PARAMETER_STATE, \
 #                                             MECHANISM, PROJECTIONS, SENDER, RECEIVER
 #

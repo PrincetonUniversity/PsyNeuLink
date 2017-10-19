@@ -304,25 +304,38 @@ Class Reference
 
 import inspect
 import numbers
-import sys
 import warnings
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, function_type
-from psyneulink.components.functions.function import LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
-from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
-from psyneulink.components.projections.projection import ConnectionTuple, _is_projection_spec, _parse_connection_specs, _parse_projection_spec, _validate_connection_request
-from psyneulink.components.shellclasses import Mechanism, Process, Projection, State
-from psyneulink.globals.keywords import CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OWNER, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
-from psyneulink.globals.log import LogEntry, LogLevel
-from psyneulink.globals.preferences.componentpreferenceset import kpVerbosePref
-from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, convert_to_np_array, get_args, get_class_attributes, is_value_spec, iscompatible, merge_param_dicts, type_match
-from psyneulink.scheduling.timescale import CurrentTime, TimeScale
+from PsyNeuLink.Components.Component import Component, ComponentError, InitStatus, component_keywords, function_type
+from PsyNeuLink.Components.Functions.Function import LinearCombination, ModulationParam, _get_modulated_param, \
+    get_param_value_for_function, get_param_value_for_keyword
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.Projection import \
+    _is_projection_spec, _parse_connection_specs, _parse_projection_spec, \
+    _validate_connection_request, ConnectionTuple, WEIGHT, EXPONENT
+
+from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
+from PsyNeuLink.Globals.Keywords import VARIABLE, SIZE, VALUE, NAME, OWNER, PARAMS, PREFS_ARG, CONTEXT, \
+    EXECUTING, MECHANISM, FUNCTION_PARAMS,  REFERENCE_VALUE, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, \
+    STANDARD_ARGS, STANDARD_OUTPUT_STATES,\
+    PROJECTIONS, PATHWAY_PROJECTIONS, PROJECTION_PARAMS,  PROJECTION_TYPE, PROJECTION, RECEIVER, SENDER,\
+    MAPPING_PROJECTION_PARAMS, MATRIX, MATRIX_KEYWORD_SET, \
+    MODULATION, MODULATORY_SIGNAL, MODULATORY_PROJECTIONS, \
+    LEARNING, LEARNING_PROJECTION, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
+    CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
+    GATING, GATING_PROJECTION, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, \
+    kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
+from PsyNeuLink.Globals.Log import LogEntry, LogLevel
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import kpVerbosePref
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Globals.Registry import register_category
+from PsyNeuLink.Globals.Utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, \
+    convert_to_np_array, get_class_attributes, is_value_spec, iscompatible, is_numeric, \
+    merge_param_dicts, type_match, get_args
+from PsyNeuLink.Scheduling.TimeScale import CurrentTime, TimeScale
 
 state_keywords = component_keywords.copy()
 state_keywords.update({MECHANISM,
@@ -687,7 +700,7 @@ class State_Base(State):
                                          context=context.__class__.__name__)
 
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
-        # FIX: 10/3/17 - ??MOVE TO COMPOSITION WHEN IT IS IMPELEMENT (INSTEAD OF BEING HANDLED BY STATE ITSELF)
+        # FIX: 10/3/17 - ??MOVE TO COMPOSITION THAT IS IMPELEMENTED (INSTEAD OF BEING HANDLED BY STATE ITSELF)
         if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
             self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
         else:
@@ -928,8 +941,10 @@ class State_Base(State):
                so, need to test for prior assignment to avoid duplicates.
         """
 
-        from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
-        from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+        from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection \
+            import PathwayProjection_Base
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
+            import ModulatoryProjection_Base
 
         default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
 
@@ -941,6 +956,10 @@ class State_Base(State):
 
 
         # # FIX: 10/3/17 - FOR DEBUGGING:
+        # from PsyNeuLink.Components.States.InputState import InputState
+        # from PsyNeuLink.Components.States.OutputState import OutputState
+        # from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+        # from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
         # projection_list[0] = OutputState
         # projection_list[0] = projection_list[0].sender.owner
         # projection_list[0] = 'LEARNING'
@@ -1088,7 +1107,11 @@ class State_Base(State):
                so, need to test for prior assignment to avoid duplicates.
         """
 
-        state_name_string = self.name
+        from PsyNeuLink.Components.Projections.Projection import Projection_Base, ProjectionRegistry
+        from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection \
+            import PathwayProjection_Base
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
+            import ModulatoryProjection_Base
 
         # FIX: 10/3/17 THIS NEEDS TO BE MADE SPECIFIC TO EFFERENT PROJECTIONS (I.E., FOR WHICH IT CAN BE A SENDER)
         # default_projection_type = ProjectionRegistry[self.paramClassDefaults[PROJECTION_TYPE]].subclass
@@ -1111,6 +1134,8 @@ class State_Base(State):
         receiver_list = receiver
         if not isinstance(projection_list, list):
             receiver_list = [receiver_list]
+        if not receiver_list:
+            receiver_list = [None] * len(projection_list)
 
         # Parse Projection specification using self as connectee_state:
         # - calls _parse_projection_spec for projection_spec;
@@ -1125,25 +1150,38 @@ class State_Base(State):
 
         for connection, receiver in zip(connection_tuples, receiver_list):
 
-            # VALIDATE RECEIVER
+            # VALIDATE CONNECTION AND RECEIVER SPECS
 
-            # ALLOW SPEC TO BE ANY STATE (INCLUDING OutPutState, FOR GATING PROJECTIONS)
-            # OR MECHANISM (IN WHICH CASE PRIMARY INPUTSTATE IS ASSUMED)
-            from psyneulink.components.shellclasses import State
-            if (not isinstance(receiver, (State, Mechanism, ConnectionTuple))
+            if (not isinstance(connection, ConnectionTuple)
+                and receiver
+                and not isinstance(receiver, State, Mechanism)
                 and not (inspect.isclass(receiver) and issubclass(receiver, (State, Mechanism)))):
                 raise StateError("Receiver ({}) of {} from {} must be a {}, {}, a class of one, or a {}".
                                  format(receiver, projection_spec, self.name,
                                         State.__name__, Mechanism.__name__, ConnectionTuple.__name__))
-            # If receiver is a Mechanism, use of primary InputState (and warn if verbose is set)
+
             if isinstance(receiver, Mechanism):
-                if self.verbosePref:
-                    warnings.warn("Receiver {} of {} from {} is a Mechanism, so its primary InputState will be used".
-                                  format(receiver, projection_spec, self.name))
-                receiver = receiver.input_state
+                from PsyNeuLink.Components.States.InputState import InputState
+                from PsyNeuLink.Components.States.ParameterState import ParameterState
 
+                # If receiver is a Mechanism and Projection is a MappingProjection,
+                #    use primary InputState (and warn if verbose is set)
+                if isinstance(default_projection_type, MappingProjection):
+                    if self.verbosePref:
+                        warnings.warn("Receiver {} of {} from {} is a {} and {} is a {}, "
+                                      "so its primary {} will be used".
+                                      format(receiver, projection_spec, self.name, Mechanism.__name__,
+                                             Projection.__name__, default_projection_type.__name__,
+                                             InputState.__name__))
+                    receiver = receiver.input_state
 
-            # FIX: 10/3/17 - CHECK WHETHER state == receiver (IT SHOULD, AND IT'D BE NICE IF IT DID)
+                else:
+                    raise StateError("Receiver {} of {} from {} is a {}, but the specified {} is a {} so "
+                                     "target {} can't be determined".
+                                      format(receiver, projection_spec, self.name, Mechanism.__name__,
+                                             Projection.__name__, default_projection_type.__name__,
+                                             ParameterState.__name__))
+
 
             # GET Projection --------------------------------------------------------
 
@@ -1151,51 +1189,69 @@ class State_Base(State):
             #    note: weight and exponent for connection have been assigned to Projection in _parse_connection_specs
             connection_receiver, weight, exponent, projection_spec = connection
 
-            if connection_receiver != receiver:
+            if receiver and connection_receiver != receiver:
                 assert False
 
+            # Parse projection_spec and receiver specifications
+            #    - if one is assigned and the other is not, assign the one to the other
+            #    - if both are assigned, validate they are the same
+            #    - if projection_spec is None and receiver is specified, use the latter to construct default Projection
 
             # Projection object
             if isinstance(projection_spec, Projection):
                 projection = projection_spec
                 projection_type = projection.__class__
 
-                # Validate that Projection's receiver is one passed to the method;  if it is None, assign as receiver
                 if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                    projection.init_args[RECEIVER] = projection.init_args[RECEIVER] or receiver
                     proj_recvr = projection.init_args[RECEIVER]
                 else:
+                    projection.receiver = projection.receiver or receiver
                     proj_recvr = projection.receiver
-                if proj_recvr and not proj_recvr is receiver:
-                    # Note: if proj_recvr is None, it will be assigned under handling of deferred_init below
-                    raise StateError("Receiver ({}) of specified Projection ({}) "
-                                     "is not the same as the specified receiver ({})".
-                                     format(proj_recvr, projection.name, receiver))
                 # MODIFIED 10/3/17 OLD:
                 # if default_class_name:
                 #     # projection_object.name = projection_object.name.replace(default_class_name, self.name)
                 #     projection_object.name = self.name + '_' + projection_object.name
                 # MODIFIED 10/3/17 END
 
-            # Projection specification dictionary:
-            elif isinstance(projection_spec, dict):
-                # Instantiate Projection
+            # Projection specification dictionary or None:
+            elif isinstance(projection_spec, (dict, None)):
+
+                # If Projection was not specified, create default Projection specification dict
+                if projection_spec is None:
+                    projection_spec = {SENDER: self, RECEIVER: receiver}
+
+                # Instantiate Projection from specification dict
                 projection_type = projection_spec.pop(PROJECTION_TYPE, None) or default_projection_type
                 projection = projection_type(**projection_spec)
+                projection.receiver = projection.receiver or receiver
+                proj_recvr = projection.receiver
 
             else:
+                rcvr_str = ""
+                if receiver:
+                    if isinstance(receiver, State):
+                        rcvr_str = " to {}".format(receiver.name)
+                    else:
+                        rcvr_str = " to {}".format(receiver.__name__)
                 raise StateError("PROGRAM ERROR: Unrecognized {} specification ({}) returned "
-                                 "from _parse_connection_specs for connection from {} to {} of {}".
-                                 format(Projection.__name__,projection_spec,sender.__name__,self.name,self.owner.name))
+                                 "from _parse_connection_specs for connection from {} of {}{}".
+                                 format(Projection.__name__,projection_spec,self.name,self.owner.name,rcvr_str))
 
-            # ASSIGN PARAMS
+            # Validate that receiver and projection_spec receiver are now the same
+            receiver = receiver or proj_recvr  # If receiver was not specified, assign it receiver from projection_spec
+            if proj_recvr and receiver and not proj_recvr is receiver:
+                # Note: if proj_recvr is None, it will be assigned under handling of deferred_init below
+                raise StateError("Receiver ({}) specified for Projection ({}) "
+                                 "is not the same as the one specified in {} ({})".
+                                 format(proj_recvr, projection.name, ConnectionTuple.__name__, receiver))
+
+            # ASSIGN REMAINING PARAMS
 
             # Deferred init
             if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
 
                 projection.init_args[SENDER] = self
-                projection.init_args[RECEIVER] = receiver
-                projection_spec[REFERENCE_VALUE] = projection_spec[REFERENCE_VALUE] or self.instance_defaults.variable
-                projection_spec[VARIABLE] = projection_spec[VARIABLE] or projection_spec[REFERENCE_VALUE]
 
                 # Construct and assign name
                 if isinstance(receiver, State):
@@ -1230,7 +1286,7 @@ class State_Base(State):
 
                 # Validate variable
                 #    - check that input to Projection is compatible with self.value
-                if not iscompatible(self.value, projection_spec.instance_defaults.variable):
+                if not iscompatible(self.value, projection.instance_defaults.variable):
                     raise StateError("Input to {} ({}) is not compatible with the value ({}) of "
                                      "the State from which it is supposed to project ({})".
                                      format(projection.name, projection.variable, self.value, self.name))
@@ -1331,13 +1387,15 @@ class State_Base(State):
         for value in self._mod_proj_values:
             self._mod_proj_values[value] = []
 
-        from psyneulink.components.process import ProcessInputState
-        from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
-        from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-        from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-        from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-        from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
+        from PsyNeuLink.Components.Process import ProcessInputState
+        from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection \
+            import PathwayProjection_Base
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
+            import ModulatoryProjection_Base
+        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
 
         # If owner is a Mechanism, get its execution_id
         if isinstance(self.owner, (Mechanism, Process)):
@@ -1835,6 +1893,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from ComponentPreferenceSet)
     # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its owner;
     state_type = state_spec_dict.pop(STATE_TYPE, None)
+    del state_spec_dict[REFERENCE_VALUE_NAME]
     # Implement default State
     state = state_type(**state_spec_dict, context=context)
 
@@ -1866,6 +1925,7 @@ def _parse_state_type(owner, state_spec):
 
         # State keyword
         if state_spec in state_type_keywords:
+            import sys
             return getattr(sys.modules['PsyNeuLink.Components.States.'+state_spec], state_spec)
 
         # standard_output_state
@@ -1875,8 +1935,9 @@ def _parse_state_type(owner, state_spec):
             # if item is not None:
             #     # assign dict to owner's output_state list
             #     return owner.standard_output_states.get_dict(state_spec)
+            # from PsyNeuLink.Components.States.OutputState import StandardOutputStates
             if owner.standard_output_states.get_state_dict(state_spec):
-                from psyneulink.components.states.outputstate import OutputState
+                from PsyNeuLink.Components.States.OutputState import OutputState
                 return OutputState
 
     # State specification dict
@@ -1995,8 +2056,9 @@ def _parse_state_spec(state_type=None,
         del state_spec[STATE_SPEC_ARG]
 
     if state_spec:
-        print('Args other than standard args and state_spec were in _instantiate_state ({})'.
-              format(state_spec))
+        # print('Args other than standard args and state_spec were in _instantiate_state ({})'.
+        #       format(state_spec))
+        state_specific_args.update(state_spec)
 
     # state_dict = defaultdict(lambda: None)
     # state_dict.update(standard_args)
