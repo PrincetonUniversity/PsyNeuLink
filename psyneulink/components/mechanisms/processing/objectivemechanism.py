@@ -709,6 +709,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                 receiver_list=instantiated_input_states,
                                                 receiver_projection_specs=input_state_projection_specs,
                                                 context=context)
+        TEST = True
 
     def _instantiate_monitored_output_states(self, monitored_output_states, input_states=None, context=None):
         """Parse monitored_output_state specs and instantiate monitored_output_states attribute
