@@ -309,16 +309,16 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import Component, ComponentError, InitStatus, component_keywords, function_type
-from PsyNeuLink.Components.Functions.Function import LinearCombination, ModulationParam, _get_modulated_param, \
+from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, function_type
+from psyneulink.components.functions.function import LinearCombination, ModulationParam, _get_modulated_param, \
     get_param_value_for_function, get_param_value_for_keyword
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.Projection import \
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.projections.projection import \
     _is_projection_spec, _parse_connection_specs, _parse_projection_spec, \
     _validate_connection_request, ConnectionTuple, WEIGHT, EXPONENT
 
-from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
-from PsyNeuLink.Globals.Keywords import VARIABLE, SIZE, VALUE, NAME, OWNER, PARAMS, PREFS_ARG, CONTEXT, \
+from psyneulink.components.shellclasses import Mechanism, Process, Projection, State
+from psyneulink.globals.keywords import VARIABLE, SIZE, VALUE, NAME, OWNER, PARAMS, PREFS_ARG, CONTEXT, \
     EXECUTING, MECHANISM, FUNCTION_PARAMS,  REFERENCE_VALUE, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, \
     STANDARD_ARGS, STANDARD_OUTPUT_STATES,\
     PROJECTIONS, PATHWAY_PROJECTIONS, PROJECTION_PARAMS,  PROJECTION_TYPE, PROJECTION, RECEIVER, SENDER,\
@@ -328,14 +328,14 @@ from PsyNeuLink.Globals.Keywords import VARIABLE, SIZE, VALUE, NAME, OWNER, PARA
     CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
     GATING, GATING_PROJECTION, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, \
     kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
-from PsyNeuLink.Globals.Log import LogEntry, LogLevel
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import kpVerbosePref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.Utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, \
+from psyneulink.globals.log import LogEntry, LogLevel
+from psyneulink.globals.preferences.componentpreferenceset import kpVerbosePref
+from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.globals.registry import register_category
+from psyneulink.globals.utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, \
     convert_to_np_array, get_class_attributes, is_value_spec, iscompatible, is_numeric, \
     merge_param_dicts, type_match, get_args
-from PsyNeuLink.Scheduling.TimeScale import CurrentTime, TimeScale
+from psyneulink.scheduling.timescale import CurrentTime, TimeScale
 
 state_keywords = component_keywords.copy()
 state_keywords.update({MECHANISM,
@@ -638,7 +638,7 @@ class State_Base(State):
             except (KeyError, NameError):
                 pass
             try:
-                projections = kargs[PROJECTIONS]
+                projections = kargs[projections]
             except (KeyError, NameError):
                 pass
             try:
@@ -701,8 +701,8 @@ class State_Base(State):
 
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
         # FIX: 10/3/17 - ??MOVE TO COMPOSITION THAT IS IMPELEMENTED (INSTEAD OF BEING HANDLED BY STATE ITSELF)
-        if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
-            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
+        if projections in self.paramsCurrent and self.paramsCurrent[projections]:
+            self._instantiate_projections(self.paramsCurrent[projections], context=context)
         else:
             # No projections specified, so none will be created here
             # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
@@ -806,7 +806,7 @@ class State_Base(State):
             projections = request_set[PROJECTIONS]
             if not isinstance(projections, list):
                 projections = [projections]
-                request_set[PROJECTIONS] = projections
+                request_set[projections] = projections
         else:
             # If no projections, ignore (none will be created)
             projections = None
@@ -941,10 +941,8 @@ class State_Base(State):
                so, need to test for prior assignment to avoid duplicates.
         """
 
-        from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection \
-            import PathwayProjection_Base
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
-            import ModulatoryProjection_Base
+        from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
+        from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 
         default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
 
@@ -1107,11 +1105,9 @@ class State_Base(State):
                so, need to test for prior assignment to avoid duplicates.
         """
 
-        from PsyNeuLink.Components.Projections.Projection import Projection_Base, ProjectionRegistry
-        from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection \
-            import PathwayProjection_Base
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
-            import ModulatoryProjection_Base
+        from psyneulink.components.projections.projection import Projection_Base, ProjectionRegistry
+        from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
+        from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 
         # FIX: 10/3/17 THIS NEEDS TO BE MADE SPECIFIC TO EFFERENT PROJECTIONS (I.E., FOR WHICH IT CAN BE A SENDER)
         # default_projection_type = ProjectionRegistry[self.paramClassDefaults[PROJECTION_TYPE]].subclass
@@ -1161,8 +1157,8 @@ class State_Base(State):
                                         State.__name__, Mechanism.__name__, ConnectionTuple.__name__))
 
             if isinstance(receiver, Mechanism):
-                from PsyNeuLink.Components.States.InputState import InputState
-                from PsyNeuLink.Components.States.ParameterState import ParameterState
+                from psyneulink.components.States.InputState import InputState
+                from psyneulink.components.States.ParameterState import ParameterState
 
                 # If receiver is a Mechanism and Projection is a MappingProjection,
                 #    use primary InputState (and warn if verbose is set)
@@ -1387,15 +1383,13 @@ class State_Base(State):
         for value in self._mod_proj_values:
             self._mod_proj_values[value] = []
 
-        from PsyNeuLink.Components.Process import ProcessInputState
-        from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection \
-            import PathwayProjection_Base
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
-            import ModulatoryProjection_Base
-        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+        from psyneulink.components.process import ProcessInputState
+        from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
+        from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
+        from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+        from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
 
         # If owner is a Mechanism, get its execution_id
         if isinstance(self.owner, (Mechanism, Process)):
@@ -1937,7 +1931,7 @@ def _parse_state_type(owner, state_spec):
             #     return owner.standard_output_states.get_dict(state_spec)
             # from PsyNeuLink.Components.States.OutputState import StandardOutputStates
             if owner.standard_output_states.get_state_dict(state_spec):
-                from PsyNeuLink.Components.States.OutputState import OutputState
+                from psyneulink.components.States.OutputState import OutputState
                 return OutputState
 
     # State specification dict
