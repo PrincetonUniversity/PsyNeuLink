@@ -652,7 +652,6 @@ class ControlSignal(ModulatorySignal):
                                                   allocation_samples=allocation_samples,
                                                   params=params)
 
-        # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
         # Consider adding self to owner.output_states here (and removing from ControlProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputStates in ControlProjection._instantiate_sender),
@@ -848,7 +847,6 @@ class ControlSignal(ModulatorySignal):
         :parameter allocation: (single item list, [0-1])
         :return: (intensity)
         """
-
 
         # MODIFIED 4/15/17 OLD: [NOT SURE WHY, BUT THIS SKIPPED OutputState.update() WHICH CALLS self.calculate()
         # super(OutputState, self).update(params=params, time_scale=time_scale, context=context)
@@ -1054,8 +1052,6 @@ class ControlSignal(ModulatorySignal):
 
         return params_dict
 # MODIFIED 9/30/17 END
-
-
 
 
     @property
