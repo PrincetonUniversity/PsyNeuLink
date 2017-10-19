@@ -282,15 +282,15 @@ from enum import IntEnum
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import InitStatus, function_type, method_type
+from psyneulink.components.component import InitStatus, function_type, method_type
 # import Components
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
-from PsyNeuLink.Components.Functions.Function import CombinationFunction, Exponential, IntegratorFunction, Linear, \
-    LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
-from PsyNeuLink.Components.ShellClasses import Function, Mechanism
-from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
-from PsyNeuLink.Components.States.State import State_Base
+from psyNeuLink.components.functions.Function import CombinationFunction, Exponential, IntegratorFunction, Linear, \
+    linearcombination, reduce, simpleIntegrator, transferFunction, _is_modulation_param, is_function_type
+from psyNeuLink.components.shellClasses import function, mechanism
+from psyNeuLink.components.states.modulatorySignals.modulatorySignal import modulatorySignal
+from psyneulink.components.shellclasses import State_Base
 from PsyNeuLink.Components.States.ParameterState import _get_parameter_state
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _parse_connection_specs, ConnectionTuple
