@@ -1,34 +1,34 @@
 import numpy as np
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms \
-    .IntegratorMechanism import \
+from psyneulink.components.mechanisms.processing \
+    .integratormechanism import \
     IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms \
+from psyneulink.components.mechanisms.processing \
     .RecurrentTransferMechanism import \
     RecurrentTransferMechanism
-from PsyNeuLink.Scheduling.condition import EveryNCalls, Any, AfterNCalls, EveryNPasses
+from psyneulink.scheduling.condition import EveryNCalls, Any, AfterNCalls, EveryNPasses
 
-from PsyNeuLink import ModulationParam
-from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, \
+from psyneulink import ModulationParam
+from psyneulink.components.functions.function import AdaptiveIntegrator, \
     BogaczEtAl, DriftDiffusionIntegrator, Linear, Logistic, PROB, SoftMax
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism \
-    .GatingMechanism import \
+from psyneulink.components.mechanisms.adaptive.gating \
+    .gatingmechanism import \
     GatingMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import \
+from psyneulink.components.mechanisms.processing.objectivemechanism import \
     ComparatorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism \
+from psyneulink.components.mechanisms.processing.transfermechanism \
     import \
     MEAN, RESULT, TransferMechanism, VARIANCE, TRANSFER_OUTPUT
-from PsyNeuLink.Components.Process import PARAMETER_STATE_PARAMS, \
+from psyneulink.components.process import PARAMETER_STATE_PARAMS, \
     RANDOM_CONNECTIVITY_MATRIX, process
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection \
+from psyneulink.components.projections.pathway.mappingprojection \
     import MappingProjection
-from PsyNeuLink.Components.States.ModulatorySignals import ControlSignal
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import ENABLED, GAIN, NAME, INDEX, CALCULATE, \
+from psyneulink.components.states.modulatorysignals import controlsignal
+from psyneulink.components.system import system
+from psyneulink.globals.keywords import ENABLED, GAIN, NAME, INDEX, CALCULATE, \
     INTERCEPT, MECHANISM, MODULATION, GATE
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, \
+from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, \
     NOISE, THRESHOLD, TimeScale
-from PsyNeuLink.Scheduling.Scheduler import Scheduler
+from psyneulink.scheduling.scheduler import Scheduler
 
 
 def intro():
@@ -205,7 +205,7 @@ def states():
                                               function=Logistic(
                                                   gain=0.5,
                                                   bias=(1.0,
-                                                        ControlSignal.ControlSignal(
+                                                        controlsignal.ControlSignal(
                                                             modulation=ModulationParam.ADDITIVE))))
 
     # my_mapping_projection = MappingProjection(sender=my_input_mechanism,
@@ -251,11 +251,11 @@ def states():
     # endregion
 
     # region ControlSignals
-    my_mech = TransferMechanism(function=Logistic(bias=(1.0, ControlSignal)))
+    my_mech = TransferMechanism(function=Logistic(bias=(1.0, controlsignal)))
     # need clarification on Modulate the parameter of a Mechanism’s function
 
     my_mech = TransferMechanism(function=Logistic(gain=(
-        1.0, ControlSignal.ControlSignal(modulation=ModulationParam.ADDITIVE))))
+        1.0, controlsignal.ControlSignal(modulation=ModulationParam.ADDITIVE))))
 
     my_mech_A = TransferMechanism(function=Logistic)
     my_mech_B = TransferMechanism(function=Linear, output_states=[RESULT, MEAN])

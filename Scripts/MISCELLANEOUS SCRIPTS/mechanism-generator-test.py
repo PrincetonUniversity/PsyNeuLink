@@ -1,8 +1,8 @@
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.mechanismGenerator import mechanismGenerator
+from psyneulink.components.mechanisms.processing.transfermechanism import *
+from psyneulink.components.process import process
+from psyneulink.components.system import system
+from psyneulink.globals.keywords import *
+from psyneulink.mechanismGenerator import mechanismGenerator
 
 mechanism1 = TransferMechanism(name='my_Transfer1',
                        default_variable = [0],

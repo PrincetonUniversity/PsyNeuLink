@@ -1,5 +1,5 @@
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Globals.Keywords import *
+from psyneulink.components.process import process
+from psyneulink.globals.keywords import *
 
 DDM_prefs = ComponentPreferenceSet(
                 prefs = {

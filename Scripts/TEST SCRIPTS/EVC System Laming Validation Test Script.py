@@ -1,15 +1,13 @@
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 
-from PsyNeuLink.Components.System import MonitoredOutputStatesOption
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import *
-from PsyNeuLink.Library.Subsystems.EVC.EVCControlMechanism import EVCControlMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import *
+from psyneulink.components.process import process
+from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.components.system import MonitoredOutputStatesOption, system
+from psyneulink.globals.keywords import *
+from psyneulink.globals.preferences.componentpreferenceset import *
+from psyneulink.library.mechanisms.processing.integrator.ddm import *
+from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
 
 random.seed(0)
 np.random.seed(0)
@@ -184,10 +182,10 @@ def show_results():
     print ('\t\t\tDrift rate control signal (from EVC): {} / parameter value: {}'.
            # format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
            format(
-            mySystem.controller.output_states['drift_rate_ControlSignal'].value,
+            mySystem.controller.output_states['Decision drift_rate ControlSignal'].value,
             re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision._parameter_states[DRIFT_RATE].value))))))
     print ('\t\t\tThreshold control signal (from EVC): {} / parameter value: {}'.
-           format(mySystem.controller.output_states['threshold_ControlSignal'].value,
+           format(mySystem.controller.output_states['Decision threshold ControlSignal'].value,
                   re.sub('[\[,\],\n]','',str(float(Decision._parameter_states[THRESHOLD].value)))
                   # Decision._parameter_states[THRESHOLD].mod_afferents[0].value
                   ))

@@ -1,10 +1,10 @@
 import pytest
 import typecheck
 import numpy as np
-from PsyNeuLink.Components.Component import ComponentError
-from PsyNeuLink.Components.Functions.Function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, NormalDist
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, DDMError
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.components.component import ComponentError
+from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, NormalDist
+from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DDMError
+from psyneulink.scheduling.timescale import TimeScale
 
 
 # ======================================= FUNCTION TESTS ============================================

@@ -1,7 +1,7 @@
-from PsyNeuLink.Components.Functions.Function import Linear, Logistic
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.System import *
-from PsyNeuLink.Globals.Keywords import *
+from psyneulink.components.functions.function import Linear, Logistic
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.system import *
+from psyneulink.globals.keywords import *
 
 process_prefs = {REPORT_OUTPUT_PREF: True,
                  VERBOSE_PREF: False}

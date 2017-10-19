@@ -1,18 +1,18 @@
 import numpy as np
 import pytest
 
-from PsyNeuLink.Components.Functions.Function import Linear, BogaczEtAl, Exponential, DRIFT_RATE, THRESHOLD
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, MEAN, RESULT, VARIANCE
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet, kpVerbosePref, \
+from psyneulink.components.functions.function import Linear, BogaczEtAl, Exponential, DRIFT_RATE, THRESHOLD
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import process
+from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.components.system import system
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, MEAN, RESULT, VARIANCE
+from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref, \
     kpReportOutputPref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, DECISION_VARIABLE, \
+from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, \
     PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
-from PsyNeuLink.Library.Subsystems.EVC.EVCControlMechanism import EVCControlMechanism
+from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
 
 
 def test_EVC():

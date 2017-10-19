@@ -1,13 +1,13 @@
 from pprint import pprint
 
-from PsyNeuLink.Components.Functions.Function import Integrator, BogaczEtAl
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms import DDM
+from psyneulink.components.functions.function import Integrator, BogaczEtAl
+from psyneulink.components.process import process
+from psyneulink.library.mechanisms.processing.integrator import ddm
 
 
 def test_DDM_rate_int():
     stim = 10
-    D = DDM(
+    D = ddm(
             name='DDM',
             function = Integrator(
                                     integration_type= DIFFUSION,
@@ -30,7 +30,7 @@ def test_DDM_rate_int():
 
 def test_DDM_rate_list_len_1():
     stim = 10
-    D_2 = DDM(
+    D_2 = ddm(
         name='DDM',
         function=Integrator(
             integration_type=DIFFUSION,
@@ -52,7 +52,7 @@ def test_DDM_rate_list_len_1():
 
 def test_DDM_rate_int_bog():
     stim = 10
-    D_bog = DDM(
+    D_bog = ddm(
             name='DDM',
             function = BogaczEtAl(drift_rate=5)
            )
@@ -69,7 +69,7 @@ def test_DDM_rate_int_bog():
 
 def test_DDM_rate_list_len_1_bog():
     stim = 10
-    D_2_bog = DDM(
+    D_2_bog = ddm(
         name='DDM',
         function=BogaczEtAl(drift_rate=[5, 5])
     )

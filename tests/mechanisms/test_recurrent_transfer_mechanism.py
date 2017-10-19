@@ -1,16 +1,16 @@
 import numpy as np
 import pytest
 
-from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError, TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
-from PsyNeuLink.Globals.Utilities import UtilitiesError
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism import RecurrentTransferError, RecurrentTransferMechanism
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA import LCA
+from psyneulink.components.functions.function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
+from psyneulink.components.mechanisms.mechanism import MechanismError
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
+from psyneulink.components.process import process
+from psyneulink.components.system import system
+from psyneulink.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
+from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
+from psyneulink.globals.utilities import UtilitiesError
+from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferError, RecurrentTransferMechanism
+from psyneulink.library.mechanisms.processing.transfer.lca import LCA
 
 # class TestLCA:
 #     def test_lca(self):
