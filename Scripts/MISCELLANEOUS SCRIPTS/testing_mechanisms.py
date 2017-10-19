@@ -1,11 +1,11 @@
-from PsyNeuLink.Components.Functions.Function import Linear, SimpleIntegrator
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Globals.Keywords import EXECUTING
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.components.functions.function import Linear, SimpleIntegrator
+from psyneulink.components.mechanisms.processing import integratormechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.globals.keywords import EXECUTING
+from psyneulink.scheduling.timescale import TimeScale
 
-I = IntegratorMechanism(
+I = integratormechanism(
         name='IntegratorMechanism',
         function=SimpleIntegrator(
         ),
@@ -68,7 +68,7 @@ print([val, val2] == [10.0, 5.0])
 # print([val, val2] == [5.0, 1.0])
 
 def test_mechanisms_without_system_or_process_no_input():
-    I = IntegratorMechanism(
+    I = integratormechanism(
             name='IntegratorMechanism',
             default_variable= 10,
             function=SimpleIntegrator(

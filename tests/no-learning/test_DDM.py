@@ -1,9 +1,9 @@
 import numpy as np
 
-from PsyNeuLink.Components.Functions.Function import BogaczEtAl
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Globals.Keywords import IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
+from psyneulink.components.functions.function import BogaczEtAl
+from psyneulink.components.process import process
+from psyneulink.globals.keywords import IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX
+from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
 
 
 # does not run a system, can be used to ensure that running processes alone still works

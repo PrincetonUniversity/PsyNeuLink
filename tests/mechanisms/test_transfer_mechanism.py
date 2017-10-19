@@ -1,15 +1,15 @@
 import numpy as np
 import pytest
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferError
 
-from PsyNeuLink.Components.Component import ComponentError
-from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, \
+from psyneulink.components.component import ComponentError
+from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, \
     Reinforcement, SoftMax
-from PsyNeuLink.Components.Functions.Function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Globals.Utilities import UtilitiesError
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist
+from psyneulink.components.mechanisms.mechanism import MechanismError
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.globals.utilities import UtilitiesError
+from psyneulink.scheduling.timescale import TimeScale
 
 
 class TestTransferMechanismInputs:

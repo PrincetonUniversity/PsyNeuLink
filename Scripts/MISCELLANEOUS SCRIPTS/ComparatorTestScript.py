@@ -1,7 +1,7 @@
 
 
-from PsyNeuLink.Components.Process import Process_Base
-from PsyNeuLink.Globals.Keywords import *
+from psyneulink.components.process import Process_Base
+from psyneulink.globals.keywords import *
 
 # from Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # sample_mech = TransferMechanism(name='Sample',

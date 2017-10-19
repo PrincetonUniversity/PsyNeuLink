@@ -1,13 +1,12 @@
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import GatingMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal
-from PsyNeuLink.Components.States.OutputState import *
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Scheduling.Condition import AfterNCalls
+from psyneulink.components.functions.function import Logistic
+from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import process
+from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
+from psyneulink.components.states.outputstate import *
+from psyneulink.components.system import system
+from psyneulink.scheduling.condition import AfterNCalls
 
-# from PsyNeuLink.Globals.Run import run, construct_inputs
 
 Input_Layer = TransferMechanism(name='Input Layer',
                                 function=Logistic,
@@ -25,7 +24,7 @@ Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic,
                         default_variable = [0,0,0])
 
-from PsyNeuLink.Components.States.InputState import InputState
+from psyneulink.components.states.inputstate import InputState
 
 my_input_state = InputState(
     # owner=Output_Layer,
@@ -230,7 +229,6 @@ elif COMPOSITION is SYSTEM:
     # x.show_graph()
     # x.show_graph(show_learning=True)
 
-    # from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism \
     #     import _add_gating_mechanism_to_system
     # _add_gating_mechanism_to_system(Gating_Mechanism)
     #

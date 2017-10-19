@@ -1,6 +1,6 @@
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.System import system
+from psyneulink.components.mechanisms.processing.transfermechanism import *
+from psyneulink.components.process import process
+from psyneulink.components.system import system
 
 myInputLayer = TransferMechanism(name='Input Layer',
                         function=Linear(),
