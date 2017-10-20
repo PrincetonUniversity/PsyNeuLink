@@ -6,12 +6,12 @@ import random
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import leabra
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.LeabraMechanism import LeabraMechanism, build_network
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Functions.Function import Linear
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.System import system
+from psyneulink.library.mechanisms.processing.leabramechanism import LeabraMechanism, build_network
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.functions.function import Linear
+from psyneulink.components.process import process
+from psyneulink.components.system import system
 import time
 
 random.seed(1)
