@@ -1007,7 +1007,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # MODIFIED 10/3/17 NEW:
         # Add ControlProjection to ControlMechanism's list of ControlProjections
         try:
-            self.control_projections.append(control_signal.efferents)
+            self.control_projections.extend(control_signal.efferents)
         except AttributeError:
             self.control_projections = control_signal.efferents
         # MODIFIED 10/3/17 END

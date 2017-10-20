@@ -1,4 +1,5 @@
 
+from psyneulink.components.functions.function import Exponential
 from psyneulink.components.mechanisms.processing.transfermechanism import *
 from psyneulink.components.process import process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
