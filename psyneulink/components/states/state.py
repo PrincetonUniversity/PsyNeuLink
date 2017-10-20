@@ -2075,6 +2075,14 @@ def _parse_state_spec(state_type=None,
     # FIX: XXX
     # reference_value = _parse_state_spec(**state_spec)
 
+    parsed_reference_value = _parse_state_spec(owner=owner,
+                                               state_type=state_type,
+                                               state_spec=reference_value,
+                                               value=None,
+                                               params=None)
+    reference_value = parsed_reference_value[VARIABLE]
+
+
     #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
     if isinstance(reference_value, numbers.Number):
         reference_value = convert_to_np_array(reference_value,1)
