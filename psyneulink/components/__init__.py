@@ -26,6 +26,7 @@ import inspect
 from psyneulink.globals.keywords import PROJECTION_SENDER, PROJECTION_TYPE
 from psyneulink.globals.registry import register_category
 
+from . import component
 from . import functions
 from . import mechanisms
 from . import process
@@ -33,6 +34,7 @@ from . import projections
 from . import states
 from . import system
 
+from .component import *
 from .functions import *
 from .mechanisms import *
 from .process import *
@@ -43,6 +45,7 @@ from .system import *
 __all__ = [
     'InitError'
 ]
+__all__.extend(component.__all__)
 __all__.extend(functions.__all__)
 __all__.extend(mechanisms.__all__)
 __all__.extend(process.__all__)
