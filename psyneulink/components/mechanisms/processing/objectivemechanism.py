@@ -330,25 +330,6 @@ from collections import namedtuple
 
 import typecheck as tc
 
-<<<<<<< HEAD:PsyNeuLink/Components/Mechanisms/ProcessingMechanisms/ObjectiveMechanism.py
-from PsyNeuLink.Components.Component import InitStatus
-from PsyNeuLink.Components.Functions.Function import LinearCombination
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.ShellClasses import Mechanism, State
-from PsyNeuLink.Components.States.State import _parse_state_spec
-from PsyNeuLink.Components.States.InputState import InputState
-from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE, standard_output_states
-from PsyNeuLink.Globals.Keywords import NAME, VARIABLE, FUNCTION, VALUE, PARAMS, TIME_SCALE, OBJECTIVE_MECHANISM, \
-                                        INPUT_STATES, PROJECTIONS, WEIGHT, WEIGHTS, EXPONENT, EXPONENTS, SENDER, \
-                                        MATRIX, DEFAULT_MATRIX, AUTO_ASSIGN_MATRIX, \
-                                        OUTPUT_STATE, OUTPUT_STATES, LEARNING, CONTROL, MECHANISM, kwPreferenceSetName
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from PsyNeuLink.Globals.Utilities import ContentAddressableList, is_matrix
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
-=======
 from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base, MonitoredOutputStatesOption
@@ -368,7 +349,6 @@ __all__ = [
     'MonitoredOutputStateTuple', 'OBJECTIVE_OUTPUT', 'ObjectiveMechanism', 'ObjectiveMechanismError', 'OUTCOME',
     'OUTPUT_STATE_INDEX', 'ROLE', 'WEIGHT_INDEX'
 ]
->>>>>>> remotes/origin/devel:psyneulink/components/mechanisms/processing/objectivemechanism.py
 
 ROLE = 'role'
 MONITORED_OUTPUT_STATES = 'monitored_output_states'

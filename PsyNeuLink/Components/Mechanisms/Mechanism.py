@@ -635,29 +635,18 @@ from inspect import isclass
 import numpy as np
 import typecheck as tc
 
-<<<<<<< HEAD:PsyNeuLink/Components/Mechanisms/Mechanism.py
-from PsyNeuLink.Components.Component import Component, ExecutionStatus, function_type, method_type
-from PsyNeuLink.Components.ShellClasses import Function, Mechanism, Projection
-from PsyNeuLink.Globals.Defaults import timeScaleSystemDefault
-from PsyNeuLink.Globals.Keywords import CHANGED, COMMAND_LINE, DDM_MECHANISM, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, kwMechanismComponentCategory, kwMechanismExecuteFunction, kwMechanismType, kwProcessDefaultMechanism
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.Utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_2d_input, convert_to_np_array, iscompatible, kwCompatibilityNumeric
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
-=======
 from psyneulink.components.component import Component, ExecutionStatus, function_type, method_type
 from psyneulink.components.shellclasses import Function, Mechanism, Projection
 from psyneulink.globals.defaults import timeScaleSystemDefault
 from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
+from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_2d_input, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
 __all__ = [
     'Mechanism_Base', 'MechanismError', 'MonitoredOutputStatesOption',
 ]
->>>>>>> remotes/origin/devel:psyneulink/components/mechanisms/mechanism.py
 
 logger = logging.getLogger(__name__)
 MechanismRegistry = {}
