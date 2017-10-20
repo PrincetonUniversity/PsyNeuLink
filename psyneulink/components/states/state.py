@@ -1751,6 +1751,13 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     Returns a State or None
     """
 
+    parsed_reference_value = _parse_state_spec(owner=owner,
+                                               state_type=state_type,
+                                               state_spec=reference_value,
+                                               value=None,
+                                               params=None)
+    reference_value = parsed_reference_value[VARIABLE]
+
     # standard_args = get_args(inspect.currentframe())
     # parsed_state_spec  = _parse_state_spec(standard_args, context, **state_spec)
     parsed_state_spec = _parse_state_spec(state_type=state_type,
@@ -2072,17 +2079,6 @@ def _parse_state_spec(state_type=None,
     variable = state_dict[VARIABLE]
     params = state_specific_args
 
-    # FIX: XXX
-    # reference_value = _parse_state_spec(**state_spec)
-
-    parsed_reference_value = _parse_state_spec(owner=owner,
-                                               state_type=state_type,
-                                               state_spec=reference_value,
-                                               value=None,
-                                               params=None)
-    reference_value = parsed_reference_value[VARIABLE]
-
-
     #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
     if isinstance(reference_value, numbers.Number):
         reference_value = convert_to_np_array(reference_value,1)
@@ -2283,7 +2279,7 @@ def _parse_state_spec(state_type=None,
     #                      format(state_type_name, owner.name, state_spec))
     # MODIFIED 10/3/17 END
 
-    # If variable is none, use value:
+    # # If variable is none, use value:
     # # MODIFIED 10/3/17 OLDISH:
     # state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
     # MODIFIED 10/3/17 NEWER:
