@@ -1,7 +1,11 @@
-# script written by Changyan in Sept. 2017 to test the LeabraMechanism: this will probably be rapidly deprecated.
-# Feel free to remove it.
-import numpy as np
+# Hi Jon and Randy! The following script briefly demos the LeabraMechanism in PsyNeuLink
+# Before running this, please make sure you are using Python 3.5, and that you have installed the leabra package in
+# your Python 3.5 environment.
+# I've emailed Jon the instructions for installing leabra.
+# 10/20/17
 import warnings
+warnings.filterwarnings("ignore", message=r".*numpy.dtype size changed.*")
+import numpy as np
 import random
 # with warnings.catch_warnings():
 #     warnings.simplefilter("ignore")
@@ -14,40 +18,41 @@ from psyneulink.components.process import Process
 from psyneulink.components.system import System
 import time
 
-random.seed(1)
+random_seed_value = 1  # feel free to change this value
+random.seed(random_seed_value)  # this (also see random.seed below) is to ensure Leabra network is identical below
+num_trials = 10  # how many trials should we run?
 input_size = 4  # how big is the input layer?
 output_size = 2  # how big is the output layer?
 hidden_layers = 4  # how many hidden layers are there?
 hidden_sizes = [2, 3, 4, 5]  # how big is each hidden layer?
-input_pattern = [[0, 1, 3, 4]]  # what is the input?
-training_pattern = [[0, 1]]  # what is the training pattern?
-num_trials = 100  # how many trials should we run?
+input_pattern = [[0, 1, 3, 4]] * num_trials  # the input
+# similar example: input_pattern = [[0, 1, 3, 4]] * int(num_trials/2) + [[0, 0, 0, 0]] * int(num_trials/2)
+training_pattern = [[0, 1]] * num_trials  # the training pattern
 
-L3 = LeabraMechanism(input_size=input_size, output_size=output_size, hidden_layers=hidden_layers, hidden_sizes=hidden_sizes, name='L', training_flag=True)
+# the LeabraMechanism of interest
+L = LeabraMechanism(input_size=input_size, output_size=output_size, hidden_layers=hidden_layers,
+                     hidden_sizes=hidden_sizes, name='L', training_flag=True)
+
 
 T1 = TransferMechanism(name='T1', size=4, function=Linear)
 T2 = TransferMechanism(name='T2', size=2, function=Linear)
 
-p1 = Process(pathway=[T1, L3])
-proj = MappingProjection(sender=T2, receiver=L3.input_states[1])
-p2 = Process(pathway=[T2, L3])
+p1 = Process(pathway=[T1, L])
+proj = MappingProjection(sender=T2, receiver=L.input_states[1])
+p2 = Process(pathway=[T2, L])
 T2.output_state.efferents[1].matrix = T2.output_state.efferents[1].matrix * 0
 s = System(processes=[p1, p2])
+
+print('Running Leabra in PsyNeuLink...')
 start_time = time.process_time()
-tmp = s.run(inputs={T1: input_pattern.copy()*num_trials, T2: training_pattern.copy()*num_trials})
-print('PNL time to run: ', time.process_time()-start_time)
+tmp = s.run(inputs={T1: input_pattern.copy(), T2: training_pattern.copy()})
+end_time = time.process_time()
 
-# begin: optional print statements
-print('PNL Output: ', tmp)
-print('types within PNL output: ', type(tmp), type(tmp[0]), type(tmp[0][0]), type(tmp[0][0][0]))
-print('activities and types: ', L3.function_object.network.layers[-1].activities, type(L3.function_object.network.layers[-1].activities[0]))
-unit = [unit.act_m for unit in L3.function_object.network.layers[-1].units]
-print('output layer unit values and their types: ', unit, type(unit), type(unit[0]))
-print('output state value and type: ', L3.output_state.value, type(L3.output_state.value), type(L3.output_state.value[0]))
-print("L3 value and L3 variable: ", L3.value, L3.variable)
-# end: optional print statements
+print('PNL time to run: ', end_time - start_time, "seconds")
+print('PNL Output: ', tmp, type(tmp))
 
-random.seed(1)
+
+random.seed(random_seed_value)
 leabra_net = build_network(n_input=input_size, n_output=output_size, n_hidden=hidden_layers, hidden_sizes=hidden_sizes)
 leabra_net.set_inputs({'input_layer': np.zeros(4)})
 leabra_net.trial()
@@ -63,8 +68,10 @@ def train_network(network, input_pattern, output_pattern):
     network.trial()
     return [unit.act_m for unit in network.layers[-1].units]
 
+print('\nRunning Leabra in Leabra...')
 start_time = time.process_time()
-for _ in range(num_trials):
-    train_network(leabra_net, input_pattern[0].copy(), training_pattern[0])
-print('Leabra time to run: ', time.process_time() - start_time)
+for i in range(num_trials):
+    train_network(leabra_net, input_pattern[i].copy(), training_pattern[i])
+end_time = time.process_time()
+print('Leabra time to run: ', end_time - start_time, "seconds")
 print('Leabra Output: ', [unit.act_m for unit in leabra_net.layers[-1].units], type([unit.act_m for unit in leabra_net.layers[-1].units][0]))
