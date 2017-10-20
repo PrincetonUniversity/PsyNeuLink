@@ -233,7 +233,8 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
 from psyneulink.components.states.outputstate import OutputState, PRIMARY_OUTPUT_STATE
 from psyneulink.components.states.state import State_Base
-from psyneulink.globals.keywords import GATE, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, INPUT_STATE, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION_TYPE, STATES, SUM
+from psyneulink.globals.keywords import GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, INPUT_STATE, MECHANISM, NAME, \
+    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION_TYPE, STATES, SUM, GATE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -379,7 +380,7 @@ class GatingSignal(ModulatorySignal):
 
     #region CLASS ATTRIBUTES
 
-    componentType = OUTPUT_STATES
+    componentType = GATING_SIGNAL
     componentName = 'GatingSignal'
     paramsType = OUTPUT_STATE_PARAMS
 

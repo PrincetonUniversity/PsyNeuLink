@@ -289,8 +289,10 @@ import typecheck as tc
 
 from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination
+from psyneulink.components.mechanisms.mechanism import Mechanism
+from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT
+from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
@@ -660,7 +662,7 @@ class InputState(State_Base):
         #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
         #      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
-
+        from psyneulink.components.projections.projection import Projection, _parse_connection_specs
 
         params_dict = {}
 
@@ -731,118 +733,6 @@ class InputState(State_Base):
     @pathway_projections.setter
     def pathway_projections(self, assignment):
         self.path_afferents = assignment
-
-# # MODIFIED 9/29/17 NEW:
-# def _parse_input_state_specification_dictionary(owner, dict):
-#     """Parse dictionary of InputState specifications, and return list of InputStates
-#
-#     Each entry must have a key that is a Mechanism or the keyword MECHANISMS or INPUT_STATES
-#        with the following corresponding values:
-#        Mechanism:<InputState or list of InputStates>
-#        MECHANISMS:<Mechanism or Projection or list of either>
-#        INPUT_STATES:<InputState or Projection or list of either>
-#     """
-#
-#     # FIX: NEED TO CHECK THAT THE sender OF ANY PROJECTIONS SPECIFICATIONS ARE ASSIGNED TO THE OWNER
-#     #        RAISE EXCEPTION OR WARNING IF NOT
-#     # FIX: NEED TO CHECK THAT THE receiver OF ANY PROJECTIONS SPECIFICATIONS EXIST
-#     #        RAISE EXCEPTION OR WARNING IF NOT
-#
-#
-#     for param_key, param_value in dict:
-#         # If the entry is not a list, convert it to one for further processing
-#         if not isinstance(param_value, list):
-#             param_value = [param_value]
-#         input_states = []
-#         # Key is the keyword MECHANISMS or INPUT_STATES
-#         if isinstance(param_key, str):
-#             # Must be a list of Mechanism(s) (primary InputState(s) will be used) or Projection(s)
-#             if param_key is MECHANISMS:
-#                 for param in param_value:
-#                     if isinstance(param, Mechanism):
-#                         input_states.append(param.input_state)
-#                     elif isinstance(param, Projection):
-#                         input_states.append(param.receiver)
-#                     else:
-#                         raise InputStateError("Specification in \'{}\' entry of InputState specification dictionary "
-#                                               "for {} ({}) is not a {} or {} to one".
-#                                               format(MECHANISMS, owner.name, param,
-#                                                      Mechanism.__name__, Projection.__name__,))
-#             # Must be a list of InputState(s) (not names, as Mechanism's are not specified) or Projection(s)
-#             elif param_key is INPUT_STATES:
-#                 for param in param_value:
-#                     if isinstance(param, InputState):
-#                         input_states.append(param)
-#                     elif isinstance(param, Projection):
-#                         input_states.append(param.receiver)
-#                     else:
-#                         raise InputStateError("Specification in {} entry of InputState specification dictionary "
-#                                               "for {} ({}) is not a {} or {}".
-#                                               format(INPUT_STATES, owner.name, param,
-#                                                      InputState.__name__, Projection.__name__))
-#             else:
-#                 raise InputStateError("Key for an entry of the InputState specification dictionary for {} "
-#                                       "is an unrecognized string (\'{}\')".format(owner.name, param_key))
-#         # Key is a Mechanism, value must be a list of InputState(s) or Projection(s) to one(s) for that Mechanism
-#         elif  isinstance(param_key, Mechanism):
-#             mech = param_key
-#
-#             for param in param_value:
-#                 # Entry is the name of an InputState
-#                 if isinstance(param, str):
-#                     try:
-#                         # Get the named OutputState
-#                         param = mech.input_states[param]
-#                     except IndexError:
-#                         raise InputStateError("\'{}\' is not the name of an {} of {} "
-#                                               "(in InputState specification dictionary for {} of {})".
-#                                               format(param,
-#                                                      InputState.__name__,
-#                                                      mech.name,
-#                                                      OutputState.__name__,
-#                                                      owner.name))
-#                 # Entry is an InputState
-#                 elif isinstance(param, InputState):
-#                     # Validate that it belongs to the Mechanism
-#                     if param.owner is mech:
-#                         input_states.append(param)
-#                     else:
-#                         raise InputStateError("{} is not an {} of {}"
-#                                               "(in InputState specification dictionary for {} of {}".
-#                                               format(param.name,
-#                                                      OutputState.__name__,
-#                                                      mech.name,
-#                                                      InputState.__name__,
-#                                                      owner.name))
-#                 # Entry is a Projection
-#                 elif isinstance(param, Projection):
-#                     # Validate that it's receiver belongs to the Mechanism
-#                     if param.receiver.owner is mech:
-#                         input_states.append(param.receiver)
-#                     else:
-#                         raise InputStateError("{} does not project to an {} of {}"
-#                                               "(in InputState specification dictionary for {} of {}".
-#                                               format(param.name,
-#                                                      InputState.__name__,
-#                                                      mech.name,
-#                                                      OutputState.__name__,
-#                                                      owner.name))
-#                 else:
-#                     raise InputStateError("{} is not an {} of, or a {} that projects to an {} of {} "
-#                                           "(in InputState specification dictionary for {} of {}".
-#                                           format(param,
-#                                                  InputState.__name__,
-#                                                  Projection.__name__,
-#                                                  InputState.__name__,
-#                                                  mech.name,
-#                                                  OutputState.__name__,
-#                                                  owner.name))
-#
-#         else:
-#             raise InputStateError("Illegal key for an entry of the OutputState specification dictionary for {} ({})".
-#                                   format(owner.name, param_key))
-#         return input_states
-# # MODIFIED 9/29/17 END
 
 
 # def _instantiate_input_states(owner, input_states=None, context=None):

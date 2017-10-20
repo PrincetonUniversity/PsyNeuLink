@@ -439,6 +439,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         gating_signal_params = {}
 
         # FIX: 10/3/17 - THIS NO LONGER BE NEEDED;
+        # FIX:      MIMIC ControlSignal
         # FIX:      SHOULD JUST CALL: _instantiate_state(owner=self, state_type=GatingSignal, state_spec=gating_signal)
         # FIX:      _instantiate_state WILL CALL _parse_state_specific_specs TO HANDLE STATE-SPECIFIC SPECS
         gating_signal_spec = _parse_gating_signal_spec(owner=self, state_spec=gating_signal)

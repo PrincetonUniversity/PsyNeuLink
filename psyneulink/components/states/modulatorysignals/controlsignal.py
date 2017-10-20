@@ -277,7 +277,6 @@ Class Reference
 
 import inspect
 import warnings
-
 from enum import IntEnum
 
 import numpy as np
@@ -287,14 +286,15 @@ from psyneulink.components.component import InitStatus, function_type, method_ty
 # import Components
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
-from psyneulink.components.functions.function import CombinationFunction, Exponential, IntegratorFunction, Linear, LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
-from psyneulink.components.shellclasses import Function, Mechanism
+from psyneulink.components.functions.function import CombinationFunction, Exponential, IntegratorFunction, Linear, \
+    LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
+from psyneulink.components.shellclasses import Function
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE
-from psyneulink.components.states.parameterstate import ParameterState, _get_parameter_state
+from psyneulink.components.states.parameterstate import _get_parameter_state
 from psyneulink.components.states.state import State_Base
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAM, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, MECHANISM, NAME, OFF, ON, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, SEPARATOR_BAR, SLOPE, SUM, kwAssign
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, MECHANISM, MODULATION, NAME, OFF, ON, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, SEPARATOR_BAR, SLOPE, SUM, kwAssign
 from psyneulink.globals.log import LogEntry, LogLevel
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -321,6 +321,8 @@ __all__ = [
 #     TEST_MODE = 240
 # defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
 DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.3)
+
+STATE_SPECIFIC_PARAMS = {ALLOCATION_SAMPLES, MODULATION}
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
@@ -605,7 +607,7 @@ class ControlSignal(ModulatorySignal):
 
     #region CLASS ATTRIBUTES
 
-    componentType = OUTPUT_STATES
+    componentType = CONTROL_SIGNAL
     paramsType = OUTPUT_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE
@@ -618,7 +620,7 @@ class ControlSignal(ModulatorySignal):
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_TYPE: CONTROL_PROJECTION,
-        CONTROLLED_PARAM:None
+        CONTROLLED_PARAMS:None
     })
     #endregion
 
@@ -658,6 +660,7 @@ class ControlSignal(ModulatorySignal):
                                                   cost_combination_function=cost_combination_function,
                                                   allocation_samples=allocation_samples,
                                                   params=params)
+
 
         # IMPLEMENTATION NOTE:
         # Consider adding self to owner.output_states here (and removing from ControlProjection._instantiate_sender)
@@ -984,7 +987,10 @@ class ControlSignal(ModulatorySignal):
         Returns params dict with CONNECTIONS entries if any of these was specified.
 
         """
+        from psyneulink.components.mechanisms.mechanism import Mechanism
+        from psyneulink.components.states.parameterstate import ParameterState
         from psyneulink.components.projections.projection import _parse_connection_specs
+        from psyneulink.globals.keywords import PROJECTIONS
 
         params_dict = {}
 
@@ -993,8 +999,9 @@ class ControlSignal(ModulatorySignal):
         else:
             params_dict[PROJECTIONS] = []
 
-        if ALLOCATION_SAMPLES in state_specific_params:
-            params_dict[ALLOCATION_SAMPLES] = state_specific_params[ALLOCATION_SAMPLES]
+        for param in STATE_SPECIFIC_PARAMS:
+            if param in state_specific_params:
+                params_dict[param] = state_specific_params[param]
 
         if isinstance(state_specific_params, dict):
 
@@ -1291,10 +1298,10 @@ class ControlSignal(ModulatorySignal):
 #         CONTROL_SIGNAL:ControlSignal or None
 #         PARAMS:dict - params dict if any were included in the state_spec
 #     """
-#     from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-#     from psyneulink.components.states.state import _parse_state_spec
-#     from psyneulink.components.states.parameterstate import ParameterState, _get_parameter_state
-#     from psyneulink.globals.keywords import NAME, PARAMS, \
+#     from psyneulink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+#     from psyneulink.Components.States.State import _parse_state_spec
+#     from psyneulink.Components.States.ParameterState import ParameterState, _get_parameter_state
+#     from psyneulink.globals.Keywords import NAME, PARAMS, \
 #                                             CONTROL_SIGNAL, CONTROL_SIGNAL_SPECS, PARAMETER_STATE, \
 #                                             MECHANISM, PROJECTIONS, SENDER, RECEIVER
 #

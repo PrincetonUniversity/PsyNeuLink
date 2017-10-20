@@ -300,15 +300,12 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.components.shellclasses import Mechanism, System_Base
-from psyneulink.components.states.inputstate import EXPONENT_INDEX, InputState, WEIGHT_INDEX
-from psyneulink.components.states.state import _parse_state_spec
+from psyneulink.components.shellclasses import System_Base
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROLLED_PARAM, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, OBJECTIVE_MECHANISM, OWNER, PARAMS, PRODUCT, PROJECTIONS, RECEIVER, REFERENCE_VALUE, STATE_TYPE, SYSTEM, VARIABLE, WEIGHT
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, OBJECTIVE_MECHANISM, PRODUCT, PROJECTIONS, SYSTEM, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -546,6 +543,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         """
         from psyneulink.components.system import MonitoredOutputStateTuple
         from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+        from psyneulink.components.states.inputstate import InputState
+        from psyneulink.components.states.state import _parse_state_spec
 
         super(ControlMechanism, self)._validate_params(request_set=request_set,
                                                                  target_set=target_set,
@@ -635,6 +634,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 # # MODIFIED 10/2/17 OLD:
                 # _parse_control_signal_spec(self, control_signal, context=context)
                 # MODIFIED 10/2/17 NEW:
+                # from psyneulink.Components.Projections.Projection import _parse_connection_specs
                 # _parse_connection_specs(ControlSignal, self, control_signal)
                 # _parse_state_spec(self, ControlSignal, control_signal)
                 _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=control_signal)
@@ -662,6 +662,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         from psyneulink.components.system import MonitoredOutputStateTuple
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, ObjectiveMechanismError
+        from psyneulink.components.states.inputstate import EXPONENT_INDEX, WEIGHT_INDEX
 
         monitored_output_states = None
 
@@ -811,9 +812,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         Returns ControlSignal (OutputState)
         """
         from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
-        from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-        from psyneulink.components.projections.projection import _validate_receiver
-        from psyneulink.components.states.parameterstate import ParameterState
 
         # EXTEND allocation_policy TO ACCOMMODATE NEW ControlSignal -------------------------------------------------
         #        also used to determine constraint on ControlSignal value
@@ -823,51 +821,79 @@ class ControlMechanism(AdaptiveMechanism_Base):
         else:
             self.allocation_policy = np.append(self.allocation_policy, defaultControlAllocation)
 
-        # Update self.value to reflect change in allocation_policy (and the new number of  control_signals);
-        #    this is necessary, since function is not fully executed during initialization (in _instantiate_function)
-        #    it returns default_allocation policy which has only a single item,
+        # Update self.value to reflect change in allocation_policy (and the new number of  control_signals).
+        #    This is necessary, since function is not fully executed during initialization (in _instantiate_function);
+        #    it returns the default_allocation policy which has only a single item,
         #    however validation of indices for OutputStates requires that proper number of items be in self.value
         self.value = self.allocation_policy
         self._default_value = self.value
 
-        default_name = self.name + " " + ControlSignal.__name__
 
+
+        # FIX: *** DEAL WTIH MULTIPLE PROJECTIONS
+        # FIX: *** CALL super()._instantiate_output_states
 
         # FIX: 10/3/17 - THIS NO LONGER BE NEEDED;
         # FIX:    SHOULD JUST CALL: _instantiate_state(owner=self, state_type=ControlSignal,state_spec=control_signal)
         # FIX:    _instantiate_state WILL CALL _parse_state_specific_specs TO HANDLE STATE-SPECIFIC SPECS
         # FIX: 10/3/17 - * SHOULD TEST FOR init STATUS AND DEAL WITH INITIALIZED AS WELL AS DEFERRED INIT
-        control_signal_spec = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
-        for projection_spec in control_signal_spec[PARAMS][PROJECTIONS]:
-            parameter_state = control_signal_spec[PARAMS][PROJECTIONS][0].projection.init_args[RECEIVER]
-            parameter_state_owner_name = parameter_state.owner.name
-            param_name = parameter_state.name
+
+        # # FIX: FULL VERSION ************************************************************************************
+        # # Parse control_signal spec to get name for ControlSignal from parameter (ControlProjection receiver)
+        # control_signal_spec = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
+        #
+        # # FIX: 10/3/17 - MOVE TO ControlSignal._instantiate_state  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        # # Construct default name
+        # param_names = []
+        # param_state_owner_names = []
+        # param_state_owner_param_names = []
+        # for projection_spec in control_signal_spec[PARAMS][PROJECTIONS]:
+        #     # FIX: 10/3/17 - IF THERE ARE MULTIPLE PROJECTIONS, NEED TO DECIDE ON A SINGLE NAME FOR THE ControlSignal
+        #     parameter_state = projection_spec.projection.init_args[RECEIVER]
+        #     param_names.append(parameter_state.name)
+        #     param_state_owner_names.append(parameter_state.owner.name)
+        #     param_state_owner_param_names.append("{} {}".format(parameter_state.owner.name, parameter_state.name))
+        # # Only one param: "<Mech> <param> ControlSignal" (e.g., Decision drift_rate ControlSignal)
+        # if len(param_state_owner_param_names) == 1:
+        #     default_name = param_state_owner_param_names[0] + " " + ControlSignal.__name__
+        # # Multiple params all for same mech: "<Mech> params ControlSignal" (e.g., Decision params ControlSignal)
+        # elif all(name is param_state_owner_names[0] for name in param_state_owner_names):
+        #     default_name = param_state_owner_names[0] + " params " + ControlSignal.__name__
+        # # Mult params for diff mechs: "<ControlMechanism> divergent ControlSignal" (e.g., EVC divergent ControlSignal)
+        # else:
+        #     default_name = self.name + " divergent " + ControlSignal.__name__
+        # # FIX: 10/3/17 - END OF MOVE TO ControlSignal._instantiate_state  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        #
+        # from psyneulink.components.states.state import _instantiate_state
+        # state_type = control_signal_spec.pop(STATE_TYPE, None)
+        # control_signal_spec[OWNER] = self
+        # control_signal_spec[VARIABLE] = defaultControlAllocation
+        # control_signal_spec[REFERENCE_VALUE] = defaultControlAllocation
+        # control_signal_spec[NAME] = control_signal_spec[NAME] or default_name
+        # control_signal = ControlSignal(**control_signal_spec)
+        # # FIX: END FULL VERSION **********************************************************************************
+
+        from psyneulink.components.states.state import _instantiate_state
+        # Parses control_signal specifications (in call to State._parse_state_spec)
+        #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
+        control_signal = _instantiate_state(state_type=ControlSignal,
+                                            owner=self,
+                                            reference_value=defaultControlAllocation,
+                                            modulaton=self.modulation,
+                                            state_spec=control_signal)
+
+        # # FIX: *********************************************************************************
 
 
-        # FIX: *********************************************************************************
-        # FIX: NEW MOVE TO BELOW
-        # FIX: *** DEAL WTIH MULTIPLE PROJECTIONS
-        # FIX: *** CALL super()._instantiate_output_states
-        state_type = control_signal_spec.pop(STATE_TYPE, None)
-        control_signal_spec[OWNER] = self
-        control_signal_spec[VARIABLE] = defaultControlAllocation
-        control_signal_spec[REFERENCE_VALUE] = defaultControlAllocation
-        # control_signal_spec[NAME] = control_signal_spec.init_args[NAME] or default_name
-        control_signal = state_type(**control_signal_spec)
-        # FIX: *********************************************************************************
+        # control_signal_params = {}
+        # control_projection = None
 
-
-        # control_signal_params = control_signal_spec[PARAMS]0
-        control_signal_params = {}
-        control_projection = None
-
-        # MODIFIED 10/3/17 OLD: FIX: NEED TO RESTORE OR PUT SOMEWHERE
+        # # MODIFIED 10/3/17 OLD: FIX: NEED TO RESTORE OR PUT SOMEWHERE
         # default_name = param_name + '_' + ControlSignal.__name__
-        # MODIFIED 10/3/17 END
+        # # MODIFIED 10/3/17 END
 
         # MODIFIED 9/11/17 OLD:
         # # Get constraint for ControlSignal value
-        # #    - get ControlMechanism's value
         self._update_value(context=context)
         # MODIFIED 9/11/17 END
 
@@ -876,102 +902,110 @@ class ControlMechanism(AdaptiveMechanism_Base):
             output_state_index = len(self.output_states)
         except (AttributeError, TypeError):
             output_state_index = 0
-        # - get constraint for OutputState's value
-        output_state_reference_value = self.allocation_policy[output_state_index]
 
-        # Specification is a ControlSignal (either passed in directly, or parsed from tuple above)
-        if isinstance(control_signal_spec, ControlSignal):
-            # Deferred Initialization, so assign owner, name, and initialize
-            if control_signal_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                control_signal_spec.init_args[OWNER] = self
-                control_signal_spec.init_args[NAME] = control_signal_spec.init_args[NAME] or default_name
-                # control_signal_spec.init_args[REFERENCE_VALUE] = output_state_reference_value
-                control_signal_spec.init_args[REFERENCE_VALUE] = defaultControlAllocation
-                control_signal = control_signal_spec._deferred_init(context=context)
-            elif not control_signal_spec.owner is self:
-                raise ControlMechanismError("Attempt to assign ControlSignal to {} ({}) that is already owned by {}".
-                                            format(self.name, control_signal_spec.name, control_signal_spec.owner.name))
-            else:
-                control_signal = control_signal_spec
-                control_signal_name = control_signal_spec.name
-                control_projections = control_signal_spec.efferents
+        # # - get constraint for OutputState's value
+        # output_state_reference_value = self.allocation_policy[output_state_index]
+        # # Specification is a ControlSignal (either passed in directly, or parsed from tuple above)
+        # if isinstance(control_signal_spec, ControlSignal):
+        #     # Deferred Initialization, so assign owner, name, and initialize
+        #     if control_signal_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        #         control_signal_spec.init_args[OWNER] = self
+        #         control_signal_spec.init_args[NAME] = control_signal_spec.init_args[NAME] or default_name
+        #         # control_signal_spec.init_args[REFERENCE_VALUE] = output_state_reference_value
+        #         control_signal_spec.init_args[REFERENCE_VALUE] = defaultControlAllocation
+        #         control_signal = control_signal_spec._deferred_init(context=context)
+        #     elif not control_signal_spec.owner is self:
+        #         raise ControlMechanismError("Attempt to assign ControlSignal to {} ({}) that is already owned by {}".
+        #                                     format(self.name, control_signal_spec.name, control_signal_spec.owner.name))
+        #     else:
+        #         control_signal = control_signal_spec
+        #         control_signal_name = control_signal_spec.name
+        #         control_projections = control_signal_spec.efferents
+        #
+        #         # IMPLEMENTATION NOTE:
+        #         #    THIS IS TO HANDLE FUTURE POSSIBILITY OF MULTIPLE ControlProjections FROM A SINGLE ControlSignal;
+        #         #    FOR NOW, HOWEVER, ONLY A SINGLE ONE IS SUPPORTED
+        #         # parameter_states = [proj.recvr for proj in control_projections]
+        #         if len(control_projections) > 1:
+        #             raise ControlMechanismError("PROGRAM ERROR: list of ControlProjections is not currently supported "
+        #                                         "as specification in a ControlSignal")
+        #         else:
+        #             control_projection = control_projections[0]
+        #             parameter_state = control_projection.receiver
+        #
+        # # Instantiate OutputState for ControlSignal
+        # else:
+        #     control_signal_name = default_name
+        #
+        #     from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
+        #     from psyneulink.components.states.state import _instantiate_state
+        #
+        #     control_signal_params.update({CONTROLLED_PARAMS:param_names})
+        #
+        #     # FIX: 10/3/17 - SHOULD BE HANDLED BY CALL TO _instantiate_state ABOVE
+        #     # FIX 5/23/17: CALL super()_instantiate_output_states ??
+        #     # FIX:         OR AGGREGATE ALL ControlSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
+        #     control_signal = _instantiate_state(owner=self,
+        #                                         state_type=ControlSignal,
+        #                                         name=control_signal_name,
+        #                                         reference_value=output_state_reference_value,
+        #                                         reference_value_name='Default control allocation',
+        #                                         params=control_signal_params,
+        #                                         context=context)
+        #
+        # # VALIDATE OR INSTANTIATE ControlProjection(s) TO ControlSignal  -------------------------------------------
+        #
+        # # Validate control_projection (if specified) and get receiver's name
+        # if isinstance(parameter_state, ParameterState):
+        #     parameter_state_name = parameter_state.name
+        # else:
+        #     assert False, "parameter_state for {} has not been assigned".format(control_signal.name)
+        # control_projection_name = parameter_state_name + ' ' + ControlProjection.__name__
+        # if control_projection:
+        #     _validate_receiver(self, control_projection, Mechanism, CONTROL_SIGNAL, context=context)
+        #
+        #     from psyneulink.components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        #     if not isinstance(control_projection, ControlProjection):
+        #         raise ControlMechanismError("PROGRAM ERROR: Attempt to assign {}, "
+        #                                           "that is not a ControlProjection, to ControlSignal of {}".
+        #                                           format(control_projection, self.name))
+        #     if control_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        #         control_projection.init_args['sender']=control_signal
+        #         if control_projection.init_args['name'] is None:
+        #             # FIX 5/23/17: CLEAN UP NAME STUFF BELOW:
+        #             control_projection.init_args['name'] = control_projection_name
+        #                 # CONTROL_PROJECTION + ' for ' + parameter_state.owner.name + ' ' + parameter_state.name
+        #         control_projection._deferred_init()
+        #     else:
+        #         control_projection.sender = control_signal
+        #
+        # # Instantiate ControlProjection
+        # else:
+        #     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+        #     from psyneulink.components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        #     control_projection = ControlProjection(sender=control_signal,
+        #                                            receiver=parameter_state,
+        #                                            # name=CONTROL_PROJECTION + control_signal_name)
+        #                                            name=control_projection_name)
+        #
+        # # Add ControlProjection to list of OutputState's outgoing Projections
+        # # (note: if it was deferred, it just added itself, skip)
+        # if not control_projection in control_signal.efferents:
+        #     control_signal.efferents.append(control_projection)
+        #
+        # # Add ControlProjection to ControlMechanism's list of ControlProjections
+        # try:
+        #     self.control_projections.append(control_projection)
+        # except AttributeError:
+        #     self.control_projections = [control_projection]
 
-                # IMPLEMENTATION NOTE:
-                #    THIS IS TO HANDLE FUTURE POSSIBILITY OF MULTIPLE ControlProjections FROM A SINGLE ControlSignal;
-                #    FOR NOW, HOWEVER, ONLY A SINGLE ONE IS SUPPORTED
-                # parameter_states = [proj.recvr for proj in control_projections]
-                if len(control_projections) > 1:
-                    raise ControlMechanismError("PROGRAM ERROR: list of ControlProjections is not currently supported "
-                                                "as specification in a ControlSignal")
-                else:
-                    control_projection = control_projections[0]
-                    parameter_state = control_projection.receiver
-
-        # Instantiate OutputState for ControlSignal
-        else:
-            control_signal_name = parameter_state_owner_name + " " + param_name + " " + ControlSignal.__name__
-
-            from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
-            from psyneulink.components.states.state import _instantiate_state
-
-            control_signal_params.update({CONTROLLED_PARAM:param_name})
-
-            # FIX: 10/3/17 - SHOULD BE HANDLED BY CALL TO _instantiate_state ABOVE
-            # FIX 5/23/17: CALL super()_instantiate_output_states ??
-            # FIX:         OR AGGREGATE ALL ControlSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
-            control_signal = _instantiate_state(owner=self,
-                                                state_type=ControlSignal,
-                                                name=control_signal_name,
-                                                reference_value=output_state_reference_value,
-                                                reference_value_name='Default control allocation',
-                                                params=control_signal_params,
-                                                context=context)
-
-        # VALIDATE OR INSTANTIATE ControlProjection(s) TO ControlSignal  -------------------------------------------
-
-        # Validate control_projection (if specified) and get receiver's name
-        if isinstance(parameter_state, ParameterState):
-            parameter_state_name = parameter_state.name
-        else:
-            assert False, "parameter_state for {} has not been assigned".format(control_signal.name)
-        control_projection_name = parameter_state_name + ' ' + ControlProjection.__name__
-        if control_projection:
-            _validate_receiver(self, control_projection, Mechanism, CONTROL_SIGNAL, context=context)
-
-            from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-            if not isinstance(control_projection, ControlProjection):
-                raise ControlMechanismError("PROGRAM ERROR: Attempt to assign {}, "
-                                                  "that is not a ControlProjection, to ControlSignal of {}".
-                                                  format(control_projection, self.name))
-            if control_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                control_projection.init_args['sender']=control_signal
-                if control_projection.init_args['name'] is None:
-                    # FIX 5/23/17: CLEAN UP NAME STUFF BELOW:
-                    control_projection.init_args['name'] = control_projection_name
-                        # CONTROL_PROJECTION + ' for ' + parameter_state.owner.name + ' ' + parameter_state.name
-                control_projection._deferred_init()
-            else:
-                control_projection.sender = control_signal
-
-        # Instantiate ControlProjection
-        else:
-            # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-            from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-            control_projection = ControlProjection(sender=control_signal,
-                                                   receiver=parameter_state,
-                                                   # name=CONTROL_PROJECTION + control_signal_name)
-                                                   name=control_projection_name)
-
-        # Add ControlProjection to list of OutputState's outgoing Projections
-        # (note: if it was deferred, it just added itself, skip)
-        if not control_projection in control_signal.efferents:
-            control_signal.efferents.append(control_projection)
-
+        # MODIFIED 10/3/17 NEW:
         # Add ControlProjection to ControlMechanism's list of ControlProjections
         try:
-            self.control_projections.append(control_projection)
+            self.control_projections.extend(control_signal.efferents)
         except AttributeError:
-            self.control_projections = [control_projection]
+            self.control_projections = control_signal.efferents.copy()
+        # MODIFIED 10/3/17 END
 
         # Update control_signal_costs to accommodate instantiated Projection
         try:
