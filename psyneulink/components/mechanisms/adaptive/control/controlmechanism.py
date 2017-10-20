@@ -879,13 +879,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # # FIX: END FULL VERSION **********************************************************************************
 
         from psyneulink.components.states.state import _instantiate_state
-        # ALT VERSION (WITHOUT CALL TO OR NAME STUFF ABOVE parse_state_spec):
+        # Parses control_signal specifications (in call to State._parse_state_spec)
+        #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
         control_signal = _instantiate_state(state_type=ControlSignal,
                                             owner=self,
                                             reference_value=defaultControlAllocation,
                                             modulaton=self.modulation,
                                             state_spec=control_signal)
-
 
         # # FIX: *********************************************************************************
 
@@ -907,9 +907,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
             output_state_index = len(self.output_states)
         except (AttributeError, TypeError):
             output_state_index = 0
-        # - get constraint for OutputState's value
-        output_state_reference_value = self.allocation_policy[output_state_index]
 
+        # # - get constraint for OutputState's value
+        # output_state_reference_value = self.allocation_policy[output_state_index]
         # # Specification is a ControlSignal (either passed in directly, or parsed from tuple above)
         # if isinstance(control_signal_spec, ControlSignal):
         #     # Deferred Initialization, so assign owner, name, and initialize
