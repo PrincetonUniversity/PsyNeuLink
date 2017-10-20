@@ -376,7 +376,7 @@ class GatingSignal(ModulatorySignal):
 
     #region CLASS ATTRIBUTES
 
-    componentType = OUTPUT_STATES
+    componentType = GATING_SIGNAL
     componentName = 'GatingSignal'
     paramsType = OUTPUT_STATE_PARAMS
 

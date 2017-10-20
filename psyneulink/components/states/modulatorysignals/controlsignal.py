@@ -607,7 +607,7 @@ class ControlSignal(ModulatorySignal):
 
     #region CLASS ATTRIBUTES
 
-    componentType = OUTPUT_STATES
+    componentType = CONTROL_SIGNAL
     paramsType = OUTPUT_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE
