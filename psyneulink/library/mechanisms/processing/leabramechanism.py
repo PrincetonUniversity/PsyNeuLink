@@ -16,16 +16,16 @@ import numbers
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import Component, function_type, method_type, parameter_keywords
-from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, Function_Base, Linear
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError, Mechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates, standard_output_states
-from PsyNeuLink.Globals.Keywords import FUNCTION, GAIN, INITIALIZER, INITIALIZING, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, MEAN, MEDIAN, NETWORK, NOISE, OUTPUT_STATES, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+from psyneulink.components.component import Component, function_type, method_type, parameter_keywords
+from psyneulink.components.functions.function import AdaptiveIntegrator, Function_Base, Linear
+from psyneulink.components.mechanisms.mechanism import MechanismError, Mechanism_Base
+from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
+from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE, StandardOutputStates, standard_output_states
+from psyneulink.globals.keywords import FUNCTION, GAIN, INITIALIZER, INITIALIZING, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, MEAN, MEDIAN, NETWORK, NOISE, OUTPUT_STATES, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
+from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
+from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.globals.utilities import append_type_to_name, iscompatible
+from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
 # Used to name input_states and output_states:
 MAIN_INPUT = 'main_input'
