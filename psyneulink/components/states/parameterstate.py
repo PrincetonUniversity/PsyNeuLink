@@ -814,7 +814,6 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                       state_type=ParameterState,
                                       name=function_param_name,
                                       state_spec=function_param_value,
-                                      # reference_value=reference_value,
                                       reference_value=reference_value,
                                       reference_value_name=function_param_name,
                                       params=None,
