@@ -2072,6 +2072,9 @@ def _parse_state_spec(state_type=None,
     variable = state_dict[VARIABLE]
     params = state_specific_args
 
+    # FIX: XXX
+    # reference_value = _parse_state_spec(**state_spec)
+
     #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
     if isinstance(reference_value, numbers.Number):
         reference_value = convert_to_np_array(reference_value,1)
