@@ -1,15 +1,15 @@
 import numpy as np
 import pytest
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferError
 
-from PsyNeuLink.Components.Component import ComponentError
-from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, \
+from psyneulink.components.component import ComponentError
+from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, \
     Reinforcement, SoftMax
-from PsyNeuLink.Components.Functions.Function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Globals.Utilities import UtilitiesError
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist
+from psyneulink.components.mechanisms.mechanism import MechanismError
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.globals.utilities import UtilitiesError
+from psyneulink.scheduling.timescale import TimeScale
 
 
 class TestTransferMechanismInputs:
@@ -24,7 +24,7 @@ class TestTransferMechanismInputs:
         )
         val = T.execute([10, 10, 10, 10]).tolist()
         assert val == [[10.0, 10.0, 10.0, 10.0]]
-        assert len(T.size) == 1 and T.size[0] == 4 and type(T.size[0]) == np.int64
+        assert len(T.size) == 1 and T.size[0] == 4 and isinstance(T.size[0], np.integer)
         # this test assumes size is returned as a 1D array: if it's not, then several tests in this file must be changed
 
     def test_transfer_mech_inputs_list_of_floats(self):
@@ -453,7 +453,7 @@ class TestTransferMechanismSize:
             size=4
         )
         assert len(T.instance_defaults.variable) == 1 and (T.instance_defaults.variable[0] == [0., 0., 0., 0.]).all()
-        assert len(T.size) == 1 and T.size[0] == 4 and type(T.size[0]) == np.int64
+        assert len(T.size) == 1 and T.size[0] == 4 and isinstance(T.size[0], np.integer)
 
     def test_transfer_mech_size_int_inputs_ints(self):
         T = TransferMechanism(
@@ -498,7 +498,7 @@ class TestTransferMechanismSize:
             size=4.0,
         )
         assert len(T.instance_defaults.variable) == 1 and (T.instance_defaults.variable[0] == [0., 0., 0., 0.]).all()
-        assert len(T.size == 1) and T.size[0] == 4.0 and type(T.size[0]) == np.int64
+        assert len(T.size == 1) and T.size[0] == 4.0 and isinstance(T.size[0], np.integer)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 6

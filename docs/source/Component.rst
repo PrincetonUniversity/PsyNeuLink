@@ -9,6 +9,6 @@ Components
    States <State>
    Functions <Function>
 
-.. automodule:: Component
+.. automodule:: psyneulink.components.component
    :members:
    :exclude-members: ParamsDict, ComponentLog, COMPONENT_BASE_CLASS

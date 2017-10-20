@@ -1,15 +1,13 @@
 import numpy as np
 import pytest
 
-from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, ConstantIntegrator, NormalDist, \
-    SimpleIntegrator, FHNIntegrator
-from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, \
-    OrnsteinUhlenbeckIntegrator, AGTUtilityIntegrator
-from PsyNeuLink.Components.Functions.Function import FunctionError
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism \
+from psyneulink.components.functions.function import AGTUtilityIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
+from psyneulink.components.functions.function import AccumulatorIntegrator, ConstantIntegrator, FHNIntegrator, NormalDist, SimpleIntegrator
+from psyneulink.components.functions.function import FunctionError
+from psyneulink.components.mechanisms.mechanism import MechanismError
+from psyneulink.components.mechanisms.processing.integratormechanism \
     import IntegratorMechanism
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.scheduling.timescale import TimeScale
 
 
 # ======================================= FUNCTION TESTS ============================================
@@ -24,7 +22,7 @@ class TestIntegratorFunctions:
                 offset=10,
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = I.execute(1)
         assert val == 25
 
@@ -36,7 +34,7 @@ class TestIntegratorFunctions:
                 offset=10
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         # constant integrator does not use input value (variable)
 
         # step 1:
@@ -62,7 +60,7 @@ class TestIntegratorFunctions:
                 offset=10,
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         # 10*0.5 + 1*0.5 + 10
         val = I.execute(1)
         assert val == 15.5
@@ -76,7 +74,7 @@ class TestIntegratorFunctions:
                 offset=10,
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         # 10 + 10*0.5 + 0 + 10 = 25
         val = I.execute(1)
         assert val == 25
@@ -92,7 +90,7 @@ class TestIntegratorFunctions:
                 offset= 1.0
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         # value = previous_value + decay * (previous_value -  rate * new_value) * time_step_size + np.sqrt(
         # time_step_size * noise) * np.random.normal()
         # step 1:
@@ -140,7 +138,7 @@ class TestIntegratorFunctions:
 
     def test_integrator_no_function(self):
         I = IntegratorMechanism(time_scale=TimeScale.TIME_STEP)
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute(10))
         assert val == 5
 
@@ -154,7 +152,7 @@ class TestResetInitializer:
             ),
             time_scale=TimeScale.TIME_STEP
         )
-    #     # P = process(pathway=[I])
+    #     # P = Process(pathway=[I])
 
         #  returns previous_value + rate*variable + noise
         # so in this case, returns 10.0
@@ -176,7 +174,7 @@ class TestResetInitializer:
             time_scale=TimeScale.TIME_STEP
         )
         # val = float(I.execute(10)[0])
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute(10))
         # returns (rate)*variable + (1-rate*previous_value) + noise
         # rate = 1, noise = 0, so in this case, returns 10.0
@@ -196,7 +194,7 @@ class TestResetInitializer:
             time_scale=TimeScale.TIME_STEP
         )
         # val = float(I.execute(10)[0])
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute())
         # returns previous_value + rate + noise
         # rate = 1.0, noise = 0, so in this case returns 1.0
@@ -215,7 +213,7 @@ class TestResetInitializer:
             time_scale=TimeScale.TIME_STEP
         )
         # val = float(I.execute(10)[0])
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute(10))
 
         # testing initializer
@@ -238,7 +236,7 @@ class TestIntegratorInputs:
             function=SimpleIntegrator(
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute(10.0))
         assert val == 10.0
 
@@ -250,7 +248,7 @@ class TestIntegratorInputs:
             function=SimpleIntegrator(
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute([10.0]))
         assert val == 10.0
 
@@ -264,7 +262,7 @@ class TestIntegratorInputs:
             function=SimpleIntegrator(
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = I.execute([10.0, 5.0, 2.0, 1.0, 0.0])[0]
         expected_output = [10.0, 5.0, 2.0, 1.0, 0.0]
 
@@ -283,7 +281,7 @@ class TestIntegratorInputs:
             function=SimpleIntegrator(
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         input_array = np.array([10.0, 5.0, 2.0, 1.0, 0.0])
         val = I.execute(input_array)[0]
         expected_output = [10.0, 5.0, 2.0, 1.0, 0.0]
@@ -304,7 +302,7 @@ class TestIntegratorInputs:
                 name='IntegratorMechanism',
                 default_variable=[0, 0, 0]
             )
-            # P = process(pathway=[I])
+            # P = Process(pathway=[I])
             I.execute([10.0, 5.0, 2.0, 1.0, 0.0])
         assert "does not match required length" in str(error_text)
 
@@ -317,7 +315,7 @@ class TestIntegratorInputs:
                 name='IntegratorMechanism',
                 default_variable=[0, 0, 0, 0, 0]
             )
-            # P = process(pathway=[I])
+            # P = Process(pathway=[I])
             I.execute([10.0, 5.0, 2.0])
         assert "does not match required length" in str(error_text)
 
@@ -335,7 +333,7 @@ class TestIntegratorRate:
                 rate=5.0
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute(10.0))
         assert val == 50.0
 
@@ -348,7 +346,7 @@ class TestIntegratorRate:
                 rate=5.0
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute(10.0))
         assert val == 5.0
 
@@ -361,7 +359,7 @@ class TestIntegratorRate:
                 rate=5.0
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute(10.0))
         assert val == 50.0
 
@@ -375,7 +373,7 @@ class TestIntegratorRate:
                 rate=[5.0, 5.0, 5.0]
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [50.0, 50.0, 50.0]
 
@@ -389,7 +387,7 @@ class TestIntegratorRate:
                 rate=[5.0, 5.0, 5.0]
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [5.0, 5.0, 5.0]
 
@@ -403,7 +401,7 @@ class TestIntegratorRate:
                 rate=[5.0, 5.0, 5.0]
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [50.0, 50.0, 50.0]
 
@@ -417,7 +415,7 @@ class TestIntegratorRate:
                 rate=[0.5, 0.5, 0.5]
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [5.0, 5.0, 5.0]
 
@@ -431,7 +429,7 @@ class TestIntegratorRate:
                 rate=0.5
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [5.0, 5.0, 5.0]
 
@@ -444,7 +442,7 @@ class TestIntegratorRate:
                 rate=0.5
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = list(I.execute(10.0))
         assert val == [5.0]
 
@@ -459,7 +457,7 @@ class TestIntegratorRate:
                     rate=[5.0, 5.0, 5.0]
                 )
             )
-            # P = process(pathway=[I])
+            # P = Process(pathway=[I])
             float(I.execute(10.0))
         assert (
             "array specified for the rate parameter" in str(error_text)
@@ -475,7 +473,7 @@ class TestIntegratorRate:
                     rate=[5.0, 5.0, 5.0]
                 )
             )
-            # P = process(pathway=[I])
+            # P = Process(pathway=[I])
             float(I.execute(10.0))
         assert (
             "array specified for the rate parameter" in str(error_text)
@@ -491,7 +489,7 @@ class TestIntegratorRate:
                     rate=[5.0, 5.0, 5.0]
                 )
             )
-            # P = process(pathway=[I])
+            # P = Process(pathway=[I])
             float(I.execute(10.0))
         assert (
             "array specified for the rate parameter" in str(error_text)
@@ -507,7 +505,7 @@ class TestIntegratorRate:
     #                 increment= 1.0
     #             )
     #         )
-    # #     P = process(pathway=[I])
+    # #     P = Process(pathway=[I])
 
     #     # value = previous_value * rate + noise + increment
     #     # step 1:
@@ -675,44 +673,107 @@ class TestIntegratorNoise:
 class TestFHN:
 
 
-    def test_FHN_defaults(self):
+    # def test_FHN_defaults(self):
+    #     F = IntegratorMechanism(
+    #         name='IntegratorMech-FHNFunction',
+    #         function=FHNIntegrator(
+    #             initial_v=0.2,
+    #             initial_w=0.0,
+    #             time_step_size=0.01
+    #         )
+    #     )
+    #     plot_v_list = [0.2]
+    #     plot_w_list = [0.0]
+    #     plot_t_list = [0.0]
+    #
+    #     expected_v_list = []
+    #     expected_w_list = []
+    #     stimulus = 0.08
+    #     for i in range(80):
+    #         results = F.execute(stimulus)
+    #         new_v = results[0][0]
+    #         new_w = results[1][0]
+    #         new_t = results[2]
+    #
+    #         # ** uncomment the lines below if you want to view the plot:
+    #         plot_v_list.append(new_v)
+    #         plot_w_list.append(new_w)
+    #         plot_t_list.append(new_t)
+    #     # ** uncomment the lines below if you want to view the plot:
+    #     from matplotlib import pyplot as plt
+    #     plt.plot(plot_v_list)
+    #     plt.plot(plot_w_list)
+    #     plt.show()
+    #
+    #     print(plot_v_list)
+    #     print(plot_w_list)
+    #     print(plot_t_list)
+    #
+    #     # np.testing.assert_allclose(expected_v_list, [1.9861589924245777, 1.9184159304279109, 1.7920107368145777,
+    #     #                                              1.6651158106802393, 1.5360917598075965, 1.4019128309448776,
+    #     #                                              1.2568420252868404, 1.08773745582042, 0.8541804646541804,
+    #     #                                              0.34785588139530099])
+    #     # np.testing.assert_allclose(expected_w_list, [0.28713219302304327, 0.65355262255707869, 0.9581082373550347,
+    #     #                                              1.2070585850028435, 1.4068978270680454, 1.5629844531368104,
+    #     #                                              1.6793901854329185, 1.7583410650743645, 1.7981128658110572,
+    #     #                                              1.7817328532815251])
+
+    def test_Gilzenrat_Figure_2(self):
+
+        initial_v = 0.2
+        initial_w = 0.0
 
         F = IntegratorMechanism(
             name='IntegratorMech-FHNFunction',
             function=FHNIntegrator(
+                initial_v=initial_v,
+                initial_w=initial_w,
+                time_step_size=0.01,
+                time_constant_w=1.0,
+                time_constant_v=0.01,
+                a_v=-1.0,
+                b_v=1.0,
+                c_v=1.0,
+                d_v=0.0,
+                e_v=-1.0,
+                f_v=1.0,
+                threshold=0.5,
+                mode=1.0,
+                uncorrelated_activity=0.0,
+                a_w=1.0,
+                b_w=-1.0,
+                c_w=0.0
 
             )
         )
-        plot_v_list = []
-        plot_w_list = []
+        plot_v_list = [initial_v]
+        plot_w_list = [initial_w]
 
-        expected_v_list = []
-        expected_w_list = []
-        stimulus = 1.0
+        # found this stimulus by guess and check b/c one was not provided with Figure 2 params
+        stimulus = 0.073
+        # increase range to 200 to match Figure 2 in Gilzenrat
         for i in range(10):
-            for j in range(10):
-                new_v = F.execute(stimulus)[0][0][0]
-                new_w = F.execute(stimulus)[1][0][0]
-                # ** uncomment the lines below if you want to view the plot:
-                # plot_v_list.append(new_v)
-                # plot_w_list.append(new_w)
-            expected_v_list.append(new_v)
-            expected_w_list.append(new_w)
+            results = F.execute(stimulus)
+            plot_v_list.append(results[0][0][0])
+            plot_w_list.append(results[1][0][0])
 
         # ** uncomment the lines below if you want to view the plot:
-        # import matplotlib.pyplot as plt
+        # from matplotlib import pyplot as plt
         # plt.plot(plot_v_list)
         # plt.plot(plot_w_list)
         # plt.show()
 
-        np.testing.assert_allclose(expected_v_list, [1.9861589924245777, 1.9184159304279109, 1.7920107368145777,
-                                                     1.6651158106802393, 1.5360917598075965, 1.4019128309448776,
-                                                     1.2568420252868404, 1.08773745582042, 0.8541804646541804,
-                                                     0.34785588139530099])
-        np.testing.assert_allclose(expected_w_list, [0.28713219302304327, 0.65355262255707869, 0.9581082373550347,
-                                                     1.2070585850028435, 1.4068978270680454, 1.5629844531368104,
-                                                     1.6793901854329185, 1.7583410650743645, 1.7981128658110572,
-                                                     1.7817328532815251])
+        np.testing.assert_allclose(plot_v_list, [0.2, 0.22493312915681499, 0.24844236992931412, 0.27113468959297515,
+                                                 0.29350254152625221, 0.31599112332052792, 0.33904651470437225,
+                                                 0.36315614063656521, 0.38888742632665502, 0.41692645840176923,
+                                                 0.44811281741549686]
+)
+        np.testing.assert_allclose(plot_w_list, [0.0, 0.0019518690642000148, 0.0041351416812363193,
+                                                 0.0065323063637677276, 0.0091322677555586273, 0.011929028036111457,
+                                                 0.014921084302726394, 0.018111324713170868, 0.021507331976846619,
+                                                 0.025122069034563425, 0.028974949616469712]
+)
+
 
 class TestAGTUtilityIntegrator:
 

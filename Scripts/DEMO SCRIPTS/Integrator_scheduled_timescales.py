@@ -1,9 +1,9 @@
-from PsyNeuLink.Components.Functions.Function import Integrator, Linear
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.System import *
-from PsyNeuLink.Scheduling.Condition import AfterNCalls, Any, AtPass, EveryNCalls
-from PsyNeuLink.Scheduling.Scheduler import Scheduler
+from psyneulink.components.functions.function import Integrator, Linear
+from psyneulink.components.mechanisms.processing import integratormechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.system import *
+from psyneulink.scheduling.condition import AfterNCalls, Any, AtPass, EveryNCalls
+from psyneulink.scheduling.scheduler import Scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ A = TransferMechanism(
     prefs={REPORT_OUTPUT_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE)}
 )
 
-B = IntegratorMechanism(
+B = integratormechanism(
     name='B',
     default_variable = [0],
     function=Integrator(
@@ -29,7 +29,7 @@ B = IntegratorMechanism(
     prefs={REPORT_OUTPUT_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE)}
 )
 
-C = IntegratorMechanism(
+C = integratormechanism(
     name='C',
     default_variable = [0],
     function=Integrator(
@@ -46,20 +46,20 @@ D = TransferMechanism(
     prefs={REPORT_OUTPUT_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE)}
 )
 
-p = process(
+p = Process(
     default_variable = [0],
     pathway = [A, B, D],
     name = 'p'
 )
 
-q = process(
+q = Process(
     default_variable = [0],
     pathway = [A, C, D],
     name = 'q',
     prefs=process_prefs
 )
 
-s = system(
+s = System(
     processes=[p, q],
     name = 's'
 )
