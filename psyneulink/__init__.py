@@ -28,8 +28,6 @@ from . import globals
 from . import library
 from . import scheduling
 
-import psyneulink.globals.keywords as keywords
-
 from .components import *
 from .composition import *
 from .globals import *
