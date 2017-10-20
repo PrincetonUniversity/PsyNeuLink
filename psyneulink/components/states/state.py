@@ -1763,8 +1763,6 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                                           context=context,
                                           **state_spec)
 
-    # FIX: 10/3/17 - ??VARIABLE IS A DICT??
-
     # FIX: 10/3/17: HANDLE NAME HERE
             # if not state_name is state_spec and not state_name in states:
             #     state_name = state_spec
