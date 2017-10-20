@@ -1735,6 +1735,13 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     Returns a State or None
     """
 
+    parsed_reference_value = _parse_state_spec(owner=owner,
+                                               state_type=state_type,
+                                               state_spec=reference_value,
+                                               value=None,
+                                               params=None)
+    reference_value = parsed_reference_value[VARIABLE]
+
     # standard_args = get_args(inspect.currentframe())
     # parsed_state_spec  = _parse_state_spec(standard_args, context, **state_spec)
     parsed_state_spec = _parse_state_spec(state_type=state_type,
@@ -1975,6 +1982,7 @@ def _parse_state_spec(state_type=None,
                       reference_value=None,
                       name=None,
                       variable=None,
+                      value=None,
                       params=None,
                       prefs=None,
                       context=None,
@@ -2027,7 +2035,9 @@ def _parse_state_spec(state_type=None,
             #    to replace those explicitly specified in the call to _instantiate_state (i.e., passed in standard_args)
             #    (use copy so that items in state_spec dict are not deleted when called from _validate_params)
             state_specific_args = state_spec[STATE_SPEC_ARG].copy()
-            standard_args.update({key: state_specific_args[key] for key in state_specific_args if key in standard_args})
+            standard_args.update({key: state_specific_args[key]
+                                  for key in state_specific_args
+                                  if key in standard_args})
             # Delete them from the State specification dictionary, leaving only state-specific items there
             for key in standard_args:
                 state_specific_args.pop(key, None)
@@ -2255,9 +2265,16 @@ def _parse_state_spec(state_type=None,
     #                      format(state_type_name, owner.name, state_spec))
     # MODIFIED 10/3/17 END
 
-    # If variable is none, use value:
+    # # If variable is none, use value:
+    # # MODIFIED 10/3/17 OLDISH:
+    # state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
+    # MODIFIED 10/3/17 NEWER:
     if state_dict[VARIABLE] is None:
-        state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
+        if state_dict[VALUE] is not None:
+            state_dict[VARIABLE] = state_dict[VALUE]
+        else:
+            state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
+    # MODIFIED 10/3/17 END
 
     # # Add STATE_TYPE entry to state_dict
     # state_dict[STATE_TYPE] = state_type

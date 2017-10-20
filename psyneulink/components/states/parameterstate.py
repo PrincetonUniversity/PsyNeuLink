@@ -769,7 +769,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     else:
         return
 
-    # Assign parameterStates to component for parameters of its function (function_params), except for ones that are:
+    # Assign ParameterStates to Component for parameters of its function (function_params), except for ones that are:
     #    - another component
     #    - a function or method
     #    - have a value of None (see IMPLEMENTATION_NOTE below)
