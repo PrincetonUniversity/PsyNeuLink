@@ -1,15 +1,14 @@
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import *
-from PsyNeuLink.Library.Subsystems.EVC.EVCControlMechanism import EVCControlMechanism
+from psyneulink.components.mechanisms.mechanism import MonitoredOutputStatesOption
+from psyneulink.components.mechanisms.processing.transfermechanism import *
+from psyneulink.components.process import Process
+from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.components.system import System
+from psyneulink.globals.keywords import *
+from psyneulink.globals.preferences.componentpreferenceset import *
+from psyneulink.library.mechanisms.processing.integrator.ddm import *
+from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
 
 random.seed(0)
 np.random.seed(0)
@@ -37,10 +36,10 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                                                                           ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)},
                                                                       )),
 
-                                   # threshold=(1.0, ControlProjection(function=Linear,
-                                   #                                   control_signal_params={
-                                   #                                       ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
-                                   #                                   )),
+                                   threshold=(1.0, ControlProjection(function=Linear,
+                                                                     control_signal_params={
+                                                                         ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
+                                                                     )),
 
                                    # threshold=(1.0, ControlProjection(function=Linear,
                                    #                                   control_signal_params={
@@ -48,8 +47,8 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                                    #                                       MODULATION:ModulationParam.ADDITIVE}
                                    #                                   )),
 
-                                   threshold=(1.0, ControlSignal(function=Linear,
-                                                                 allocation_samples=np.arange(0.1, 1.01, 0.3))),
+                                   # threshold=(1.0, ControlSignal(function=Linear,
+                                   #                               allocation_samples=np.arange(0.1, 1.01, 0.3))),
 
                                    # threshold={VALUE: 1.0,
                                    #            CONTROL_PROJECTION: ControlProjection(function=Linear,
@@ -79,20 +78,20 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
 # TEST
 
 # Processes:
-TaskExecutionProcess = process(
+TaskExecutionProcess = Process(
     default_variable=[0],
     pathway=[Input, IDENTITY_MATRIX, Decision],
     prefs = process_prefs,
     name = 'TaskExecutionProcess')
 
-RewardProcess = process(
+RewardProcess = Process(
     default_variable=[0],
     pathway=[Reward],
     prefs = process_prefs,
     name = 'RewardProcess')
 
 # System:
-mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
+mySystem = System(processes=[TaskExecutionProcess, RewardProcess],
 
                   # WORKS:
                   controller=EVCControlMechanism,
@@ -147,7 +146,7 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
 # Show characteristics of system:
 mySystem.show()
 mySystem.controller.show()
-# mySystem.show_graph(show_control=True)
+mySystem.show_graph(show_control=True)
 # mySystem.show_graph()
 
 # Specify stimuli for run:

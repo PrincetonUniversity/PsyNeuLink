@@ -9,7 +9,7 @@ Utilities
    Log
    Preferences
 
-.. automodule:: Utilities
+.. automodule:: psyneulink.globals.utilities
    :members:
    :exclude-members: random
 

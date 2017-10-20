@@ -1,8 +1,8 @@
 import time
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Globals.Keywords import *
+from psyneulink.components.mechanisms.processing.transfermechanism import *
+from psyneulink.components.process import Process
+from psyneulink.globals.keywords import *
 
 print("========TIME STEP MODE========")
 print()
@@ -23,7 +23,7 @@ my_DDM_proc = DDM(function=Integrator(integration_type=DIFFUSION, noise=0.5),
              time_scale=TimeScale.TIME_STEP
              )
 
-MyProcess = process(
+MyProcess = Process(
     pathway=[my_Transfer_Test, my_DDM_proc],
     name='MyProcess')
 print("RESULT = ", MyProcess.execute(500))
@@ -48,7 +48,7 @@ my_Transfer_Test_Trial = TransferMechanism(name='my_Transfer_Test_Trial',
                         )
 my_DDM_proc_trial = DDM()
 
-MyProcess2 = process(
+MyProcess2 = Process(
     pathway=[my_Transfer_Test_Trial, my_DDM_proc_trial],
     name='MyProcess')
 

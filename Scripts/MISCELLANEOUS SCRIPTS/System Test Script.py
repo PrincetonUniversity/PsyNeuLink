@@ -1,7 +1,7 @@
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import Process_Base
-from PsyNeuLink.Components.System import System_Base
-from PsyNeuLink.Globals.Keywords import *
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.system import System
+from psyneulink.globals.keywords import *
 
 # DDM_prefs = ComponentPreferenceSet(
 #                 prefs = {
@@ -46,17 +46,17 @@ Layer_2 = TransferMechanism(default_variable=[0,0], name='Layer 2')
 Layer_3 = TransferMechanism(default_variable=[0,0], name='Layer 3')
 
 
-myProcess_1 = Process_Base(default_variable=[0, 0],
-                           params={PATHWAY:[(Layer_1, 0),
+myProcess_1 = Process(default_variable=[0, 0],
+                      params={PATHWAY:[(Layer_1, 0),
                                                     IDENTITY_MATRIX,
                                                     (Layer_3, 0)]})
 
-myProcess_2 = Process_Base(default_variable=[0, 0],
-                           params={PATHWAY:[(Layer_2, 0),
+myProcess_2 = Process(default_variable=[0, 0],
+                      params={PATHWAY:[(Layer_2, 0),
                                                     FULL_CONNECTIVITY_MATRIX,
                                                     (Layer_3, 0)]})
 
-mySystem = System_Base(params={PROCESSES:[(myProcess_1,0), (myProcess_2,0)]})
+mySystem = System(params={PROCESSES:[(myProcess_1, 0), (myProcess_2, 0)]})
 
 myProcess_1.reportOutputPref = True
 myProcess_2.reportOutputPref = True

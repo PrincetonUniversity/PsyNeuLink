@@ -1,5 +1,5 @@
-ModulatorySignals
-=================
+Modulatory Signals
+==================
 
 .. _ModulatorySignal_Subtypes:
 
@@ -13,7 +13,7 @@ ModulatorySignals
 .. toctree::
    :maxdepth: 3
 
-.. automodule:: ModulatorySignals.ModulatorySignal
+.. automodule:: psyneulink.components.states.modulatorysignals.modulatorysignal
    :members:
    :exclude-members: random, update
 

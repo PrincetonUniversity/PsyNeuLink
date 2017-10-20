@@ -1,5 +1,5 @@
-ControlProjections
-==================
+Control Projections
+===================
 
 **Base class**:
 

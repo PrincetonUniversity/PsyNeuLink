@@ -1,12 +1,12 @@
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.States.OutputState import *
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
-from PsyNeuLink.Scheduling.Condition import AfterNCalls
-from PsyNeuLink.Scheduling.TimeScale import TimeScale, CentralClock
+from psyneulink.components.functions.function import Logistic
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.states.outputstate import *
+from psyneulink.components.system import System
+from psyneulink.globals.keywords import *
+from psyneulink.globals.preferences.componentpreferenceset import *
+from psyneulink.scheduling.condition import AfterNCalls
+from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 
@@ -77,7 +77,7 @@ Output_Weights = MappingProjection(name='Output Weights',
                          matrix=Output_Weights_matrix
                          )
 
-z = process(default_variable=[0, 0],
+z = Process(default_variable=[0, 0],
             pathway=[Input_Layer,
                            # The following reference to Input_Weights is needed to use it in the pathway
                            #    since it's sender and receiver args are not specified in its declaration above
@@ -159,7 +159,7 @@ if COMPOSITION is PROCESS:
 
 elif COMPOSITION is SYSTEM:
     # SYSTEM VERSION:
-    x = system(processes=[z],
+    x = System(processes=[z],
                targets=[0, 0, 1],
                learning_rate=2.0)
 
