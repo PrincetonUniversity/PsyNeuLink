@@ -385,9 +385,15 @@ class ModulatorySignal(OutputState):
                          prefs=prefs,
                          context=context)
 
-        # If owner is specified but modulation has not been specified, assign to owner's value
-        if owner and self._modulation is None:
-            self._modulation = self.modulation or owner.modulation
+        # MODIFIED 10/3/17 OLD:
+        # # If owner is specified but modulation has not been specified, assign to owner's value
+        # if owner and self._modulation is None:
+        #     self._modulation = self.modulation or owner.modulation
+        # MODIFIED 10/3/17 END
+        if self.init_status is InitStatus.INITIALIZED:
+            # PUT NAME HERE??
+            pass
+
 
     def _instantiate_attributes_after_function(self, context=None):
         # If owner is specified but modulation has not been specified, assign to owner's value

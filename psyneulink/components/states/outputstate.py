@@ -562,7 +562,7 @@ class OutputState(State_Base):
 
     #region CLASS ATTRIBUTES
 
-    componentType = OUTPUT_STATES
+    componentType = OUTPUT_STATE
     paramsType = OUTPUT_STATE_PARAMS
 
     class ClassDefaults(State_Base.ClassDefaults):

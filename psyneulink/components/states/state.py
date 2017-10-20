@@ -1267,7 +1267,7 @@ class State_Base(State):
                         receiver_name = receiver.owner.name + " " + receiver.name
                     else:
                         receiver_name = receiver.__name__
-                    projection_name = self.__class__.__name__ + " for " + receiver_name
+                    projection_name = projection_type.__name__ + " for " + receiver_name
                 projection.init_args[NAME] = projection.init_args[NAME] or projection_name
 
                 # If receiver has been instantiated, try to complete initialization
@@ -1763,7 +1763,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                                           context=context,
                                           **state_spec)
 
-    # FIX: 10/3/17: HANDLE NAME HERE (GET CODE FROM ABOVE)
+    # FIX: 10/3/17: HANDLE NAME HERE
             # if not state_name is state_spec and not state_name in states:
             #     state_name = state_spec
             # # Add index suffix to name if it is already been used
