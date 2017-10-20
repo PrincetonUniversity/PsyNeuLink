@@ -18,7 +18,7 @@ A ControlProjection is a type of `ModulatoryProjection <ModulatoryProjection>` t
 <ParameterState>` of a `ProcessingMechanism <ProcessingMechanism>`. It takes the `value <ControlSignal.value>` of a
 `ControlSignal` of a `ControlMechanism <ControlMechanism>` and uses it to  modify the value of the parameter associated
 with the ParameterState to which it projects.  All of the ControlProjections in a System, along with its other `control
-components <ControlMechanism>`, can be displayed using the System's `show_graph <System_Base.show_graph>` method with
+components <ControlMechanism>`, can be displayed using the System's `show_graph <System.show_graph>` method with
 its **show_control** argument assigned as `True`.
 
 .. _ControlProjection_Creation:
@@ -105,13 +105,17 @@ from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
-from psyneulink.components.shellclasses import Mechanism, Process
+from psyneulink.components.shellclasses import Mechanism, Process_Base
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import CONTROL, CONTROL_SIGNAL, CONTROL_PROJECTION, PROJECTION_SENDER, \
     PROJECTION_SENDER_VALUE, PARAMETER_STATE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock
+
+__all__ = [
+    'CONTROL_SIGNAL_PARAMS', 'ControlProjection', 'ControlProjectionError',
+]
 
 parameter_keywords.update({CONTROL_PROJECTION, CONTROL})
 projection_keywords.update({CONTROL_PROJECTION, CONTROL})
@@ -347,7 +351,7 @@ class ControlProjection(ModulatoryProjection_Base):
         """
 
         # A Process can't be the sender of a ControlMechanism
-        if isinstance(self.sender, Process):
+        if isinstance(self.sender, Process_Base):
             raise ProjectionError("PROGRAM ERROR: attempt to add a ControlProjection from a Process {0} "
                                   "to a Mechanism {0} in pathway list".format(self.name, self.sender.name))
 

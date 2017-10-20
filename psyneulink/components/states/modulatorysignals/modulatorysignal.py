@@ -197,12 +197,15 @@ Class Reference
 """
 
 from psyneulink.components.component import InitStatus, component_keywords
-from psyneulink.components.projections.projection import ConnectionTuple, _parse_connection_specs
 from psyneulink.components.shellclasses import Mechanism, State
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base
 from psyneulink.globals.keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL, PROJECTIONS
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+
+__all__ = [
+    'modulatory_signal_keywords', 'ModulatorySignal', 'ModulatorySignalError',
+]
 
 
 class ModulatorySignalError(Exception):
@@ -409,8 +412,8 @@ class ModulatorySignal(OutputState):
         Call _instantiate_projection_from_state to assign ModulatoryProjections to .efferents
 
         """
-        from psyneulink.components.projections.modulatory.modulatoryprojection \
-            import ModulatoryProjection_Base
+        from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+        from psyneulink.components.projections.projection import ConnectionTuple
 
         modulatory_projection_specs = [proj for proj in projections
                                   if isinstance(proj, (ModulatoryProjection_Base, Mechanism, State, ConnectionTuple))]
@@ -471,6 +474,7 @@ def _parse_state_specific_params(self, owner, state_spec_dict, state_specific_pa
         Returns params dict with CONNECTIONS entries if any of these was specified.
 
         """
+        from psyneulink.components.projections.projection import _parse_connection_specs
 
         params_dict = {}
 

@@ -7,6 +7,12 @@
 #
 #
 # ***********************************************  Init ****************************************************************
+'''
+This module provides core psyneulink mechanisms, projections, functions, and states
+
+https://princetonuniversity.github.io/PsyNeuLink/Component.html
+'''
+
 #
 # __all__ = ['INPUT_STATES',
 #            'OUTPUT_STATES',
@@ -17,8 +23,32 @@
 
 import inspect
 
-from psyneulink.globals.keywords import DEFAULT_PROCESSING_MECHANISM, PROJECTION_SENDER, PROJECTION_TYPE
+from psyneulink.globals.keywords import PROJECTION_SENDER, PROJECTION_TYPE
 from psyneulink.globals.registry import register_category
+
+from . import functions
+from . import mechanisms
+from . import process
+from . import projections
+from . import states
+from . import system
+
+from .functions import *
+from .mechanisms import *
+from .process import *
+from .projections import *
+from .states import *
+from .system import *
+
+__all__ = [
+    'InitError'
+]
+__all__.extend(functions.__all__)
+__all__.extend(mechanisms.__all__)
+__all__.extend(process.__all__)
+__all__.extend(projections.__all__)
+__all__.extend(states.__all__)
+__all__.extend(system.__all__)
 
 kwInitPy = '__init__.py'
 
@@ -60,14 +90,6 @@ register_category(entry=DDM,
 #endregion
 
 #region *************************************** ASSIGN DEFAULT MECHANISMS **********************************************
-
-# Use as default Mechanism in Process and in calls to mechanism()
-# Note: this must be a class (i.e., not an instantiated object)
-Mechanism_Base.default_mechanism = MechanismRegistry[Mechanism_Base.default_mechanism].subclass
-
-# Use as DefaultPreferenceSetOwner if owner is not specified for ComponentPreferenceSet (in ComponentPreferenceSet)
-# Note: this must be an instantiated object
-DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=DEFAULT_PROCESSING_MECHANISM)
 
 # Specifies subclass used to instantiate a ControlMechanism if it is not specified for a System being instantiated
 # Note: must be a class
@@ -275,17 +297,17 @@ for projection_type in ProjectionRegistry:
 from psyneulink.globals.preferences.componentpreferenceset \
     import ComponentPreferenceSet, ComponentDefaultPrefDicts, PreferenceLevel
 
-from psyneulink.components.shellclasses import System
-System.classPreferences = ComponentPreferenceSet(owner=System,
-                                                 prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
-                                                 level=PreferenceLevel.INSTANCE,
-                                                 context=".__init__.py")
+from psyneulink.components.shellclasses import System_Base
+System_Base.classPreferences = ComponentPreferenceSet(owner=System_Base,
+                                                      prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
+                                                      level=PreferenceLevel.INSTANCE,
+                                                      context=".__init__.py")
 
-from psyneulink.components.shellclasses import Process
-Process.classPreferences = ComponentPreferenceSet(owner=Process,
-                                                 prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
-                                                 level=PreferenceLevel.INSTANCE,
-                                                 context=".__init__.py")
+from psyneulink.components.shellclasses import Process_Base
+Process_Base.classPreferences = ComponentPreferenceSet(owner=Process_Base,
+                                                       prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
+                                                       level=PreferenceLevel.INSTANCE,
+                                                       context=".__init__.py")
 
 
 from psyneulink.components.shellclasses import Mechanism
@@ -375,6 +397,6 @@ Function.classPreferences = ComponentPreferenceSet(owner=Function,
 
 
 # # # MODIFIED 6/28/16: -- COMMENT OUT TO RUN
-# from Components.System import System_Base
+# from Components.System import System
 # # Use as default System (by EVC)
-# DefaultSystem = System_Base(name = DEFAULT_SYSTEM)
+# DefaultSystem = System(name = DEFAULT_SYSTEM)

@@ -17,6 +17,12 @@ from psyneulink.globals.preferences.componentpreferenceset import ComponentPrefe
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import Modulation
 
+__all__ = [
+    'MechanismPreferenceSet', 'runtimeParamModulationPrefCategoryDefault', 'runtimeParamModulationPrefInstanceDefault',
+    'runtimeParamModulationPrefTypeDefault', 'runtimeParamStickyAssignmentPrefCategoryDefault',
+    'runtimeParamStickyAssignmentPrefInstanceDefault', 'runtimeParamStickyAssignmentPrefTypeDefault',
+]
+
 # MODIFIED 11/29/16 OLD:
 # # Keypaths for preferences:
 # kpRuntimeParamModulationPref = '_runtime_param_modulation_pref'

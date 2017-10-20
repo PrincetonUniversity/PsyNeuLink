@@ -1,6 +1,6 @@
 
 
-from psyneulink.components.process import Process_Base
+from psyneulink.components.process import Process
 from psyneulink.globals.keywords import *
 
 # from Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
@@ -19,7 +19,7 @@ import numpy as np
 #
 # my_comparator.execute(variable=np.array([[0,0], [0,1]]))
 #
-# my_process = Process_Base(default_variable=[[0,0], [0,1]],
+# my_process = Process(default_variable=[[0,0], [0,1]],
 #                           params={PATHWAY:[my_comparator]},
 #                           # prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 #                           )
@@ -28,10 +28,10 @@ import numpy as np
 
 
 
-my_process = Process_Base(default_variable=[[0],[1]],
-                 params={PATHWAY:[my_comparator]},
-                 # prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
-                          )
+my_process = Process(default_variable=[[0], [1]],
+                     params={PATHWAY:[my_comparator]},
+                     # prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
+                     )
 my_process.execute(input=np.array([[0], [1]]))
 
 

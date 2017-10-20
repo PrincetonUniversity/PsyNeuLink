@@ -236,9 +236,9 @@ COMMENT:
     My_Mech_B = TransferMechanism(function=Linear,
                                  output_states=[RESULT, MEAN])
 
-    Process_A = process(pathway=[My_Mech_A])
-    Process_B = process(pathway=[My_Mech_B])
-    My_System = system(processes=[Process_A, Process_B])
+    Process_A = Process(pathway=[My_Mech_A])
+    Process_B = Process(pathway=[My_Mech_B])
+    My_System = System(processes=[Process_A, Process_B])
 
     My_EVC_Mechanism = EVCControlMechanism(system=My_System,
                                     monitor_for_control=[My_Mech_A.output_states[RESULT],
@@ -257,10 +257,10 @@ the `gain <Logistic.gain>` parameter of the `Logistic` function for ``My_Mech_A`
     My_Mech_A = TransferMechanism(function=Logistic)
     My_Mech_B = TransferMechanism(function=Linear,
                                  output_states=[RESULT, MEAN])
-    Process_A = process(pathway=[My_Mech_A])
-    Process_B = process(pathway=[My_Mech_B])
+    Process_A = Process(pathway=[My_Mech_A])
+    Process_B = Process(pathway=[My_Mech_B])
 
-    My_System = system(processes=[Process_A, Process_B],
+    My_System = System(processes=[Process_A, Process_B],
                                     monitor_for_control=[My_Mech_A.output_states[RESULT],
                                                          My_Mech_B.output_states[MEAN]],
                                     control_signals=[(GAIN, My_Mech_A),
@@ -288,25 +288,25 @@ from psyneulink.components.component import InitStatus, function_type, method_ty
 #            SHOULD THEY BE LIMITED TO EVC??
 from psyneulink.components.functions.function import CombinationFunction, Exponential, IntegratorFunction, Linear, \
     LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
-from psyneulink.components.shellclasses import Function, Mechanism
+from psyneulink.components.shellclasses import Function
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.components.states.state import State_Base
-from psyneulink.components.states.parameterstate import _get_parameter_state
 from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE
-from psyneulink.components.projections.projection import _is_projection_spec, _parse_connection_specs, ConnectionTuple
-from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.components.states.parameterstate import _get_parameter_state
+from psyneulink.components.states.state import State_Base
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import\
-    NAME, FUNCTION, FUNCTION_PARAMS, PARAMS, EXECUTING, SEPARATOR_BAR, OFF, ON, AUTO, SUM, SLOPE, INTERCEPT, \
-    MECHANISM, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE, MODULATION, \
-    PROJECTION_TYPE, SENDER, RECEIVER, WEIGHT, EXPONENT,\
-    CONTROL_SIGNAL, CONTROL_SIGNAL_SPECS, CONTROLLED_PARAMS, CONTROL_PROJECTION, ALLOCATION_SAMPLES, kwAssign
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, MECHANISM, MODULATION, NAME, OFF, ON, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, SEPARATOR_BAR, SLOPE, SUM, kwAssign
 from psyneulink.globals.log import LogEntry, LogLevel
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, \
-    kwCompatibilityType
+from psyneulink.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
 from psyneulink.scheduling.timescale import CurrentTime, TimeScale
+
+__all__ = [
+    'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalCosts', 'ControlSignalError',
+    'COST_COMBINATION_FUNCTION', 'COST_OPTIONS', 'costFunctionNames', 'DEFAULT_ALLOCATION_SAMPLES', 'DURATION_COST',
+    'DURATION_COST_FUNCTION', 'INTENSITY_COST', 'INTENSITY_COST_FUNCTION', 'kpAdjustmentCost', 'kpAllocation', 'kpCost',
+    'kpCostRange', 'kpDurationCost', 'kpIntensity', 'kpIntensityCost',
+]
 
 # class OutputStateLog(IntEnum):
 #     NONE            = 0
@@ -990,7 +990,7 @@ class ControlSignal(ModulatorySignal):
         from psyneulink.components.mechanisms.mechanism import Mechanism
         from psyneulink.components.states.parameterstate import ParameterState
         from psyneulink.components.projections.projection import _parse_connection_specs
-        from psyneulink.globals.keywords import CONNECTIONS, PROJECTIONS
+        from psyneulink.globals.keywords import PROJECTIONS
 
         params_dict = {}
 

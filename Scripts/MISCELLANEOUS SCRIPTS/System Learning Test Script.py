@@ -53,7 +53,7 @@ Output_Weights = MappingProjection(name='Output Weights',
                          matrix=Output_Weights_matrix
                          )
 
-p = process(default_variable=[0, 0],
+p = Process(default_variable=[0, 0],
             pathway=[Input_Layer,
                            # The following reference to Input_Weights is needed to use it in the pathway
                            #    since it's sender and receiver args are not specified in its declaration above
@@ -74,7 +74,7 @@ p = process(default_variable=[0, 0],
             prefs={VERBOSE_PREF: False,
                    REPORT_OUTPUT_PREF: True})
 
-s = system(processes=[p],
+s = System(processes=[p],
            # controller=EVCControlMechanism,
            # enable_controller=True,
            # monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],

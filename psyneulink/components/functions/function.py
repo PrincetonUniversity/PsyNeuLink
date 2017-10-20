@@ -172,45 +172,43 @@ Class Reference
 
 """
 
-# __all__ = ['Reduce',
-#            'LinearCombination',
-#            'CombineMean',
-#            'Linear',
-#            'Exponential',
-#            'Logistic',
-#            'SoftMax',
-#            'Integrator',
-#            'LinearMatrix',
-#            'NormalDist',
-#            'ExponentialDist',
-#            'UniformDist`',
-#            'GammaDist',
-#            'WaldDist',
-#            'Stability`,
-#            'Distance`,
-#            'Reinforcement',
-#            'BackPropagation',
-#            'FunctionError',
-#            "FunctionOutputType"]
 import numbers
 import warnings
+
 from collections import namedtuple
 from enum import Enum, IntEnum
 from random import randint
 
 import numpy as np
 import typecheck as tc
+
 from numpy import abs, exp, tanh
 
-from psyneulink.components.component import Component, ComponentError, function_type, method_type, parameter_keywords
+from psyneulink.components.component import ComponentError, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
-from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ANGLE, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
-    LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+from psyneulink.globals.keywords import GILZENRAT_INTEGRATOR_FUNCTION, ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ANGLE, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, is_distance_metric, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
 from psyneulink.scheduling.timescale import TimeScale
+
+__all__ = [
+    'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM', 'AdditiveParam', 'AGTUtilityIntegrator',
+    'ArgumentTherapy', 'AUTOASSOCIATIVE', 'BackPropagation', 'BogaczEtAl', 'BOUNDS', 'CombinationFunction', 'CombineMeans',
+    'ConstantIntegrator', 'DISABLE', 'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
+    'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON', 'ERROR_MATRIX', 'Exponential', 'ExponentialDist',
+    'FHNIntegrator', 'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
+    'GammaDist', 'get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword', 'Hebbian', 'Integrator',
+    'IntegratorFunction', 'is_Function', 'is_function_type', 'kwBogaczEtAl', 'kwNavarrosAndFuss', 'LCAIntegrator',
+    'LEARNING_ACTIVATION_FUNCTION', 'LEARNING_ACTIVATION_INPUT', 'LEARNING_ACTIVATION_OUTPUT', 'LEARNING_ERROR_OUTPUT',
+    'LearningFunction', 'Linear', 'LinearCombination', 'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next',
+    'ModulatedParam', 'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MultiplicativeParam', 'NavarroAndFuss',
+    'NF_Results', 'NON_DECISION_TIME', 'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator', 'OVERRIDE',
+    'OVERRIDE_PARAM', 'PERTINACITY', 'PROPENSITY', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator', 'SoftMax',
+    'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY', 'THRESHOLD', 'TransferFunction', 'TRESHOLD_VARIABILITY',
+    'UniformDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM', 'WT_MATRIX_SENDERS_DIM'
+]
 
 EPSILON = np.finfo(float).eps
 
@@ -342,11 +340,15 @@ def _is_modulation_param(val):
 
 ModulatedParam = namedtuple('ModulatedParam', 'meta_param, function_param, function_param_val')
 
-from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-@tc.typecheck
-def _get_modulated_param(owner, mod_proj:ModulatoryProjection_Base):
+
+def _get_modulated_param(owner, mod_proj):
     """Return ModulationParam object, function param name and value of param modulated by ModulatoryProjection
     """
+
+    from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+
+    if not isinstance(mod_proj, ModulatoryProjection_Base):
+        raise FunctionError('mod_proj ({0}) is not a ModulatoryProjection_Base'.format(mod_proj))
 
     # Get function "meta-parameter" object specified in the Projection sender's modulation attribute
     function_mod_meta_param_obj = mod_proj.sender.modulation
@@ -555,7 +557,7 @@ class Function_Base(Function):
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1
 
-    paramClassDefaults = Component.paramClassDefaults.copy()
+    paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({
         FUNCTION_OUTPUT_TYPE_CONVERSION: False,  # Enable/disable output type conversion
         FUNCTION_OUTPUT_TYPE:None                # Default is to not convert
@@ -1608,7 +1610,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         # Validate variable and assign to variable, and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
         exponents = self.exponents
         weights = self.weights
         operation = self.operation
@@ -3616,8 +3617,9 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         # Handle list or array for rate specification
         if RATE in request_set:
             rate = request_set[RATE]
+
             if isinstance(rate, (list, np.ndarray)) and not iscompatible(rate, self.instance_defaults.variable):
-                if len(rate) != np.array(self.instance_defaults.variable).size:
+                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign ClassDefaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
@@ -3992,7 +3994,6 @@ class LCAIntegrator(
     """
     LCAIntegrator(                 \
         default_variable=None,  \
-        rate=1.0,               \
         noise=0.0,              \
         initializer,            \
         params=None,            \
@@ -4109,6 +4110,7 @@ class LCAIntegrator(
                  noise=0.0,
                  offset=None,
                  initializer=ClassDefaults.variable,
+                 time_step_size=0.1,
                  params: tc.optional(dict)=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -4118,6 +4120,7 @@ class LCAIntegrator(
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   noise=noise,
+                                                  time_step_size=time_step_size,
                                                   offset=offset,
                                                   params=params)
 
@@ -4169,7 +4172,7 @@ class LCAIntegrator(
 
         # execute noise if it is a function
         noise = self._try_execute_param(self.noise, variable)
-        
+
         # try:
         #     previous_value = self._initializer
         # except (TypeError, KeyError):
@@ -4184,7 +4187,7 @@ class LCAIntegrator(
 
         # Compute function based on integration_type param
 
-        value = rate*previous_value + new_value + noise
+        value = previous_value + (rate*previous_value + new_value)*self.time_step_size # + noise?
 
         adjusted_value = value + offset
         # If this NOT an initialization run, update the old value
@@ -4195,6 +4198,213 @@ class LCAIntegrator(
 
         return adjusted_value
 
+# class LCAIntegrator(
+#     Integrator):  # --------------------------------------------------------------------------------
+#     """
+#     LCAIntegrator(                 \
+#         default_variable=None,  \
+#         noise=0.0,              \
+#         initializer,            \
+#         params=None,            \
+#         owner=None,             \
+#         prefs=None,             \
+#         )
+#
+#     .. _LCAIntegrator:
+#
+#     Integrate current value of `variable <LCAIntegrator.variable>` with its prior value:
+#
+#     `rate <LCAIntegrator.rate>` * `previous_value <LCAIntegrator.previous_value>` + \
+#     `variable <variable.LCAIntegrator.variable>` + \
+#     `noise <LCAIntegrator.noise>`;
+#
+#     Arguments
+#     ---------
+#
+#     default_variable : number, list or np.array : default ClassDefaults.variable
+#         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+#         integrated.
+#
+#     rate : float, list or 1d np.array : default 1.0
+#         specifies the rate of integration.  If it is a list or array, it must be the same length as
+#         `variable <LCAIntegrator.default_variable>` (see `rate <LCAIntegrator.rate>` for details).
+#
+#     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
+#         specifies random value to be added in each call to `function <LCAIntegrator.function>`. (see
+#         `noise <LCAIntegrator.noise>` for details).
+#
+#     initializer float, list or 1d np.array : default 0.0
+#         specifies starting value for integration.  If it is a list or array, it must be the same length as
+#         `default_variable <LCAIntegrator.default_variable>` (see `initializer <LCAIntegrator.initializer>` for details).
+#
+#     params : Optional[Dict[param keyword, param value]]
+#         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+#         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+#         arguments of the constructor.
+#
+#     owner : Component
+#         `component <Component>` to which to assign the Function.
+#
+#     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+#         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+#         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+#
+#
+#     Attributes
+#     ----------
+#
+#     variable : number or np.array
+#         current input value some portion of which (determined by `rate <LCAIntegrator.rate>`) will be
+#         added to the prior value;  if it is an array, each element is independently integrated.
+#
+#     rate : float or 1d np.array
+#         determines the rate of integration based on current and prior values. If it has a single element, it
+#         applies to all elements of `variable <LCAIntegrator.variable>`;  if it has more than one element, each element
+#         applies to the corresponding element of `variable <LCAIntegrator.variable>`.
+#
+#     noise : float, function, list, or 1d np.array
+#         specifies random value to be added in each call to `function <LCAIntegrator.function>`.
+#
+#         If noise is a list or array, it must be the same length as `variable <LCAIntegrator.default_variable>`.
+#
+#         If noise is specified as a single float or function, while `variable <LCAIntegrator.variable>` is a list or array,
+#         noise will be applied to each variable element. In the case of a noise function, this means that the function
+#         will be executed separately for each variable element.
+#
+#
+#         .. note::
+#             In order to generate random noise, we recommend selecting a probability distribution function
+#             (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+#             its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
+#             the noise will simply be an offset that remains the same across all executions.
+#
+#     initializer : float, 1d np.array or list
+#         determines the starting value for integration (i.e., the value to which
+#         `previous_value <LCAIntegrator.previous_value>` is set.
+#
+#         If initializer is a list or array, it must be the same length as `variable <LCAIntegrator.default_variable>`.
+#
+#     previous_value : 1d np.array : default ClassDefaults.variable
+#         stores previous value with which `variable <LCAIntegrator.variable>` is integrated.
+#
+#     owner : Mechanism
+#         `component <Component>` to which the Function has been assigned.
+#
+#     prefs : PreferenceSet or specification dict : Projection.classPreferences
+#         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
+#         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+#         (see :doc:`PreferenceSet <LINK>` for details).
+#
+#     """
+#
+#     componentName = SIMPLE_INTEGRATOR_FUNCTION
+#
+#     class ClassDefaults(Integrator.ClassDefaults):
+#         variable = [[0]]
+#
+#     paramClassDefaults = Function_Base.paramClassDefaults.copy()
+#     # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
+#     paramClassDefaults.update({
+#         NOISE: None,
+#         RATE: None
+#     })
+#
+#     multiplicative_param = RATE
+#     additive_param = OFFSET
+#
+#     @tc.typecheck
+#     def __init__(self,
+#                  default_variable=None,
+#                  rate: parameter_spec=1.0,
+#                  noise=0.0,
+#                  offset=None,
+#                  initializer=ClassDefaults.variable,
+#                  params: tc.optional(dict)=None,
+#                  owner=None,
+#                  prefs: is_pref_set = None,
+#                  context="LCAIntegrator Init"):
+#
+#         # Assign args to params and functionParams dicts (kwConstants must == arg names)
+#         params = self._assign_args_to_param_dicts(rate=rate,
+#                                                   initializer=initializer,
+#                                                   noise=noise,
+#                                                   offset=offset,
+#                                                   params=params)
+#
+#         super().__init__(default_variable=default_variable,
+#                          params=params,
+#                          owner=owner,
+#                          prefs=prefs,
+#                          context=context)
+#
+#         self.previous_value = self.initializer
+#         self.auto_dependent = True
+#
+#     def function(self,
+#                  variable=None,
+#                  params=None,
+#                  time_scale=TimeScale.TRIAL,
+#                  context=None):
+#         """
+#         Return: `variable <Linear.slope>` combined with `previous_value <LCAIntegrator.previous_value>`
+#         according to `rate <LCAIntegrator.rate>` * `previous_value <LCAIntegrator.previous_value>` + `variable
+#         <variable.LCAIntegrator.variable>` + `noise <LCAIntegrator.noise>`;
+#
+#         Arguments
+#         ---------
+#
+#         variable : number, list or np.array : default ClassDefaults.variable
+#            a single value or array of values to be integrated.
+#
+#         params : Optional[Dict[param keyword, param value]]
+#             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+#             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+#             arguments of the constructor.
+#
+#         Returns
+#         -------
+#
+#         updated value of integral : 2d np.array
+#
+#         """
+#
+#         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+#
+#         rate = np.array(self.paramsCurrent[RATE]).astype(float)
+#
+#         if self.offset is None:
+#             offset = 0.0
+#         else:
+#             offset = self.offset
+#
+#         # execute noise if it is a function
+#         noise = self._try_execute_param(self.noise, variable)
+#
+#         # try:
+#         #     previous_value = self._initializer
+#         # except (TypeError, KeyError):
+#         previous_value = self.previous_value
+#
+#         # previous_value = np.atleast_2d(previous_value)
+#         new_value = variable
+#
+#
+#         # if params and VARIABLE in params:
+#         #     new_value = params[VARIABLE]
+#
+#         # Compute function based on integration_type param
+#
+#         value = rate*previous_value + new_value + noise
+#
+#         adjusted_value = value + offset
+#         # If this NOT an initialization run, update the old value
+#         # If it IS an initialization run, leave as is
+#         #    (don't want to count it as an execution step)
+#         if not context or not INITIALIZING in context:
+#             self.previous_value = adjusted_value
+#
+#         return adjusted_value
+#
 class ConstantIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
@@ -4537,6 +4747,7 @@ class AdaptiveIntegrator(
                  rate: parameter_spec = 1.0,
                  noise=0.0,
                  offset= 0.0,
+                 time_step_size=0.02,
                  initializer=ClassDefaults.variable,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -4548,6 +4759,7 @@ class AdaptiveIntegrator(
                                                   initializer=initializer,
                                                   noise=noise,
                                                   offset=offset,
+                                                  time_step_size=time_step_size,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -4673,10 +4885,266 @@ class AdaptiveIntegrator(
 
         previous_value = np.atleast_2d(previous_value)
         new_value = variable
+        # value = (1 - rate) * previous_value + rate * new_value + noise
+        value = (1-rate)*previous_value + rate*variable + noise
+        adjusted_value = value + offset
+        # If this NOT an initialization run, update the old value
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        if not context or not INITIALIZING in context:
+            self.previous_value = adjusted_value
 
-        value = (1 - rate) * previous_value + rate * new_value + noise
+        return adjusted_value
+
+class GilzenratIntegrator(
+    Integrator):  # --------------------------------------------------------------------------------
+    """
+    GilzenratDecisionIntegrator(                 \
+        default_variable=None,          \
+        time_step_size-0.2,             \
+        noise=0.0,                      \
+        scale: parameter_spec = 1.0,    \
+        offset: parameter_spec = 0.0,   \
+        initializer,                    \
+        params=None,                    \
+        owner=None,                     \
+        prefs=None,                     \
+        )
+
+    .. _GilzenratDecisionIntegrator:
+
+    Computes X_i of the decision layer (target and distractor) according to the Gilzenrat model
+    Arguments
+    ---------
+
+    default_variable : number, list or np.array : default ClassDefaults.variable
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
+        specifies random value to be added in each call to `function <GilzenratDecisionIntegrator.function>`. (see
+        `noise <GilzenratDecisionIntegrator.noise>` for details).
+
+    initializer float, list or 1d np.array : default 0.0
+        specifies starting value for integration.  If it is a list or array, it must be the same length as
+        `default_variable <GilzenratDecisionIntegrator.default_variable>` (see `initializer <GilzenratDecisionIntegrator.initializer>` for details).
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
 
 
+    Attributes
+    ----------
+
+    variable : number or np.array
+        current input value some portion of which (determined by `rate <GilzenratDecisionIntegrator.rate>`) will be
+        added to the prior value;  if it is an array, each element is independently integrated.
+
+    noise : float, function, list, or 1d np.array
+        specifies random value to be added in each call to `function <GilzenratDecisionIntegrator.function>`.
+
+        If noise is a list or array, it must be the same length as `variable <GilzenratDecisionIntegrator.default_variable>`.
+
+        If noise is specified as a single float or function, while `variable <GilzenratDecisionIntegrator.variable>` is a list or array,
+        noise will be applied to each variable element. In the case of a noise function, this means that the function
+        will be executed separately for each variable element.
+
+        .. note::
+            In order to generate random noise, we recommend selecting a probability distribution function
+            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
+            the noise will simply be an offset that remains the same across all executions.
+
+    initializer : float, 1d np.array or list
+        determines the starting value for time-averaging (i.e., the value to which
+        `previous_value <GilzenratDecisionIntegrator.previous_value>` is originally set).
+
+        If initializer is a list or array, it must be the same length as `variable <GilzenratDecisionIntegrator.default_variable>`.
+
+    previous_value : 1d np.array : default ClassDefaults.variable
+        stores previous value with which `variable <GilzenratDecisionIntegrator.variable>` is integrated.
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+    """
+
+    componentName = GILZENRAT_INTEGRATOR_FUNCTION
+
+    class ClassDefaults(Integrator.ClassDefaults):
+        variable = [[0]]
+
+    multiplicative_param = RATE
+    additive_param = OFFSET
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
+    paramClassDefaults.update({
+        NOISE: None,
+        RATE: None
+    })
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 rate: parameter_spec = 1.0,
+                 noise=0.0,
+                 offset= 0.0,
+                 time_step_size=0.02,
+                 initializer=ClassDefaults.variable,
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context="GilzenratIntegrator Init"):
+
+        # Assign args to params and functionParams dicts
+        params = self._assign_args_to_param_dicts(rate=rate,
+                                                  initializer=initializer,
+                                                  noise=noise,
+                                                  offset=offset,
+                                                  time_step_size=time_step_size,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+        self.previous_value = self.initializer
+
+        self.auto_dependent = True
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        # Handle list or array for rate specification
+        if RATE in request_set:
+            rate = request_set[RATE]
+            if isinstance(rate, (list, np.ndarray)):
+                if len(rate) != np.array(self.instance_defaults.variable).size:
+                    # If the variable was not specified, then reformat it to match rate specification
+                    #    and assign ClassDefaults.variable accordingly
+                    # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
+                    #       AdaptiveIntegrator's constructor, where that is used as a specification for a function parameter
+                    #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
+                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
+                    #       in that case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]]) before
+                    #       the object itself, thus does not see the array specification for the input.
+                    if self._variable_not_specified:
+                        self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
+                        if self.verbosePref:
+                            warnings.warn(
+                                "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                "must match the length ({}) of the default input ({});  "
+                                "the default input has been updated to match".format(
+                                    len(rate),
+                                    rate,
+                                    self.name,
+                                    np.array(self.instance_defaults.variable).size
+                                ),
+                                self.instance_defaults.variable
+                            )
+                    else:
+                        raise FunctionError(
+                            "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                            "must match the length ({}) of the default input ({})".format(
+                                len(rate),
+                                rate,
+                                self.name,
+                                np.array(self.instance_defaults.variable).size,
+                                self.instance_defaults.variable,
+                            )
+                        )
+                        # OLD:
+                        # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+
+                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
+                        # to have a rate parameter of type ndarray/list
+
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+        if RATE in target_set:
+            if isinstance(target_set[RATE], (list, np.ndarray)):
+                for r in target_set[RATE]:
+                    if r < 0.0 or r > 1.0:
+                        raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
+                                            "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
+                                            format(target_set[RATE], self.name))
+            else:
+                if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
+                    raise FunctionError(
+                        "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
+                        "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
+
+        if NOISE in target_set:
+            self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
+        # if INITIALIZER in target_set:
+        #     self._validate_initializer(target_set[INITIALIZER])
+
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        """
+        Return: some fraction of `variable <AdaptiveIntegrator.variable>` combined with some fraction of `previous_value
+        <AdaptiveIntegrator.previous_value>`.
+
+        Arguments
+        ---------
+
+        variable : number, list or np.array : default ClassDefaults.variable
+           a single value or array of values to be integrated.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        updated value of integral : 2d np.array
+
+        """
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        rate = np.array(self.paramsCurrent[RATE]).astype(float)
+        offset = self.paramsCurrent[OFFSET]
+        # execute noise if it is a function
+        noise = self._try_execute_param(self.noise, variable)
+
+
+        # try:
+        #     previous_value = params[INITIALIZER]
+        # except (TypeError, KeyError):
+        previous_value = self.previous_value
+        
+        previous_value = np.atleast_2d(previous_value)
+        new_value = variable
+
+        # if X equation in gilzenrat paper represents change in state of unit i over time
+        value = previous_value + (-previous_value + variable)*self.time_step_size + noise
         adjusted_value = value + offset
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
@@ -6997,7 +7465,7 @@ class NormalDist(DistributionFunction):
         mean = self.paramsCurrent[DIST_MEAN]
         standard_dev = self.paramsCurrent[STANDARD_DEVIATION]
 
-        result = standard_dev * np.random.normal() + mean
+        result = np.random.normal(mean, standard_dev)
 
         return result
 
@@ -7508,9 +7976,6 @@ class Stability(ObjectiveFunction):
         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
      """
 
-    from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-    from psyneulink.components.states.parameterstate import ParameterState
-
     componentName = STABILITY_FUNCTION
 
     class ClassDefaults(ObjectiveFunction.ClassDefaults):
@@ -7521,7 +7986,7 @@ class Stability(ObjectiveFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=ClassDefaults.variable,
-                 matrix:tc.any(is_matrix, MappingProjection, ParameterState)=HOLLOW_MATRIX,
+                 matrix=HOLLOW_MATRIX,
                  # metric:is_distance_metric=ENERGY,
                  metric:tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric)=ENERGY,
                  transfer_fct:tc.optional(tc.any(function_type, method_type))=None,
@@ -7878,8 +8343,8 @@ class LearningFunction(Function_Base):
     default_learning_rate : numeric
         the value used for the function's `learning_rate <LearningFunction.learning_rate>` parameter if none of the
         following are specified:  the `learning_rate <LearningMechanism.learning_rate>` for the `LearningMechanism` to
-        which the function has been assigned, the `learning_rate <Process_Base.learning_rate>` for any `Process` or
-        the `learning_rate <System_Base.learning_rate>` for any `System` to which that LearningMechanism belongs.
+        which the function has been assigned, the `learning_rate <Process.learning_rate>` for any `Process` or
+        the `learning_rate <System.learning_rate>` for any `System` to which that LearningMechanism belongs.
         The exact form of the value (i.e., whether it is a scalar or array) depends on the function's type.
 
     learning_rate : numeric
@@ -7992,7 +8457,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         the `function <Hebbian.function>`.
 
     activation_function : Function or function : SoftMax
-        the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations in 
+        the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations in
         `variable <Hebbian.variable>`.
 
     learning_rate : float, 1d or 2d np.array
@@ -8002,8 +8467,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d np.array, it is
         multiplied Hadamard (elementwise) by the `variable` <Hebbian.variable>` before calculating the weight change
         matrix;  if it is a 2d np.array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
-        `None`, then the `learning_rate <Process_Base.learning_rate>` specified for the Process to which the `owner
-        <Hebbian.owner>` belongs is used;  and, if that is `None`, then the `learning_rate <System_Base.learning_rate>`
+        `None`, then the `learning_rate <Process.learning_rate>` specified for the Process to which the `owner
+        <Hebbian.owner>` belongs is used;  and, if that is `None`, then the `learning_rate <System.learning_rate>`
         for the System to which it belongs is used. If all are `None`, then the `default_learning_rate
         <Hebbian.default_learning_rate>` is used.
 
@@ -8239,9 +8704,9 @@ class Reinforcement(
     learning_rate : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
         `Process <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's
-        `owner <Reinforcement.owner>` belongs.  If it is `None`, then the `learning_rate <Process_Base.learning_rate>`
+        `owner <Reinforcement.owner>` belongs.  If it is `None`, then the `learning_rate <Process.learning_rate>`
         specified for the Process to which the `owner <Reinforcement.owner>` belongs is used;  and, if that is `None`,
-        then the `learning_rate <System_Base.learning_rate>` for the System to which it belongs is used. If all are
+        then the `learning_rate <System.learning_rate>` for the System to which it belongs is used. If all are
         `None`, then the `default_learning_rate <Reinforcement.default_learning_rate>` is used.
 
     default_learning_rate : float

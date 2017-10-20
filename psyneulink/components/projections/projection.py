@@ -34,7 +34,7 @@ each of which has subtypes that differ in the type of information they transmit,
 
 * `PathwayProjection <PathwayProjection>`
     Used in conjunction with `ProcessingMechanisms <ProcessingMechanism>` to convey information along a processing
-    `pathway <Process_Base.pathway`>.  There is currently one on type of PathwayProjection:
+    `pathway <Process.pathway`>.  There is currently one on type of PathwayProjection:
 
   * `MappingProjection`
       takes the `value <OutputState.value>` of an `OutputState` of a `ProcessingMechanism <ProcessingMechanism>`
@@ -86,7 +86,7 @@ In Context Specification
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Projections can be specified in a number of places where they are required or permitted, for example in the
-specification of a `pathway <Process_Base.pathway>` for a `Process`, where the value of a parameter is specified
+specification of a `pathway <Process.pathway>` for a `Process`, where the value of a parameter is specified
 (e.g., to assign a `ControlProjection`) or where a `MappingProjection` is specified  (to assign it a
 `LearningProjection <MappingProjection_Tuple_Specification>`).  Any of the following can be used to specify a
 Projection in context:
@@ -100,7 +100,7 @@ Projection in context:
       * *MAPPING_PROJECTION* -- if the `sender <MappingProjection.sender>` and/or its `receiver
         <MappingProjection.receiver>` cannot be inferred from the context in which this specification occurs, then its
         `initialization is deferred <MappingProjection_Deferred_Initialization>` until both of those have been
-        determined (e.g., it is used in the specification of a `pathway <Process_Base.pathway>` for a `Process`).
+        determined (e.g., it is used in the specification of a `pathway <Process.pathway>` for a `Process`).
       |
       * *LEARNING_PROJECTION*  (or *LEARNING*) -- this can only be used in the specification of a `MappingProjection`
         (see `tuple <Mapping_Matrix_Specification>` format).  If the `receiver <MappingProjection.receiver>` of the
@@ -113,10 +113,10 @@ Projection in context:
       * *CONTROL_PROJECTION* (or *CONTROL*)-- this can be used when specifying a parameter using the `tuple format
         <ParameterState_Tuple_Specification>`, to create a default `ControlProjection` to the `ParameterState` for that
         parameter.  If the `Component <Component>` to which the parameter belongs is part of a `System`, then a
-        `ControlSignal` is added to the System's `controller <System_Base.controller>` and assigned as the
+        `ControlSignal` is added to the System's `controller <System.controller>` and assigned as the
         ControlProjection's `sender <ControlProjection.sender>`;  otherwise, the ControlProjection's `initialization
         is deferred <ControlProjection_Deferred_Initialization>` until the Mechanism is assigned to a System,
-        at which time the ControlSignal is added to the System's `controller <System_Base.controller>` and assigned
+        at which time the ControlSignal is added to the System's `controller <System.controller>` and assigned
         as its the ControlProjection's `sender <ControlProjection.sender>`.  See `ControlMechanism_Control_Signals` for
         additional details.
       |
@@ -166,7 +166,7 @@ Automatic creation
 
 Under some circumstances Projections are created automatically. For example, a `Process` automatically creates a
 `MappingProjection` between adjacent `ProcessingMechanisms <ProcessingMechanism>` in its `pathway
-<Process_Base.pathway>` if none is specified; and `LearningProjections <LearningProjection>` are automatically created
+<Process.pathway>` if none is specified; and `LearningProjections <LearningProjection>` are automatically created
 when :keyword:`learning` is specified for a `Process <Process_Learning_Sequence>` or `System
 <System_Execution_Learning>`).
 
@@ -313,11 +313,15 @@ import typecheck as tc
 import warnings
 
 from psyneulink.components.component import Component, InitStatus
-from psyneulink.components.shellclasses import Mechanism, Process, Projection, State
+from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.keywords import CONTEXT, CONTROL, CONTROL_PROJECTION, EXPONENT, GATING, GATING_PROJECTION, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, iscompatible, type_match
+
+__all__ = [
+    'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError',
+]
 
 ProjectionRegistry = {}
 
@@ -703,7 +707,7 @@ class Projection_Base(Projection):
                                                                           self.receiver.owner.name,
                                                                           sender_param.__class__.__name__))
                 # it IS the same as the default, so check if sender arg (self.sender) is valid
-                elif not (isinstance(self.sender, (Mechanism, State, Process)) or
+                elif not (isinstance(self.sender, (Mechanism, State, Process_Base)) or
                               # # MODIFIED 12/1/16 OLD:
                               # (inspect.isclass(self.sender) and
                               #      (issubclass(self.sender, Mechanism) or issubclass(self.sender, State)))):

@@ -2,8 +2,9 @@ import numpy as np
 
 from psyneulink.components.functions.function import Linear, Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.system import system, process
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import FULL_CONNECTIVITY_MATRIX, LEARNING, LEARNING_PROJECTION
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.library.mechanisms.processing.objective.comparatormechanism import MSE
@@ -41,7 +42,7 @@ class TestStroop:
             name="Response",
         )
 
-        color_naming_process = process(
+        color_naming_process = Process(
             default_variable=[1, 2.5],
             pathway=[colors, FULL_CONNECTIVITY_MATRIX, response],
             learning=LEARNING_PROJECTION,
@@ -50,7 +51,7 @@ class TestStroop:
             prefs=process_prefs,
         )
 
-        word_reading_process = process(
+        word_reading_process = Process(
             default_variable=[.5, 3],
             pathway=[words, FULL_CONNECTIVITY_MATRIX, response],
             name='Word Reading',
@@ -59,7 +60,7 @@ class TestStroop:
             prefs=process_prefs,
         )
 
-        # s = system(
+        # s = System(
         #     processes=[color_naming_process, word_reading_process],
         #     name='Stroop Model',
         #     targets=[0, 0],
@@ -174,7 +175,7 @@ class TestStroop:
             matrix=HO_Weights_matrix,
         )
 
-        color_naming_process = process(
+        color_naming_process = Process(
             default_variable=[1, 2.5],
             pathway=[colors, CH_Weights, hidden, HO_Weights, response],
             learning=LEARNING,
@@ -183,7 +184,7 @@ class TestStroop:
             prefs=process_prefs,
         )
 
-        word_reading_process = process(
+        word_reading_process = Process(
             default_variable=[.5, 3],
             pathway=[words, WH_Weights, hidden],
             name='Word Reading',
@@ -192,7 +193,7 @@ class TestStroop:
             prefs=process_prefs,
         )
 
-        s = system(
+        s = System(
             processes=[color_naming_process, word_reading_process],
             targets=[20, 20],
             name='Stroop Model',

@@ -29,6 +29,10 @@ TBI:
 
 from psyneulink.components.component import Component
 
+__all__ = [
+    'Function', 'Mechanism', 'Process', 'Projection', 'ShellClass', 'ShellClassError', 'State', 'System',
+]
+
 
 class ShellClassError(Exception):
     def __init__(self, error_value):
@@ -48,7 +52,7 @@ class ShellClass(Component):
 
 # ******************************************* SYSTEM *******************************************************************
 
-class System(ShellClass):
+class System_Base(ShellClass):
 
     def __init__(self,
                  default_variable=None,
@@ -57,8 +61,7 @@ class System(ShellClass):
                  name=None,
                  prefs=None,
                  context=None):
-        if context is None:
-            _attempt_to_call_base_class(self,'system()')
+
         super().__init__(default_variable=default_variable,
                          size=size,
                          param_defaults=param_defaults,
@@ -73,7 +76,7 @@ class System(ShellClass):
 # ****************************************** PROCESS *******************************************************************
 
 
-class Process(ShellClass):
+class Process_Base(ShellClass):
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -81,8 +84,7 @@ class Process(ShellClass):
                  name=None,
                  prefs=None,
                  context=None):
-        if context is None:
-            _attempt_to_call_base_class(self,'process()')
+
         super().__init__(default_variable=default_variable,
                          size=size,
                          param_defaults=param_defaults,
@@ -102,8 +104,6 @@ class Mechanism(ShellClass):
                  name=None,
                  prefs=None,
                  context=None):
-        if context is None:
-            _attempt_to_call_base_class(self,'mechanism()')
         super().__init__(default_variable=default_variable,
                          size=size,
                          param_defaults=param_defaults,

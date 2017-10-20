@@ -33,14 +33,14 @@ term = TransferMechanism(
     prefs={REPORT_OUTPUT_PREF: PreferenceEntry(True,PreferenceLevel.INSTANCE)}
 )
 
-p = process(
+p = Process(
     default_variable = [0],
     pathway = [o, ddm, term],
     name = 'p',
 )
 
 # origin → DDM → terminal
-s = system(
+s = System(
     processes=[p],
     name='s',
 )

@@ -7,93 +7,59 @@
 #
 #
 # ***********************************************  Init ****************************************************************
-import logging
 
-from psyneulink.components.functions.function import BackPropagation, Exponential, FunctionOutputType, Integrator, \
-    Linear, LinearCombination, LinearMatrix, Logistic, SoftMax, UserDefinedFunction
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import process
-from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.globals.keywords import ALL, DEFAULT_MATRIX, EXPONENTS, FULL_CONNECTIVITY_MATRIX, FUNCTION, \
-    FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INITIALIZER, INPUT_STATES, MATRIX, \
-    MAX_INDICATOR, MAX_VAL, MONITOR_FOR_CONTROL, OFFSET, OPERATION, OUTPUT_STATES, PARAMETER_STATES, PROB, SCALE, \
-    WEIGHTS
-from psyneulink.components.shellclasses import System
-from psyneulink.components.system import system
-from psyneulink.library.mechanisms.processing.integrator import ddm
-from psyneulink.library.mechanisms.processing.objective.comparatormechanism import \
-    ComparatorMechanism
-from psyneulink.scheduling.timescale import CentralClock
+'''
+PsyNeuLink is a "block modeling system" for cognitive neuroscience.
 
+Documentation is available at https://princetonuniversity.github.io/PsyNeuLink/
+
+Example scripts are available at https://github.com/PrincetonUniversity/PsyNeuLink/tree/master/Scripts
+
+If you have trouble installing PsyNeuLink, run into any bugs, or have suggestions for development,
+please contact psyneulinkhelp@princeton.edu.
+'''
+
+import logging as _logging
+
+# starred imports to allow user imports from top level
+from . import components
+from . import composition
+from . import globals
+from . import library
+from . import scheduling
+
+from .components import *
+from .composition import *
+from .globals import *
+from .library import *
+from .scheduling import *
+
+__all__ = list(components.__all__)
+__all__.extend(composition.__all__)
+__all__.extend(globals.__all__)
+__all__.extend(library.__all__)
+__all__.extend(scheduling.__all__)
 
 # https://stackoverflow.com/a/17276457/3131666
-class Whitelist(logging.Filter):
+class _Whitelist(_logging.Filter):
     def __init__(self, *whitelist):
-        self.whitelist = [logging.Filter(name) for name in whitelist]
+        self.whitelist = [_logging.Filter(name) for name in whitelist]
 
     def filter(self, record):
         return any(f.filter(record) for f in self.whitelist)
 
 
-class Blacklist(Whitelist):
+class _Blacklist(_Whitelist):
     def filter(self, record):
-        return not Whitelist.filter(self, record)
+        return not _Whitelist.filter(self, record)
 
 
-logging.basicConfig(
-    level=logging.ERROR,
+_logging.basicConfig(
+    level=_logging.ERROR,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-for handler in logging.root.handlers:
-    handler.addFilter(Blacklist(
+for handler in _logging.root.handlers:
+    handler.addFilter(_Blacklist(
         'psyneulink.scheduling.scheduler',
         'psyneulink.scheduling.condition',
     ))
-
-__all__ = ['System',
-           'system',
-           'process',
-           'CentralClock',
-           'TransferMechanism',
-           'IntegratorMechanism',
-           'ddm.py',
-           'EVCControlMechanism',
-           'ComparatorMechanism',
-           'MappingProjection',
-           'ControlProjection',
-           'LearningProjection',
-           'UserDefinedFunction',
-           'LinearCombination',
-           'Linear',
-           'Exponential',
-           'Logistic',
-           'SoftMax',
-           'Integrator',
-           'LinearMatrix',
-           'AGTUtilityIntegrator',
-           'FHNIntegrator',
-           'BackPropagation',
-           'FunctionOutputType',
-           'FUNCTION',
-           'FUNCTION_PARAMS',
-           'INPUT_STATES',
-           'PARAMETER_STATES',
-           'OUTPUT_STATES',
-           'MONITOR_FOR_CONTROL',
-           'INITIALIZER',
-           'WEIGHTS',
-           'EXPONENTS',
-           'OPERATION',
-           'OFFSET',
-           'SCALE',
-           'MATRIX',
-           'IDENTITY_MATRIX',
-           'HOLLOW_MATRIX',
-           'FULL_CONNECTIVITY_MATRIX',
-           'DEFAULT_MATRIX',
-           'ALL',
-           'MAX_VAL',
-           'MAX_INDICATOR',
-           'PROB']

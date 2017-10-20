@@ -31,9 +31,9 @@ Creating an InputState
 
 An InputState can be created by calling its constructor, but in general this is not necessary as a Mechanism can
 usually automatically create the InputState(s) it needs when it is created.  For example, if the Mechanism is
-being created within the `pathway <Process_Base.pathway` of a `Process`, its InputState will be created and  assigned
+being created within the `pathway <Process.pathway` of a `Process`, its InputState will be created and  assigned
 as the `receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding `Mechanism <Mechanism>` in
-the `pathway <Process_Base.pathway>`.
+the `pathway <Process.pathway>`.
 
 .. _InputState_Deferred_Initialization:
 
@@ -290,15 +290,16 @@ import typecheck as tc
 from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism
-from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.components.projections.projection import Projection, _parse_connection_specs
-from psyneulink.globals.keywords import \
-    EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, \
-    MAPPING_PROJECTION, SUM, VARIABLE, WEIGHT
+from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
+
+__all__ = [
+    'InputState', 'InputStateError', 'state_type_keywords',
+]
 state_type_keywords = state_type_keywords.update({INPUT_STATE})
 
 # InputStatePreferenceSet = ComponentPreferenceSet(log_pref=logPrefTypeDefault,
@@ -661,7 +662,7 @@ class InputState(State_Base):
         #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
         #      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
-
+        from psyneulink.components.projections.projection import Projection, _parse_connection_specs
 
         params_dict = {}
 

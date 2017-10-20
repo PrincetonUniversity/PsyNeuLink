@@ -16,7 +16,7 @@ class ScratchPadError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
-# ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
+# ----------------------------------------------- psyneulink -----------------------------------------------------------
 
 #region USER GUIDE
 
@@ -29,11 +29,11 @@ class ScratchPadError(Exception):
 # input_layer = TransferMechanism(default_variable=[0,0,0,0,0])
 # hidden_layer = TransferMechanism(default_variable=[0,0], function=Logistic)
 # output_layer = TransferMechanism(default_variable=[0,0,0,0,0], function=Logistic)
-# # my_process = process(pathway=[input_layer, hidden_layer, output_layer], target=[0,0,0,0,0], learning=LEARNING)
-# my_process = process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
+# # my_process = Process(pathway=[input_layer, hidden_layer, output_layer], target=[0,0,0,0,0], learning=LEARNING)
+# my_process = Process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
 #
-# # my_system = system(processes=[my_process], targets=[0,0,0,0,0])
-# my_system = system(processes=[my_process])
+# # my_system = System(processes=[my_process], targets=[0,0,0,0,0])
+# my_system = System(processes=[my_process])
 # # my_system.show_graph(show_learning=True, direction='TB')
 # my_system.show_graph(show_control=True, direction='TB')
 # # MappingProjection(sender=output_layer,
@@ -59,10 +59,10 @@ class ScratchPadError(Exception):
 #                                        function=Logistic,
 #                                        name='OUTPUT')
 # decision_mech = DDM(name='DECISION')
-# colors_process = process(pathway=[colors_input_layer, FULL_CONNECTIVITY_MATRIX, output_layer], name='COLOR PROCESS')
-# words_process = process(pathway=[words_input_layer, FULL_CONNECTIVITY_MATRIX, output_layer], name='WORD PROCESS')
-# decision_process = process(pathway=[output_layer, FULL_CONNECTIVITY_MATRIX, decision_mech], name='DECISION_PROCESS')
-# my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
+# colors_process = Process(pathway=[colors_input_layer, FULL_CONNECTIVITY_MATRIX, output_layer], name='COLOR PROCESS')
+# words_process = Process(pathway=[words_input_layer, FULL_CONNECTIVITY_MATRIX, output_layer], name='WORD PROCESS')
+# decision_process = Process(pathway=[output_layer, FULL_CONNECTIVITY_MATRIX, decision_mech], name='DECISION_PROCESS')
+# my_simple_Stroop = System(processes=[colors_process, words_process, decision_process])
 #
 
 # VERSION 2:
@@ -71,15 +71,15 @@ class ScratchPadError(Exception):
 # words_input_layer = TransferMechanism(default_variable=[0,0], function=Logistic, name='WORDS INPUT')
 # output_layer = TransferMechanism(default_variable=[0], name='OUTPUT')
 # decision_mech = DDM(name='DECISION')
-# colors_process = process(pathway=[colors_input_layer, differencing_weights, output_layer],
+# colors_process = Process(pathway=[colors_input_layer, differencing_weights, output_layer],
 #                          target=[0],
 #                          name='COLOR PROCESS')
-# words_process = process(pathway=[words_input_layer, differencing_weights, output_layer],
+# words_process = Process(pathway=[words_input_layer, differencing_weights, output_layer],
 #                         target=[0],
 #                         name='WORD PROCESS')
-# decision_process = process(pathway=[output_layer, decision_mech],
+# decision_process = Process(pathway=[output_layer, decision_mech],
 #                            name='DECISION PROCESS')
-# my_simple_Stroop = system(processes=[colors_process, words_process],
+# my_simple_Stroop = System(processes=[colors_process, words_process],
 #                           targets=[0])
 #
 # my_simple_Stroop.show_graph(direction='LR')
@@ -118,32 +118,32 @@ class ScratchPadError(Exception):
 
 # my_mech = Mechanism_Base()
 
-# my_process = process()
+# my_process = Process()
 # print(my_process.name)
-# my_process = process()
+# my_process = Process()
 # print(my_process.name)
-# my_process = process()
+# my_process = Process()
 # print(my_process.name)
-# my_process = process()
+# my_process = Process()
 # print(my_process.name)
 
 # my_process = Process()
 # print(my_process.name)
 
-# my_process = Process_Base()
+# my_process = Process()
 # print(my_process.name)
-# my_process = Process_Base()
+# my_process = Process()
 # print(my_process.name)
-# my_process = Process_Base()
+# my_process = Process()
 # print(my_process.name)
 
-# my_sys = system()
+# my_sys = System()
 # print(my_sys.name)
-# my_sys = system()
+# my_sys = System()
 # print(my_sys.name)
-# my_sys = system()
+# my_sys = System()
 # print(my_sys.name)
-# my_sys = system()
+# my_sys = System()
 # print(my_sys.name)
 
 # my_sys = System()
@@ -363,9 +363,9 @@ class ScratchPadError(Exception):
 # My_Mech_B = TransferMechanism(function=Linear,
 #                              output_states=[RESULT, MEAN])
 #
-# Process_A = process(pathway=[My_Mech_A])
-# Process_B = process(pathway=[My_Mech_B])
-# My_System = system(processes=[Process_A, Process_B])
+# Process_A = Process(pathway=[My_Mech_A])
+# Process_B = Process(pathway=[My_Mech_B])
+# My_System = System(processes=[Process_A, Process_B])
 #
 # My_EVC_Mechanism = EVCControlMechanism(system=My_System,
 #                                 monitor_for_control=[My_Mech_A.output_states[RESULT],
@@ -380,10 +380,10 @@ class ScratchPadError(Exception):
 # My_Mech_A = TransferMechanism(function=Logistic)
 # My_Mech_B = TransferMechanism(function=Linear,
 #                              output_states=[RESULT, MEAN])
-# Process_A = process(pathway=[My_Mech_A])
-# Process_B = process(pathway=[My_Mech_B])
+# Process_A = Process(pathway=[My_Mech_A])
+# Process_B = Process(pathway=[My_Mech_B])
 #
-# My_System = system(processes=[Process_A, Process_B],
+# My_System = System(processes=[Process_A, Process_B],
 #                                 monitor_for_control=[My_Mech_A.output_states[RESULT],
 #                                                      My_Mech_B.output_states[MEAN]],
 #                                 control_signals=[(GAIN, My_Mech_A),
@@ -453,7 +453,7 @@ class ScratchPadError(Exception):
 # # # transfer_mechanism_3 = TransferMechanism()
 # # transfer_mechanism_3 = TransferMechanism(function=Linear(slope=3))
 # #
-# # # my_process = process(pathway=[transfer_mechanism_1,
+# # # my_process = Process(pathway=[transfer_mechanism_1,
 # # #                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
 # # #                                                                                     Modulation.OVERRIDE)}}),
 # # #                               transfer_mechanism_2])
@@ -506,7 +506,7 @@ class ScratchPadError(Exception):
 # transfer_mechanism_3 = TransferMechanism(function=Linear(slope=1))
 #
 # transfer_mechanism_1.execute()
-# # my_process = process(pathway=[transfer_mechanism_1,
+# # my_process = Process(pathway=[transfer_mechanism_1,
 # #                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
 # #                                                                                     Modulation.OVERRIDE)}}),
 # #                               transfer_mechanism_2])
@@ -527,7 +527,7 @@ class ScratchPadError(Exception):
 # # print(transfer_mechanism_3.run(inputs=[1.0],
 # #                                num_trials=3))
 #
-# my_process = process(pathway=[transfer_mechanism_1,
+# my_process = Process(pathway=[transfer_mechanism_1,
 #                                # {PARAMETER_STATE_PARAMS:{SLOPE:2}}),
 #                               transfer_mechanism_3])
 #
@@ -542,7 +542,7 @@ class ScratchPadError(Exception):
 #
 #
 #
-# # transfer_process = process(pathway = [transfer_mechanism_1])
+# # transfer_process = Process(pathway = [transfer_mechanism_1])
 # # print(transfer_process.execute())
 # print ('Done')
 #
@@ -624,10 +624,10 @@ class ScratchPadError(Exception):
 # c = TransferMechanism(name='c')
 # d = TransferMechanism(name='d')
 #
-# p1 = process(pathway=[a, b, c], name='p1')
-# p2 = process(pathway=[a, b, d], name='p2')
+# p1 = Process(pathway=[a, b, c], name='p1')
+# p2 = Process(pathway=[a, b, d], name='p2')
 #
-# s = system(
+# s = System(
 #     processes=[p1, p2],
 #     name='Branch System',
 #     initial_values={a: [1, 1]},
@@ -645,7 +645,7 @@ class ScratchPadError(Exception):
 # c = TransferMechanism(name='c')
 # d = TransferMechanism(name='d')
 #
-# p1 = process(pathway=[a,
+# p1 = Process(pathway=[a,
 #                       # MappingProjection(matrix=(RANDOM_CONNECTIVITY_MATRIX, LEARNING),
 #                       #                   name="MP-1"),
 #                       b,
@@ -656,7 +656,7 @@ class ScratchPadError(Exception):
 #              # learning=LEARNING,
 #              name='p1')
 #
-# # s = system(
+# # s = System(
 # #     processes=[p1],
 # #     name='Double Learning System',
 # #     # initial_values={a: [1, 1]},
@@ -726,17 +726,17 @@ class ScratchPadError(Exception):
 #                            name='Reward')
 #
 # # Processes:
-# TaskExecutionProcess = process(
+# TaskExecutionProcess = Process(
 #     default_variable=[0],
 #     pathway=[Input, IDENTITY_MATRIX, Decision],
 #     name = 'TaskExecutionProcess')
-# RewardProcess = process(
+# RewardProcess = Process(
 #     default_variable=[0],
 #     pathway=[Reward],
 #     name = 'RewardProcess')
 #
 # # System:
-# mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
+# mySystem = System(processes=[TaskExecutionProcess, RewardProcess],
 #                   controller=EVCControlMechanism(objective_mechanism=ObjectiveMechanism(monitored_output_states=[
 #                                                      Reward,
 #                                                      Decision.output_states[Decision.PROBABILITY_UPPER_THRESHOLD],
@@ -782,10 +782,10 @@ class ScratchPadError(Exception):
 # print(a.execute([2,2]))
 #
 #
-# p1 = process(pathway=[a, c], name='p1')
-# p2 = process(pathway=[b, c], name='p2')
+# p1 = Process(pathway=[a, c], name='p1')
+# p2 = Process(pathway=[b, c], name='p2')
 #
-# s = system(processes=[p1, p2],
+# s = System(processes=[p1, p2],
 #            name='Convergent System')
 #
 # def show_trial_header():
@@ -812,10 +812,10 @@ class ScratchPadError(Exception):
 # fb1 = MappingProjection(sender=c, receiver=b, name='fb1')
 # fb2 = MappingProjection(sender=d, receiver=e, name = 'fb2')
 #
-# p1 = process(pathway=[a, b, c, d], name='p1')
-# p2 = process(pathway=[e, b, c, d], name='p2')
+# p1 = Process(pathway=[a, b, c, d], name='p1')
+# p2 = Process(pathway=[e, b, c, d], name='p2')
 #
-# a = system(processes=[p1, p2], name='systsem')
+# a = System(processes=[p1, p2], name='systsem')
 #
 # a.show()
 #
@@ -948,7 +948,7 @@ class ScratchPadError(Exception):
 #
 # my_transfer = TransferMechanism()
 #
-# x = Process_Base(params={PATHWAY:[my_transfer]})
+# x = Process(params={PATHWAY:[my_transfer]})
 #
 # for i in range(100):
 #     x.execute([1])
@@ -1090,6 +1090,76 @@ class ScratchPadError(Exception):
 
 #endregion
 
+#region TEST Stroop Model @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+print ("TEST Stroop Model")
+
+import psyneulink as pnl
+import numpy as np
+from psyneulink import System, Process, TransferMechanism, DDM, MappingProjection, Linear, Logistic
+
+# FROM BASICS AND SAMPLER -------------------------------------
+
+# # Construct the Mechanisms:
+# colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
+# words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
+# output_layer = TransferMechanism(size=1, name='OUTPUT')
+# decision_mech = DDM(name='DECISION')
+#
+# # Define a MappingProjection from each of the input layers to the output_layer
+# input_to_output_weights = np.array([[1], [-1]])
+#
+# # Construct the Processes:
+# colors_process = process(pathway=[colors_input_layer, input_to_output_weights, output_layer])
+# words_process = process(pathway=[words_input_layer, input_to_output_weights, output_layer])
+# decision_process = process(pathway=[output_layer, decision_mech])
+#
+# # Construct the System:
+# my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
+
+# # SIMPLE STROOP ---------------
+#
+# colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
+# words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
+# output_layer = TransferMechanism(size=1, name='OUTPUT')
+# decision_mech = DDM(name='DECISION')
+#
+# input_to_output_weights = MappingProjection(matrix=np.array([[1], [-1]]))
+#
+# colors_process = process(pathway=[colors_input_layer, input_to_output_weights, output_layer])
+# words_process = process(pathway=[words_input_layer, input_to_output_weights, output_layer])
+# decision_process = process(pathway=[output_layer, decision_mech])
+#
+# my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
+
+# # FULL STROOP ---------------
+#
+color_input = TransferMechanism(size=2, function=Linear, name='COLOR INPUT')
+word_input = TransferMechanism(size=2, function=Linear, name='WORD INPUT')
+task_input = TransferMechanism(size=2, function=Linear, name='TASK INPUT')
+color_hidden = TransferMechanism(size=2, function=Logistic, name='COLOR HIDDEN')
+word_hidden = TransferMechanism(size=2, function=Logistic, name='WORD HIDDEN')
+output = TransferMechanism(size=1, function=Linear, name='OUTPUT')
+decision_mech = DDM(name='DECISION')
+
+color_weights = MappingProjection(matrix=np.array([[1, -1], [-1, 1]]), name='COLOR_WEIGHTS')
+word_weights = MappingProjection(matrix=np.array([[1, -1], [-1, 1]]), name='WORD_WEIGHTS')
+output_weights = np.array([[1], [-1]])
+color_task_weights = MappingProjection(matrix=np.array([[1, 1], [0, 0]]), name='COLOR_TASK_WEIGHTS')
+word_task_weights = MappingProjection(matrix=np.array([[0, 0], [1, 1]]), name='WORD_TASK_WEIGHTS')
+
+color_process = Process(pathway=[color_input, color_weights, color_hidden, output_weights, output], name="COLORS")
+word_process = Process(pathway=[word_input, word_weights, word_hidden, output_weights, output], name="WORDS")
+color_task_process = Process(pathway=[task_input, color_task_weights, color_hidden], name="COLOR TASK")
+word_task_process = Process(pathway=[task_input, word_task_weights, word_hidden], name="WORD TASK")
+decision_process = Process(pathway=[output, decision_mech], name="DECISION")
+
+my_simple_Stroop = System(processes=[color_process, word_process,
+                                     color_task_process, word_task_process, decision_process])
+my_simple_Stroop.show_graph()
+
+
+# endregion
+
 # ----------------------------------------------- MECHANISM ------------------------------------------------------------
 
 # # region TEST RecurrentTransferMechanism @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -1190,15 +1260,15 @@ class ScratchPadError(Exception):
 #
 # # THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
 # #                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection
-# my_process = process(pathway=[my_auto],
+# my_process = Process(pathway=[my_auto],
 #
 # # THIS DOESN'T WORK, AS Process._instantiate_pathway() ONLY CHECKS PROJECTIONS AFTER ENCOUNTERING ANOTHER MECHANISM
-# # my_process = process(pathway=[my_auto, my_auto_matrix],
+# # my_process = Process(pathway=[my_auto, my_auto_matrix],
 #                      target=[0,0,0],
 #                      learning=LEARNING
 #                      )
 #
-# # my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
+# # my_process = Process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
 # #                      learning=LEARNING,
 # #                      target=[0,0,0])
 #
@@ -1212,7 +1282,7 @@ class ScratchPadError(Exception):
 #
 # # print(my_process.run(inputs=input_list, targets=target_list, num_trials=5))
 #
-# my_system = system(processes=[my_process],
+# my_system = System(processes=[my_process],
 #                    targets=[0,0,0])
 #
 # print(my_system.run(inputs=input_list,
@@ -1227,7 +1297,7 @@ class ScratchPadError(Exception):
 #
 # my_mech = TransferMechanism(function=Linear())
 #
-# my_process = process(pathway=[my_mech])
+# my_process = Process(pathway=[my_mech])
 #
 # my_mech.reportOutputPref = False
 #
@@ -1248,7 +1318,7 @@ class ScratchPadError(Exception):
 #                         receiver=my_mech2,
 #                         matrix=np.ones((1,1)))
 #
-# my_process = process(pathway=[my_mech, my_mech2])
+# my_process = Process(pathway=[my_mech, my_mech2])
 #
 #
 # my_process.execute()
@@ -1298,7 +1368,7 @@ class ScratchPadError(Exception):
 #                         matrix=IDENTITY_MATRIX
 #                        )
 #
-# Stroop_process = process(default_variable=[[1,2.5]],
+# Stroop_process = Process(default_variable=[[1,2.5]],
 #                          pathway=[color_naming, word_reading, verbal_response])
 #
 #
@@ -1651,7 +1721,7 @@ my_simple_Stroop = system(processes=[colors_process, words_process,
 #         self.tuples_list = [('mech 1', 1), ('mech 2', 2)]
 #         self.mech_list = mech_list(self)
 #
-# x = system()
+# x = System()
 # print (x.mech_list[1])
 #
 #endregion
@@ -1767,8 +1837,8 @@ my_simple_Stroop = system(processes=[colors_process, words_process,
 #
 # print ('terminal_mechs: ', terminal_mechs )
 
-# p2 = process(pathway=[e, c, b, d], name='p2')
-# p1e = process(pathway=[a, b, c, d], name='p1e')
+# p2 = Process(pathway=[e, c, b, d], name='p2')
+# p1e = Process(pathway=[a, b, c, d], name='p1e')
 
 # graph = {"B": {"A"},
 #          "C": {"B"},

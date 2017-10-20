@@ -336,12 +336,17 @@ import typecheck as tc
 
 from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination, is_function_type
-from psyneulink.components.projections.projection import _parse_connection_specs
+from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.keywords import CALCULATE, INDEX, MAPPING_PROJECTION, MEAN, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import UtilitiesError, iscompatible, type_match
+
+__all__ = [
+    'make_readonly_property', 'OUTPUTS', 'OutputState', 'OutputStateError', 'PRIMARY_OUTPUT_STATE', 'SEQUENTIAL',
+    'standard_output_states', 'StandardOutputStates', 'StandardOutputStatesError', 'state_type_keywords',
+]
 
 state_type_keywords = state_type_keywords.update({OUTPUT_STATE})
 
@@ -722,6 +727,7 @@ class OutputState(State_Base):
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
         from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 
         # Treat as ModulatoryProjection spec if it is a ModulatoryProjection, ModulatorySignal or AdaptiveMechanism
         modulatory_projections = [proj for proj in projections
@@ -772,7 +778,8 @@ class OutputState(State_Base):
         #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
         #      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
-
+        from psyneulink.components.projections.projection import _parse_connection_specs
+        from psyneulink.components.system import MonitoredOutputStatesOption
 
         params_dict = {}
 

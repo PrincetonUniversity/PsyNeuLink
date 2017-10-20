@@ -63,14 +63,14 @@ Task_Hidden_Weights = MappingProjection(name='Task-Hidden Weights',
 process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
-StimulusResponseProcess = process(
+StimulusResponseProcess = Process(
     pathway=[Stimulus_Layer, Stimulus_Hidden_Weights, Hidden_Layer, Hidden_Output_Weights, Output_Layer],
     prefs = process_prefs,
     learning=LearningProjection,
     target = [1, 0],
     name = 'Stimulus Response Process')
 
-TaskHiddenProcess = process(
+TaskHiddenProcess = Process(
     pathway=[Task_Layer, Task_Hidden_Weights, Hidden_Layer],
     prefs = process_prefs,
     learning=LearningProjection,
@@ -89,7 +89,7 @@ stim_list_dict = {Stimulus_Layer:[1, 0, 1, 0],
 
 target_list_dict = {Output_Layer:[1, 0]}
 
-stroop_mode = system(processes=[StimulusResponseProcess, TaskHiddenProcess],
+stroop_mode = System(processes=[StimulusResponseProcess, TaskHiddenProcess],
                   name='stroop_model',
                   targets= [1, 0],
                   prefs=system_prefs)

@@ -118,7 +118,7 @@ Execution
 ---------
 
 A GatingMechanism executes in the same way as a `ProcessingMechanism <ProcessingMechanism>`, based on its place in the
-System's `graph <System_Base.graph>`.  Because `GatingProjections <GatingProjection>` are likely to introduce cycles
+System's `graph <System.graph>`.  Because `GatingProjections <GatingProjection>` are likely to introduce cycles
 (recurrent connection loops) in the graph, the effects of a GatingMechanism and its projections will generally not be
 applied in the first `TRIAL` (see `initialization <System_Execution_Input_And_Initialization>` for a description of
 how to configure the initialization of feedback loops in a System; also see `Scheduler` for a description of detailed
@@ -153,7 +153,6 @@ from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.components.projections.projection import _validate_receiver
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal, _parse_gating_signal_spec
 from psyneulink.components.states.state import State_Base, _instantiate_state
@@ -163,6 +162,10 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
+
+__all__ = [
+    'GatingMechanism', 'GatingMechanismError', 'GatingMechanismRegistry'
+]
 
 GatingMechanismRegistry = {}
 
@@ -409,6 +412,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         """
 
         from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
+        from psyneulink.components.projections.projection import _validate_receiver
 
         # EXTEND gating_policy TO ACCOMMODATE NEW GatingSignal -------------------------------------------------
         #        also used to determine constraint on GatingSignal value
