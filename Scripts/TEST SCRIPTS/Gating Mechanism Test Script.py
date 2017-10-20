@@ -3,9 +3,9 @@ import numpy as np
 from psyneulink.components.functions.function import ConstantIntegrator, Logistic
 from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import process
+from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.system import system
+from psyneulink.components.system import System
 from psyneulink.globals.keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZER, LEARNING, RATE, SOFT_CLAMP, VALUE
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.scheduling.timescale import CentralClock
@@ -85,7 +85,7 @@ Output_Weights = MappingProjection(
     matrix=Output_Weights_matrix
 )
 
-z = process(
+z = Process(
     # default_variable=[0, 0],
     size=2,
     pathway=[
@@ -115,7 +115,7 @@ z = process(
     }
 )
 
-g = process(
+g = Process(
     default_variable=[1.0],
     pathway=[Gating_Mechanism]
 )
@@ -144,7 +144,7 @@ def show_target():
     print('- Middle 2: \n', Hidden_Layer_2.value)
     print('- Output:\n', Output_Layer.value)
 
-s = system(
+s = System(
     processes=[z, g],
     targets=[0, 0, 1],
     learning_rate=1.0
