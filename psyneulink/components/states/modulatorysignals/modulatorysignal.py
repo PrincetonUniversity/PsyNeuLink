@@ -427,7 +427,7 @@ class ModulatorySignal(OutputState):
     def _assign_default_mod_sig_name(self):
 
         # If the name is not a default name for the class, return
-        if not self.__class__.__name__ + '-' in self.name:
+        if not self.__class__.__name__ + '-' in self.name or len(self.efferents)==0:
             return
 
         # Construct default name
@@ -435,6 +435,7 @@ class ModulatorySignal(OutputState):
         receiver_owner_names = []
         receiver_owner_receiver_names = []
         class_name = self.__class__.__name__
+
         for projection in self.efferents:
             receiver = projection.receiver
             receiver_name = receiver.name

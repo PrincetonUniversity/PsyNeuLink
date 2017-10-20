@@ -1009,7 +1009,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         try:
             self.control_projections.extend(control_signal.efferents)
         except AttributeError:
-            self.control_projections = control_signal.efferents
+            self.control_projections = control_signal.efferents.copy()
         # MODIFIED 10/3/17 END
 
         # Update control_signal_costs to accommodate instantiated Projection
