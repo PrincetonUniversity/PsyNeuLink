@@ -389,6 +389,14 @@ class ModulatorySignal(OutputState):
         if owner and self._modulation is None:
             self._modulation = self.modulation or owner.modulation
 
+    def _instantiate_attributes_after_function(self, context=None):
+        # If owner is specified but modulation has not been specified, assign to owner's value
+
+        super()._instantiate_attributes_after_function(context=context)
+        if self.owner and self._modulation is None:
+            self._modulation = self.modulation or self.owner.modulation
+
+
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
 

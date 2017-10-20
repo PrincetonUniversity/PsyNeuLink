@@ -639,7 +639,7 @@ class State_Base(State):
             except (KeyError, NameError):
                 pass
             try:
-                projections = kargs[projections]
+                projections = kargs[PROJECTIONS]
             except (KeyError, NameError):
                 pass
             try:
@@ -702,8 +702,8 @@ class State_Base(State):
 
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
         # FIX: 10/3/17 - ??MOVE TO COMPOSITION THAT IS IMPELEMENTED (INSTEAD OF BEING HANDLED BY STATE ITSELF)
-        if projections in self.paramsCurrent and self.paramsCurrent[projections]:
-            self._instantiate_projections(self.paramsCurrent[projections], context=context)
+        if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
+            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
         else:
             # No projections specified, so none will be created here
             # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
@@ -807,7 +807,7 @@ class State_Base(State):
             projections = request_set[PROJECTIONS]
             if not isinstance(projections, list):
                 projections = [projections]
-                request_set[projections] = projections
+                request_set[PROJECTIONS] = projections
         else:
             # If no projections, ignore (none will be created)
             projections = None
@@ -1137,7 +1137,7 @@ class State_Base(State):
         # - calls _parse_projection_spec for projection_spec;
         # - validates that Projection specification is compatible with its receiver and self
         # - returns ConnectionTuple with Projection specification dictionary for projection_spec
-        connection_tuples = _parse_connection_specs(self.__class__, self.owner, projection_list)
+        connection_tuples = _parse_connection_specs(self.__class__, self.owner, receiver_list)
 
         # For Projection in ConnectionTuple:
         # - instantiate the Projection if necessary, and initialize if possible
@@ -1157,13 +1157,13 @@ class State_Base(State):
                                         State.__name__, Mechanism.__name__, ConnectionTuple.__name__))
 
             if isinstance(receiver, Mechanism):
-                from psyneulink.components.States.InputState import InputState
-                from psyneulink.components.States.ParameterState import ParameterState
+                from psyneulink.components.states.inputstate import InputState
+                from psyneulink.components.states.parameterstate import ParameterState
 
                 # If receiver is a Mechanism and Projection is a MappingProjection,
                 #    use primary InputState (and warn if verbose is set)
                 if isinstance(default_projection_type, MappingProjection):
-                    if self.verbosePref:
+                    if self.owner.verbosePref:
                         warnings.warn("Receiver {} of {} from {} is a {} and {} is a {}, "
                                       "so its primary {} will be used".
                                       format(receiver, projection_spec, self.name, Mechanism.__name__,
@@ -1213,12 +1213,11 @@ class State_Base(State):
             # Projection specification dictionary or None:
             elif isinstance(projection_spec, (dict, None)):
 
-                # If Projection was not specified, create default Projection specification dict
-                if projection_spec is None:
-                    projection_spec = {SENDER: self, RECEIVER: receiver}
-
                 # Instantiate Projection from specification dict
                 projection_type = projection_spec.pop(PROJECTION_TYPE, None) or default_projection_type
+                # If Projection was not specified, create default Projection specification dict
+                if not (projection_spec or len(projection_spec)):
+                    projection_spec = {SENDER: self, RECEIVER: receiver}
                 projection = projection_type(**projection_spec)
                 projection.receiver = projection.receiver or receiver
                 proj_recvr = projection.receiver
@@ -1235,7 +1234,7 @@ class State_Base(State):
                                  format(Projection.__name__,projection_spec,self.name,self.owner.name,rcvr_str))
 
             # Validate that receiver and projection_spec receiver are now the same
-            receiver = receiver or proj_recvr  # If receiver was not specified, assign it receiver from projection_spec
+            receiver = proj_recvr or receiver  # If receiver was not specified, assign it receiver from projection_spec
             if proj_recvr and receiver and not proj_recvr is receiver:
                 # Note: if proj_recvr is None, it will be assigned under handling of deferred_init below
                 raise StateError("Receiver ({}) specified for Projection ({}) "

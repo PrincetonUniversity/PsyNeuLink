@@ -309,8 +309,8 @@ class ControlProjection(ModulatoryProjection_Base):
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if (sender is None or sender.init_status is InitStatus.DEFERRED_INITIALIZATION or
-                inspect.isclass(receiver) or receiver is None or receiver.init_status is
-            InitStatus.DEFERRED_INITIALIZATION):
+                inspect.isclass(receiver) or receiver is None or
+                    receiver.init_status is InitStatus.DEFERRED_INITIALIZATION):
             self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
