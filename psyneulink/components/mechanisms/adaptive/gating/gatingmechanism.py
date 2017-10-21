@@ -435,119 +435,142 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # PARSE gating_signal SPECIFICATION -----------------------------------------------------------------------
 
-        gating_projections = []
-        gating_signal_params = {}
+        # # FIX: *********************************************************************************
 
-        # FIX: 10/3/17 - THIS NO LONGER BE NEEDED;
-        # FIX:      MIMIC ControlSignal
-        # FIX:      SHOULD JUST CALL: _instantiate_state(owner=self, state_type=GatingSignal, state_spec=gating_signal)
-        # FIX:      _instantiate_state WILL CALL _parse_state_specific_specs TO HANDLE STATE-SPECIFIC SPECS
-        gating_signal_spec = _parse_gating_signal_spec(owner=self, state_spec=gating_signal)
+        from psyneulink.components.states.state import _instantiate_state
+        # Parses control_signal specifications (in call to State._parse_state_spec)
+        #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
+        control_signal = _instantiate_state(state_type=GatingSignal,
+                                            owner=self,
+                                            reference_value=defaultGatingPolicy,
+                                            modulaton=self.modulation,
+                                            state_spec=gating_signal)
 
-        # Specification is a GatingSignal (either passed in directly, or parsed from tuple above)
-        if isinstance(gating_signal_spec[GATING_SIGNAL], GatingSignal):
-            gating_signal = gating_signal_spec[GATING_SIGNAL]
-            # Deferred Initialization, so assign owner, name, and initialize
-            if gating_signal.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                # FIX 5/23/17:  IMPLEMENT DEFERRED_INITIALIZATION FOR GatingSignal
-                # CALL DEFERRED INIT WITH SELF AS OWNER ??A˝ND NAME FROM gating_signal_dict?? (OR WAS IT SPECIFIED)
-                # OR ASSIGN NAME IF IT IS DEFAULT, USING GATING_SIGNAL_DICT??
-                # # MODIFIED 7/7/17 OLD:
-                # pass
-                # MODIFIED 7/7/17 NEW:
-                # default_name = self.name + '_' + GatingSignal.__name__
-                default_name = gating_signal_spec[NAME] + '_' + GatingSignal.__name__
-                gating_signal.init_args[OWNER] = self
-                gating_signal.init_args[NAME] = gating_signal.init_args[NAME] or default_name
-                # control_signal_spec.init_args[REFERENCE_VALUE] = output_state_reference_value
-                gating_signal.init_args[REFERENCE_VALUE] = defaultGatingPolicy
-                gating_signal._deferred_init(context=context)
-                # MODIFIED 7/7/17 END
-            elif not gating_signal.owner is self:
-                raise GatingMechanismError("Attempt to assign GatingSignal to {} ({}) that is already owned by {}".
-                                            format(self.name, gating_signal_spec.name, gating_signal_spec.owner.name))
-            gating_signal_name = gating_signal.name
-            gating_projections = gating_signal.efferents
+        # # FIX: *********************************************************************************
 
-        # Instantiate OutputState for GatingSignal
-        else:
-            # FIX: 10/3/17 - THIS SHOULD ALL BE HANDLED IN STATE_instantiate_state
-            gating_signal_name = gating_signal_spec[NAME]
-            # FIX: ??CALL REGISTRY FOR NAME HERE (AS FOR OUTPUTSTATE IN MECHANISM?? -
-            # FIX:  OR IS THIS DONE AUTOMATICALLY IN _instantiate_state??)
-            # MODIFIED 7/8/17 OLD:
-            # if gating_signal_name in [gs.name for gs in self.gating_signals if isinstance(gs, GatingSignal)]:
-            #     gating_signal_name = gating_signal_name + '-' + repr(len(self.gating_signals))
-            # MODIFIED 7/8/17 NEW:
-            # Get names of any instantiated (or deferred_init) GatingSignals
-            existing_names = []
-            for gs in self.gating_signals:
-                if isinstance(gs, GatingSignal):
-                    if gs.init_status is InitStatus.DEFERRED_INITIALIZATION and gs.init_args[NAME]:
-                        existing_names.append(gs.init_args[NAME])
-                    else:
-                        existing_names.append(gs.name)
-            # Add index to name of GatingSignal if its name is already used
-            if gating_signal_name in existing_names:
-                gating_signal_name = gating_signal_name + '-' + repr(len(self.gating_signals))
-            # MODIFIED 7/8/17 END
 
-            # Get constraint for OutputState's value
-            #    - get GatingMechanism's value
-            self._update_value(context=context)
-            # - get constraint for OutputState's value
-            output_state_reference_value = self.gating_policy[output_state_index]
+        # gating_projections = []
+        # gating_signal_params = {}
+        #
+        # # FIX: 10/3/17 - THIS NO LONGER BE NEEDED;
+        # # FIX:      MIMIC ControlSignal
+        # # FIX:      SHOULD JUST CALL: _instantiate_state(owner=self, state_type=GatingSignal, state_spec=gating_signal)
+        # # FIX:      _instantiate_state WILL CALL _parse_state_specific_specs TO HANDLE STATE-SPECIFIC SPECS
+        # gating_signal_spec = _parse_gating_signal_spec(owner=self, state_spec=gating_signal)
+        #
+        # # Specification is a GatingSignal (either passed in directly, or parsed from tuple above)
+        # if isinstance(gating_signal_spec[GATING_SIGNAL], GatingSignal):
+        #     gating_signal = gating_signal_spec[GATING_SIGNAL]
+        #     # Deferred Initialization, so assign owner, name, and initialize
+        #     if gating_signal.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        #         # FIX 5/23/17:  IMPLEMENT DEFERRED_INITIALIZATION FOR GatingSignal
+        #         # CALL DEFERRED INIT WITH SELF AS OWNER ??A˝ND NAME FROM gating_signal_dict?? (OR WAS IT SPECIFIED)
+        #         # OR ASSIGN NAME IF IT IS DEFAULT, USING GATING_SIGNAL_DICT??
+        #         # # MODIFIED 7/7/17 OLD:
+        #         # pass
+        #         # MODIFIED 7/7/17 NEW:
+        #         # default_name = self.name + '_' + GatingSignal.__name__
+        #         default_name = gating_signal_spec[NAME] + '_' + GatingSignal.__name__
+        #         gating_signal.init_args[OWNER] = self
+        #         gating_signal.init_args[NAME] = gating_signal.init_args[NAME] or default_name
+        #         # control_signal_spec.init_args[REFERENCE_VALUE] = output_state_reference_value
+        #         gating_signal.init_args[REFERENCE_VALUE] = defaultGatingPolicy
+        #         gating_signal._deferred_init(context=context)
+        #         # MODIFIED 7/7/17 END
+        #     elif not gating_signal.owner is self:
+        #         raise GatingMechanismError("Attempt to assign GatingSignal to {} ({}) that is already owned by {}".
+        #                                     format(self.name, gating_signal_spec.name, gating_signal_spec.owner.name))
+        #     gating_signal_name = gating_signal.name
+        #     gating_projections = gating_signal.efferents
+        #
+        # # Instantiate OutputState for GatingSignal
+        # else:
+        #     # FIX: 10/3/17 - THIS SHOULD ALL BE HANDLED IN STATE_instantiate_state
+        #     gating_signal_name = gating_signal_spec[NAME]
+        #     # FIX: ??CALL REGISTRY FOR NAME HERE (AS FOR OUTPUTSTATE IN MECHANISM?? -
+        #     # FIX:  OR IS THIS DONE AUTOMATICALLY IN _instantiate_state??)
+        #     # MODIFIED 7/8/17 OLD:
+        #     # if gating_signal_name in [gs.name for gs in self.gating_signals if isinstance(gs, GatingSignal)]:
+        #     #     gating_signal_name = gating_signal_name + '-' + repr(len(self.gating_signals))
+        #     # MODIFIED 7/8/17 NEW:
+        #     # Get names of any instantiated (or deferred_init) GatingSignals
+        #     existing_names = []
+        #     for gs in self.gating_signals:
+        #         if isinstance(gs, GatingSignal):
+        #             if gs.init_status is InitStatus.DEFERRED_INITIALIZATION and gs.init_args[NAME]:
+        #                 existing_names.append(gs.init_args[NAME])
+        #             else:
+        #                 existing_names.append(gs.name)
+        #     # Add index to name of GatingSignal if its name is already used
+        #     if gating_signal_name in existing_names:
+        #         gating_signal_name = gating_signal_name + '-' + repr(len(self.gating_signals))
+        #     # MODIFIED 7/8/17 END
+        #
+        #     # Get constraint for OutputState's value
+        #     #    - get GatingMechanism's value
+        #     self._update_value(context=context)
+        #     # - get constraint for OutputState's value
+        #     output_state_reference_value = self.gating_policy[output_state_index]
+        #
+        #     # gating_signal_params.update({GATE:state_name})
+        #     gating_signal_params.update(gating_signal_spec[PARAMS])
+        #
+        #     # FIX 5/23/17: CALL super()_instantiate_output_states ??
+        #     # FIX:         OR AGGREGATE ALL GatingSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
+        #     gating_signal = _instantiate_state(owner=self,
+        #                                        state_type=GatingSignal,
+        #                                        name=gating_signal_name,
+        #                                        reference_value=output_state_reference_value,
+        #                                        reference_value_name='Default control allocation',
+        #                                        params=gating_signal_params,
+        #                                        context=context)
+        #
+        # # VALIDATE OR INSTANTIATE GatingProjection(s) TO GatingSignal  -------------------------------------------
+        #
+        # # Validate gating_projections (if specified)
+        # if gating_projections:
+        #     for gating_projection in gating_projections:
+        #         if not isinstance(gating_projection, GatingProjection):
+        #             raise GatingMechanismError("PROGRAM ERROR: Attempt to assign {}, "
+        #                                               "that is not a GatingProjection, to GatingSignal of {}".
+        #                                               format(gating_projection, self.name))
+        #         _validate_receiver(self, gating_projection, Mechanism, GATING_SIGNAL, context=context)
+        #         state = gating_projection.receiver
+        #         if gating_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        #             gating_projection.init_args['sender']=gating_signal
+        #             if gating_projection.init_args['name'] is None:
+        #                 gating_projection.init_args['name'] = GATING_PROJECTION + \
+        #                                                       ' for ' + state.name + ' of ' + state.owner.name
+        #             gating_projection._deferred_init()
+        #         else:
+        #             gating_projection.sender = gating_signal
+        #
+        # # Instantiate GatingProjection
+        # else:
+        #     for state in gating_signal_spec[STATES]:
+        #         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+        #         gating_projection = GatingProjection(sender=gating_signal,
+        #                                              receiver=state,
+        #                                              name=GATING_PROJECTION + gating_signal_name)
+        #         # Add gating_projection to GatingSignal.efferents
+        #         # gating_signal.efferents.append(gating_projection)
+        #         gating_projections.append(gating_projection)
+        #
+        # # Add GatingProjections to GatingMechanism's list of GatingProjections
+        # for gating_projection in gating_projections:
+        #     try:
+        #         self.gating_projections.append(gating_projection)
+        #     except AttributeError:
+        #         self.gating_projections = [gating_projection]
 
-            # gating_signal_params.update({GATE:state_name})
-            gating_signal_params.update(gating_signal_spec[PARAMS])
+        # MODIFIED 10/3/17 NEW:
+        # Add ControlProjection to ControlMechanism's list of ControlProjections
+        try:
+            self.gating_projections.extend(gating_signal.efferents)
+        except AttributeError:
+            self.gating_projections = gating_signal.efferents.copy()
+        # MODIFIED 10/3/17 END
 
-            # FIX 5/23/17: CALL super()_instantiate_output_states ??
-            # FIX:         OR AGGREGATE ALL GatingSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
-            gating_signal = _instantiate_state(owner=self,
-                                               state_type=GatingSignal,
-                                               name=gating_signal_name,
-                                               reference_value=output_state_reference_value,
-                                               reference_value_name='Default control allocation',
-                                               params=gating_signal_params,
-                                               context=context)
-
-        # VALIDATE OR INSTANTIATE GatingProjection(s) TO GatingSignal  -------------------------------------------
-
-        # Validate gating_projections (if specified)
-        if gating_projections:
-            for gating_projection in gating_projections:
-                if not isinstance(gating_projection, GatingProjection):
-                    raise GatingMechanismError("PROGRAM ERROR: Attempt to assign {}, "
-                                                      "that is not a GatingProjection, to GatingSignal of {}".
-                                                      format(gating_projection, self.name))
-                _validate_receiver(self, gating_projection, Mechanism, GATING_SIGNAL, context=context)
-                state = gating_projection.receiver
-                if gating_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                    gating_projection.init_args['sender']=gating_signal
-                    if gating_projection.init_args['name'] is None:
-                        gating_projection.init_args['name'] = GATING_PROJECTION + \
-                                                              ' for ' + state.name + ' of ' + state.owner.name
-                    gating_projection._deferred_init()
-                else:
-                    gating_projection.sender = gating_signal
-
-        # Instantiate GatingProjection
-        else:
-            for state in gating_signal_spec[STATES]:
-                # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-                gating_projection = GatingProjection(sender=gating_signal,
-                                                     receiver=state,
-                                                     name=GATING_PROJECTION + gating_signal_name)
-                # Add gating_projection to GatingSignal.efferents
-                # gating_signal.efferents.append(gating_projection)
-                gating_projections.append(gating_projection)
-
-        # Add GatingProjections to GatingMechanism's list of GatingProjections
-        for gating_projection in gating_projections:
-            try:
-                self.gating_projections.append(gating_projection)
-            except AttributeError:
-                self.gating_projections = [gating_projection]
 
         # FIX: CONSIDER OVERRIDING output_states PROPERTY WITH ASSIGNMENT TO gating_signals
         # UPDATE output_states

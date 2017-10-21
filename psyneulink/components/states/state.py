@@ -1735,12 +1735,14 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     Returns a State or None
     """
 
-    parsed_reference_value = _parse_state_spec(owner=owner,
+    # Parse reference value to get actual value (in case it is, itself, a specification dict)
+    reference_value_dict = _parse_state_spec(owner=owner,
                                                state_type=state_type,
                                                state_spec=reference_value,
                                                value=None,
                                                params=None)
-    reference_value = parsed_reference_value[VARIABLE]
+    # Its value is assigned to the VARIABLE entry (including if it was originally just a value)
+    reference_value = reference_value_dict[VARIABLE]
 
     # standard_args = get_args(inspect.currentframe())
     # parsed_state_spec  = _parse_state_spec(standard_args, context, **state_spec)
@@ -1798,11 +1800,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     # - check that it doesn't already belong to another owner
     # - if either fails, assign default State
 
-    # MODIFIED 10/3/17 OLD:
-    # if _is_state_class(parsed_state_spec):
-    # MODIFIED 10/3/17 NEW:
     if isinstance(parsed_state_spec, State):
-    # MODIFIED 10/3/17 END
 
         state = parsed_state_spec
 
@@ -1825,7 +1823,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                 variable = owner.instance_defaults.variable
 
         # # FIX: 10/3/17 - PER THE FOLLOWING (FROM _parse_state_spec DOCSTRING):
-        # # FIX: DO THIS _parse_connection_specs??  IS THIS EVE CORRECT?
+        # # FIX: DO THIS _parse_connection_specs??  IS THIS EVEN CORRECT?
         # # *value* arg should generally be a constraint for the value of the State;  however,
         # #     if state_spec is a Projection, and method is being called from:
         # #         InputState, value should be the projection's value;
@@ -1855,15 +1853,6 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     value = state_spec_dict.pop(VALUE, None)
 
-    # FIX: 10/3/17 - RECONCILE WITH "PER THE FOLLOWING" ABOVE
-    # # Check that it's variable is compatible with reference_value, and if not, assign the latter as default variable
-    # # if reference_value is not None and not iscompatible(variable, reference_value):
-    # if reference_value is None or not iscompatible(variable, reference_value):
-    #     raise StateError("{}'s value attribute ({}) is incompatible with the variable ({}) of its owner ({})".
-    #                      format(state_spec_dict[NAME],
-    #                             state_spec_dict[VALUE],
-    #                             reference_value,
-    #                             state_spec_dict[OWNER].name))
     # MODIFIED 10/3/17 OLD:
     #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
     if state_spec_dict[REFERENCE_VALUE] is None:
