@@ -117,21 +117,24 @@ can be used to specify an InputState:
 
     * A **State specification dictionary**.  This creates the specified InputState using the first item of the owner's
       `variable <Mechanism_Base.variable>` as the InputState's `variable <InputState.variable>`.  In addition to the
-      standard entries of a `State specification dictionary <State_Specification>`, the dictionary can have:
+      standard entries of a `State specification dictionary <State_Specification>`, the dictionary can have the
+      following entries:
 
-      - a *PROJECTIONS* entry -- the value can be a `Projection <Projection>`, a `Projection specification dictionary
-        <Projection_In_Context_Specification>`, or a list containing items that are either of those.  This can be
-        used to specify one or more afferent `PathwayProjections <PathwayProjection>` to the InpuState, and/or
-        `ModulatoryProjections <ModulatoryProjection>` for it to receive.
-      |
-      - a *WEIGHT* entry -- the value must be an integer or float, and is assigned as the value of the InputState's
-        `weight <InputState.weight>` attribute  (see `InputState_Weights_And_Exponents`);  this takes precedence over
-        any specification in the **weight** argument of the InputState's constructor.
-      |
-      - an *EXPONENT* entry -- the value must be an integer or float, and is assigned as the value of the InputState's
-        `exponent <InputState.exponent>` attribute  (see `InputState_Weights_And_Exponents`);  this takes precedence
-        over any specification in the **exponent** argument of the InputState's constructor.
-
+      * *PROJECTIONS*:<Projection specification or list of ones>
+          the value can be a `Projection <Projection>`, a `Projection specification dictionary
+          <Projection_In_Context_Specification>`, or a list containing items that are either of those.  This can be
+          used to specify one or more afferent `PathwayProjections <PathwayProjection>` to the InpuState,
+          and/or `ModulatoryProjections <ModulatoryProjection>` for it to receive.
+      ..
+      * *WEIGHT*:<number>
+          the value must be an integer or float, and is assigned as the value of the InputState's `weight
+          <InputState.weight>` attribute  (see `InputState_Weights_And_Exponents`);  this takes precedence over any
+          specification in the **weight** argument of the InputState's constructor.
+      ..
+      * *EXPONENT*:<number>
+          the value must be an integer or float, and is assigned as the value of the InputState's `exponent
+          <InputState.exponent>` attribute  (see `InputState_Weights_And_Exponents`);  this takes precedence over any
+          specification in the **exponent** argument of the InputState's constructor.
     ..
     * A **2-item tuple**.  The first item must be a value, and the second a `ModulatoryProjection
       <ModulatoryProjection>` specification. This creates a default InputState using the first item as the InputState's

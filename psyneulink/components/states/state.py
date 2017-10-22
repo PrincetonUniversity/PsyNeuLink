@@ -114,7 +114,6 @@ Wherever a State is specified, it can be done using any of the following:
       ..
       * *NAME*:<str>
           the string is used as the name of the State;
-
       ..
       * *STATE_TYPE*:<State type>
           specifies type of State to create (necessary if it cannot be determined from the
