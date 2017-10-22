@@ -1283,24 +1283,24 @@ def _parse_connection_specs(connectee_state_type,
 
     # Request for afferent Projections (projection socket is SENDER)
     if issubclass(connectee_state_type, InputState):
-        ConnectsWith = [OutputState,          # types of States to which the connectee can connect
+        ConnectsWith = {OutputState,          # types of States to which the connectee can connect
                        ProcessInputState,
                        SystemInputState,
-                       GatingSignal]
+                       GatingSignal}
         connect_with_attr = OUTPUT_STATES  # attribute that holds the ConnectsWith States
         CONNECTIONS_KEYWORD = OUTPUT_STATES  # keyword used in a State specification dictionary for connection specs
         PROJECTION_SOCKET = SENDER           # socket of the Projection that connects to the ConnectsWith State
         Modulator = GatingSignal             # type of ModulatorySignal the connecteed can receiver
         # MOD_KEYWORD = GATING_SIGNALS         # keyword used in a State specification dictionary for Modulatory specs
     elif isinstance(owner, Mechanism) and issubclass(connectee_state_type, ParameterState):
-        ConnectsWith = [ControlSignal]
+        ConnectsWith = {ControlSignal}
         connect_with_attr = CONTROL_SIGNALS
         CONNECTIONS_KEYWORD = CONTROL_SIGNALS
         PROJECTION_SOCKET = SENDER
         Modulator = ControlSignal
         # MOD_KEYWORD = CONTROL_SIGNALS
     elif isinstance(owner, MappingProjection) and issubclass(connectee_state_type, ParameterState):
-        ConnectsWith = [LearningSignal, ControlSignal]
+        ConnectsWith = {LearningSignal, ControlSignal}
         connect_with_attr = LEARNING_SIGNALS
         CONNECTIONS_KEYWORD = LEARNING_SIGNALS
         PROJECTION_SOCKET = SENDER
@@ -1309,21 +1309,21 @@ def _parse_connection_specs(connectee_state_type,
 
     # Request for efferent Projections (projection socket is RECEIVER)
     elif isinstance(owner, ProcessingMechanism_Base) and issubclass(connectee_state_type, OutputState):
-        ConnectsWith = [InputState]
+        ConnectsWith = {InputState}
         connect_with_attr = INPUT_STATES
         CONNECTIONS_KEYWORD = INPUT_STATES
         PROJECTION_SOCKET = RECEIVER
         Modulator = GatingSignal
         MOD_KEYWORD = GATING_SIGNALS
     elif isinstance(owner, ControlMechanism) and issubclass(connectee_state_type, ControlSignal):
-        ConnectsWith = [ParameterState]
+        ConnectsWith = {ParameterState}
         connect_with_attr = PARAMETER_STATES
         # CONNECTIONS_KEYWORD = CONTROLLED_PARAMS
         PROJECTION_SOCKET = RECEIVER
         Modulator = None
         MOD_KEYWORD = None
     elif isinstance(owner, LearningMechanism) and issubclass(connectee_state_type, LearningSignal):
-        ConnectsWith = [ParameterState]
+        ConnectsWith = {ParameterState}
         connect_with_attr = PARAMETER_STATES
         # CONNECTIONS_KEYWORD = LEARNED_PROJECTIONS
         PROJECTION_SOCKET = RECEIVER
@@ -1331,7 +1331,7 @@ def _parse_connection_specs(connectee_state_type,
         MOD_KEYWORD = None
     elif isinstance(owner, GatingMechanism) and issubclass(connectee_state_type, GatingSignal):
         # FIX:
-        ConnectsWith = [InputState, OutputState]
+        ConnectsWith = {InputState, OutputState}
         # FIX:
         connect_with_attr = {INPUT_STATES, OUTPUT_STATES}
         # CONNECTIONS_KEYWORD = GATED_STATES
@@ -1580,7 +1580,7 @@ def _parse_connection_specs(connectee_state_type,
 @tc.typecheck
 def _validate_connection_request(
         owner,                                   # Owner of State seeking connection
-        connect_with_states:list,                # State to which connection is being sought
+        connect_with_states:set,                 # State to which connection is being sought
         projection_spec:_is_projection_spec,     # projection specification
         projection_socket:str,                   # socket of Projection to be connected to target state
         connectee_state:tc.optional(type)=None): # State for which connection is being sought

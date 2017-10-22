@@ -2288,10 +2288,10 @@ def _parse_state_spec(state_type=None,
 @tc.typecheck
 def _get_state_for_socket(owner,
                           state_spec=None,
-                          state_type:tc.optional(tc.any(_is_state_class, list))=None,
+                          state_type:tc.optional(tc.any(_is_state_class, set))=None,
                           mech:tc.optional(Mechanism)=None,
                           mech_state_attribute:tc.optional(str)=None,
-                          projection_socket:tc.optional(str, set)=None):
+                          projection_socket:tc.optional(tc.any(str, set))=None):
     """Take some combination of Mechanism, state name (string), Projection, and projection_socket, and return
     specified State(s)
 
