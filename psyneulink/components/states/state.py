@@ -2289,7 +2289,7 @@ def _parse_state_spec(state_type=None,
 @tc.typecheck
 def _get_state_for_socket(owner,
                           state_spec=None,
-                          state_type:tc.optional(tc.any(_is_state_class, list))=None,
+                          state_type:tc.optional(tc.any(_is_state_class, list, set))=None,
                           mech:tc.optional(Mechanism)=None,
                           mech_state_attribute:tc.optional(str)=None,
                           projection_socket:tc.optional(str)=None):
@@ -2312,8 +2312,8 @@ def _get_state_for_socket(owner,
     from psyneulink.components.projections.projection import _is_projection_spec, _validate_connection_request, _parse_projection_spec
 
 
-    if not isinstance(state_type, list):
-        state_type = [state_type]
+    if not isinstance(state_type, set):
+        state_type = {state_type}
     state_type_names = ",".join([s.__name__ for s in state_type])
 
     # Return State itself if it is an instantiate State
