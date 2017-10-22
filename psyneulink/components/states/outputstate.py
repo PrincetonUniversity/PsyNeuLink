@@ -338,7 +338,10 @@ from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination, is_function_type
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import CALCULATE, INDEX, MAPPING_PROJECTION, MEAN, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE
+from psyneulink.globals.keywords import \
+    PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, \
+    STATE, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, RESULT, INDEX, \
+    CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import UtilitiesError, iscompatible, type_match
@@ -778,13 +781,18 @@ class OutputState(State_Base):
         #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
         #      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
-        from psyneulink.components.projections.projection import _parse_connection_specs
+        from psyneulink.components.projections.projection import _parse_connection_specs, ConnectionTuple
         from psyneulink.components.system import MonitoredOutputStatesOption
 
         params_dict = {}
 
         if isinstance(state_specific_params, dict):
             return state_specific_params
+
+        elif isinstance(state_specific_params, ConnectionTuple):
+            params_dict[PROJECTIONS] = _parse_connection_specs(self,
+                                                               owner=owner,
+                                                               connections=[state_specific_params])
 
         elif isinstance(state_specific_params, tuple):
 
@@ -805,9 +813,12 @@ class OutputState(State_Base):
             # Note:  first item is assumed to be a specification for the OutputState itself, handled in _parse_state_spec()
             # FIX: TEST FOR LEN OF TUPLE AND RAISE EXCEPTION OF < 2
             elif not len(tuple_spec) in {2,3} :
-                raise OutputStateError("Tuple provided in {0} specification dictionary for {0} of {1} ({2}) must have "
-                                       "either 2 ({0} and {3} specification(s) items or 3 (optional additional {4} item)".
-                                       format(OutputState.__name__, owner.name, tuple_spec, PROJECTIONS_INDEX, INDEX))
+                raise OutputStateError("Tuple provided in {} specification dictionary for {} ({}) must have "
+                                       "either 2 ({} and {}) or 3 (optional additional {}) items, "
+                                       "or must be a {}".
+                                       format(OutputState.__name__, owner.name, tuple_spec,
+                                              STATE, PROJECTION, INDEX, ConnectionTuple.__name__))
+
 
             # Get PROJECTIONS specification (efferents) from tuple
             try:
@@ -818,9 +829,9 @@ class OutputState(State_Base):
             if projections_spec:
                 try:
                     # params_dict[CONNECTIONS] = _parse_connection_specs(self.__class__,
-                    params_dict[PROJECTIONS_INDEX] = _parse_connection_specs(self.__class__,
-                                                                       owner=owner,
-                                                                       connections={projections_spec})
+                    params_dict[PROJECTIONS] = _parse_connection_specs(self.__class__,
+                                                                             owner=owner,
+                                                                             connections={projections_spec})
                 except OutputStateError:
                     raise OutputStateError("Item {} of tuple specification in {} specification dictionary "
                                           "for {} ({}) is not a recognized specification for one or more "

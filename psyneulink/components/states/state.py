@@ -2006,7 +2006,8 @@ def _parse_state_spec(state_type=None,
        generate a warning and are ignored.
 
     """
-    from psyneulink.components.projections.projection import _is_projection_spec, _parse_connection_specs
+    from psyneulink.components.projections.projection \
+        import _is_projection_spec, _parse_connection_specs, ConnectionTuple
 
     # Get all of the standard arguments passed from _instantiate_state (i.e., those other than state_spec) into a dict
     standard_args = get_args(inspect.currentframe())
@@ -2066,52 +2067,61 @@ def _parse_state_spec(state_type=None,
 
     # EXISTING STATES
 
-    # Validate that specified state is consistent with any standard_args specified in call to _instantiate_state
+    # Determine whether specified State is one to be instantiated or to be conncted with,
+    #    and validat that is consistent with any standard_args specified in call to _instantiate_state
 
     # State or Mechanism object specification:
     if isinstance(state_specification, (Mechanism, State)):
         state = None
 
-        # State object:
-        if isinstance(state_specification, State):
-            # Validate that State object is same type as one specified in state_type (in call to _instantiate_state)
-            if not type(state_specification) is state_type:
-                raise StateError("PROGRAM ERROR: \'{}\' entry in State specification dictionary for {} ({}) "
-                                 "does not match the type specified in the call to _instantiate_state ({})".
-                                 format(STATE_TYPE, owner.name, state_specification, state_type))
-            state = state_specification
-
         # Mechanism object:
         # - call owner to get primary state of specified type
-        # - validate and return
-        elif isinstance(state_specification, Mechanism):
+        if isinstance(state_specification, Mechanism):
             mech = state_specification
             state = state_type._get_primary_state(state_type, mech)
 
-        if not isinstance(state, state_type):
-            raise StateError("State specified in the call to _instantiate_state for {} ({}) "
-                             "does not match the type specified in the \'{}\' argument ({})".
-                             format(owner.name, state.name, STATE_TYPE, state_type.__name__))
+        if isinstance(state, state_type):
+            if reference_value is not None and not iscompatible(reference_value, state.value):
+                raise StateError("The value ({}) of the State specified in the call to _instantiate_state for {} ({}) "
+                                 "does not match the type specified in the \'{}\' argument ({})".
+                                 format(state.value, owner.name, state.name, REFERENCE_VALUE, reference_value))
+            if variable and not iscompatible(variable, state.variable):
+                raise StateError("The variable ({}) of the State specified in the call to _instantiate_state for {} "
+                                 "({}) is not compatible with the one specified in the \'{}\' argument ({})".
+                                 format(state.variable, owner.name, state.name, VARIABLE, variable))
 
-        if not state.owner is owner:
-            raise StateError("The State specified in a call to _instantiate_state ({}) "
-                             "does belong to the {} specified in the \'{}\' argument ({})".
-                             format(state.name, owner.name, Mechanism.__name__, OWNER, owner.name))
+            if not state.owner is owner:
+                raise StateError("The State specified in a call to _instantiate_state ({}) "
+                                 "does belong to the {} specified in the \'{}\' argument ({})".
+                                 format(state.name, owner.name, Mechanism.__name__, OWNER, owner.name))
+            return state
 
-        if reference_value is not None and not iscompatible(reference_value, state.value):
-            raise StateError("The value ({}) of the State specified in the call to _instantiate_state for {} ({}) "
-                             "does not match the type specified in the \'{}\' argument ({})".
-                             format(state.value, owner.name, state.name, REFERENCE_VALUE, reference_value))
+        else:
+            # State is not of type specified in call to _instantiate_state, so assume it for one to connect with
+            # FIX: 10/3/17 - ??VALIDATE AGAINST OTHER OTHER SPECS (VARIABLE AND VALUE?) IN _instantiate_state
+            # FIX:           OR WILL THAT BE HANDLED BELOW OR IN _parse_connection_spec??
+            state_specification = ConnectionTuple(state=state, weight=None, exponent=None, projection=None)
 
-        if variable and  not iscompatible(variable, state.variable):
-            raise StateError("The variable ({}) of the State specified in the call to _instantiate_state for {} "
-                             "({}) is not compatible with the one specified in the \'{}\' argument ({})".
-                             format(state.variable, owner.name, state.name, VARIABLE, variable))
-
-        return state
+        # # FIX: DEAL WITH THIS:
+        # # State object:
+        # if isinstance(state_specification, State):
+        #     # # MODIFIED 10/3/17 OLD:
+        #     # # Validate that State object is same type as one specified in state_type (in call to _instantiate_state)
+        #     # if not type(state_specification) is state_type:
+        #     #     raise StateError("PROGRAM ERROR: \'{}\' entry in State specification dictionary for {} ({}) "
+        #     #                      "does not match the type specified in the call to _instantiate_state ({})".
+        #     #                      format(STATE_TYPE, owner.name, state_specification, state_type))
+        #     # state = state_specification
+        #     # MODIFIED 10/3/17 NEW:
+        #     # Check whether State object is same type as one specified in state_type (in call to _instantiate_state)
+        #     if type(state_specification) is state_type:
+        #         # If so, treat as specification for state of that type
+        #         state = state_specification
+        # MODIFIED 10/3/17 END
 
     # State class
     if (inspect.isclass(state_specification) and issubclass(state_specification, State)):
+        # FIX: 10/3/17: ??TREAT AS ABOVE:  IF STATE CLASS != state_type, ASSUME IT IS FOR A State TO CONNECT WITH
         if state_specification is state_type:
             state_dict[VARIABLE] = state_specification.ClassDefaults.variable
         else:
@@ -2281,7 +2291,7 @@ def _get_state_for_socket(owner,
                           state_type:tc.optional(tc.any(_is_state_class, list))=None,
                           mech:tc.optional(Mechanism)=None,
                           mech_state_attribute:tc.optional(str)=None,
-                          projection_socket:tc.optional(str)=None):
+                          projection_socket:tc.optional(str, set)=None):
     """Take some combination of Mechanism, state name (string), Projection, and projection_socket, and return
     specified State(s)
 

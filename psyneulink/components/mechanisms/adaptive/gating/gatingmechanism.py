@@ -436,11 +436,13 @@ class GatingMechanism(AdaptiveMechanism_Base):
         # PARSE gating_signal SPECIFICATION -----------------------------------------------------------------------
 
         # # FIX: *********************************************************************************
+        # FIX: ?? DOES gating_signal NEED TO BE PARSED INTO A CONNECTION SPEC??
+        # FIX:  MAYBE BY CONNECTION_SPEC??  DOES THAT HAPPEN FOR control_signal??
 
         from psyneulink.components.states.state import _instantiate_state
         # Parses control_signal specifications (in call to State._parse_state_spec)
         #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
-        control_signal = _instantiate_state(state_type=GatingSignal,
+        gating_signal = _instantiate_state(state_type=GatingSignal,
                                             owner=self,
                                             reference_value=defaultGatingPolicy,
                                             modulaton=self.modulation,
