@@ -2100,7 +2100,8 @@ def _parse_state_spec(state_type=None,
             # State is not of type specified in call to _instantiate_state, so assume it for one to connect with
             # FIX: 10/3/17 - ??VALIDATE AGAINST OTHER OTHER SPECS (VARIABLE AND VALUE?) IN _instantiate_state
             # FIX:           OR WILL THAT BE HANDLED BELOW OR IN _parse_connection_spec??
-            state_specification = ConnectionTuple(state=state, weight=None, exponent=None, projection=None)
+            # state_specification = ConnectionTuple(state=state, weight=None, exponent=None, projection=None)
+            state_dict[PROJECTIONS] = ConnectionTuple(state=state, weight=None, exponent=None, projection=None)
 
         # # FIX: DEAL WITH THIS:
         # # State object:

@@ -976,7 +976,7 @@ class ControlSignal(ModulatorySignal):
 
 
 # MODIFIED 9/30/17 NEW:
-
+# FIX: 10/3/17 - SHOULD BE ABLE TO PARE THIS DOWN
     def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
 
@@ -1037,7 +1037,7 @@ class ControlSignal(ModulatorySignal):
             try:
                 parameter_state = mech._parameter_states[param_name]
             except KeyError:
-                raise ControlSignalError("No {} found for {} param of {} in {} specificadtion tuple for {}".
+                raise ControlSignalError("No {} found for {} param of {} in {} specification tuple for {}".
                                          format(ParameterState.__name__, param_name, mech.name,
                                                 ControlSignal.__name__, owner.name))
             except AttributeError:

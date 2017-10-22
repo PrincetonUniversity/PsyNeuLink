@@ -58,14 +58,14 @@ A ComparatorMechanism has two `input_states <ComparatorMechanism.input_states>`,
 constructor.  The InputStates are listed in the Mechanism's `input_states <ComparatorMechanism.input_States>` attribute
 and named, respectively, *SAMPLE* and *TARGET*.  The OutputStates from which they receive their projections (specified
 in the **sample** and **target** arguments) are listed in the Mechanism's `sample <ComparatorMechanism.sample>` and
-`target <ComparatorMechanism.target>` attributes as well as in its `monitored_output_states <Comparator.monitored_output_states>`
-attribute. The ComparatorMechanism's `function <ComparatorMechanism.function>` compares the value of the sample and
-target InputStates.  By default, it uses a `LinearCombination` function, assigning the sample InputState a `weight
-<LinearCombination.weight>` of *-1* and the target a `weight <LinearCombination.weight>` of *1*, so that the sample is
-subtracted from the target.  However, the `function <ComparatorMechanism.function>` can be customized, so long as it is
-replaced with one that takes two arrays with the same format as its inputs, and generates a similar array as its result.
-The result is assigned as the value of the Comparator Mechanism's *OUTCOME* (`primary <OutputState_Primary>`)
-OutputState.
+`target <ComparatorMechanism.target>` attributes as well as in its `monitored_output_states
+<Comparator.monitored_output_states>` attribute. The ComparatorMechanism's `function <ComparatorMechanism.function>`
+compares the value of the sample and target InputStates.  By default, it uses a `LinearCombination` function,
+assigning the sample InputState a `weight <LinearCombination.weight>` of *-1* and the target a `weight
+<LinearCombination.weight>` of *1*, so that the sample is subtracted from the target.  However, the `function
+<ComparatorMechanism.function>` can be customized, so long as it is replaced with one that takes two arrays with the
+same format as its inputs, and generates a similar array as its result. The result is assigned as the value of the
+Comparator Mechanism's *OUTCOME* (`primary <OutputState_Primary>`) OutputState.
 
 .. _ComparatorMechanism_Function:
 

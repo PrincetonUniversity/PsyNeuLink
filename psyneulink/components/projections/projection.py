@@ -1287,24 +1287,24 @@ def _parse_connection_specs(connectee_state_type,
                        ProcessInputState,
                        SystemInputState,
                        GatingSignal}
-        connect_with_attr = OUTPUT_STATES  # attribute that holds the ConnectsWith States
+        connect_with_attr = OUTPUT_STATES    # attribute that holds the ConnectsWith States
         CONNECTIONS_KEYWORD = OUTPUT_STATES  # keyword used in a State specification dictionary for connection specs
         PROJECTION_SOCKET = SENDER           # socket of the Projection that connects to the ConnectsWith State
-        Modulator = GatingSignal             # type of ModulatorySignal the connecteed can receiver
+        Modulators = {GatingSignal}          # type of ModulatorySignals the connectee can receive
         # MOD_KEYWORD = GATING_SIGNALS         # keyword used in a State specification dictionary for Modulatory specs
     elif isinstance(owner, Mechanism) and issubclass(connectee_state_type, ParameterState):
         ConnectsWith = {ControlSignal}
         connect_with_attr = CONTROL_SIGNALS
         CONNECTIONS_KEYWORD = CONTROL_SIGNALS
         PROJECTION_SOCKET = SENDER
-        Modulator = ControlSignal
+        Modulators = {ControlSignal}
         # MOD_KEYWORD = CONTROL_SIGNALS
     elif isinstance(owner, MappingProjection) and issubclass(connectee_state_type, ParameterState):
         ConnectsWith = {LearningSignal, ControlSignal}
         connect_with_attr = LEARNING_SIGNALS
         CONNECTIONS_KEYWORD = LEARNING_SIGNALS
         PROJECTION_SOCKET = SENDER
-        Modulator = LearningSignal
+        Modulators = {LearningSignal}
         MOD_KEYWORD = LEARNING_SIGNALS
 
     # Request for efferent Projections (projection socket is RECEIVER)
@@ -1313,21 +1313,21 @@ def _parse_connection_specs(connectee_state_type,
         connect_with_attr = INPUT_STATES
         CONNECTIONS_KEYWORD = INPUT_STATES
         PROJECTION_SOCKET = RECEIVER
-        Modulator = GatingSignal
+        Modulators = {GatingSignal}
         MOD_KEYWORD = GATING_SIGNALS
     elif isinstance(owner, ControlMechanism) and issubclass(connectee_state_type, ControlSignal):
         ConnectsWith = {ParameterState}
         connect_with_attr = PARAMETER_STATES
         # CONNECTIONS_KEYWORD = CONTROLLED_PARAMS
         PROJECTION_SOCKET = RECEIVER
-        Modulator = None
+        Modulators = {None}
         MOD_KEYWORD = None
     elif isinstance(owner, LearningMechanism) and issubclass(connectee_state_type, LearningSignal):
         ConnectsWith = {ParameterState}
         connect_with_attr = PARAMETER_STATES
         # CONNECTIONS_KEYWORD = LEARNED_PROJECTIONS
         PROJECTION_SOCKET = RECEIVER
-        Modulator = None
+        Modulators = {None}
         MOD_KEYWORD = None
     elif isinstance(owner, GatingMechanism) and issubclass(connectee_state_type, GatingSignal):
         # FIX:
@@ -1336,7 +1336,7 @@ def _parse_connection_specs(connectee_state_type,
         connect_with_attr = {INPUT_STATES, OUTPUT_STATES}
         # CONNECTIONS_KEYWORD = GATED_STATES
         PROJECTION_SOCKET = RECEIVER
-        Modulator = None
+        Modulators = {None}
         MOD_KEYWORD = None
 
     else:
@@ -1553,7 +1553,7 @@ def _parse_connection_specs(connectee_state_type,
                                                          state_type=connectee_state_type)
 
                 _validate_connection_request(owner,
-                                             ConnectsWith,
+                                             ConnectsWith | Modulators,
                                              projection_spec,
                                              PROJECTION_SOCKET,
                                              connectee_state_type)
@@ -1613,7 +1613,7 @@ def _validate_connection_request(
         connectee_str =  ""
 
     connect_with_states = tuple(connect_with_states)
-    connect_with_state_names = ", ".join([c.__name__ for c in connect_with_states])
+    connect_with_state_names = ", ".join([c.__name__ for c in connect_with_states if c is not None])
 
     # Used below
     def _validate_projection_type(projection_class):
@@ -1717,6 +1717,7 @@ def _validate_connection_request(
         # Try to validate using entry for Projection' type
         elif PROJECTION_TYPE in projection_spec and projection_spec[PROJECTION_TYPE] is not None:
             _validate_projection_type(projection_spec[PROJECTION_TYPE])
+            return True
 
     # Projection spec is too abstract to validate here
     #    (e.g., value or a name that will be used in context to instantiate it)
@@ -1843,11 +1844,10 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     from psyneulink.components.states.inputstate import InputState
     from psyneulink.components.states.parameterstate import ParameterState
 
-    if not isinstance(state, (int, str, InputState, ParameterState)):
-        raise ProjectionError("State specification(s) for {0} (as receivers of {1}) contain(s) one or more items"
-                             " that is not a name, reference to an InputState or ParameterState object, "
-                             " or an index (for input_states)".
-                             format(receiver.name, projection_spec.name))
+    if not isinstance(state, (int, str, State)):
+        raise ProjectionError("State specification(s) for {} (as receiver(s) of {}) contain(s) one or more items"
+                             " that is not a name, reference to a {} or an index for one".
+                             format(receiver.name, projection_spec.name, State.__name__))
 
     # state is State object, so use that
     if isinstance(state, State_Base):

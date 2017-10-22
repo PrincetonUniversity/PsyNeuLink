@@ -27,21 +27,18 @@ Creating an ObjectiveMechanism
 
 ObjectiveMechanisms are often created automatically when other PsyNeuLink components are created (in particular,
 AdaptiveMechanisms such as `LearningMechanisms <LearningMechanism_Creation>` and
-`ControlMechanisms <ControlMechanism_Creation>`.  An ObjectiveMechanism can also be created directly by calling its
-constructor.  The two primary attributes used to define an ObjectiveMechanism are its `monitored_output_states
-<ObjectiveMechanism.monitored_output_states>` and `input_states <ObjectiveMechanism.input_states>` attributes, specified
-using the corresponding arguments of its construtor as described below.
+`ControlMechanisms <ControlMechanism_Creation>`).  An ObjectiveMechanism can also be created directly by calling its
+constructor.  The primary attribute used to define an ObjectiveMechanism is its `monitored_output_states
+<ObjectiveMechanism.monitored_output_states>` specified using the corresponding arguments of its constructor as
+described below.
 
 .. _ObjectiveMechanism_Monitored_Output_States:
 
 Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The **monitored_output_states** argument of the constructor specifies the OutputStates it monitors.  The assignment of
-the OutputStates to be monitored can also be passed from the **objective_mechanism** argument of the constructor for a
-`ControlMechanism`, or the **monitor_for_control** argument of a `System` for which the ControlMechanism is a
-`controller <System.controller>`.  The **monitored_output_states** argument can be specified using a  list
-containing any of the following:
+The **monitored_output_states** argument of the constructor specifies the OutputStates it monitors, that can be
+specified in a list containing any of the following:
 
 COMMENT:
 Note that some forms of specification may
@@ -73,6 +70,21 @@ COMMENT
   * **string** -- this can be used as a "placemarker", to specify that an `InputState` be created for an OutputState
     to be monitored that will be identified later.  The string is used as the name of the InputState when it is created.
 
+  * **State specification dictionary** -- this can be a standard specification dictionary for an OutputState, or
+    it can specify one or more OutputStates of a Mechanism by their name, using the following entries:
+
+        * *MECHANISM*:`Mechanism <Mechanism>`
+            this enty must be included in the dictionary to specify multiple OutputStates by their names.
+
+        * *OUTPUT_STATES*:List[<str or any of the specifications above>, ...]
+            here, a string can be used anywhere an OutputState would have been specified as the name
+            of an OutputState belonging to the *MECHANISM* entry.
+
+        If the dictionary includes only the *MECHANISM* entry, then (as with a standalone Mechanism specification),
+        the Mechanism's `primary OutputState <OutputState_Primary>` is used.  If a string is used for any items
+        of the list in the *OUTPUT_STATES* entry, and it is not the name of the Mechanism in the *MECHANISM* entry,
+        it will be treated as an "unbound" string specification.
+
   .. _ObjectiveMechanism_OutputState_Tuple:
 
   * **monitored_output_states tuple** -- this is a convenience notation that can be used to compactly specify a weight
@@ -102,31 +114,51 @@ COMMENT
        any values specified there take precedence over any other weight and/or exponent specifications of the
        InputStates for the ObjectiveMechanism.
 
-  .. _ObjectiveMechanism_OutputState_Specification_Dictionary:
+An ObjectiveMechanism creates one `InputState <InputState>` for each OutputState specified in its
+**monitored_output_states** argument.  For specifications in the **monitored_output_states** argument that can be
+resolved to an OutputState at the time the ObjectiveMechanism is created, a `MappingProjection` is automatically
+created from it to the corresponding InputState of the ObjectiveMechanism using `AUTO_ASSIGN_MATRIX` as its `matrix
+<MappingProjection.matrix>` parameter. If an OutputState can't be determined, no MappingProjection is assigned,
+and this must be done by some other means; any values assigned to the ObjectiveMechanism's `monitored_output_states
+<ObjectiveMechanism.monitored_output_states>` attribute that are not associated with an OutputState at the time the
+ObjectiveMechanism is executed are ignored.
 
-  * **monitored_output_states specification dictionary** -- this the most flexible form of specification, that can be
-    used to specify one or more OutputStates of a Mechanism by their name:
+.. note::
+   The **monitored_output_states** arugment of an ObjectiveMechanism serves the same purpose as the **input_states**
+   argument for a standard `Mechanism`.  If both are specified, an attempt is made to combine the two sets of
+   specifications, giving precedence to XXX???, and an error is generated if this cannot be done.
 
-        * *MECHANISM*:`Mechanism <Mechanism>`
-            this enty must be included in the dictionary;
+When an ObjectiveMechanism is created by a `ControlMechanism`, or a `System` for its `controller
+<System_Base.controller>`, these may pass it a set of OutputStates to be monitored.  A ControlMechanism passes any
+OutputState specifications listed in its **objective_mechanism** argument (see `ControlMechanism_ObjectiveMechanism`),
+and a System passes any listed in its **monitor_for_control** argument (see `System_Control_Specification`).
 
-        * *OUTPUT_STATES*:List[<str or any of the specifications above>, ...]
-            here, a string can be used anywhere an OutputState would have been specified as the name
-            of an OutputState belonging to the *MECHANISM* entry.
+.. _ObjectiveMechanism_Structure:
 
-        If the dictionary includes only the *MECHANISM* entry, then (as with a standalone Mechanism specification),
-        the Mechanism's `primary OutputState <OutputState_Primary>` is used.  If a string is used for any items
-        of the list in the *OUTPUT_STATES* entry, and it is not the name of the Mechanism in the *MECHANISM* entry,
-        it will be treated as an "unbound" string specification.
+Structure
+---------
 
-If an OutputState to be monitored is specified at the time the ObjectiveMechanism is created, or the specification
-can be resolved to an OutputState, a `MappingProjection` is automatically created from it to the corresponding
-InputState of the ObjectiveMechanism using `AUTO_ASSIGN_MATRIX` as its `matrix <MappingProjection.matrix>` parameter.
-If the OutputState can't be determined, no MappingProjection is assigned, and this must be done by some other means;
-any values assigned to the ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
-attribute that are not associated with an OutputState at the time the ObjectiveMechanism is executed are ignored.
+.. _ObjectiveMechanism_Input:
+
+Input
+~~~~~
+
+An ObjectiveMechanism has one `InputState <InputState>` for each of the OutputStates specified in its
+**monitored_output_states** argument (see `ObjectiveMechanism_Monitored_Output_States`). Each InputState receives a
+`MappingProjection` from the corresponding OutputState, the values of which are used by the ObjectiveMechanism's
+`function <ObjectiveMechanism.function>` to generate the value of its *OUTCOME* `OutputState
+<ObjectiveMechanism_Output>`.  The InputStates are listed in the ObjectiveMechanism's `input_states
+<ObjectiveMechanism.input_states>` attribute, and the OutputStates from which they receive projections are listed in
+the same order its `monitored_output_states  <ObjectiveMechanism.monitored_output_states>` attribute.  If any `weights
+and/or exponents are specified <ObjectiveMechanism_Monitored_Output_States>` for either the ObjectiveMechanism's
+`monitored_output_states <ObjectiveMechanism.monitored_output_states>` or its `input_states`, the former take
+precedence over the latter.  These are assigned to the weights and/or exponents attributes of the ObjectiveMechanism's
+`function <ObjectiveMechanism.function>` if the function implements these attributes;  if so, the function applies the
+weights and/or exponents specified to the corresponding InputState `value <InputState.value>`\\s before it combining
+these to generate the ObjectiveMechanism's `output <ObjectiveMechanism_Output>`.
 
 
+# FIX: MOVE TO STRUCTURE BELOW:
 .. _ObjectiveMechanism_InputStates::
 
 InputStates
@@ -166,29 +198,7 @@ COMMENT:
     specification -- i.e., as the name of the InputState -- and the value as its value specification.
 COMMENT
 
-.. _ObjectiveMechanism_Structure:
 
-Structure
----------
-
-.. _ObjectiveMechanism_Input:
-
-Input
-~~~~~
-
-=An ObjectiveMechanism has one `InputState <InputState>` for each of the OutputStates specified in its
-**monitored_output_states** argument (see `ObjectiveMechanism_Monitored_Output_States`). Each InputState receives a
-`MappingProjection` from the corresponding OutputState, the values of which are used by the ObjectiveMechanism's
-`function <ObjectiveMechanism.function>` to generate the value of its *OUTCOME* `OutputState
-<ObjectiveMechanism_Output>`.  The InputStates are listed in the ObjectiveMechanism's `input_states
-<ObjectiveMechanism.input_states>` attribute, and the OutputStates from which they receive projections are listed in
-the same order its `monitored_output_states  <ObjectiveMechanism.monitored_output_states>` attribute.  If any `weights
-and/or exponents are specified <ObjectiveMechanism_Monitored_Output_States>` for either the ObjectiveMechanism's
-`monitored_output_states <ObjectiveMechanism.monitored_output_states>` or its `input_states`, the former take
-precedence over the latter.  These are assigned to the weights and/or exponents attributes of the ObjectiveMechanism's
-`function <ObjectiveMechanism.function>` if the function implements these attributes;  if so, the function applies the
-weights and/or exponents specified to the corresponding InputState `value <InputState.value>`\\s before it combining
-these to generate the ObjectiveMechanism's `output <ObjectiveMechanism_Output>`.
 
 .. _ObjectiveMechanism_Function:
 
