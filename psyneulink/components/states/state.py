@@ -2312,7 +2312,7 @@ def _get_state_for_socket(owner,
 
 
     if not isinstance(state_type, set):
-        state_type = [state_type]
+        state_type = {state_type}
     state_type_names = ",".join([s.__name__ for s in state_type])
 
     # Return State itself if it is an instantiate State
