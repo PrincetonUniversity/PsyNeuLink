@@ -115,6 +115,9 @@ can be used to specify an InputState:
 
     .. _InputState_Specification_Dictionary:
 
+COMMENT:
+    10/3/17 - INCLUDE MECHANISM AND OUTPUT_STATES ENTRIES FROM ObjectiveMechanism HERE (AND USE THOSE EXAMPLES??)
+COMMENT
     * A **State specification dictionary**.  This creates the specified InputState using the first item of the owner's
       `variable <Mechanism_Base.variable>` as the InputState's `variable <InputState.variable>`.  In addition to the
       standard entries of a `State specification dictionary <State_Specification>`, the dictionary can have the
@@ -136,6 +139,10 @@ can be used to specify an InputState:
           <InputState.exponent>` attribute  (see `InputState_Weights_And_Exponents`);  this takes precedence over any
           specification in the **exponent** argument of the InputState's constructor.
     ..
+COMMENT:
+    10/3/17 - CHANGE THIS SO THAT: 1) 2ND ITEM OF 2-ITEM TUPLE CAN BE ANY KIND OF PROJECTIONS (LIST??)
+                                   2) ConnectionTuple CAN BE USED (MOVE EXAMPLES HERE FROM OBJECTIVE MECHANISM??
+COMMENT
     * A **2-item tuple**.  The first item must be a value, and the second a `ModulatoryProjection
       <ModulatoryProjection>` specification. This creates a default InputState using the first item as the InputState's
       `variable <InputState.variable>`, and assigns the InputState as a `receiver <ModulatoryProjection.receiver>` of
@@ -663,13 +670,17 @@ class InputState(State_Base):
         #      CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
         #      THESE CAN BE USED BY THE InputState's LinearCombination Function
         #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
-        #      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
+        #      THIS WOULD ALLOW AN ADDITONAL HIERARCHICAL LEVEL FOR NESTING ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
         from psyneulink.components.projections.projection import Projection, _parse_connection_specs
 
         params_dict = {}
 
         if isinstance(state_specific_params, dict):
+            # FIX: 10/3/17 - CHECK HERE THAT, IF MECHANISM ENTRY IS USED, A VARIABLE, WEIGHT AND/OR EXPONENT ENTRY
+            # FIX:                       IS APPLIED TO ALL THE OutputStates SPECIFIED IN OUTPUT_STATES
+            # FIX:                       UNLESS THEY THEMSELVES USE A State specification dict WITH ANY OF THOSE ENTRIES
+            # FIX:           USE ObjectiveMechanism EXAMPLES
             return state_specific_params
 
         elif isinstance(state_specific_params, tuple):

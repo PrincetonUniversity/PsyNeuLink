@@ -2102,7 +2102,7 @@ def _parse_state_spec(state_type=None,
             # state_specification = ConnectionTuple(state=state, weight=None, exponent=None, projection=None)
             state_dict[PROJECTIONS] = ConnectionTuple(state=state, weight=None, exponent=None, projection=None)
 
-        # # FIX: DEAL WITH THIS:
+        # # FIX: 10/3/17 - DEAL WITH THIS:
         # # State object:
         # if isinstance(state_specification, State):
         #     # # MODIFIED 10/3/17 OLD:
