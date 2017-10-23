@@ -365,16 +365,16 @@ def _instantiate_learning_components(learning_projection, context=None):
         # FIX: CHECK THAT THE PROJECTION IS TO ANOTHER MECHANISM IN THE CURRENT PROCESS;
         #      OTHERWISE, ALLOW OBJECTIVE_MECHANISM TO BE IMPLEMENTED
         #      BUT HOW CAN IT KNOW THIS, SINCE UNTIL THE METHOD IS PART OF A COMPOSITION, IT DOESN'T KNOW WHAT
-        #             COMPOSITION IS BEING CALLED.  -- LOOK AT LearningProjection_OLD TO SEE HOW IT WAS HANDLED THERE.
-        #             OR IS A TARGET/OBJECTIVE MECHANISM ALWAYS ASSIGNED FOR A PROCESS, AND THEN DELETED IN SYSTEM GRAPH?
-        #             IN THAT CASE, JUST IGNORE SECOND CONDITION BELOW (THAT IT HAS NO PROJECTIONS TO LEARNING_PROJECTIONS?
+        #          COMPOSITION IS BEING CALLED.  -- LOOK AT LearningProjection_OLD TO SEE HOW IT WAS HANDLED THERE.
+        #          OR IS A TARGET/OBJECTIVE MECHANISM ALWAYS ASSIGNED FOR A PROCESS, AND THEN DELETED IN SYSTEM GRAPH?
+        #          IN THAT CASE, JUST IGNORE SECOND CONDITION BELOW (THAT IT HAS NO PROJECTIONS TO LEARNING_PROJECTIONS?
 
         # Next, determine whether an ObjectiveMechanism or LearningMechanism should be assigned as the sender
         # It SHOULD be an ObjectiveMechanism (i.e., TARGET) if either:
         #     - it has no outgoing projections or
         #     - it has no projections that receive a LearningProjection;
         #   in either case, lc.error_projection returns None.
-        #   Note:  this assumes that LearningProjections are being assigned from the end of the pathway to the beginning.
+        #   Note: this assumes that LearningProjections are being assigned from the end of the pathway to the beginning.
         is_target = not lc.error_projection
 
     # INSTANTIATE learning function
