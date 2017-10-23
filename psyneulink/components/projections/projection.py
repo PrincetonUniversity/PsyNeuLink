@@ -1643,7 +1643,7 @@ def _validate_connection_request(
         if projection_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
 
             # Try to get the State to which the Projection will be connected when fully initialized
-            #     as positive confirmation that it is the correct type for state_type
+            #     as confirmation that it is the correct type for state_type
             try:
                 projection_socket_state = projection_spec.socket_assignments[RECEIVER]
                 # Projection's socket has been assigned to a State
