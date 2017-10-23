@@ -1325,9 +1325,7 @@ def _parse_connection_specs(connectee_state_type,
         Modulator = None
         MOD_KEYWORD = None
     elif isinstance(owner, GatingMechanism) and issubclass(connectee_state_type, GatingSignal):
-        # FIX:
         ConnectsWith = {InputState, OutputState}
-        # FIX:
         connect_with_attr = 'input_states' or 'output_states'
         # CONNECTIONS_KEYWORD = GATED_STATES
         PROJECTION_SOCKET = RECEIVER
