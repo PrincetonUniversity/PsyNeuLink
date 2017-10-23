@@ -973,8 +973,6 @@ class ControlSignal(ModulatorySignal):
                                                                             float(self.cost))
     #endregion
 
-
-
 # MODIFIED 9/30/17 NEW:
 # FIX: 10/3/17 - SHOULD BE ABLE TO PARE THIS DOWN
     def _parse_state_specific_params(self, owner, state_dict, state_specific_params):

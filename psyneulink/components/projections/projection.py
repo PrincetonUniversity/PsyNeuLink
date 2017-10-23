@@ -1389,7 +1389,11 @@ def _parse_connection_specs(connectee_state_type,
             # FIX:           (i.e., NOT IF IT IS A VALUE OR STRING)
             # FIX:           ?? SHOULD THIS BE HANDLED LIKE STATE SPEC (AS ABOVE): I.E., CONTINGENT ON PROJECTION_SOCKET
             projection_spec = connection
+            # FIX: ---------------------------------
+            # FIX:  10/22/17 - ??SHOULD GatingProjection BE in BOTH STATE AND PROJECTON ITEMS OF THE ConnectionTuple:
+            # FIX:             ??SHOULDN'T ONE OF THEM BE GatingSignal OR the OUTPUT_STATE BEING CONNECT TO?
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
+            # FIX: ---------------------------------
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
 
         # Dict of one or more Mechanism specifications, used to specify individual States of (each) Mechanism;
@@ -1500,9 +1504,9 @@ def _parse_connection_specs(connectee_state_type,
         #        State specification tuple is handled in the _parse_state_specific_params() method of State subclasses
 
         elif isinstance(connection, tuple):
+
         # Notes:
         #    - first item is assumed to always be a specification for the State being connected with
-
             if len(connection) == 2:
                 state_spec, projection_spec = connection
                 weight = DEFAULT_WEIGHT
@@ -1639,7 +1643,7 @@ def _validate_connection_request(
         if projection_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
 
             # Try to get the State to which the Projection will be connected when fully initialized
-            #     as positive confirmation that it is the correct type for state_type
+            #     as confirmation that it is the correct type for state_type
             try:
                 projection_socket_state = projection_spec.socket_assignments[RECEIVER]
                 # Projection's socket has been assigned to a State

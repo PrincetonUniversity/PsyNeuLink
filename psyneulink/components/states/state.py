@@ -114,7 +114,6 @@ Wherever a State is specified, it can be done using any of the following:
       ..
       * *NAME*:<str>
           the string is used as the name of the State;
-
       ..
       * *STATE_TYPE*:<State type>
           specifies type of State to create (necessary if it cannot be determined from the
@@ -2067,8 +2066,8 @@ def _parse_state_spec(state_type=None,
 
     # EXISTING STATES
 
-    # Determine whether specified State is one to be instantiated or to be conncted with,
-    #    and validat that is consistent with any standard_args specified in call to _instantiate_state
+    # Determine whether specified State is one to be instantiated or to be connected with,
+    #    and validate that it is consistent with any standard_args specified in call to _instantiate_state
 
     # State or Mechanism object specification:
     if isinstance(state_specification, (Mechanism, State)):
@@ -2103,7 +2102,7 @@ def _parse_state_spec(state_type=None,
             # state_specification = ConnectionTuple(state=state, weight=None, exponent=None, projection=None)
             state_dict[PROJECTIONS] = ConnectionTuple(state=state, weight=None, exponent=None, projection=None)
 
-        # # FIX: DEAL WITH THIS:
+        # # FIX: 10/3/17 - DEAL WITH THIS:
         # # State object:
         # if isinstance(state_specification, State):
         #     # # MODIFIED 10/3/17 OLD:

@@ -443,6 +443,9 @@ class GatingSignal(ModulatorySignal):
     def _execute(self, function_params, context):
         return float(super()._execute(function_params=function_params, context=context))
 
+    def _get_primary_state(self, mechanism):
+        return mechanism.input_state
+
     @property
     def gating_signal(self):
         return self.value
@@ -742,3 +745,4 @@ def _parse_gating_signal_spec(owner, state_spec):
             STATES: states,
             PARAMS: params,
             GATING_SIGNAL: gating_signal}
+
