@@ -698,7 +698,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                       RATE: self.time_constant},
                                                               context=context
 
-                                                             )
+                                                             )[0]
         else:
         # elif time_scale is TimeScale.TRIAL:
             noise = self._try_execute_param(self.noise, variable)
