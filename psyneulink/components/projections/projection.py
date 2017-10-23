@@ -1504,6 +1504,7 @@ def _parse_connection_specs(connectee_state_type,
         #        State specification tuple is handled in the _parse_state_specific_params() method of State subclasses
 
         elif isinstance(connection, tuple):
+
         # Notes:
         #    - first item is assumed to always be a specification for the State being connected with
             if len(connection) == 2:
