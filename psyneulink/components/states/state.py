@@ -2066,8 +2066,8 @@ def _parse_state_spec(state_type=None,
 
     # EXISTING STATES
 
-    # Determine whether specified State is one to be instantiated or to be conncted with,
-    #    and validat that is consistent with any standard_args specified in call to _instantiate_state
+    # Determine whether specified State is one to be instantiated or to be connected with,
+    #    and validate that it is consistent with any standard_args specified in call to _instantiate_state
 
     # State or Mechanism object specification:
     if isinstance(state_specification, (Mechanism, State)):

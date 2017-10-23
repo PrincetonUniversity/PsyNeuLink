@@ -592,7 +592,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                            function=learning_function,
                                            # learning_signals=[lc.activation_mech_projection],
                                            learning_signals=[learning_projection],
-                                           name = lc.activation_mech_projection.name + " " +LEARNING_MECHANISM,
+                                           name = lc.activation_mech_projection.name + " " + LEARNING_MECHANISM,
                                            context=context)
 
     # IMPLEMENTATION NOTE:

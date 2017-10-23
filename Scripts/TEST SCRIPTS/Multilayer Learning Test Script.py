@@ -1,3 +1,5 @@
+import numpy as np
+
 from psyneulink.components.functions.function import Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
