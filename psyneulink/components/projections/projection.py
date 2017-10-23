@@ -1627,6 +1627,8 @@ def _validate_connection_request(
             x = connect_with_states
         except AttributeError:
             pass
+        if connect_with_states is None:
+            pass
         # FIX: END
 
         if any(state.__name__ in getattr(projection_class.sockets, projection_socket)
