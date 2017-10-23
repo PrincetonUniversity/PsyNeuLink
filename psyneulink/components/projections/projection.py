@@ -1622,6 +1622,13 @@ def _validate_connection_request(
     # Used below
     def _validate_projection_type(projection_class):
         # Validate that Projection's type can connect with a class in connect_with_states
+        # FIX: 10/3/17 - FOR DEBUGGING:
+        try:
+            x = connect_with_states
+        except AttributeError:
+            pass
+        # FIX: END
+
         if any(state.__name__ in getattr(projection_class.sockets, projection_socket)
                for state in connect_with_states):
             # FIX: 10/3/17 - GETS CALLED BY ComparatorMechanism.__init__ BEFORE IT CALLS SUPER, SO
