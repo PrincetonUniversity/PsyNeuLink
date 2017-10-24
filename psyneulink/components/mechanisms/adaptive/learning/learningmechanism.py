@@ -526,7 +526,10 @@ from psyneulink.components.mechanisms.adaptive.adaptivemechanism import Adaptive
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.globals.keywords import CONTROL_PROJECTIONS, FUNCTION_PARAMS, IDENTITY_MATRIX, INDEX, INITIALIZING, INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, PARAMETER_STATE, PARAMS, PROJECTION, PROJECTIONS
+from psyneulink.globals.keywords import CONTROL_PROJECTIONS, FUNCTION_PARAMS, IDENTITY_MATRIX, INDEX, INITIALIZING, \
+    INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, \
+    LEARNING_SIGNALS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION, MATRIX, NAME, PARAMS, OUTPUT_STATES, PARAMETER_STATE, \
+    PARAMS, PROJECTION, PROJECTIONS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, parameter_spec
@@ -910,6 +913,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
 
+        from psyneulink.components.states.state import _parse_state_spec
+        from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
+        from psyneulink.components.states.parameterstate import ParameterState
+        from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.components.projections.projection import _validate_receiver
 
@@ -919,129 +926,128 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                              "LearningMechanism".
                                              format(ERROR_SOURCE, self.name, target_set[ERROR_SOURCE]))
 
-
-        # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS (AKIN TO CONTROL_SIGNAL)
         if LEARNING_SIGNALS in target_set and target_set[LEARNING_SIGNALS]:
 
-            from psyneulink.components.states.modulatorysignals.learningsignal \
-                import LearningSignal
-            from psyneulink.components.states.parameterstate import ParameterState
-            from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
+            if not isinstance(target_set[LEARNING_SIGNALS], list):
+                raise LearningMechanismError("{} arg of {} must be list".
+                                           format(LEARNING_SIGNAL, self.name))
 
             for spec in target_set[LEARNING_SIGNALS]:
+                learning_signal = _parse_state_spec(state_type=LearningSignal, owner=self, state_spec=spec)
 
-                # FIX: 10/3/17 - REPLACE WITH _parse_state_spec PER ControlMechanism and GatingMechanism
-
-                learning_proj = None  # Projection from LearningSignal to MappingProjection
-                mapping_proj = None   # MappingProjection that receives Projection from LearningSignal
-
-                # Specification is for a LearningSignal
-                if isinstance(spec, LearningSignal):
-                    #  Check that any LearningProjections it has
-                    #    are to MappingProjections to Mechanisms in the same System
-                    for learning_proj in spec.efferents:
-                        _validate_receiver(self,learning_proj, MappingProjection, LEARNING_SIGNAL, context)
-                    continue
-
-                # Specification is for a ParameterState
-                elif isinstance(spec, ParameterState):
-                    param_name = spec.name
-                    mapping_proj = spec.owner
-
-                # Specification is for a Projection
-                elif isinstance(spec, Projection):
-                    if isinstance(spec, LearningProjection):
-                        param_name = spec.receiver.name
-                        learning_proj = spec
-                        mapping_proj = learning_proj.receiver.owner
-                    elif isinstance(spec, MappingProjection):
-                        param_name = MATRIX
-                        mapping_proj = spec
-                    else:
-                        raise LearningMechanismError("The {} specified in the {} arg for {} ({}) must be a {}".
-                                                     format(PROJECTION,
-                                                            LEARNING_SIGNALS,
-                                                            self.name,
-                                                            spec.name,
-                                                            MAPPING_PROJECTION))
-
-                # Specification is for a tuple (str, MappingProjection):
-                elif isinstance(spec, tuple):
-                    param_name = spec[0]
-                    mapping_proj = spec[1]
-                    # Check that 1st item is a str (presumably the name of the learned Projection's attribute
-                    #    for the param to be learned; e.g., 'MATRIX' for MappingProjection)
-                    if not isinstance(param_name, str):
-                        raise LearningMechanismError("1st item of tuple in specification of {} for {} ({}) "
-                                                     "must be a string".format(LEARNING_SIGNAL, self.name, param_name))
-                    # Check that 2nd item is a MappingProjection
-                    if not isinstance(mapping_proj, MappingProjection):
-                        raise LearningMechanismError("2nd item of tuple in specification of {} for {} ({}) "
-                                                     "must be a {}".
-                                                     format(LEARNING_SIGNAL,
-                                                            self.name,
-                                                            mapping_proj,
-                                                            MAPPING_PROJECTION))
-
-                # LearningSignal specification dictionary, must have the following entries:
-                #    NAME:str - must be the name of an attribute of PROJECTION
-                #    PROJECTION:Projection - must be a MappingProjection
-                #                            and have an attribute and corresponding ParameterState named NAME
-                #    PARAMS:dict - entries must be valid LearningSignal parameters (e.g., LEARNING_RATE)
-                elif isinstance(spec, dict):
-                    if not NAME in spec:
-                        raise LearningMechanismError("Specification dict for {} of {} must have a {} entry".
-                                                    format(LEARNING_SIGNAL, self.name, NAME))
-                    param_name = spec[NAME]
-                    if not PROJECTION in spec:
-                        raise LearningMechanismError("Specification dict for {} of {} must have a {} entry".
-                                                    format(LEARNING_SIGNAL, self.name, PROJECTION))
-                    mapping_proj = spec[PROJECTION]
-                    if not isinstance(mapping_proj, MappingProjection):
-                        raise LearningMechanismError("{} entry of specification dict for {} of {} must be a {}".
-                                                    format(PROJECTION, LEARNING_SIGNAL, self.name, MAPPING_PROJECTION))
-                    # Check that all of the other entries in the specification dictionary
-                    #    are valid LearningSignal params
-                    for param in spec:
-                        if param in {NAME, PROJECTION}:
-                            continue
-                        if not hasattr(LearningSignal, param):
-                            raise LearningMechanismError("Entry in specification dictionary for {} arg of {} ({}) "
-                                                       "is not a valid {} parameter".
-                                                       format(LEARNING_SIGNAL, self.name, param,
-                                                              LearningSignal.__class__.__name__))
-                else:
-                    raise LearningMechanismError("PROGRAM ERROR: unrecognized specification for {} arg of {} ({})".
-                                                format(LEARNING_SIGNALS, self.name, spec))
-                    # raise LearningMechanismError("Specification of {} for {} ({}) must be a "
-                    #                             "ParameterState, Projection, a tuple specifying a parameter and "
-                    #                              "Projection, a LearningSignal specification dictionary, "
-                    #                              "or an existing LearningSignal".
-                    #                             format(CONTROL_SIGNAL, self.name, spec))
+                # learning_proj = None  # Projection from LearningSignal to MappingProjection
+                # mapping_proj = None   # MappingProjection that receives Projection from LearningSignal
+                #
+                # # Specification is for a LearningSignal
+                # if isinstance(spec, LearningSignal):
+                #     #  Check that any LearningProjections it has
+                #     #    are to MappingProjections to Mechanisms in the same System
+                #     for learning_proj in spec.efferents:
+                #         _validate_receiver(self,learning_proj, MappingProjection, LEARNING_SIGNAL, context)
+                #     continue
+                #
+                # # Specification is for a ParameterState
+                # elif isinstance(spec, ParameterState):
+                #     param_name = spec.name
+                #     mapping_proj = spec.owner
+                #
+                # # Specification is for a Projection
+                # elif isinstance(spec, Projection):
+                #     if isinstance(spec, LearningProjection):
+                #         param_name = spec.receiver.name
+                #         learning_proj = spec
+                #         mapping_proj = learning_proj.receiver.owner
+                #     elif isinstance(spec, MappingProjection):
+                #         param_name = MATRIX
+                #         mapping_proj = spec
+                #     else:
+                #         raise LearningMechanismError("The {} specified in the {} arg for {} ({}) must be a {}".
+                #                                      format(PROJECTION,
+                #                                             LEARNING_SIGNALS,
+                #                                             self.name,
+                #                                             spec.name,
+                #                                             MAPPING_PROJECTION))
+                #
+                # # Specification is for a tuple (str, MappingProjection):
+                # elif isinstance(spec, tuple):
+                #     param_name = spec[0]
+                #     mapping_proj = spec[1]
+                #     # Check that 1st item is a str (presumably the name of the learned Projection's attribute
+                #     #    for the param to be learned; e.g., 'MATRIX' for MappingProjection)
+                #     if not isinstance(param_name, str):
+                #         raise LearningMechanismError("1st item of tuple in specification of {} for {} ({}) "
+                #                                      "must be a string".format(LEARNING_SIGNAL, self.name, param_name))
+                #     # Check that 2nd item is a MappingProjection
+                #     if not isinstance(mapping_proj, MappingProjection):
+                #         raise LearningMechanismError("2nd item of tuple in specification of {} for {} ({}) "
+                #                                      "must be a {}".
+                #                                      format(LEARNING_SIGNAL,
+                #                                             self.name,
+                #                                             mapping_proj,
+                #                                             MAPPING_PROJECTION))
+                #
+                # # LearningSignal specification dictionary, must have the following entries:
+                # #    NAME:str - must be the name of an attribute of PROJECTION
+                # #    PROJECTION:Projection - must be a MappingProjection
+                # #                            and have an attribute and corresponding ParameterState named NAME
+                # #    PARAMS:dict - entries must be valid LearningSignal parameters (e.g., LEARNING_RATE)
+                # elif isinstance(spec, dict):
+                #     if not NAME in spec:
+                #         raise LearningMechanismError("Specification dict for {} of {} must have a {} entry".
+                #                                     format(LEARNING_SIGNAL, self.name, NAME))
+                #     param_name = spec[NAME]
+                #     if not PROJECTION in spec:
+                #         raise LearningMechanismError("Specification dict for {} of {} must have a {} entry".
+                #                                     format(LEARNING_SIGNAL, self.name, PROJECTION))
+                #     mapping_proj = spec[PROJECTION]
+                #     if not isinstance(mapping_proj, MappingProjection):
+                #         raise LearningMechanismError("{} entry of specification dict for {} of {} must be a {}".
+                #                                     format(PROJECTION, LEARNING_SIGNAL, self.name, MAPPING_PROJECTION))
+                #     # Check that all of the other entries in the specification dictionary
+                #     #    are valid LearningSignal params
+                #     for param in spec:
+                #         if param in {NAME, PROJECTION}:
+                #             continue
+                #         if not hasattr(LearningSignal, param):
+                #             raise LearningMechanismError("Entry in specification dictionary for {} arg of {} ({}) "
+                #                                        "is not a valid {} parameter".
+                #                                        format(LEARNING_SIGNAL, self.name, param,
+                #                                               LearningSignal.__class__.__name__))
+                # else:
+                #     raise LearningMechanismError("PROGRAM ERROR: unrecognized specification for {} arg of {} ({})".
+                #                                 format(LEARNING_SIGNALS, self.name, spec))
+                #     # raise LearningMechanismError("Specification of {} for {} ({}) must be a "
+                #     #                             "ParameterState, Projection, a tuple specifying a parameter and "
+                #     #                              "Projection, a LearningSignal specification dictionary, "
+                #     #                              "or an existing LearningSignal".
+                #     #                             format(CONTROL_SIGNAL, self.name, spec))
 
                 # Validate that the receiver of the LearningProjection (if specified)
                 #     is a MappingProjection and in the same System as self (if specified)
-                if learning_proj:
-                    _validate_receiver(sender_mech=self,
-                                       projection=learning_proj,
-                                       expected_owner_type=MappingProjection,
-                                       spec_type=LEARNING_SIGNAL,
-                                       context=context)
+                try:
+                    for learning_projection in  learning_signal[PARAMS][PROJECTIONS]:
+                        _validate_receiver(sender_mech=self,
+                                           projection=learning_projection,
+                                           expected_owner_type=MappingProjection,
+                                           spec_type=LEARNING_SIGNAL,
+                                           context=context)
+                except KeyError:
+                    pass
 
-                # IMPLEMENTATION NOTE: the tests below allow for the possibility that the MappingProjection
-                #                      may not yet be fully implemented (e.g., this can occur if the
-                #                      LearningMechanism being implemented here is as part of a LearningProjection
-                #                      specification for the MappingProjection's matrix param)
-                # Check that param_name is the name of a parameter of the MappingProjection to be learned
-                if not param_name in (set(mapping_proj.user_params) | set(mapping_proj.user_params[FUNCTION_PARAMS])):
-                    raise LearningMechanismError("{} (in specification of {} for {}) is not an "
-                                                "attribute of {} or its function"
-                                                .format(param_name, LEARNING_SIGNAL, self.name, mapping_proj))
-                # Check that the MappingProjection to be learned has a ParameterState for the param
-                if mapping_proj._parameter_states and not param_name in mapping_proj._parameter_states.names:
-                    raise LearningMechanismError("There is no ParameterState for the parameter ({}) of {} "
-                                                "specified in {} for {}".
-                                                format(param_name, mapping_proj.name, LEARNING_SIGNAL, self.name))
+                # # IMPLEMENTATION NOTE: the tests below allow for the possibility that the MappingProjection
+                # #                      may not yet be fully implemented (e.g., this can occur if the
+                # #                      LearningMechanism being implemented here is as part of a LearningProjection
+                # #                      specification for the MappingProjection's matrix param)
+                # # Check that param_name is the name of a parameter of the MappingProjection to be learned
+                # if not param_name in (set(mapping_proj.user_params) | set(mapping_proj.user_params[FUNCTION_PARAMS])):
+                #     raise LearningMechanismError("{} (in specification of {} for {}) is not an "
+                #                                 "attribute of {} or its function"
+                #                                 .format(param_name, LEARNING_SIGNAL, self.name, mapping_proj))
+                # # Check that the MappingProjection to be learned has a ParameterState for the param
+                # if mapping_proj._parameter_states and not param_name in mapping_proj._parameter_states.names:
+                #     raise LearningMechanismError("There is no ParameterState for the parameter ({}) of {} "
+                #                                 "specified in {} for {}".
+                #                                 format(param_name, mapping_proj.name, LEARNING_SIGNAL, self.name))
 
     def _instantiate_attributes_before_function(self, context=None):
         """Instantiates MappingProjection from error_source (if specified) to the LearningMechanism
@@ -1059,7 +1065,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # Create registry for LearningSignals (to manage names)
         from psyneulink.globals.registry import register_category
         from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-        from psyneulink.components.states.state import State_Base
+        from psyneulink.components.states.state import State_Base, _instantiate_state
+
         register_category(entry=LearningSignal,
                           base_class=State_Base,
                           registry=self._stateRegistry,
@@ -1074,90 +1081,28 @@ class LearningMechanism(AdaptiveMechanism_Base):
             del self._output_states[1]
             for i, learning_signal in enumerate(self.learning_signals):
                 # Instantiate LearningSignal
-                ls = self._instantiate_learning_signal(learning_signal=learning_signal, context=context)
+
+                params = {LEARNED_PARAM:MATRIX}
+
+                # Parses learning_signal specifications (in call to State._parse_state_spec)
+                #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
+                ls = _instantiate_state(state_type=LearningSignal,
+                                                     owner=self,
+                                                     params=params,
+                                                     reference_value=self.learning_signal,
+                                                     modulation=self.modulation,
+                                                     # state_spec=self.learning_signal)
+                                                     state_spec=learning_signal)
+
                 # Add LearningSignal to output_states list
                 self._output_states.append(ls)
                 # Replace spec in learning_signals list with actual LearningSignal
                 self.learning_signals[i] = ls
+
         # Make sure that the first LearningSignal is named LEARNNG_SIGNAL; the names of any others can be user-defined
         self.learning_signals[0].name = LEARNING_SIGNAL
-        # FIX: 10/3/17 - ??PUT IN CALL ABOVE TO _instantiate_learning_signal:
+
         super()._instantiate_output_states(context=context)
-
-    def _instantiate_learning_signal(self, learning_signal=None, context=None):
-        """Instantiate LearningSignal OutputState and assign (if specified) or instantiate LearningProjection
-
-        Notes:
-        * learning_signal arg can be a:
-            - LearningSignal object;
-            - LearningProjection;
-            - ParameterState;
-            - Projection (in which case, MATRIX parameter is used as receiver of LearningProjection)
-            - params dict containing a LearningProjection;
-            - tuple (param_name, PROJECTION), from learning_signals arg of constructor;
-                    [NOTE: this is a convenience format;
-                           it precludes specification of LearningSignal params (??e.g., LEARNING_RATE)]
-            - LearningSignal specification dictionary, from learning_signals arg of constructor
-                    [NOTE: this must have at least NAME:str (param name) and MECHANISM:Mechanism entries;
-                           it can also include a PARAMS entry with a params dict containing LearningSignal params]
-            * NOTE: ParameterState must be for a Projection, and generally for MATRIX parameter of a MappingProjection;
-                    however, LearningSignal is implemented to be applicable for any ParameterState of any Projection.
-        * State._parse_state_spec() is used to parse learning_signal arg
-        * params are expected to be for (i.e., to be passed to) LearningSignal;
-        * wait to instantiate deferred_init() Projections until after LearningSignal is instantiated,
-             so that correct OutputState can be assigned as its sender;
-        * index of OutputState is incremented based on number of LearningSignals already instantiated;
-            this means that a LearningMechanism's function must return as many items as it has LearningSignals,
-            with each item of the function's value used by a corresponding LearningSignal.
-            NOTE: multiple LearningProjections can be assigned to the same LearningSignal to implement "ganged" learning
-                  (that is, learning of many Projections with a single value)
-
-        Returns LearningSignal (OutputState)
-        """
-
-# FIX: THESE NEEDS TO BE DEALT WITH
-# FIX: learning_projection -> learning_projections
-# FIX: trained_projection -> learned_projection
-# FIX: error_signal ??OR?? error_signals??
-# FIX: LearningMechanism: learned_projection attribute -> learned_projections list
-#                         learning_signal -> learning_signals (WITH SINGULAR ONE INDEXING INTO learning_signals.values)
-#  FIX: THIS MAY NEED TO BE A 3d array (TO ACCOMDOATE 2d array (MATRICES) AS ENTRIES)
-
-        from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-        from psyneulink.components.states.state import _parse_state_spec
-        from psyneulink.components.states.parameterstate import ParameterState, _get_parameter_state
-        from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-        from psyneulink.components.projections.projection import _validate_receiver
-        from psyneulink.components.states.state import _instantiate_state
-
-        # FIX: NEED TO CHARACTERIZE error_signal FOR BELOW
-        # # EXTEND error_signals TO ACCOMMODATE NEW LearningSignal -------------------------------------------------
-        # #        also used to determine constraint on LearningSignal output value
-        #
-        # if not hasattr(self, ERROR_SIGNALS) or self.error_signals is None:
-        #     self.error_signals = np.array(defaultErrorSignal)
-        # else:
-        #     self.error_signals = np.append(self.error_signals, defaultErrorSignal)
-
-        # GET index FOR LearningSignal OutputState
-        try:
-            output_state_index = len(self.output_states)
-        except (AttributeError, TypeError):
-            output_state_index = 0
-
-        params = {LEARNED_PARAM:MATRIX}
-
-        # Parses learning_signal specifications (in call to State._parse_state_spec)
-        #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
-        learning_signal = _instantiate_state(state_type=LearningSignal,
-                                             owner=self,
-                                             params=params,
-                                             reference_value=self.learning_signal,
-                                             modulation=self.modulation,
-                                             # state_spec=self.learning_signal)
-                                             state_spec=learning_signal)
-        return learning_signal
 
     def _instantiate_attributes_after_function(self, context=None):
 
@@ -1187,6 +1132,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         self.value = [self.learning_signal, self.error_signal]
         return self.value
+
+    # @property
+    # def learning_signals(self):
+    #     return [ls for ls in self.output_states if isinstance(ls, LearningSignal)]
 
     @property
     def learning_enabled(self):
