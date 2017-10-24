@@ -1320,14 +1320,14 @@ def _parse_connection_specs(connectee_state_type,
         connect_with_attr = PARAMETER_STATES
         # CONNECTIONS_KEYWORD = CONTROLLED_PARAMS
         PROJECTION_SOCKET = RECEIVER
-        Modulators = {None}
+        Modulators = set()
         MOD_KEYWORD = None
     elif isinstance(owner, LearningMechanism) and issubclass(connectee_state_type, LearningSignal):
         ConnectsWith = {ParameterState}
         connect_with_attr = PARAMETER_STATES
         # CONNECTIONS_KEYWORD = LEARNED_PROJECTIONS
         PROJECTION_SOCKET = RECEIVER
-        Modulators = {None}
+        Modulators = set()
         MOD_KEYWORD = None
     elif isinstance(owner, GatingMechanism) and issubclass(connectee_state_type, GatingSignal):
         # FIX:
@@ -1336,7 +1336,7 @@ def _parse_connection_specs(connectee_state_type,
         connect_with_attr = {INPUT_STATES, OUTPUT_STATES}
         # CONNECTIONS_KEYWORD = GATED_STATES
         PROJECTION_SOCKET = RECEIVER
-        Modulators = {None}
+        Modulators = set()
         MOD_KEYWORD = None
 
     else:
@@ -1616,23 +1616,21 @@ def _validate_connection_request(
     else:
         connectee_str =  ""
 
+    # Convert connect_with_states (a set of classes) into a tuple for use as second arg in isinstance()
     connect_with_states = tuple(connect_with_states)
+    # Make sure none of its entries are None (which will fail in isinstance()):
+    if None in connect_with_states:
+        raise ProjectionError("PROGRAM ERROR: connect_with_states ({}) should not have any entries that are \'None\'; "
+                              "Check assignments to \'ConnectsWith' and \'Modulators\' for each State class".
+                              format(connect_with_states))
+
     connect_with_state_names = ", ".join([c.__name__ for c in connect_with_states if c is not None])
 
     # Used below
     def _validate_projection_type(projection_class):
         # Validate that Projection's type can connect with a class in connect_with_states
-        # FIX: 10/3/17 - FOR DEBUGGING:
-        try:
-            x = connect_with_states
-        except AttributeError:
-            pass
-        if connect_with_states is None:
-            pass
-        # FIX: END
 
-        if any(state.__name__ in getattr(projection_class.sockets, projection_socket)
-               for state in connect_with_states):
+        if any(state.__name__ in getattr(projection_class.sockets, projection_socket) for state in connect_with_states):
             # FIX: 10/3/17 - GETS CALLED BY ComparatorMechanism.__init__ BEFORE IT CALLS SUPER, SO
             # FIX:           SO ITS verbosePref AND name ATTRIBUTES HAVE NOT BEEN ASSIGNED
             # if owner.verbosePref:
@@ -1655,7 +1653,13 @@ def _validate_connection_request(
             #     as confirmation that it is the correct type for state_type
             try:
                 projection_socket_state = projection_spec.socket_assignments[RECEIVER]
-                # Projection's socket has been assigned to a State
+            # State for projection's socket couldn't be determined
+            except KeyError:
+                # Use Projection's type for validation
+                # At least validate that Projection's type can connect with a class in connect_with_states
+                return _validate_projection_type(projection_spec.__class__)
+                    # Projection's socket has been assigned to a State
+            else:
                 if projection_socket_state:
                     # Validate that the State is a class in connect_with_states
                     if (isinstance(projection_socket_state, connect_with_states) or
@@ -1664,11 +1668,7 @@ def _validate_connection_request(
                         return True
                 else:
                     return _validate_projection_type(projection_spec.__class__)
-            # State for projection's socket couldn't be determined
-            except KeyError:
-                # Use Projection's type for validation
-                # At least validate that Projection's type can connect with a class in connect_with_states
-                    return _validate_projection_type(projection_spec.__class__)
+
 
         # Projection has been instantiated
         else:

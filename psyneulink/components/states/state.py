@@ -1110,11 +1110,10 @@ class State_Base(State):
         if not isinstance(projection_list, list):
             projection_list = [projection_list]
 
-        receiver_list = receiver
-        if not isinstance(projection_list, list):
-            receiver_list = [receiver_list]
-        if not receiver_list:
+        if not receiver:
             receiver_list = [None] * len(projection_list)
+        elif not isinstance(receiver, list):
+            receiver_list = [receiver]
 
         # Parse Projection specification using self as connectee_state:
         # - calls _parse_projection_spec for projection_spec;
@@ -1131,9 +1130,25 @@ class State_Base(State):
 
             # VALIDATE CONNECTION AND RECEIVER SPECS
 
+            # FIX: 10/3/17
+            # FIX: CLEAN UP THE FOLLOWING WITH REGARD TO RECEIVER, CONNECTION, RECEIVER_STATE, CONNECTION_STATE ETC.
+
+            # Validate that State to be connected to specified in receiver is same as any one specified in connection
+            def _get_receiver_state(spec):
+                """Get state specification from ConnectionTuple, which itself may be a ConnectionTuple"""
+                if isinstance(spec, ConnectionTuple):
+                    return _get_receiver_state(spec.state)
+                return spec
+            receiver_state = _get_receiver_state(receiver)
+            connection_receiver_state = _get_receiver_state(connection)
+            if receiver_state != connection_receiver_state:
+                raise StateError("PROGRAM ERROR: State specified as receiver ({}) "
+                                 "should have been the same as the one specified in the connection {}.".
+                                 format(receiver_state, connection_receiver_state))
+
             if (not isinstance(connection, ConnectionTuple)
                 and receiver
-                and not isinstance(receiver, State, Mechanism)
+                and not isinstance(receiver, (State, Mechanism))
                 and not (inspect.isclass(receiver) and issubclass(receiver, (State, Mechanism)))):
                 raise StateError("Receiver ({}) of {} from {} must be a {}, {}, a class of one, or a {}".
                                  format(receiver, projection_spec, self.name,
@@ -1168,9 +1183,6 @@ class State_Base(State):
             #    note: weight and exponent for connection have been assigned to Projection in _parse_connection_specs
             connection_receiver, weight, exponent, projection_spec = connection
 
-            if receiver and connection_receiver != receiver:
-                assert False
-
             # Parse projection_spec and receiver specifications
             #    - if one is assigned and the other is not, assign the one to the other
             #    - if both are assigned, validate they are the same
@@ -1200,7 +1212,7 @@ class State_Base(State):
                 projection_type = projection_spec.pop(PROJECTION_TYPE, None) or default_projection_type
                 # If Projection was not specified, create default Projection specification dict
                 if not (projection_spec or len(projection_spec)):
-                    projection_spec = {SENDER: self, RECEIVER: receiver}
+                    projection_spec = {SENDER: self, RECEIVER: receiver_state}
                 projection = projection_type(**projection_spec)
                 projection.receiver = projection.receiver or receiver
                 proj_recvr = projection.receiver
@@ -2071,36 +2083,65 @@ def _parse_state_spec(state_type=None,
 
     # State or Mechanism object specification:
     if isinstance(state_specification, (Mechanism, State)):
-        state = None
+        # MODIFIED 10/3/17 OLD:
+        # state = None
+        # MODIFIED 10/3/17 END
 
         # Mechanism object:
         # - call owner to get primary state of specified type
         if isinstance(state_specification, Mechanism):
             mech = state_specification
-            state = state_type._get_primary_state(state_type, mech)
+            # # MODIFIED 10/3/17 OLD:
+            # state = state_type._get_primary_state(state_type, mech)
+            # MODIFIED 10/3/17 NEW:
+            state_specification = state_type._get_primary_state(state_type, mech)
+            # MODIFIED 10/3/17 END
 
-        if isinstance(state, state_type):
-            if reference_value is not None and not iscompatible(reference_value, state.value):
+        # # # MODIFIED 10/3/17 OLD:
+        # if isinstance(state, state_type):
+        #     if reference_value is not None and not iscompatible(reference_value, state.value):
+        #         raise StateError("The value ({}) of the State specified in the call to _instantiate_state for {} ({}) "
+        #                          "does not match the type specified in the \'{}\' argument ({})".
+        #                          format(state.value, owner.name, state.name, REFERENCE_VALUE, reference_value))
+        #     if variable and not iscompatible(variable, state.variable):
+        #         raise StateError("The variable ({}) of the State specified in the call to _instantiate_state for {} "
+        #                          "({}) is not compatible with the one specified in the \'{}\' argument ({})".
+        #                          format(state.variable, owner.name, state.name, VARIABLE, variable))
+        #
+        #     if not state.owner is owner:
+        #         raise StateError("The State specified in a call to _instantiate_state ({}) "
+        #                          "does belong to the {} specified in the \'{}\' argument ({})".
+        #                          format(state.name, owner.name, Mechanism.__name__, OWNER, owner.name))
+        #     return state
+        # MODIFIED 10/3/17 NEW:
+        if isinstance(state_specification, state_type):
+            if reference_value is not None and not iscompatible(reference_value, state_specification.value):
                 raise StateError("The value ({}) of the State specified in the call to _instantiate_state for {} ({}) "
                                  "does not match the type specified in the \'{}\' argument ({})".
-                                 format(state.value, owner.name, state.name, REFERENCE_VALUE, reference_value))
-            if variable and not iscompatible(variable, state.variable):
+                                 format(state_specification.value, owner.name,
+                                        state_specification.name, REFERENCE_VALUE, reference_value))
+            if variable and not iscompatible(variable, state_specification.variable):
                 raise StateError("The variable ({}) of the State specified in the call to _instantiate_state for {} "
                                  "({}) is not compatible with the one specified in the \'{}\' argument ({})".
-                                 format(state.variable, owner.name, state.name, VARIABLE, variable))
+                                 format(state_specification.variable, owner.name,
+                                        state_specification.name, VARIABLE, variable))
 
-            if not state.owner is owner:
+            if not state_specification.owner is owner:
                 raise StateError("The State specified in a call to _instantiate_state ({}) "
                                  "does belong to the {} specified in the \'{}\' argument ({})".
-                                 format(state.name, owner.name, Mechanism.__name__, OWNER, owner.name))
-            return state
+                                 format(state_specification.name, owner.name, Mechanism.__name__, OWNER, owner.name))
+            return state_specification
+        # MODIFIED 10/3/17 END
 
         else:
             # State is not of type specified in call to _instantiate_state, so assume it for one to connect with
             # FIX: 10/3/17 - ??VALIDATE AGAINST OTHER OTHER SPECS (VARIABLE AND VALUE?) IN _instantiate_state
             # FIX:           OR WILL THAT BE HANDLED BELOW OR IN _parse_connection_spec??
             # state_specification = ConnectionTuple(state=state, weight=None, exponent=None, projection=None)
-            state_dict[PROJECTIONS] = ConnectionTuple(state=state, weight=None, exponent=None, projection=None)
+            state_dict[PROJECTIONS] = ConnectionTuple(state=state_specification,
+                                                      weight=None,
+                                                      exponent=None,
+                                                      projection=None)
 
         # # FIX: 10/3/17 - DEAL WITH THIS:
         # # State object:
