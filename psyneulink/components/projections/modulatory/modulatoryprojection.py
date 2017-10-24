@@ -236,19 +236,3 @@ class ModulatoryProjection_Base(Projection_Base):
         else:
             raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized InitStatus ({})".
                                             format(self, self.init_status))
-
-
-def _parse_projection_spec(projection_spec, proj_spec_dict):
-
-
-    # If projection_spec is in the form of a ModulationParam value,
-    #    move it to a MODULATION entry in the params dict
-    if isinstance(projection_spec, ModulationParam):
-        proj_spec_dict[PARAMS].update({MODULATION:projection_spec})
-        return True
-
-    return False
-
-
-
-

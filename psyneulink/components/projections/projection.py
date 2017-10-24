@@ -1038,26 +1038,6 @@ def _parse_projection_spec(projection_spec,
     proj_spec_dict = defaultdict(lambda :None)
     proj_spec_dict.update(kwargs)
 
-    # # Construct default name:
-    # direction_str = defaultdict(lambda :None, {RECEIVER: '_to_', SENDER: '_from_'})[socket]
-    # # FIX: 10/3/17 - THE FOLLOWING NEEDS WORK: TEST THAT:
-    # # FIX:                    socket HAS BEEN PASSED
-    # # FIX:                    state HAS BEEN PASSED
-    # # FIX:                    PROJECTION_TYPE HAS BEEN DETERMINED
-    # # FIX:                    APPEND INDEX IF NAME EXISTS ALREADY (CHECK REGISTRY FOR TYPE)
-    # if state:
-    #     state_name = state.name
-    # else:
-    #     state_name = ""
-    # proj_type = proj_spec_dict[PROJECTION_TYPE]
-    # if proj_type:
-    #     proj_name = proj_type.__name__
-    # else:
-    #     proj_name = ""
-    # direction_str = direction_str or ""
-    #
-    # default_name = proj_name + direction_str + state_name
-
     # Projection object
     if isinstance(projection_spec, Projection):
         projection = projection_spec
@@ -1118,7 +1098,6 @@ def _parse_projection_spec(projection_spec,
                                  state_type.__class__.__name__,
                                  owner.name,
                                  proj_spec_dict[PROJECTION_TYPE]))
-
     return proj_spec_dict
 
 
