@@ -1136,12 +1136,14 @@ class State_Base(State):
                 """Get state specification from ConnectionTuple, which itself may be a ConnectionTuple"""
                 if isinstance(spec, ConnectionTuple):
                     return _get_receiver_state(spec.state)
+                if isinstance(spec, Projection):
+                    return spec.receiver
                 return spec
             receiver_state = _get_receiver_state(receiver)
             connection_receiver_state = _get_receiver_state(connection)
             if receiver_state != connection_receiver_state:
-                raise StateError("PROGRAM ERROR: State specified as receiver ({}) "
-                                 "should have been the same as the one specified in the connection {}.".
+                raise StateError("PROGRAM ERROR: State specified as receiver ({}) should "
+                                 "be the same as the one specified in the connection {}.".
                                  format(receiver_state, connection_receiver_state))
 
             if (not isinstance(connection, ConnectionTuple)
@@ -1268,9 +1270,19 @@ class State_Base(State):
                 if isinstance(receiver, State) and receiver.init_status is InitStatus.INITIALIZED:
                     projection._deferred_init()
 
-            # VALIDATE (if initialized)
+            # VALIDATE (if initialized or being initialized (UNSET))
 
-            if projection.init_status is InitStatus.INITIALIZED:
+            elif projection.init_status in {InitStatus.INITIALIZED, InitStatus.UNSET}:
+
+                # If still being initialized, then assign sender and receiver as necessary
+                if projection.init_status is InitStatus.UNSET:
+                    if not isinstance(projection.sender, State):
+                        projection.sender = self
+                        projection.instance_defaults.variable = self.value
+
+                    if not isinstance(projection.receiver, State):
+                        projection.receiver = receiver_state
+                    # FIX: 10/3/17 -- ?? WHY IS projection.variable A PROPERTY RATHER THAN AN ACTUAL NDARRAY?
 
                 # Validate variable
                 #    - check that input to Projection is compatible with self.value
@@ -2350,6 +2362,10 @@ def _get_state_for_socket(owner,
         # Get State type if it is appropriate for the specified socket of the Projection's type
         s = next((s for s in state_type if s.__name__ in getattr(proj_type.sockets, projection_socket)), None)
         if s:
+            # Return State associated with projection_socket if proj_spec is an actual Projection
+            if isinstance(proj_spec, Projection):
+                return getattr(proj_spec, projection_socket)
+            # Otherwise, return first state_type (s)
             return s
         # FIX: 10/3/17 - ??IS THE FOLLOWING CORRECT:  ??HOW IS IT DIFFERENT FROM ABOVE?
         # Otherwise, get State types that are allowable for that projection_socket

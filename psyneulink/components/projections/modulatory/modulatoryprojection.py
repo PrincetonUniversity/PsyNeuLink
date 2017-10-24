@@ -221,7 +221,7 @@ class ModulatoryProjection_Base(Projection_Base):
 
     def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
 
-        if self.init_status is InitStatus.INITIALIZED:
+        if self.init_status in {InitStatus.INITIALIZED, InitStatus.UNSET}:
             # If the name is not a default name for the class, return
             if not self.className + '-' in self.name:
                 return self.name
