@@ -2083,37 +2083,13 @@ def _parse_state_spec(state_type=None,
 
     # State or Mechanism object specification:
     if isinstance(state_specification, (Mechanism, State)):
-        # MODIFIED 10/3/17 OLD:
-        # state = None
-        # MODIFIED 10/3/17 END
 
         # Mechanism object:
         # - call owner to get primary state of specified type
         if isinstance(state_specification, Mechanism):
             mech = state_specification
-            # # MODIFIED 10/3/17 OLD:
-            # state = state_type._get_primary_state(state_type, mech)
-            # MODIFIED 10/3/17 NEW:
             state_specification = state_type._get_primary_state(state_type, mech)
-            # MODIFIED 10/3/17 END
 
-        # # # MODIFIED 10/3/17 OLD:
-        # if isinstance(state, state_type):
-        #     if reference_value is not None and not iscompatible(reference_value, state.value):
-        #         raise StateError("The value ({}) of the State specified in the call to _instantiate_state for {} ({}) "
-        #                          "does not match the type specified in the \'{}\' argument ({})".
-        #                          format(state.value, owner.name, state.name, REFERENCE_VALUE, reference_value))
-        #     if variable and not iscompatible(variable, state.variable):
-        #         raise StateError("The variable ({}) of the State specified in the call to _instantiate_state for {} "
-        #                          "({}) is not compatible with the one specified in the \'{}\' argument ({})".
-        #                          format(state.variable, owner.name, state.name, VARIABLE, variable))
-        #
-        #     if not state.owner is owner:
-        #         raise StateError("The State specified in a call to _instantiate_state ({}) "
-        #                          "does belong to the {} specified in the \'{}\' argument ({})".
-        #                          format(state.name, owner.name, Mechanism.__name__, OWNER, owner.name))
-        #     return state
-        # MODIFIED 10/3/17 NEW:
         if isinstance(state_specification, state_type):
             if reference_value is not None and not iscompatible(reference_value, state_specification.value):
                 raise StateError("The value ({}) of the State specified in the call to _instantiate_state for {} ({}) "
@@ -2131,7 +2107,6 @@ def _parse_state_spec(state_type=None,
                                  "does belong to the {} specified in the \'{}\' argument ({})".
                                  format(state_specification.name, owner.name, Mechanism.__name__, OWNER, owner.name))
             return state_specification
-        # MODIFIED 10/3/17 END
 
         else:
             # State is not of type specified in call to _instantiate_state, so assume it for one to connect with
