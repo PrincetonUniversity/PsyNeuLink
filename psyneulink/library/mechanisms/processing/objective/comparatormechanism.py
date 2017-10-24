@@ -58,14 +58,14 @@ A ComparatorMechanism has two `input_states <ComparatorMechanism.input_states>`,
 constructor.  The InputStates are listed in the Mechanism's `input_states <ComparatorMechanism.input_States>` attribute
 and named, respectively, *SAMPLE* and *TARGET*.  The OutputStates from which they receive their projections (specified
 in the **sample** and **target** arguments) are listed in the Mechanism's `sample <ComparatorMechanism.sample>` and
-`target <ComparatorMechanism.target>` attributes as well as in its `monitored_output_states <Comparator.monitored_output_states>`
-attribute. The ComparatorMechanism's `function <ComparatorMechanism.function>` compares the value of the sample and
-target InputStates.  By default, it uses a `LinearCombination` function, assigning the sample InputState a `weight
-<LinearCombination.weight>` of *-1* and the target a `weight <LinearCombination.weight>` of *1*, so that the sample is
-subtracted from the target.  However, the `function <ComparatorMechanism.function>` can be customized, so long as it is
-replaced with one that takes two arrays with the same format as its inputs, and generates a similar array as its result.
-The result is assigned as the value of the Comparator Mechanism's *OUTCOME* (`primary <OutputState_Primary>`)
-OutputState.
+`target <ComparatorMechanism.target>` attributes as well as in its `monitored_output_states
+<Comparator.monitored_output_states>` attribute. The ComparatorMechanism's `function <ComparatorMechanism.function>`
+compares the value of the sample and target InputStates.  By default, it uses a `LinearCombination` function,
+assigning the sample InputState a `weight <LinearCombination.weight>` of *-1* and the target a `weight
+<LinearCombination.weight>` of *1*, so that the sample is subtracted from the target.  However, the `function
+<ComparatorMechanism.function>` can be customized, so long as it is replaced with one that takes two arrays with the
+same format as its inputs, and generates a similar array as its result. The result is assigned as the value of the
+Comparator Mechanism's *OUTCOME* (`primary <OutputState_Primary>`) OutputState.
 
 .. _ComparatorMechanism_Function:
 
@@ -87,8 +87,8 @@ Example
 
 *Formatting InputState values*
 
-The **input_states** argument can be used to specify a particular format for the SAMPLE and/or TARGET InputStates
-of a ComparatorMechanism.  This can be useful when one or both of these must be different than the format of the
+The **variable** argument can be used to specify a particular format for the SAMPLE and/or TARGET InputStates
+of a ComparatorMechanism.  This can be useful when one or both of these differ from the format of the
 OutputState(s) specified in the **sample** and **target** arguments. For example, for `Reinforcement Learning
 <Reinforcement>`, a ComparatorMechanism is used to monitor an action selection Mechanism (the sample), and compare
 this with a reinforcement signal (the target).  In the example below, the action selection Mechanism is a
@@ -97,7 +97,7 @@ an action.  This generates a vector with a single non-zero value (the selected a
 specifying it as the ComparatorMechanism's **sample** argument will generate a corresponding InputState with a vector
 as its value.  This will not match the reward signal specified in the ComparatorMechanism's **target** argument, the
 value of which is a single scalar.  This can be dealt with by explicitly specifying the format for the SAMPLE and
-TARGET InputStates in the **input_states** argument of the ComparatorMechanism's constructor, as follows::
+TARGET InputStates in the **variable** argument of the ComparatorMechanism's constructor, as follows::
 
     my_action_selection_mech = TransferMechanism(size=5,
                                                  function=SoftMax(output=PROB))
@@ -106,12 +106,12 @@ TARGET InputStates in the **input_states** argument of the ComparatorMechanism's
 
     my_comparator_mech = ComparatorMechanism(sample=my_action_selection_mech,
                                              target=my_reward_mech,
-                                             input_states = [[0],[0]])
+                                             variable = [[0],[0]])
 
 Note that ``my_action_selection_mechanism`` is specified to take an array of length 5 as its input, and therefore
 generate one of the same length as its `primary output <OutputState_Primary>`.  Since it is assigned as the **sample**
 of the ComparatorMechanism, by default this will create a *SAMPLE* InputState of length 5, that will not match the
-length of the *TARGET* InputState (which is 1).  This is taken care of, by specifying the **input_states** argument
+length of the *TARGET* InputState (which is 1).  This is taken care of, by specifying the **variable** argument
 as an array with two single-value arrays (corresponding to the *SAMPLE* and *TARGET* InputStates). (In this
 example, the **sample** and **target** arguments are specified as Mechanisms since, by default, each has only a single
 (`primary <OutputState_Primary>`) OutputState, that will be used;  if either had more than one OutputState, and

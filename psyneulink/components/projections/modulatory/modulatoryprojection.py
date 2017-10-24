@@ -81,13 +81,20 @@ Class Reference
 """
 
 from psyneulink.components.projections.projection import Projection_Base
-from psyneulink.globals.keywords import MODULATORY_PROJECTION
+from psyneulink.globals.keywords import MODULATORY_PROJECTION, NAME
+from psyneulink.components.component import InitStatus
 
 __all__ = [
     'MODULATORY_SIGNAL_PARAMS'
 ]
 
 MODULATORY_SIGNAL_PARAMS = 'modulatory_signal_params'
+
+
+class ModulatoryProjectionError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
 
 class ModulatoryProjection_Base(Projection_Base):
     """
@@ -212,14 +219,20 @@ class ModulatoryProjection_Base(Projection_Base):
                          prefs=prefs,
                          context=context)
 
+    def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
 
-def _parse_projection_spec(projection_spec, proj_spec_dict):
+        if self.init_status is InitStatus.INITIALIZED:
+            # If the name is not a default name for the class, return
+            if not self.className + '-' in self.name:
+                return self.name
+            self.name = self.className + " for " + \
+                              self.receiver.name + " of " + \
+                              self.receiver.owner.name
 
+        elif self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+            projection_name = self.className + " for " + state.owner.name + " " + state.name
+            self.init_args[NAME] = self.init_args[NAME] or projection_name
 
-    # If projection_spec is in the form of a ModulationParam value,
-    #    move it to a MODULATION entry in the params dict
-    if isinstance(projection_spec, ModulationParam):
-        proj_spec_dict[PARAMS].update({MODULATION:projection_spec})
-        return True
-
-    return False
+        else:
+            raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized InitStatus ({})".
+                                            format(self, self.init_status))

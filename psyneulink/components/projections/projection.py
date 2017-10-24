@@ -315,8 +315,8 @@ import warnings
 from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.keywords import \
-    CONTEXT, CONTROL, CONTROL_PROJECTION, EXPONENT, GATING, GATING_PROJECTION, INPUT_STATE, \
-    LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
+    CONTEXT, CONTROL, CONTROL_PROJECTION, EXPONENT, GATING, GATING_PROJECTION, \
+    INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
     MECHANISM, NAME, OUTPUT_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, \
     PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, \
     STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
@@ -931,6 +931,10 @@ class Projection_Base(Projection):
         return {SENDER:sender,
                 RECEIVER:receiver}
 
+    def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
+        raise ProjectionError("PROGRAM ERROR: {} must implement _assign_default_projection_name().".
+                              format(self.__class__.__name__))
+
 
 def _is_projection_spec(spec, include_matrix_spec=True):
     """Evaluate whether spec is a valid Projection specification
@@ -1034,26 +1038,6 @@ def _parse_projection_spec(projection_spec,
     proj_spec_dict = defaultdict(lambda :None)
     proj_spec_dict.update(kwargs)
 
-    # # Construct default name:
-    # direction_str = defaultdict(lambda :None, {RECEIVER: '_to_', SENDER: '_from_'})[socket]
-    # # FIX: 10/3/17 - THE FOLLOWING NEEDS WORK: TEST THAT:
-    # # FIX:                    socket HAS BEEN PASSED
-    # # FIX:                    state HAS BEEN PASSED
-    # # FIX:                    PROJECTION_TYPE HAS BEEN DETERMINED
-    # # FIX:                    APPEND INDEX IF NAME EXISTS ALREADY (CHECK REGISTRY FOR TYPE)
-    # if state:
-    #     state_name = state.name
-    # else:
-    #     state_name = ""
-    # proj_type = proj_spec_dict[PROJECTION_TYPE]
-    # if proj_type:
-    #     proj_name = proj_type.__name__
-    # else:
-    #     proj_name = ""
-    # direction_str = direction_str or ""
-    #
-    # default_name = proj_name + direction_str + state_name
-
     # Projection object
     if isinstance(projection_spec, Projection):
         projection = projection_spec
@@ -1114,7 +1098,6 @@ def _parse_projection_spec(projection_spec,
                                  state_type.__class__.__name__,
                                  owner.name,
                                  proj_spec_dict[PROJECTION_TYPE]))
-
     return proj_spec_dict
 
 
@@ -1287,24 +1270,24 @@ def _parse_connection_specs(connectee_state_type,
                        ProcessInputState,
                        SystemInputState,
                        GatingSignal}
-        connect_with_attr = OUTPUT_STATES  # attribute that holds the ConnectsWith States
+        connect_with_attr = OUTPUT_STATES    # attribute that holds the ConnectsWith States
         CONNECTIONS_KEYWORD = OUTPUT_STATES  # keyword used in a State specification dictionary for connection specs
         PROJECTION_SOCKET = SENDER           # socket of the Projection that connects to the ConnectsWith State
-        Modulator = GatingSignal             # type of ModulatorySignal the connecteed can receiver
+        Modulators = {GatingSignal}          # type of ModulatorySignals the connectee can receive
         # MOD_KEYWORD = GATING_SIGNALS         # keyword used in a State specification dictionary for Modulatory specs
     elif isinstance(owner, Mechanism) and issubclass(connectee_state_type, ParameterState):
         ConnectsWith = {ControlSignal}
         connect_with_attr = CONTROL_SIGNALS
         CONNECTIONS_KEYWORD = CONTROL_SIGNALS
         PROJECTION_SOCKET = SENDER
-        Modulator = ControlSignal
+        Modulators = {ControlSignal}
         # MOD_KEYWORD = CONTROL_SIGNALS
     elif isinstance(owner, MappingProjection) and issubclass(connectee_state_type, ParameterState):
         ConnectsWith = {LearningSignal, ControlSignal}
         connect_with_attr = LEARNING_SIGNALS
         CONNECTIONS_KEYWORD = LEARNING_SIGNALS
         PROJECTION_SOCKET = SENDER
-        Modulator = LearningSignal
+        Modulators = {LearningSignal}
         MOD_KEYWORD = LEARNING_SIGNALS
 
     # Request for efferent Projections (projection socket is RECEIVER)
@@ -1313,28 +1296,30 @@ def _parse_connection_specs(connectee_state_type,
         connect_with_attr = INPUT_STATES
         CONNECTIONS_KEYWORD = INPUT_STATES
         PROJECTION_SOCKET = RECEIVER
-        Modulator = GatingSignal
+        Modulators = {GatingSignal}
         MOD_KEYWORD = GATING_SIGNALS
     elif isinstance(owner, ControlMechanism) and issubclass(connectee_state_type, ControlSignal):
         ConnectsWith = {ParameterState}
         connect_with_attr = PARAMETER_STATES
         # CONNECTIONS_KEYWORD = CONTROLLED_PARAMS
         PROJECTION_SOCKET = RECEIVER
-        Modulator = None
+        Modulators = set()
         MOD_KEYWORD = None
     elif isinstance(owner, LearningMechanism) and issubclass(connectee_state_type, LearningSignal):
         ConnectsWith = {ParameterState}
         connect_with_attr = PARAMETER_STATES
         # CONNECTIONS_KEYWORD = LEARNED_PROJECTIONS
         PROJECTION_SOCKET = RECEIVER
-        Modulator = None
+        Modulators = set()
         MOD_KEYWORD = None
     elif isinstance(owner, GatingMechanism) and issubclass(connectee_state_type, GatingSignal):
+        # FIX:
         ConnectsWith = {InputState, OutputState}
+        # FIX:
         connect_with_attr = {INPUT_STATES, OUTPUT_STATES}
         # CONNECTIONS_KEYWORD = GATED_STATES
         PROJECTION_SOCKET = RECEIVER
-        Modulator = None
+        Modulators = set()
         MOD_KEYWORD = None
 
     else:
@@ -1365,13 +1350,8 @@ def _parse_connection_specs(connectee_state_type,
         #     along with defaults for weight and exponent, and call _parse_connection_specs recursively
         #     to validate the state spec and append ConnectionTuple to connect_with_states
         if isinstance(connection, (Mechanism, State, type)):
-            # connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, DEFAULT_PROJECTION)
             # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ConnectionTuple THAT HAS BOTH SENDER AND RECEIVER
-            # FIX: 10/3/17 - NEED TO RESOLVE Projection tpye HERE OR IN _parse_connection_specs
-            if PROJECTION_SOCKET is SENDER:
-                projection_spec = connectee_state_type
-            elif PROJECTION_SOCKET is RECEIVER:
-                projection_spec = connection
+            projection_spec = connectee_state_type
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
 
@@ -1380,12 +1360,6 @@ def _parse_connection_specs(connectee_state_type,
         #  but also leave it is as the connection specification (it will get resolved to a State reference when the
         #    tuple is created in the recursive call to _parse_connection_specs below).
         elif _is_projection_spec(connection, include_matrix_spec=False):
-            # FIX: 10/3/17:  RENAME _parse_projection_keyword to _parse_projection_spec
-            # FIX:           MODIFY _parse_projection_keyword to TO ACTUALLY RESOLVE IT INTO A Projection Specification Dict
-            # FIX:           CALL _parse_projection_keyword HERE AND ASSIGN RESULT TO project_spec
-            # FIX:           ONLY ASSIGN ORIGINAL CONNECTION SPEC TO connection IF IT IS A State OR Mechanism SPEC
-            # FIX:           (i.e., NOT IF IT IS A VALUE OR STRING)
-            # FIX:           ?? SHOULD THIS BE HANDLED LIKE STATE SPEC (AS ABOVE): I.E., CONTINGENT ON PROJECTION_SOCKET
             projection_spec = connection
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
@@ -1498,9 +1472,9 @@ def _parse_connection_specs(connectee_state_type,
         #        State specification tuple is handled in the _parse_state_specific_params() method of State subclasses
 
         elif isinstance(connection, tuple):
+
         # Notes:
         #    - first item is assumed to always be a specification for the State being connected with
-
             if len(connection) == 2:
                 state_spec, projection_spec = connection
                 weight = DEFAULT_WEIGHT
@@ -1512,7 +1486,7 @@ def _parse_connection_specs(connectee_state_type,
                 raise ProjectionError("{} specificaton tuple for {} ({}) must have either two or four items".
                                       format(connectee_state_type.__name__, owner.name, connection))
 
-            # # Validate state specification, and get actual state referenced if it has been instantiated
+            # Validate state specification, and get actual state referenced if it has been instantiated
             state = _get_state_for_socket(owner=owner,
                                           state_spec=state_spec,
                                           state_type=ConnectsWith,
@@ -1551,7 +1525,7 @@ def _parse_connection_specs(connectee_state_type,
                                                          state_type=connectee_state_type)
 
                 _validate_connection_request(owner,
-                                             ConnectsWith,
+                                             ConnectsWith | Modulators,
                                              projection_spec,
                                              PROJECTION_SOCKET,
                                              connectee_state_type)
@@ -1610,14 +1584,21 @@ def _validate_connection_request(
     else:
         connectee_str =  ""
 
+    # Convert connect_with_states (a set of classes) into a tuple for use as second arg in isinstance()
     connect_with_states = tuple(connect_with_states)
-    connect_with_state_names = ", ".join([c.__name__ for c in connect_with_states])
+    # Make sure none of its entries are None (which will fail in isinstance()):
+    if None in connect_with_states:
+        raise ProjectionError("PROGRAM ERROR: connect_with_states ({}) should not have any entries that are \'None\'; "
+                              "Check assignments to \'ConnectsWith' and \'Modulators\' for each State class".
+                              format(connect_with_states))
+
+    connect_with_state_names = ", ".join([c.__name__ for c in connect_with_states if c is not None])
 
     # Used below
     def _validate_projection_type(projection_class):
         # Validate that Projection's type can connect with a class in connect_with_states
-        if any(state.__name__ in getattr(projection_class.sockets, projection_socket)
-               for state in connect_with_states):
+
+        if any(state.__name__ in getattr(projection_class.sockets, projection_socket) for state in connect_with_states):
             # FIX: 10/3/17 - GETS CALLED BY ComparatorMechanism.__init__ BEFORE IT CALLS SUPER, SO
             # FIX:           SO ITS verbosePref AND name ATTRIBUTES HAVE NOT BEEN ASSIGNED
             # if owner.verbosePref:
@@ -1637,10 +1618,16 @@ def _validate_connection_request(
         if projection_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
 
             # Try to get the State to which the Projection will be connected when fully initialized
-            #     as positive confirmation that it is the correct type for state_type
+            #     as confirmation that it is the correct type for state_type
             try:
                 projection_socket_state = projection_spec.socket_assignments[RECEIVER]
-                # Projection's socket has been assigned to a State
+            # State for projection's socket couldn't be determined
+            except KeyError:
+                # Use Projection's type for validation
+                # At least validate that Projection's type can connect with a class in connect_with_states
+                return _validate_projection_type(projection_spec.__class__)
+                    # Projection's socket has been assigned to a State
+            else:
                 if projection_socket_state:
                     # Validate that the State is a class in connect_with_states
                     if (isinstance(projection_socket_state, connect_with_states) or
@@ -1649,11 +1636,7 @@ def _validate_connection_request(
                         return True
                 else:
                     return _validate_projection_type(projection_spec.__class__)
-            # State for projection's socket couldn't be determined
-            except KeyError:
-                # Use Projection's type for validation
-                # At least validate that Projection's type can connect with a class in connect_with_states
-                    return _validate_projection_type(projection_spec.__class__)
+
 
         # Projection has been instantiated
         else:
@@ -1715,6 +1698,7 @@ def _validate_connection_request(
         # Try to validate using entry for Projection' type
         elif PROJECTION_TYPE in projection_spec and projection_spec[PROJECTION_TYPE] is not None:
             _validate_projection_type(projection_spec[PROJECTION_TYPE])
+            return True
 
     # Projection spec is too abstract to validate here
     #    (e.g., value or a name that will be used in context to instantiate it)
@@ -1841,11 +1825,10 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     from psyneulink.components.states.inputstate import InputState
     from psyneulink.components.states.parameterstate import ParameterState
 
-    if not isinstance(state, (int, str, InputState, ParameterState)):
-        raise ProjectionError("State specification(s) for {0} (as receivers of {1}) contain(s) one or more items"
-                             " that is not a name, reference to an InputState or ParameterState object, "
-                             " or an index (for input_states)".
-                             format(receiver.name, projection_spec.name))
+    if not isinstance(state, (int, str, State)):
+        raise ProjectionError("State specification(s) for {} (as receiver(s) of {}) contain(s) one or more items"
+                             " that is not a name, reference to a {} or an index for one".
+                             format(receiver.name, projection_spec.name, State.__name__))
 
     # state is State object, so use that
     if isinstance(state, State_Base):

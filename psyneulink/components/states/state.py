@@ -114,7 +114,6 @@ Wherever a State is specified, it can be done using any of the following:
       ..
       * *NAME*:<str>
           the string is used as the name of the State;
-
       ..
       * *STATE_TYPE*:<State type>
           specifies type of State to create (necessary if it cannot be determined from the
@@ -1007,11 +1006,7 @@ class State_Base(State):
                 else:
                     raise StateError("SENDER of {} to {} of {} is neither a State or State class".
                                      format(projection_type.__name__, self.name, self.owner.name))
-                if isinstance(projection, PathwayProjection_Base):
-                    projection_name = projection_type.__name__ + " from " + sender_name + " to " + self.owner.name
-                else:
-                    projection_name = sender_name + " for " + self.owner.name + " " + self.name
-                projection.init_args[NAME] = projection.init_args[NAME] or projection_name
+                projection._assign_default_projection_name(state=self, sender_name=sender_name, receiver_name=self.name)
 
                 # If sender has been instantiated, try to complete initialization
                 # If not, assume it will be handled later (by Mechanism or Composition)
@@ -1087,6 +1082,8 @@ class State_Base(State):
                its self.path_afferents or .mod_afferents attribute (in Projection._instantiate_receiver) and
                its sender's .efferents attribute (in Projection._instantiate_sender);
                so, need to test for prior assignment to avoid duplicates.
+
+        Returns instantiated Projection
         """
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
@@ -1111,11 +1108,10 @@ class State_Base(State):
         if not isinstance(projection_list, list):
             projection_list = [projection_list]
 
-        receiver_list = receiver
-        if not isinstance(projection_list, list):
-            receiver_list = [receiver_list]
-        if not receiver_list:
+        if not receiver:
             receiver_list = [None] * len(projection_list)
+        elif not isinstance(receiver, list):
+            receiver_list = [receiver]
 
         # Parse Projection specification using self as connectee_state:
         # - calls _parse_projection_spec for projection_spec;
@@ -1132,9 +1128,25 @@ class State_Base(State):
 
             # VALIDATE CONNECTION AND RECEIVER SPECS
 
+            # FIX: 10/3/17
+            # FIX: CLEAN UP THE FOLLOWING WITH REGARD TO RECEIVER, CONNECTION, RECEIVER_STATE, CONNECTION_STATE ETC.
+
+            # Validate that State to be connected to specified in receiver is same as any one specified in connection
+            def _get_receiver_state(spec):
+                """Get state specification from ConnectionTuple, which itself may be a ConnectionTuple"""
+                if isinstance(spec, ConnectionTuple):
+                    return _get_receiver_state(spec.state)
+                return spec
+            receiver_state = _get_receiver_state(receiver)
+            connection_receiver_state = _get_receiver_state(connection)
+            if receiver_state != connection_receiver_state:
+                raise StateError("PROGRAM ERROR: State specified as receiver ({}) "
+                                 "should have been the same as the one specified in the connection {}.".
+                                 format(receiver_state, connection_receiver_state))
+
             if (not isinstance(connection, ConnectionTuple)
                 and receiver
-                and not isinstance(receiver, State, Mechanism)
+                and not isinstance(receiver, (State, Mechanism))
                 and not (inspect.isclass(receiver) and issubclass(receiver, (State, Mechanism)))):
                 raise StateError("Receiver ({}) of {} from {} must be a {}, {}, a class of one, or a {}".
                                  format(receiver, projection_spec, self.name,
@@ -1169,9 +1181,6 @@ class State_Base(State):
             #    note: weight and exponent for connection have been assigned to Projection in _parse_connection_specs
             connection_receiver, weight, exponent, projection_spec = connection
 
-            if receiver and connection_receiver != receiver:
-                assert False
-
             # Parse projection_spec and receiver specifications
             #    - if one is assigned and the other is not, assign the one to the other
             #    - if both are assigned, validate they are the same
@@ -1201,7 +1210,7 @@ class State_Base(State):
                 projection_type = projection_spec.pop(PROJECTION_TYPE, None) or default_projection_type
                 # If Projection was not specified, create default Projection specification dict
                 if not (projection_spec or len(projection_spec)):
-                    projection_spec = {SENDER: self, RECEIVER: receiver}
+                    projection_spec = {SENDER: self, RECEIVER: receiver_state}
                 projection = projection_type(**projection_spec)
                 projection.receiver = projection.receiver or receiver
                 proj_recvr = projection.receiver
@@ -1303,6 +1312,8 @@ class State_Base(State):
             #    and assigned Projection to self.efferents
             if not projection in self.efferents:
                 self.efferents.append(projection)
+
+            return projection
 
 
     def _get_primary_state(self, mechanism):
@@ -1735,12 +1746,14 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     Returns a State or None
     """
 
-    parsed_reference_value = _parse_state_spec(owner=owner,
+    # Parse reference value to get actual value (in case it is, itself, a specification dict)
+    reference_value_dict = _parse_state_spec(owner=owner,
                                                state_type=state_type,
                                                state_spec=reference_value,
                                                value=None,
                                                params=None)
-    reference_value = parsed_reference_value[VARIABLE]
+    # Its value is assigned to the VARIABLE entry (including if it was originally just a value)
+    reference_value = reference_value_dict[VARIABLE]
 
     # standard_args = get_args(inspect.currentframe())
     # parsed_state_spec  = _parse_state_spec(standard_args, context, **state_spec)
@@ -1798,11 +1811,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     # - check that it doesn't already belong to another owner
     # - if either fails, assign default State
 
-    # MODIFIED 10/3/17 OLD:
-    # if _is_state_class(parsed_state_spec):
-    # MODIFIED 10/3/17 NEW:
     if isinstance(parsed_state_spec, State):
-    # MODIFIED 10/3/17 END
 
         state = parsed_state_spec
 
@@ -1825,7 +1834,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                 variable = owner.instance_defaults.variable
 
         # # FIX: 10/3/17 - PER THE FOLLOWING (FROM _parse_state_spec DOCSTRING):
-        # # FIX: DO THIS _parse_connection_specs??  IS THIS EVE CORRECT?
+        # # FIX: DO THIS _parse_connection_specs??  IS THIS EVEN CORRECT?
         # # *value* arg should generally be a constraint for the value of the State;  however,
         # #     if state_spec is a Projection, and method is being called from:
         # #         InputState, value should be the projection's value;
@@ -1853,17 +1862,8 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     state_spec_dict = parsed_state_spec
 
-    value = state_spec_dict.pop(VALUE, None)
+    state_spec_dict.pop(VALUE, None)
 
-    # FIX: 10/3/17 - RECONCILE WITH "PER THE FOLLOWING" ABOVE
-    # # Check that it's variable is compatible with reference_value, and if not, assign the latter as default variable
-    # # if reference_value is not None and not iscompatible(variable, reference_value):
-    # if reference_value is None or not iscompatible(variable, reference_value):
-    #     raise StateError("{}'s value attribute ({}) is incompatible with the variable ({}) of its owner ({})".
-    #                      format(state_spec_dict[NAME],
-    #                             state_spec_dict[VALUE],
-    #                             reference_value,
-    #                             state_spec_dict[OWNER].name))
     # MODIFIED 10/3/17 OLD:
     #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
     if state_spec_dict[REFERENCE_VALUE] is None:
@@ -2017,7 +2017,8 @@ def _parse_state_spec(state_type=None,
        generate a warning and are ignored.
 
     """
-    from psyneulink.components.projections.projection import _is_projection_spec, _parse_connection_specs
+    from psyneulink.components.projections.projection \
+        import _is_projection_spec, _parse_connection_specs, ConnectionTuple
 
     # Get all of the standard arguments passed from _instantiate_state (i.e., those other than state_spec) into a dict
     standard_args = get_args(inspect.currentframe())
@@ -2047,16 +2048,15 @@ def _parse_state_spec(state_type=None,
 
         # Delete the State specification dictionary from state_spec
         del state_spec[STATE_SPEC_ARG]
+        if REFERENCE_VALUE_NAME in state_spec:
+            del state_spec[REFERENCE_VALUE_NAME]
 
     if state_spec:
-        # print('Args other than standard args and state_spec were in _instantiate_state ({})'.
-        #       format(state_spec))
-        # state_specific_args.update(state_spec)
-        # FIX: 10/3/17: REMOVE REFERENCE_VALUE_NAME HERE?
-        pass
+        if owner.verbosePref:
+            print('Args other than standard args and state_spec were in _instantiate_state ({})'.
+                  format(state_spec))
+        state_specific_args.update(state_spec)
 
-    # state_dict = defaultdict(lambda: None)
-    # state_dict.update(standard_args)
     state_dict = standard_args
     context = state_dict.pop(CONTEXT, None)
     owner = state_dict[OWNER]
@@ -2077,52 +2077,66 @@ def _parse_state_spec(state_type=None,
 
     # EXISTING STATES
 
-    # Validate that specified state is consistent with any standard_args specified in call to _instantiate_state
+    # Determine whether specified State is one to be instantiated or to be connected with,
+    #    and validate that it is consistent with any standard_args specified in call to _instantiate_state
 
     # State or Mechanism object specification:
     if isinstance(state_specification, (Mechanism, State)):
-        state = None
-
-        # State object:
-        if isinstance(state_specification, State):
-            # Validate that State object is same type as one specified in state_type (in call to _instantiate_state)
-            if not type(state_specification) is state_type:
-                raise StateError("PROGRAM ERROR: \'{}\' entry in State specification dictionary for {} ({}) "
-                                 "does not match the type specified in the call to _instantiate_state ({})".
-                                 format(STATE_TYPE, owner.name, state_specification, state_type))
-            state = state_specification
 
         # Mechanism object:
         # - call owner to get primary state of specified type
-        # - validate and return
-        elif isinstance(state_specification, Mechanism):
+        if isinstance(state_specification, Mechanism):
             mech = state_specification
-            state = state_type._get_primary_state(state_type, mech)
+            state_specification = state_type._get_primary_state(state_type, mech)
 
-        if not isinstance(state, state_type):
-            raise StateError("State specified in the call to _instantiate_state for {} ({}) "
-                             "does not match the type specified in the \'{}\' argument ({})".
-                             format(owner.name, state.name, STATE_TYPE, state_type.__name__))
+        if isinstance(state_specification, state_type):
+            if reference_value is not None and not iscompatible(reference_value, state_specification.value):
+                raise StateError("The value ({}) of the State specified in the call to _instantiate_state for {} ({}) "
+                                 "does not match the type specified in the \'{}\' argument ({})".
+                                 format(state_specification.value, owner.name,
+                                        state_specification.name, REFERENCE_VALUE, reference_value))
+            if variable and not iscompatible(variable, state_specification.variable):
+                raise StateError("The variable ({}) of the State specified in the call to _instantiate_state for {} "
+                                 "({}) is not compatible with the one specified in the \'{}\' argument ({})".
+                                 format(state_specification.variable, owner.name,
+                                        state_specification.name, VARIABLE, variable))
 
-        if not state.owner is owner:
-            raise StateError("The State specified in a call to _instantiate_state ({}) "
-                             "does belong to the {} specified in the \'{}\' argument ({})".
-                             format(state.name, owner.name, Mechanism.__name__, OWNER, owner.name))
+            if not state_specification.owner is owner:
+                raise StateError("The State specified in a call to _instantiate_state ({}) "
+                                 "does belong to the {} specified in the \'{}\' argument ({})".
+                                 format(state_specification.name, owner.name, Mechanism.__name__, OWNER, owner.name))
+            return state_specification
 
-        if reference_value is not None and not iscompatible(reference_value, state.value):
-            raise StateError("The value ({}) of the State specified in the call to _instantiate_state for {} ({}) "
-                             "does not match the type specified in the \'{}\' argument ({})".
-                             format(state.value, owner.name, state.name, REFERENCE_VALUE, reference_value))
+        else:
+            # State is not of type specified in call to _instantiate_state, so assume it for one to connect with
+            # FIX: 10/3/17 - ??VALIDATE AGAINST OTHER OTHER SPECS (VARIABLE AND VALUE?) IN _instantiate_state
+            # FIX:           OR WILL THAT BE HANDLED BELOW OR IN _parse_connection_spec??
+            # state_specification = ConnectionTuple(state=state, weight=None, exponent=None, projection=None)
+            state_dict[PROJECTIONS] = ConnectionTuple(state=state_specification,
+                                                      weight=None,
+                                                      exponent=None,
+                                                      projection=None)
 
-        if variable and  not iscompatible(variable, state.variable):
-            raise StateError("The variable ({}) of the State specified in the call to _instantiate_state for {} "
-                             "({}) is not compatible with the one specified in the \'{}\' argument ({})".
-                             format(state.variable, owner.name, state.name, VARIABLE, variable))
-
-        return state
+        # # FIX: 10/3/17 - DEAL WITH THIS:
+        # # State object:
+        # if isinstance(state_specification, State):
+        #     # # MODIFIED 10/3/17 OLD:
+        #     # # Validate that State object is same type as one specified in state_type (in call to _instantiate_state)
+        #     # if not type(state_specification) is state_type:
+        #     #     raise StateError("PROGRAM ERROR: \'{}\' entry in State specification dictionary for {} ({}) "
+        #     #                      "does not match the type specified in the call to _instantiate_state ({})".
+        #     #                      format(STATE_TYPE, owner.name, state_specification, state_type))
+        #     # state = state_specification
+        #     # MODIFIED 10/3/17 NEW:
+        #     # Check whether State object is same type as one specified in state_type (in call to _instantiate_state)
+        #     if type(state_specification) is state_type:
+        #         # If so, treat as specification for state of that type
+        #         state = state_specification
+        # MODIFIED 10/3/17 END
 
     # State class
     if (inspect.isclass(state_specification) and issubclass(state_specification, State)):
+        # FIX: 10/3/17: ??TREAT AS ABOVE:  IF STATE CLASS != state_type, ASSUME IT IS FOR A State TO CONNECT WITH
         if state_specification is state_type:
             state_dict[VARIABLE] = state_specification.ClassDefaults.variable
         else:
@@ -2132,6 +2146,8 @@ def _parse_state_spec(state_type=None,
     # Projection specification (class, object, or matrix/keyword:
     #    set variable to Projection's value and assign projection specification to PROJECTIONS entry in params
     #    FIX: 10/3/17 - HANDLE THIS IN _parse_connection_specs?? (USING projection_socket)?? (ALSO TO VALIDATE?)
+    #    FIX: 10/3/17 - WHAT ABOUT GATING SIGNAL, FOR WHICH IT SHOULD USE REFERENCE_VALUE, NOT STATE'S VALUE
+    #    FIX:           ??USE _parse_state_specific_specs TO HANDLE THIS??
     #    IMPLEMENTATION NOTE:  It is the caller's responsibility to assign the value arg
     #                          appropriately for the state being requested, for:
     #                              InputState, projection's value;
@@ -2289,10 +2305,10 @@ def _parse_state_spec(state_type=None,
 @tc.typecheck
 def _get_state_for_socket(owner,
                           state_spec=None,
-                          state_type:tc.optional(tc.any(_is_state_class, list, set))=None,
+                          state_type:tc.optional(tc.any(set, _is_state_class))=None,
                           mech:tc.optional(Mechanism)=None,
-                          mech_state_attribute:tc.optional(str)=None,
-                          projection_socket:tc.optional(str)=None):
+                          mech_state_attribute:tc.optional(tc.any(str, set))=None,
+                          projection_socket:tc.optional(tc.any(str, set))=None):
     """Take some combination of Mechanism, state name (string), Projection, and projection_socket, and return
     specified State(s)
 

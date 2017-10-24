@@ -394,7 +394,7 @@ class ModulatorySignal(OutputState):
         #     self._modulation = self.modulation or owner.modulation
         # MODIFIED 10/3/17 END
         if self.init_status is InitStatus.INITIALIZED:
-            self._assign_default_mod_sig_name()
+            _assign_default_modulatory_signal_name(self)
 
     def _instantiate_attributes_after_function(self, context=None):
         # If owner is specified but modulation has not been specified, assign to owner's value
@@ -424,43 +424,46 @@ class ModulatorySignal(OutputState):
                                     self.__class__.__name__,
                                     excluded_specs))
 
+        # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         for receiver_spec in modulatory_projection_specs:
-            self._instantiate_projection_from_state(projection_spec=type(self), receiver=receiver_spec, context=context)
+            projection = self._instantiate_projection_from_state(projection_spec=type(self),
+                                                                 receiver=receiver_spec,
+                                                                 context=context)
+            projection._assign_default_projection_name(state=self)
 
-    def _assign_default_mod_sig_name(self):
+def _assign_default_modulatory_signal_name(mod_sig):
 
-        # If the name is not a default name for the class, return
-        if not self.__class__.__name__ + '-' in self.name or len(self.efferents)==0:
-            return
+    # If the name is not a default name for the class, or the ModulatorySignal has no projections, return
+    if not mod_sig.__class__.__name__ + '-' in mod_sig.name or len(mod_sig.efferents)==0:
+        return
 
-        # Construct default name
-        receiver_names = []
-        receiver_owner_names = []
-        receiver_owner_receiver_names = []
-        class_name = self.__class__.__name__
+    # Construct default name
+    receiver_names = []
+    receiver_owner_names = []
+    receiver_owner_receiver_names = []
+    class_name = mod_sig.__class__.__name__
 
-        for projection in self.efferents:
-            receiver = projection.receiver
-            receiver_name = receiver.name
-            receiver_owner_name = receiver.owner.name
-            receiver_names.append(receiver_name)
-            receiver_owner_names.append(receiver_owner_name)
-            receiver_owner_receiver_names.append("{} {}".format(receiver_owner_name, receiver_name))
+    for projection in mod_sig.efferents:
+        receiver = projection.receiver
+        receiver_name = receiver.name
+        receiver_owner_name = receiver.owner.name
+        receiver_names.append(receiver_name)
+        receiver_owner_names.append(receiver_owner_name)
+        receiver_owner_receiver_names.append("{} {}".format(receiver_owner_name, receiver_name))
 
-        # Only one param: "<Mech> <param> ControlSignal" (e.g., Decision drift_rate ControlSignal)
-        if len(receiver_owner_receiver_names) == 1:
-            default_name = receiver_owner_receiver_names[0] + " " + class_name
+    # Only one param: "<Mech> <param> ControlSignal" (e.g., Decision drift_rate ControlSignal)
+    if len(receiver_owner_receiver_names) == 1:
+        default_name = receiver_owner_receiver_names[0] + " " + class_name
 
-        # Multiple params all for same mech: "<Mech> params ControlSignal" (e.g., Decision params ControlSignal)
-        elif all(name is receiver_owner_names[0] for name in receiver_owner_names):
-            default_name = "{} ({}) {}".format(receiver_owner_names[0], ", ".join(receiver_names), class_name)
+    # Multiple params all for same mech: "<Mech> params ControlSignal" (e.g., Decision params ControlSignal)
+    elif all(name is receiver_owner_names[0] for name in receiver_owner_names):
+        default_name = "{} ({}) {}".format(receiver_owner_names[0], ", ".join(receiver_names), class_name)
 
-        # Mult params for diff mechs: "<ControlMechanism> divergent ControlSignal" (e.g., EVC divergent ControlSignal)
-        else:
-            default_name = self.name + " divergent " + class_name
+    # Mult params for diff mechs: "<ControlMechanism> divergent ControlSignal" (e.g., EVC divergent ControlSignal)
+    else:
+        default_name = mod_sig.name + " divergent " + class_name
 
-        self.name = default_name
-
+    mod_sig.name = default_name
 
 
 # MODIFIED 9/30/17 NEW:

@@ -66,17 +66,17 @@ the `OutputStates it monitors <ControlMechanism_ObjectiveMechanism>` and the `pa
 <ControlMechanism_Control_Signals>` can be specified using its `objective_mechanism
 <ControlMechanism.objective_mechanism>` and `control_signals <ControlMechanism.control_signals>`
 attributes, respectively.  In addition, these can be specified in the **monitor_for_control** and **control_signal**
-arguments of the `System` class, as described below.
+arguments of the `System`, as described below.
 
 * **monitor_for_control** argument -- used to specify OutputStates of Mechanisms in the System that be monitored by the
   `ObjectiveMechanism` associated with the System's `controller <System.controller>` (see
   `ControlMechanism_ObjectiveMechanism`);  these are used in addition to any specified for the ControlMechanism or
   its ObjectiveMechanism.  These can be specified in the **monitor_for_control** argument of the `System` class using
-  any of the ways used to specify the *monitored_output_states* argument of the constructor for an ObjectiveMechanism (see
-  `ObjectiveMechanism_Monitored_Output_States`).  In addition, the **monitor_for_control** argument supports two other forms
-  of specification:
+  any of the ways used to specify the *monitored_output_states* argument of the constructor for an ObjectiveMechanism
+  (see `ObjectiveMechanism_Monitored_Output_States`).  In addition, the **monitor_for_control** argument supports two
+  other forms of specification:
 
-  * **string** -- must be the name <OutputState.name>` of an `OuputState` of a `Mechanism` in the System (see third
+  * **string** -- must be the name <OutputState.name>` of an `OutputState` of a `Mechanism` in the System (see third
     example under `System_Control_Examples`);  any OutputState with that name, including ones with the same
     name belonging to different Mechanisms within the System, will be monitored. If a OutputState of a particular
     Mechanism is desired, and it shares its name with ones of other Mechanisms, then it must be referenced explicitly
