@@ -1006,11 +1006,7 @@ class State_Base(State):
                 else:
                     raise StateError("SENDER of {} to {} of {} is neither a State or State class".
                                      format(projection_type.__name__, self.name, self.owner.name))
-                if isinstance(projection, PathwayProjection_Base):
-                    projection_name = projection_type.__name__ + " from " + sender_name + " to " + self.owner.name
-                else:
-                    projection_name = sender_name + " for " + self.owner.name + " " + self.name
-                projection.init_args[NAME] = projection.init_args[NAME] or projection_name
+                projection._assign_default_projection_name(state=self, sender_name=sender_name, receiver_name=self.name)
 
                 # If sender has been instantiated, try to complete initialization
                 # If not, assume it will be handled later (by Mechanism or Composition)
@@ -1086,6 +1082,8 @@ class State_Base(State):
                its self.path_afferents or .mod_afferents attribute (in Projection._instantiate_receiver) and
                its sender's .efferents attribute (in Projection._instantiate_sender);
                so, need to test for prior assignment to avoid duplicates.
+
+        Returns instantiated Projection
         """
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
@@ -1314,6 +1312,8 @@ class State_Base(State):
             #    and assigned Projection to self.efferents
             if not projection in self.efferents:
                 self.efferents.append(projection)
+
+            return projection
 
 
     def _get_primary_state(self, mechanism):

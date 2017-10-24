@@ -931,6 +931,10 @@ class Projection_Base(Projection):
         return {SENDER:sender,
                 RECEIVER:receiver}
 
+    def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
+        raise ProjectionError("PROGRAM ERROR: {} must implement _assign_default_projection_name().".
+                              format(self.__class__.__name__))
+
 
 def _is_projection_spec(spec, include_matrix_spec=True):
     """Evaluate whether spec is a valid Projection specification
