@@ -2048,16 +2048,15 @@ def _parse_state_spec(state_type=None,
 
         # Delete the State specification dictionary from state_spec
         del state_spec[STATE_SPEC_ARG]
+        if REFERENCE_VALUE_NAME in state_spec:
+            del state_spec[REFERENCE_VALUE_NAME]
 
     if state_spec:
-        # print('Args other than standard args and state_spec were in _instantiate_state ({})'.
-        #       format(state_spec))
-        # state_specific_args.update(state_spec)
-        # FIX: 10/3/17: REMOVE REFERENCE_VALUE_NAME HERE?
-        pass
+        if owner.verbosePref:
+            print('Args other than standard args and state_spec were in _instantiate_state ({})'.
+                  format(state_spec))
+        state_specific_args.update(state_spec)
 
-    # state_dict = defaultdict(lambda: None)
-    # state_dict.update(standard_args)
     state_dict = standard_args
     context = state_dict.pop(CONTEXT, None)
     owner = state_dict[OWNER]
