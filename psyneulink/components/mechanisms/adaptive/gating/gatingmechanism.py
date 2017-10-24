@@ -154,7 +154,7 @@ from psyneulink.components.functions.function import ModulationParam, _is_modula
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.shellclasses import Mechanism
-from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal, _parse_gating_signal_spec
+from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.components.states.state import State_Base, _instantiate_state
 from psyneulink.globals.defaults import defaultGatingPolicy
 from psyneulink.globals.keywords import GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, NAME, OWNER, PARAMS, REFERENCE_VALUE, STATES
