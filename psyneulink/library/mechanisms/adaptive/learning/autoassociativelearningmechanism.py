@@ -31,7 +31,7 @@ created automatically when a RecurrentTransferMechanism is `configure for learni
 Structure
 ---------
 
-An AutoAssociativeLearningMechanism is identical to a LearningMechanism in all respectes except the following:
+An AutoAssociativeLearningMechanism is identical to a LearningMechanism in all respects except the following:
 
   * it has only a single *ACTIVATION_INPUT* `InputState`, that receives a `MappingProjection` from an `OutputState` of
     another `Mechanism` (identified by the `activity_source <AutoAssociativeLearningMechanism.activity_source>`,
@@ -43,8 +43,8 @@ An AutoAssociativeLearningMechanism is identical to a LearningMechanism in all r
     *ERROR_SIGNAL* OutputState.
 
   * it has no `input_source <LearningMechanism.input_source>`, `output_source <LearningMechanism.output_source>`,
-    or `error_source <LearningMechanism.error_source>` attributes;  instead, it has a single `activity_source` attribute
-    that identifies the source of the activity vector used by the Mechanism's `function
+    or `error_source <LearningMechanism.error_source>` attributes;  instead, it has a single `activity_source`
+    attribute that identifies the source of the activity vector used by the Mechanism's `function
     <AutoAssociativeLearningProjection.function>`.
 
   * it's `function <AutoAssociativeLearningMechanism.function>` takes as its `variable <Function_Base.variable>`
@@ -62,10 +62,10 @@ An AutoAssociativeLearningMechanism is identical to a LearningMechanism in all r
 Execution
 ---------
 
-An AutoAssociativeLearningMechanism executes in the same manner as standard `LearningMechanism`, however its
-exeuction can be enabled or disabled by setting the the `learning_enabled
-<RecurrentTransferMechanism.learning_enabled>` attribute of the `RecurrentTransferMechanism` with which it is
-associated (identified in its `activity_source <AutoAssociativeLearningMechanism.attribute>`).
+An AutoAssociativeLearningMechanism executes in the same manner as standard `LearningMechanism`, however its execution
+can be enabled or disabled by setting the the `learning_enabled <RecurrentTransferMechanism.learning_enabled>`
+attribute of the `RecurrentTransferMechanism` with which it is associated (identified in its `activity_source
+<AutoAssociativeLearningMechanism.attribute>`).
 
 .. _AutoAssociativeLearningMechanism_Class_Reference:
 
