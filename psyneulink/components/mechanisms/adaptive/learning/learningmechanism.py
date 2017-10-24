@@ -1146,14 +1146,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
 # FIX: 10/3/17 START HERE:
 
-        ??params = {LEARNED_PARAM:MATRIX}
+        params = {LEARNED_PARAM:MATRIX}
 
         from psyneulink.components.states.state import _instantiate_state
         # Parses learning_signal specifications (in call to State._parse_state_spec)
         #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
         learning_signal = _instantiate_state(state_type=LearningSignal,
                                              owner=self,
-                                             ??params=params,
+                                             params=params,
                                              reference_value=self.learning_signal,
                                              modulation=self.modulation,
                                              state_spec=self.learning_signal)

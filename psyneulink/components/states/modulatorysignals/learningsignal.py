@@ -391,8 +391,8 @@ class LearningSignal(ModulatorySignal):
                          prefs=prefs,
                          context=self)
 
-    def _get_primary_state(self, mechanism):
-        return mechanism.parameter_state
+    def _get_primary_state(self, projection):
+        return projection.parameter_state
 
     @property
     def learning_signal(self):
