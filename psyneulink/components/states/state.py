@@ -2342,7 +2342,11 @@ def _get_state_for_socket(owner,
 
     Returns a State if it can be resolved, or list of allowed State types if not.
     """
-    from psyneulink.components.projections.projection import _is_projection_spec, _validate_connection_request, _parse_projection_spec
+    from psyneulink.components.projections.projection import \
+        _is_projection_spec, _validate_connection_request, _parse_projection_spec
+    from psyneulink.components.states.parameterstate import ParameterState
+    from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+    from psyneulink.globals.keywords import MATRIX
 
 
     if not isinstance(state_type, set):
@@ -2364,6 +2368,7 @@ def _get_state_for_socket(owner,
             proj_type = proj_spec.__class__
         else:
             proj_type = proj_spec[PROJECTION_TYPE]
+
         # Get State type if it is appropriate for the specified socket of the Projection's type
         s = next((s for s in state_type if s.__name__ in getattr(proj_type.sockets, projection_socket)), None)
         if s:
@@ -2381,6 +2386,16 @@ def _get_state_for_socket(owner,
                 # Otherwise, return first state_type (s)
                 return s
             # MODIFIED 10/3/17 END
+
+        # FIX: 10/24/17 - ??MOVE THIS TO State-SPECIFIC OR Projection-SPECIFIC METHOD OR DELETE
+        # FIX:            OR DELETE IF SPECIFICATION OF MappingProjection AS DESTINATION IS PARSED EARLIER
+        # If state_type is ParameterState, state_spec is MappingProjection, and projection_socket is RECEIVER,
+        #    assume the request is from a LearningSignal for a LearningProjection and return the MATRIX ParameterState
+        elif (ParameterState in state_type
+              and isinstance(state_spec, MappingProjection)
+              and projection_socket is RECEIVER):
+            return state_spec.parameter_states[MATRIX]
+
         # FIX: 10/3/17 - ??IS THE FOLLOWING CORRECT:  ??HOW IS IT DIFFERENT FROM ABOVE?
         # Otherwise, get State types that are allowable for that projection_socket
         elif inspect.isclass(proj_type) and issubclass(proj_type, Projection):

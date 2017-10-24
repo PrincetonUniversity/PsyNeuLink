@@ -175,7 +175,9 @@ from psyneulink.components.projections.projection import Projection_Base, _is_pr
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.globals.keywords import ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
+from psyneulink.globals.keywords import ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, \
+    LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE, NAME, \
+    CONTEXT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import iscompatible, parameter_spec
@@ -459,22 +461,20 @@ class LearningProjection(ModulatoryProjection_Base):
                                                   exponent=exponent,
                                                   params=params)
 
-        # IMPLEMENTATION NOTE:
-        #    LearningProjection ALWAYS uses deferred_init, so:
-        #        assign init_args here
-        #        don't both calling super()
-        # Store args for deferred initialization
-        self.init_args = locals().copy()
-        self.init_args['context'] = self
-        self.init_args['name'] = name
-        # self.init_args['weight'] = weight
-        # self.init_args['exponent'] = exponent
-        del self.init_args['learning_function']
-        del self.init_args['learning_rate']
-
-        # Flag for deferred initialization
-        self.init_status = InitStatus.DEFERRED_INITIALIZATION
+        # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
+        if sender is None or receiver is None:
+            # Flag for deferred initialization
+            self.init_status = InitStatus.DEFERRED_INITIALIZATION
+        super().__init__(sender=sender,
+                         receiver=receiver,
+                         weight=weight,
+                         exponent=exponent,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=self)
         self.learning_enable = True
+
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate sender and receiver
