@@ -1269,6 +1269,7 @@ def _parse_connection_specs(connectee_state_type,
         ConnectsWith = {OutputState,          # types of States to which the connectee can connect
                        ProcessInputState,
                        SystemInputState,
+                       LearningSignal,
                        GatingSignal}
         connect_with_attr = OUTPUT_STATES    # attribute that holds the ConnectsWith States
         CONNECTIONS_KEYWORD = OUTPUT_STATES  # keyword used in a State specification dictionary for connection specs

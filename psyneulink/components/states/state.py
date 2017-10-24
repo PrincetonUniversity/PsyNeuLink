@@ -1272,7 +1272,7 @@ class State_Base(State):
 
             # VALIDATE (if initialized or being initialized (UNSET))
 
-            elif projection.init_status in {InitStatus.INITIALIZED, InitStatus.UNSET}:
+            if projection.init_status in {InitStatus.INITIALIZED, InitStatus.UNSET}:
 
                 # If still being initialized, then assign sender and receiver as necessary
                 if projection.init_status is InitStatus.UNSET:
@@ -1282,7 +1282,12 @@ class State_Base(State):
 
                     if not isinstance(projection.receiver, State):
                         projection.receiver = receiver_state
-                    # FIX: 10/3/17 -- ?? WHY IS projection.variable A PROPERTY RATHER THAN AN ACTUAL NDARRAY?
+
+                    # FIX: 10/3/17 -- ??IS THE FOLLOWING LEGIT? (IT IS DONE TO PASS TESTS BELOW)
+                    # FIX:            [HASN'T BEEN ASSIGNED IN __init__ YET BECAUSE CALL CAN BE FROM
+                    # FIX:            LearningProjection._instantiate_sender() WHICH IS ITSELF CALLED
+                    # FIX:            FROM _instantiate_attributes_before_function
+                    projection.value = receiver.variable
 
                 # Validate variable
                 #    - check that input to Projection is compatible with self.value
@@ -2362,11 +2367,20 @@ def _get_state_for_socket(owner,
         # Get State type if it is appropriate for the specified socket of the Projection's type
         s = next((s for s in state_type if s.__name__ in getattr(proj_type.sockets, projection_socket)), None)
         if s:
-            # Return State associated with projection_socket if proj_spec is an actual Projection
-            if isinstance(proj_spec, Projection):
+            # # MODIFIED 10/3/17 OLD:
+            # # Return State associated with projection_socket if proj_spec is an actual Projection
+            # if isinstance(proj_spec, Projection):
+            #     return getattr(proj_spec, projection_socket)
+            # # Otherwise, return first state_type (s)
+            # return s
+            # MODIFIED 10/3/17 NEW:
+            try:
+                # Return State associated with projection_socket if proj_spec is an actual Projection
                 return getattr(proj_spec, projection_socket)
-            # Otherwise, return first state_type (s)
-            return s
+            except AttributeError:
+                # Otherwise, return first state_type (s)
+                return s
+            # MODIFIED 10/3/17 END
         # FIX: 10/3/17 - ??IS THE FOLLOWING CORRECT:  ??HOW IS IT DIFFERENT FROM ABOVE?
         # Otherwise, get State types that are allowable for that projection_socket
         elif inspect.isclass(proj_type) and issubclass(proj_type, Projection):
