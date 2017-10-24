@@ -1156,7 +1156,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                              params=params,
                                              reference_value=self.learning_signal,
                                              modulation=self.modulation,
-                                             state_spec=self.learning_signal)
+                                             # state_spec=self.learning_signal)
+                                             state_spec=learning_signal)
 
 
         # PARSE learning_signal SPECIFICATION -----------------------------------------------------------------------

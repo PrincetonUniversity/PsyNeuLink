@@ -1081,6 +1081,7 @@ class Mechanism_Base(Mechanism):
         except AttributeError:
             self._default_value = self.value
         self.value = self._old_value = None
+        # FIX: 10/3/17 - IS THIS CORRECT?  SHOULD IT BE INITIALIZED??
         self._status = INITIALIZING
         self._receivesProcessInput = False
         self.phaseSpec = None
