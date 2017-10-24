@@ -415,20 +415,34 @@ class ModulatorySignal(OutputState):
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.components.projections.projection import ConnectionTuple
 
-        modulatory_projection_specs = [proj for proj in projections
-                                  if isinstance(proj, (ModulatoryProjection_Base, Mechanism, State, ConnectionTuple))]
-        excluded_specs = [spec for spec in projections if not spec in modulatory_projection_specs]
-        if excluded_specs:
-            raise StateError("The following are not allowed as a specification for a {} from a {}: {}".
-                             format(ModulatoryProjection_Base.componentCategory,
-                                    self.__class__.__name__,
-                                    excluded_specs))
-
+        # # MODIFIED 10/24/17 OLD:
+        # modulatory_projection_specs = [proj for proj in projections
+        #                           if isinstance(proj, (ModulatoryProjection_Base, Mechanism, State, ConnectionTuple))]
+        #
+        #
+        # # FIX: 10/24/17 - FOR THESE, CHECK THAT THEY ARE ACCEPTABLE TARGETS FOR THE MODULATORY PROJECTION
+        # # FIX:            (E.G., MappingProjection FOR LearningProjection;)
+        # # FIX:             ASSUMING THIS IS NOT DONE INSIDE OF _instantiate_rpojection
+        # # FIX:             OR MAYBE DON'T BOTHER WTIH THIS AT ALL, AND LET IT BE HANDLED IN _instantiate_rpojection
+        # excluded_specs = [spec for spec in projections if not spec in modulatory_projection_specs]
+        # if excluded_specs:
+        #     raise StateError("The following are not allowed as a specification for a {} from a {}: {}".
+        #                      format(ModulatoryProjection_Base.componentCategory,
+        #                             self.__class__.__name__,
+        #                             excluded_specs))
+        #
+        # # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+        # for receiver_spec in modulatory_projection_specs:
+        #     projection = self._instantiate_projection_from_state(projection_spec=type(self),
+        #                                                          receiver=receiver_spec,
+        #                                                          context=context)
+        # MODIFIED 10/24/17 NEW:
         # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        for receiver_spec in modulatory_projection_specs:
+        for receiver_spec in projections:
             projection = self._instantiate_projection_from_state(projection_spec=type(self),
                                                                  receiver=receiver_spec,
                                                                  context=context)
+        # MODIFIED 10/24/17 END
             projection._assign_default_projection_name(state=self)
 
 def _assign_default_modulatory_signal_name(mod_sig):
