@@ -1142,6 +1142,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         except (AttributeError, TypeError):
             output_state_index = 0
 
+# FIX: 10/3/17 START HERE:
 
         # PARSE learning_signal SPECIFICATION -----------------------------------------------------------------------
 
