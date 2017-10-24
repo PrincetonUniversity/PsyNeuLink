@@ -1367,17 +1367,8 @@ def _parse_connection_specs(connectee_state_type,
         #     along with defaults for weight and exponent, and call _parse_connection_specs recursively
         #     to validate the state spec and append ConnectionTuple to connect_with_states
         if isinstance(connection, (Mechanism, State, type)):
-            # connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, DEFAULT_PROJECTION)
             # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ConnectionTuple THAT HAS BOTH SENDER AND RECEIVER
-            # FIX: 10/3/17 - NEED TO RESOLVE Projection tpye HERE OR IN _parse_connection_specs
-            if PROJECTION_SOCKET is SENDER:
-                projection_spec = connectee_state_type
-            elif PROJECTION_SOCKET is RECEIVER:
-                # # MODIFIED 10/23/17 OLD:
-                # projection_spec = connection
-                # MODIFIED 10/23/17 NEW:
-                projection_spec = connectee_state_type
-                # MODIFIED 10/23/17 END
+            projection_spec = connectee_state_type
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
 
@@ -1386,18 +1377,8 @@ def _parse_connection_specs(connectee_state_type,
         #  but also leave it is as the connection specification (it will get resolved to a State reference when the
         #    tuple is created in the recursive call to _parse_connection_specs below).
         elif _is_projection_spec(connection, include_matrix_spec=False):
-            # FIX: 10/3/17:  RENAME _parse_projection_keyword to _parse_projection_spec
-            # FIX:           MODIFY _parse_projection_keyword to TO ACTUALLY RESOLVE IT INTO A Projection Specification Dict
-            # FIX:           CALL _parse_projection_keyword HERE AND ASSIGN RESULT TO project_spec
-            # FIX:           ONLY ASSIGN ORIGINAL CONNECTION SPEC TO connection IF IT IS A State OR Mechanism SPEC
-            # FIX:           (i.e., NOT IF IT IS A VALUE OR STRING)
-            # FIX:           ?? SHOULD THIS BE HANDLED LIKE STATE SPEC (AS ABOVE): I.E., CONTINGENT ON PROJECTION_SOCKET
             projection_spec = connection
-            # FIX: ---------------------------------
-            # FIX:  10/22/17 - ??SHOULD GatingProjection BE in BOTH STATE AND PROJECTON ITEMS OF THE ConnectionTuple:
-            # FIX:             ??SHOULDN'T ONE OF THEM BE GatingSignal OR the OUTPUT_STATE BEING CONNECT TO?
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
-            # FIX: ---------------------------------
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
 
         # Dict of one or more Mechanism specifications, used to specify individual States of (each) Mechanism;
