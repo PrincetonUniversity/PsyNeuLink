@@ -155,7 +155,7 @@ from psyneulink.components.mechanisms.adaptive.adaptivemechanism import Adaptive
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
-from psyneulink.components.states.state import State_Base, _instantiate_state
+from psyneulink.components.states.state import State_Base, _parse_state_spec
 from psyneulink.globals.defaults import defaultGatingPolicy
 from psyneulink.globals.keywords import GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, NAME, OWNER, PARAMS, REFERENCE_VALUE, STATES
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -360,8 +360,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
                 raise GatingMechanismError("{} arg of {} must be list".
                                            format(GATING_SIGNAL, self.name))
 
-            for spec in target_set[GATING_SIGNALS]:
-                _parse_gating_signal_spec(self, spec)
+            for gating_signal in target_set[GATING_SIGNALS]:
+                _parse_state_spec(state_type=GatingSignal, owner=self, state_spec=gating_signal)
 
     def _instantiate_output_states(self, context=None):
 
@@ -445,7 +445,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         gating_signal = _instantiate_state(state_type=GatingSignal,
                                             owner=self,
                                             reference_value=defaultGatingPolicy,
-                                            modulaton=self.modulation,
+                                            modulation=self.modulation,
                                             state_spec=gating_signal)
 
         # # FIX: *********************************************************************************
@@ -573,8 +573,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
             self.gating_projections = gating_signal.efferents.copy()
         # MODIFIED 10/3/17 END
 
-
         # FIX: CONSIDER OVERRIDING output_states PROPERTY WITH ASSIGNMENT TO gating_signals
+        # FIX: 10/3/17 - REVISE TO CALL super()._instantiate_output_states
         # UPDATE output_states
         try:
             self.output_states[gating_signal.name] = gating_signal

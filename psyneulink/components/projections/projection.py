@@ -1373,7 +1373,11 @@ def _parse_connection_specs(connectee_state_type,
             if PROJECTION_SOCKET is SENDER:
                 projection_spec = connectee_state_type
             elif PROJECTION_SOCKET is RECEIVER:
-                projection_spec = connection
+                # # MODIFIED 10/23/17 OLD:
+                # projection_spec = connection
+                # MODIFIED 10/23/17 NEW:
+                projection_spec = connectee_state_type
+                # MODIFIED 10/23/17 END
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
 

@@ -1862,7 +1862,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     state_spec_dict = parsed_state_spec
 
-    value = state_spec_dict.pop(VALUE, None)
+    state_spec_dict.pop(VALUE, None)
 
     # MODIFIED 10/3/17 OLD:
     #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
@@ -2172,6 +2172,8 @@ def _parse_state_spec(state_type=None,
     # Projection specification (class, object, or matrix/keyword:
     #    set variable to Projection's value and assign projection specification to PROJECTIONS entry in params
     #    FIX: 10/3/17 - HANDLE THIS IN _parse_connection_specs?? (USING projection_socket)?? (ALSO TO VALIDATE?)
+    #    FIX: 10/3/17 - WHAT ABOUT GATING SIGNAL, FOR WHICH IT SHOULD USE REFERENCE_VALUE, NOT STATE'S VALUE
+    #    FIX:           ??USE _parse_state_specific_specs TO HANDLE THIS??
     #    IMPLEMENTATION NOTE:  It is the caller's responsibility to assign the value arg
     #                          appropriately for the state being requested, for:
     #                              InputState, projection's value;

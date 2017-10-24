@@ -879,7 +879,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         control_signal = _instantiate_state(state_type=ControlSignal,
                                             owner=self,
                                             reference_value=defaultControlAllocation,
-                                            modulaton=self.modulation,
+                                            modulation=self.modulation,
                                             state_spec=control_signal)
 
         # # FIX: *********************************************************************************
@@ -1013,6 +1013,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         except AttributeError:
             self.control_signal_costs = np.empty((1,1))
 
+        # FIX: 10/3/17 - REVISE TO CALL super()._instantiate_output_states
         # UPDATE output_states AND control_projections -------------------------------------------------------------
 
         # TBI: For control mechanisms that accumulate, starting output must be equal to the initial "previous value"

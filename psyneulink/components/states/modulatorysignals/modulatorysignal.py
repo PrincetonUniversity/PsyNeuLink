@@ -424,6 +424,7 @@ class ModulatorySignal(OutputState):
                                     self.__class__.__name__,
                                     excluded_specs))
 
+        # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         for receiver_spec in modulatory_projection_specs:
             self._instantiate_projection_from_state(projection_spec=type(self), receiver=receiver_spec, context=context)
 
