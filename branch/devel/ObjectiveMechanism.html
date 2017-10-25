@@ -202,16 +202,17 @@ with (and often created automatically by) <a class="reference internal" href="Ad
 <span id="objectivemechanism-creation"></span><h2>Creating an ObjectiveMechanism<a class="headerlink" href="#creating-an-objectivemechanism" title="Permalink to this headline">¶</a></h2>
 <p>ObjectiveMechanisms are often created automatically when other PsyNeuLink components are created (in particular,
 AdaptiveMechanisms such as <a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">LearningMechanisms</span></a> and
-<a class="reference internal" href="ControlMechanism.html#controlmechanism-creation"><span class="std std-ref">ControlMechanisms</span></a>.  An ObjectiveMechanism can also be created directly by calling its
-constructor.  The two primary attributes used to define an ObjectiveMechanism are its <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> and <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attributes, specified
-using the corresponding arguments of its construtor as described below.</p>
+<a class="reference internal" href="ControlMechanism.html#controlmechanism-creation"><span class="std std-ref">ControlMechanisms</span></a>).  An ObjectiveMechanism can also be created directly by calling its
+constructor.  The primary attribute used to define an ObjectiveMechanism is its <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> specified using the corresponding arguments of its constructor as
+described below.</p>
 <div class="section" id="monitored-outputstates">
 <span id="objectivemechanism-monitored-output-states"></span><h3>Monitored OutputStates<a class="headerlink" href="#monitored-outputstates" title="Permalink to this headline">¶</a></h3>
-<p>The <strong>monitored_output_states</strong> argument of the constructor specifies the OutputStates it monitors.  The assignment of
-the OutputStates to be monitored can also be passed from the <strong>objective_mechanism</strong> argument of the constructor for a
-<a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a>, or the <strong>monitor_for_control</strong> argument of a <a class="reference internal" href="System.html"><span class="doc">System</span></a> for which the ControlMechanism is a
-<a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.  The <strong>monitored_output_states</strong> argument can be specified using a  list
-containing any of the following:</p>
+<p>The <strong>monitored_output_states</strong> argument of the constructor specifies the <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> it monitors.
+When the ObjectiveMechanism is created, it creates an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> for each of the OutputStates specified in
+<strong>monitored_output_states</strong>.  The OutputStates to be monitored are be specified in a list that can contain any of
+the following forms of specification, some of which allow attributes of the InputState created for them to also be
+specified (including their <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.weight" title="psyneulink.components.states.inputstate.InputState.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> and ‘exponent
+&lt;InputState.exponent&gt;` attributes) to also be specified:</p>
 <blockquote>
 <div><ul class="simple">
 <li><strong>OutputState</strong> – a reference to the <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of a Mechanism.  This creates a
@@ -224,12 +225,61 @@ containing any of the following:</p>
 <li><strong>string</strong> – this can be used as a “placemarker”, to specify that an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> be created for an OutputState
 to be monitored that will be identified later.  The string is used as the name of the InputState when it is created.</li>
 </ul>
+<ul class="simple" id="objectivemechanism-specification-dictionary">
+<li><strong>State specification dictionary</strong> – this can be used to specify one or more OutputStates to be monitored,</li>
+</ul>
+<p>as well the attributes of the corresponding InputStates that are created for them, using any of the following
+entries:</p>
+<blockquote>
+<div><blockquote>
+<div><ul class="simple">
+<li><dl class="first docutils">
+<dt><em>MECHANISM</em>:&lt;<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>&gt;</dt>
+<dd>this entry must be included in the dictionary to specify multiple OutputStates by their names.
+If the dictionary contains this entry but no <em>OUTPUT_STATES</em> entry, then (as with a standalone Mechanism
+specification), the Mechanism’s <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> is used.</dd>
+</dl>
+</li>
+</ul>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt><em>OUTPUT_STATES</em>:&lt;List[&lt;str or any of the other forms of specifications for an OutputState&gt;, …]&gt;</dt>
+<dd>this requires use of the <em>MECHANISM</em> entry, and can be used to specify one or more of its OutputStates
+by their names;  if a string is used that is not the name of an OutputState in the <em>MECHANISM</em> entry,
+it will be treated as an  “unbound” string specification (i.e., used as place-marker for the creation
+of InputState with that name, to be assigned a monitored OutputState later).  If a specification
+dictionary is used to specify an OutputState in the list, its attributes (see below) will be used to create
+the InputState of the ObjectiveMechanism corresponding to the specified OutputState.</dd>
+</dl>
+</li>
+</ul>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt><em>VARIABLE</em>:&lt;value, list or ndarray&gt;</dt>
+<dd>specifies the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for the InputState created by the ObjectiveMechanism
+for the OutputState to be monitored, or all of the OutputStates specified in the <em>OUTPUT_STATES</em> entry
+(see above), except any that is specified using a specification dictionary with its own <em>VARIABLE</em> entry
+(see <a class="reference internal" href="#objectivemechanism-inputstate-size"><span class="std std-ref">InputState variable</span></a>).</dd>
+</dl>
+</li>
+</ul>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt><em>WEIGHT</em>:&lt;number&gt;</dt>
+<dd>specifies the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.weight" title="psyneulink.components.states.inputstate.InputState.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> for the InputState created by the ObjectiveMechanism
+for the OutputState to be monitored, or for all of the OutputStates specified in the <em>OUTPUT_STATES</em> entry
+(see above), except any that is specified using a specification dictionary with its own <em>WEIGHT</em> entry
+(see <a class="reference internal" href="InputState.html#inputstate-weights-and-exponents"><span class="std std-ref">Weights and Exponents</span></a>).</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
 <ul id="objectivemechanism-outputstate-tuple">
-<li><p class="first"><strong>monitored_output_states tuple</strong> – this is a convenience notation that can be used to compactly specify a weight
-and exponent for an OutputState’ (see <a class="reference internal" href="#objectivemechanism-outputstate-tuple-example"><span class="std std-ref">example</span></a>), as well as an
-optional specification for the <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the
-OutputState to the ObjectiveMechanism; each tuple must have the first three following items in the order listed,
-and can include the fourth:</p>
+<li><p class="first"><strong>monitored_output_states tuple</strong> – this is a convenience notation that can be used to compactly specify a <a class="reference internal" href="#objectivemechanism-weights-and-exponents"><span class="std std-ref">weight
+and exponent</span></a> for an OutputState’ (see <a class="reference internal" href="#objectivemechanism-outputstate-tuple-example"><span class="std std-ref">example</span></a>), as well as an optional specification for the <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the monitored OutputState to the
+corresponding InputState of the ObjectiveMechanism; each tuple must have the first three following items in the
+order listed, and can include the fourth:</p>
 <blockquote>
 <div><ul class="simple">
 <li>any of the specifications above – if it is a string, the weight and exponent specified in the tuple
@@ -241,117 +291,100 @@ created.</li>
 </div>
 <ul class="simple">
 <li>a weight – must be an integer or a float; multiplies the value of the OutputState before being combined with
-others by the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
+others by the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see
+<a class="reference internal" href="#objectivemechanism-weights-and-exponents"><span class="std std-ref">Weights and Exponents</span></a>).</li>
 </ul>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
 <ul class="simple">
 <li>an exponent – must be an integer or float; exponentiates the value of the OutputState before being combined
-with others by the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
+with others by the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see
+<a class="reference internal" href="#objectivemechanism-weights-and-exponents"><span class="std std-ref">Weights and Exponents</span></a>).</li>
 </ul>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
 <ul class="simple">
 <li>a <a class="reference internal" href="MappingProjection.html#mapping-matrix-specification"><span class="std std-ref">matrix specification</span></a> (optional) – this can be any legal specification for
-the <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.</li>
+the <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>;  the width (number of columns) of
+the matrix determines the dimension of its <a class="reference internal" href="#objectivemechanism-inputstate-size"><span class="std std-ref">corresponding InputState</span></a>.</li>
 </ul>
 </div></blockquote>
-<div class="admonition note" id="objectivemechanism-weights-and-exponents">
+</li>
+</ul>
+</div></blockquote>
+<p>The list of OutputStates monitored by the ObjectiveMechanism are listed in its <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute. When an ObjectiveMechanism is created by a
+<a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a>, or a <a class="reference internal" href="System.html"><span class="doc">System</span></a> for its <code class="xref any docutils literal"><span class="pre">controller</span></code>, these may pass it a set of
+OutputStates to be monitored.  A ControlMechanism passes any OutputState specifications listed in its
+<strong>objective_mechanism</strong> argument (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">ObjectiveMechanism and Monitored OutputStates</span></a>), and a System passes any listed in its
+<strong>monitor_for_control</strong> argument (see <a class="reference internal" href="System.html#system-control-specification"><span class="std std-ref">Specifying Control</span></a>).</p>
+<div class="section" id="creation-of-inputstates-and-mappingprojections-for-monitored-outputstates">
+<span id="objectivemechanism-inputstates"></span><h4>Creation of InputStates and MappingProjections for Monitored OutputStates<a class="headerlink" href="#creation-of-inputstates-and-mappingprojections-for-monitored-outputstates" title="Permalink to this headline">¶</a></h4>
+<p>An ObjectiveMechanism creates one <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> for each OutputState specified in its <strong>monitored_output_states</strong>
+argument. By default, it uses the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a monitored OutputState to determine the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of the corresponding InputState.  However, this can be modified using any of the following
+(see <code class="xref any docutils literal"><span class="pre">ObjectiveMechanism_Monitored_Output_States_Examples</span></code> below):</p>
+<ul class="simple">
+<li>the <strong>variable</strong> argument of the ObjectiveMechanism’s constructor – this is used to determine the format for the
+<a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of each of <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> created for the corresponding
+<a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> in the <strong>monitored_output_states* argument of the ObjectiveMechanism’s constructor;
+accordingly, the number of items in the outermost dimension (axis 0) of the  **variable</strong> specification must match
+the number of items in the <strong>monitored_output_states</strong> specification.</li>
+<li>a <em>VARIABLE</em> entry of a State specification dictionary in the <strong>monitored_output_state</strong> argument (see above) –
+note that the value of the entry specifies the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute of  the
+<em>InputState</em> created for the monitored OutputState, and does not refer to the monitored OutputState itself.</li>
+<li>the <em>matrix</em> entry of a monitored_output_states tuple – the width (number of columns, or ???XXX dimension??)
+of the matrix determines the size of the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute of the InputState created by
+the ObjectiveMechanism for the monitored OutputState.</li>
+</ul>
+<div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The weight and exponent specifications in a tuple are used to specify the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.weight" title="psyneulink.components.states.inputstate.InputState.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> and
-<a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.exponent" title="psyneulink.components.states.inputstate.InputState.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> of the corresponding InputState of the ObjectiveMechanism;  therefore,
-any values specified there take precedence over any other weight and/or exponent specifications of the
-InputStates for the ObjectiveMechanism.</p>
+<p class="last">The <strong>monitored_output_states</strong> argument of an ObjectiveMechanism serves the same purpose as the <strong>input_states</strong>
+argument for a standard <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, and any variable, weight or exponent specifications specified for a monitored
+OutputState are assigned as the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.weight" title="psyneulink.components.states.inputstate.InputState.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> and <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.exponent" title="psyneulink.components.states.inputstate.InputState.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> of the corresponding InputState.  While ill-advised, if for some reason both the
+<strong>monitored_output_states</strong> and <strong>input_states</strong> arguments are specified, an attempt is made to combine the two
+sets of specifications (which must be lists of the same length), giving precedence to the monitored_output_states
+specfication(s); an error is generated if this cannot be done.</p>
 </div>
-</li>
-</ul>
-<ul id="objectivemechanism-outputstate-specification-dictionary">
-<li><p class="first"><strong>monitored_output_states specification dictionary</strong> – this the most flexible form of specification, that can be
-used to specify one or more OutputStates of a Mechanism by their name:</p>
-<blockquote>
-<div><ul class="simple">
-<li><dl class="first docutils">
-<dt><em>MECHANISM</em>:<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a></dt>
-<dd>this enty must be included in the dictionary;</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><em>OUTPUT_STATES</em>:List[&lt;str or any of the specifications above&gt;, …]</dt>
-<dd>here, a string can be used anywhere an OutputState would have been specified as the name
-of an OutputState belonging to the <em>MECHANISM</em> entry.</dd>
-</dl>
-</li>
-</ul>
-<p>If the dictionary includes only the <em>MECHANISM</em> entry, then (as with a standalone Mechanism specification),
-the Mechanism’s <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> is used.  If a string is used for any items
-of the list in the <em>OUTPUT_STATES</em> entry, and it is not the name of the Mechanism in the <em>MECHANISM</em> entry,
-it will be treated as an “unbound” string specification.</p>
-</div></blockquote>
-</li>
-</ul>
-</div></blockquote>
-<p>If an OutputState to be monitored is specified at the time the ObjectiveMechanism is created, or the specification
-can be resolved to an OutputState, a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is automatically created from it to the corresponding
-InputState of the ObjectiveMechanism using <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX" title="psyneulink.globals.keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">AUTO_ASSIGN_MATRIX</span></code></a> as its <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter.
-If the OutputState can’t be determined, no MappingProjection is assigned, and this must be done by some other means;
-any values assigned to the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>
-attribute that are not associated with an OutputState at the time the ObjectiveMechanism is executed are ignored.</p>
+<p>A <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created automatically from each OutputState specified in <strong>monitored_output_states</strong>
+to the InputState of the ObjectiveMechanism created or it, using <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX" title="psyneulink.globals.keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">AUTO_ASSIGN_MATRIX</span></code></a> as the <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter. However, if a specification in the <strong>monitored_output_states</strong> argument cannot be
+resolved to an instantiated OutputState at the time the ObjectiveMechanism is created, no MappingProjection is
+assigned, and this must be done by some other means; any specifications in the <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute that are not associated with an instantiated OutputState at
+the time the ObjectiveMechanism is executed are ignored.</p>
 </div>
-<div class="section" id="inputstates">
-<h3>InputStates<a class="headerlink" href="#inputstates" title="Permalink to this headline">¶</a></h3>
-<p>When an ObjectiveMechanism is created, an InputState is created for each of the OutputStates specified in its
-<strong>monitored_output_states</strong> argument, and a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is assigned from each of those to the corresponding
-InputState.  By default, the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each InputState uses the format of the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>  of its corresponding OutputState, and the MappingProjection between them uses an
-<a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MatrixKeywords.IDENTITY_MATRIX" title="psyneulink.globals.keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a>.  However, the <strong>input_states</strong> argument can be used to specify the names of the InputStates
-and/or customize their lengths (e.g., specify one that is different from the OutputState that projects to it).  Any of
-the forms used for <a class="reference internal" href="InputState.html#inputstate-specification"><span class="std std-ref">specifying InputStates</span></a> can be used in  the <strong>input_states</strong> argument,
-including a list of strings (to be used as names for the InputStates), values (used to specify their length),
-or <a class="reference internal" href="State.html#state-specification"><span class="std std-ref">State Specification Dictionaries</span></a>, with the following constraints:</p>
-<blockquote>
-<div><ul class="simple">
-<li>the number of InputStates specified in the <strong>input_states</strong> argument must equal the number of OutputStates specified
-in the <strong>monitored_output_states</strong> argument (see the <a class="reference internal" href="#objectivemechanism-monitored-output-states-examples"><span class="std std-ref">examples</span></a> below);</li>
-</ul>
-<ul class="simple">
-<li>the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of each must also be of the same type as the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
-the corresponding OutputState, however their lengths can differ;  in that case, by default,
-a <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="psyneulink.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a> is used to create the MappingProjection between them (although this too can be
-customized using the <em>PROJECTION</em> entry of a <a class="reference internal" href="State.html#state-specification"><span class="std std-ref">State specification dictionary</span></a> for the
-InputState in the <strong>input_states</strong> argument;</li>
-</ul>
-<ul class="simple">
-<li>a <a class="reference internal" href="InputState.html#inputstate-weights-and-exponents"><span class="std std-ref">weight and/or exponent</span></a> can be specified for each InputState (e.g., for use
-by the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;  however, these are superseded by any weights
-and/or exponents specified in the <strong>monitored_output_states</strong> argument of the ObjectiveMechanism’s constructor
-(see <a class="reference internal" href="#objectivemechanism-monitored-output-states"><span class="std std-ref">Monitored OutputStates</span></a> and <a class="reference internal" href="#objectivemechanism-weights-and-exponents"><span class="std std-ref">note</span></a> above).</li>
-</ul>
-</div></blockquote>
 </div>
 </div>
 <div class="section" id="structure">
 <span id="objectivemechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="input">
 <span id="objectivemechanism-input"></span><h3>Input<a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h3>
-<p>=An ObjectiveMechanism has one <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> for each of the OutputStates specified in its
-<strong>monitored_output_states</strong> argument (see <a class="reference internal" href="#objectivemechanism-monitored-output-states"><span class="std std-ref">Monitored OutputStates</span></a>). Each InputState receives a
+<p>An ObjectiveMechanism has one <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> for each of the OutputStates specified in its
+<strong>monitored_output_states</strong> argument (see <a class="reference internal" href="#objectivemechanism-inputstates"><span class="std std-ref">Creation of InputStates and MappingProjections for Monitored OutputStates</span></a>). Each InputState receives a
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the corresponding OutputState, the values of which are used by the ObjectiveMechanism’s
-<a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to generate the value of its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">OutputState</span></a>.  The InputStates are listed in the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute, and the OutputStates from which they receive projections are listed in
-the same order its <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute.  If any <a class="reference internal" href="#objectivemechanism-monitored-output-states"><span class="std std-ref">weights
-and/or exponents are specified</span></a> for either the ObjectiveMechanism’s
-<a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> or its <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a>, the former take
-precedence over the latter.  These are assigned to the weights and/or exponents attributes of the ObjectiveMechanism’s
-<a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> if the function implements these attributes;  if so, the function applies the
-weights and/or exponents specified to the corresponding InputState <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s before it combining
-these to generate the ObjectiveMechanism’s <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">output</span></a>.</p>
+<a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to generate the value of its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">OutputState</span></a>.  The InputStates are listed in the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute, and the monitored OutputStates from which they receive projections are
+listed in the same order its <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute.</p>
+<div class="section" id="inputstate-variable">
+<span id="objectivemechanism-inputstate-size"></span><h4>InputState <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a><a class="headerlink" href="#inputstate-variable" title="Permalink to this headline">¶</a></h4>
+<p>By default, the format of the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for each InputState is determined by the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the monitored OutputState to which it corresponds.  However, if the <strong>variable</strong> argument is
+specified in an Objective Mechanism’s constructor, or a variable is specified as part of a monitored OutputState
+specification (see <a class="reference internal" href="#objectivemechanism-inputstates"><span class="std std-ref">Creation of InputStates and MappingProjections for Monitored OutputStates</span></a>), then that is used as the format for the <code class="xref any docutils literal"><span class="pre">variable</span>
+<span class="pre">&lt;InputState.variable</span></code> of the corresponding InputState(s) (see <code class="xref any docutils literal"><span class="pre">ObjectiveMechanism_Monitored_Output_States_Examples</span></code>
+below).</p>
+</div>
+<div class="section" id="weights-and-exponents">
+<span id="objectivemechanism-weights-and-exponents"></span><h4>Weights and Exponents<a class="headerlink" href="#weights-and-exponents" title="Permalink to this headline">¶</a></h4>
+<p>If any weights and/or exponents are specified for any of the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>, they are assigned to the corresponding InputStates.  Those, in turn,
+are assigned to the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> if the function implements these
+attributes;  if so, the function applies the weights and/or exponents specified to the corresponding InputState
+<a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s before it combining these to generate the ObjectiveMechanism’s <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">output</span></a>.</p>
+</div>
 </div>
 <div class="section" id="function">
 <span id="objectivemechanism-function"></span><h3>Function<a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
 <p>The ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> uses the values of its InputStates to compute an
 <a class="reference external" href="https://en.wikipedia.org/wiki/Loss_function">objective (or “loss”) function</a>, that is assigned as the value of its
 <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">OutputState</span></a>.  By default, it uses a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination" title="psyneulink.components.functions.function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function to sum the
-values of the values of the OutputStates listed in <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>. However, this can be configured to
+values of the values of the OutputStates listed in <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.monitored_output_states" title="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>. However, this can be configured to
 calculate differences, ratios, etc. (see <a class="reference internal" href="#objectivemechanism-weights-and-exponents-example"><span class="std std-ref">example</span></a> below).  It can
 also be replaced with any <code class="xref any docutils literal"><span class="pre">CombinationFunction</span></code>, or any python function that takes a nd array as its input (with a
 number of items in axis 0 equal to the number of the ObjectiveMechanism’s InputStates), and generates a 1d array as
@@ -366,12 +399,12 @@ result of its <a class="reference internal" href="#psyneulink.components.mechani
 <div class="section" id="execution">
 <span id="objectivemechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When an ObjectiveMechanism is executed, it updates its input_states with the values of the OutputStates listed in
-its <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute, and then uses its <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to
+its <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.monitored_output_states" title="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute, and then uses its <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to
 evaluate these.  The result is assigned as to its <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.value" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute as the value of its
 <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a>.</p>
 <p class="rubric" id="objectivemechanism-examples">Examples</p>
-<p id="objectivemechanism-monitored-output-states-examples"><em>Specifying</em> <strong>monitored_output_states</strong></p>
-<p>The use of default_variable to override a specification in <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> can be useful in some situations.
+<p id="objectivemechanism-monitored-output-states-examples"><em>Specifying</em> the <strong>variable</strong> for the InputStates of an ObjectiveMechanism</p>
+<p>The use of default_variable to override a specification in <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.monitored_output_states" title="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> can be useful in some situations.
 For example, for <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Reinforcement" title="psyneulink.components.functions.function.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span> <span class="pre">Learning</span></code></a>, an ObjectiveMechanism is used to monitor an action
 selection Mechanism.  In the example below, the latter uses a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.SoftMax" title="psyneulink.components.functions.function.SoftMax"><code class="xref any py py-class docutils literal"><span class="pre">SoftMax</span></code></a> function (and the
 <code class="xref any docutils literal"><span class="pre">PROB</span></code> as its output format) to select the action.  This generates a vector with a single non-zero
@@ -384,11 +417,12 @@ the InputState for the ObjectiveMechanism to have a single value, as in the exam
 
 <span class="n">my_reward_mech</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
-<span class="n">my_objective_mech</span> <span class="o">=</span> <span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">monitored_output_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">my_action_select_mech</span><span class="p">,</span> <span class="n">my_reward_mech</span><span class="p">])</span>
+<span class="n">my_objective_mech</span> <span class="o">=</span> <span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
+                                       <span class="n">monitored_output_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">my_action_select_mech</span><span class="p">,</span> <span class="n">my_reward_mech</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Note that the OutputState for the <code class="docutils literal"><span class="pre">my_action_selection</span></code> and <code class="docutils literal"><span class="pre">my_reward_mech</span></code> are specified
-in <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>.  If that were the only specification, the InputState created for <code class="docutils literal"><span class="pre">my_action_select_mech</span></code>
+<p>Note that the OutputStates for the <code class="docutils literal"><span class="pre">my_action_selection</span></code> and <code class="docutils literal"><span class="pre">my_reward_mech</span></code> are specified
+in <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.monitored_output_states" title="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>.  If that were the only specification, the InputState created for <code class="docutils literal"><span class="pre">my_action_select_mech</span></code>
 would be a vector of length 3.  This is overridden by specifying <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Reduce.default_variable" title="psyneulink.components.functions.function.Reduce.default_variable"><code class="xref any py py-attr docutils literal"><span class="pre">default_variable</span></code></a> as an array with two
 single-value arrays (one corresponding to <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> and the other to <code class="docutils literal"><span class="pre">my_reward_mech</span></code>).  This forces
 the InputState for <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> to have only a single element which, in turn, will cause a
@@ -397,10 +431,35 @@ MappingProjection to be created from  <code class="docutils literal"><span class
 different lengths).  This produces the desired effect, since the action selected is the only non-zero value in the
 output of <code class="docutils literal"><span class="pre">my_action_select_mech</span></code>, and so the <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="psyneulink.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a> will combine it with zeros (the other values
 in the vector), and so its value will be assigned as the value of the corresponding InputState in the
-ObjectiveMechanism.  Another option would have been to customize the ObjectiveMechanism’s
-<a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to convert the output of <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> to a length 1 vector, though
-this would have been more involved.  The next example describes a simple case of customizing the ObjectiveMechanism’s
-<a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, however more sophisticated ones are possible, just as the one just suggested.</p>
+ObjectiveMechanism.</p>
+<p>An alternative would be to explicitly specify the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute for the InputState
+created for <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> using a <code class="xref any docutils literal"><span class="pre">State</span> <span class="pre">specification</span> <span class="pre">dictionary</span>
+<span class="pre">&lt;ObjectiveMechanism_Specification_Dictionary&gt;</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">**monitored_output_states**</span> <span class="pre">argument</span> <span class="pre">of</span> <span class="pre">``my_objective_mech`</span></code>,
+as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_objective_mech</span> <span class="o">=</span> <span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">monitored_output_states</span> <span class="o">=</span> <span class="p">[{</span><span class="n">MECHANISM</span><span class="p">:</span> <span class="n">my_action_select_mech</span><span class="p">,</span>
+                                                                   <span class="n">VARIABLE</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]},</span>
+                                                                  <span class="n">my_reward_mech</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Note that the <em>VARIABLE</em> entry here specifies the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for the InputState of the
+ObjectiveMechanism created to receive a Projection from <code class="docutils literal"><span class="pre">my_action_selcect_mech</span></code>, and not <code class="docutils literal"><span class="pre">my_action_selcect_mech</span></code>
+itself (see <a class="reference internal" href="#objectivemechanism-inputstates"><span class="std std-ref">Creation of InputStates and MappingProjections for Monitored OutputStates</span></a> for a full explanation).</p>
+<p>Yet another alternative would be to use a <a class="reference internal" href="State.html#state-specification"><span class="std std-ref">2-item tuple</span></a> to specify a matrix for the
+MappingProjection from <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> to the corresponding InputState of
+<code class="docutils literal"><span class="pre">my_objective_mech</span></code>, as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_objective_mech</span> <span class="o">=</span> <span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">monitored_output_states</span> <span class="o">=</span>
+                                                     <span class="p">[(</span><span class="n">my_action_select_mech</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span><span class="mi">1</span><span class="p">)),</span>
+                                                      <span class="n">my_reward_mech</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>A <a class="reference internal" href="#objectivemechanism-outputstate-tuple"><span class="std std-ref">monitored_output_states tuple</span></a> could also be used, but this would require
+that entries for its weight and exponent items be included (as <code class="docutils literal"><span class="pre">(my_action_select_mech,</span> <span class="pre">None,</span> <span class="pre">None,</span> <span class="pre">np.ones((5,1))</span></code>
+which, in this case, are not necessary (see <a class="reference internal" href="#objectivemechanism-outputstate-tuple-example"><span class="std std-ref">example</span></a> below for how
+these can be used).</p>
+<p>Finally, the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> itself could be customized, to convert the
+output of <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> to a length 1 vector, though this would have been more involved.  The next
+example describes a simple case of customizing the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>,
+however more sophisticated ones are possible, such as the one just suggested.</p>
 <p id="objectivemechanism-weights-and-exponents-example"><em>Customizing the ObjectiveMechanism’s function</em></p>
 <p>The simplest way to customize the <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an ObjectiveMechanism is to
 parametrize its default function (<a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination" title="psyneulink.components.functions.function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>).  In the example below, the ObjectiveMechanism used in the
@@ -411,13 +470,13 @@ previous example is further customized to subtract the value of the action selec
 </pre></div>
 </div>
 <p>This is done by specifying the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination.weights" title="psyneulink.components.functions.function.LinearCombination.weights"><code class="xref any py py-attr docutils literal"><span class="pre">weights</span></code></a> parameter of the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination" title="psyneulink.components.functions.function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function,
-with two values [-1] and [1] corresponding to the two items in <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> (and <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Reduce.default_variable" title="psyneulink.components.functions.function.Reduce.default_variable"><code class="xref any py py-attr docutils literal"><span class="pre">default_variable</span></code></a>).
+with two values [-1] and [1] corresponding to the two items in <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.monitored_output_states" title="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> (and <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Reduce.default_variable" title="psyneulink.components.functions.function.Reduce.default_variable"><code class="xref any py py-attr docutils literal"><span class="pre">default_variable</span></code></a>).
 This will multiply the value from <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> by -1 before adding it to (and thus subtracting it from)
 the value of <code class="docutils literal"><span class="pre">my_reward_mech</span></code>.  Notice that the weight for <code class="docutils literal"><span class="pre">my_reward_mech</span></code> had to be specified, even though it
 is using the default value (1);  whenever a weight and/or exponent parameter is specified, there must be an entry for
 every item of the function’s variable.  The <a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination.operation" title="psyneulink.components.functions.function.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> and <a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination.exponents" title="psyneulink.components.functions.function.LinearCombination.exponents"><code class="xref any py py-attr docutils literal"><span class="pre">exponents</span></code></a> parameters of <a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination" title="psyneulink.components.functions.function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> can be used similarly, and together, to multiply and
 divide quantities.</p>
-<p id="objectivemechanism-outputstate-tuple-example">As a conveninence notation, weights and exponents can be included with the specification of the OutputState itself, in
+<p id="objectivemechanism-outputstate-tuple-example">As a convenience notation, weights and exponents can be included with the specification of the OutputState itself, in
 the <strong>monitored_output_states</strong> argument, by placing them in a tuple with the OutputState (see <a class="reference internal" href="#objectivemechanism-outputstate-tuple"><span class="std std-ref">monitored_output_states
 tuple</span></a>).  The following example specifies the example same ObjectiveMechanism
 as the previous example:</p>
@@ -445,35 +504,6 @@ assigned to the <em>OUTPUT_STATES</em> entry.</p>
 <div class="section" id="class-reference">
 <span id="objectivemechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="psyneulink.components.mechanisms.processing.objectivemechanism.MonitoredOutputStateTuple">
-<em class="property">class </em><code class="descclassname">psyneulink.components.mechanisms.processing.objectivemechanism.</code><code class="descname">MonitoredOutputStateTuple</code><span class="sig-paren">(</span><em>output_state</em>, <em>weight</em>, <em>exponent</em>, <em>matrix</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.processing.objectivemechanism.MonitoredOutputStateTuple" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="psyneulink.components.mechanisms.processing.objectivemechanism.MonitoredOutputStateTuple.exponent">
-<code class="descname">exponent</code><a class="headerlink" href="#psyneulink.components.mechanisms.processing.objectivemechanism.MonitoredOutputStateTuple.exponent" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 2</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.processing.objectivemechanism.MonitoredOutputStateTuple.matrix">
-<code class="descname">matrix</code><a class="headerlink" href="#psyneulink.components.mechanisms.processing.objectivemechanism.MonitoredOutputStateTuple.matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 3</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.processing.objectivemechanism.MonitoredOutputStateTuple.output_state">
-<code class="descname">output_state</code><a class="headerlink" href="#psyneulink.components.mechanisms.processing.objectivemechanism.MonitoredOutputStateTuple.output_state" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.mechanisms.processing.objectivemechanism.MonitoredOutputStateTuple.weight">
-<code class="descname">weight</code><a class="headerlink" href="#psyneulink.components.mechanisms.processing.objectivemechanism.MonitoredOutputStateTuple.weight" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 1</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
 <dt id="psyneulink.components.mechanisms.processing.objectivemechanism.OBJECTIVE_OUTPUT">
 <em class="property">class </em><code class="descclassname">psyneulink.components.mechanisms.processing.objectivemechanism.</code><code class="descname">OBJECTIVE_OUTPUT</code><a class="headerlink" href="#psyneulink.components.mechanisms.processing.objectivemechanism.OBJECTIVE_OUTPUT" title="Permalink to this definition">¶</a></dt>
 <dd><p id="objectivemechanism-standard-outputstates"><a class="reference internal" href="OutputState.html#outputstate-standard"><span class="std std-ref">Standard OutputStates</span></a> for <a class="reference internal" href="#"><span class="doc">ObjectiveMechanism</span></a>:</p>
@@ -486,8 +516,12 @@ ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.component
 
 <dl class="class">
 <dt id="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.components.mechanisms.processing.objectivemechanism.</code><code class="descname">ObjectiveMechanism</code><span class="sig-paren">(</span><em>                       monitored_output_states,              input_states=None,                    function=LinearCombination,           output_states=[OUTCOME],              params=None,                          name=None,                            prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that evaluates the value(s)
+<em class="property">class </em><code class="descclassname">psyneulink.components.mechanisms.processing.objectivemechanism.</code><code class="descname">ObjectiveMechanism</code><span class="sig-paren">(</span><em>input_states=None, function=&lt;class 'psyneulink.components.functions.function.LinearCombination'&gt;, output_states: &lt;typecheck.framework.optional object at 0x1057c0828&gt; = ['outcome'], params=None, name=None, prefs: &lt;function is_pref_set at 0x1055c4620&gt; = None, context=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>ObjectiveMechanism(                       monitored_output_states,        # alias to input_states argument, which can still be used in a spec dict</dt>
+<dd>function=LinearCombination,           output_states=[OUTCOME],              params=None,                          name=None,                            prefs=None)</dd>
+</dl>
+<p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that evaluates the value(s)
 of one or more <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -497,10 +531,7 @@ of one or more <a class="reference internal" href="OutputState.html"><span class
 <li><strong>monitored_output_states</strong> (List[<a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, str, value, dict, <code class="xref any docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code>] or Dict) – specifies the OutputStates, the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of which will be monitored, and evaluated by
 the ObjectiveMechanism’s <a class="reference internal" href="#"><span class="doc">function</span></a> (see <a class="reference internal" href="#objectivemechanism-monitored-output-states"><span class="std std-ref">Monitored OutputStates</span></a>
 for details of specification).</li>
-<li><strong>input_states</strong> (<em>List</em><em>[</em><a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState" title="psyneulink.components.states.inputstate.InputState"><em>InputState</em></a><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value" title="psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default None</em>) – specifies the names and/or formats to use for the values of the InputStates that receive the input from the
-OutputStates specified in the monitored_output_states** argument; if specified, there must be one for each item
-specified in the <strong>monitored_output_states</strong> argument.</li>
-<li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><em>ObjectiveFunction</em><em>, </em><a class="reference internal" href="Function.html#psyneulink.components.functions.function.NavarroAndFuss.function" title="psyneulink.components.functions.function.NavarroAndFuss.function"><em>function</em></a><em> or </em><em>method : default LinearCombination</em>) – specifies the function used to evaluate the values listed in <code class="xref std std-keyword docutils literal"><span class="pre">monitored_output_states</span></code>
+<li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><em>ObjectiveFunction</em><em>, </em><a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a><em> or </em><em>method : default LinearCombination</em>) – specifies the function used to evaluate the values listed in <code class="xref std std-keyword docutils literal"><span class="pre">monitored_output_states</span></code>
 (see <a class="reference internal" href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function" title="psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for details.</li>
 <li><strong>output_states</strong> (<em>List</em><em>[</em><a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState" title="psyneulink.components.states.outputstate.OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value" title="psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>OUTCOME</em><em>]</em>) – specifies the OutputStates for the Mechanism;</li>
 <li><strong>role</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.LEARNING" title="psyneulink.globals.keywords.MechanismRoles.LEARNING"><em>LEARNING</em></a><em>, </em><em>CONTROL</em><em>]</em>) – specifies if the ObjectiveMechanism is being used for learning or control (see <a class="reference internal" href="#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role"><code class="xref any py py-attr docutils literal"><span class="pre">role</span></code></a> for details).</li>
