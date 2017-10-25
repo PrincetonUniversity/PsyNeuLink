@@ -661,11 +661,10 @@ class RecurrentTransferMechanism(TransferMechanism):
             d = np.diagonal(specified_matrix).copy()
             state = _instantiate_state(owner=self,
                                        state_type=ParameterState,
-                                       state_name=AUTO,
-                                       state_spec=d,
-                                       state_params=None,
-                                       constraint_value=d,
-                                       constraint_value_name=AUTO,
+                                       name=AUTO,
+                                       reference_value=d,
+                                       reference_value_name=AUTO,
+                                       params=None,
                                        context=context)
             if state is not None:
                 self._parameter_states[AUTO] = state
@@ -682,11 +681,10 @@ class RecurrentTransferMechanism(TransferMechanism):
             np.fill_diagonal(m, 0.0)
             state = _instantiate_state(owner=self,
                                        state_type=ParameterState,
-                                       state_name=HETERO,
-                                       state_spec=m,
-                                       state_params=None,
-                                       constraint_value=m,
-                                       constraint_value_name=HETERO,
+                                       name=HETERO,
+                                       reference_value=m,
+                                       reference_value_name=HETERO,
+                                       params=None,
                                        context=context)
             if state is not None:
                 self._parameter_states[HETERO] = state
@@ -907,18 +905,23 @@ class RecurrentTransferMechanism(TransferMechanism):
                                         context=None):
 
         learning_mechanism = AutoAssociativeLearningMechanism(variable=[activity_vector.value],
-                                                              learning_signals=[self.recurrent_projection],
+                                                              # learning_signals=[self.recurrent_projection],
                                                               function=learning_function,
                                                               learning_rate=learning_rate,
+                                                              name="{} for {}".format(
+                                                                      AutoAssociativeLearningMechanism.className,
+                                                                      self.name),
                                                               context=context)
 
         # Instantiate Projection from Mechanism's output to LearningMechanism
         MappingProjection(sender=activity_vector,
-                          receiver=learning_mechanism.input_states[ACTIVATION_INPUT])
+                          receiver=learning_mechanism.input_states[ACTIVATION_INPUT],
+                          name="Error Projection for {}".format(learning_mechanism.name))
 
         # Instantiate Projection from LearningMechanism to Mechanism's AutoAssociativeProjection
         LearningProjection(sender=learning_mechanism.output_states[LEARNING_SIGNAL],
-                          receiver=matrix.parameter_states[MATRIX])
+                           receiver=matrix.parameter_states[MATRIX],
+                           name="{} for {}".format(LearningProjection.className, self.recurrent_projection.name))
 
         return learning_mechanism
 

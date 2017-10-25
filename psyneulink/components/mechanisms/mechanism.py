@@ -628,7 +628,6 @@ Class Reference
 
 import inspect
 import logging
-
 from collections import OrderedDict
 from inspect import isclass
 
@@ -638,29 +637,18 @@ import typecheck as tc
 from psyneulink.components.component import Component, ExecutionStatus, function_type, method_type
 from psyneulink.components.shellclasses import Function, Mechanism, Projection
 from psyneulink.globals.defaults import timeScaleSystemDefault
-from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, kwMechanismComponentCategory, kwMechanismExecuteFunction
+from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
+from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
 __all__ = [
-    'Mechanism_Base', 'MechanismError', 'MonitoredOutputStatesOption',
+    'Mechanism_Base', 'MechanismError'
 ]
 
 logger = logging.getLogger(__name__)
 MechanismRegistry = {}
-
-class MonitoredOutputStatesOption(AutoNumber):
-    """Specifies OutputStates to be monitored by a `ControlMechanism <ControlMechanism>`
-    (see `ObjectiveMechanism_Monitored_Output_States` for a more complete description of their meanings."""
-    ONLY_SPECIFIED_OUTPUT_STATES = ()
-    """Only monitor explicitly specified Outputstates."""
-    PRIMARY_OUTPUT_STATES = ()
-    """Monitor only the `primary OutputState <OutputState_Primary>` of a Mechanism."""
-    ALL_OUTPUT_STATES = ()
-    """Monitor all OutputStates <Mechanism_Base.output_states>` of a Mechanism."""
-    NUM_MONITOR_STATES_OPTIONS = ()
 
 
 class MechanismError(Exception):
@@ -1093,6 +1081,7 @@ class Mechanism_Base(Mechanism):
         except AttributeError:
             self._default_value = self.value
         self.value = self._old_value = None
+        # FIX: 10/3/17 - IS THIS CORRECT?  SHOULD IT BE INITIALIZED??
         self._status = INITIALIZING
         self._receivesProcessInput = False
         self.phaseSpec = None
@@ -2036,17 +2025,6 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.states.parameterstate import ParameterState
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, ParameterState) )
-
-    def _get_primary_state(self, state_type):
-        from psyneulink.components.states.inputstate import InputState
-        from psyneulink.components.states.parameterstate import ParameterState
-        from psyneulink.components.states.outputstate import OutputState
-        if issubclass(state_type, InputState):
-            return self.input_state
-        if issubclass(state_type, OutputState):
-            return self.output_state
-        if issubclass(state_type, ParameterState):
-            raise Mechanism("PROGRAM ERROR:  illegal call to {} for a primary {}".format(self.name, PARAMETER_STATE))
 
     @property
     def value(self):

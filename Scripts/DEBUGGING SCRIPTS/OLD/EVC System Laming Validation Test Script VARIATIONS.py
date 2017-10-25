@@ -1,4 +1,3 @@
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 from psyneulink.components.mechanisms.adaptive.control.EVCControlMechanism import EVCControlMechanism
 
 from psyneulink.components.mechanisms.processing.transfermechanism import *

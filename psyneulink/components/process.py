@@ -445,29 +445,26 @@ import inspect
 import numbers
 import re
 import warnings
-
 from collections import UserList, namedtuple
 
 import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, ExecutionStatus, InitStatus, function_type
-from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.projections.modulatory.learningprojection import LearningProjection, _is_learning_spec
+from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.projection import _add_projection_to, _is_projection_spec
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, System_Base
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state, _instantiate_state_list
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMPONENT_INIT, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, HARD_CLAMP, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SEPARATOR_BAR, SINGLETON, SOFT_CLAMP, TARGET, TERMINAL, TIME_SCALE, kwProcessComponentCategory, kwReceiverArg, kwSeparator
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMPONENT_INIT, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SEPARATOR_BAR, SINGLETON, TARGET, TERMINAL, TIME_SCALE, kwProcessComponentCategory, kwReceiverArg, kwSeparator
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import append_type_to_name, convert_to_np_array, iscompatible, parameter_spec
+from psyneulink.globals.utilities import append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
 __all__ = [
@@ -1204,6 +1201,7 @@ class Process(Process_Base):
                                              append_type_to_name(mech)))
 
     def _parse_and_instantiate_projection_entries(self, pathway, context=None):
+        from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 
         # ASSIGN DEFAULT PROJECTION PARAMS
 
@@ -1269,6 +1267,9 @@ class Process(Process_Base):
                                                         preceding_item._parameter_states[MATRIX].mod_afferents
                                                         if isinstance(projection, LearningProjection))
 
+                            # FIX: 10/3/17: USE OF TUPLE AS ITEM IN state_list ARGS BELOW IS NO LONGER SUPPORTED
+                            #               NEED TO REFORMAT SPECS FOR state_list BELOW
+                            #               (NOTE: THESE EXCEPTIONS ARE NOT BEING CALLED IN CURRENT TEST SUITES)
                             # preceding_item doesn't have a _parameter_states attrib, so assign one with self.learning
                             except AttributeError:
                                 # Instantiate _parameter_states Ordered dict with ParameterState and self.learning
@@ -1278,8 +1279,8 @@ class Process(Process_Base):
                                                                                              self.learning)],
                                                                                 state_type=ParameterState,
                                                                                 state_param_identifier=PARAMETER_STATE,
-                                                                                constraint_value=self.learning,
-                                                                                constraint_value_name=LEARNING_PROJECTION,
+                                                                                reference_value=self.learning,
+                                                                                reference_value_name=LEARNING_PROJECTION,
                                                                                 context=context)
 
                             # preceding_item has _parameter_states but not (yet!) one for MATRIX, so instantiate it
@@ -1288,11 +1289,12 @@ class Process(Process_Base):
                                 preceding_item._parameter_states[MATRIX] = _instantiate_state(
                                                                                 owner=preceding_item,
                                                                                 state_type=ParameterState,
-                                                                                state_name=MATRIX,
-                                                                                state_spec=PARAMETER_STATE,
-                                                                                state_params=self.learning,
-                                                                                constraint_value=self.learning,
-                                                                                constraint_value_name=LEARNING_PROJECTION,
+                                                                                name=MATRIX,
+                                                                                # # FIX: NOT SURE IF THIS IS CORRECT:
+                                                                                # state_spec=PARAMETER_STATE,
+                                                                                reference_value=self.learning,
+                                                                                reference_value_name=LEARNING_PROJECTION,
+                                                                                params=self.learning,
                                                                                 context=context)
                             # preceding_item has ParameterState for MATRIX,
                             else:
@@ -1330,8 +1332,8 @@ class Process(Process_Base):
                                                                                              self.learning)],
                                                                                 state_type=ParameterState,
                                                                                 state_param_identifier=PARAMETER_STATE,
-                                                                                constraint_value=self.learning,
-                                                                                constraint_value_name=LEARNING_PROJECTION,
+                                                                                reference_value=self.learning,
+                                                                                reference_value_name=LEARNING_PROJECTION,
                                                                                 context=context)
 
                                 # Projection has _parameter_states but not (yet!) one for MATRIX,
@@ -1341,11 +1343,11 @@ class Process(Process_Base):
                                     projection._parameter_states[MATRIX] = _instantiate_state(
                                                                                 owner=preceding_item,
                                                                                 state_type=ParameterState,
-                                                                                state_name=MATRIX,
-                                                                                state_spec=PARAMETER_STATE,
-                                                                                state_params=self.learning,
-                                                                                constraint_value=self.learning,
-                                                                                constraint_value_name=LEARNING_PROJECTION,
+                                                                                name=MATRIX,
+                                                                                # state_spec=PARAMETER_STATE,
+                                                                                reference_value=self.learning,
+                                                                                reference_value_name=LEARNING_PROJECTION,
+                                                                                params=self.learning,
                                                                                 context=context)
 
                                 # Check if Projection's matrix param has a learningSignal
@@ -1425,7 +1427,7 @@ class Process(Process_Base):
                     # FIX: PARSE/VALIDATE ALL FORMS OF PROJECTION SPEC (ITEM PART OF TUPLE) HERE:
                     # FIX:                                                          CLASS, OBJECT, DICT, STR, TUPLE??
                     # IMPLEMENT: MOVE State._instantiate_projections_to_state(), _check_projection_receiver()
-                    #            and _parse_projection_ref() all to Projection_Base.__init__() and call that
+                    #            and _parse_projection_keyword() all to Projection_Base.__init__() and call that
                     #           VALIDATION OF PROJECTION OBJECT:
                     #                MAKE SURE IT IS A MappingProjection
                     #                CHECK THAT SENDER IS pathway[i-1][OBJECT_ITEM]
@@ -1560,8 +1562,8 @@ class Process(Process_Base):
                         else:
                             matrix_spec = item
                         projection = MappingProjection(sender=sender_mech,
-                                             receiver=receiver_mech,
-                                             matrix=matrix_spec)
+                                                       receiver=receiver_mech,
+                                                       matrix=matrix_spec)
                     else:
                         raise ProcessError("Item {0} ({1}) of pathway for {2} is not "
                                            "a valid Mechanism or Projection specification".format(i, item, self.name))
@@ -1828,7 +1830,7 @@ class Process(Process_Base):
 
             # For each ParameterState of the mechanism
             for parameter_state in mech._parameter_states:
-                parameter_state._deferred_init() # XXX
+                parameter_state._deferred_init()
                 # MODIFIED 5/2/17 OLD:
                 # self._instantiate__deferred_init_projections(parameter_state.path_afferents)
                 # MODIFIED 5/2/17 NEW:
@@ -2132,6 +2134,7 @@ class Process(Process_Base):
         COMMENT
 
         """
+        from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 
         if not context:
             context = EXECUTING + " " + PROCESS + " " + self.name
@@ -2572,8 +2575,6 @@ class ProcessInputState(OutputState):
         # self.owner.input = self.value
         # MODIFIED 2/17/17 END
         # self.path_afferents = []
-        # from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
-        # from PsyNeuLink.Components.Functions.Function import Linear
         # self.index = PRIMARY_OUTPUT_STATE
         # self.calculate = Linear
 

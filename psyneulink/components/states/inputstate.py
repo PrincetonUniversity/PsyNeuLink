@@ -115,24 +115,34 @@ can be used to specify an InputState:
 
     .. _InputState_Specification_Dictionary:
 
+COMMENT:
+    10/3/17 - INCLUDE MECHANISM AND OUTPUT_STATES ENTRIES FROM ObjectiveMechanism HERE (AND USE THOSE EXAMPLES??)
+COMMENT
     * A **State specification dictionary**.  This creates the specified InputState using the first item of the owner's
       `variable <Mechanism_Base.variable>` as the InputState's `variable <InputState.variable>`.  In addition to the
-      standard entries of a `State specification dictionary <State_Specification>`, the dictionary can have:
+      standard entries of a `State specification dictionary <State_Specification>`, the dictionary can have the
+      following entries:
 
-      - a *PROJECTIONS* entry -- the value can be a `Projection <Projection>`, a `Projection specification dictionary
-        <Projection_In_Context_Specification>`, or a list containing items that are either of those.  This can be
-        used to specify one or more afferent `PathwayProjections <PathwayProjection>` to the InpuState, and/or
-        `ModulatoryProjections <ModulatoryProjection>` for it to receive.
-      |
-      - a *WEIGHT* entry -- the value must be an integer or float, and is assigned as the value of the InputState's
-        `weight <InputState.weight>` attribute  (see `InputState_Weights_And_Exponents`);  this takes precedence over
-        any specification in the **weight** argument of the InputState's constructor.
-      |
-      - an *EXPONENT* entry -- the value must be an integer or float, and is assigned as the value of the InputState's
-        `exponent <InputState.exponent>` attribute  (see `InputState_Weights_And_Exponents`);  this takes precedence
-        over any specification in the **exponent** argument of the InputState's constructor.
-
+      * *PROJECTIONS*:<Projection specification or list of ones>
+          the value can be a `Projection <Projection>`, a `Projection specification dictionary
+          <Projection_In_Context_Specification>`, or a list containing items that are either of those.  This can be
+          used to specify one or more afferent `PathwayProjections <PathwayProjection>` to the InpuState,
+          and/or `ModulatoryProjections <ModulatoryProjection>` for it to receive.
+      ..
+      * *WEIGHT*:<number>
+          the value must be an integer or float, and is assigned as the value of the InputState's `weight
+          <InputState.weight>` attribute  (see `InputState_Weights_And_Exponents`);  this takes precedence over any
+          specification in the **weight** argument of the InputState's constructor.
+      ..
+      * *EXPONENT*:<number>
+          the value must be an integer or float, and is assigned as the value of the InputState's `exponent
+          <InputState.exponent>` attribute  (see `InputState_Weights_And_Exponents`);  this takes precedence over any
+          specification in the **exponent** argument of the InputState's constructor.
     ..
+COMMENT:
+    10/3/17 - CHANGE THIS SO THAT: 1) 2ND ITEM OF 2-ITEM TUPLE CAN BE ANY KIND OF PROJECTIONS (LIST??)
+                                   2) ConnectionTuple CAN BE USED (MOVE EXAMPLES HERE FROM OBJECTIVE MECHANISM??
+COMMENT
     * A **2-item tuple**.  The first item must be a value, and the second a `ModulatoryProjection
       <ModulatoryProjection>` specification. This creates a default InputState using the first item as the InputState's
       `variable <InputState.variable>`, and assigns the InputState as a `receiver <ModulatoryProjection.receiver>` of
@@ -281,6 +291,7 @@ Class Reference
 ---------------
 
 """
+import numbers
 import warnings
 
 import numpy as np
@@ -288,8 +299,10 @@ import typecheck as tc
 
 from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination
+from psyneulink.components.mechanisms.mechanism import Mechanism
+from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT
+from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
@@ -312,6 +325,9 @@ state_type_keywords = state_type_keywords.update({INPUT_STATE})
 #     ALL = TIME_STAMP
 #     DEFAULTS = NONE
 
+# STATE_SPEC_INDEX = 0 <- DECLARED IN State
+WEIGHT_INDEX = 1
+EXPONENT_INDEX = 2
 
 class InputStateError(Exception):
     def __init__(self, error_value):
@@ -393,10 +409,10 @@ class InputState(State_Base):
         `mod_afferents <InputState.mod_afferents>` attributes, respectively (see `InputState_Projections` for additional
         details).
 
-    weight : int or float : default 1
+    weight : number : default 1
         specifies the value of the `weight <InputState.weight>` attribute of the InputState.
 
-    exponent : int or float : default 1
+    exponent : number : default 1
         specifies the value of the `exponent <InputState.exponent>` attribute of the InputState.
 
     params : Optional[Dict[param keyword, param value]]
@@ -450,10 +466,10 @@ class InputState(State_Base):
         `mod_afferents <InputState.mod_afferents>` attribute).  The result (whether a value or an ndarray) is
         assigned to an item of the owner Mechanism's `variable <Mechanism_Base.variable>`.
 
-    weight : int or float
+    weight : number
         see `InputState_Weights_And_Exponents` for description.
 
-    exponent : int or float
+    exponent : number
         see `InputState_Weights_And_Exponents` for description.
 
     name : str : default <State subclass>-<index>
@@ -633,6 +649,97 @@ class InputState(State_Base):
             #    it is ignored in execute method (i.e., not combined with base_value)
             return None
 
+    def _get_primary_state(self, mechanism):
+        return mechanism.input_state
+
+# MODIFIED 9/30/17 NEW:
+    @tc.typecheck
+    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
+        """Get weights, exponents and/or any connections specified in an InputState specification tuple
+
+        Tuple specification can be:
+            (state_spec, connections)
+            (state_spec, weights, exponents, connections)
+
+        Returns params dict with WEIGHT, EXPONENT and/or CONNECTIONS entries if any of these was specified.
+
+        """
+        # FIX: MAKE SURE IT IS OK TO USE DICT PASSED IN (as params) AND NOT INADVERTENTLY OVERWRITING STUFF HERE
+
+        # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputState SPECS
+        #      CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
+        #      THESE CAN BE USED BY THE InputState's LinearCombination Function
+        #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
+        #      THIS WOULD ALLOW AN ADDITONAL HIERARCHICAL LEVEL FOR NESTING ALGEBRAIC COMBINATION OF INPUT VALUES
+        #      TO A MECHANISM
+        from psyneulink.components.projections.projection import Projection, _parse_connection_specs
+
+        params_dict = {}
+
+        if isinstance(state_specific_params, dict):
+            # FIX: 10/3/17 - CHECK HERE THAT, IF MECHANISM ENTRY IS USED, A VARIABLE, WEIGHT AND/OR EXPONENT ENTRY
+            # FIX:                       IS APPLIED TO ALL THE OutputStates SPECIFIED IN OUTPUT_STATES
+            # FIX:                       UNLESS THEY THEMSELVES USE A State specification dict WITH ANY OF THOSE ENTRIES
+            # FIX:           USE ObjectiveMechanism EXAMPLES
+            return state_specific_params
+
+        elif isinstance(state_specific_params, tuple):
+
+            tuple_spec = state_specific_params
+            # Note: 1s item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
+
+            # Get connection (afferent Projection(s)) specification from tuple
+            PROJECTIONS_INDEX = len(tuple_spec)-1
+            try:
+                projections_spec = tuple_spec[PROJECTIONS_INDEX]
+            except IndexError:
+                projections_spec = None
+
+            if projections_spec:
+                try:
+                    params_dict[PROJECTIONS] = _parse_connection_specs(self.__class__,
+                                                                       owner=owner,
+                                                                       connections={projections_spec})
+                except InputStateError:
+                    raise InputStateError("Item {} of tuple specification in {} specification dictionary "
+                                          "for {} ({}) is not a recognized specification for one or more "
+                                          "{}s, {}s, or {}s that project to it".
+                                          format(PROJECTIONS_INDEX,
+                                                 InputState.__name__,
+                                                 owner.name,
+                                                 projections_spec,
+                                                 Mechanism.__name__,
+                                                 OutputState.__name__,
+                                                 Projection.__name))
+
+            # Tuple is (spec, weights, exponents<, afferent_source_spec>),
+            #    for specification of weights and exponents,  + connection(s) (afferent projection(s)) to InputState
+            if len(tuple_spec) in {3, 4}:
+
+                weight = tuple_spec[WEIGHT_INDEX]
+                exponent = tuple_spec[EXPONENT_INDEX]
+
+                if weight is not None and not isinstance(weight, numbers.Number):
+                    raise InputStateError("Specification of the weight ({}) in tuple of {} specification dictionary "
+                                          "for {} must be a number".format(weight, InputState.__name__, owner.name))
+                params_dict[WEIGHT] = weight
+
+                if exponent is not None and not isinstance(exponent, numbers.Number):
+                    raise InputStateError("Specification of the exponent ({}) in tuple of {} specification dictionary "
+                                          "for {} must be a number".format(exponent, InputState.__name__, owner.name))
+                params_dict[EXPONENT] = exponent
+
+            else:
+                raise StateError("Tuple provided as state_spec for {} of {} ({}) must have either 2, 3 or 4 items".
+                                 format(InputState.__name__, owner.name, tuple_spec))
+
+        elif state_specific_params is not None:
+            raise InputStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
+                                  format(self.__class__.__name__, state_specific_params))
+
+        return params_dict
+# MODIFIED 9/30/17 END
+
     @property
     def pathway_projections(self):
         return self.path_afferents
@@ -661,7 +768,7 @@ def _instantiate_input_states(owner, input_states=None, context=None):
         - if there is only one InputState, it is assigned the full value
 
     Note: State._instantiate_state_list()
-              parses self.instance_defaults.variable (2D np.array, passed in constraint_value)
+              parses self.instance_defaults.variable (2D np.array, passed in reference_value)
               into individual 1D arrays, one for each input state
 
     (See State._instantiate_state_list() for additional details)
@@ -678,8 +785,8 @@ def _instantiate_input_states(owner, input_states=None, context=None):
                                          state_list=input_states,
                                          state_type=InputState,
                                          state_param_identifier=INPUT_STATE,
-                                         constraint_value=owner.instance_defaults.variable,
-                                         constraint_value_name=VARIABLE,
+                                         reference_value=owner.instance_defaults.variable,
+                                         reference_value_name=VARIABLE,
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)

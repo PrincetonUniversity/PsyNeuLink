@@ -58,14 +58,14 @@ A ComparatorMechanism has two `input_states <ComparatorMechanism.input_states>`,
 constructor.  The InputStates are listed in the Mechanism's `input_states <ComparatorMechanism.input_States>` attribute
 and named, respectively, *SAMPLE* and *TARGET*.  The OutputStates from which they receive their projections (specified
 in the **sample** and **target** arguments) are listed in the Mechanism's `sample <ComparatorMechanism.sample>` and
-`target <ComparatorMechanism.target>` attributes as well as in its `monitored_output_states <Comparator.monitored_output_states>`
-attribute. The ComparatorMechanism's `function <ComparatorMechanism.function>` compares the value of the sample and
-target InputStates.  By default, it uses a `LinearCombination` function, assigning the sample InputState a `weight
-<LinearCombination.weight>` of *-1* and the target a `weight <LinearCombination.weight>` of *1*, so that the sample is
-subtracted from the target.  However, the `function <ComparatorMechanism.function>` can be customized, so long as it is
-replaced with one that takes two arrays with the same format as its inputs, and generates a similar array as its result.
-The result is assigned as the value of the Comparator Mechanism's *OUTCOME* (`primary <OutputState_Primary>`)
-OutputState.
+`target <ComparatorMechanism.target>` attributes as well as in its `monitored_output_states
+<Comparator.monitored_output_states>` attribute. The ComparatorMechanism's `function <ComparatorMechanism.function>`
+compares the value of the sample and target InputStates.  By default, it uses a `LinearCombination` function,
+assigning the sample InputState a `weight <LinearCombination.weight>` of *-1* and the target a `weight
+<LinearCombination.weight>` of *1*, so that the sample is subtracted from the target.  However, the `function
+<ComparatorMechanism.function>` can be customized, so long as it is replaced with one that takes two arrays with the
+same format as its inputs, and generates a similar array as its result. The result is assigned as the value of the
+Comparator Mechanism's *OUTCOME* (`primary <OutputState_Primary>`) OutputState.
 
 .. _ComparatorMechanism_Function:
 
@@ -87,8 +87,8 @@ Example
 
 *Formatting InputState values*
 
-The **input_states** argument can be used to specify a particular format for the SAMPLE and/or TARGET InputStates
-of a ComparatorMechanism.  This can be useful when one or both of these must be different than the format of the
+The **variable** argument can be used to specify a particular format for the SAMPLE and/or TARGET InputStates
+of a ComparatorMechanism.  This can be useful when one or both of these differ from the format of the
 OutputState(s) specified in the **sample** and **target** arguments. For example, for `Reinforcement Learning
 <Reinforcement>`, a ComparatorMechanism is used to monitor an action selection Mechanism (the sample), and compare
 this with a reinforcement signal (the target).  In the example below, the action selection Mechanism is a
@@ -97,7 +97,7 @@ an action.  This generates a vector with a single non-zero value (the selected a
 specifying it as the ComparatorMechanism's **sample** argument will generate a corresponding InputState with a vector
 as its value.  This will not match the reward signal specified in the ComparatorMechanism's **target** argument, the
 value of which is a single scalar.  This can be dealt with by explicitly specifying the format for the SAMPLE and
-TARGET InputStates in the **input_states** argument of the ComparatorMechanism's constructor, as follows::
+TARGET InputStates in the **variable** argument of the ComparatorMechanism's constructor, as follows::
 
     my_action_selection_mech = TransferMechanism(size=5,
                                                  function=SoftMax(output=PROB))
@@ -106,12 +106,12 @@ TARGET InputStates in the **input_states** argument of the ComparatorMechanism's
 
     my_comparator_mech = ComparatorMechanism(sample=my_action_selection_mech,
                                              target=my_reward_mech,
-                                             input_states = [[0],[0]])
+                                             variable = [[0],[0]])
 
 Note that ``my_action_selection_mechanism`` is specified to take an array of length 5 as its input, and therefore
 generate one of the same length as its `primary output <OutputState_Primary>`.  Since it is assigned as the **sample**
 of the ComparatorMechanism, by default this will create a *SAMPLE* InputState of length 5, that will not match the
-length of the *TARGET* InputState (which is 1).  This is taken care of, by specifying the **input_states** argument
+length of the *TARGET* InputState (which is 1).  This is taken care of, by specifying the **variable** argument
 as an array with two single-value arrays (corresponding to the *SAMPLE* and *TARGET* InputStates). (In this
 example, the **sample** and **target** arguments are specified as Mechanisms since, by default, each has only a single
 (`primary <OutputState_Primary>`) OutputState, that will be used;  if either had more than one OutputState, and
@@ -129,14 +129,15 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_STATES, OUTCOME, ObjectiveMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY_OUTPUT_STATE, StandardOutputStates
+from psyneulink.components.states.state import _parse_state_spec
 from psyneulink.globals.keywords import CALCULATE, COMPARATOR_MECHANISM, INPUT_STATES, NAME, SAMPLE, TARGET, TIME_SCALE, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.globals.utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric
+from psyneulink.globals.utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, recursive_update
 from psyneulink.scheduling.timescale import TimeScale
 
 __all__ = [
@@ -316,9 +317,7 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     # ComparatorMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        TIME_SCALE: TimeScale.TRIAL,
-        MONITORED_OUTPUT_STATES: None})
+    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
 
     standard_output_states = ObjectiveMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME:SSE,
@@ -326,31 +325,21 @@ class ComparatorMechanism(ObjectiveMechanism):
                                    {NAME:MSE,
                                     CALCULATE:lambda x: np.sum(x*x)/len(x)}])
 
+    # MODIFIED 10/10/17 OLD:
     @tc.typecheck
     def __init__(self,
                  sample:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  target:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
-                 input_states=[SAMPLE, TARGET],
                  function=LinearCombination(weights=[[-1], [1]]),
                  output_states:tc.optional(tc.any(list, dict))=[OUTCOME, MSE],
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 context=None,
+                 **input_states # IMPLEMENTATION NOTE: this is for backward compatibility
+                 ):
 
-        # Parse items of input_states arg for validation (in _validate_params)
-        input_states = input_states or [None] * 2
-        from psyneulink.components.states.state import _parse_state_spec
-        sample_input = _parse_state_spec(owner=self,
-                                         state_type=InputState,
-                                         state_spec=input_states[0],
-                                         name=SAMPLE,
-                                         value=None)
-        target_input = _parse_state_spec(owner=self,
-                                         state_type=InputState,
-                                         state_spec=input_states[1],
-                                         name=TARGET,
-                                         value=None)
+        input_states = self._merge_legacy_constructor_args(sample, target, input_states)
 
         # IMPLEMENTATION NOTE: The following prevents the default from being updated by subsequent assignment
         #                     (in this case, to [OUTCOME, {NAME= MSE}]), but fails to expose default in IDE
@@ -362,8 +351,8 @@ class ComparatorMechanism(ObjectiveMechanism):
                                                                self.standard_output_states,
                                                                indices=PRIMARY_OUTPUT_STATE)
 
-        super().__init__(monitored_output_states=[sample, target],
-                         input_states = [sample_input, target_input],
+        super().__init__(# monitored_output_states=[sample, target],
+                         input_states = input_states,
                          function=function,
                          output_states=output_states.copy(), # prevent default from getting overwritten by later assign
                          params=params,
@@ -375,7 +364,7 @@ class ComparatorMechanism(ObjectiveMechanism):
         """If sample and target values are specified, validate that they are compatible
         """
 
-        if INPUT_STATES in request_set:
+        if INPUT_STATES in request_set and request_set[INPUT_STATES] is not None:
             input_states = request_set[INPUT_STATES]
 
             # Validate that there are exactly two input_states (for sample and target)
@@ -446,3 +435,44 @@ class ComparatorMechanism(ObjectiveMechanism):
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
                                  context=context)
+
+    def _merge_legacy_constructor_args(self, sample, target, input_states):
+
+        # USE sample and target TO CREATE AN InputState specfication dictionary for each;
+        # DO SAME FOR InputStates argument, USE TO OVERWRITE ANY SPECIFICATIONS IN sample AND target DICTS
+        # TRY tuple format AS WAY OF PROVIDED CONSOLIDATED variable AND OutputState specifications
+
+        sample_dict = _parse_state_spec(owner=self,
+                                        state_type=InputState,
+                                        state_spec=sample,
+                                        name=SAMPLE)
+
+        target_dict = _parse_state_spec(owner=self,
+                                        state_type=InputState,
+                                        state_spec=target,
+                                        name=TARGET)
+
+        # If input_states arg is provided, parse it and use it to upate sample and target dicts
+        if input_states:
+
+            if len(input_states) != 2:
+                raise ComparatorMechanismError("If an \'input_states\' arg is included in the constructor for a {}"
+                                               "it must be a list with exactly two items (not {})".
+                                               format(ComparatorMechanism.__name__, len(input_states)))
+
+            sample_input_state_dict = _parse_state_spec(owner=self,
+                                                        state_type=InputState,
+                                                        state_spec=input_states[0],
+                                                        name=SAMPLE,
+                                                        value=None)
+
+            target_input_state_dict = _parse_state_spec(owner=self,
+                                                        state_type=InputState,
+                                                        state_spec=input_states[1],
+                                                        name=TARGET,
+                                                        value=None)
+
+            sample_dict = recursive_update(sample_dict, sample_input_state_dict)
+            target_dict = recursive_update(target_dict, target_input_state_dict)
+
+        return [sample_dict, target_dict]

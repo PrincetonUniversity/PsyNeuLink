@@ -1,8 +1,11 @@
+import numpy as np
+from psyneulink.components.process import Process
 from psyneulink.components.functions.function import Linear, Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.system import *
 from psyneulink.globals.keywords import *
+from psyneulink.globals.environment import CentralClock
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 
 process_prefs = {REPORT_OUTPUT_PREF: True,

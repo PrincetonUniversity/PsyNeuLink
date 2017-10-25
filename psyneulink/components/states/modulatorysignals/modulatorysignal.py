@@ -200,7 +200,7 @@ from psyneulink.components.component import InitStatus, component_keywords
 from psyneulink.components.shellclasses import Mechanism, State
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base
-from psyneulink.globals.keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL
+from psyneulink.globals.keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL, PROJECTIONS
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -388,9 +388,21 @@ class ModulatorySignal(OutputState):
                          prefs=prefs,
                          context=context)
 
+        # MODIFIED 10/3/17 OLD:
+        # # If owner is specified but modulation has not been specified, assign to owner's value
+        # if owner and self._modulation is None:
+        #     self._modulation = self.modulation or owner.modulation
+        # MODIFIED 10/3/17 END
+        if self.init_status is InitStatus.INITIALIZED:
+            _assign_default_modulatory_signal_name(self)
+
+    def _instantiate_attributes_after_function(self, context=None):
         # If owner is specified but modulation has not been specified, assign to owner's value
-        if owner and self._modulation is None:
-            self._modulation = self.modulation or owner.modulation
+
+        super()._instantiate_attributes_after_function(context=context)
+        if self.owner and self._modulation is None:
+            self._modulation = self.modulation or self.owner.modulation
+
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
@@ -400,17 +412,121 @@ class ModulatorySignal(OutputState):
         Call _instantiate_projection_from_state to assign ModulatoryProjections to .efferents
 
         """
-        from psyneulink.components.projections.modulatory.modulatoryprojection \
-            import ModulatoryProjection_Base
+        from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+        from psyneulink.components.projections.projection import ConnectionTuple
 
-        modulatory_projection_specs = [proj for proj in projections
-                                  if isinstance(proj, (ModulatoryProjection_Base, Mechanism, State))]
-        excluded_specs = [spec for spec in projections if not spec in modulatory_projection_specs]
-        if excluded_specs:
-            raise StateError("The following are not allowed as a specification for a {} from a {}: {}".
-                             format(ModulatoryProjection_Base.componentName,
-                                    self.__class__.__name__,
-                                    excluded_specs))
+        # # MODIFIED 10/24/17 OLD:
+        # modulatory_projection_specs = [proj for proj in projections
+        #                           if isinstance(proj, (ModulatoryProjection_Base, Mechanism, State, ConnectionTuple))]
+        #
+        #
+        # # FIX: 10/24/17 - FOR THESE, CHECK THAT THEY ARE ACCEPTABLE TARGETS FOR THE MODULATORY PROJECTION
+        # # FIX:            (E.G., MappingProjection FOR LearningProjection;)
+        # # FIX:             ASSUMING THIS IS NOT DONE INSIDE OF _instantiate_rpojection
+        # # FIX:             OR MAYBE DON'T BOTHER WTIH THIS AT ALL, AND LET IT BE HANDLED IN _instantiate_rpojection
+        # excluded_specs = [spec for spec in projections if not spec in modulatory_projection_specs]
+        # if excluded_specs:
+        #     raise StateError("The following are not allowed as a specification for a {} from a {}: {}".
+        #                      format(ModulatoryProjection_Base.componentCategory,
+        #                             self.__class__.__name__,
+        #                             excluded_specs))
+        #
+        # # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+        # for receiver_spec in modulatory_projection_specs:
+        #     projection = self._instantiate_projection_from_state(projection_spec=type(self),
+        #                                                          receiver=receiver_spec,
+        #                                                          context=context)
+        # MODIFIED 10/24/17 NEW:
+        # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+        for receiver_spec in projections:
+            projection = self._instantiate_projection_from_state(projection_spec=type(self),
+                                                                 receiver=receiver_spec,
+                                                                 context=context)
+        # MODIFIED 10/24/17 END
+            projection._assign_default_projection_name(state=self)
 
-        for receiver_spec in modulatory_projection_specs:
-            self._instantiate_projection_from_state(projection_spec=type(self), receiver=receiver_spec, context=context)
+def _assign_default_modulatory_signal_name(mod_sig):
+
+    # If the name is not a default name for the class, or the ModulatorySignal has no projections, return
+    if not mod_sig.__class__.__name__ + '-' in mod_sig.name or len(mod_sig.efferents)==0:
+        return
+
+    # Construct default name
+    receiver_names = []
+    receiver_owner_names = []
+    receiver_owner_receiver_names = []
+    class_name = mod_sig.__class__.__name__
+
+    for projection in mod_sig.efferents:
+        receiver = projection.receiver
+        receiver_name = receiver.name
+        receiver_owner_name = receiver.owner.name
+        receiver_names.append(receiver_name)
+        receiver_owner_names.append(receiver_owner_name)
+        receiver_owner_receiver_names.append("{} {}".format(receiver_owner_name, receiver_name))
+
+    # Only one param: "<Mech> <param> ControlSignal" (e.g., Decision drift_rate ControlSignal)
+    if len(receiver_owner_receiver_names) == 1:
+        default_name = receiver_owner_receiver_names[0] + " " + class_name
+
+    # Multiple params all for same mech: "<Mech> params ControlSignal" (e.g., Decision params ControlSignal)
+    elif all(name is receiver_owner_names[0] for name in receiver_owner_names):
+        default_name = "{} ({}) {}".format(receiver_owner_names[0], ", ".join(receiver_names), class_name)
+
+    # Mult params for diff mechs: "<ControlMechanism> divergent ControlSignal" (e.g., EVC divergent ControlSignal)
+    else:
+        default_name = mod_sig.name + " divergent " + class_name
+
+    mod_sig.name = default_name
+
+
+# MODIFIED 9/30/17 NEW:
+# FIX: THIS IS GENERIC FOR MODULATORY SIGNALS, BUT SHOULD BE IMPLEMENTED FOR EACH SUBCLASS
+def _parse_state_specific_params(self, owner, state_spec_dict, state_specific_params):
+        """Get connections specified in a ParameterState specification tuple
+
+        Tuple specification can be:
+            (state_spec, connections)
+
+        Returns params dict with CONNECTIONS entries if any of these was specified.
+
+        """
+        from psyneulink.components.projections.projection import _parse_connection_specs
+
+        params_dict = {}
+
+        if isinstance(state_specific_params, dict):
+            return state_specific_params
+
+        if isinstance(state_specific_params, tuple):
+
+            tuple_spec = state_specific_params
+
+            # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
+
+            # Get connection (afferent Projection(s)) specification from tuple
+            PROJECTIONS_INDEX = len(tuple_spec)-1
+            try:
+                projections_spec = tuple_spec[PROJECTIONS_INDEX]
+            except IndexError:
+                projections_spec = None
+
+            if projections_spec:
+                try:
+                    # params_dict[CONNECTIONS] = _parse_connection_specs(self.__class__,
+                    params_dict[PROJECTIONS] = _parse_connection_specs(self,
+                                                                       owner=owner,
+                                                                       connections={projections_spec})
+                except ModulatorySignalError:
+                    raise ModulatorySignalError("Item {} of tuple specification in {} specification dictionary "
+                                                "for {} ({}) is not a recognized specification".
+                                                format(PROJECTIONS_INDEX,
+                                                       ModulatorySignalError.__name__,
+                                                       owner.name,
+                                                       projections_spec))
+
+        elif state_specific_params is not None:
+            raise ModulatorySignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
+                                        format(self.__class__.__name__, state_specific_params))
+        return params_dict
+# MODIFIED 9/30/17 END

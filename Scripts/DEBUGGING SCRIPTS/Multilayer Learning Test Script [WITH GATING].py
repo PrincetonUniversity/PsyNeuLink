@@ -7,7 +7,6 @@ from psyneulink.components.states.outputstate import *
 from psyneulink.components.system import System
 from psyneulink.scheduling.condition import AfterNCalls
 
-# from PsyNeuLink.Globals.Run import run, construct_inputs
 
 Input_Layer = TransferMechanism(name='Input Layer',
                                 function=Logistic,
@@ -230,7 +229,6 @@ elif COMPOSITION is SYSTEM:
     # x.show_graph()
     # x.show_graph(show_learning=True)
 
-    # from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism \
     #     import _add_gating_mechanism_to_system
     # _add_gating_mechanism_to_system(Gating_Mechanism)
     #

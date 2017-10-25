@@ -39,7 +39,6 @@ import typecheck as tc
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPUT_STATES, INTERCEPT, MODULATION, NAME, OBJECTIVE_MECHANISM, SLOPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -155,6 +154,7 @@ class DefaultControlMechanism(ControlMechanism):
     def _instantiate_control_signal(self, control_signal, context=None):
         """Instantiate requested ControlSignal, ControlProjection and associated InputState
         """
+        from psyneulink.components.states.parameterstate import ParameterState
 
         if isinstance(control_signal, dict):
             if CONTROL in control_signal:
@@ -246,11 +246,11 @@ class DefaultControlMechanism(ControlMechanism):
         from psyneulink.components.states.inputstate import InputState
         input_state = _instantiate_state(owner=self,
                                          state_type=InputState,
-                                         state_name=input_state_name,
-                                         state_spec=defaultControlAllocation,
-                                         state_params=None,
-                                         constraint_value=np.array(self.instance_defaults.variable[variable_item_index]),
-                                         constraint_value_name='Default control allocation',
+                                         name=input_state_name,
+                                         # state_spec=defaultControlAllocation,
+                                         reference_value=np.array(self.instance_defaults.variable[variable_item_index]),
+                                         reference_value_name='Default control allocation',
+                                         params=None,
                                          context=context)
 
         #  Update inputState and input_states

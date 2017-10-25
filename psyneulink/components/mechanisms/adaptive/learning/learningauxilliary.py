@@ -144,7 +144,9 @@ from psyneulink.components.projections.projection import _is_projection_spec
 from psyneulink.components.shellclasses import Function
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.globals.keywords import BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, WEIGHT
+from psyneulink.globals.keywords import \
+    BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, \
+    MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, WEIGHT, PROJECTIONS
 
 __all__ = [
     'LearningAuxilliaryError'
@@ -363,16 +365,16 @@ def _instantiate_learning_components(learning_projection, context=None):
         # FIX: CHECK THAT THE PROJECTION IS TO ANOTHER MECHANISM IN THE CURRENT PROCESS;
         #      OTHERWISE, ALLOW OBJECTIVE_MECHANISM TO BE IMPLEMENTED
         #      BUT HOW CAN IT KNOW THIS, SINCE UNTIL THE METHOD IS PART OF A COMPOSITION, IT DOESN'T KNOW WHAT
-        #             COMPOSITION IS BEING CALLED.  -- LOOK AT LearningProjection_OLD TO SEE HOW IT WAS HANDLED THERE.
-        #             OR IS A TARGET/OBJECTIVE MECHANISM ALWAYS ASSIGNED FOR A PROCESS, AND THEN DELETED IN SYSTEM GRAPH?
-        #             IN THAT CASE, JUST IGNORE SECOND CONDITION BELOW (THAT IT HAS NO PROJECTIONS TO LEARNING_PROJECTIONS?
+        #          COMPOSITION IS BEING CALLED.  -- LOOK AT LearningProjection_OLD TO SEE HOW IT WAS HANDLED THERE.
+        #          OR IS A TARGET/OBJECTIVE MECHANISM ALWAYS ASSIGNED FOR A PROCESS, AND THEN DELETED IN SYSTEM GRAPH?
+        #          IN THAT CASE, JUST IGNORE SECOND CONDITION BELOW (THAT IT HAS NO PROJECTIONS TO LEARNING_PROJECTIONS?
 
         # Next, determine whether an ObjectiveMechanism or LearningMechanism should be assigned as the sender
         # It SHOULD be an ObjectiveMechanism (i.e., TARGET) if either:
         #     - it has no outgoing projections or
         #     - it has no projections that receive a LearningProjection;
         #   in either case, lc.error_projection returns None.
-        #   Note:  this assumes that LearningProjections are being assigned from the end of the pathway to the beginning.
+        #   Note: this assumes that LearningProjections are being assigned from the end of the pathway to the beginning.
         is_target = not lc.error_projection
 
     # INSTANTIATE learning function
@@ -491,25 +493,50 @@ def _instantiate_learning_components(learning_projection, context=None):
             #    this will induce a simple subtraction of target-sample (i.e., implement a comparator)
             sample_input = target_input = error_output
 
-            objective_mechanism = ComparatorMechanism(sample=lc.activation_mech_output,
-                                                      target=TARGET,
+            # MODIFIED 10/10/17 OLD:
+            # objective_mechanism = ComparatorMechanism(sample=lc.activation_mech_output,
+            #                                           target=TARGET,
+            #                                           # input_states=[sample_input, target_input],
+            #                                           # FOR TESTING: ALTERNATIVE specifications of input_states arg:
+            #                                           # input_states=[(sample_input, FULL_CONNECTIVITY_MATRIX),
+            #                                           #               target_input],
+            #                                           # input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
+            #                                           #               target_input],
+            #                                           input_states=[{NAME:SAMPLE,
+            #                                                          VARIABLE:sample_input,
+            #                                                          WEIGHT:-1
+            #                                                          },
+            #                                                         {NAME:TARGET,
+            #                                                          VARIABLE:target_input,
+            #                                                          # WEIGHT:1
+            #                                                          }],
+            #                                           name="{} {}".format(lc.activation_mech.name,
+            #                                                               COMPARATOR_MECHANISM),
+            #                                           context=context)
+            # MODIFIED 10/10/17 NEW:
+            objective_mechanism = ComparatorMechanism(sample={NAME:SAMPLE,
+                                                              VARIABLE:sample_input,
+                                                              PROJECTIONS:[lc.activation_mech_output],
+                                                              WEIGHT:-1},
+                                                      target={NAME:TARGET,
+                                                              VARIABLE:target_input},
                                                       # input_states=[sample_input, target_input],
                                                       # FOR TESTING: ALTERNATIVE specifications of input_states arg:
                                                       # input_states=[(sample_input, FULL_CONNECTIVITY_MATRIX),
-                                                      #               target_input],
                                                       # input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
                                                       #               target_input],
-                                                      input_states=[{NAME:SAMPLE,
-                                                                     VARIABLE:sample_input,
-                                                                     WEIGHT:-1
-                                                                     },
-                                                                    {NAME:TARGET,
-                                                                     VARIABLE:target_input,
-                                                                     # WEIGHT:1
-                                                                     }],
+                                                      # input_states=[{NAME:SAMPLE,
+                                                      #                VARIABLE:sample_input,
+                                                      #                WEIGHT:-1
+                                                      #                },
+                                                      #               {NAME:TARGET,
+                                                      #                VARIABLE:target_input,
+                                                      #                # WEIGHT:1
+                                                      #                }],
                                                       name="{} {}".format(lc.activation_mech.name,
                                                                           COMPARATOR_MECHANISM),
                                                       context=context)
+            # MODIFIED 10/10/17 END
 
             # # FOR TESTING: ALTERNATIVE to Direct call to ObjectiveMechanism
             # #              (should produce identical result to use of ComparatorMechanism above)
@@ -565,7 +592,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                            function=learning_function,
                                            # learning_signals=[lc.activation_mech_projection],
                                            learning_signals=[learning_projection],
-                                           name = lc.activation_mech_projection.name + " " +LEARNING_MECHANISM,
+                                           name = lc.activation_mech_projection.name + " " + LEARNING_MECHANISM,
                                            context=context)
 
     # IMPLEMENTATION NOTE:

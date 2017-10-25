@@ -52,8 +52,11 @@ KVO
 
 * observe_value_at_keypath
 
+
 OTHER
 ~~~~~
+* `get_args`
+* `recursive_update`
 * `merge_param_dicts`
 * `multi_getattr`
 * `np_array_less_that_2d`
@@ -73,6 +76,7 @@ OTHER
 import inspect
 import numbers
 import warnings
+
 from enum import Enum, EnumMeta, IntEnum
 
 import numpy as np
@@ -373,7 +377,6 @@ def iscompatible(candidate, reference=None, **kargs):
 
     # # FIX??
     # # Reference is a matrix or a keyword specification for one
-    # # from PsyNeuLink.Components.Functions.Function import matrix_spec
     if is_matrix_spec(reference):
         return is_matrix(candidate)
 
@@ -463,6 +466,29 @@ def iscompatible(candidate, reference=None, **kargs):
             return True
     else:
         return False
+
+def get_args(frame):
+    """Gets dictionary of arguments and their values for a function
+    Frame should be assigned as follows in the funciton itself:  frame = inspect.currentframe()
+    """
+    args, _, _, values = inspect.getargvalues(frame)
+    return dict((key, value) for key, value in values.items() if key in args)
+
+
+from collections import Mapping
+
+def recursive_update(d, u):
+    """Recursively update entries of dictionary d with dictionary u
+    From: https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
+    """
+    for k, v in u.items():
+        if isinstance(v, Mapping):
+            r = recursive_update(d.get(k, {}), v)
+            d[k] = r
+        else:
+            d[k] = u[k]
+    return d
+
 
 def merge_param_dicts(source, specific, general):
     """Search source dict for specific and general dicts, merge specific with general, and return merged

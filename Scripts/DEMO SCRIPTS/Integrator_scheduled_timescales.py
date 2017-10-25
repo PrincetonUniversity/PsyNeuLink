@@ -1,5 +1,5 @@
 from psyneulink.components.functions.function import Integrator, Linear
-from psyneulink.components.mechanisms.processing import integratormechanism
+from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.system import *
 from psyneulink.scheduling.condition import AfterNCalls, Any, AtPass, EveryNCalls
@@ -19,7 +19,7 @@ A = TransferMechanism(
     prefs={REPORT_OUTPUT_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE)}
 )
 
-B = integratormechanism(
+B = IntegratorMechanism(
     name='B',
     default_variable = [0],
     function=Integrator(
@@ -29,7 +29,7 @@ B = integratormechanism(
     prefs={REPORT_OUTPUT_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE)}
 )
 
-C = integratormechanism(
+C = IntegratorMechanism(
     name='C',
     default_variable = [0],
     function=Integrator(

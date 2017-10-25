@@ -8,6 +8,7 @@
 
 # *********************************************  ObjectiveMechanism ****************************************************
 
+# FIX: RE-WRITE DOCS TO INDICATE THAT monitored_output_states IS AN ALIAS TO input_states ARGUMENT/ATTRIBUTE
 """
 
 Overview
@@ -26,21 +27,26 @@ Creating an ObjectiveMechanism
 
 ObjectiveMechanisms are often created automatically when other PsyNeuLink components are created (in particular,
 AdaptiveMechanisms such as `LearningMechanisms <LearningMechanism_Creation>` and
-`ControlMechanisms <ControlMechanism_Creation>`.  An ObjectiveMechanism can also be created directly by calling its
-constructor.  The two primary attributes used to define an ObjectiveMechanism are its `monitored_output_states
-<ObjectiveMechanism.monitored_output_states>` and `input_states <ObjectiveMechanism.input_states>` attributes, specified
-using the corresponding arguments of its construtor as described below.
+`ControlMechanisms <ControlMechanism_Creation>`).  An ObjectiveMechanism can also be created directly by calling its
+constructor.  The primary attribute used to define an ObjectiveMechanism is its `monitored_output_states
+<ObjectiveMechanism.monitored_output_states>` specified using the corresponding arguments of its constructor as
+described below.
 
 .. _ObjectiveMechanism_Monitored_Output_States:
 
 Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The **monitored_output_states** argument of the constructor specifies the OutputStates it monitors.  The assignment of
-the OutputStates to be monitored can also be passed from the **objective_mechanism** argument of the constructor for a
-`ControlMechanism`, or the **monitor_for_control** argument of a `System` for which the ControlMechanism is a
-`controller <System.controller>`.  The **monitored_output_states** argument can be specified using a  list
-containing any of the following:
+COMMENT:
+10/3/17 - MOVE MOST OF THIS TO InputState DOCSTRING
+COMMENT
+
+The **monitored_output_states** argument of the constructor specifies the `OutputStates <OutputState>` it monitors.
+When the ObjectiveMechanism is created, it creates an `InputState` for each of the OutputStates specified in
+**monitored_output_states**.  The OutputStates to be monitored are be specified in a list that can contain any of
+the following forms of specification, some of which allow attributes of the InputState created for them to also be
+specified (including their `variable <InputState.variable>`, `weight <InputState.weight>` and 'exponent
+<InputState.exponent>` attributes) to also be specified:
 
 COMMENT:
 Note that some forms of specification may
@@ -72,97 +78,118 @@ COMMENT
   * **string** -- this can be used as a "placemarker", to specify that an `InputState` be created for an OutputState
     to be monitored that will be identified later.  The string is used as the name of the InputState when it is created.
 
+  .. _ObjectiveMechanism_Specification_Dictionary:
+
+  * **State specification dictionary** -- this can be used to specify one or more OutputStates to be monitored,
+  as well the attributes of the corresponding InputStates that are created for them, using any of the following
+  entries:
+
+        * *MECHANISM*:<`Mechanism <Mechanism>`>
+            this entry must be included in the dictionary to specify multiple OutputStates by their names.
+            If the dictionary contains this entry but no *OUTPUT_STATES* entry, then (as with a standalone Mechanism
+            specification), the Mechanism's `primary OutputState <OutputState_Primary>` is used.
+        ..
+        * *OUTPUT_STATES*:<List[<str or any of the other forms of specifications for an OutputState>, ...]>
+            this requires use of the *MECHANISM* entry, and can be used to specify one or more of its OutputStates
+            by their names;  if a string is used that is not the name of an OutputState in the *MECHANISM* entry,
+            it will be treated as an  "unbound" string specification (i.e., used as place-marker for the creation
+            of InputState with that name, to be assigned a monitored OutputState later).  If a specification
+            dictionary is used to specify an OutputState in the list, its attributes (see below) will be used to create
+            the InputState of the ObjectiveMechanism corresponding to the specified OutputState.
+        ..
+        * *VARIABLE*:<value, list or ndarray>
+           specifies the `variable <InputState.variable>` for the InputState created by the ObjectiveMechanism
+           for the OutputState to be monitored, or all of the OutputStates specified in the *OUTPUT_STATES* entry
+           (see above), except any that is specified using a specification dictionary with its own *VARIABLE* entry
+           (see `ObjectiveMechanism_InputState_Size`).
+        ..
+        * *WEIGHT*:<number>
+           specifies the `weight <InputState.weight>` for the InputState created by the ObjectiveMechanism
+           for the OutputState to be monitored, or for all of the OutputStates specified in the *OUTPUT_STATES* entry
+           (see above), except any that is specified using a specification dictionary with its own *WEIGHT* entry
+           (see `InputState_Weights_And_Exponents`).
+      ..
+        * *EXPONENT*:<number>
+           specifies the `exponent <InputState.exponent>` for the InputState created by the ObjectiveMechanism
+           for the OutputState to be monitored, or for all of the OutputStates specified in the *OUTPUT_STATES* entry
+           (see above), except any that is specified using a specification dictionary with its own *EXPONENT* entry
+           (see `InputState_Weights_And_Exponents`).
+
   .. _ObjectiveMechanism_OutputState_Tuple:
 
-  * **monitored_output_states tuple** -- this is a convenience notation that can be used to compactly specify a weight
-    and exponent for an OutputState' (see `example <ObjectiveMechanism_OutputState_Tuple_Example>`), as well as an
-    optional specification for the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` from the
-    OutputState to the ObjectiveMechanism; each tuple must have the first three following items in the order listed,
-    and can include the fourth:
+  * **monitored_output_states tuple** -- this is a convenience notation that can be used to compactly specify a `weight
+    and exponent  <ObjectiveMechanism_Weights_and_Exponents>` for an OutputState' (see `example
+    <ObjectiveMechanism_OutputState_Tuple_Example>`), as well as an optional specification for the `matrix
+    <MappingProjection.matrix>` parameter of the `MappingProjection` from the monitored OutputState to the
+    corresponding InputState of the ObjectiveMechanism; each tuple must have the first three following items in the
+    order listed, and can include the fourth:
 
         * any of the specifications above -- if it is a string, the weight and exponent specified in the tuple
           (see below) will be assigned along with the string as the name of the "placemarker" InputState when it is
           created.
         |
         * a weight -- must be an integer or a float; multiplies the value of the OutputState before being combined with
-          others by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.
+          others by the ObjectiveMechanism's `function <ObjectiveMechanism.function>` (see
+          `ObjectiveMechanism_Weights_and_Exponents`).
         |
         * an exponent -- must be an integer or float; exponentiates the value of the OutputState before being combined
-          with others by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.
+          with others by the ObjectiveMechanism's `function <ObjectiveMechanism.function>` (see
+          `ObjectiveMechanism_Weights_and_Exponents`).
         |
         * a `matrix specification <Mapping_Matrix_Specification>` (optional) -- this can be any legal specification for
-          the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
+          the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`;  the width (number of columns) of
+          the matrix determines the dimension of its `corresponding InputState <ObjectiveMechanism_InputState_Size>`.
 
-    .. _ObjectiveMechanism_Weights_And_Exponents:
+The list of OutputStates monitored by the ObjectiveMechanism are listed in its `monitored_output_states
+<ObjectiveMechanism.monitored_output_states>` attribute. When an ObjectiveMechanism is created by a
+`ControlMechanism`, or a `System` for its `controller <System_Base.controller>`, these may pass it a set of
+OutputStates to be monitored.  A ControlMechanism passes any OutputState specifications listed in its
+**objective_mechanism** argument (see `ControlMechanism_ObjectiveMechanism`), and a System passes any listed in its
+**monitor_for_control** argument (see `System_Control_Specification`).
 
-    .. note::
-       The weight and exponent specifications in a tuple are used to specify the `weight <InputState.weight>` and
-       `exponent <InputState.exponent>` of the corresponding InputState of the ObjectiveMechanism;  therefore,
-       any values specified there take precedence over any other weight and/or exponent specifications of the
-       InputStates for the ObjectiveMechanism.
+.. _ObjectiveMechanism_InputStates:
 
-  .. _ObjectiveMechanism_OutputState_Specification_Dictionary:
+Creation of InputStates and MappingProjections for Monitored OutputStates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  * **monitored_output_states specification dictionary** -- this the most flexible form of specification, that can be
-    used to specify one or more OutputStates of a Mechanism by their name:
+An ObjectiveMechanism creates one `InputState` for each OutputState specified in its **monitored_output_states**
+argument. By default, it uses the `value <OutputState.value>` of a monitored OutputState to determine the `variable
+<InputState.variable>` of the corresponding InputState.  However, this can be modified using any of the following
+(see `ObjectiveMechanism_Monitored_Output_States_Examples` below):
 
-        * *MECHANISM*:`Mechanism <Mechanism>`
-            this enty must be included in the dictionary;
+* the **variable** argument of the ObjectiveMechanism's constructor -- this is used to determine the format for the
+  `variable <InputState.variable>` of each of `InputState <InputState>` created for the corresponding
+  `OutputState <OutputState>` in the **monitored_output_states* argument of the ObjectiveMechanism's constructor;
+  accordingly, the number of items in the outermost dimension (axis 0) of the  **variable** specification must match
+  the number of items in the **monitored_output_states** specification.
 
-        * *OUTPUT_STATES*:List[<str or any of the specifications above>, ...]
-            here, a string can be used anywhere an OutputState would have been specified as the name
-            of an OutputState belonging to the *MECHANISM* entry.
+* a *VARIABLE* entry of a State specification dictionary in the **monitored_output_state** argument (see above) --
+  note that the value of the entry specifies the `variable <InputState.variable>` attribute of  the
+  *InputState* created for the monitored OutputState, and does not refer to the monitored OutputState itself.
 
-        If the dictionary includes only the *MECHANISM* entry, then (as with a standalone Mechanism specification),
-        the Mechanism's `primary OutputState <OutputState_Primary>` is used.  If a string is used for any items
-        of the list in the *OUTPUT_STATES* entry, and it is not the name of the Mechanism in the *MECHANISM* entry,
-        it will be treated as an "unbound" string specification.
+* the *matrix* entry of a monitored_output_states tuple -- the width (number of columns, or ???XXX dimension??)
+  of the matrix determines the size of the `variable <InputState.variable>` attribute of the InputState created by
+  the ObjectiveMechanism for the monitored OutputState.
 
-If an OutputState to be monitored is specified at the time the ObjectiveMechanism is created, or the specification
-can be resolved to an OutputState, a `MappingProjection` is automatically created from it to the corresponding
-InputState of the ObjectiveMechanism using `AUTO_ASSIGN_MATRIX` as its `matrix <MappingProjection.matrix>` parameter.
-If the OutputState can't be determined, no MappingProjection is assigned, and this must be done by some other means;
-any values assigned to the ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
-attribute that are not associated with an OutputState at the time the ObjectiveMechanism is executed are ignored.
+.. note::
+   The **monitored_output_states** argument of an ObjectiveMechanism serves the same purpose as the **input_states**
+   argument for a standard `Mechanism`, and any variable, weight or exponent specifications specified for a monitored
+   OutputState are assigned as the `variable <InputState.variable>`, `weight <InputState.weight>` and `exponent
+   <InputState.exponent>` of the corresponding InputState.  While ill-advised, if for some reason both the
+   **monitored_output_states** and **input_states** arguments are specified, an attempt is made to combine the two
+   sets of specifications (which must be lists of the same length), giving precedence to the monitored_output_states
+   specfication(s); an error is generated if this cannot be done.
 
-
-.. _ObjectiveMechanism_InputStates::
-
-InputStates
-~~~~~~~~~~~
-
-When an ObjectiveMechanism is created, an InputState is created for each of the OutputStates specified in its
-**monitored_output_states** argument, and a `MappingProjection` is assigned from each of those to the corresponding
-InputState.  By default, the `value <InputState.value>` of each InputState uses the format of the `value
-<OutputState.value>`  of its corresponding OutputState, and the MappingProjection between them uses an
-`IDENTITY_MATRIX`.  However, the **input_states** argument can be used to specify the names of the InputStates
-and/or customize their lengths (e.g., specify one that is different from the OutputState that projects to it).  Any of
-the forms used for `specifying InputStates <InputState_Specification>` can be used in  the **input_states** argument,
-including a list of strings (to be used as names for the InputStates), values (used to specify their length),
-or `State Specification Dictionaries <State_Specification>`, with the following constraints:
-
-  * the number of InputStates specified in the **input_states** argument must equal the number of OutputStates specified
-    in the **monitored_output_states** argument (see the `examples
-    <ObjectiveMechanism_Monitored_Output_States_Examples>` below);
-  ..
-  * the `variable <InputState.variable>` of each must also be of the same type as the `value <OutputState.value>` of
-    the corresponding OutputState, however their lengths can differ;  in that case, by default,
-    a `FULL_CONNECTIVITY_MATRIX` is used to create the MappingProjection between them (although this too can be
-    customized using the *PROJECTION* entry of a `State specification dictionary <State_Specification>` for the
-    InputState in the **input_states** argument;
-  ..
-  * a `weight and/or exponent <InputState_Weights_And_Exponents>` can be specified for each InputState (e.g., for use
-    by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`;  however, these are superseded by any weights
-    and/or exponents specified in the **monitored_output_states** argument of the ObjectiveMechanism's constructor
-    (see `ObjectiveMechanism_Monitored_Output_States` and `note <ObjectiveMechanism_Weights_And_Exponents>` above).
+A `MappingProjection` is created automatically from each OutputState specified in **monitored_output_states**
+to the InputState of the ObjectiveMechanism created or it, using `AUTO_ASSIGN_MATRIX` as the `matrix
+<MappingProjection.matrix>` parameter. However, if a specification in the **monitored_output_states** argument cannot be
+resolved to an instantiated OutputState at the time the ObjectiveMechanism is created, no MappingProjection is
+assigned, and this must be done by some other means; any specifications in the `monitored_output_states
+<ObjectiveMechanism.monitored_output_states>` attribute that are not associated with an instantiated OutputState at
+the time the ObjectiveMechanism is executed are ignored.
 
 COMMENT:
-  * **string**, **value** or **dict** -- these can be used as placemarkers for a state to be monitored, that will be
-    instantiated later (for example, for the TARGET input of a Composition).  If a string is specified, it is used as
-    the default name of the corresponding InputState (specified in the `input_states <ObjectiveMechanism.input_states>`
-    attribute of the ObjectiveMechanism). If a value is specified, it is used as the default value for the corresponding
-    InputState.  If a dict is specified, it must have a single entry, the key of which is used as a string
-    specification -- i.e., as the name of the InputState -- and the value as its value specification.
+WEIGHTS AND EXPONENTS
 COMMENT
 
 .. _ObjectiveMechanism_Structure:
@@ -175,19 +202,47 @@ Structure
 Input
 ~~~~~
 
-=An ObjectiveMechanism has one `InputState <InputState>` for each of the OutputStates specified in its
-**monitored_output_states** argument (see `ObjectiveMechanism_Monitored_Output_States`). Each InputState receives a
+An ObjectiveMechanism has one `InputState <InputState>` for each of the OutputStates specified in its
+**monitored_output_states** argument (see `ObjectiveMechanism_InputStates`). Each InputState receives a
 `MappingProjection` from the corresponding OutputState, the values of which are used by the ObjectiveMechanism's
 `function <ObjectiveMechanism.function>` to generate the value of its *OUTCOME* `OutputState
 <ObjectiveMechanism_Output>`.  The InputStates are listed in the ObjectiveMechanism's `input_states
-<ObjectiveMechanism.input_states>` attribute, and the OutputStates from which they receive projections are listed in
-the same order its `monitored_output_states  <ObjectiveMechanism.monitored_output_states>` attribute.  If any `weights
-and/or exponents are specified <ObjectiveMechanism_Monitored_Output_States>` for either the ObjectiveMechanism's
-`monitored_output_states <ObjectiveMechanism.monitored_output_states>` or its `input_states`, the former take
-precedence over the latter.  These are assigned to the weights and/or exponents attributes of the ObjectiveMechanism's
-`function <ObjectiveMechanism.function>` if the function implements these attributes;  if so, the function applies the
-weights and/or exponents specified to the corresponding InputState `value <InputState.value>`\\s before it combining
-these to generate the ObjectiveMechanism's `output <ObjectiveMechanism_Output>`.
+<ObjectiveMechanism.input_states>` attribute, and the monitored OutputStates from which they receive projections are
+listed in the same order its `monitored_output_states  <ObjectiveMechanism.monitored_output_states>` attribute.
+
+.. _ObjectiveMechanism_InputState_Size:
+
+InputState `variable <InputState.variable>`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, the format of the `variable <InputState.variable>` for each InputState is determined by the `value
+<OutputState.value>` of the monitored OutputState to which it corresponds.  However, if the **variable** argument is
+specified in an Objective Mechanism's constructor, or a variable is specified as part of a monitored OutputState
+specification (see `ObjectiveMechanism_InputStates`), then that is used as the format for the `variable
+<InputState.variable` of the corresponding InputState(s) (see `ObjectiveMechanism_Monitored_Output_States_Examples`
+below).
+
+.. _ObjectiveMechanism_Weights_and_Exponents:
+
+Weights and Exponents
+^^^^^^^^^^^^^^^^^^^^^
+
+If any weights and/or exponents are specified for any of the ObjectiveMechanism's `monitored_output_states
+<ObjectiveMechanism.monitored_output_states>`, they are assigned to the corresponding InputStates.  Those, in turn,
+are assigned to the ObjectiveMechanism's `function <ObjectiveMechanism.function>` if the function implements these
+attributes;  if so, the function applies the weights and/or exponents specified to the corresponding InputState
+`value <InputState.value>`\\s before it combining these to generate the ObjectiveMechanism's `output
+<ObjectiveMechanism_Output>`.
+
+COMMENT:
+  * **string**, **value** or **dict** -- these can be used as placemarkers for a state to be monitored, that will be
+    instantiated later (for example, for the TARGET input of a Composition).  If a string is specified, it is used as
+    the default name of the corresponding InputState (specified in the `input_states <ObjectiveMechanism.input_states>`
+    attribute of the ObjectiveMechanism). If a value is specified, it is used as the default value for the corresponding
+    InputState.  If a dict is specified, it must have a single entry, the key of which is used as a string
+    specification -- i.e., as the name of the InputState -- and the value as its value specification.
+COMMENT
+
 
 .. _ObjectiveMechanism_Function:
 
@@ -233,7 +288,7 @@ Examples
 
 .. _ObjectiveMechanism_Monitored_Output_States_Examples:
 
-*Specifying* **monitored_output_states**
+*Specifying* the **variable** for the InputStates of an ObjectiveMechanism
 
 The use of default_variable to override a specification in `monitored_output_states` can be useful in some situations.
 For example, for `Reinforcement Learning <Reinforcement>`, an ObjectiveMechanism is used to monitor an action
@@ -249,9 +304,10 @@ the InputState for the ObjectiveMechanism to have a single value, as in the exam
 
     my_reward_mech = TransferMechanism(default_variable = [0])
 
-    my_objective_mech = ObjectiveMechanism(monitored_output_states = [my_action_select_mech, my_reward_mech])
+    my_objective_mech = ObjectiveMechanism(default_variable = [[0],[0]],
+                                           monitored_output_states = [my_action_select_mech, my_reward_mech])
 
-Note that the OutputState for the ``my_action_selection`` and ``my_reward_mech`` are specified
+Note that the OutputStates for the ``my_action_selection`` and ``my_reward_mech`` are specified
 in `monitored_output_states`.  If that were the only specification, the InputState created for ``my_action_select_mech``
 would be a vector of length 3.  This is overridden by specifying `default_variable` as an array with two
 single-value arrays (one corresponding to ``my_action_select_mech`` and the other to ``my_reward_mech``).  This forces
@@ -261,10 +317,38 @@ MappingProjection to be created from  ``my_action_select_mech`` to the Objective
 different lengths).  This produces the desired effect, since the action selected is the only non-zero value in the
 output of ``my_action_select_mech``, and so the `FULL_CONNECTIVITY_MATRIX` will combine it with zeros (the other values
 in the vector), and so its value will be assigned as the value of the corresponding InputState in the
-ObjectiveMechanism.  Another option would have been to customize the ObjectiveMechanism's
-`function <ObjectiveMechanism.function>` to convert the output of ``my_action_select_mech`` to a length 1 vector, though
-this would have been more involved.  The next example describes a simple case of customizing the ObjectiveMechanism's
-`function <ObjectiveMechanism.function>`, however more sophisticated ones are possible, just as the one just suggested.
+ObjectiveMechanism.
+
+An alternative would be to explicitly specify the `variable <InputState.variable>` attribute for the InputState
+created for ``my_action_select_mech`` using a `State specification dictionary
+<ObjectiveMechanism_Specification_Dictionary> in the **monitored_output_states** argument of ``my_objective_mech``,
+as follows::
+
+    my_objective_mech = ObjectiveMechanism(monitored_output_states = [{MECHANISM: my_action_select_mech,
+                                                                       VARIABLE: [0]},
+                                                                      my_reward_mech])
+
+Note that the *VARIABLE* entry here specifies the `variable <InputState.variable>` for the InputState of the
+ObjectiveMechanism created to receive a Projection from ``my_action_selcect_mech``, and not ``my_action_selcect_mech``
+itself (see `ObjectiveMechanism_InputStates` for a full explanation).
+
+Yet another alternative would be to use a `2-item tuple <State_Specification>` to specify a matrix for the
+MappingProjection from ``my_action_select_mech`` to the corresponding InputState of
+``my_objective_mech``, as follows::
+
+    my_objective_mech = ObjectiveMechanism(monitored_output_states =
+                                                         [(my_action_select_mech, np.ones((5,1)),
+                                                          my_reward_mech])
+
+A `monitored_output_states tuple <ObjectiveMechanism_OutputState_Tuple>` could also be used, but this would require
+that entries for its weight and exponent items be included (as ``(my_action_select_mech, None, None, np.ones((5,1))``
+which, in this case, are not necessary (see `example <ObjectiveMechanism_OutputState_Tuple_Example>` below for how
+these can be used).
+
+Finally, the ObjectiveMechanism's `function <ObjectiveMechanism.function>` itself could be customized, to convert the
+output of ``my_action_select_mech`` to a length 1 vector, though this would have been more involved.  The next
+example describes a simple case of customizing the ObjectiveMechanism's `function <ObjectiveMechanism.function>`,
+however more sophisticated ones are possible, such as the one just suggested.
 
 .. _ObjectiveMechanism_Weights_and_Exponents_Example:
 
@@ -289,7 +373,7 @@ divide quantities.
 
 .. _ObjectiveMechanism_OutputState_Tuple_Example:
 
-As a conveninence notation, weights and exponents can be included with the specification of the OutputState itself, in
+As a convenience notation, weights and exponents can be included with the specification of the OutputState itself, in
 the **monitored_output_states** argument, by placing them in a tuple with the OutputState (see `monitored_output_states
 tuple <ObjectiveMechanism_OutputState_Tuple>`).  The following example specifies the example same ObjectiveMechanism
 as the previous example::
@@ -324,43 +408,37 @@ Class Reference
 ---------------
 
 """
-import numbers
 import warnings
-from collections import namedtuple
 
 import typecheck as tc
 
 from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import LinearCombination
-from psyneulink.components.mechanisms.mechanism import Mechanism_Base, MonitoredOutputStatesOption
+from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.components.shellclasses import Mechanism, State
-from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY_OUTPUT_STATE, standard_output_states
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, DEFAULT_MATRIX, EXPONENT, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, MECHANISM, NAME, OBJECTIVE_MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PROJECTIONS, SENDER, TIME_SCALE, VALUE, VARIABLE, WEIGHT, WEIGHTS, kwPreferenceSetName
+from psyneulink.globals.keywords import CONTROL, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, OBJECTIVE_MECHANISM, SENDER, TIME_SCALE, VARIABLE, WEIGHTS, kwPreferenceSetName, DEFAULT_MATRIX
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.globals.utilities import ContentAddressableList, is_matrix
+from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.scheduling.timescale import TimeScale
 
 __all__ = [
-    'EXPONENT_INDEX', 'MATRIX_INDEX', 'MONITORED_OUTPUT_STATE_NAME_SUFFIX', 'MONITORED_OUTPUT_STATES',
-    'MonitoredOutputStateTuple', 'OBJECTIVE_OUTPUT', 'ObjectiveMechanism', 'ObjectiveMechanismError', 'OUTCOME',
-    'OUTPUT_STATE_INDEX', 'ROLE', 'WEIGHT_INDEX'
+    'DEFAULT_MONITORED_STATE_WEIGHT', 'DEFAULT_MONITORED_STATE_EXPONENT', 'DEFAULT_MONITORED_STATE_MATRIX',
+    'MONITORED_OUTPUT_STATE_NAME_SUFFIX', 'MONITORED_OUTPUT_STATES',
+    'OBJECTIVE_OUTPUT', 'ObjectiveMechanism', 'ObjectiveMechanismError', 'OUTCOME',
+    'ROLE'
 ]
 
 ROLE = 'role'
+OUTCOME = 'outcome'
 MONITORED_OUTPUT_STATES = 'monitored_output_states'
 MONITORED_OUTPUT_STATE_NAME_SUFFIX = '_Monitor'
-OUTCOME = 'outcome'
 
-# Indices for items in tuple format used for specifying monitored_output_states using weights and exponents
-OUTPUT_STATE_INDEX = 0
-WEIGHT_INDEX = 1
-EXPONENT_INDEX = 2
-MATRIX_INDEX = 3
-MonitoredOutputStateTuple = namedtuple("MonitoredOutputStateTuple", "output_state, weight exponent matrix")
+DEFAULT_MONITORED_STATE_WEIGHT = None
+DEFAULT_MONITORED_STATE_EXPONENT = None
+DEFAULT_MONITORED_STATE_MATRIX = None
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class OBJECTIVE_OUTPUT():
@@ -390,8 +468,7 @@ class ObjectiveMechanismError(Exception):
 class ObjectiveMechanism(ProcessingMechanism_Base):
     """
     ObjectiveMechanism(               \
-        monitored_output_states,      \
-        input_states=None,            \
+        monitored_output_states,      \   # alias to input_states argument, which can still be used in a spec dict
         function=LinearCombination,   \
         output_states=[OUTCOME],      \
         params=None,                  \
@@ -434,10 +511,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         the ObjectiveMechanism's `function <ObjectiveMechanism>` (see `ObjectiveMechanism_Monitored_Output_States`
         for details of specification).
 
+    COMMENT:
     input_states :  List[InputState, value, str or dict] or Dict[] : default None
         specifies the names and/or formats to use for the values of the InputStates that receive the input from the
         OutputStates specified in the monitored_output_states** argument; if specified, there must be one for each item
         specified in the **monitored_output_states** argument.
+    COMMENT
 
     COMMENT:
     names: List[str]
@@ -551,7 +630,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        MONITORED_OUTPUT_STATES: None,
+        # MONITORED_OUTPUT_STATES: None,
         TIME_SCALE: TimeScale.TRIAL,
         FUNCTION: LinearCombination,
         })
@@ -561,21 +640,34 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
-                 monitored_output_states,
                  input_states=None,
                  function=LinearCombination,
                  output_states:tc.optional(tc.any(list, dict))=[OUTCOME],
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 context=None,
+                 **kwargs):
+
+        if MONITORED_OUTPUT_STATES in kwargs and kwargs[MONITORED_OUTPUT_STATES] is not None:
+            name_string = name or 'an ' + ObjectiveMechanism.__name__
+            if input_states:
+                # warnings.warn("Both \'{}\' and \'{}\' args were specified in constuctor for {}; "
+                #               "an attempt will be made to merge them but this may produce unexpected results.".
+                #               format(MONITORED_OUTPUT_STATES, INPUT_STATES, name_string))
+                input_states.append(kwargs[MONITORED_OUTPUT_STATES])
+            input_states = kwargs[MONITORED_OUTPUT_STATES]
+            del kwargs[MONITORED_OUTPUT_STATES]
+            if kwargs:
+                raise ObjectiveMechanismError("\'Invalid arguments used in constructor for {}".
+                                              format(kwargs.keys(), name_string))
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(monitored_output_states=monitored_output_states,
-                                                  input_states=input_states,
+        params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   output_states=output_states,
                                                   function=function,
                                                   params=params)
+
         self._learning_role = None
 
         from psyneulink.components.states.outputstate import StandardOutputStates
@@ -600,21 +692,22 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """Validate that default_variable (if specified) matches in number of values the monitored_output_states
 
         """
-        # NOTE 6/29/17: (CW)
-        # This is a very questionable check. The problem is that TransferMechanism (if default_variable is passed as
-        # None) expects variable to be initialized to ClassDefaults.variable ([[0]]) while ObjectiveMechanism expects
-        # variable to be initialized to ClassDefaults.variable ([[0]]) AFTER this check has occurred. The problem is,
-        # my solution to this has been to write (in each subclass of ProcessingMechanism) specific behavior on how to
-        # react if both variable and size are None. This is fine but potentially cumbersome for future developers.
-        # We should consider deleting this check entirely, and allowing ProcessingMechanism (or a further parent class)
-        # to always set variable to ClassDefaults.variable if variable and size are both None.
-        # IMPLEMENTATION NOTE:  use self.user_params (i.e., values specified in constructor)
-        #                       since params have not yet been validated and so self.params is not yet available
-        if variable is not None and len(variable) != len(self.user_params[MONITORED_OUTPUT_STATES]):
-            raise ObjectiveMechanismError("The number of items specified for the default_variable arg ({}) of {} "
-                                          "must match the number of items specified for its monitored_output_states arg ({})".
-                                          format(len(variable), self.name, len(self.user_params[MONITORED_OUTPUT_STATES])))
-        # MODIFIED 6/29/17 END
+        # # MODIFIED 10/8/17 OLD: [OBVIATED BY ALIASING OF monitored_output_states TO input_states]
+        # # NOTE 6/29/17: (CW)
+        # # This is a very questionable check. The problem is that TransferMechanism (if default_variable is passed as
+        # # None) expects variable to be initialized to ClassDefaults.variable ([[0]]) while ObjectiveMechanism expects
+        # # variable to be initialized to ClassDefaults.variable ([[0]]) AFTER this check has occurred. The problem is,
+        # # my solution to this has been to write (in each subclass of ProcessingMechanism) specific behavior on how to
+        # # react if both variable and size are None. This is fine but potentially cumbersome for future developers.
+        # # We should consider deleting this check entirely, and allowing ProcessingMechanism (or a further parent class)
+        # # to always set variable to ClassDefaults.variable if variable and size are both None.
+        # # IMPLEMENTATION NOTE:  use self.user_params (i.e., values specified in constructor)
+        # #                       since params have not yet been validated and so self.params is not yet available
+        # if variable is not None and len(variable) != len(self.user_params[MONITORED_OUTPUT_STATES]):
+        #     raise ObjectiveMechanismError("The number of items specified for the default_variable arg ({}) of {} "
+        #                                   "must match the number of items specified for its monitored_output_states arg ({})".
+        #                                   format(len(variable), self.name, len(self.user_params[MONITORED_OUTPUT_STATES])))
+        # MODIFIED 10/8/17 END
 
         return super()._validate_variable(variable=variable, context=context)
 
@@ -633,26 +726,17 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         if (INPUT_STATES in target_set and target_set[INPUT_STATES] is not None and
                 not all(input_state is None for input_state in target_set[INPUT_STATES])):
+            # FIX: 10/3/17 - ??ARE THESE DOING ANYTHING:  INTEGRATE THEM... HERE OR BELOW (IN _instantiate_input_states)
             if MONITORED_OUTPUT_STATES in target_set:
                 monitored_output_states = target_set[MONITORED_OUTPUT_STATES]
             elif hasattr(self, 'monitored_output_states'):
                 monitored_output_states = self.monitored_output_states
             else:
-                raise ObjectiveMechanismError("PROGRAM ERROR: monitored_output_states not instantiated as param or attirb")
+                pass
 
-            if len(target_set[INPUT_STATES]) != len(monitored_output_states):
-                raise ObjectiveMechanismError("The number of items in the \'{}\'arg for {} ({}) "
-                                              "must equal of the number in the \'{}\' arg ({})".
-                                     format(INPUT_STATES,
-                                            self.name,
-                                            len(target_set[INPUT_STATES]),
-                                            MONITORED_OUTPUT_STATES,
-                                        len(target_set[MONITORED_OUTPUT_STATES])))
-
+        # FIX: 10/3/17 ->
         if MONITORED_OUTPUT_STATES in target_set and target_set[MONITORED_OUTPUT_STATES] is not None:
-            _parse_monitored_output_states(source=self,
-                                           output_state_list=target_set[MONITORED_OUTPUT_STATES],
-                                           context=context)
+            pass
 
 
     def _instantiate_input_states(self, monitored_output_states_specs=None, context=None):
@@ -671,7 +755,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         Call _instantiate_monitoring_projection() to instantiate MappingProjection to InputState
             if an OutputState has been specified.
         """
-
+        from psyneulink.components.states.inputstate import InputState
         # If call is for initialization
         if self.init_status is InitStatus.UNSET:
             # Pass self.input_states (containing specs from **input_states** arg of constructor)
@@ -679,154 +763,33 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         else:
             # If initialized, don't pass self.input_states, as this is now a list of existing InputStates
             input_states = None
-        monitored_output_states = monitored_output_states_specs or self.monitored_output_states
-        input_state_dicts, output_state_dicts = self._instantiate_monitored_output_states(monitored_output_states=monitored_output_states,
-                                                                                   input_states=input_states,
-                                                                                   context=context)
 
-       # For each InputState specified by monitored_output_states, add an item to self.variable
-        #    - get specified constraint on variable and add item to self.variable
-        self.instance_defaults.variable = self.instance_defaults.variable or []
-        for i, input_state_dict in enumerate(input_state_dicts):
-            self.instance_defaults.variable.append(input_state_dict[VARIABLE])
+        # PARSE input_states (=monitored_output_states) specifications into InputState specification dictionaries
+        # and ASSIGN self.variable
 
-        # Instantiate InputStates corresponding to OutputStates specified in specified monitored_output_states
-        instantiated_input_states = super()._instantiate_input_states(input_states=input_state_dicts, context=context)
+        # For each spec in input_state:
+        #    - parse into InputState specification dictionary
+        #    - get specified item for variable
+        input_state_variables = []
+        # for i, input_state in enumerate(self.input_states):
+        for i, input_state in enumerate(input_states):
+            input_state_dict = _parse_state_spec(owner=self, state_type=InputState, state_spec=input_state)
+            input_state_variables.append(input_state_dict[VARIABLE])
 
-        # Get any Projections specified in input_states arg, else set to default (AUTO_ASSIGN_MATRIX)
-        # Only do this during initialization;  otherwise, self._input_states has actual states, not specifications.
-        if self.init_status is InitStatus.UNSET:
-            input_state_projection_specs = []
-            for i, state in enumerate(self._input_states):
-                input_state_projection_specs.append(state.params[PROJECTIONS] or [AUTO_ASSIGN_MATRIX])
-        # FIX: END DIFF
+        # If variable argument of ObjectiveMechanism constructor was specified,
+        #    use that as reference_value for InputStates (i.e, give it precedence over InputState specifications);
+        #    this is so that a different shape can be specified for an InputState of the ObjectiveMechanism
+        #    than that of the OutputState from which it receives a projection
+        #    (e.g., ComparatorMechanism for RL:  OutputState that projects to SAMPLE InputState can be a vector,
+        #     but the ObjectiveMechanism's InputState must be a scalar).
+        # If variable was *NOT* specified, then it is OK to get it from the InputState specifications
+        if self.variable is None:
+            self.instance_defaults.variable = self.instance_defaults.variable or input_state_variables
 
-        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        output_states = [monitored_output_state[OUTPUT_STATE] for monitored_output_state in output_state_dicts]
-        if output_states:
-            _instantiate_monitoring_projections(owner=self,
-                                                sender_list=output_states,
-                                                receiver_list=instantiated_input_states,
-                                                receiver_projection_specs=input_state_projection_specs,
-                                                context=context)
-
-    def _instantiate_monitored_output_states(self, monitored_output_states, input_states=None, context=None):
-        """Parse monitored_output_state specs and instantiate monitored_output_states attribute
-
-        Used by _instantiate_input_states and _add_monitored_output_states
-            (so must distinguish between initialization and adding to instantiated input_states)
-        monitored_output_states argument:
-            list of any legal specification for **monitored_output_states** argument of the constructor;
-        input_states argument:
-            list of input_state specifications,
-            specified in the **input_states** arg of the constructor, and used for default values
-                not overridden by specifications monitored_output_states (e.g., weight and exponents)
-
-        Returns list of tuples, each of which is a pair of InputState and OutputState specification dictionaries;
-            input_state_dicts: specification for InputStates to be created
-            output_state_dicts:  OutputStates to be monitored by the InputStates
-        """
-
-        # PARSE monitored_output_states SPECIFICATION(S)
-
-        # First parse for tuples to extract OutputStates, weights, exponents and matrices
-        monitored_output_states_parsed = _parse_monitored_output_states(source=self,
-                                                          output_state_list=monitored_output_states,
-                                                          context=context)
-        output_state_specs = [s.output_state for s in monitored_output_states_parsed]
-        monitored_output_state_weights = [w.weight for w in monitored_output_states_parsed]
-        monitored_output_state_exponents = [e.exponent for e in monitored_output_states_parsed]
-        monitored_output_state_matrices = [m.matrix for m in monitored_output_states_parsed]
-
-        # Then, parse OutputState specifications
-        output_state_dicts = []
-        for value in output_state_specs:
-            output_state_dict = {}
-            output_state_spec = _parse_state_spec(owner=self,
-                                                  state_type=OutputState,
-                                                  state_spec=value)
-            if isinstance(output_state_spec, dict):
-                output_state_dict = output_state_spec
-            elif isinstance(output_state_spec, State):
-                output_state_dict[NAME] = output_state_spec.name
-                output_state_dict[VARIABLE] = output_state_spec.instance_defaults.variable
-                output_state_dict[VALUE] = output_state_spec.instance_defaults.variable
-                # output_state_dict[PARAMS] = output_state_spec.params
-            else:
-                raise ObjectiveMechanismError("PROGRAM ERROR: call to State._parse_state_spec() for {} of {} "
-                                              "should have returned dict or State, but returned {} instead ({})".
-                                              format(OUTPUT_STATE,
-                                                     self.name,
-                                                     type(output_state_spec).__name__,
-                                                     output_state_spec))
-            output_state_dict[OUTPUT_STATE]=value
-            output_state_dict[NAME] = output_state_dict[NAME] + MONITORED_OUTPUT_STATE_NAME_SUFFIX
-
-            # Ignore any OutputStates from which an InputState of the ObjectiveMechanism already receives a Projection.
-            # However, skip this step if this call is during initialization of the ObjectiveMechanism, because:
-            #    - it should not have yet any InputStates instantiated
-            #    - but can't test for self.input_states==None, since that might contain specifications from the
-            #      input_states argument of the ObjectiveMechanism's constructor
-            if not self.init_status is InitStatus.UNSET:
-                if output_state_dict[OUTPUT_STATE] in self.monitored_output_states:
-                    if any(any(projection.sender is output_state_dict[OUTPUT_STATE]
-                           for projection in input_state.path_afferents)
-                        for input_state in self.input_states):
-                        continue
-
-            output_state_dicts.append(output_state_dict)
-
-        # INSTANTIATE InputStates:
-        #    one for each OutputState specified in monitored_output_states
-
-        # If input_states were provided use those for specifications;
-        #    otherwise use value of monitored_output_stated for each (to invoke a default assignment for each input_state)
-        input_state_specs = input_states or [output_state_dict[VALUE] for output_state_dict in output_state_dicts]
-
-        # Parse input_states into a state specification dict, passing output_state_specs as defaults
-        input_state_dicts = []
-        for i, input_state, output_state_dict in zip(range(len(input_state_specs)),
-                                                     input_state_specs,
-                                                     output_state_dicts):
-            # Parse input_state to determine its specifications and assign values from output_state_specs
-            #    to any missing specifications, including any projections requested and weights and exponents.
-            input_state_dict = _parse_state_spec(self,
-                                                 state_type=InputState,
-                                                 state_spec=input_state,
-                                                 name=output_state_dict[NAME],
-                                                 value=output_state_dict[VALUE])
-            input_state_dicts.append(input_state_dict)
-
-        # FIX: ADD MATRIX SPEC AS PROJECTIONS ENTRY TO INPUT_STATES DICT HERE
-        # For each InputState specified by monitored_output_states:
-        #    - assign weights and exponents (if specified in monitored_output_state to params dict
-        #      (otherwise, don't include param dict)
-        for i, input_state_dict in enumerate(input_state_dicts):
-            weight_exponent_matrices_dict = {}
-            if monitored_output_state_weights[i] is not None:
-                weight_exponent_matrices_dict[WEIGHT] = monitored_output_state_weights[i]
-            if monitored_output_state_exponents[i] is not None:
-                weight_exponent_matrices_dict[EXPONENT] = monitored_output_state_exponents[i]
-            if monitored_output_state_matrices[i] is not None:
-                weight_exponent_matrices_dict[PROJECTIONS] = monitored_output_state_matrices[i]
-            # If the input_state_dict already had a PARAMS entry, add WEIGHT and EXPONENT ENTRIES to it
-            if input_state_dict[PARAMS] is not None:
-                input_state_dict[PARAMS].update(weight_exponent_matrices_dict)
-            # Otherwise, if any weights and/or exponents were specified, assign dict with them to PARAMS entry
-            elif weight_exponent_matrices_dict:
-                input_state_dict[PARAMS] = weight_exponent_matrices_dict
-
-
-        output_states = [monitored_output_state[OUTPUT_STATE] for monitored_output_state in output_state_dicts]
-        if output_states:
-            if self.init_status is InitStatus.UNSET:
-                # Call is during initialization -- vs. and addition of monitored_output_state(s) -- so assign output_states
-                self.monitored_output_states = output_states
-            else:
-                # Call is to add monitored_output_state(s) -- so append output_states
-                self.monitored_output_states.append(output_states)
-
-        return input_state_dicts, output_state_dicts
+        # Instantiate InputStates corresponding to OutputStates specified in monitored_output_states
+        # instantiated_input_states = super()._instantiate_input_states(input_states=self.input_states, context=context)
+        instantiated_input_states = super()._instantiate_input_states(input_states=input_states, context=context)
+        # MODIFIED 10/3/17 END
 
     def add_monitored_output_states(self, monitored_output_states_specs, context=None):
         """Instantiate `OutputStates <OutputState>` to be monitored by the ObjectiveMechanism.
@@ -841,7 +804,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # FIX: NEEDS TO RETURN output_states (?IN ADDITION TO input_states) SO THAT IF CALLED BY ControlMechanism THAT
         # FIX:  BELONGS TO A SYSTEM, THE ControlMechanism CAN CALL System._validate_monitored_state_in_system
         # FIX:  ON THE output_states ADDED
-        return self._instantiate_input_states(monitored_output_states_specs=monitored_output_states_specs, context=context)
+        return self._instantiate_input_states(monitored_output_states_specs=monitored_output_states_specs,
+                                              context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
         """Assign InputState weights and exponents to ObjectiveMechanism's function
@@ -869,6 +833,20 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 self.function_object.exponents = [exponent or DEFAULT_EXPONENT for exponent in exponents]
 
     @property
+    def monitored_output_states(self):
+        if not isinstance(self.input_states, ContentAddressableList):
+            return None
+        else:
+            monitored_output_states = []
+            for input_state in self.input_states:
+                for projection in input_state.path_afferents:
+                    monitored_output_states.append(projection.sender)
+
+            return ContentAddressableList(component_type=OutputState,
+                                          list=[projection.sender for input_state in self.input_states
+                                                for projection in input_state.path_afferents])
+
+    @property
     def monitored_output_states_weights_and_exponents(self):
         if hasattr(self.function_object, WEIGHTS) and self.function_object.weights is not None:
             weights = self.function_object.weights
@@ -887,211 +865,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         exponents = [e[1] for e in weights_and_exponents_tuples]
         self._instantiate_weights_and_exponents(weights, exponents)
 
-def _parse_monitored_output_states(source, output_state_list, mech=None, context=None):
-    """Parses specifications in list and returns list of MonitoredOutputStateTuples
-
-    Serves the following purposes:
-
-        Validates that each item of monitored_output_state arg is:
-            * OutputState
-            * Mechanism,
-            * tuple: (OutputState/Mechanism, weight, exponent<, matrix>) tuple
-            * dictionary: {MECHANISM:<Mechanism>, <OUTPUT_STATES:[<legal monitored_output_state spec>, ...]}
-            * string
-            * MonitoredOutpuStatesOption value
-
-    Extract references to Mechanisms and/or OutputStates, exponents, weights, and optional matrix from each tuple
-    and assign each to its own list
-    Assign None as default for unspecified weights and exponents, so that specification of these for
-       InputStates can be used (see ObjectiveMechanism._instantiate_input_states)
-
-    Called by:
-        self._validate_params()
-        self._instantiate_input_states()
-        self._instantiate_monitored_output_states()
-        ControlMechanism._instantiate_objective_mechanism()
-        System._get_monitored_output_states_for_system()
-
-    """
-
-    if not isinstance(output_state_list, list):
-        output_state_list = [output_state_list]
-
-    # output_states = np.array([None] * len(output_state_list))
-    # weights = output_states.copy()
-    # exponents = weights.copy()
-    output_states = []
-    weights = []
-    exponents = []
-    matrices = []
-    DEFAULT_WEIGHT = None
-    DEFAULT_EXPONENT = None
-    DEFAULT_MATRIX = None
-
-    for item in output_state_list:
-
-        if item is None:
-            raise ObjectiveMechanismError("\'{}\' argument for {} must be specified".
-                                          format(MONITORED_OUTPUT_STATES, source.name))
-
-        # Specification is an OutputState on its own, so use it and assign default weight and exponent
-        if isinstance(item, OutputState):
-            output_states.append(item)
-            weights.append(DEFAULT_WEIGHT)
-            exponents.append(DEFAULT_EXPONENT)
-            matrices.append(DEFAULT_MATRIX)
-
-        # Specification is a Mechanism, so use its primary OutputState and assign default weight and exponent
-        elif isinstance(item, Mechanism):
-            output_states.append(item.output_state)
-            weights.append(DEFAULT_WEIGHT)
-            exponents.append(DEFAULT_EXPONENT)
-            matrices.append(DEFAULT_MATRIX)
-
-        # Specification is a string so see if it is the name of an OutputState
-        elif isinstance(item, str):
-            if mech is not None:
-                # If mech was specified, interpret str as the name of one of its OutputStates
-                try:
-                    output_states.append(mech.output_states[item])
-                except KeyError:
-                    raise ObjectiveMechanismError("{} does not have an OutputState named {} "
-                                                  "(used to specify it in monitored_output_states for {})".
-                                                  format(mech.name, item, source.name))
-                except AttributeError:
-                    raise ObjectiveMechanismError("MECHANISM entry ({}) of monitored_output_states specification dictionary "
-                                                  "for {} does not appear to have an output_states attribute".
-                                                  format(mech.name, source.name))
-            else:
-                # Specification is an "unbound" string, so pass it along
-                #    (note:  strings can be used as "placemarkers" for InputStates that will be resolved later,
-                #            e.g., for TARGET InputState of a ObjectiveMechanism)
-                output_states.append(item)
-            weights.append(DEFAULT_WEIGHT)
-            exponents.append(DEFAULT_EXPONENT)
-            matrices.append(DEFAULT_MATRIX)
-
-        # Specification is a tuple so parse
-        elif isinstance(item, tuple):
-            #  Check that it has three items:  (monitored_output_state specification, weight, exponent)
-            if len(item)<3 or len(item)>4:
-                raise ObjectiveMechanismError("Tuple {} used for monitored_output_state specification in {} "
-                                     "has {} items;  it should be 3 (or 4 if a matrix spec is included".
-                                     format(item, source.name, len(item)))
-
-            # Recursively call _parse_monitored_output_states to parse the first item of the tuple (the OutputState)
-            # (index with 0 since parse returns a list, but should only be one item in it)
-            output_state_tuple = _parse_monitored_output_states(source,
-                                                         item[OUTPUT_STATE_INDEX],
-                                                         mech=mech, context=context)[0]
-
-            # Use OutputState in tuple returned from parse
-            output_state = output_state_tuple.output_state
-
-            # If output_state is a string,
-            from psyneulink.components.shellclasses import System_Base
-            if isinstance(output_state, str):
-                if not isinstance(source, System_Base):
-                    raise ObjectiveMechanismError("A string was used to specify an OutputState (presumably its name: "
-                                                  "\'{}\') to be monitored by the ObjectiveMechanism for {}; the name "
-                                                  "of an OutputState can be used to specify it only in the "
-                                                  "\'monitor_for_control\' argument of a System, but NOT in the "
-                                                  "\'objective_mechanism\' argument of a ControlMechanism nor in the "
-                                                  "\'monitored_output_states\' argument of an ObjectiveMechanism".
-                                                  format(output_state, source.name))
-
-            elif not isinstance(output_state, (OutputState, Mechanism)):
-                raise ObjectiveMechanismError("PROGRAM ERROR: parse_monitored_output_states() returned a tuple for {}, "
-                                              "the first item of which ({}) is not an OutputState, the name of one, "
-                                              "or Mechanism".format(source.name, output_state))
-            output_states.append(output_state)
-
-            # Use weight and exponent if returned from parse;  otherwise use what was in item
-            weight = output_state_tuple.weight or item[WEIGHT_INDEX]
-            exponent = output_state_tuple.exponent or item[EXPONENT_INDEX]
-            try:
-                matrix = output_state_tuple.matrix or item[MATRIX_INDEX]
-            except IndexError:
-                # matrix spec not included
-                matrix = DEFAULT_MATRIX
-
-            if weight and not isinstance(weight, numbers.Number):
-                raise ObjectiveMechanismError("Specification of the weight ({}) in tuple for {} of {} "
-                                     "must be a number".
-                                     format(weight, output_state, source.name))
-            weights.append(weight)
-
-            if exponent and not isinstance(exponent, numbers.Number):
-                raise ObjectiveMechanismError("Specification of the exponent ({}) in tuple for {} of {} "
-                                     "must be a number".
-                                     format(exponent, output_state, source.name))
-            exponents.append(exponent)
-
-            if not is_matrix(matrix):
-                raise ObjectiveMechanismError("Specification of the exponent ({}) in tuple for {} of {} "
-                                     "must be a number".
-                                     format(exponent, output_state, source.name))
-            matrices.append(matrix)
-
-        # Specification is a dictionary, so parse
-        elif isinstance(item, dict):
-            if not MECHANISM in item:
-                raise ObjectiveMechanismError("Specification dictionary used for monitored_output_states in {} "
-                                              "is missing its MECHANISM entry".format(source.name))
-            mech = item[MECHANISM]
-
-            if OUTPUT_STATES in item:
-                # Get list of OutputState specifications and append to output_states by
-                #    recursively calling _parse_monitored_output_states to parse the list of OutputState entries
-                #    (index with 0 since parse returns a list, but should only be one item in it)
-                output_state_tuples = _parse_monitored_output_states(source=source,
-                                                              output_state_list=item[OUTPUT_STATES],
-                                                              mech=mech,
-                                                              context=context)
-                output_states.extend([output_state_tuple.output_state
-                                      for output_state_tuple in output_state_tuples])
-                weights.extend([output_state_tuple.weight
-                                      for output_state_tuple in output_state_tuples])
-                exponents.extend([output_state_tuple.exponent
-                                      for output_state_tuple in output_state_tuples])
-                matrices.extend([output_state_tuple.matrix
-                                      for output_state_tuple in output_state_tuples])
-
-            else:
-                # MECHANISM was the only entry in the dict,
-                #     so use it as a specification for the primary OutputState of the Mechanism
-                output_states.append(mech.output_state)
-                weights.append(DEFAULT_WEIGHT)
-                exponents.append(DEFAULT_EXPONENT)
-                matrices.append(DEFAULT_MATRIX)
-
-        elif isinstance(item, MonitoredOutputStatesOption):
-            output_states.append(item)
-            weights.append(DEFAULT_WEIGHT)
-            exponents.append(DEFAULT_EXPONENT)
-            matrices.append(DEFAULT_MATRIX)
-
-        else:
-            raise ObjectiveMechanismError("Unrecognized specification for monitor_value ({}) in {}".
-                                          format(item, source.name))
-
-    if not (len(output_states)==len(weights)==len(exponents)==len(matrices)):
-        raise ObjectiveMechanismError("PROGRAM ERROR: The lengths of the lists of OutputStates ({}), weights ({}), "
-                                      "exponents ({}), and matrices ({}) are not equal "
-                                      "in the monitored_output_states specification for {}".
-                                      format(len(output_states),
-                                             len(weights),
-                                             len(exponents),
-                                             len(matrices),
-                                             source.name))
-
-    return list(map(lambda output_state, weight, exponent, matrix:
-                    MonitoredOutputStateTuple(output_state = output_state,
-                                              weight = weight,
-                                              exponent = exponent,
-                                              matrix = matrix),
-                    output_states, weights, exponents, matrices))
-
 def _objective_mechanism_role(mech, role):
     if isinstance(mech, ObjectiveMechanism):
         if mech._role is role:
@@ -1101,7 +874,7 @@ def _objective_mechanism_role(mech, role):
     else:
         return False
 
-# IMPLEMENTATION NOTE: THIS IS A PLACEMARKER FOR A METHOD TO BE IMPLEMENTED IN THE Composition CLASS
+# IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 #                      ??MAYBE INTEGRATE INTO State MODULE (IN _instantate_state)
 @tc.typecheck
 def _instantiate_monitoring_projections(owner,
@@ -1112,6 +885,7 @@ def _instantiate_monitoring_projections(owner,
 
     from psyneulink.components.states.outputstate import OutputState
     from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+    from psyneulink.components.projections.projection import ConnectionTuple
 
     receiver_projection_specs = receiver_projection_specs or [DEFAULT_MATRIX] * len(sender_list)
 
@@ -1132,12 +906,16 @@ def _instantiate_monitoring_projections(owner,
         # IMPLEMENTATION NOTE:  If there is more than one Projection specified for a receiver, only the 1st is used;
         #                           (there should only be one if a 2-item tuple was used to specify the InputState,
         #                            however other forms of specifications could produce more)
-        if len(recvr_projs) > 1 and owner.verbosePref:
+        if isinstance(recvr_projs,list) and len(recvr_projs) > 1 and owner.verbosePref:
             warnings.warn("{} projections were specified for InputState ({}) of {} ;"
                           "only the first ({}) will be used".
-                          format(len(recvr_projs), receiver.name, owner.name))
-        projection_spec = recvr_projs[0]
+                          format(len(recvr_projs), receiver.name, owner.name, recvr_projs[0].state.name))
+            projection_spec = recvr_projs[0]
+        else:
+            projection_spec = recvr_projs
 
+        if isinstance(projection_spec, ConnectionTuple):
+            projection_spec = projection_spec.projection
 
         # IMPLEMENTATION NOTE:  This may not handle situations properly in which the OutputState is specified
         #                           by a 2-item tuple (i.e., with a Projection specification as its second item)
@@ -1147,8 +925,11 @@ def _instantiate_monitoring_projections(owner,
                 if not receiver.path_afferents[0].init_status is InitStatus.DEFERRED_INITIALIZATION:
                     raise ObjectiveMechanismError("PROGRAM ERROR: {} of {} already has an afferent projection "
                                                   "implemented and initialized ({})".
-                                                  format(receiver.name, owner.name, receiver.aferents[0].name))
-                if not receiver.path_afferents[0].function_params[MATRIX] is projection_spec:
+                                                  format(receiver.name, owner.name, receiver.afferents[0].name))
+                # FIX: 10/3/17 - IS IT OK TO IGNORE projection_spec IF IT IS None?  SHOULD IT HAVE BEEN SPECIFIED??
+                # FIX:           IN DEVEL, projection_spec HAS BEEN PROPERLY ASSIGNED
+                if (projection_spec and
+                        not receiver.path_afferents[0].function_params[MATRIX] is projection_spec):
                     raise ObjectiveMechanismError("PROGRAM ERROR: Projection specification for {} of {} ({}) "
                                                   "does not match matrix already assigned ({})".
                                                   format(receiver.name,

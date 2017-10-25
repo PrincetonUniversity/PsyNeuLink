@@ -15,8 +15,8 @@ Overview
 
 An AGTControlMechanism is a `ControlMechanism <ControlMechanism>` that uses an ObjectiveMechanism with a `AGTUtilityIntegrator`
 Function to regulate its `allocation_policy <ControlMechanism.allocation_policy>`.  When used with an `LCControlMechanism`
-to regulate the `mode <FHNIntegrator.mode>` parameter of its `FHNIntegrator` Function, it implements a form of the 
-`Adaptive Gain Theory <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus 
+to regulate the `mode <FHNIntegrator.mode>` parameter of its `FHNIntegrator` Function, it implements a form of the
+`Adaptive Gain Theory <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus
 coeruleus-norepinephrine (LC-NE) system.
 
 .. _AGTControlMechanism_Creation:
@@ -122,7 +122,7 @@ import typecheck as tc
 from psyneulink.components.functions.function import AGTUtilityIntegrator, ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import MonitoredOutputStatesOption, ObjectiveMechanism, _parse_monitored_output_states
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.shellclasses import Mechanism, System_Base
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.defaults import defaultControlAllocation

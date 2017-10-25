@@ -339,6 +339,7 @@ COMMENT
 import inspect
 import numbers
 import warnings
+
 from collections import Iterable, OrderedDict
 from enum import Enum, IntEnum
 
@@ -1753,7 +1754,6 @@ class Component(object):
 
         # if request_set has been passed or created then validate and, if OK, assign params to target_set
         if request_set:
-            # MODIFIED 4/18/17 NEW:
             # For params that are a 2-item tuple, extract the value
             #    both for validation and assignment (tuples are left intact in user_params_for_instantiation dict
             #    which is used it instantiate the specified Components in the 2nd item of the tuple)
@@ -1764,11 +1764,15 @@ class Component(object):
                 if isinstance(param_value, tuple):
                     param_value = self._get_param_value_from_tuple(param_value)
                     request_set[param_name] = param_value
-            # MODIFIED 4/18/17 END NEW
             try:
-                self._validate_params(variable=variable, request_set=request_set, target_set=target_set, context=context)
+                self._validate_params(variable=variable,
+                                      request_set=request_set,
+                                      target_set=target_set,
+                                      context=context)
             except TypeError:
-                self._validate_params(request_set=request_set, target_set=target_set, context=context)
+                self._validate_params(request_set=request_set,
+                                      target_set=target_set,
+                                      context=context)
 
     def assign_params(self, request_set=None, context=None):
         """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary
@@ -2057,8 +2061,6 @@ class Component(object):
             #    then simply assign value to paramClassDefault (implication of not specifying it explicitly);
             #    this also allows it to pass the test below and function execution to occur for initialization;
             from psyneulink.components.shellclasses import Projection
-            # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-            # from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
             if (((isinstance(param_value, str) and
                           param_value in {CONTROL_PROJECTION, LEARNING_PROJECTION, LEARNING}) or
                 isinstance(param_value, Projection) or  # These should be just ControlProjection or LearningProjection
@@ -2174,8 +2176,6 @@ class Component(object):
     def _get_param_value_from_tuple(self, param_spec):
         """Returns param value (first item) of a (value, projection) tuple
         """
-        # from PsyNeuLink.Components.Projections.Modulatory.ControlProjection import ControlProjection
-        # from PsyNeuLink.Components.Projections.Modulatory.LearningProjection import LearningProjection
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
         ALLOWABLE_TUPLE_SPEC_KEYWORDS = {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING}
