@@ -380,6 +380,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
             for i, gating_signal in enumerate(self.gating_signals):
 
+                # FIX: 10/24/17 - THIS NEEDS TO BE RECONCILED WITH INDEX ASSIGNMENTS BELOW
                 if not hasattr(self, GATING_POLICY) or self.gating_policy is None:
                     self.gating_policy = np.atleast_2d(defaultGatingPolicy)
                 else:
@@ -410,7 +411,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
                     self.gating_projections = gating_signal.efferents.copy()
 
                 # Add GatingSignal to output_states list
-                gating_signal.index = i
+                # All GatingSignals use a single gating policy value by default
+                # FIX: 10/24/17 - THIS SHOULD BE RECONCILED WITH GATING POLICY ABOVE AND OUTPUT OF FUNCTION
+                gating_signal.index = 0
                 self._output_states.append(gating_signal)
 
         super()._instantiate_output_states(context=context)
