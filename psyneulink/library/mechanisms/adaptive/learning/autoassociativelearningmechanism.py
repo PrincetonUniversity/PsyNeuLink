@@ -349,7 +349,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                          context=self)
 
     def _validate_variable(self, variable, context=None):
-        """Validate that variable has exactly three items: activation_input, activation_output and error_signal
+        """Validate that variable has only one item: activation_input.
         """
 
         # Skip LearningMechanism._validate_variable in call to super(), as it requires variable to have 3 items
@@ -363,162 +363,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                                                         format(self.name, variable))
         return variable
 
-    def _validate_params(self, request_set, target_set=None, context=None):
-        # Skip LearningMechanism._validate_params, as it has different requirements
-        super(LearningMechanism, self)._validate_params(request_set=request_set,target_set=target_set,context=context)
-
-        # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS (AKIN TO CONTROL_SIGNAL
-        if LEARNING_SIGNALS in target_set and target_set[LEARNING_SIGNALS]:
-
-            from psyneulink.components.states.modulatorysignals.learningsignal \
-                import LearningSignal
-            from psyneulink.components.states.parameterstate import ParameterState
-            from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-
-            for spec in target_set[LEARNING_SIGNALS]:
-
-                learning_proj = None  # Projection from LearningSignal to MappingProjection
-
-                # Specification is for a LearningSignal
-                if isinstance(spec, LearningSignal):
-                    #  Check that any LearningProjections it has
-                    #    are to MappingProjections to Mechanisms in the same System
-                    for learning_proj in spec.efferents:
-                        _validate_receiver(self,learning_proj, MappingProjection, LEARNING_SIGNAL, context)
-                    continue
-
-                # Specification is for a ParameterState
-                elif isinstance(spec, ParameterState):
-                    param_name = spec.name
-                    mapping_proj = spec.owner
-
-                # Specification is for a Projection
-                elif isinstance(spec, Projection):
-                    if isinstance(spec, LearningProjection):
-                        param_name = spec.receiver.name
-                        learning_proj = spec
-                        mapping_proj = learning_proj.receiver.owner
-                    elif isinstance(spec, MappingProjection):
-                        param_name = MATRIX
-                        mapping_proj = spec
-                    else:
-                        raise AutoAssociativeLearningMechanismError("The {} specified in the {} arg for {} ({}) must be a {}".
-                                                     format(PROJECTION,
-                                                            LEARNING_SIGNALS,
-                                                            self.name,
-                                                            spec.name,
-                                                            MAPPING_PROJECTION))
-
-                # Specification is for a tuple (str, MappingProjection):
-                elif isinstance(spec, tuple):
-                    param_name = spec[0]
-                    mapping_proj = spec[1]
-                    # Check that 1st item is a str (presumably the name of the learned Projection's attribute
-                    #    for the param to be learned; e.g., 'MATRIX' for MappingProjection)
-                    if not isinstance(param_name, str):
-                        raise AutoAssociativeLearningMechanismError("1st item of tuple in specification of {} for {} ({}) "
-                                                     "must be a string".format(LEARNING_SIGNAL, self.name, param_name))
-                    # Check that 2nd item is a MappingProjection
-                    if not isinstance(mapping_proj, MappingProjection):
-                        raise AutoAssociativeLearningMechanismError("2nd item of tuple in specification of {} for {} ({}) "
-                                                     "must be a {}".
-                                                     format(LEARNING_SIGNAL,
-                                                            self.name,
-                                                            mapping_proj,
-                                                            MAPPING_PROJECTION))
-
-                # LearningSignal specification dictionary, must have the following entries:
-                #    NAME:str - must be the name of an attribute of PROJECTION
-                #    PROJECTION:Projection - must be a MappingProjection
-                #                            and have an attribute and corresponding ParameterState named NAME
-                #    PARAMS:dict - entries must be valid LearningSignal parameters (e.g., LEARNING_RATE)
-                elif isinstance(spec, dict):
-                    if not NAME in spec:
-                        raise AutoAssociativeLearningMechanismError("Specification dict for {} of {} must have a {} entry".
-                                                    format(LEARNING_SIGNAL, self.name, NAME))
-                    param_name = spec[NAME]
-                    if not PROJECTION in spec:
-                        raise AutoAssociativeLearningMechanismError("Specification dict for {} of {} must have a {} entry".
-                                                    format(LEARNING_SIGNAL, self.name, PROJECTION))
-                    mapping_proj = spec[PROJECTION]
-                    if not isinstance(mapping_proj, MappingProjection):
-                        raise AutoAssociativeLearningMechanismError("{} entry of specification dict for {} of {} must be a {}".
-                                                    format(PROJECTION, LEARNING_SIGNAL, self.name, MAPPING_PROJECTION))
-                    # Check that all of the other entries in the specification dictionary
-                    #    are valid LearningSignal params
-                    for param in spec:
-                        if param in {NAME, PROJECTION}:
-                            continue
-                        if not hasattr(LearningSignal, param):
-                            raise AutoAssociativeLearningMechanismError("Entry in specification dictionary for {} arg of {} ({}) "
-                                                       "is not a valid {} parameter".
-                                                       format(LEARNING_SIGNAL, self.name, param,
-                                                              LearningSignal.__class__.__name__))
-                else:
-                    raise AutoAssociativeLearningMechanismError("PROGRAM ERROR: unrecognized specification for {} arg of {} ({})".
-                                                format(LEARNING_SIGNALS, self.name, spec))
-                    # raise LearningMechanismError("Specification of {} for {} ({}) must be a "
-                    #                             "ParameterState, Projection, a tuple specifying a parameter and "
-                    #                              "Projection, a LearningSignal specification dictionary, "
-                    #                              "or an existing LearningSignal".
-                    #                             format(CONTROL_SIGNAL, self.name, spec))
-
-                # Validate that the receiver of the LearningProjection (if specified)
-                #     is a MappingProjection and in the same System as self (if specified)
-                if learning_proj:
-                    _validate_receiver(sender_mech=self,
-                                       projection=learning_proj,
-                                       expected_owner_type=MappingProjection,
-                                       spec_type=LEARNING_SIGNAL,
-                                       context=context)
-
-                # IMPLEMENTATION NOTE: the tests below allow for the possibility that the MappingProjection
-                #                      may not yet be fully implemented (e.g., this can occur if the
-                #                      LearningMechanism being implemented here is as part of a LearningProjection
-                #                      specification for the MappingProjection's matrix param)
-                # Check that param_name is the name of a parameter of the MappingProjection to be learned
-                if not param_name in (set(mapping_proj.user_params) | set(mapping_proj.user_params[FUNCTION_PARAMS])):
-                    raise AutoAssociativeLearningMechanismError("{} (in specification of {} for {}) is not an "
-                                                "attribute of {} or its function"
-                                                .format(param_name, LEARNING_SIGNAL, self.name, mapping_proj))
-                # Check that the MappingProjection to be learned has a ParameterState for the param
-                if mapping_proj._parameter_states and not param_name in mapping_proj._parameter_states.names:
-                    raise AutoAssociativeLearningMechanismError("There is no ParameterState for the parameter ({}) of {} "
-                                                "specified in {} for {}".
-                                                format(param_name, mapping_proj.name, LEARNING_SIGNAL, self.name))
-
-    def _instantiate_attributes_before_function(self, context=None):
-        # Skip LearningMechanism, as it checks for error_source, which AutoAssociativeLearningMechanism doesn't have
-        super(LearningMechanism, self)._instantiate_attributes_before_function(context=context)
-
-    def _instantiate_output_states(self, context=None):
-
-        # Create registry for LearningSignals (to manage names)
-        from psyneulink.globals.registry import register_category
-        from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-        from psyneulink.components.states.state import State_Base
-        register_category(entry=LearningSignal,
-                          base_class=State_Base,
-                          registry=self._stateRegistry,
-                          context=context)
-
-        # Instantiate LearningSignals if they are specified, and assign to self._output_states
-        # Note: if any LearningSignals are specified they will replace the default LEARNING_SIGNAL OutputState
-        #          in the OUTPUT_STATES entry of paramClassDefaults;
-        #       the LearningSignals are appended to _output_states, leaving ERROR_SIGNAL as the first entry.
-        if self.learning_signals:
-            # Delete default LEARNING_SIGNAL item in output_states
-            del self._output_states[0]
-            for i, learning_signal in enumerate(self.learning_signals):
-                # Instantiate LearningSignal
-                ls = self._instantiate_learning_signal(learning_signal=learning_signal, context=context)
-                # Add LearningSignal to ouput_states list
-                self._output_states.append(ls)
-                # Replace spec in learning_signals list with actual LearningSignal
-                self.learning_signals[i] = ls
-
-        super(LearningMechanism, self)._instantiate_output_states(context=context)
-
     def _execute(self,
                 variable=None,
                 runtime_params=None,
@@ -530,7 +374,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         :return: (2D np.array) self.learning_signal
         """
 
-        # COMPUTE LEARNING SIGNAL (dE/dW):
+        # COMPUTE LEARNING SIGNAL (note that function is assumed to return only one value)
         self.learning_signal = self.function(variable=variable,
                                              params=runtime_params,
                                              context=context)
@@ -540,22 +384,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         self.value = [self.learning_signal]
         return self.value
-
-    @property
-    def learning_rate(self):
-        return self.function_object.learning_rate
-
-    @learning_rate.setter
-    def learning_rate(self, assignment):
-        self.function_object.learning_rate = assignment
-
-    @property
-    def primary_learned_projection(self):
-        return self.learned_projection[0]
-
-    @property
-    def learned_projections(self):
-        return [lp.receiver.owner for lp in self.learning_projections]
 
     @property
     def activity_source(self):

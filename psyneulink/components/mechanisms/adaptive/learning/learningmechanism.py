@@ -915,12 +915,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         from psyneulink.components.states.state import _parse_state_spec
         from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-        from psyneulink.components.states.parameterstate import ParameterState
-        from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.components.projections.projection import _validate_receiver
 
-        if ERROR_SOURCE in target_set:
+        if ERROR_SOURCE in target_set and target_set[ERROR_SOURCE] is not None:
             if not isinstance(target_set[ERROR_SOURCE], (ObjectiveMechanism, LearningMechanism)):
                 raise LearningMechanismError("{} arg for {} ({}) must be an ObjectiveMechanism or another "
                                              "LearningMechanism".
@@ -1060,6 +1058,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if self.error_source:
             _instantiate_error_signal_projection(sender=self.error_source, receiver=self)
 
+    def _instantiate_attributes_after_function(self, context=None):
+
+        if self._learning_rate is not None:
+            self.learning_rate = self._learning_rate
+
+        super()._instantiate_attributes_after_function(context=context)
+
     def _instantiate_output_states(self, context=None):
 
         # Create registry for LearningSignals (to manage names)
@@ -1077,6 +1082,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         #          in the OUTPUT_STATES entry of paramClassDefaults;
         #       the LearningSignals are appended to _output_states, leaving ERROR_SIGNAL as the first entry.
         if self.learning_signals:
+
             # Delete default LEARNING_SIGNAL item in output_states
             del self._output_states[1]
             for i, learning_signal in enumerate(self.learning_signals):
@@ -1086,30 +1092,24 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
                 # Parses learning_signal specifications (in call to State._parse_state_spec)
                 #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
-                ls = _instantiate_state(state_type=LearningSignal,
+                learning_signal = _instantiate_state(state_type=LearningSignal,
                                                      owner=self,
                                                      params=params,
                                                      reference_value=self.learning_signal,
                                                      modulation=self.modulation,
                                                      # state_spec=self.learning_signal)
                                                      state_spec=learning_signal)
-
                 # Add LearningSignal to output_states list
-                self._output_states.append(ls)
-                # Replace spec in learning_signals list with actual LearningSignal
-                self.learning_signals[i] = ls
+                self._output_states.append(learning_signal)
 
-        # Make sure that the first LearningSignal is named LEARNNG_SIGNAL; the names of any others can be user-defined
-        self.learning_signals[0].name = LEARNING_SIGNAL
+            # Assign LEARNING_SIGNAL as the name of the 1st LearningSignal; the names of any others can be user-defined
+            first_learning_signal = next(state for state in self.output_states if isinstance(state, LearningSignal))
+            first_learning_signal.name = LEARNING_SIGNAL
 
         super()._instantiate_output_states(context=context)
 
-    def _instantiate_attributes_after_function(self, context=None):
-
-        if self._learning_rate is not None:
-            self.learning_rate = self._learning_rate
-
-        super()._instantiate_attributes_after_function(context=context)
+        # Reassign learning_signals to capture any user_defined LearningSignals instantiated by in call to super
+        self._learning_signals = [state for state in self.output_states if isinstance(state, LearningSignal)]
 
     def _execute(self,
                 variable=None,
@@ -1132,10 +1132,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         self.value = [self.learning_signal, self.error_signal]
         return self.value
-
-    # @property
-    # def learning_signals(self):
-    #     return [ls for ls in self.output_states if isinstance(ls, LearningSignal)]
 
     @property
     def learning_enabled(self):
