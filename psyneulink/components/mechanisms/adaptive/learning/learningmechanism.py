@@ -1067,11 +1067,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     def _instantiate_output_states(self, context=None):
 
-        # Create registry for LearningSignals (to manage names)
         from psyneulink.globals.registry import register_category
         from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
         from psyneulink.components.states.state import State_Base, _instantiate_state
 
+        # Create registry for LearningSignals (to manage names)
         register_category(entry=LearningSignal,
                           base_class=State_Base,
                           registry=self._stateRegistry,
@@ -1085,7 +1085,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
             # Delete default LEARNING_SIGNAL item in output_states
             del self._output_states[1]
-            for i, learning_signal in enumerate(self.learning_signals):
+            for learning_signal in self.learning_signals:
                 # Instantiate LearningSignal
 
                 params = {LEARNED_PARAM:MATRIX}

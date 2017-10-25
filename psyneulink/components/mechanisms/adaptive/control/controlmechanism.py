@@ -721,131 +721,79 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     def _instantiate_output_states(self, context=None):
 
-        # Create registry for GatingSignals (to manage names)
         from psyneulink.globals.registry import register_category
         from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
         from psyneulink.components.states.state import State_Base
+
+        # Create registry for ControlSignals (to manage names)
         register_category(entry=ControlSignal,
                           base_class=State_Base,
                           registry=self._stateRegistry,
                           context=context)
 
-        if self.control_signals:
-            for control_signal in self.control_signals:
-                self._instantiate_control_signal(control_signal=control_signal, context=context)
-
-        # IMPLEMENTATION NOTE:  Don't want to call this because it instantiates undesired default OutputState
-        # super()._instantiate_output_states(context=context)
-
     # ---------------------------------------------------
-    # IMPLEMENTATION NOTE:  IMPLEMENT _instantiate_output_states THAT CALLS THIS FOR EACH ITEM
-    #                       DESIGN PATTERN SHOULD COMPLEMENT THAT FOR _instantiate_input_states of ObjectiveMechanism
-    #                           (with control_signals taking the place of monitored_output_states)
     # FIX 5/23/17: PROJECTIONS AND PARAMS SHOULD BE PASSED BY ASSIGNING TO STATE SPECIFICATION DICT
     # FIX          UPDATE parse_state_spec TO ACCOMODATE (param, ControlSignal) TUPLE
     # FIX          TRACK DOWN WHERE PARAMS ARE BEING HANDED OFF TO ControlProjection
     # FIX                   AND MAKE SURE THEY ARE NOW ADDED TO ControlSignal SPECIFICATION DICT
-    #
-    def _instantiate_control_signal(self, control_signal=None, context=None):
-        """Instantiate ControlSignal OutputState and assign (if specified) or instantiate ControlProjection
+    # ---------------------------------------------------
 
-        # Extends allocation_policy and control_signal_costs attributes to accommodate instantiated Projection
+        if self.control_signals:
 
-        Notes:
-        * control_signal arg can be a:
-            - ControlSignal object;
-            - ControlProjection;
-            - ParameterState;
-            - params dict containing a ControlProjection;
-            - tuple (param_name, Mechanism), from control_signals arg of constructor;
-                    [NOTE: this is a convenience format;
-                           it precludes specification of ControlSignal params (e.g., ALLOCATION_SAMPLES)]
-            - ControlSignal specification dictionary, from control_signals arg of constructor
-                    [NOTE: this must have at least NAME:str (param name) and MECHANISM:Mechanism entries;
-                           it can also include a PARAMS entry with a params dict containing ControlSignal params]
-        * State._parse_state_spec() is used to parse control_signal arg
-        * params are expected to be for (i.e., to be passed to) ControlSignal;
-        * wait to instantiate deferred_init() Projections until after ControlSignal is instantiated,
-             so that correct OutputState can be assigned as its sender;
-        * index of OutputState is incremented based on number of ControlSignals already instantiated;
-            this means that the ControlMechanism's function must return as many items as it has ControlSignals,
-            with each item of the function's value used by a corresponding ControlSignal.
-            Note: multiple ControlProjections can be assigned to the same ControlSignal to achieve "divergent control"
-                  (that is, control of many parameters with a single value)
+            self._output_states = []
 
-        Returns ControlSignal (OutputState)
-        """
-        from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
+            for i, control_signal in enumerate(self.control_signals):
 
-        # EXTEND allocation_policy TO ACCOMMODATE NEW ControlSignal -------------------------------------------------
-        #        also used to determine constraint on ControlSignal value
+                # EXTEND allocation_policy TO ACCOMMODATE NEW ControlSignal -------------------------------------------------
+                #        also used to determine constraint on ControlSignal value
+                if self.allocation_policy is None:
+                    self.allocation_policy = np.atleast_2d(defaultControlAllocation)
+                else:
+                    self.allocation_policy = np.append(self.allocation_policy, [defaultControlAllocation], axis=0)
 
-        if self.allocation_policy is None:
-            self.allocation_policy = np.array(defaultControlAllocation)
-        else:
-            self.allocation_policy = np.append(self.allocation_policy, defaultControlAllocation)
+                # Update self.value to reflect change in allocation_policy (and the new number of  control_signals).
+                #    This is necessary, since function is not fully executed during init (in _instantiate_function);
+                #    it returns the default_allocation policy which has only a single item,
+                #    however validation of indices for OutputStates requires proper number of items be in self.value
+                self.value = self.allocation_policy
+                self._default_value = self.value
 
-        # Update self.value to reflect change in allocation_policy (and the new number of  control_signals).
-        #    This is necessary, since function is not fully executed during initialization (in _instantiate_function);
-        #    it returns the default_allocation policy which has only a single item,
-        #    however validation of indices for OutputStates requires that proper number of items be in self.value
-        self.value = self.allocation_policy
-        self._default_value = self.value
+                from psyneulink.components.states.state import _instantiate_state
+                # Parses control_signal specifications (in call to State._parse_state_spec)
+                #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
+                control_signal = _instantiate_state(state_type=ControlSignal,
+                                                    owner=self,
+                                                    reference_value=defaultControlAllocation,
+                                                    modulation=self.modulation,
+                                                    state_spec=control_signal)
 
+                # Add ControlProjection to ControlMechanism's list of ControlProjections
+                try:
+                    self.control_projections.extend(control_signal.efferents)
+                except AttributeError:
+                    self.control_projections = control_signal.efferents.copy()
 
-        # FIX: *** DEAL WTIH MULTIPLE PROJECTIONS
-        # FIX: *** CALL super()._instantiate_output_states
+                # Update control_signal_costs to accommodate instantiated Projection
+                try:
+                    self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
+                except AttributeError:
+                    self.control_signal_costs = np.empty((1,1))
 
-        from psyneulink.components.states.state import _instantiate_state
-        # Parses control_signal specifications (in call to State._parse_state_spec)
-        #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
-        control_signal = _instantiate_state(state_type=ControlSignal,
-                                            owner=self,
-                                            reference_value=defaultControlAllocation,
-                                            modulation=self.modulation,
-                                            state_spec=control_signal)
+                # UPDATE output_states AND control_projections -------------------------------------------------------------
 
-        # - get OutputState's index
-        try:
-            output_state_index = len(self.output_states)
-        except (AttributeError, TypeError):
-            output_state_index = 0
+                # TBI: For control mechanisms that accumulate, starting output must be equal to the initial "previous value"
+                # so that modulation that occurs BEFORE the control mechanism executes is computed appropriately
+                # if (isinstance(self.function_object, Integrator)):
+                #     control_signal._intensity = function_object.initializer
 
-        # MODIFIED 10/3/17 NEW:
-        # Add ControlProjection to ControlMechanism's list of ControlProjections
-        try:
-            self.control_projections.extend(control_signal.efferents)
-        except AttributeError:
-            self.control_projections = control_signal.efferents.copy()
-        # MODIFIED 10/3/17 END
+                # Add ControlSignal to output_states list
+                control_signal.index = i
+                self._output_states.append(control_signal)
 
-        # Update control_signal_costs to accommodate instantiated Projection
-        try:
-            self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
-        except AttributeError:
-            self.control_signal_costs = np.empty((1,1))
+        super()._instantiate_output_states(context=context)
 
-        # FIX: 10/3/17 - REVISE TO CALL super()._instantiate_output_states
-        # UPDATE output_states AND control_projections -------------------------------------------------------------
-
-        # TBI: For control mechanisms that accumulate, starting output must be equal to the initial "previous value"
-        # so that modulation that occurs BEFORE the control mechanism executes is computed appropriately
-        # if (isinstance(self.function_object, Integrator)):
-        #     control_signal._intensity = function_object.initializer
-
-        try:
-            self._output_states[control_signal.name] = control_signal
-
-        except (AttributeError, TypeError):
-            from psyneulink.components.states.state import State_Base
-            self._output_states = ContentAddressableList(component_type=State_Base,
-                                                        list=[control_signal],
-                                                        name = self.name+'.output_states')
-        # Add index assignment to OutputState
-        control_signal.index = output_state_index
-        # (Re-)assign control_signals attribute to output_states
-        self._control_signals = self.output_states
-        return control_signal
+        # Reassign control_signals to capture any user_defined ControlSignals instantiated by in call to super
+        self._control_signals = [state for state in self.output_states if isinstance(state, ControlSignal)]
 
     def _execute(self,
                     variable=None,
