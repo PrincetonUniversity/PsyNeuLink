@@ -915,12 +915,13 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Instantiate Projection from Mechanism's output to LearningMechanism
         MappingProjection(sender=activity_vector,
-                          receiver=learning_mechanism.input_states[ACTIVATION_INPUT])
+                          receiver=learning_mechanism.input_states[ACTIVATION_INPUT],
+                          name="Error Projection for {}".format(learning_mechanism.name))
 
         # Instantiate Projection from LearningMechanism to Mechanism's AutoAssociativeProjection
         LearningProjection(sender=learning_mechanism.output_states[LEARNING_SIGNAL],
                            receiver=matrix.parameter_states[MATRIX],
-                           name="{} for {}".format(LearningProjection.className, self.recurrent_projection.name)
+                           name="{} for {}".format(LearningProjection.className, self.recurrent_projection.name))
 
         return learning_mechanism
 
