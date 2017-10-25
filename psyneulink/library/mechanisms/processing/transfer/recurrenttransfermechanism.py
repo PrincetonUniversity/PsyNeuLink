@@ -908,6 +908,9 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                               # learning_signals=[self.recurrent_projection],
                                                               function=learning_function,
                                                               learning_rate=learning_rate,
+                                                              name="{} for {}".format(
+                                                                      AutoAssociativeLearningMechanism.className,
+                                                                      self.name),
                                                               context=context)
 
         # Instantiate Projection from Mechanism's output to LearningMechanism
@@ -916,7 +919,8 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Instantiate Projection from LearningMechanism to Mechanism's AutoAssociativeProjection
         LearningProjection(sender=learning_mechanism.output_states[LEARNING_SIGNAL],
-                           receiver=matrix.parameter_states[MATRIX])
+                           receiver=matrix.parameter_states[MATRIX],
+                           name="{} for {}".format(LearningProjection.className, self.recurrent_projection.name)
 
         return learning_mechanism
 
