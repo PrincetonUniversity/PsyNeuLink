@@ -188,7 +188,9 @@ assigned, and this must be done by some other means; any specifications in the `
 <ObjectiveMechanism.monitored_output_states>` attribute that are not associated with an instantiated OutputState at
 the time the ObjectiveMechanism is executed are ignored.
 
+COMMENT:
 WEIGHTS AND EXPONENTS
+COMMENT
 
 .. _ObjectiveMechanism_Structure:
 
