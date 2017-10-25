@@ -2372,29 +2372,21 @@ def _get_state_for_socket(owner,
         # Get State type if it is appropriate for the specified socket of the Projection's type
         s = next((s for s in state_type if s.__name__ in getattr(proj_type.sockets, projection_socket)), None)
         if s:
-            # # MODIFIED 10/3/17 OLD:
-            # # Return State associated with projection_socket if proj_spec is an actual Projection
-            # if isinstance(proj_spec, Projection):
-            #     return getattr(proj_spec, projection_socket)
-            # # Otherwise, return first state_type (s)
-            # return s
-            # MODIFIED 10/3/17 NEW:
             try:
                 # Return State associated with projection_socket if proj_spec is an actual Projection
                 return getattr(proj_spec, projection_socket)
             except AttributeError:
                 # Otherwise, return first state_type (s)
                 return s
-            # MODIFIED 10/3/17 END
 
-        # FIX: 10/24/17 - ??MOVE THIS TO State-SPECIFIC OR Projection-SPECIFIC METHOD OR DELETE
-        # FIX:            OR DELETE IF SPECIFICATION OF MappingProjection AS DESTINATION IS PARSED EARLIER
-        # If state_type is ParameterState, state_spec is MappingProjection, and projection_socket is RECEIVER,
-        #    assume the request is from a LearningSignal for a LearningProjection and return the MATRIX ParameterState
-        elif (ParameterState in state_type
-              and isinstance(state_spec, MappingProjection)
-              and projection_socket is RECEIVER):
-            return state_spec.parameter_states[MATRIX]
+        # # FIX: 10/24/17 - ??MOVE THIS TO State-SPECIFIC OR Projection-SPECIFIC METHOD OR DELETE
+        # # FIX:            OR DELETE IF SPECIFICATION OF MappingProjection AS DESTINATION IS PARSED EARLIER
+        # # If state_type is ParameterState, state_spec is MappingProjection, and projection_socket is RECEIVER,
+        # #    assume the request is from a LearningSignal for a LearningProjection and return the MATRIX ParameterState
+        # elif (ParameterState in state_type
+        #       and isinstance(state_spec, MappingProjection)
+        #       and projection_socket is RECEIVER):
+        #     return state_spec.parameter_states[MATRIX]
 
         # FIX: 10/3/17 - ??IS THE FOLLOWING CORRECT:  ??HOW IS IT DIFFERENT FROM ABOVE?
         # Otherwise, get State types that are allowable for that projection_socket
