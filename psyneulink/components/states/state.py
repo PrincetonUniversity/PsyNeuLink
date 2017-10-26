@@ -1135,7 +1135,10 @@ class State_Base(State):
             def _get_receiver_state(spec):
                 """Get state specification from ConnectionTuple, which itself may be a ConnectionTuple"""
                 if isinstance(spec, ConnectionTuple):
-                    return _get_receiver_state(spec.state)
+                    spec = _parse_connection_specs(connectee_state_type=self.__class__,
+                                                   owner=self.owner,
+                                                   connections=receiver)
+                    return _get_receiver_state(spec[0].state)
                 if isinstance(spec, Projection):
                     return spec.receiver
                 return spec
@@ -1706,7 +1709,11 @@ def _instantiate_state_list(owner,
                                    context=context)
 
         # Get name of state, and use as index to assign to states ContentAddressableList
-        states[state.name] = state
+        if state.init_status is InitStatus.DEFERRED_INITIALIZATION:
+            state_name = state.init_args[NAME]
+        else:
+            state_name = state.name
+        states[state_name] = state
     return states
 
 
@@ -1784,41 +1791,41 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                                           context=context,
                                           **state_spec)
 
-    # FIX: 10/3/17: HANDLE NAME HERE
-            # if not state_name is state_spec and not state_name in states:
-            #     state_name = state_spec
-            # # Add index suffix to name if it is already been used
-            # # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
-            # else:
-            #     state_name = state_spec + '_' + str(index)
-            # state_spec_dict[NAME] = state_name
 
-            # # If state_spec has NAME entry
-            # if NAME in state_spec:
-            #     # If it has been used, add suffix to it
-            #     if state_name is state_spec[NAME]:
-            #         state_name = state_spec[NAME] + '_' + str(key)
-            #     # Otherwise, use it
-            #     else:
-            #         state_name = state_spec[NAME]
-            # state_spec_dict[NAME] = state_name
+    # # FIX: 10/3/17: HANDLE NAME HERE
+    if isinstance(parsed_state_spec, dict) and parsed_state_spec[NAME] is None:
+        parsed_state_spec[NAME] = state_type.__name__
+    else:
+        pass
 
-            # # # MODIFIED 9/3/17 OLD:
-            # # # If only one State, don't add index suffix
-            # # if num_states == 1:
-            # #     state_name = 'Default_' + state_param_identifier[:-1]
-            # # # Add incremented index suffix for each State name
-            # # else:
-            # #     state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(index+1)
-            # # MODIFIED 9/3/17 NEW:
-            # # If only one State, don't add index suffix
-            # if num_states == 1:
-            #     state_name = 'Default_' + state_param_identifier
-            # # Add incremented index suffix for each State name
-            # else:
-            #     state_name = 'Default_' + state_param_identifier + "-" + str(index+1)
-            # # MODIFIED 9/3/17 END
-            # # If it is an "exposed" number, make it a 1d np.array
+
+
+    # if not state_name is state_spec and not state_name in states:
+    #     state_name = state_spec
+    # # Add index suffix to name if it has already been used
+    # # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
+    # else:
+    #     state_name = state_spec + '_' + str(index)
+    # state_spec_dict[NAME] = state_name
+    #
+    # # If state_spec has NAME entry
+    # if NAME in state_spec:
+    #     # If it has been used, add suffix to it
+    #     if state_name is state_spec[NAME]:
+    #         state_name = state_spec[NAME] + '_' + str(key)
+    #     # Otherwise, use it
+    #     else:
+    #         state_name = state_spec[NAME]
+    # state_spec_dict[NAME] = state_name
+    #
+    # # MODIFIED 9/3/17 NEW:
+    # # If only one State, don't add index suffix
+    # if num_states == 1:
+    #     state_name = 'Default_' + state_param_identifier
+    # # Add incremented index suffix for each State name
+    # else:
+    #     state_name = 'Default_' + state_param_identifier + "-" + str(index+1)
+    # # MODIFIED 9/3/17 END
 
 
     # STATE SPECIFICATION IS A State OBJECT ***************************************
@@ -2005,7 +2012,7 @@ def _parse_state_spec(state_type=None,
                       context=None,
                       **state_spec):
 
-    """Return either State object or State specification dict for state_spec
+    """Parse State specification and return either State object or State specification dictionary
 
     If state_spec is or resolves to a State object, returns State object.
     Otherwise, return State specification dictionary using any arguments provided as defaults
@@ -2033,6 +2040,7 @@ def _parse_state_spec(state_type=None,
     Any arguments to _instantiate_states that are not standard arguments (in standard_args) or a state_specs_arg
        generate a warning and are ignored.
 
+    Return either State object or State specification dictionary
     """
     from psyneulink.components.projections.projection \
         import _is_projection_spec, _parse_connection_specs, ConnectionTuple
@@ -2100,11 +2108,24 @@ def _parse_state_spec(state_type=None,
     # State or Mechanism object specification:
     if isinstance(state_specification, (Mechanism, State)):
 
+        projection = None
+
         # Mechanism object:
         # - call owner to get primary state of specified type
         if isinstance(state_specification, Mechanism):
             mech = state_specification
-            state_specification = state_type._get_primary_state(state_type, mech)
+            # Instantiating State of specified Mechanism, so get primary State of state_type
+            if mech is owner:
+                state_specification = state_type._get_primary_state(state_type, mech)
+            # mech used to specify State to be connected with:
+            else:
+                # FIX: 10/25/17 - IF CAN DISAMBIGUATE WHICH _state_type,
+                # FIX:                then call state_type._get_primary_state(state_type, mech)
+                # FIX:            TEST USING GilzenratModel and Gating Mechanism Test Scripts
+                # FIX:            IF owner is ObjectiveMechanism, state_type is InputState,
+                # FIX:                but need primary **OutputState** of mech
+                state_specification = mech
+                projection = state_type
 
         if isinstance(state_specification, state_type):
             if reference_value is not None and not iscompatible(reference_value, state_specification.value):
@@ -2125,14 +2146,14 @@ def _parse_state_spec(state_type=None,
             return state_specification
 
         else:
-            # State is not of type specified in call to _instantiate_state, so assume it for one to connect with
+            # State is not of type specified in call to _instantiate_state, so assume it is for one to connect with
             # FIX: 10/3/17 - ??VALIDATE AGAINST OTHER OTHER SPECS (VARIABLE AND VALUE?) IN _instantiate_state
             # FIX:           OR WILL THAT BE HANDLED BELOW OR IN _parse_connection_spec??
             # state_specification = ConnectionTuple(state=state, weight=None, exponent=None, projection=None)
             state_dict[PROJECTIONS] = ConnectionTuple(state=state_specification,
                                                       weight=None,
                                                       exponent=None,
-                                                      projection=None)
+                                                      projection=projection)
 
         # # FIX: 10/3/17 - DEAL WITH THIS:
         # # State object:
@@ -2322,9 +2343,9 @@ def _parse_state_spec(state_type=None,
 @tc.typecheck
 def _get_state_for_socket(owner,
                           state_spec=None,
-                          state_type:tc.optional(tc.any(set, _is_state_class))=None,
+                          state_types:tc.optional(tc.any(list, _is_state_class))=None,
                           mech:tc.optional(Mechanism)=None,
-                          mech_state_attribute:tc.optional(tc.any(str, set))=None,
+                          mech_state_attribute:tc.optional(tc.any(str, list))=None,
                           projection_socket:tc.optional(tc.any(str, set))=None):
     """Take some combination of Mechanism, state name (string), Projection, and projection_socket, and return
     specified State(s)
@@ -2344,14 +2365,19 @@ def _get_state_for_socket(owner,
     """
     from psyneulink.components.projections.projection import \
         _is_projection_spec, _validate_connection_request, _parse_projection_spec
-    from psyneulink.components.states.parameterstate import ParameterState
-    from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-    from psyneulink.globals.keywords import MATRIX
+    from psyneulink.globals.utilities import is_matrix
+    from collections import Iterable
 
+    # If the mech_state_attribute specified has more than one item, get the primary one
+    if isinstance(mech_state_attribute, list):
+        mech_state_attribute = mech_state_attribute[0]
 
-    if not isinstance(state_type, set):
-        state_type = {state_type}
-    state_type_names = ",".join([s.__name__ for s in state_type])
+    if isinstance(state_types, list):
+        state_type = state_types[0]
+    else:
+        state_type = state_types
+
+    state_type_names = ", ".join([s.__name__ for s in state_types])
 
     # Return State itself if it is an instantiate State
     if isinstance(state_spec, State):
@@ -2362,7 +2388,12 @@ def _get_state_for_socket(owner,
     #    - a projection keyword (e.g., 'LEARNING' or 'CONTROL', and it is consistent with projection_socket
     # Otherwise, return list of allowable State types for projection_socket (if state_spec is a Projection type)
     if _is_projection_spec(state_spec):
-        # Get Projection's type (class)
+        # These specifications require that a particular State be specified to assign its default Projection type
+        if ((is_matrix(state_spec) or (isinstance(state_spec, dict) and not PROJECTION_TYPE in state_spec))
+            and state_type is 'MULTIPLE'):
+            raise StateError("PROGRAM ERROR: Projection specified ({}) for object "
+                             "that has multiple possible States {}) for the specified socket ({}).".
+                             format(state_spec, state_types, projection_socket))
         proj_spec = _parse_projection_spec(state_spec, owner=owner, state_type=state_type)
         if isinstance(proj_spec, Projection):
             proj_type = proj_spec.__class__
@@ -2370,7 +2401,7 @@ def _get_state_for_socket(owner,
             proj_type = proj_spec[PROJECTION_TYPE]
 
         # Get State type if it is appropriate for the specified socket of the Projection's type
-        s = next((s for s in state_type if s.__name__ in getattr(proj_type.sockets, projection_socket)), None)
+        s = next((s for s in state_types if s.__name__ in getattr(proj_type.sockets, projection_socket)), None)
         if s:
             try:
                 # Return State associated with projection_socket if proj_spec is an actual Projection
@@ -2423,17 +2454,15 @@ def _get_state_for_socket(owner,
         if state_type is None:
             raise StateError("PROGRAM ERROR: The type of State requested for {} must be specified "
                              "to get its primary State".format(state_spec.name))
-        if len(state_type) > 1:
-            raise StateError("PROGRAM ERROR: More than one State type specified ({}) for Mechanism ({})".
-                             format(state_type_names, state_spec.name))
-        else:
-            state_type = state_type[0]
-
         try:
             state = state_type._get_primary_state(state_type, state_spec)
         except StateError:
-            raise StateError("{} does not seem to have a primary State of type {}"
-                             .format(state_spec.name, state_type.__name__))
+            if mech_state_attribute:
+                try:
+                    state = getattr(state_spec, mech_state_attribute)[0]
+                except:
+                    raise StateError("{} does not seem to have an {} attribute"
+                                     .format(state_spec.name, mech_state_attribute))
 
     # Get state from Projection specification (exclude matrix spec in test as it can't be used to determine the state)
     elif _is_projection_spec(state_spec, include_matrix_spec=False):

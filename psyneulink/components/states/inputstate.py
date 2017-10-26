@@ -302,7 +302,8 @@ from psyneulink.components.functions.function import Linear, LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT
+from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
+    MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
@@ -688,24 +689,44 @@ class InputState(State_Base):
             tuple_spec = state_specific_params
             # Note: 1s item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
 
-            # Get connection (afferent Projection(s)) specification from tuple
-            PROJECTIONS_INDEX = len(tuple_spec)-1
-            try:
-                projections_spec = tuple_spec[PROJECTIONS_INDEX]
-            except IndexError:
-                projections_spec = None
+            # # MODIFIED 10/25/17 OLD:
+            # # Get connection (afferent Projection(s)) specification from tuple
+            # PROJECTIONS_INDEX = len(tuple_spec)-1
+            # try:
+            #     projections_spec = tuple_spec[PROJECTIONS_INDEX]
+            # except IndexError:
+            #     projections_spec = None
+            # MODIFIED 10/25/17 NEW:
+            if len(tuple_spec) == 2:
+                projections_spec = tuple_spec[1]
+            elif len(tuple_spec) == 4:
+                projections_spec = tuple_spec
+            # MODIFIED 10/25/17 END
 
-            if projections_spec:
+            if projections_spec is not None:
                 try:
-                    params_dict[PROJECTIONS] = _parse_connection_specs(self.__class__,
+                    params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                        owner=owner,
-                                                                       connections={projections_spec})
+                                                                       connections=[projections_spec])
+                    for projection_spec in params_dict[PROJECTIONS]:
+                        # Insure that value of all of the Projections are consistent with the variable of the State
+                        #    or, if that is not specified, do so based on the value of the Projection(s):
+                        if state_dict[REFERENCE_VALUE] is None:
+                            # FIX: 10/3/17 - PUTTING THIS HERE IS A HACK...
+                            # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ConnectionTuple SPEC
+                            # FIX:           USING _get_state_for_socket
+                            from psyneulink.components.projections.projection import _parse_projection_spec
+                            sender_dim = projection_spec.state.value.ndim
+                            matrix = projection_spec.projection[MATRIX]
+                            # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
+                            proj_val_shape = matrix.shape[sender_dim :]
+                            state_dict[VARIABLE] = np.zeros(proj_val_shape)
+
                 except InputStateError:
-                    raise InputStateError("Item {} of tuple specification in {} specification dictionary "
+                    raise InputStateError("Tuple specification in {} specification dictionary "
                                           "for {} ({}) is not a recognized specification for one or more "
                                           "{}s, {}s, or {}s that project to it".
-                                          format(PROJECTIONS_INDEX,
-                                                 InputState.__name__,
+                                          format(InputState.__name__,
                                                  owner.name,
                                                  projections_spec,
                                                  Mechanism.__name__,

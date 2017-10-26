@@ -418,7 +418,8 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.outputstate import OutputState, PRIMARY_OUTPUT_STATE, standard_output_states
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import CONTROL, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, OBJECTIVE_MECHANISM, SENDER, TIME_SCALE, VARIABLE, WEIGHTS, kwPreferenceSetName, DEFAULT_MATRIX
+from psyneulink.globals.keywords import CONTROL, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, \
+    OBJECTIVE_MECHANISM, SENDER, TIME_SCALE, VARIABLE, WEIGHTS, kwPreferenceSetName, DEFAULT_MATRIX, DEFAULT_VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -640,7 +641,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
-                 input_states=None,
+                 default_variable=None,
                  function=LinearCombination,
                  output_states:tc.optional(tc.any(list, dict))=[OUTCOME],
                  params=None,
@@ -651,16 +652,38 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         if MONITORED_OUTPUT_STATES in kwargs and kwargs[MONITORED_OUTPUT_STATES] is not None:
             name_string = name or 'an ' + ObjectiveMechanism.__name__
-            if input_states:
-                # warnings.warn("Both \'{}\' and \'{}\' args were specified in constuctor for {}; "
-                #               "an attempt will be made to merge them but this may produce unexpected results.".
-                #               format(MONITORED_OUTPUT_STATES, INPUT_STATES, name_string))
-                input_states.append(kwargs[MONITORED_OUTPUT_STATES])
+            # FIX: 10/26/17: TRY TO INTEGRATE input_states AND monitored_output_states
+            # FIX:           OR DOCUMENT OTHERWISE (I.E., USE OF default_variable
+            # if input_states:
+            #     raise ObjectiveMechanismError("Both \'{}\' and \'{}\' args were specified in constuctor for {}.".
+            #                                   format(MONITORED_OUTPUT_STATES, INPUT_STATES, name_string))
+            #     # warnings.warn("Both \'{}\' and \'{}\' args were specified in constuctor for {}; "
+            #     #               "an attempt will be made to merge them but this may produce unexpected results.".
+            #     #               format(MONITORED_OUTPUT_STATES, INPUT_STATES, name_string))
+            #     # if not len(input_states) == len(kwargs[MONITORED_OUTPUT_STATES]):
+            #     #     raise ObjectiveMechanismError("The {} arg specified for {} ({}) must be the same length as {} ({})".
+            #     #                                   format(INPUT_STATES,name,input_states,
+            #     #                                          MONITORED_OUTPUT_STATES,
+            #     #                                          kwargs[MONITORED_OUTPUT_STATES] ))
             input_states = kwargs[MONITORED_OUTPUT_STATES]
             del kwargs[MONITORED_OUTPUT_STATES]
             if kwargs:
+                if INPUT_STATES in kwargs:
+                    raise ObjectiveMechanismError("\'{}\' argument is not supported for an {} "
+                                                  "(found in constructor for: \'{}\'); \'{}\' should be used instead".
+                                                  format(INPUT_STATES,
+                                                         self.__class__.__name__,
+                                                         name_string,
+                                                         MONITORED_OUTPUT_STATES))
+                # if DEFAULT_VARIABLE in kwargs:
+                #     raise ObjectiveMechanismError("\'{}\' argument is not supported for an {} "
+                #                                   "(found in constructor for: \'{}\'); \'{}\' should be used instead".
+                #                                   format(INPUT_STATES,
+                #                                          self.__class__.__name__,
+                #                                          name_string,
+                #                                          MONITORED_OUTPUT_STATES))
                 raise ObjectiveMechanismError("\'Invalid arguments used in constructor for {}".
-                                              format(kwargs.keys(), name_string))
+                                              format(kwargs.keys(), name))
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,
@@ -676,7 +699,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                                self.standard_output_states,
                                                                indices=PRIMARY_OUTPUT_STATE)
 
-        super().__init__(variable=None,
+        super().__init__(variable=default_variable,
                          input_states=input_states,
                          output_states=output_states,
                          params=params,
