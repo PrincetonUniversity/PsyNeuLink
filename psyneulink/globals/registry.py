@@ -9,6 +9,8 @@
 # ***********************************************  Registry ************************************************************
 #
 
+import re
+
 from collections import namedtuple
 
 from psyneulink.globals.keywords import CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_STATE, MAPPING_PROJECTION, OUTPUT_STATE, PARAMETER_STATE, kwComponentCategory, kwComponentPreferenceSet, kwMechanismComponentCategory, kwPreferenceSet, kwProcessComponentCategory, kwProjectionComponentCategory, kwStateComponentCategory, kwSystemComponentCategory
@@ -40,10 +42,9 @@ RegistryVerbosePrefs = {
     kwComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
 }
 
-RegistryEntry = namedtuple('RegistryTuple', 'subclass, instanceDict, instanceCount, default')
+RegistryEntry = namedtuple('RegistryTuple', 'subclass, instanceDict, instanceCount, renamed_instance_counts, default')
 
-def rreplace(myStr, old, new, count):
-    return myStr[::-1].replace(old[::-1], new[::-1], count)[::-1]
+numeric_suffix_pat = re.compile(r'(.*)-\d+$')
 
 
 class RegistryError(Exception):
@@ -169,9 +170,13 @@ def register_category(entry,
 
             # Create instance dict:
             instanceDict = {entry.name: entry}
+            if name is None:
+                renamed_instance_counts = {component_type_name: 1}
+            else:
+                renamed_instance_counts = {component_type_name: 0}
 
             # Register component type with instance count of 1:
-            registry[component_type_name] = RegistryEntry(type(entry), instanceDict, 1, False)
+            registry[component_type_name] = RegistryEntry(type(entry), instanceDict, 1, renamed_instance_counts, False)
 
 
     # If entry is a reference to the component type (rather than an instance of it)
@@ -185,47 +190,48 @@ def register_category(entry,
         # - instantiate empty instanceDict
         # - set instance count = 0
         else:
-            registry[component_type_name] = RegistryEntry(entry, {}, 0, False)
+            registry[component_type_name] = RegistryEntry(entry, {}, 0, {component_type_name: 0}, False)
 
     else:
         raise RegistryError("Requested entry {0} not of type {1}".format(entry, base_class))
 
 
 def register_instance(entry, name, base_class, registry, sub_dict):
+    renamed_instance_counts = registry[sub_dict].renamed_instance_counts
 
-            # Get and increment instanceCount
-            instanceCount = registry[sub_dict].instanceCount + 1
+    # If entry (instance) does not have a name, set entry's name to sub_dict-n where n is the next available
+    # numeric suffix based on the number of unnamed/renamed sub_dict objects that have already been assigned names
+    if not name:
+        renamed_instance_counts[sub_dict] += 1
+        entry.name = '{0}-{1}'.format(sub_dict, renamed_instance_counts[sub_dict])
+    else:
+        entry.name = name
 
-            # If instance does not have a name, set instance's name to "component_type_name-1"
-            if not name:
-                entry.name = sub_dict+'-1'
-            else:
-                entry.name = name
+    while entry.name in registry[sub_dict].instanceDict:
+        # if the decided name (provided or determined) is already assigned to an object, get the non-suffixed name,
+        # and append the proper new suffix according to the number of objects that have been assigned that name
+        # NOTE: the while is to handle a scenario in which a user specifies a name that uses our convention but
+        #   does not follow our pattern. In this case, we will produce a unique name, but the "count" will be off
+        #   e.g. user gives a mechanism the name TransferMechanism-5, then the fifth unnamed TransferMechanism
+        #   will be named TransferMechanism-6
+        match = numeric_suffix_pat.match(entry.name)
+        if not match:
+            name_stripped_of_suffix = entry.name
+            try:
+                renamed_instance_counts[entry.name] += 1
+            except KeyError:
+                renamed_instance_counts[entry.name] = 1
+            entry.name += '-{0}'.format(renamed_instance_counts[entry.name])
+        else:
+            name_stripped_of_suffix = match.groups()[0]
+        entry.name = numeric_suffix_pat.sub(r'\1-{0}'.format(renamed_instance_counts[name_stripped_of_suffix]), entry.name)
 
-            # Check for instance name in instanceDict for its component type;
-            # - if name exists, add numerical suffix if none, and increment if already present
-            old_entry_name = entry.name
-            while entry.name in registry[sub_dict].instanceDict:
-                try:
-                    # Check if name ends in '-number'
-                    numerical_suffix = [int(s) for s in entry.name.rsplit('-') if s.isdigit()][-1]
-                except IndexError:
-                    # Otherwise, add '-1' as suffix
-                    entry.name = entry.name+'-1'
-                else:
-                # If so, replace only final occurence of '-number' with '-number+1'
-                    if numerical_suffix:
-                        # entry.name.rreplace('-'+str(numerical_suffix),'-'+str(numerical_suffix+1),1)
-                        entry.name = rreplace(entry.name, '-'+str(numerical_suffix),'-'+str(numerical_suffix+1),1)
-                        if RegistryVerbosePrefs[base_class.__name__]:
-                            print("Object named {0} already registered; current one will be re-named {1}.".
-                                  format(old_entry_name, entry.name))
+    # Add instance to instanceDict:
+    registry[sub_dict].instanceDict.update({entry.name: entry})
 
-            # Add instance to instanceDict:
-            registry[sub_dict].instanceDict.update({entry.name: entry})
+    # Update instanceCount in registry:
+    registry[sub_dict] = registry[sub_dict]._replace(instanceCount=registry[sub_dict].instanceCount + 1)
 
-            # Update instanceCount in registry:
-            registry[sub_dict] = registry[sub_dict]._replace(instanceCount=instanceCount)
 
 # def set_default_mechanism(mechanism_subclass):
 #     """Sets DefaultMechanism to specified component type
