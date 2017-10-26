@@ -313,6 +313,7 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 
 # Standard arg / attribute names:
 VARIABLE = "variable"
+DEFAULT_VARIABLE = "default_variable"
 VALUE = "value"
 PARAMS = "params"
 NAME = "name"
