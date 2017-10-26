@@ -322,7 +322,7 @@ from psyneulink.globals.keywords import \
     STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import ContentAddressableList, iscompatible, type_match
+from psyneulink.globals.utilities import ContentAddressableList, iscompatible, type_match, is_matrix
 
 __all__ = [
     'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError',
@@ -1062,6 +1062,10 @@ def _parse_projection_spec(projection_spec,
     elif isinstance(projection_spec, str):
         proj_spec_dict[PROJECTION_TYPE] = _parse_projection_keyword(projection_spec)
 
+    # Matrix
+    elif is_matrix(projection_spec):
+        proj_spec_dict[MATRIX] = projection_spec
+
     # State object
     elif isinstance(projection_spec, State):
         proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
@@ -1087,7 +1091,7 @@ def _parse_projection_spec(projection_spec,
                            format(proj_spec_dict[PROJECTION_PARAMS], projection_spec, proj_spec_dict[NAME])
 
     # None
-    else:
+    if not proj_spec_dict[PROJECTION_TYPE]:
         # Assign default type
         proj_spec_dict[PROJECTION_TYPE] = state_type.paramClassDefaults[PROJECTION_TYPE]
 

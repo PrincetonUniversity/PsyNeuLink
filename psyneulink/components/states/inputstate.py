@@ -688,24 +688,31 @@ class InputState(State_Base):
             tuple_spec = state_specific_params
             # Note: 1s item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
 
-            # Get connection (afferent Projection(s)) specification from tuple
-            PROJECTIONS_INDEX = len(tuple_spec)-1
-            try:
-                projections_spec = tuple_spec[PROJECTIONS_INDEX]
-            except IndexError:
-                projections_spec = None
+            # MODIFIED 10/25/17 OLD:
+            # # Get connection (afferent Projection(s)) specification from tuple
+            # PROJECTIONS_INDEX = len(tuple_spec)-1
+            # try:
+            #     projections_spec = tuple_spec[PROJECTIONS_INDEX]
+            # except IndexError:
+            #     projections_spec = None
+            # MODIFIED 10/25/17 NEW:
+            if len(tuple_spec) == 2:
+                projections_spec = tuple_spec[1]
+            elif len(tuple_spec) == 4:
+                projections_spec = tuple_spec
 
-            if projections_spec:
+            # MODIFIED 10/25/17 END
+
+            if projections_spec is not None:
                 try:
-                    params_dict[PROJECTIONS] = _parse_connection_specs(self.__class__,
+                    params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                        owner=owner,
-                                                                       connections={projections_spec})
+                                                                       connections=[projections_spec])
                 except InputStateError:
-                    raise InputStateError("Item {} of tuple specification in {} specification dictionary "
+                    raise InputStateError("Tuple specification in {} specification dictionary "
                                           "for {} ({}) is not a recognized specification for one or more "
                                           "{}s, {}s, or {}s that project to it".
-                                          format(PROJECTIONS_INDEX,
-                                                 InputState.__name__,
+                                          format(InputState.__name__,
                                                  owner.name,
                                                  projections_spec,
                                                  Mechanism.__name__,
