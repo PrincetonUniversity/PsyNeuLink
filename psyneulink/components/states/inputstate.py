@@ -303,7 +303,7 @@ from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
-    PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE
+    MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
@@ -710,14 +710,16 @@ class InputState(State_Base):
                                                                        connections=[projections_spec])
                     # # FIX: 10/26/17 - GET RECEIVER AND USE TO ASSIGN REFERENCE_VALUE TO STATE_DICT IF IT IS NONE
                     # #      OR SHOULD THIS BE ONE OUTSIDE??  IF NOT, THEN
-                    # for projection_spec in params_dict[PROJECTIONS]:
-                    #     # Insure that value of all of the projections is consistent with the variable of the State
-                    #     #    and, if that is not specified, do so based on the value of the Projection(s):
-                    #     if state_dict[REFERENCE_VALUE] is None:
-                    #         # FIX: 10/3/17 - THIS IS A HACK... NEED TO GENERALIZE
-                    #         from psyneulink.components.projections.projection import _parse_projection_spec
-                    #         projection = _parse_projection_spec(projection_spec, owner=owner, state_type=self)
-                    #         state_dict[REFERENCE_VALUE] = projection.state.value
+                    for projection_spec in params_dict[PROJECTIONS]:
+                        # Insure that value of all of the Projections are consistent with the variable of the State
+                        #    or, if that is not specified, do so based on the value of the Projection(s):
+                        if state_dict[REFERENCE_VALUE] is None:
+                            # FIX: 10/3/17 - THIS IS A HACK... NEED TO GENERALIZE
+                            from psyneulink.components.projections.projection import _parse_projection_spec
+                            send_dim = projection_spec.state.value.ndim
+                            matrix = projection_spec.projection[MATRIX]
+                            proj_val_shape = matrix.shape[1:]
+                            state_dict[REFERENCE_VALUE] = np.zeros()
 
                 except InputStateError:
                     raise InputStateError("Tuple specification in {} specification dictionary "

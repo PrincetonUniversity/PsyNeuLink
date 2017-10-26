@@ -352,7 +352,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                                                                indices=PRIMARY_OUTPUT_STATE)
 
         super().__init__(# monitored_output_states=[sample, target],
-                         input_states = input_states,
+                         monitored_output_states = input_states,
                          function=function,
                          output_states=output_states.copy(), # prevent default from getting overwritten by later assign
                          params=params,

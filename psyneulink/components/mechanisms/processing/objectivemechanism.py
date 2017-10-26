@@ -641,6 +641,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
+                 default_variable=None,
                  function=LinearCombination,
                  output_states:tc.optional(tc.any(list, dict))=[OUTCOME],
                  params=None,
@@ -674,13 +675,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                          self.__class__.__name__,
                                                          name_string,
                                                          MONITORED_OUTPUT_STATES))
-                if DEFAULT_VARIABLE in kwargs:
-                    raise ObjectiveMechanismError("\'{}\' argument is not supported for an {} "
-                                                  "(found in constructor for: \'{}\'); \'{}\' should be used instead".
-                                                  format(INPUT_STATES,
-                                                         self.__class__.__name__,
-                                                         name_string,
-                                                         MONITORED_OUTPUT_STATES))
+                # if DEFAULT_VARIABLE in kwargs:
+                #     raise ObjectiveMechanismError("\'{}\' argument is not supported for an {} "
+                #                                   "(found in constructor for: \'{}\'); \'{}\' should be used instead".
+                #                                   format(INPUT_STATES,
+                #                                          self.__class__.__name__,
+                #                                          name_string,
+                #                                          MONITORED_OUTPUT_STATES))
                 raise ObjectiveMechanismError("\'Invalid arguments used in constructor for {}".
                                               format(kwargs.keys(), name))
 
@@ -698,7 +699,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                                self.standard_output_states,
                                                                indices=PRIMARY_OUTPUT_STATE)
 
-        super().__init__(variable=None,
+        super().__init__(variable=default_variable,
                          input_states=input_states,
                          output_states=output_states,
                          params=params,
