@@ -787,6 +787,8 @@ class OutputState(State_Base):
         params_dict = {}
 
         if isinstance(state_specific_params, dict):
+            if PROJECTIONS in state_dict:
+                params_dict[PROJECTIONS] = state_dict[PROJECTIONS]
             return state_specific_params
 
         elif isinstance(state_specific_params, ConnectionTuple):

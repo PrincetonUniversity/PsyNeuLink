@@ -350,7 +350,8 @@ from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, C
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
-from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_to_np_array, is_same_function_spec, iscompatible, kwCompatibilityLength
+from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_to_np_array, \
+    is_same_function_spec, iscompatible, kwCompatibilityLength, is_matrix
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
@@ -2161,16 +2162,25 @@ class Component(object):
             elif hasattr(param_value, FUNCTION) and callable(param_value.function):
                 target_set[param_name] = param_value
 
+            elif isinstance(param_name, str):
+                # FIX: 10/3/17 - THIS IS A HACK;  IT SHOULD BE HANDLED EITHER
+                # FIX:           MORE GENERICALLY OR LOCALLY (E.G., IN OVERRIDE OF _validate_params)
+                if param_name == 'matrix':
+                    if is_matrix(self.paramClassDefaults[param_name]):
+                        # FIX:  ?? ASSIGN VALUE HERE, OR SIMPLY ALLOW AND ASSUME IT WILL BE PARSED ELSEWHERE
+                        # param_value = self.paramClassDefaults[param_name]
+                        # target_set[param_name] = param_value
+                        pass
+                    else:
+                        raise ComponentError("Value of {} param for {} ({}) must be a valid matrix specification".
+                                             format(param_name, self.name, param_value))
+
+
             # Parameter is not a valid type
             else:
                 if type(self.paramClassDefaults[param_name]) is type:
                     type_name = 'the name of a subclass of ' + self.paramClassDefaults[param_name].__base__.__name__
-                else:
-                    type_name = self.paramClassDefaults[param_name].__class__.__name__
-                if param_name == 'matrix':
-                    raise ComponentError("Value of {} param for {} ({}) must be a valid matrix specification".
-                                    format(param_name, self.name, param_value))
-                raise ComponentError("Value of {} param for {} ({}) must be compatible with {}".
+                raise ComponentError("Value of {} param for {} ({}) is not compatible with {}".
                                     format(param_name, self.name, param_value, type_name))
 
     def _get_param_value_from_tuple(self, param_spec):

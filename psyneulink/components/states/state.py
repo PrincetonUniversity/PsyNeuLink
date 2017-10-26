@@ -1135,7 +1135,10 @@ class State_Base(State):
             def _get_receiver_state(spec):
                 """Get state specification from ConnectionTuple, which itself may be a ConnectionTuple"""
                 if isinstance(spec, ConnectionTuple):
-                    return _get_receiver_state(spec.state)
+                    spec = _parse_connection_specs(connectee_state_type=self.__class__,
+                                                   owner=self.owner,
+                                                   connections=receiver)
+                    return _get_receiver_state(spec[0].state)
                 if isinstance(spec, Projection):
                     return spec.receiver
                 return spec
@@ -2099,17 +2102,24 @@ def _parse_state_spec(state_type=None,
     # State or Mechanism object specification:
     if isinstance(state_specification, (Mechanism, State)):
 
+        projection = None
+
         # Mechanism object:
         # - call owner to get primary state of specified type
         if isinstance(state_specification, Mechanism):
             mech = state_specification
-
             # Instantiating State of specified Mechanism, so get primary State of state_type
             if mech is owner:
                 state_specification = state_type._get_primary_state(state_type, mech)
             # mech used to specify State to be connected with:
             else:
-                pass
+                # FIX: 10/25/17 - IF CAN DISAMBIGUATE WHICH _state_type,
+                # FIX:                then call state_type._get_primary_state(state_type, mech)
+                # FIX:            TEST USING GilzenratModel and Gating Mechanism Test Scripts
+                # FIX:            IF owner is ObjectiveMechanism, state_type is InputState,
+                # FIX:                but need primary **OutputState** of mech
+                state_specification = mech
+                projection = state_type
 
         if isinstance(state_specification, state_type):
             if reference_value is not None and not iscompatible(reference_value, state_specification.value):
@@ -2130,14 +2140,14 @@ def _parse_state_spec(state_type=None,
             return state_specification
 
         else:
-            # State is not of type specified in call to _instantiate_state, so assume it for one to connect with
+            # State is not of type specified in call to _instantiate_state, so assume it is for one to connect with
             # FIX: 10/3/17 - ??VALIDATE AGAINST OTHER OTHER SPECS (VARIABLE AND VALUE?) IN _instantiate_state
             # FIX:           OR WILL THAT BE HANDLED BELOW OR IN _parse_connection_spec??
             # state_specification = ConnectionTuple(state=state, weight=None, exponent=None, projection=None)
             state_dict[PROJECTIONS] = ConnectionTuple(state=state_specification,
                                                       weight=None,
                                                       exponent=None,
-                                                      projection=None)
+                                                      projection=projection)
 
         # # FIX: 10/3/17 - DEAL WITH THIS:
         # # State object:
@@ -2327,9 +2337,9 @@ def _parse_state_spec(state_type=None,
 @tc.typecheck
 def _get_state_for_socket(owner,
                           state_spec=None,
-                          state_types:tc.optional(tc.any(set, _is_state_class))=None,
+                          state_types:tc.optional(tc.any(list, _is_state_class))=None,
                           mech:tc.optional(Mechanism)=None,
-                          mech_state_attribute:tc.optional(tc.any(str, set))=None,
+                          mech_state_attribute:tc.optional(tc.any(str, list))=None,
                           projection_socket:tc.optional(tc.any(str, set))=None):
     """Take some combination of Mechanism, state name (string), Projection, and projection_socket, and return
     specified State(s)
@@ -2350,13 +2360,14 @@ def _get_state_for_socket(owner,
     from psyneulink.components.projections.projection import \
         _is_projection_spec, _validate_connection_request, _parse_projection_spec
     from psyneulink.globals.utilities import is_matrix
+    from collections import Iterable
 
+    # If the mech_state_attribute specified has more than one item, get the primary one
+    if isinstance(mech_state_attribute, list):
+        mech_state_attribute = mech_state_attribute[0]
 
-    if isinstance(state_types, set):
-        if len(state_types) == 1:
-            state_type = list(state_types)[0]
-        else:
-            state_type = 'MULTIPLE'
+    if isinstance(state_types, list):
+        state_type = state_types[0]
     else:
         state_type = state_types
 
@@ -2437,23 +2448,15 @@ def _get_state_for_socket(owner,
         if state_type is None:
             raise StateError("PROGRAM ERROR: The type of State requested for {} must be specified "
                              "to get its primary State".format(state_spec.name))
-        if len(state_type) == 1:
-            state_type = state_type[0]
-            try:
-                state = state_type._get_primary_state(state_type, state_spec)
-            except StateError:
-                raise StateError("{} does not seem to have a primary State of type {}"
-                                 .format(state_spec.name, state_type.__name__))
-        elif mech_state_attribute:
-            try:
-                state = getattr(state_spec, mech_state_attribute)[0]
-            except:
-                raise StateError("{} does not seem to have an {} attribute"
-                                 .format(state_spec.name, mech_state_attribute))
-        else:
-            raise StateError("PROGRAM ERROR: No State-specific attribute is specified for Mechanism ({}) "
-                             "and it has more than one relevant State type specified for it ({}).".
-                             format(state_spec.name, state_type_names))
+        try:
+            state = state_type._get_primary_state(state_type, state_spec)
+        except StateError:
+            if mech_state_attribute:
+                try:
+                    state = getattr(state_spec, mech_state_attribute)[0]
+                except:
+                    raise StateError("{} does not seem to have an {} attribute"
+                                     .format(state_spec.name, mech_state_attribute))
 
     # Get state from Projection specification (exclude matrix spec in test as it can't be used to determine the state)
     elif _is_projection_spec(state_spec, include_matrix_spec=False):
