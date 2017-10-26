@@ -81,7 +81,8 @@ Class Reference
 """
 
 from psyneulink.components.projections.projection import Projection_Base
-from psyneulink.globals.keywords import MODULATORY_PROJECTION
+from psyneulink.globals.keywords import MODULATORY_PROJECTION, NAME
+from psyneulink.components.component import InitStatus
 
 __all__ = [
     'MODULATORY_SIGNAL_PARAMS'
@@ -89,11 +90,19 @@ __all__ = [
 
 MODULATORY_SIGNAL_PARAMS = 'modulatory_signal_params'
 
+
+class ModulatoryProjectionError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+
 class ModulatoryProjection_Base(Projection_Base):
     """
     ModulatoryProjection_Base(     \
         receiver,                  \
         sender=None,               \
+        weight=None,               \
+        exponent=None,             \
         params=None,               \
         name=None,                 \
         prefs=None,                \
@@ -113,6 +122,14 @@ class ModulatoryProjection_Base(Projection_Base):
 
     sender : Optional[OutputState or Mechanism] : default None
         specifies the Component from which the ModulatoryProjection projects.
+
+    weight : number : default None
+       specifies the value by which to multiply the ModulatoryProjection's `value <ModulatoryProjection.value>`
+       before combining it with others (see `weight <ModulatoryProjection.weight>` for additional details).
+
+    exponent : number : default None
+       specifies the value by which to exponentiate the ModulatoryProjection's `value <ModulatoryProjection.value>`
+       before combining it with others (see `exponent <ModulatoryProjection.exponent>` for additional details).
 
     params : Optional[Dict[param keyword, param value]] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -156,6 +173,18 @@ class ModulatoryProjection_Base(Projection_Base):
         value used to modulate the `function <State_Base.function>` of the State that is its `receiver
         <ModulatoryProjection.receiver>`.
 
+    weight : number
+       multiplies the `value <ModulatoryProjection.value>` of the ModulatoryProjection after applying `exponent
+       <ModulatoryProjection.exponent>`, and before combining it with any others that project to the same `State` to
+       determine that State's `variable <State.variable>` is modified (see description in `Projection
+       <Projection_Weight_and_Exponent>` for details).
+
+    exponent : number
+        exponentiates the `value <ModulatoryProjection.value>` of the ModulatoryProjection, before applying `weight
+        <ModulatoryProjection.weight>`, and before combining it with any others that project to the same `State` to
+        determine that State's `variable <State.variable>` is modified (see description in `Projection
+        <Projection_Weight_and_Exponent>` for details).
+
     name : str : default ModulatoryProjection-<index>
         the name of the ModulatoryProjection.
         Specified in the **name** argument of the constructor for the ModulatoryProjection;
@@ -174,6 +203,8 @@ class ModulatoryProjection_Base(Projection_Base):
     def __init__(self,
                  receiver,
                  sender=None,
+                 weight=None,
+                 exponent=None,
                  params=None,
                  name=None,
                  prefs=None,
@@ -182,6 +213,26 @@ class ModulatoryProjection_Base(Projection_Base):
         super().__init__(receiver=receiver,
                          sender=sender,
                          params=params,
+                         weight=weight,
+                         exponent=exponent,
                          name=name,
                          prefs=prefs,
                          context=context)
+
+    def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
+
+        if self.init_status in {InitStatus.INITIALIZED, InitStatus.UNSET}:
+            # If the name is not a default name for the class, return
+            if not self.className + '-' in self.name:
+                return self.name
+            self.name = self.className + " for " + \
+                              self.receiver.name + " of " + \
+                              self.receiver.owner.name
+
+        elif self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+            projection_name = self.className + " for " + state.owner.name + " " + state.name
+            self.init_args[NAME] = self.init_args[NAME] or projection_name
+
+        else:
+            raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized InitStatus ({})".
+                                            format(self, self.init_status))

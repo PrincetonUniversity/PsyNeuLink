@@ -172,6 +172,21 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
   that project to it (see `MappingProjection_Learning` below).  This can be replaced by any function that can take
   as its input an array or matrix, and return one of the same size.
 
+.. _Mapping_Weight_Exponent:
+
+*  `weight <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` - applied to the `value
+   <MappingProjection.value>` of the MappingProjection before it is combined with other MappingProjections
+   to the same `InputState` to determine its `value <InputState.value>` (see description under `Projection
+   <Projection_Weight_Exponent>` for additional details).
+
+   .. note::
+      The `weight <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` attributes of a
+      MappingProjection are distinct from those of the `InputState` to which it projects.  It is also important
+      to recognize that, as noted under `Projection <Projection_Weight_Exponent>`, they are not normalized,
+      and thus contribute to the magnitude of the InputState's `variable <InputState.variable>` and therefore its
+      relationship to that of other InputStates that may belong to the same Mechanism.
+
+
 .. _Mapping_Execution:
 
 Execution
@@ -228,7 +243,6 @@ Class Reference
 
 """
 import inspect
-
 import numpy as np
 import typecheck as tc
 
@@ -237,7 +251,7 @@ from psyneulink.components.functions.function import AccumulatorIntegrator, Line
 from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, SYSTEM_INPUT_STATE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock
@@ -261,6 +275,8 @@ class MappingProjection(PathwayProjection_Base):
         sender=None,                                        \
         receiver=None,                                      \
         matrix=DEFAULT_MATRIX,                              \
+        weight=None,               \
+        exponent=None,             \
         params=None,                                        \
         name=None,                                          \
         prefs=None)
@@ -319,6 +335,14 @@ class MappingProjection(PathwayProjection_Base):
         the context in which the Projection is used, or its initialization will be `deferred
         <MappingProjection_Deferred_Initialization>`.
 
+    weight : number : default None
+       specifies the value by which to multiply the MappingProjection's `value <MappingProjection.value>`
+       before combining it with others (see `weight <MappingProjection.weight>` for additional details).
+
+    exponent : number : default None
+       specifies the value by which to exponentiate the MappingProjection's `value <MappingProjection.value>`
+       before combining it with others (see `exponent <MappingProjection.exponent>` for additional details).
+
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
         the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to transform the
         value of the `sender <MappingProjection.sender>` into a form suitable for the `variable <InputState.variable>`
@@ -367,6 +391,18 @@ class MappingProjection(PathwayProjection_Base):
         output of MappingProjection, transmitted to `variable <InputState.variable>` of its `receiver
         <MappingProjection.receiver>`.
 
+    weight : number
+       multiplies `value <MappingProjection.value>` of the MappingProjection after applying `exponent
+       <MappingProjection.exponent>`, and before combining with any others that project to the same `InputState` to
+       determine that InputState's `variable <InputState.variable>` (see `description above
+       <Mapping_Weight_Exponent>` for details).
+
+    exponent : number
+        exponentiates the `value <MappingProjection.value>` of the MappingProjection, before applying `weight
+        <MappingProjection.weight>`, and before combining it with any others that project to the same
+        `InputState` to determine that InputState's `variable <InputState.variable>` (see `description above
+        <Mapping_Weight_Exponent>` for details).
+
     name : str : default MappingProjection-<index>
         the name of the MappingProjection.
         Specified in the **name** argument of the constructor for the Projection;
@@ -387,6 +423,10 @@ class MappingProjection(PathwayProjection_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
+    class sockets:
+        sender=[OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE]
+        receiver=[INPUT_STATE]
+
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION: LinearMatrix,
                                PROJECTION_SENDER: OutputState,
@@ -396,6 +436,8 @@ class MappingProjection(PathwayProjection_Base):
     def __init__(self,
                  sender=None,
                  receiver=None,
+                 weight=None,
+                 exponent=None,
                  matrix=DEFAULT_MATRIX,
                  params=None,
                  name=None,
@@ -417,9 +459,8 @@ class MappingProjection(PathwayProjection_Base):
         if isinstance(matrix, (np.matrix, list)):
             matrix = np.array(matrix)
 
-        params = self._assign_args_to_param_dicts(
-                function_params={MATRIX: matrix},
-                params=params)
+        params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix},
+                                                  params=params)
 
         self.learning_mechanism = None
         self.has_learning_projection = False
@@ -431,6 +472,8 @@ class MappingProjection(PathwayProjection_Base):
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super(MappingProjection, self).__init__(sender=sender,
                                                 receiver=receiver,
+                                                weight=weight,
+                                                exponent=exponent,
                                                 params=params,
                                                 name=name,
                                                 prefs=prefs,

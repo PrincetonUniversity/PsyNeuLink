@@ -14,6 +14,8 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
 from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.globals.keywords import PROJECTION_TYPE, RECEIVER, SENDER, MATRIX
 
 # --------------------------------- Global Variables ----------------------------------------
 
@@ -38,7 +40,8 @@ G = 0.5
 
 # numerical integration
 time_step_size = 0.02
-number_of_trials = int(20/time_step_size)
+# number_of_trials = int(20/time_step_size)
+number_of_trials = 1
 
 # noise
 standard_deviation = 0.22*(time_step_size**0.5)
@@ -99,7 +102,9 @@ LC = LCControlMechanism(
         objective_mechanism=ObjectiveMechanism(
                                     function=Linear,
                                     monitored_output_states=[(decision_layer, None, None, np.array([[0.3],[0.0]]))],
-                                    input_states=[[0]],
+                                    # monitored_output_states=[{PROJECTION_TYPE: MappingProjection,
+                                    #                           SENDER: decision_layer,
+                                    #                           MATRIX: np.array([[0.3],[0.0]])}],
                                     name='LC ObjectiveMechanism'
         ),
         modulated_mechanisms=[decision_layer, response],

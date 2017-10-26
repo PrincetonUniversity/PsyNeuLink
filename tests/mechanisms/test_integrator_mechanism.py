@@ -5,8 +5,7 @@ from psyneulink.components.functions.function import AGTUtilityIntegrator, Adapt
 from psyneulink.components.functions.function import AccumulatorIntegrator, ConstantIntegrator, FHNIntegrator, NormalDist, SimpleIntegrator
 from psyneulink.components.functions.function import FunctionError
 from psyneulink.components.mechanisms.mechanism import MechanismError
-from psyneulink.components.mechanisms.processing.integratormechanism \
-    import IntegratorMechanism
+from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.scheduling.timescale import TimeScale
 
 

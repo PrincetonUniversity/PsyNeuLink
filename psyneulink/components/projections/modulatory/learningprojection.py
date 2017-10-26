@@ -102,6 +102,26 @@ over the direct specification of the `learning_rate <LearningProjection.learning
 `function <LearningProjection.function>` is assigned unmodified as the LearningProjection's `value
 <LearningProjection.value>` (and `weight_change_matrix <LearningProjection.weight_change_matrix>` attributes.
 
+.. _Learning_Weight_Exponent:
+
+Weight and Exponent
+~~~~~~~~~~~~~~~~~~~
+
+Every LearningProjection has a `weight <LearningProjection.weight>` and `exponent <LearningProjection.exponent>`
+attribute that are applied to its `value <LearningProjection.value>` before it is combined  with other
+LearningProjections that modify the `ParameterState` for the `matrix <MappingProjection.matrix>` parameter of the
+`MappingProjection` to which they project (see description under `Projection <Projection_Weight_Exponent>` for
+additional details).
+
+.. note::
+   The `weight <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` attributes of a
+   LearningProjection are not commonly used, and are implemented largely for generalit and compatibility with other
+   types of `Projection`.  They are distinct from, and are applied in addition to the LearningProjection's
+   `learning_rate <LearningProjection.learning_rate>` attribute.  As noted under  `Projection
+   <Projection_Weight_Exponent>`, they are not normalized and thus their effects aggregate if a ParameterState
+   receives one or more LearningProjections with non-default values of their  `weight
+   <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` attributes.
+
 .. _LearningProjection_Receiver:
 
 Receiver
@@ -155,7 +175,9 @@ from psyneulink.components.projections.projection import Projection_Base, _is_pr
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.globals.keywords import ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, MATRIX, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
+from psyneulink.globals.keywords import ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, \
+    LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE, NAME, \
+    CONTEXT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import iscompatible, parameter_spec
@@ -178,6 +200,8 @@ def _is_learning_spec(spec):
 
     """
     if spec in {LEARNING, ENABLED}:
+        return True
+    elif isinstance(spec, LearningSignal):
         return True
     else:
         return _is_projection_spec(spec)
@@ -204,6 +228,8 @@ class LearningProjection(ModulatoryProjection_Base):
                  receiver=None,       \
                  learning_function,   \
                  learning_rate=None,  \
+                 weight=None,         \
+                 exponent=None,       \
                  params=None,         \
                  name=None,           \
                  prefs=None)
@@ -272,6 +298,14 @@ class LearningProjection(ModulatoryProjection_Base):
         <LearningMechanism.learning_rate>` for the `LearningMechanism` from which the LearningProjection receives its
         `learning_signal <LearningProjection.learning_signal>` (see `LearningProjection_Function_and_Learning_Rate` for
         additional details).
+
+    weight : number : default None
+       specifies the value by which to multiply the LearningProjection's `value <LearningProjection.value>`
+       before combining it with others (see `weight <LearningProjection.weight>` for additional details).
+
+    exponent : number : default None
+       specifies the value by which to exponentiate the LearningProjection's `value <LearningProjection.value>`
+       before combining it with others (see `exponent <LearningProjection.exponent>` for additional details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -346,6 +380,22 @@ class LearningProjection(ModulatoryProjection_Base):
     value : 2d np.array
         same as `weight_change_matrix`.
 
+    weight : number
+       multiplies the `value <LearningProjection.value>` of the LearningProjection after applying `exponent
+       <LearningProjection.exponent>`, and before combining it with any others that project to the `ParameterState`
+       for the `matrix <MappingProjection.matrix>` parameter of the same `MappingProjection` to determine how that
+       MappingProjection's `matrix <MappingProjection.matrix>` is modified (see `description above
+       <LearningProjection_Weight_and_Exponent>` for additional details, including relationship to `learning_rate
+       <LearningProjection.learning_rate>`).
+
+    exponent : number
+        exponentiates the `value <LearningProjection.value>` of the LearningProjection, before applying `weight
+        <ControlProjection.weight>`, and before combining it with any others that project to the `ParameterState`
+       for the `matrix <MappingProjection.matrix>` parameter of the same `MappingProjection` to determine how that
+       MappingProjection's `matrix <MappingProjection.matrix>` is modified (see `description above
+       <LearningProjection_Weight_and_Exponent>` for additional details, including relationship to `learning_rate
+       <LearningProjection.learning_rate>`).
+
     name : str : default LearningProjection-<index>
         the name of the LearningProjection.
         Specified in the **name** argument of the constructor for the LearningProjection;
@@ -366,6 +416,10 @@ class LearningProjection(ModulatoryProjection_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
+    class sockets:
+        sender=[LEARNING_SIGNAL]
+        receiver=[PARAMETER_STATE]
+
     class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
         variable = None
 
@@ -380,10 +434,14 @@ class LearningProjection(ModulatoryProjection_Base):
 
     @tc.typecheck
     def __init__(self,
-                 sender:tc.optional(tc.any(OutputState, LearningMechanism))=None,
+                 sender:tc.optional(tc.any(LearningSignal, LearningMechanism))=None,
                  receiver:tc.optional(tc.any(ParameterState, MappingProjection))=None,
                  learning_function:tc.optional(is_function_type)=BackPropagation,
+                 # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
+                 # learning_signal_params:tc.optional(dict)=None,
                  learning_rate:tc.optional(tc.any(parameter_spec))=None,
+                 weight=None,
+                 exponent=None,
                  params:tc.optional(dict)=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -397,18 +455,26 @@ class LearningProjection(ModulatoryProjection_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(learning_function=learning_function,
                                                   learning_rate=learning_rate,
+                                                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
+                                                  # learning_signal_params=learning_signal_params,
+                                                  weight=weight,
+                                                  exponent=exponent,
                                                   params=params)
 
-        # Store args for deferred initialization
-        self.init_args = locals().copy()
-        self.init_args['context'] = self
-        self.init_args['name'] = name
-        del self.init_args['learning_function']
-        del self.init_args['learning_rate']
-
-        # Flag for deferred initialization
-        self.init_status = InitStatus.DEFERRED_INITIALIZATION
+        # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
+        if sender is None or receiver is None:
+            # Flag for deferred initialization
+            self.init_status = InitStatus.DEFERRED_INITIALIZATION
+        super().__init__(sender=sender,
+                         receiver=receiver,
+                         weight=weight,
+                         exponent=exponent,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=self)
         self.learning_enable = True
+
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate sender and receiver
@@ -480,7 +546,8 @@ class LearningProjection(ModulatoryProjection_Base):
                                           format(self.name, self.sender.owner.name))
 
         # This assigns self as an outgoing projection from the sender (LearningMechanism) outputState
-        #    and formats self.instance_defaults.variable to be compatible with that outputState's value (i.e., its learning_signal)
+        #    and formats self.instance_defaults.variable to be compatible with that outputState's value
+        #    (i.e., its learning_signal)
         super()._instantiate_sender(context=context)
 
         if self.sender.learning_rate is not None:
