@@ -2081,7 +2081,6 @@ class Component(object):
 
             # Check if param value is of same type as one with the same name in paramClassDefaults;
             #    don't worry about length
-
             if iscompatible(param_value, self.paramClassDefaults[param_name], **{kwCompatibilityLength:0}):
                 # If param is a dict, check that entry exists in paramClassDefaults
                 # IMPLEMENTATION NOTE:
@@ -2162,6 +2161,8 @@ class Component(object):
             elif hasattr(param_value, FUNCTION) and callable(param_value.function):
                 target_set[param_name] = param_value
 
+            # It has already passed as the name of a valid param, so let it pass;
+            #    value should be validated in subclass _validate_params override
             elif isinstance(param_name, str):
                 # FIX: 10/3/17 - THIS IS A HACK;  IT SHOULD BE HANDLED EITHER
                 # FIX:           MORE GENERICALLY OR LOCALLY (E.G., IN OVERRIDE OF _validate_params)
@@ -2170,11 +2171,11 @@ class Component(object):
                         # FIX:  ?? ASSIGN VALUE HERE, OR SIMPLY ALLOW AND ASSUME IT WILL BE PARSED ELSEWHERE
                         # param_value = self.paramClassDefaults[param_name]
                         # target_set[param_name] = param_value
-                        pass
+                        target_set[param_name] = param_value
                     else:
                         raise ComponentError("Value of {} param for {} ({}) must be a valid matrix specification".
                                              format(param_name, self.name, param_value))
-
+                target_set[param_name] = param_value
 
             # Parameter is not a valid type
             else:
