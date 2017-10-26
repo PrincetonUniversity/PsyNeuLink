@@ -38,7 +38,8 @@ G = 0.5
 
 # numerical integration
 time_step_size = 0.02
-number_of_trials = int(20/time_step_size)
+# number_of_trials = int(20/time_step_size)
+number_of_trials = 1
 
 # noise
 standard_deviation = 0.22*(time_step_size**0.5)
@@ -97,9 +98,10 @@ LC = LCControlMechanism(
                         initial_w_FHN=initial_w,
                         threshold_FHN=0.5,        #Parameter describing shape of the FitzHugh–Nagumo cubic nullcline for the fast excitation variable v
         objective_mechanism=ObjectiveMechanism(
+                                    default_variable=[[0]],
                                     function=Linear,
                                     monitored_output_states=[(decision_layer, None, None, np.array([[0.3],[0.0]]))],
-                                    input_states=[[0]],
+                                    # input_states=[[0]],
                                     name='LC ObjectiveMechanism'
         ),
         modulated_mechanisms=[decision_layer, response],

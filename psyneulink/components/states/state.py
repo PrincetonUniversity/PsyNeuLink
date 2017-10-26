@@ -1709,7 +1709,11 @@ def _instantiate_state_list(owner,
                                    context=context)
 
         # Get name of state, and use as index to assign to states ContentAddressableList
-        states[state.name] = state
+        if state.init_status is InitStatus.DEFERRED_INITIALIZATION:
+            state_name = state.init_args[NAME]
+        else:
+            state_name = state.name
+        states[state_name] = state
     return states
 
 
@@ -1789,8 +1793,10 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
 
     # # FIX: 10/3/17: HANDLE NAME HERE
-    # if parsed_state_spec[NAME] is None:
-    #     parsed_state_spec[NAME] = state_type.__name__
+    if isinstance(parsed_state_spec, dict) and parsed_state_spec[NAME] is None:
+        parsed_state_spec[NAME] = state_type.__name__
+    else:
+        pass
 
 
 

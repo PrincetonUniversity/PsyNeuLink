@@ -640,6 +640,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
+                 default_variable=None,
                  input_states=None,
                  function=LinearCombination,
                  output_states:tc.optional(tc.any(list, dict))=[OUTCOME],
@@ -652,10 +653,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if MONITORED_OUTPUT_STATES in kwargs and kwargs[MONITORED_OUTPUT_STATES] is not None:
             name_string = name or 'an ' + ObjectiveMechanism.__name__
             if input_states:
+                raise ObjectiveMechanismError("Both \'{}\' and \'{}\' args were specified in constuctor for {}.".
+                                              format(MONITORED_OUTPUT_STATES, INPUT_STATES, name_string))
                 # warnings.warn("Both \'{}\' and \'{}\' args were specified in constuctor for {}; "
                 #               "an attempt will be made to merge them but this may produce unexpected results.".
                 #               format(MONITORED_OUTPUT_STATES, INPUT_STATES, name_string))
-                input_states.append(kwargs[MONITORED_OUTPUT_STATES])
+                # if not len(input_states) == len(kwargs[MONITORED_OUTPUT_STATES]):
+                #     raise ObjectiveMechanismError("The {} arg specified for {} ({}) must be the same length as {} ({})".
+                #                                   format(INPUT_STATES,name,input_states,
+                #                                          MONITORED_OUTPUT_STATES,
+                #                                          kwargs[MONITORED_OUTPUT_STATES] ))
             input_states = kwargs[MONITORED_OUTPUT_STATES]
             del kwargs[MONITORED_OUTPUT_STATES]
             if kwargs:
@@ -676,7 +683,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                                self.standard_output_states,
                                                                indices=PRIMARY_OUTPUT_STATE)
 
-        super().__init__(variable=None,
+        super().__init__(variable=default_variable,
                          input_states=input_states,
                          output_states=output_states,
                          params=params,
