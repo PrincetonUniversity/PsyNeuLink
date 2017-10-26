@@ -708,18 +708,19 @@ class InputState(State_Base):
                     params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                        owner=owner,
                                                                        connections=[projections_spec])
-                    # # FIX: 10/26/17 - GET RECEIVER AND USE TO ASSIGN REFERENCE_VALUE TO STATE_DICT IF IT IS NONE
-                    # #      OR SHOULD THIS BE ONE OUTSIDE??  IF NOT, THEN
                     for projection_spec in params_dict[PROJECTIONS]:
                         # Insure that value of all of the Projections are consistent with the variable of the State
                         #    or, if that is not specified, do so based on the value of the Projection(s):
                         if state_dict[REFERENCE_VALUE] is None:
-                            # FIX: 10/3/17 - THIS IS A HACK... NEED TO GENERALIZE
+                            # FIX: 10/3/17 - PUTTING THIS HERE IS A HACK...
+                            # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ConnectionTuple SPEC
+                            # FIX:           USING _get_state_for_socket
                             from psyneulink.components.projections.projection import _parse_projection_spec
-                            send_dim = projection_spec.state.value.ndim
+                            sender_dim = projection_spec.state.value.ndim
                             matrix = projection_spec.projection[MATRIX]
-                            proj_val_shape = matrix.shape[1:]
-                            state_dict[REFERENCE_VALUE] = np.zeros()
+                            # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
+                            proj_val_shape = matrix.shape[sender_dim :]
+                            state_dict[VARIABLE] = np.zeros(proj_val_shape)
 
                 except InputStateError:
                     raise InputStateError("Tuple specification in {} specification dictionary "
