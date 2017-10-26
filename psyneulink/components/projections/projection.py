@@ -1064,6 +1064,7 @@ def _parse_projection_spec(projection_spec,
 
     # Matrix
     elif is_matrix(projection_spec):
+        is_matrix(projection_spec)
         proj_spec_dict[MATRIX] = projection_spec
 
     # State object
@@ -1416,7 +1417,7 @@ def _parse_connection_specs(connectee_state_type,
                         #    and in either case to make sure it belongs to mech
                         state = _get_state_for_socket(owner=owner,
                                                       state_spec=state_connect_spec,
-                                                      state_type=connect_with_attr,
+                                                      state_types=connect_with_attr,
                                                       mech=mech,
                                                       projection_socket=PROJECTION_SOCKET)
                         if isinstance(state, list):
@@ -1436,7 +1437,7 @@ def _parse_connection_specs(connectee_state_type,
                         # Parse it to get reference to actual State make sure it belongs to mech:
                         state = _get_state_for_socket(owner=owner,
                                                     state_spec=state_spec,
-                                                    state_type=connect_with_attr,
+                                                    state_types=connect_with_attr,
                                                     mech=mech,
                                                     projection_socket=PROJECTION_SOCKET)
                         if isinstance(state, list):
@@ -1452,7 +1453,7 @@ def _parse_connection_specs(connectee_state_type,
                         # Parse it to get reference to actual State make sure it belongs to mech:
                         state = _get_state_for_socket(owner=owner,
                                                     state_spec=state_spec,
-                                                    state_type=connect_with_attr,
+                                                    state_types=connect_with_attr,
                                                     mech=mech,
                                                     projection_socket=PROJECTION_SOCKET)
                         if isinstance(state, list):
@@ -1497,7 +1498,7 @@ def _parse_connection_specs(connectee_state_type,
             # Validate state specification, and get actual state referenced if it has been instantiated
             state = _get_state_for_socket(owner=owner,
                                           state_spec=state_spec,
-                                          state_type=ConnectsWith,
+                                          state_types=ConnectsWith,
                                           mech_state_attribute=connect_with_attr,
                                           projection_socket=PROJECTION_SOCKET)
 

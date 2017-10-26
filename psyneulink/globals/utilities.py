@@ -237,10 +237,14 @@ def is_matrix_spec(m):
 
 
 def is_matrix(m):
+    from psyneulink.components.component import Component
+
     if is_matrix_spec(m):
         return True
     if isinstance(m, (list, np.ndarray, np.matrix)):
         return True
+    if m is None or isinstance(m, (Component, dict, set)) or (inspect.isclass(m) and issubclass(m, Component)):
+        return False
     try:
         m2 = np.matrix(m)
         return is_matrix(m2)

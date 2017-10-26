@@ -1785,39 +1785,38 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                                           **state_spec)
 
 
-    # FIX: 10/3/17: HANDLE NAME HERE
-    if isinstance(parsed_state_spec, State):
-        state_name = parsed_state_spec.name
-    else:
-        state_name = parsed_state_spec[NAME]
+    # # FIX: 10/3/17: HANDLE NAME HERE
+    # if parsed_state_spec[NAME] is None:
+    #     parsed_state_spec[NAME] = state_type.__name__
 
 
-    if not state_name is state_spec and not state_name in states:
-        state_name = state_spec
-    # Add index suffix to name if it has already been used
-    # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
-    else:
-        state_name = state_spec + '_' + str(index)
-    state_spec_dict[NAME] = state_name
 
-    # If state_spec has NAME entry
-    if NAME in state_spec:
-        # If it has been used, add suffix to it
-        if state_name is state_spec[NAME]:
-            state_name = state_spec[NAME] + '_' + str(key)
-        # Otherwise, use it
-        else:
-            state_name = state_spec[NAME]
-    state_spec_dict[NAME] = state_name
-
-    # MODIFIED 9/3/17 NEW:
-    # If only one State, don't add index suffix
-    if num_states == 1:
-        state_name = 'Default_' + state_param_identifier
-    # Add incremented index suffix for each State name
-    else:
-        state_name = 'Default_' + state_param_identifier + "-" + str(index+1)
-    # MODIFIED 9/3/17 END
+    # if not state_name is state_spec and not state_name in states:
+    #     state_name = state_spec
+    # # Add index suffix to name if it has already been used
+    # # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
+    # else:
+    #     state_name = state_spec + '_' + str(index)
+    # state_spec_dict[NAME] = state_name
+    #
+    # # If state_spec has NAME entry
+    # if NAME in state_spec:
+    #     # If it has been used, add suffix to it
+    #     if state_name is state_spec[NAME]:
+    #         state_name = state_spec[NAME] + '_' + str(key)
+    #     # Otherwise, use it
+    #     else:
+    #         state_name = state_spec[NAME]
+    # state_spec_dict[NAME] = state_name
+    #
+    # # MODIFIED 9/3/17 NEW:
+    # # If only one State, don't add index suffix
+    # if num_states == 1:
+    #     state_name = 'Default_' + state_param_identifier
+    # # Add incremented index suffix for each State name
+    # else:
+    #     state_name = 'Default_' + state_param_identifier + "-" + str(index+1)
+    # # MODIFIED 9/3/17 END
 
 
     # STATE SPECIFICATION IS A State OBJECT ***************************************
@@ -2328,7 +2327,7 @@ def _parse_state_spec(state_type=None,
 @tc.typecheck
 def _get_state_for_socket(owner,
                           state_spec=None,
-                          state_type:tc.optional(tc.any(set, _is_state_class))=None,
+                          state_types:tc.optional(tc.any(set, _is_state_class))=None,
                           mech:tc.optional(Mechanism)=None,
                           mech_state_attribute:tc.optional(tc.any(str, set))=None,
                           projection_socket:tc.optional(tc.any(str, set))=None):
@@ -2350,14 +2349,18 @@ def _get_state_for_socket(owner,
     """
     from psyneulink.components.projections.projection import \
         _is_projection_spec, _validate_connection_request, _parse_projection_spec
-    from psyneulink.components.states.parameterstate import ParameterState
-    from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-    from psyneulink.globals.keywords import MATRIX
+    from psyneulink.globals.utilities import is_matrix
 
 
-    if not isinstance(state_type, set):
-        state_type = {state_type}
-    state_type_names = ",".join([s.__name__ for s in state_type])
+    if isinstance(state_types, set):
+        if len(state_types) == 1:
+            state_type = list(state_types)[0]
+        else:
+            state_type = 'MULTIPLE'
+    else:
+        state_type = state_types
+
+    state_type_names = ", ".join([s.__name__ for s in state_types])
 
     # Return State itself if it is an instantiate State
     if isinstance(state_spec, State):
@@ -2368,7 +2371,12 @@ def _get_state_for_socket(owner,
     #    - a projection keyword (e.g., 'LEARNING' or 'CONTROL', and it is consistent with projection_socket
     # Otherwise, return list of allowable State types for projection_socket (if state_spec is a Projection type)
     if _is_projection_spec(state_spec):
-        # Get Projection's type (class)
+        # These specifications require that a particular State be specified to assign its default Projection type
+        if ((is_matrix(state_spec) or (isinstance(state_spec, dict) and not PROJECTION_TYPE in state_spec))
+            and state_type is 'MULTIPLE'):
+            raise StateError("PROGRAM ERROR: Projection specified ({}) for object "
+                             "that has multiple possible States {}) for the specified socket ({}).".
+                             format(state_spec, state_types, projection_socket))
         proj_spec = _parse_projection_spec(state_spec, owner=owner, state_type=state_type)
         if isinstance(proj_spec, Projection):
             proj_type = proj_spec.__class__
@@ -2376,7 +2384,7 @@ def _get_state_for_socket(owner,
             proj_type = proj_spec[PROJECTION_TYPE]
 
         # Get State type if it is appropriate for the specified socket of the Projection's type
-        s = next((s for s in state_type if s.__name__ in getattr(proj_type.sockets, projection_socket)), None)
+        s = next((s for s in state_types if s.__name__ in getattr(proj_type.sockets, projection_socket)), None)
         if s:
             try:
                 # Return State associated with projection_socket if proj_spec is an actual Projection

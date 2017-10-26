@@ -688,7 +688,7 @@ class InputState(State_Base):
             tuple_spec = state_specific_params
             # Note: 1s item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
 
-            # MODIFIED 10/25/17 OLD:
+            # # MODIFIED 10/25/17 OLD:
             # # Get connection (afferent Projection(s)) specification from tuple
             # PROJECTIONS_INDEX = len(tuple_spec)-1
             # try:
@@ -700,7 +700,6 @@ class InputState(State_Base):
                 projections_spec = tuple_spec[1]
             elif len(tuple_spec) == 4:
                 projections_spec = tuple_spec
-
             # MODIFIED 10/25/17 END
 
             if projections_spec is not None:
