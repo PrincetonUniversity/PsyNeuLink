@@ -170,7 +170,7 @@ Under some circumstances Projections are created automatically. For example, a `
 when :keyword:`learning` is specified for a `Process <Process_Learning_Sequence>` or `System
 <System_Execution_Learning>`).
 
-.. _MappingProjection_Deferred_Initialization:
+.. _Projection_Deferred_Initialization:
 
 Deferred Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~

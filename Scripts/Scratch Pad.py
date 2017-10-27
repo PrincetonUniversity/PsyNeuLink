@@ -745,6 +745,22 @@ class ScratchPadError(Exception):
 # TEST = True
 # endregion
 
+#region TEST InputState SPECIFICATION
+print ('TEST InputState SPECIFICATION')
+
+from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, RESPONSE_TIME
+from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES
+
+my_mech_1 = DDM()
+my_mech_2 = TransferMechanism(input_states=[{MECHANISM: my_mech_1,
+                                            OUTPUT_STATES: [DECISION_VARIABLE, RESPONSE_TIME]}])
+assert True
+
+
+#endregion
+
 #region TEST INPUT FORMATS
 
 #
@@ -1090,73 +1106,71 @@ class ScratchPadError(Exception):
 
 #endregion
 
-#region TEST Stroop Model @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-print ("TEST Stroop Model")
-
-import psyneulink as pnl
-import numpy as np
-from psyneulink import System, Process, TransferMechanism, DDM, MappingProjection, Linear, Logistic
-
-# FROM BASICS AND SAMPLER -------------------------------------
-
-# # Construct the Mechanisms:
-# colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
-# words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
-# output_layer = TransferMechanism(size=1, name='OUTPUT')
+# #region TEST Stroop Model @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# print ("TEST Stroop Model")
+# import psyneulink as pnl
+# import numpy as np
+# from psyneulink import System, Process, TransferMechanism, DDM, MappingProjection, Linear, Logistic
+#
+# # FROM BASICS AND SAMPLER -------------------------------------
+#
+# # # Construct the Mechanisms:
+# # colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
+# # words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
+# # output_layer = TransferMechanism(size=1, name='OUTPUT')
+# # decision_mech = DDM(name='DECISION')
+# #
+# # # Define a MappingProjection from each of the input layers to the output_layer
+# # input_to_output_weights = np.array([[1], [-1]])
+# #
+# # # Construct the Processes:
+# # colors_process = process(pathway=[colors_input_layer, input_to_output_weights, output_layer])
+# # words_process = process(pathway=[words_input_layer, input_to_output_weights, output_layer])
+# # decision_process = process(pathway=[output_layer, decision_mech])
+# #
+# # # Construct the System:
+# # my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
+#
+# # # SIMPLE STROOP ---------------
+# #
+# # colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
+# # words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
+# # output_layer = TransferMechanism(size=1, name='OUTPUT')
+# # decision_mech = DDM(name='DECISION')
+# #
+# # input_to_output_weights = MappingProjection(matrix=np.array([[1], [-1]]))
+# #
+# # colors_process = process(pathway=[colors_input_layer, input_to_output_weights, output_layer])
+# # words_process = process(pathway=[words_input_layer, input_to_output_weights, output_layer])
+# # decision_process = process(pathway=[output_layer, decision_mech])
+# #
+# # my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
+#
+# # # FULL STROOP ---------------
+# #
+# color_input = TransferMechanism(size=2, function=Linear, name='COLOR INPUT')
+# word_input = TransferMechanism(size=2, function=Linear, name='WORD INPUT')
+# task_input = TransferMechanism(size=2, function=Linear, name='TASK INPUT')
+# color_hidden = TransferMechanism(size=2, function=Logistic, name='COLOR HIDDEN')
+# word_hidden = TransferMechanism(size=2, function=Logistic, name='WORD HIDDEN')
+# output = TransferMechanism(size=1, function=Linear, name='OUTPUT')
 # decision_mech = DDM(name='DECISION')
 #
-# # Define a MappingProjection from each of the input layers to the output_layer
-# input_to_output_weights = np.array([[1], [-1]])
+# color_weights = MappingProjection(matrix=np.array([[1, -1], [-1, 1]]), name='COLOR_WEIGHTS')
+# word_weights = MappingProjection(matrix=np.array([[1, -1], [-1, 1]]), name='WORD_WEIGHTS')
+# output_weights = np.array([[1], [-1]])
+# color_task_weights = MappingProjection(matrix=np.array([[1, 1], [0, 0]]), name='COLOR_TASK_WEIGHTS')
+# word_task_weights = MappingProjection(matrix=np.array([[0, 0], [1, 1]]), name='WORD_TASK_WEIGHTS')
 #
-# # Construct the Processes:
-# colors_process = process(pathway=[colors_input_layer, input_to_output_weights, output_layer])
-# words_process = process(pathway=[words_input_layer, input_to_output_weights, output_layer])
-# decision_process = process(pathway=[output_layer, decision_mech])
+# color_process = Process(pathway=[color_input, color_weights, color_hidden, output_weights, output], name="COLORS")
+# word_process = Process(pathway=[word_input, word_weights, word_hidden, output_weights, output], name="WORDS")
+# color_task_process = Process(pathway=[task_input, color_task_weights, color_hidden], name="COLOR TASK")
+# word_task_process = Process(pathway=[task_input, word_task_weights, word_hidden], name="WORD TASK")
+# decision_process = Process(pathway=[output, decision_mech], name="DECISION")
 #
-# # Construct the System:
-# my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
-
-# # SIMPLE STROOP ---------------
-#
-# colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
-# words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
-# output_layer = TransferMechanism(size=1, name='OUTPUT')
-# decision_mech = DDM(name='DECISION')
-#
-# input_to_output_weights = MappingProjection(matrix=np.array([[1], [-1]]))
-#
-# colors_process = process(pathway=[colors_input_layer, input_to_output_weights, output_layer])
-# words_process = process(pathway=[words_input_layer, input_to_output_weights, output_layer])
-# decision_process = process(pathway=[output_layer, decision_mech])
-#
-# my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
-
-# # FULL STROOP ---------------
-#
-color_input = TransferMechanism(size=2, function=Linear, name='COLOR INPUT')
-word_input = TransferMechanism(size=2, function=Linear, name='WORD INPUT')
-task_input = TransferMechanism(size=2, function=Linear, name='TASK INPUT')
-color_hidden = TransferMechanism(size=2, function=Logistic, name='COLOR HIDDEN')
-word_hidden = TransferMechanism(size=2, function=Logistic, name='WORD HIDDEN')
-output = TransferMechanism(size=1, function=Linear, name='OUTPUT')
-decision_mech = DDM(name='DECISION')
-
-color_weights = MappingProjection(matrix=np.array([[1, -1], [-1, 1]]), name='COLOR_WEIGHTS')
-word_weights = MappingProjection(matrix=np.array([[1, -1], [-1, 1]]), name='WORD_WEIGHTS')
-output_weights = np.array([[1], [-1]])
-color_task_weights = MappingProjection(matrix=np.array([[1, 1], [0, 0]]), name='COLOR_TASK_WEIGHTS')
-word_task_weights = MappingProjection(matrix=np.array([[0, 0], [1, 1]]), name='WORD_TASK_WEIGHTS')
-
-color_process = Process(pathway=[color_input, color_weights, color_hidden, output_weights, output], name="COLORS")
-word_process = Process(pathway=[word_input, word_weights, word_hidden, output_weights, output], name="WORDS")
-color_task_process = Process(pathway=[task_input, color_task_weights, color_hidden], name="COLOR TASK")
-word_task_process = Process(pathway=[task_input, word_task_weights, word_hidden], name="WORD TASK")
-decision_process = Process(pathway=[output, decision_mech], name="DECISION")
-
-my_simple_Stroop = System(processes=[color_process, word_process,
-                                     color_task_process, word_task_process, decision_process])
-my_simple_Stroop.show_graph()
-
+# my_simple_Stroop = System(processes=[color_process, word_process,
+#                                      color_task_process, word_task_process, decision_process])
+# my_simple_Stroop.show_graph()
 
 # endregion
 

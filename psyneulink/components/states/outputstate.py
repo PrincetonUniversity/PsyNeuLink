@@ -761,7 +761,6 @@ class OutputState(State_Base):
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
 
-
     @tc.typecheck
     def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
         """Get index and/or connections specified in an OutputState specification tuple

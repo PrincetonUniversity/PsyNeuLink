@@ -1335,7 +1335,6 @@ class State_Base(State):
 
             return projection
 
-
     def _get_primary_state(self, mechanism):
         raise StateError("PROGRAM ERROR: {} does not implement _get_primary_state method".
                          format(self.__class__.__name__))
@@ -1591,6 +1590,8 @@ class State_Base(State):
     def all_afferents(self):
         return self.path_afferents + self.mod_afferents
 
+    def _assign_default_name(self):
+        return False
 
 def _instantiate_state_list(owner,
                            state_list,              # list of State specs, (state_spec, params) tuples, or None
@@ -1709,13 +1710,15 @@ def _instantiate_state_list(owner,
                                    context=context)
 
         # Get name of state, and use as index to assign to states ContentAddressableList
-        if self._assign_default_state_name(self):
-            pass
+        default_name = state._assign_default_name()
+        if default_name:
+             state_name = default_name
         elif state.init_status is InitStatus.DEFERRED_INITIALIZATION:
             state_name = state.init_args[NAME]
         else:
             state_name = state.name
         states[state_name] = state
+
     return states
 
 
