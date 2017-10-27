@@ -818,6 +818,7 @@ def _instantiate_input_states(owner, input_states=None, context=None):
 
     # Check that number of input_states and their variables are consistent with owner.instance_defaults.variable,
     #    and adjust the latter if not
+    variable_item_is_OK = False
     for i, input_state in enumerate(owner.input_states):
         try:
             variable_item_is_OK = iscompatible(owner.instance_defaults.variable[i], input_state.value)

@@ -1709,7 +1709,9 @@ def _instantiate_state_list(owner,
                                    context=context)
 
         # Get name of state, and use as index to assign to states ContentAddressableList
-        if state.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        if self._assign_default_state_name(self):
+            pass
+        elif state.init_status is InitStatus.DEFERRED_INITIALIZATION:
             state_name = state.init_args[NAME]
         else:
             state_name = state.name

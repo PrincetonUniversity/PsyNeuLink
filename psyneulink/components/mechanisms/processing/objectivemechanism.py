@@ -43,10 +43,10 @@ COMMENT
 
 The **monitored_output_states** argument of the constructor specifies the `OutputStates <OutputState>` it monitors.
 When the ObjectiveMechanism is created, it creates an `InputState` for each of the OutputStates specified in
-**monitored_output_states**.  The OutputStates to be monitored are be specified in a list that can contain any of
-the following forms of specification, some of which allow attributes of the InputState created for them to also be
+**monitored_output_states**.  The OutputStates are specified in a list that can contain any of the following forms of
+specification, some of which allow attributes of the InputState created for them to also be
 specified (including their `variable <InputState.variable>`, `weight <InputState.weight>` and 'exponent
-<InputState.exponent>` attributes) to also be specified:
+<InputState.exponent>` attributes):
 
 COMMENT:
 Note that some forms of specification may
@@ -418,7 +418,7 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.outputstate import OutputState, PRIMARY_OUTPUT_STATE, standard_output_states
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import CONTROL, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, \
+from psyneulink.globals.keywords import CONTROL, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, STATE_TYPE,\
     OBJECTIVE_MECHANISM, SENDER, TIME_SCALE, VARIABLE, WEIGHTS, kwPreferenceSetName, DEFAULT_MATRIX, DEFAULT_VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -470,6 +470,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     """
     ObjectiveMechanism(               \
         monitored_output_states,      \   # alias to input_states argument, which can still be used in a spec dict
+        default_variable,             \
+        size,                         \
         function=LinearCombination,   \
         output_states=[OUTCOME],      \
         params=None,                  \
@@ -507,24 +509,24 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    monitored_output_states : List[`OutputState`, `Mechanism`, str, value, dict, `MonitoredOutputStatesOption`] or Dict
+    monitored_output_states : List[`OutputState`, `Mechanism`, str, value, dict, `MonitoredOutputStatesOption`] or dict
         specifies the OutputStates, the `value <OutputState.value>`\\s of which will be monitored, and evaluated by
         the ObjectiveMechanism's `function <ObjectiveMechanism>` (see `ObjectiveMechanism_Monitored_Output_States`
         for details of specification).
+
+    default_variable : number, list or np.ndarray : default monitored_output_states
+        specifies the format of the `variable <ObjectiveMechanism.variable>` for the `InputStates` of the
+        ObjectiveMechanism (see XXX***??? for details).
+
+    size : int, list or np.ndarray of ints
+        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
+        if **default_variable** is specified, it takes precedence over the specification of **size**.
 
     COMMENT:
     input_states :  List[InputState, value, str or dict] or Dict[] : default None
         specifies the names and/or formats to use for the values of the InputStates that receive the input from the
         OutputStates specified in the monitored_output_states** argument; if specified, there must be one for each item
         specified in the **monitored_output_states** argument.
-    COMMENT
-
-    COMMENT:
-    names: List[str]
-        specifies the names to use for the input_states created for the list in
-        `monitored_output_states <ObjectiveMechanism.monitor>`.  If specified,
-        the number of items in the list must equal the number of items in `monitored_output_states`, and takes precedence
-        over any names specified there.
     COMMENT
 
     function: CombinationFunction, ObjectiveFunction, function or method : default LinearCombination
@@ -557,9 +559,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     Attributes
     ----------
 
-    COMMENT:
-    default_variable : Optional[List[array] or 2d np.array]
-    COMMENT
+    variable : 2d ndarray : default array of values of OutputStates in monitor_output_states
+        the input to Mechanism's `function <TransferMechanism.function>`.
 
     monitored_output_states : ContentAddressableList[OutputState]
         determines the OutputStates, the `value <OutputState.value>`\\s of which are monitored, and evaluated by the
@@ -631,7 +632,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        # MONITORED_OUTPUT_STATES: None,
         TIME_SCALE: TimeScale.TRIAL,
         FUNCTION: LinearCombination,
         })
@@ -641,7 +641,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
+                 monitored_output_states=None,
                  default_variable=None,
+                 size=None,
                  function=LinearCombination,
                  output_states:tc.optional(tc.any(list, dict))=[OUTCOME],
                  params=None,
@@ -650,40 +652,24 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  context=None,
                  **kwargs):
 
-        if MONITORED_OUTPUT_STATES in kwargs and kwargs[MONITORED_OUTPUT_STATES] is not None:
-            name_string = name or 'an ' + ObjectiveMechanism.__name__
-            # FIX: 10/26/17: TRY TO INTEGRATE input_states AND monitored_output_states
-            # FIX:           OR DOCUMENT OTHERWISE (I.E., USE OF default_variable
-            # if input_states:
-            #     raise ObjectiveMechanismError("Both \'{}\' and \'{}\' args were specified in constuctor for {}.".
-            #                                   format(MONITORED_OUTPUT_STATES, INPUT_STATES, name_string))
-            #     # warnings.warn("Both \'{}\' and \'{}\' args were specified in constuctor for {}; "
-            #     #               "an attempt will be made to merge them but this may produce unexpected results.".
-            #     #               format(MONITORED_OUTPUT_STATES, INPUT_STATES, name_string))
-            #     # if not len(input_states) == len(kwargs[MONITORED_OUTPUT_STATES]):
-            #     #     raise ObjectiveMechanismError("The {} arg specified for {} ({}) must be the same length as {} ({})".
-            #     #                                   format(INPUT_STATES,name,input_states,
-            #     #                                          MONITORED_OUTPUT_STATES,
-            #     #                                          kwargs[MONITORED_OUTPUT_STATES] ))
-            input_states = kwargs[MONITORED_OUTPUT_STATES]
-            del kwargs[MONITORED_OUTPUT_STATES]
-            if kwargs:
-                if INPUT_STATES in kwargs:
-                    raise ObjectiveMechanismError("\'{}\' argument is not supported for an {} "
-                                                  "(found in constructor for: \'{}\'); \'{}\' should be used instead".
-                                                  format(INPUT_STATES,
-                                                         self.__class__.__name__,
-                                                         name_string,
-                                                         MONITORED_OUTPUT_STATES))
-                # if DEFAULT_VARIABLE in kwargs:
-                #     raise ObjectiveMechanismError("\'{}\' argument is not supported for an {} "
-                #                                   "(found in constructor for: \'{}\'); \'{}\' should be used instead".
-                #                                   format(INPUT_STATES,
-                #                                          self.__class__.__name__,
-                #                                          name_string,
-                #                                          MONITORED_OUTPUT_STATES))
-                raise ObjectiveMechanismError("\'Invalid arguments used in constructor for {}".
-                                              format(kwargs.keys(), name))
+        # # MODIFIED 10/26/17 OLD:  NOTE: REQUIRES THAT monitored_input_states NOT BE A CONSTRUCTOR ARGUMENT
+        # if MONITORED_OUTPUT_STATES in kwargs and kwargs[MONITORED_OUTPUT_STATES] is not None:
+        #     name_string = name or 'an ' + ObjectiveMechanism.__name__
+        #     input_states = kwargs[MONITORED_OUTPUT_STATES]
+        #     del kwargs[MONITORED_OUTPUT_STATES]
+        #     if kwargs:
+        #         if INPUT_STATES in kwargs:
+        #             raise ObjectiveMechanismError("\'{}\' argument is not supported for an {} "
+        #                                           "(found in constructor for: \'{}\'); \'{}\' should be used instead".
+        #                                           format(INPUT_STATES,
+        #                                                  self.__class__.__name__,
+        #                                                  name_string,
+        #                                                  MONITORED_OUTPUT_STATES))
+        #         raise ObjectiveMechanismError("\'Invalid arguments used in constructor for {}".
+        #                                       format(kwargs.keys(), name))
+        # MODIFIED 10/26/17 NEW:
+        input_states = monitored_output_states
+        # MODIFIED 10/26/17 END
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,
@@ -700,6 +686,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                                indices=PRIMARY_OUTPUT_STATE)
 
         super().__init__(variable=default_variable,
+                         size=size,
                          input_states=input_states,
                          output_states=output_states,
                          params=params,
@@ -790,11 +777,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # PARSE input_states (=monitored_output_states) specifications into InputState specification dictionaries
         # and ASSIGN self.variable
 
+        if not input_states:
+            # If no input_states are specified, create a default
+            input_states = [{STATE_TYPE: InputState, VARIABLE: [0]}]
+
         # For each spec in input_state:
         #    - parse into InputState specification dictionary
         #    - get specified item for variable
         input_state_variables = []
-        # for i, input_state in enumerate(self.input_states):
         for i, input_state in enumerate(input_states):
             input_state_dict = _parse_state_spec(owner=self, state_type=InputState, state_spec=input_state)
             input_state_variables.append(input_state_dict[VARIABLE])
