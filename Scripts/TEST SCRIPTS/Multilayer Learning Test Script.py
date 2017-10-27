@@ -1,6 +1,8 @@
+import numpy as np
 from psyneulink.components.functions.function import Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.outputstate import *
 from psyneulink.components.system import System
 from psyneulink.globals.keywords import *
@@ -8,7 +10,6 @@ from psyneulink.globals.preferences.componentpreferenceset import *
 from psyneulink.scheduling.condition import AfterNCalls
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
-# from PsyNeuLink.Globals.Run import run, construct_inputs
 
 Input_Layer = TransferMechanism(name='Input Layer',
                                 function=Logistic,

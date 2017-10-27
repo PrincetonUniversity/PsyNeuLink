@@ -32,7 +32,7 @@ __all__ = [
     'COMPARATOR_MECHANISM', 'COMPONENT_INIT', 'COMPOSITION_INTERFACE_MECHANISM', 'CONROLLER_PHASE_SPEC', 'CONSTANT',
     'CONSTANT_INTEGRATOR_FUNCTION', 'CONTEXT', 'CONTROL', 'CONTROL_MECHANISM', 'CONTROL_PROJECTION',
     'CONTROL_PROJECTION_PARAMS', 'CONTROL_PROJECTIONS', 'CONTROL_SIGNAL', 'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS',
-    'CONTROLLED_PARAM', 'CONTROLLER', 'CORRELATION', 'COST_FUNCTION', 'CROSS_ENTROPY', 'CYCLE', 'DDM_MECHANISM', 'DECAY',
+    'CONTROLLED_PARAMS', 'CONTROLLER', 'CORRELATION', 'COST_FUNCTION', 'CROSS_ENTROPY', 'CYCLE', 'DDM_MECHANISM', 'DECAY',
     'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_MATRIX', 'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_SYSTEM',
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION', 'DIFFERENCE', 'DIFFERENCE', 'DIFFUSION',
     'DIST_FUNCTION_TYPE', 'DIST_MEAN', 'DIST_SHAPE', 'DISTANCE_FUNCTION', 'DISTANCE_METRICS', 'DISTRIBUTION_FUNCTION_TYPE',
@@ -313,6 +313,7 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 
 # Standard arg / attribute names:
 VARIABLE = "variable"
+DEFAULT_VARIABLE = "default_variable"
 VALUE = "value"
 PARAMS = "params"
 NAME = "name"
@@ -370,9 +371,14 @@ AUTOASSOCIATIVE_LEARNING_MECHANISM = 'AutoAssociativeLearningMechanism'
 
 # States:
 INPUT_STATE = "InputState"
+PROCESS_INPUT_STATE = "ProcessInputState"
+SYSTEM_INPUT_STATE = "SystemInputState"
 PARAMETER_STATE = "ParameterState"
 OUTPUT_STATE = "OutputState"
 MODULATORY_SIGNAL = 'ModulatorySignal'
+LEARNING_SIGNAL = 'LearningSignal'
+CONTROL_SIGNAL = 'ControlSignal'
+GATING_SIGNAL = 'GatingSignal'
 
 # Projections:
 MAPPING_PROJECTION = "MappingProjection"
@@ -381,7 +387,9 @@ LEARNING_PROJECTION = "LearningProjection"
 CONTROL_PROJECTION = "ControlProjection"
 GATING_PROJECTION = "GatingProjection"
 PATHWAY_PROJECTION = "PathwayProjection"
+PATHWAY_PROJECTIONS = "PathwayProjections"
 MODULATORY_PROJECTION = "ModulatoryProjection"
+MODULATORY_PROJECTIONS = "ModulatoryProjections"
 
 
 # Function:
@@ -503,6 +511,7 @@ kpMechanismExecutedLogEntry = "Mechanism Executed"
 #region ---------------------------------------------    MECHANISM   ---------------------------------------------------
 
 MECHANISM = 'MECHANISM'
+MECHANISMS = 'MECHANISMS'
 kwMechanismName = "MECHANISM NAME"
 kwMechanismDefault = "DEFAULT MECHANISM"
 DEFAULT_PROCESSING_MECHANISM = "DefaultProcessingMechanism"
@@ -567,14 +576,12 @@ PREDICTION_MECHANISM = "Prediction Mechanism"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
-LEARNING_SIGNAL = 'learning_signal'
 LEARNING_SIGNALS = 'learning_signals'
 LEARNING_SIGNAL_SPECS = 'LEARNING_SIGNAL_SPECS'
 LEARNED_PARAM = 'learned_param'
-CONTROL_SIGNAL = 'control_signal'
 CONTROL_SIGNALS = 'control_signals'
 CONTROL_SIGNAL_SPECS = 'CONTROL_SIGNAL_SPECS'
-CONTROLLED_PARAM = 'controlled_param'
+CONTROLLED_PARAMS = 'CONTROLLED_PARAMS'
 CONTROL_PROJECTIONS = 'ControlProjections'
 OUTCOME_FUNCTION = 'outcome_function'
 COST_FUNCTION = 'cost_function'
@@ -587,7 +594,6 @@ ALLOCATION_SAMPLES = "allocation_samples"
 
 # GatingMechanism
 MAKE_DEFAULT_GATING_MECHANISM = "make_default_gating_mechanism"
-GATING_SIGNAL = 'gating_signal'
 GATING_SIGNALS = 'gating_signals'
 GATING_SIGNAL_SPECS = 'GATING_SIGNAL_SPECS'
 GATE = 'GATE'
@@ -599,10 +605,11 @@ GATING_POLICY = 'gating_policy'
 #region ----------------------------------------------    STATES  ------------------------------------------------------
 
 STATE = "State"
+STATE_TYPE = "state_type"
 # These are used as keys in State specification dictionaries
 STATES = "STATES"
-STATE_TYPE = "state_type"
-PROJECTIONS = "projections"  # Used to specify projection list to State
+PROJECTIONS = "projections"  # Used to specify projection list to State DEPRECATED;  REPLACED BY CONNECTIONS
+CONNECTIONS = 'CONNECTIONS'
 kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
@@ -611,6 +618,7 @@ kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism._add_projection_f
 FULL = 'FULL'
 OWNER = 'owner'
 REFERENCE_VALUE = 'reference_value'
+REFERENCE_VALUE_NAME = 'reference_value_name'
 
 # InputStates:
 PRIMARY = 'Primary'
@@ -630,14 +638,13 @@ STANDARD_OUTPUT_STATES = 'standard_output_states'
 INDEX = 'index'
 CALCULATE = 'calculate'
 
-
 #endregion
 
 #region ---------------------------------------------    PROJECTION  ---------------------------------------------------
 
 # Attributes / KVO keypaths / Params
 PROJECTION = "Projection"
-PROJECTION_TYPE = "ProjectionType"
+PROJECTION_TYPE = "PROJECTION_TYPE"
 PROJECTION_PARAMS = "ProjectionParams"
 MAPPING_PROJECTION_PARAMS = "MappingProjectionParams"
 LEARNING_PROJECTION_PARAMS = 'LearningProjectionParams'

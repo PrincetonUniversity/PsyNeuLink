@@ -337,13 +337,13 @@ class TestKWTAKValue:
         assert "must be an integer, or between 0 and 1." in str(error_text.value)
 
     def test_kwta_k_value_list(self):
-        with pytest.raises(ComponentError) as error_text:
+        with pytest.raises(KWTAError) as error_text:
             K = KWTA(
                 name='K',
                 size=4,
                 k_value=[1, 2]
             )
-        assert "must be compatible with float" in str(error_text.value)
+        assert "must be a single number" in str(error_text.value)
 
     def test_kwta_k_value_too_large(self):
         with pytest.raises(KWTAError) as error_text:

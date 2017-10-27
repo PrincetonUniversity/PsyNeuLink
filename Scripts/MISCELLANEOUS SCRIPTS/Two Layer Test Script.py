@@ -3,7 +3,6 @@ from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.system import System
 
-# from PsyNeuLink.Globals.Run import run, construct_inputs
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Linear,

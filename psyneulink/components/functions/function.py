@@ -3644,13 +3644,13 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                             )
                     else:
                         raise FunctionError(
-                            "The length ({}) of the array specified for the rate parameter ({}) of {} "
-                            "must match the length ({}) of the default input ({})".format(
+                            "The length of the array specified for the rate parameter of {} ({})"
+                            "must match the length of the default input ({}).".format(
                                 len(rate),
-                                rate,
+                                # rate,
                                 self.name,
                                 np.array(self.instance_defaults.variable).size,
-                                self.instance_defaults.variable,
+                                # self.instance_defaults.variable,
                             )
                         )
                 # OLD:
@@ -7975,8 +7975,6 @@ class Stability(ObjectiveFunction):
         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
      """
-
-    from psyneulink.components.states.parameterstate import ParameterState
 
     componentName = STABILITY_FUNCTION
 

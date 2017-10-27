@@ -98,6 +98,7 @@ Class Reference
 """
 
 import typecheck as tc
+import inspect
 
 from psyneulink.components.component import InitStatus, parameter_keywords
 from psyneulink.components.functions.function import Linear
@@ -106,7 +107,8 @@ from psyneulink.components.projections.modulatory.modulatoryprojection import Mo
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.shellclasses import Mechanism, Process_Base
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import CONTROL, CONTROL_PROJECTION, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from psyneulink.globals.keywords import CONTROL, CONTROL_SIGNAL, CONTROL_PROJECTION, PROJECTION_SENDER, \
+    PROJECTION_SENDER_VALUE, PARAMETER_STATE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock
@@ -129,13 +131,15 @@ class ControlProjectionError(Exception):
 
 class ControlProjection(ModulatoryProjection_Base):
     """
-    ControlProjection(     \
-     sender=None,          \
-     receiver=None,        \
-     function=Linear       \
-     control_signal_params \
-     params=None,          \
-     name=None,            \
+    ControlProjection(           \
+     sender=None,                \
+     receiver=None,              \
+     function=Linear,            \
+     weight=None,                \
+     exponent=None,              \
+     control_signal_params=None, \
+     params=None,                \
+     name=None,                  \
      prefs=None)
 
     Subclass of `ModulatoryProjection <ModulatoryProjection>` that modulates the value of a `ParameterState` of a
@@ -187,8 +191,16 @@ class ControlProjection(ModulatoryProjection_Base):
         specifies the function used to convert the `control_signal <ControlProjection.control_signal>` to the
         ControlProjection's `value <ControlProjection.value>`.
 
+    weight : number : default None
+       specifies the value by which to multiply the ControlProjection's `value <ControlProjection.value>`
+       before combining it with others (see `weight <ControlProjection.weight>` for additional details).
+
+    exponent : number : default None
+       specifies the value by which to exponentiate the ControlProjection's `value <ControlProjection.value>`
+       before combining it with others (see `exponent <ControlProjection.exponent>` for additional details).
+
     control_signal_params : Dict[param keyword, param value]
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
         ControlProjection's `sender <ControlProjection.sender>` (see `ControlSignal_Structure` for a description
         of ControlSignal parameters).
 
@@ -234,6 +246,18 @@ class ControlProjection(ModulatoryProjection_Base):
         and `ParameterState Execution <ParameterState_Execution>` for how modulation operates and how this applies
         to a ParameterState).
 
+    weight : number
+       multiplies the `value <ControlProjection.value>` of the ControlProjection after applying `exponent
+       <ControlProjection.exponent>`, and before combining it with any others that project to the same `ParameterState`
+       to determine how that ParameterState's `variable <ParameterState.variable>` is modified (see description in
+       `Projection <Projection_Weight_and_Exponent>` for details).
+
+    exponent : number
+        exponentiates the `value <ControlProjection.value>` of the ControlProjection, before applying `weight
+        <ControlProjection.weight>`, and before combining it with any others that project to the same `ParameterState`
+        to determine how that ParameterState's `variable <ParameterState.variable>` is modified (see description in
+        `Projection <Projection_Weight_and_Exponent>` for details).
+
     name : str : default ControlProjection-<index>
         the name of the ControlProjection.
         Specified in the **name** argument of the constructor for the ControlProjection;
@@ -257,6 +281,10 @@ class ControlProjection(ModulatoryProjection_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
+    class sockets:
+        sender=[CONTROL_SIGNAL]
+        receiver=[PARAMETER_STATE]
+
     class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
         variable = 0.0
 
@@ -269,6 +297,8 @@ class ControlProjection(ModulatoryProjection_Base):
     def __init__(self,
                  sender=None,
                  receiver=None,
+                 weight=None,
+                 exponent=None,
                  function=Linear,
                  control_signal_params:tc.optional(dict)=None,
                  params=None,
@@ -283,7 +313,8 @@ class ControlProjection(ModulatoryProjection_Base):
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if (sender is None or sender.init_status is InitStatus.DEFERRED_INITIALIZATION or
-                    receiver is None or receiver.init_status is InitStatus.DEFERRED_INITIALIZATION):
+                inspect.isclass(receiver) or receiver is None or
+                    receiver.init_status is InitStatus.DEFERRED_INITIALIZATION):
             self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
@@ -291,6 +322,8 @@ class ControlProjection(ModulatoryProjection_Base):
         # super(ControlSignal_Base, self).__init__(sender=sender,
         super(ControlProjection, self).__init__(sender=sender,
                                                 receiver=receiver,
+                                                weight=weight,
+                                                exponent=exponent,
                                                 params=params,
                                                 name=name,
                                                 prefs=prefs,

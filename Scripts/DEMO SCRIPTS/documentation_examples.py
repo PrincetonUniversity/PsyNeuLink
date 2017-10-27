@@ -186,9 +186,9 @@ def mechanisms():
     # FIXME: ObjectiveMechanismError: "PROGRAM ERROR: call to
     # State._parse_state_spec() for OutputState of ComparatorMechanism-1
     # should have returned dict or State, but returned <class 'str'> instead"
-    my_comparator_mech = ComparatorMechanism(sample=my_action_select_mech,
-                                             target=my_reward_mech,
-                                             input_states=[[0], [0]])
+    my_comparator_mech = ComparatorMechanism(default_variable = [[0], [0]],
+                                             sample=my_action_select_mech,
+                                             target=my_reward_mech)
     # which function keyword argument description is correct?
     # endregion
 

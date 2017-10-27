@@ -125,6 +125,13 @@ register_category(entry=InputState,
                   registry=StateRegistry,
                   context=kwInitPy)
 
+# ParameterState
+from psyneulink.components.states.parameterstate import ParameterState
+register_category(entry=ParameterState,
+                  base_class=State_Base,
+                  registry=StateRegistry,
+                  context=kwInitPy)
+
 # OutputState
 from psyneulink.components.states.outputstate import OutputState
 register_category(entry=OutputState,
@@ -132,12 +139,41 @@ register_category(entry=OutputState,
                   registry=StateRegistry,
                   context=kwInitPy)
 
-# ParameterState
-from psyneulink.components.states.parameterstate import ParameterState
-register_category(entry=ParameterState,
+# ProcessInputState
+from psyneulink.components.process import ProcessInputState
+register_category(entry=ProcessInputState,
                   base_class=State_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
+
+# ProcessInputState
+from psyneulink.components.system import SystemInputState
+register_category(entry=SystemInputState,
+                  base_class=State_Base,
+                  registry=StateRegistry,
+                  context=kwInitPy)
+
+# LearningSignal
+from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
+register_category(entry=LearningSignal,
+                  base_class=State_Base,
+                  registry=StateRegistry,
+                  context=kwInitPy)
+
+# ControlSignal
+from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
+register_category(entry=ControlSignal,
+                  base_class=State_Base,
+                  registry=StateRegistry,
+                  context=kwInitPy)
+
+# GatingSignal
+from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
+register_category(entry=GatingSignal,
+                  base_class=State_Base,
+                  registry=StateRegistry,
+                  context=kwInitPy)
+
 
 # Projection -----------------------------------------------------------------------------------------------------------
 
@@ -152,6 +188,13 @@ register_category(entry=MappingProjection,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
 
+# LearningProjection
+from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
+register_category(entry=LearningProjection,
+                  base_class=Projection_Base,
+                  registry=ProjectionRegistry,
+                  context=kwInitPy)
+
 # ControlProjection
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 register_category(entry=ControlProjection,
@@ -159,9 +202,9 @@ register_category(entry=ControlProjection,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
 
-# LearningProjection
-from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-register_category(entry=LearningProjection,
+# GatingProjection
+from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
+register_category(entry=GatingProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
                   context=kwInitPy)

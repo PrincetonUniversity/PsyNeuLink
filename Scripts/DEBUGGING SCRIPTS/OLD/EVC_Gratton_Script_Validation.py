@@ -1,4 +1,3 @@
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 from psyneulink.components.projections.ControlProjection import ControlProjection
 
 from psyneulink.components.mechanisms.processing.transfermechanism import *

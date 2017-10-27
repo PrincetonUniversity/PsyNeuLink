@@ -1,8 +1,7 @@
 import numpy
 
 from psyneulink.components.functions.function import BogaczEtAl, Linear, Logistic, SimpleIntegrator
-from psyneulink.components.mechanisms.processing.integratormechanism \
-    import IntegratorMechanism
+from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
