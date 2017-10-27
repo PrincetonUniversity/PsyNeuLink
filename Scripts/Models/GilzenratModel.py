@@ -4,7 +4,7 @@ This implements a model of Locus Coeruleus / Norepinephrine (LC/NE) function des
 and electrophysiological data (from LC recordings) in non-human primates.
 
 """
-
+import sys
 import numpy as np
 
 from psyneulink.library.subsystems.agt.gilzenrattransfermechanism import GilzenratTransferMechanism
@@ -40,8 +40,8 @@ G = 0.5
 
 # numerical integration
 time_step_size = 0.02
-# number_of_trials = int(20/time_step_size)
-number_of_trials = 1
+number_of_trials = int(20/time_step_size)
+# number_of_trials = 1
 
 # noise
 standard_deviation = 0.22*(time_step_size**0.5)
@@ -110,8 +110,8 @@ LC = LCControlMechanism(
         modulated_mechanisms=[decision_layer, response],
         name='LC')
 
-for signal in LC._control_signals:
-    signal._intensity = k*initial_w + G
+# for signal in LC._control_signals:
+#     signal._intensity = k*initial_w + G
 
 # ELICITS WARNING:
 decision_process = Process(pathway=[input_layer,
@@ -143,14 +143,22 @@ decision_layer_target = [0.5]
 decision_layer_distractor = [0.5]
 response_layer = [0.5]
 
-def record_step():
+
+def record_trial():
     LC_results_v.append(h_v(LC.value[2][0], C, d))
     LC_results_w.append(LC.value[3][0])
     decision_layer_target.append(decision_layer.value[0][0])
     decision_layer_distractor.append(decision_layer.value[0][1])
     response_layer.append(response.value[0][0])
+    current_trial_num = len(LC_results_v)
+    if current_trial_num%100 == 0:
+        percent = int(round((float(current_trial_num) / number_of_trials)*100))
+        sys.stdout.write("\r"+ str(percent) +"% complete")
+        sys.stdout.flush()
 
-task.run(stim_list_dict, num_trials= number_of_trials, call_after_trial=record_step)
+sys.stdout.write("\r0% complete]")
+sys.stdout.flush()
+task.run(stim_list_dict, num_trials= number_of_trials, call_after_trial=record_trial)
 
 from matplotlib import pyplot as plt
 import numpy as np
