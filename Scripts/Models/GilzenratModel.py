@@ -40,8 +40,8 @@ G = 0.5
 
 # numerical integration
 time_step_size = 0.02
-number_of_trials = int(20/time_step_size)
-# number_of_trials = 1
+# number_of_trials = int(20/time_step_size)
+number_of_trials = 1
 
 # noise
 standard_deviation = 0.22*(time_step_size**0.5)
@@ -58,6 +58,7 @@ input_weights = np.array([[1, .33],[.33, 1]])
 
 # Implement self-excitatory (auto) and mutually inhibitory (hetero) connections within the decision layer
 decision_layer = GilzenratTransferMechanism(size=2,
+                                            initial_value=np.array([[1.0]]),
                                             matrix=np.matrix([[1,0],[0,-1]]),
                                             #auto=1.0,
                                             #hetero=-1.0,
@@ -72,7 +73,8 @@ output_weights = np.array([[1.84], [0]])
 # Implement response layer with a single, self-excitatory connection
 #To do Markus: specify recurrent self-connrection weight for response unit to 2.00
 response = GilzenratTransferMechanism(size=1,
-                                      matrix=np.matrix([[2.0]]),
+                                      initial_value=np.array([[2.0]]),
+                                      matrix=np.matrix([[0.5]]),
                                       function=Logistic(bias=2),
                                       time_step_size=time_step_size,
                                       noise=NormalDist(mean=0.0,standard_dev=standard_deviation).function,
@@ -110,8 +112,8 @@ LC = LCControlMechanism(
         modulated_mechanisms=[decision_layer, response],
         name='LC')
 
-# for signal in LC._control_signals:
-#     signal._intensity = k*initial_w + G
+for signal in LC._control_signals:
+    signal._intensity = k*initial_w + G
 
 # ELICITS WARNING:
 decision_process = Process(pathway=[input_layer,
@@ -151,12 +153,12 @@ def record_trial():
     decision_layer_distractor.append(decision_layer.value[0][1])
     response_layer.append(response.value[0][0])
     current_trial_num = len(LC_results_v)
-    if current_trial_num%100 == 0:
+    if current_trial_num%50 == 0:
         percent = int(round((float(current_trial_num) / number_of_trials)*100))
         sys.stdout.write("\r"+ str(percent) +"% complete")
         sys.stdout.flush()
 
-sys.stdout.write("\r0% complete]")
+sys.stdout.write("\r0% complete")
 sys.stdout.flush()
 task.run(stim_list_dict, num_trials= number_of_trials, call_after_trial=record_trial)
 
