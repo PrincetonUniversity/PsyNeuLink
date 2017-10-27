@@ -138,17 +138,6 @@ class TestGilzenratFullModel:
 
         Plotting code is commented out and only one trial will be executed
         """
-        import sys
-        import numpy as np
-
-        from psyneulink.library.subsystems.agt.gilzenrattransfermechanism import GilzenratTransferMechanism
-        from psyneulink.components.functions.function import Linear, Logistic, NormalDist
-        from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-        from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-        from psyneulink.components.process import Process
-        from psyneulink.components.system import System
-        from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
-
         # --------------------------------- Global Variables ----------------------------------------
 
         # Mode ("coherence")
