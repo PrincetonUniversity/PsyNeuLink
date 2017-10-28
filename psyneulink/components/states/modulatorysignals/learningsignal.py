@@ -400,7 +400,7 @@ class LearningSignal(ModulatorySignal):
 
     def _assign_default_name(self):
         # Preserve LEARNING_SIGNAL as name of the first LearningSignal
-        #    as this is used by System._instantiate_learning_graph
+        #    as documented, and as it is used by System._instantiate_learning_graph
         if self.name is self.componentName:
             return self.name
         # Otherwise, allow ModulatorySignal to construct default name as usual
