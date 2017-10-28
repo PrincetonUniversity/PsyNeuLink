@@ -128,11 +128,11 @@ OutputStates, and corresponding Projections (including those from `ModulatorySig
 specified explicitly in the **input_states** and **output_states** arguments of the Mechanism's constructor (see `first
 example <Mechanism_Example_1>` below), or in a `parameter specification dictionary <ParameterState_Specification>`
 assigned to its **params** argument using entries with the keys *INPUT_STATES* and *OUTPUT_STATES*, respectively (see
-`second example <Mechanism_Example_2>` below).  While specifying in the arguments directly is simpler and more
-convenient, the dictionary format allows parameter sets to be created elsewhere and/or re-used.  The value of each
-entry can be any of the allowable forms for `specifying a state <State_Creation>`. InputStates and OutputStates can
-also be added to an existing Mechanism using its `add_states` method, although this is generally not needed and
-therefore not recommended.
+`second example <Mechanism_Example_2>` below).  While specifying the arguments directly is simpler and more convenient,
+the dictionary format allows parameter sets to be created elsewhere and/or re-used.  The value of each entry can be
+any of the allowable forms for `specifying a state <State_Creation>`. InputStates and OutputStates can also be added
+to an existing Mechanism using its `add_states` method, although this is generally not needed and can have consequences
+that must be considered (e.g., see `note <Mechanism_Add_InputStates_Note>`), and therefore is not recommended.
 
 Examples
 ^^^^^^^^
@@ -412,6 +412,8 @@ with the item of the Mechanism's `variable <Mechanism_Base.variable>` to which i
 added to a Mechanism using its `add_states` method;  this extends its `variable <Mechanism_Base.variable>` by a
 number of items equal to the number of InputStates added, and each new item is assigned a value compatible with the
 `value <InputState.value>` of the corresponding InputState added.
+
+.. _Mechanism_Add_InputStates_Note:
 
 .. note::
     Adding InputStates to a Mechanism using its `add_states` method may introduce an incompatibility with the
