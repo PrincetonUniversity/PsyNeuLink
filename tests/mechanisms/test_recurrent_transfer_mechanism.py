@@ -84,18 +84,18 @@ class TestRecurrentTransferMechanismInputs:
         val = R.execute([10.0, 10.0, 10.0, 10.0]).tolist()
         np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
-    def test_recurrent_mech_inputs_list_of_fns(self):
-        R = RecurrentTransferMechanism(
-            name='R',
-            size=4,
-            integrator_mode=True
-        )
-        val = R.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
-        expected = [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
-        assert len(val) == len(expected) == 1
-        assert len(val[0]) == len(expected[0])
-        for i in range(len(val[0])):
-            np.testing.assert_allclose(val[0][i], expected[0][i])
+    # def test_recurrent_mech_inputs_list_of_fns(self):
+    #     R = RecurrentTransferMechanism(
+    #         name='R',
+    #         size=4,
+    #         integrator_mode=True
+    #     )
+    #     val = R.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
+    #     expected = [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
+    #     assert len(val) == len(expected) == 1
+    #     assert len(val[0]) == len(expected[0])
+    #     for i in range(len(val[0])):
+    #         np.testing.assert_allclose(val[0][i], expected[0][i])
 
     def test_recurrent_mech_no_inputs(self):
         R = RecurrentTransferMechanism(
