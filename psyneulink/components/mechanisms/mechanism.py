@@ -354,10 +354,9 @@ The three types of States are shown schematically in the figure below, and descr
 
 InputStates
 ^^^^^^^^^^^
-
-These receive and represent the input to a Mechanism. A Mechanism usually has only one (`primary <InputState_Primary>`)
+These receive and represent the input to a Mechanism. A Mechanism often has only one (`primary <InputState_Primary>`)
 `InputState`, identified by its `input_state <Mechanism_Base.input_state>`, attribute.  However some Mechanisms have
-more  than one InputState. For example, a `ComparatorMechanism` has one InputState for its **SAMPLE** and another for
+more than one InputState. For example, a `ComparatorMechanism` has one InputState for its **SAMPLE** and another for
 its **TARGET** input. If a Mechanism has more than one InputState, they are listed in the Mechanism's `input_states
 <Mechanism_Base.input_states>` attribute (note the plural).  The `input_states <Mechanism_Base.input_states>` attribute
 is a ContentAddressableList -- a PsyNeuLink-defined subclass of the Python class
@@ -394,24 +393,160 @@ Therefore, if any InputStates are specified in the constructor, the number of th
 `variable <Mechanism_Base.variable>`.  However, if InputStates are added using the Mechanism's `add_states` method,
 then its `variable <Mechanism_Base.variable>` is extended to accommodate the number of InputStates added (note that
 this must be coordinated with the Mechanism's `function <Mechanism_Base.function>`, which takes the Mechanism's
-`variable <Mechanism_Base.variable>` as its input -- see `InputState documentation
-<InputStates_Mechanism_Variable_and_Function>` for a more detailed explanation). The order in which InputStates are
-specified in Mechanism's constructor, and/or added using its `add_states` method, determines the order of the items
-to which they are assigned assigned in he Mechanism's `variable <Mechanism_Base.variable>`, and are listed in its
-`input_values <Mechanism_Base.input_values>` attribute.
+`variable <Mechanism_Base.variable>` as its input. The order in which InputStates are specified in Mechanism's constructor, and/or added using its `add_states` method, determines the order of the items to which they are assigned assigned in
+he Mechanism's `variable <Mechanism_Base.variable>`, and are listed in its `input_values <Mechanism_Base.input_values>`
+attribute.
 
 
 COMMENT:
 
-If more InputStates are specified than there are items in `variable <Mechanism_Base.variable>, the latter is extended
-to  match the former (see `InputState <InputStates_Mechanism_Variable_and_Function>` for a more detailed explanation).
+FROM InputStates ***************************************************************************************
 
+A Mechanism must have one InputState for each item of its `variable <Mechanism_Base.variable>` (see
+`Mechanism <Mechanism_Variable>`).  The value specified in the **variable** or **size** arguments of the
+Mechanism's constructor determines the number of items in its `variable <Mechanism_Base>`, which ordinarily matches
+the size (along axis 0) of the input expected by its `function <Mechanism_Base.function>`.  Therefore,
+if any InputStates are specified in the constructor, the number of them must match the number of items in
+`variable <Mechanism_Base.variable>`, and the `value <InputState.value>` of each InputState must be compatible
+with the item of the Mechanism's `variable <Mechanism_Base.variable>` to which it corresponds.  InputStates can be
+added to a Mechanism using its `add_states` method;  this extends its `variable <Mechanism_Base.variable>` by a
+number of items equal to the number of InputStates added, and each new item is assigned a value compatible with the
+`value <InputState.value>` of the corresponding InputState added.
+
+.. note::
+    Adding InputStates to a Mechanism using its `add_states` method may introduce an incompatibility with the
+    Mechanism's `function <Mechanism_Base.function>`, which takes the Mechanism's `variable <Mechanism_Base.variable>`
+    as its input; such an incompatibility will generate an error.  It is the user's responsibility to ensure that the
+    explicit assignment of InputStates to a Mechanism is coordinated with the assignment of its
+    `function <Mechanism_Base.function>`, so that the total number of InputStates (listed in the Mechanism's
+    `input_states <Mechanism_Base.input_states>` attribute matches the number of items expected for the input to the
+    function specified in the Mechanism's `function <Mechanism_Base.function>` attribute  (i.e., its size along axis 0).
+
+*** 1) NUMBER IN **input_states** OR INPUT_STATES ENTRY OF params DICT SUPERCEDES VARIABLE / SIZE SPECIFICATION
+However, if any InputStates are specified in its **input_states** argument or the *INPUT_STATES* entry of parameter
+dictionary assigned to its **params** argument, then the number of InputStates specified determines the number of
+items in the owner Mechanism's `variable <Mechanism_Base.variable>`, superseding any specification(s) in the
+**variable** and/or **size** arguments of the constructor.  Each item of the `variable <Mechanism_Base.variable>` is
+assigned a value compatible with the `value <InputState.value>` of the corresponding InputState). Similarly, if any
+InputStates are added to a Mechanism using its `add_states` method, then its `variable <Mechanism_Base.variable>`
+attribute is extended by a number of items equal to the number of InputStates added; and, again, each item is
+assigned a value compatible with the `value <InputState.value>` of the corresponding InputState.
+
+*** 2) SINGLE INPUTSTATE WITH MULTIPLE ITEMS MAPPING TO A MECHANISM's VARIABLE WITH MULTIPLE ITEMS
+with one exception: If the Mechanism's `variable <Mechanism_Base.variable>` has more than one item, it may still be
+assigned a single InputState;  in that case, the `value <InputState.value>` of that InputState must have the same
+number of items as the Mechanisms's `variable <Mechanism_Base.variable>`.
+
+*** 3) EXTEND VARIABLE (SIMILAR TO ABOVE):
+If more InputStates are specified than there are items in `variable <Mechanism_Base.variable>, the latter is extended
+to  match the former.
 
 The number of input_states for the Mechanism must match the number of items specified for the Mechanism's
 ``variable`` (that is, its size along its first dimension, axis 0).  An exception is if the Mechanism's `variable``
 has more than one item, but only a single InputState;  in that case, the ``value`` of that InputState must have the
 same number of items as the Mechanisms's ``variable``.
+
+*** RELATIONSHIP OF INPUTSTATE WITH MUTIPLE ITEMS TO MECHANISM VARIABLE WITH MULTIPLE ITEMS
+with one exception: If the Mechanism's `variable <Mechanism_Base.variable>` has more than one item, it may still be
+assigned a single InputState;  in that case, the `value <InputState.value>` of that InputState must have the same
+number of items as the Mechanisms's `variable <Mechanism_Base.variable>`.
+
+
+- USUALLY THIS IS DETERMINED BY ITS ORDER IN THE **input_states** ARGUMENT OF THE MECHANISM
+- IF IT IS ADDED IT IS ADD TO THE END OF THE input_states LIST AND THE MECHANISM'S VARIABLE IS EXTENDED TO
+     ACCOMODATE IT
+
+
+*********************************************************************************************************
+
+FROM ObjectiveMechanism
+
+.. _ObjectiveMechanism_InputStates:
+
+InputStates
+^^^^^^^^^^^
+
+One `InputState` is created for each item in a Mechanism's **input_states** argument.  The `variable
+<InputState.variable>` of each InputState is determined by the manner in which the `InputState is specified
+<InputState_Specification>`
+
+* **default_variable** argument of the ObjectiveMechanism's constructor -- this is used to determine the format for
+  the `variable <InputState.variable>` of each `InputState <InputState>` created for the corresponding `OutputState
+  <OutputState>` in the **monitored_output_states* argument.  If this is used, the number of items in the outermost
+  dimension (axis 0) of the  **variable** specification must match the number of items specified in the
+  **monitored_output_states** argument.
+
+* *VARIABLE* entry of a State specification dictionary in the **monitored_output_state** argument (see above) --
+  note that the value of the entry specifies the `variable <InputState.variable>` attribute of the
+  *InputState* created for the monitored OutputState, and does not affect to the monitored OutputState itself.
+
+* *Projection* entry of a `tuple specification <InputState_Tuple_Specification>` -- the dimensions of the Projection's
+  matrix (specifically, the number of its dimensions minus the number of dimensions of the `value <OutputState.value>`
+  of the OutputState from which it projects) determines the size of the `variable <InputState.variable>` attribute of
+  the InputState created.
+
+.. note::
+   The **monitored_output_states** argument of an ObjectiveMechanism serves the same purpose as the **input_states**
+   argument for a standard `Mechanism`, and any specifications beyond those that identify the OutputStates are used
+   to specify the attributes of the corresponding InputStates.
+
+.. _MappingProjections:
+
+MappingProjections
+^^^^^^^^^^^^^^^^^^
+
+A `MappingProjection` is created automatically from each OutputState specified in **monitored_output_states**
+to the InputState of the ObjectiveMechanism created for it, using `AUTO_ASSIGN_MATRIX` as the `matrix
+<MappingProjection.matrix>` parameter. However, if a specification in the **monitored_output_states** argument cannot be
+resolved to an instantiated OutputState at the time the ObjectiveMechanism is created, no MappingProjection is
+assigned, and this must be done by some other means; any specifications in the `monitored_output_states
+<ObjectiveMechanism.monitored_output_states>` attribute that are not associated with an instantiated OutputState at
+the time the ObjectiveMechanism is executed are ignored.
+
+    *************************************************************************************************************
+
+OTHER STUFF:
+
+*** VALUE OF INPUTSTATE AND VALUE OF MECHANISM:
+;  if it is
+      specified in the **input_states** argument, this is item of the Mechanism's `variable <Mechanism_Base.variable>`
+      corresponding to the place of the specification in the **input_states** list; otherwise it must correspond to the
+      first item of the owner's `variable <Mechanism_Base.variable>`.
+
+; if it is
+      specified in an **input_states** argument, its `variable <InputState.variable>` is formatted using the item of
+      the owner Mechanism's `variable <Mechanism_Base.variable>` corresponding to the place of the specification in the
+      **input_states** list; otherwise the first item of the owner's `variable <Mechanism_Base.variable>` is used.
+      If the InputState class name or *INPUT_STATE* keyword is used, a default name is assigned to the State
+
+   CHECK THIS:
+             reference_value IS THE ITEM OF variable CORRESPONDING TO THE InputState
+
+The values of a Mechanism's InputStates are assigned as items in its `input_values <Mechanism_Base.input_values>`
+attribute, in the order in which they are assigned in the constructor and/or added using the Mechanism's `add_states`
+method, and in which they are listed in the Mechanism's `input_states <Mechanism_Base.input_states>` attribute.  Note
+that a Mechanism's `input_value <Mechanism_Base.input_value>` attribute has the same information as the
+Mechanism's `variable <Mechanism_Base.variable>`, but in a list rather than an ndarray.
+
+    *************************************************************************************************************
+
 COMMENT
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .. _Mechanism_ParameterStates:
 
@@ -1975,7 +2110,7 @@ class Mechanism_Base(Mechanism):
         .. note::
             Adding States to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,
             which may produce an incompatibility with its `function <Mechanism_Base.function>` (see
-            `InputStates <InputStates_Mechanism_Variable_and_Function>` for a more detailed explanation).
+            `Mechanism InputStates` for a more detailed explanation).
 
         Arguments
         ---------

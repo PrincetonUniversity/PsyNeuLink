@@ -752,11 +752,15 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, RESPONSE_TIME
-from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES
+from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES, PROJECTIONS
 
 my_mech_1 = DDM()
-my_mech_2 = ObjectiveMechanism(monitored_output_states=[{MECHANISM: my_mech_1,
-                                                         OUTPUT_STATES: [DECISION_VARIABLE, RESPONSE_TIME]}])
+# my_mech_2 = TransferMechanism(input_states=[{MECHANISM: my_mech_1,
+#                                              OUTPUT_STATES: [DECISION_VARIABLE, RESPONSE_TIME]}])
+my_mech_2 = TransferMechanism(input_states=[{PROJECTIONS:[my_mech_1.output_states[DECISION_VARIABLE],
+                                                          my_mech_1.output_states[RESPONSE_TIME]]}])
+# my_mech_2 = ObjectiveMechanism(monitored_output_states=[{MECHANISM: my_mech_1,
+#                                                          OUTPUT_STATES: [DECISION_VARIABLE, RESPONSE_TIME]}])
 assert True
 
 

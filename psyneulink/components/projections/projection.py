@@ -100,7 +100,9 @@ Projection in context:
       * *MAPPING_PROJECTION* -- if the `sender <MappingProjection.sender>` and/or its `receiver
         <MappingProjection.receiver>` cannot be inferred from the context in which this specification occurs, then its
         `initialization is deferred <MappingProjection_Deferred_Initialization>` until both of those have been
-        determined (e.g., it is used in the specification of a `pathway <Process.pathway>` for a `Process`).
+        determined (e.g., it is used in the specification of a `pathway <Process.pathway>` for a `Process`). For
+        MappingProjections, a `matrix specification <Mapping_Matrix_Specification>` can also be used to specify the
+        projection.
       |
       * *LEARNING_PROJECTION*  (or *LEARNING*) -- this can only be used in the specification of a `MappingProjection`
         (see `tuple <Mapping_Matrix_Specification>` format).  If the `receiver <MappingProjection.receiver>` of the
@@ -148,7 +150,7 @@ Projection in context:
         manner as described above for keyword specifications.
 
       COMMENT:
-          WHAT ABOUT SPECIFICATION USING OutputState/ModulatorySignal OR Mechanism?
+          WHAT ABOUT SPECIFICATION USING OutputState/ModulatorySignal OR Mechanism? OR Matrix OR Matrix keyword
       COMMENT
 
       COMMENT:  ??IMPLEMENTED FOR PROJECTION PARAMS??
