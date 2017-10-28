@@ -249,6 +249,24 @@ COMMENT
               with the specification in the first item (i.e., for either the `variable <InputState.variable>` of the
               InputState, or the `value <OutputState.value>` of the OutputState specified to project to it.
 
+
+
+COMENT:
+*** ADD THIS BACK IN:
+* **default_variable** argument of its owner Mechanism's constructor -- this takes precedence over any of the is used to determine the
+format for
+  the `variable <InputState.variable>` of each `InputState <InputState>`
+
+* *VARIABLE* entry of a State specification dictionary in the **monitored_output_state** argument (see above) --
+  note that the value of the entry specifies the `variable <InputState.variable>` attribute of the
+  *InputState* created for the monitored OutputState, and does not affect to the monitored OutputState itself.
+
+* *Projection* entry of a `tuple specification <InputState_Tuple_Specification>` -- the dimensions of the Projection's
+  matrix (specifically, the number of its dimensions minus the number of dimensions of the `value <OutputState.value>`
+  of the OutputState from which it projects) determines the size of the `variable <InputState.variable>` attribute of
+  the InputState created.
+COMMENT
+
 .. _InputState_Projections:
 
 Projections
@@ -278,6 +296,16 @@ The GatingProjections received by an InputState are listed in its `mod_afferents
 
 An InputState has the following attributes:
 
+COMMENT:
+.. _InputState_Afferents:
+Afferent Projections
+~~~~~~~~~~~~~~~~~~~~
+
+*** FLESH OUT:
+`path_afferents <InputState.path_afferents>`
+`mod_afferents <InputState_mod_afferents>`
+COMMENT
+
 .. _InputState_Variable:
 
 Variable
@@ -290,6 +318,7 @@ Mechanism's `variable <Mechanism_Base.variable>` to which the InputState is assi
 <InputState_Value_Constraint>`).
 
 .. _InputState_Weights_And_Exponents:
+
 
 Weights and Exponents
 ~~~~~~~~~~~~~~~~~~~~~
@@ -335,10 +364,9 @@ When this occurs, the InputState executes any `Projections <Projection>` it rece
 <InputState.function>` to aggregate the values received from any `MappingProjections <MappingProjection>` it receives
 (listed in its its `path_afferents  <InputState.path_afferents>` attribute) and modulate them in response to any
 `GatingProjections <GatingProjection>` (listed in its `mod_afferents <InputState.mod_afferents>` attribute),
-and then assigns the result to the InputState's `value <InputState.value>` attribute.
-This, in turn, is assigned to the item of the Mechanism's  `variable <Mechanism_Base.variable>` and
-`input_values <Mechanism_Base.input_values>` attributes  corresponding to that InputState (see `Mechanism
-variable and input_values attributes <Mechanism_Variable>` for additional details).
+and then assigns the result to the InputState's `value <InputState.value>` attribute. This, in turn, is assigned to
+the item of the Mechanism's  `variable <Mechanism_Base.variable>` and `input_values <Mechanism_Base.input_values>`
+attributes  corresponding to that InputState (see `Mechanism_Variable_and_InputStates` for additional details).
 
 .. _InputState_Class_Reference:
 
