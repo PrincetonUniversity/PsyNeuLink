@@ -731,7 +731,7 @@ class ContentAddressableList(UserList):
       * getting and setting entries in the list using keys (string), in addition to numeric indices.
         the key to use is specified by the **key** arg of the constructor, and must be a string attribute;
         * for getting an entry:
-          the key must match the keyed attribute of a component in the list; otherwise an exception is raised;
+          the key must match the keyed attribute of a Component in the list; otherwise an exception is raised;
         * for setting an entry:
             - the key must match the key of the component being assigned;
             - if there is already a component in the list the keyed vaue of which matches the key, it is replaced;
@@ -741,7 +741,7 @@ class ContentAddressableList(UserList):
             attributes of components in the list.
 
     IMPLEMENTATION NOTE:
-        This class allows components to be maintained in lists, while providing ordered storage
+        This class allows Components to be maintained in lists, while providing ordered storage
         and the convenience access and assignment by name (e.g., akin to a dict).
         Lists are used (instead of a dict or OrderedDict) since:
             - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from
@@ -843,10 +843,11 @@ class ContentAddressableList(UserList):
         except TypeError:
             # It must be a string
             if not isinstance(key, str):
-                raise UtilitiesError("Non-numer key used for {} ({})must be a string)".
+                raise UtilitiesError("Non-numeric key used for {} ({})must be a string)".
                                       format(self.name, key))
             # The specified string must also match the value of the attribute of the class used for addressing
             if not key == value.name:
+            # if not key == type(value).__name__:
                 raise UtilitiesError("The key of the entry for {} {} ({}) "
                                      "must match the value of its {} attribute ({})".
                                       format(self.name,

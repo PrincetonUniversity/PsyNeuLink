@@ -37,19 +37,41 @@ as described below.
 Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~
 
-COMMENT:
-10/3/17 - MOVE MOST OF THIS TO InputState DOCSTRING
-COMMENT
-
 The **monitored_output_states** argument of the constructor specifies the `OutputStates <OutputState>` it monitors.
-It takes the place of the **input_stages** argument used by most other forms of `Mechanism`, and is used by the
+It takes the place of the **input_states** argument used by most other forms of `Mechanism`, and is used by the
 ObjectiveMechanism to create an `InputState` for each OutputState it monitors, along with a `MappingProjection`
 from the OutputState to the InputState.  The  **monitored_output_states** argument takes a list of State specifications,
 each item of which can be used to specify the OutputState to be monitored, as well as attributes of the InputState
 that is created and/or the MappingProjection from the one to the other.  Any of the means for `specifying an InputState
-<>` can be used to specify an item in **monitored_output_states**.  Typically, this includes specification of the
-OutputState to be monitored (see XXX).  If an OutputState is not specified for a given item, the InputState
-is created but will be ignored until an OutputState (and MappingProjection) are specified for that InputState.
+<InputState_Specification>` can be used to specify an item in **monitored_output_states**.  Typically, this includes
+`specification of the OutputState <InputState_OutputState_Specification>` to be monitored.  If an OutputState is not
+specified for a given item, the InputState is created but will be ignored until an OutputState (and MappingProjection)
+are specified for that InputState.
+
+COMMENT:
+Note that some forms of specification may
+depend on specifications made for the OutputState referenced, the Mechanism to which it belongs, and/or the Process
+or System to which that Mechanism
+belongs. These interactions (and the precedence afforded to each) are described below.
+
+  * **OutputState** -- a reference to the `OutputState <OutputState>` of a Mechanism;  this creates an InputState
+    with a `variable <InputState.variable>` that matches the format of the `value <OutputState.value>` of the
+    specified OutputState, and a `MappingProjection` between them using an *IDENTITY_MATRIX*.
+
+      TBI
+      Note that an outputState can be *excluded* from being monitored by assigning `None` as the value of its
+      `monitoring_status` attribute.  This specification takes precedence over any others;  that is, it suppresses
+      monitoring of that OutputState, irrespective of any other specifications that might otherwise apply to that
+      OutputState, including those described below.
+  ..
+  TBI
+  * **Mechanism** -- by default, the Mechanism's `primary OutputState <OutputState_Primary>` is used.  However,
+    if the Mechanism has any OutputStates specified in its `monitored_states` attribute, those are used (except for
+    any that specify `None` as their `monitoring_status`). This specification takes precedence over any of the other
+    types listed below:  if it is `None`, then none of that Mechanism's OutputStates are monitored; if it
+    specifies OutputStates to be monitored, those are monitored even if they do not satisfy any of the conditions
+    described in the specifications below.
+COMMENT
 
 The list of OutputStates monitored by the ObjectiveMechanism are listed in its `monitored_output_states
 <ObjectiveMechanism.monitored_output_states>` attribute.  When an ObjectiveMechanism is created by a
@@ -58,54 +80,9 @@ to be monitored to the ObjectiveMechanism.  A ControlMechanism passes OutputStat
 **objective_mechanism** argument (see `ControlMechanism_ObjectiveMechanism`), and a System passes any listed in its
 **monitor_for_control** argument (see `System_Control_Specification`).
 
-.. _ObjectiveMechanism_InputStates:
-
-InputStates
-^^^^^^^^^^^
-
-An ObjectiveMechanism creates one `InputState` for each OutputState specified in its **monitored_output_states**
-argument. By default, it uses the `value <OutputState.value>` of a monitored OutputState to determine the `variable
-<InputState.variable>` of the corresponding InputState.  However, this can be modified (see
-`ObjectiveMechanism_Monitored_Output_States_Examples` below), using any of the following:
-
-* **default_variable** argument of the ObjectiveMechanism's constructor -- this is used to determine the format for
-  the `variable <InputState.variable>` of each `InputState <InputState>` created for the corresponding `OutputState
-  <OutputState>` in the **monitored_output_states* argument.  If this is used, the number of items in the outermost
-  dimension (axis 0) of the  **variable** specification must match the number of items specified in the
-  **monitored_output_states** argument.
-
-* *VARIABLE* entry of a State specification dictionary in the **monitored_output_state** argument (see above) --
-  note that the value of the entry specifies the `variable <InputState.variable>` attribute of the
-  *InputState* created for the monitored OutputState, and does not affect to the monitored OutputState itself.
-
-* *matrix* entry of a `tuple specification <InputState_Tuple_Specification>` -- the dimensions of the
-  matrix (specifically, the number of its dimensions minus the number of dimensions of the `value <OutputState.value>`
-  of the OutputState from which it projects) determines the size of the `variable <InputState.variable>` attribute of
-  the InputState created.
-
-.. note::
-   The **monitored_output_states** argument of an ObjectiveMechanism serves the same purpose as the **input_states**
-   argument for a standard `Mechanism`, and any specifications beyond those that identify the OutputStates are used
-   to specify the attributes of the corresponding InputStates.
-
-.. _MappingProjections:
-
-MappingProjections
-^^^^^^^^^^^^^^^^^^
-
-A `MappingProjection` is created automatically from each OutputState specified in **monitored_output_states**
-to the InputState of the ObjectiveMechanism created for it, using `AUTO_ASSIGN_MATRIX` as the `matrix
-<MappingProjection.matrix>` parameter. However, if a specification in the **monitored_output_states** argument cannot be
-resolved to an instantiated OutputState at the time the ObjectiveMechanism is created, no MappingProjection is
-assigned, and this must be done by some other means; any specifications in the `monitored_output_states
-<ObjectiveMechanism.monitored_output_states>` attribute that are not associated with an instantiated OutputState at
-the time the ObjectiveMechanism is executed are ignored.
-
-COMMENT:
-WEIGHTS AND EXPONENTS
-COMMENT
 
 .. _ObjectiveMechanism_Structure:
+
 
 Structure
 ---------
@@ -116,26 +93,28 @@ Input
 ~~~~~
 
 An ObjectiveMechanism has one `InputState <InputState>` for each of the OutputStates specified in its
-**monitored_output_states** argument (see `ObjectiveMechanism_InputStates`). Each InputState receives a
+**monitored_output_states** argument (see `ObjectiveMechanism_Monitored_Output_States`). Each InputState receives a
 `MappingProjection` from the corresponding OutputState, the values of which are used by the ObjectiveMechanism's
 `function <ObjectiveMechanism.function>` to generate the value of its *OUTCOME* `OutputState
 <ObjectiveMechanism_Output>`.  The InputStates are listed in the ObjectiveMechanism's `input_states
 <ObjectiveMechanism.input_states>` attribute, and the monitored OutputStates from which they receive projections are
 listed in the same order its `monitored_output_states  <ObjectiveMechanism.monitored_output_states>` attribute.
 
-.. _ObjectiveMechanism_InputState_Size:
+.. _ObjectiveMechanism_InputStates:
 
-InputState `variable <InputState.variable>`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+InputState attributes
+^^^^^^^^^^^^^^^^^^^^^
 
 By default, the format of the `variable <InputState.variable>` for each InputState is determined by the `value
 <OutputState.value>` of the monitored OutputState to which it corresponds.  However, if either the **default_variable**
-or **size** argument is specified in an Objective Mechanism's constructor, or a variable is specified as part of a
-monitored OutputState specification (see `ObjectiveMechanism_InputStates`), then that is used as the format for the
-`variable <InputState.variable` of the corresponding InputState(s).  This can be used to configure a transfomration of
-the `value <OutputState.value>` of a monitored OutputState and the value used as the `variable <InputState.variable>`
-of the InputState (see `ObjectiveMechanism_Monitored_Output_States_Examples` below).
+or **size** argument is specified in an Objective Mechanism's constructor, or a `variable <InputState.variable>` is
+`specified for an InputState <InputStates_Mechanism_Variable_and_Function>` for one or more of the items in its
+**monitored_output_states** argument, then that is used as the format for the corresponding InputState(s).  This can
+be used to configure a transformation of the `value <OutputState.value>` of a monitored OutputState and the value
+used as the `variable <InputState.variable>` of the InputState.  This also applies to any other attributes that are
+specified for InputStates (e.g., its `weight <InputState.weight>` and or `exponent <InputState.exponent>` attributes).
 
+COMMENT:
 .. _ObjectiveMechanism_Weights_and_Exponents:
 
 Weights and Exponents
@@ -147,7 +126,6 @@ ObjectiveMechanism's `function <ObjectiveMechanism.function>` if it implements t
 applies the weights and/or exponents specified to the corresponding InputState `value <InputState.value>`\\s before
 combining these to generate the ObjectiveMechanism's `output <ObjectiveMechanism_Output>`.
 
-COMMENT:
   * **string**, **value** or **dict** -- these can be used as placemarkers for a state to be monitored, that will be
     instantiated later (for example, for the TARGET input of a Composition).  If a string is specified, it is used as
     the default name of the corresponding InputState (specified in the `input_states <ObjectiveMechanism.input_states>`
