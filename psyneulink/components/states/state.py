@@ -1797,41 +1797,8 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                                           **state_spec)
 
 
-    # # FIX: 10/3/17: HANDLE NAME HERE
     if isinstance(parsed_state_spec, dict) and parsed_state_spec[NAME] is None:
         parsed_state_spec[NAME] = state_type.__name__
-    else:
-        pass
-
-
-
-    # if not state_name is state_spec and not state_name in states:
-    #     state_name = state_spec
-    # # Add index suffix to name if it has already been used
-    # # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
-    # else:
-    #     state_name = state_spec + '_' + str(index)
-    # state_spec_dict[NAME] = state_name
-    #
-    # # If state_spec has NAME entry
-    # if NAME in state_spec:
-    #     # If it has been used, add suffix to it
-    #     if state_name is state_spec[NAME]:
-    #         state_name = state_spec[NAME] + '_' + str(key)
-    #     # Otherwise, use it
-    #     else:
-    #         state_name = state_spec[NAME]
-    # state_spec_dict[NAME] = state_name
-    #
-    # # MODIFIED 9/3/17 NEW:
-    # # If only one State, don't add index suffix
-    # if num_states == 1:
-    #     state_name = 'Default_' + state_param_identifier
-    # # Add incremented index suffix for each State name
-    # else:
-    #     state_name = 'Default_' + state_param_identifier + "-" + str(index+1)
-    # # MODIFIED 9/3/17 END
-
 
     # STATE SPECIFICATION IS A State OBJECT ***************************************
     # Validate and return
