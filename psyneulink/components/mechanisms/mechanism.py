@@ -375,15 +375,32 @@ that allows a specific InputState in the list to be accessed using its name as t
 
 .. _Mechanism_Variable_and_InputStates:
 
+The `value <InputState.value>` of each InputState for a Mechanism is assigned to a different item of the Mechanism's
+`variable <Mechanism_Base.variable>` attribute (a 2d np.array), as well as to a corresponding item of its `input_values
+<Mechanism_Base.input_values>` attribute (a list).  The `variable <Mechanism_Base.variable>` provides the input to the
+Mechanism's `function <Mechanism_Base.function>`, while its `input_values <Mechanism_Base.input_values>` provides a
+more convenient way of accessing the value of its individual items.  Because there is a one-to-one correspondence
+between a Mechanism's InputStates and the items of its `variable <Mechanism_Base.variable>`, their lengths must be
+equal;  that is, the number of items in the Mechanism's `variable <Mechanism_Base.variable>` attribute (its size
+along axis 0) must equal the number of InputStates in its `input_states <Mechanism_Base.input_states>` attribute.
+Therefore, if any InputStates are `specified in the constructor <Mechanism_InputState_Specification>`, the number of
+them must match the number of items in `variable <Mechanism_Base.variable>`.  However, if InputStates are added using
+the Mechanism's `add_states` method, then its `variable <Mechanism_Base.variable>` is extended to accommodate the
+number of InputStates added (note that this must be coordinated with the Mechanism's `function
+<Mechanism_Base.function>`, which takes the Mechanism's `variable <Mechanism_Base.variable>` as its input.
+
+The order in which `InputStates are specified <Mechanism_InputState_Specification>` in Mechanism's constructor,
+and/or `added <Mechanism_Add_InputStates>` using its `Mechanism_Base.add_states` method,  determines the order of the
+items to which they are assigned assigned in he Mechanism's `variable  <Mechanism_Base.variable>`, and are listed in
+its `input_values <Mechanism_Base.input_values>` attribute.
+
+.. _Mechanism_InputState_Specification:
+
 **Specifying InputStates and a Mechanism's** `variable <Mechanism_Base.variable>` **Attribute**
 
-In general, a Mechanism has one InputState for each item of its `variable <Mechanism_Base.variable>`, and uses the
-`value <InputState.value>` generated for each InputState as the value of the corresponding item of the Mechanism's
-`variable <Mechanism_Base.variable>`.  That, in turn, is provided as the input to the Mechanism's `function
-<Mechanism_Base.function>` (see `Mechanism_Variable_and_Value`).  When a `Mechanism is created, the number and format
-of the items in its `variable <Mechanism_Base.variable>` attribute, as well as the number of InputStates it has
-and their `variable <InputState.variable>` and `value <InputState.value>` attributes are determined by one of the
-following arguments in the Mechanism's constructor:
+When a `Mechanism is created, the number and format of the items in its `variable <Mechanism_Base.variable>`
+attribute, as well as the number of InputStates it has and their `variable <InputState.variable>` and `value
+<InputState.value>` attributes are determined by one of the following arguments in the Mechanism's constructor:
 
 * **default_variable** -- determines the format for the items of the Mechanism's `variable <Mechanism_Base>` attribute,
   and takes precedence over any other specifications.  The number of items in its outermost dimension (axis 0)
@@ -406,39 +423,12 @@ following arguments in the Mechanism's constructor:
 * *INPUT_STATES* entry of a params dict -- specifications are treated in the same manner as those in the
   **input_states** argument, and take precedence over those.
 
+.. _Mechanism_Add_InputStates:
 
-Xxxxxxxxxxxxxxxxxxxxxxxxxxx
+**Adding InputStates**
 
-The value specified in the **variable** or **size** arguments of the
-Mechanism's constructor determines the number of items in its `variable <Mechanism_Base>`, which ordinarily matches
-the size (along axis 0) of the input expected by its `function <Mechanism_Base.function>`.  Therefore,
-if any InputStates are specified in the constructor, the number of them must match the number of items in
-`variable <Mechanism_Base.variable>`, and the `value <InputState.value>` of each InputState must be compatible
-with the item of the Mechanism's `variable <Mechanism_Base.variable>` to which it corresponds.
-
-.. _Mechanism_Variable:
-
-The `value <InputState.value>` of each InputState for a Mechanism is assigned to a different item of the Mechanism's
-`variable <Mechanism_Base.variable>` attribute (a 2d np.array), as well as to a corresponding item of its `input_values
-<Mechanism_Base.input_values>` attribute (a list).  The `variable <Mechanism_Base.variable>` provides the input to the
-Mechanism's `function <Mechanism_Base.function>`, while its `input_values <Mechanism_Base.input_values>` provides a
-more convenient way of accessing the value of its individual items.  Because there is a one-to-one correspondence
-between a Mechanism's InputStates and the items of its `variable <Mechanism_Base.variable>`, their lengths must be
-equal;  that is, the number of items in the Mechanism's `variable <Mechanism_Base.variable>` attribute (its size
-along axis 0) must equal the number of InputStates in its `input_states <Mechanism_Base.input_states>` attribute.
-Therefore, if any InputStates are specified in the constructor, the number of them must match the number of items in
-`variable <Mechanism_Base.variable>`.  However, if InputStates are added using the Mechanism's `add_states` method,
-then its `variable <Mechanism_Base.variable>` is extended to accommodate the number of InputStates added (note that
-this must be coordinated with the Mechanism's `function <Mechanism_Base.function>`, which takes the Mechanism's
-`variable <Mechanism_Base.variable>` as its input. The order in which InputStates are specified in Mechanism's
-constructor, and/or added using its `add_states` method, determines the order of the items to which they are assigned
-assigned in
-he Mechanism's `variable <Mechanism_Base.variable>`, and are listed in its `input_values <Mechanism_Base.input_values>`
-attribute.
-
-
-*Adding InputStates.*  InputStates can be added to a Mechanism using its `add_states` method;  this extends its
-`variable <Mechanism_Base.variable>` by a number of items equal to the number of InputStates added, and each new item
+InputStates can be added to a Mechanism using its `add_states` method;  this extends its `variable
+<Mechanism_Base.variable>` by a number of items equal to the number of InputStates added, and each new item
 is assigned a value compatible with the `value <InputState.value>` of the corresponding InputState added.
 
 .. _Mechanism_Add_InputStates_Note:
@@ -453,11 +443,9 @@ is assigned a value compatible with the `value <InputState.value>` of the corres
     function specified in the Mechanism's `function <Mechanism_Base.function>` attribute  (i.e., its size along axis 0).
 
 
-
 COMMENT:
 
 FROM InputStates ***************************************************************************************
-
 
 *** 1) NUMBER IN **input_states** OR INPUT_STATES ENTRY OF params DICT SUPERCEDES VARIABLE / SIZE SPECIFICATION
 However, if any InputStates are specified in its **input_states** argument or the *INPUT_STATES* entry of parameter
@@ -493,7 +481,6 @@ number of items as the Mechanisms's `variable <Mechanism_Base.variable>`.
 - IF IT IS ADDED IT IS ADD TO THE END OF THE input_states LIST AND THE MECHANISM'S VARIABLE IS EXTENDED TO
      ACCOMODATE IT
 
-
 *********************************************************************************************************
 
 FROM ObjectiveMechanism
@@ -514,7 +501,7 @@ assigned, and this must be done by some other means; any specifications in the `
 <ObjectiveMechanism.monitored_output_states>` attribute that are not associated with an instantiated OutputState at
 the time the ObjectiveMechanism is executed are ignored.
 
-    *************************************************************************************************************
+*************************************************************************************************************
 
 OTHER STUFF:
 
@@ -539,10 +526,10 @@ method, and in which they are listed in the Mechanism's `input_states <Mechanism
 that a Mechanism's `input_value <Mechanism_Base.input_value>` attribute has the same information as the
 Mechanism's `variable <Mechanism_Base.variable>`, but in a list rather than an ndarray.
 
-    *************************************************************************************************************
+*************************************************************************************************************
 
 COMMENT
-
+.. _Mechanism_InputState_Projections:
 
 **Projections to InputStates**
 
@@ -554,19 +541,6 @@ its `path_afferents <InputState.path_afferents>` attribute.  If the Mechanism is
 attribute.  The InputState's `function <InputState.InputState.function>` aggregates  the values received from its
 `path_afferents <InputState.path_afferents>`, `modulates <ModulatorySignal_Modulation>` this in response to any
 GatingProjections it receives, and assigns the result to the InputState's `value <InputState.value>` attribute.
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
