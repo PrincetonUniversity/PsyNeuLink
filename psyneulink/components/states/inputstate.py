@@ -662,7 +662,8 @@ class InputState(State_Base):
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
                                MECHANISM: None,
-                               OUTPUT_STATES: None})
+                               OUTPUT_STATES: None
+                               })
 
     #endregion
 

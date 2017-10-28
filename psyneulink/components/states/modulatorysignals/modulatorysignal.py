@@ -450,7 +450,7 @@ class ModulatorySignal(OutputState):
         # If the name is not a default name for the class,
         #    or the ModulatorySignal has no projections (used to name it)
         #    then return
-        if (not self.name is self.__class__.__name__ or
+        if not (self.name is self.__class__.__name__ or
             self.__class__.__name__ + '-' in self.name or
                     len(self.efferents)==0):
             return self.name
