@@ -122,7 +122,8 @@ Specifying States
 Every Mechanism has one or more `InputStates <InputState>`, `ParameterStates <ParameterState>`, and `OutputStates
 <OutputState>` (described `below <Mechanism_States>`) that allow it to receive and send `Projections <Projection>`,
 and to execute its `function <Mechanism_Base.function>`).  When a Mechanism is created, it automatically creates the
-ParameterStates it needs to represent its parameters, including those of its `function <Mechanism_Base.function>`. It
+ParameterStates it needs to represent its panon9rameters, including those of its `function
+<Mechanism_Base.function>`. It
 also creates any InputStates and OutputStates required for the Projections it has been assigned. InputStates and
 OutputStates, and corresponding Projections (including those from `ModulatorySignals <ModulatorySignal>`) can also be
 specified explicitly in the **input_states** and **output_states** arguments of the Mechanism's constructor (see `first
