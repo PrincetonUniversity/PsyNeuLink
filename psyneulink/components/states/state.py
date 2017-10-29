@@ -1726,7 +1726,6 @@ def _instantiate_state_list(owner,
 def _instantiate_state(state_type:_is_state_class,           # State's type
                        owner:tc.any(Mechanism, Projection),  # State's owner
                        reference_value,                      # constraint for State's value and default for variable
-                       index:tc.optional(int)=None,          # index in list of Mechanism's States of state_type
                        name:tc.optional(str)=None,           # state's name if specified
                        variable=None,                        # used as default value for state if specified
                        params=None,                          # state-specific params
@@ -1778,7 +1777,6 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     # Parse reference value to get actual value (in case it is, itself, a specification dict)
     reference_value_dict = _parse_state_spec(owner=owner,
-                                             item=index,
                                              state_type=state_type,
                                              state_spec=reference_value,
                                              value=None,
@@ -1976,7 +1974,6 @@ STATE_SPEC_INDEX = 0
 
 @tc.typecheck
 def _parse_state_spec(state_type=None,
-                      item=None,
                       owner=None,
                       reference_value=None,
                       name=None,
@@ -2206,6 +2203,10 @@ def _parse_state_spec(state_type=None,
     elif is_value_spec(state_specification):
         # FIX: 10/3/17 - SHOULD BOTH OF THESE BE THE SAME? XXX
         #                SHOULDN'T VALUE BE NONE UNTIL FUNCTION IS INSTANTIATED?? OR DEPEND ON STATE TYPE?
+        if reference_value is not None and not iscompatible(np.squeeze(reference_value), state_specification):
+            name = state_dict[NAME] or ""
+            raise StateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})".
+                             format(name, state_type.__name__, owner.name, state_specification, reference_value))
         state_dict[VARIABLE] = state_specification
         state_dict[REFERENCE_VALUE] = state_specification
 

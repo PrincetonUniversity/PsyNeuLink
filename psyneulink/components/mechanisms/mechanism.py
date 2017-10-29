@@ -1331,9 +1331,14 @@ class Mechanism_Base(Mechanism):
         # VALIDATE INPUT STATE(S)
 
         # INPUT_STATES is specified, so validate:
+        reference_value = self.variable
         if INPUT_STATES in params and params[INPUT_STATES] is not None:
-            for item, state_spec in enumerate(params[INPUT_STATES]):
-                _parse_state_spec(owner=self, item=item, state_type=InputState, state_spec=state_spec)
+            for i, state_spec in enumerate(params[INPUT_STATES]):
+                if reference_value is not None:
+                    reference_value = self.variable[i]
+                _parse_state_spec(owner=self, state_type=InputState,
+                                  reference_value=reference_value,
+                                  state_spec=state_spec)
         # INPUT_STATES is not specified
         else:
             # pass if call is from assign_params (i.e., not from an init method)
