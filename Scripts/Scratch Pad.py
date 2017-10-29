@@ -773,7 +773,6 @@ my_mech_2 = TransferMechanism(default_variable=[[0],[0]],
 
 assert True
 
-
 #endregion
 
 #region TEST INPUT FORMATS
