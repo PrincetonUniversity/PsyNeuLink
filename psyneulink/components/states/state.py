@@ -1891,7 +1891,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 #                NOT SURE WHAT THE PURPOSE IS
 #     setattr(owner, state.name+'.value', state.value)
 
-    state._validate_reference_value(reference_value)
+    state._validate_against_reference_value(reference_value)
 
     return state
 

@@ -683,15 +683,16 @@ class InputState(State_Base):
                                       format(EXPONENT, self.name, self.owner.name, target_set[EXPONENT]))
 
 
-    def _validate_reference_value(self, reference_value):
-        """Validate that value of the State is compatible with the reference_value
+    def _validate_against_reference_value(self, reference_value):
+        """Validate that State.value is compatible with reference_value
 
         reference_value is the item of the owner Mechanism's variable to which the InputState is assigned
         """
         if reference_value is not None and not iscompatible(reference_value, self.value):
             name = self.name or ""
-            raise StateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})".
-                             format(name, self.componentName, self.owner.name, self.value, reference_value))
+            raise InputStateError("Value specified for {} {} of {} ({}) is not compatible "
+                                  "with its expected format ({})".
+                                  format(name, self.componentName, self.owner.name, self.value, reference_value))
 
     def _instantiate_function(self, context=None):
         """Insure that function is LinearCombination and that output is compatible with owner.instance_defaults.variable

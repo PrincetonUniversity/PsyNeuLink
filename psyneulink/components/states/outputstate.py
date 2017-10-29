@@ -705,16 +705,16 @@ class OutputState(State_Base):
             except KeyError:
                 pass
 
-    def _validate_reference_value(self, reference_value):
-        """Validate that value of the State is compatible with the reference_value
+    def _validate_against_reference_value(self, reference_value):
+        """Validate that State.variable is compatible with the reference_value
 
-        reference_value is the value of the parameter to which the ParameterState is assigned
+        reference_value is the value of the Mechanism to which the OutputState is assigned
         """
-        if reference_value is not None and not iscompatible(reference_value, self.value):
+        if reference_value is not None and not iscompatible(reference_value, self.variable):
             name = self.name or ""
-            raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible with "
-                                   "its expected format ({})".
-                                   format(name, self.componentName, self.owner.name, self.value, reference_value))
+            raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible "
+                                   "with its expected format ({})".
+                                   format(name, self.componentName, self.owner.name, self.variable, reference_value))
 
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate calculate function
