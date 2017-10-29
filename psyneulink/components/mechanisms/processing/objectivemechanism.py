@@ -676,7 +676,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         #    - get specified item for variable
         input_state_variables = []
         for i, input_state in enumerate(input_states):
-            input_state_dict = _parse_state_spec(owner=self, state_type=InputState, state_spec=input_state)
+            input_state_dict = _parse_state_spec(owner=self, item=i, state_type=InputState, state_spec=input_state)
             input_state_variables.append(input_state_dict[VARIABLE])
 
         # If variable argument of ObjectiveMechanism constructor was specified,

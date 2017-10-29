@@ -1726,6 +1726,7 @@ def _instantiate_state_list(owner,
 def _instantiate_state(state_type:_is_state_class,           # State's type
                        owner:tc.any(Mechanism, Projection),  # State's owner
                        reference_value,                      # constraint for State's value and default for variable
+                       index:tc.optional(int)=None,          # index in list of Mechanism's States of state_type
                        name:tc.optional(str)=None,           # state's name if specified
                        variable=None,                        # used as default value for state if specified
                        params=None,                          # state-specific params
@@ -1777,10 +1778,11 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     # Parse reference value to get actual value (in case it is, itself, a specification dict)
     reference_value_dict = _parse_state_spec(owner=owner,
-                                               state_type=state_type,
-                                               state_spec=reference_value,
-                                               value=None,
-                                               params=None)
+                                             item=index,
+                                             state_type=state_type,
+                                             state_spec=reference_value,
+                                             value=None,
+                                             params=None)
     # Its value is assigned to the VARIABLE entry (including if it was originally just a value)
     reference_value = reference_value_dict[VARIABLE]
 
@@ -1974,6 +1976,7 @@ STATE_SPEC_INDEX = 0
 
 @tc.typecheck
 def _parse_state_spec(state_type=None,
+                      item=None,
                       owner=None,
                       reference_value=None,
                       name=None,
@@ -2201,7 +2204,7 @@ def _parse_state_spec(state_type=None,
 
     # value, so use as variable of State
     elif is_value_spec(state_specification):
-        # FIX: 10/3/17 - SHOULD BOTH OF THESE BE THE SAME?
+        # FIX: 10/3/17 - SHOULD BOTH OF THESE BE THE SAME? XXX
         #                SHOULDN'T VALUE BE NONE UNTIL FUNCTION IS INSTANTIATED?? OR DEPEND ON STATE TYPE?
         state_dict[VARIABLE] = state_specification
         state_dict[REFERENCE_VALUE] = state_specification

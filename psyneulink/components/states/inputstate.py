@@ -79,36 +79,52 @@ is the same as one that already exists, its name will be suffixed with a numeric
 InputState with that name), and the InputState will be added to the list (that is, it will *not* replace ones that
 were already created).
 
-.. _InputState_Value_Constraint:
+.. _InputState_Variable_and_Value:
 
-The `value <InputState.value>` of an InputState *must always* be compatible with (that is, have the same number and
-type of elements as) the item of its owner Mechanism's `variable <Mechanism_Base.variable>` to which it is assigned
-(see `Mechanism InputStates <Mechanism_InputStates`).  In almost all cases, this is also true of the InputState's
-`variable <InputState.variable>` attribute.  That is because the default `function <InputState.function>` for an
-InputState is a `LinearCombination`, that combines the inputs received from the InputState's `Projections <Projection>`
-to generate its `value <InputState.value>`, which has the same format as its `variable <InputState.variable>`.
-Therefore, in practice, when creating an InputState, its `variable <InputState.variable>` attribute should also match
-the item of its owner's `variable <Mechanism_Base.variable>` to which the InputState is assigned. This is enforced if
-the **default_variable** or **size** argument is specified in the owner Mechanism's constructor (see `Mechanism
-InputStates <Mechanism_InputStates>`), and is assumed in the description of InputState specifications below.
+Each InputState is assigned to an item of its owner Mechanism's `variable <Mechanism_Base.variable>` attribute (see
+`Mechanism InputStates <Mechanism_InputStates`), and the `value <InputState.value>` of the InputState must be
+compatible with (that is, have the same number and type of elements as) that item.  In almost all cases, this is also
+true of the InputState's `variable <InputState.variable>` attribute.  That is because the default `function
+<InputState.function>` for an InputState is a `LinearCombination`, that combines the inputs received from the
+InputState's `Projections <Projection>` to generate its `value <InputState.value>`, which has the same format as its
+`variable <InputState.variable>`. Therefore, in practice, when creating an InputState, its `variable
+<InputState.variable>` attribute should also match the item of its owner's `variable <Mechanism_Base.variable>` to
+which the InputState is assigned.
 
 COMMENT:
-*** ADD THIS BACK IN:
-* **default_variable** argument of its owner Mechanism's constructor -- this takes precedence over any of the is used
+*** ADD THE FOLLOWING:
+
+The format of an InputState's `variable <InputState.variable>` can be specified in any the places listed below:
+
+Mechanism constructor:
+
+* **default_variable** or **size** argument of its owner Mechanism's constructor -- this takes precedence over any of
+the is used
 to determine the format for the `variable <InputState.variable>` of each `InputState <InputState>`
 
-* *VARIABLE* entry of a State specification dictionary in the **monitored_output_state** argument (see above) --
-  note that the value of the entry specifies the `variable <InputState.variable>` attribute of the
-  *InputState* created for the monitored OutputState, and does not affect to the monitored OutputState itself.
+------
+
+**input_states** arg:
+
+* value spec in **input_states** ar or  (see below)
+* *VARIABLE* or *VALUE* entry of a State specification dictionary in the **input_states** argument (see
+  above)
+
+------
+
+InputState specification dictionary:
+
+* `OutputState or Projection <LINK>` spec (see below)
 
 * *Projection* entry of a `tuple specification <InputState_Tuple_Specification>` -- the dimensions of the Projection's
   matrix (specifically, the number of its dimensions minus the number of dimensions of the `value <OutputState.value>`
   of the OutputState from which it projects) determines the size of the `variable <InputState.variable>` attribute of
   the InputState created.
+
+* *PROJECTIONS* entry of State spec dict
+
+*
 COMMENT
-
-
-
 
 InputStates can be specified in a variety of ways, that fall into three broad categories:  specifying an InputState
 directly, by an `OutputState` or `Projection` that should project to it; or by using a `State specification dictionary
@@ -123,16 +139,16 @@ these is describe below.
       the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which it is assigned.
     ..
     * **InputState class**, keyword *INPUT_STATE*, or a string -- this creates a default InputState, using the
-      item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which it is assigned as the format for
-      the InputState`s `variable <InputState.variable>`;  if a string is specified, it is used as the name of the
-      InputState (see :ref:`naming conventions <LINK>`).
+      item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState is assigned as the
+      format for the InputState`s `variable <InputState.variable>`;  if a string is specified, it is used as the name
+      of the InputState (see :ref:`naming conventions <LINK>`).
     ..
     * **value** -- this creates a default InputState using the specified value as the InputState's `variable
-      <InputState.variable>`; this must be compatible with the item of the owner Mechanism's `variable
-      <Mechanism_Base.variable>` to which it is assigned.
+      <InputState.variable>`; the format must be compatible with the item of the owner Mechanism's `variable
+      <Mechanism_Base.variable>` to which the InputState is assigned.
     ..
-    * **string** -- this creates a default `InputState` using the string as its name, and `variable
-      <InputState.variable>` attribute formatted in the same manner as an InputState class, keyword or string
+    * **string** -- this creates a default `InputState` using the string as its name; its `variable
+      <InputState.variable>` is formatted in the same manner as an InputState class, keyword or string
       specification (see above).  This can be used as a "place marker" for an InputState that will be assigned its
       Projection(s) at a later time.
 
@@ -140,11 +156,13 @@ these is describe below.
 
     **OutputState or Projection Specification**
 
-    * **OutputState** -- a reference to an existing `OutputState <OutputState>` of a Mechanism;  this creates an
-      InputState with a `variable <InputState.variable>` that matches the format of the `value <OutputState.value>`
-      of the specified OutputState, which must be compatible with the item of the owner Mechanism's `variable
-      <Mechanism_Base.variable>` to which it is assigned.  A `MappingProjection` is created from the OutputState
-      to the InputState using an *IDENTITY_MATRIX*.
+    * **OutputState** -- a reference to an existing `OutputState`;  this creates an InputState and a
+      MappingProjection to it from the specified OutputState.  By default, the OutputState's `value <OutputState.value>`
+      is used to format the InputState's `variable <InputState.variable>`, and an `IDENTITY_MATRIX` is used for the
+      MappingProjection.  However, if **default_variable** argument is specified in the constructor for the InputState's
+      owner Mechanism, then the corresponding item of its value is used as the format for the InputState's `variable
+      <InputState.variable>`, and `AUTO_ASSIGN` is used for the MappingProjection, which adjusts its `value
+      <Projection.value>` to match the InputState's `variable <InputState.variable>`.
 
     * **Mechanism** -- the Mechanism's `primary OutputState <OutputState_Primary>` is used, and the InputState
       (and MappingProjection to it) are created as for an OutputState specification (see above).
@@ -154,7 +172,7 @@ these is describe below.
       the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState is assigned.
     ..
     * **Projection subclass** -- this creates a default InputState, formattig its `variable <InputState.variable>`
-      in the same manner an InputState class, keyword or string (see above), and using this as the template for the
+      in the same manner as an InputState class, keyword or string (see above), and using this as the format for the
       Projection's `value <Projection.value>`.  Since the Projection's `sender <Projection.sender>` is unspecified,
       its `initialization is deferred <Projection_Deferred_Initialization>`.  In some cases, initialization
       can happen automatically -- for example, when a `ControlProjection` is created for the parameter of a Mechanism
@@ -315,7 +333,7 @@ This serves as the template for the `value <Projection.value>` of the `Projectio
 InputState:  each must be compatible with (that is, match both the number and type of elements of) the InputState's
 `variable <InputState.variable>`.  In general, this must also be compatible with the item of the owner
 Mechanism's `variable <Mechanism_Base.variable>` to which the InputState is assigned (see `above
-<InputState_Value_Constraint>`).
+<InputState_Variable_and_Value>`).
 
 .. _InputState_Weights_And_Exponents:
 

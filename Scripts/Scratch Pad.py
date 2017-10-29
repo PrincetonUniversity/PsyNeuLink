@@ -761,9 +761,15 @@ my_mech_1 = DDM()
 #                                                           my_mech_1.output_states[RESPONSE_TIME]]}])
 # my_mech_2 = ObjectiveMechanism(monitored_output_states=[{MECHANISM: my_mech_1,
 #                                                          OUTPUT_STATES: [DECISION_VARIABLE, RESPONSE_TIME]}])
+
+# # PROBLEM CASE:
+# my_mech_2 = TransferMechanism(input_states=[[32, 24], 'HELLO'])
+
 my_mech_2 = TransferMechanism(default_variable=[[0],[0]],
                               input_states=[[32, 24], 'HELLO'])
 
+
+# my_mech_2.execute()
 
 assert True
 

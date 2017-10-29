@@ -351,12 +351,6 @@ The three types of States are shown schematically in the figure below, and descr
    `value <Mechanism_Base.value>`, the items of which are referenced by its OutputStates to determine their own
    `value <OutputState.value>`\\s (see `Mechanism_Variable_and_Value` above, and more detailed descriptions below).
 
-
-COMMENT:
-********************************************************************************************************************
-********************************************************************************************************************
-********************************************************************************************************************
-COMMENT
 .. _Mechanism_InputStates:
 
 InputStates
@@ -409,7 +403,7 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   `variable <Mechanism_Base>` attribute.  The number of items in its outermost dimension (axis 0) determines the
   number of InputStates created for the Mechanism, and the format of each item determines the format for the
   `variable <InputState.variable>` and `value  <InputState.value>` attributes of the corresponding InputState.
-  If any InputStates are specified in the  **input_states** argument or an *INPUT_STATES* entry of
+  If any InputStates are specified in the **input_states** argument or an *INPUT_STATES* entry of
   a specification dictionary assigned to the **params** argument of the Mechanism's constructor, then the number
   must match the number of items in **default_variable**, or an error is generated.  The format of the items in
   **default_variable** are used to specify the format of the `variable <InputState.variable>` or `value
@@ -425,11 +419,16 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   created for the Mechanism. Each item must be an `InputState specification <InputState_Specification>`, and the number
   of items must match the number of items in the **default_variable** argument or **size** argument
   if either of those is specified.  If the `variable <InputState.variable>` and/or `value <InputState.value>`
-  is explicitly specified for an InputState in the **input_states** argument, it takes precedence over the value in
-  **default_variable**;  otherwise, the format of the item in **default_variable** corresponding to the InputState
-  is used to specify the format of its `variable <InputState.variable>` (e.g., the InputState is `specified using an
-  OutputState <InputState_OutputState_Specification>` to project to it;  see `EXAMPLE <***>`).  If **default_variable**
-  is not specified, a default value is specified by the Mechanism.
+  is `explicitly specified for an InputState <InputState_Variable_and_Value>` in the **input_states** argument or
+  *INPUT_STATES* entry of a **params** dictionary, it must be compatible with the value of the corresponding
+  item **default_variable**; otherwise, the format of the item in **default_variable** corresponding to the
+  InputState is used to specify the format of its `variable <InputState.variable>` (e.g., the InputState is
+  `specified using an OutputState <InputState_OutputState_Specification>` to project to it;).  If
+  **default_variable** is not specified, a default value is specified by the Mechanism.
+
+COMMENT:
+*** ADD SOME EXMPLES HERE
+COMMENT
 
 COMMENT:
 *** ADD THESE TO ABOVE WHEN IMPLEMENTED:
@@ -1333,8 +1332,8 @@ class Mechanism_Base(Mechanism):
 
         # INPUT_STATES is specified, so validate:
         if INPUT_STATES in params and params[INPUT_STATES] is not None:
-            for state_spec in params[INPUT_STATES]:
-                _parse_state_spec(owner=self, state_type=InputState, state_spec=state_spec)
+            for item, state_spec in enumerate(params[INPUT_STATES]):
+                _parse_state_spec(owner=self, item=item, state_type=InputState, state_spec=state_spec)
         # INPUT_STATES is not specified
         else:
             # pass if call is from assign_params (i.e., not from an init method)

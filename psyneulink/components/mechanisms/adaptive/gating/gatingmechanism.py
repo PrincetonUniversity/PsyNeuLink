@@ -360,8 +360,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
                 raise GatingMechanismError("{} arg of {} must be list".
                                            format(GATING_SIGNAL, self.name))
 
-            for gating_signal in target_set[GATING_SIGNALS]:
-                _parse_state_spec(state_type=GatingSignal, owner=self, state_spec=gating_signal)
+            for item, gating_signal in enumerate(target_set[GATING_SIGNALS]):
+                _parse_state_spec(state_type=GatingSignal, item=item, owner=self, state_spec=gating_signal)
 
     def _instantiate_output_states(self, context=None):
 
