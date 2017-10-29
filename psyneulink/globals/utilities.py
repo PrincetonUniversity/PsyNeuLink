@@ -363,7 +363,10 @@ def iscompatible(candidate, reference=None, **kargs):
     else:
         match_type = type(reference)
         # If length specification is non-zero (i.e., use length) and reference is an object for which len is defined:
-        if kargs[kwCompatibilityLength] and isinstance(reference, (list, tuple, dict, np.ndarray)):
+        if (kargs[kwCompatibilityLength] and
+                (isinstance(reference, (list, tuple, dict)) or
+                         isinstance(reference, np.ndarray) and reference.ndim)
+            ):
             match_length = len(reference)
         else:
             match_length = 0
@@ -383,6 +386,18 @@ def iscompatible(candidate, reference=None, **kargs):
     # # Reference is a matrix or a keyword specification for one
     if is_matrix_spec(reference):
         return is_matrix(candidate)
+
+    # MODIFIED 10/29/17 NEW:
+    # IMPLEMENTATION NOTE: This allows a number in an ndarray to match a float or int
+    # if (isinstance(candidate, np.ndarray) and candidate.ndim == 0) and issubclass(match_type, numbers.Number):
+    # if ((isinstance(candidate, np.ndarray) and candidate.ndim == 0) and isinstance(reference, numbers.Number) or
+    #             (isinstance(reference, np.ndarray) and reference.ndim == 0) and isinstance(candidate, numbers.Number)
+    #     ):
+    # If both the candidate and reference are either a number or an ndarray of dim 0, consider it a match
+    if ((isinstance(candidate, numbers.Number) or (isinstance(candidate, np.ndarray) and candidate.ndim == 0)) or
+            (isinstance(reference, numbers.Number) or (isinstance(reference, np.ndarray) and reference.ndim == 0))):
+        return True
+    # MODIFIED 10/29/17 END
 
     # IMPLEMENTATION NOTE:
     #   modified to allow numeric type mismatches (e.g., int and float;

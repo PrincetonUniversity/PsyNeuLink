@@ -756,6 +756,18 @@ class InputState(State_Base):
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
 
+    # MODIFIED 10/29/17 NEW:
+    def _validate_reference_value(self, reference_value):
+        """Validate that value of the State is compatible with the reference_value
+
+        reference_value is the item of the owner Mechanism's variable to which the InputState is assigned
+        """
+        if reference_value is not None and not iscompatible(reference_value, self.value):
+            name = self.name or ""
+            raise StateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})".
+                             format(name, self.componentName, self.owner.name, self.value, reference_value))
+    # MODIFIED 10/29/17 END
+
 # MODIFIED 9/30/17 NEW:
     @tc.typecheck
     def _parse_state_specific_params(self, owner, state_dict, state_specific_params):

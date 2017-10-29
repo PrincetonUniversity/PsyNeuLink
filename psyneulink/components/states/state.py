@@ -1775,6 +1775,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     Returns a State or None
     """
 
+
     # Parse reference value to get actual value (in case it is, itself, a specification dict)
     reference_value_dict = _parse_state_spec(owner=owner,
                                              state_type=state_type,
@@ -1889,6 +1890,11 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 # FIX: 2/17/17:  COMMENTED THIS OUT SINCE IT CREATES AN ATTRIBUTE ON OWNER THAT IS NAMED <state.name.value>
 #                NOT SURE WHAT THE PURPOSE IS
 #     setattr(owner, state.name+'.value', state.value)
+
+
+    # MODIFIED 10/29/17 NEW:
+    state._validate_reference_value(reference_value)
+    # MODIFIED 10/29/17 END
 
     return state
 
@@ -2100,6 +2106,8 @@ def _parse_state_spec(state_type=None,
                 projection = state_type
 
         if isinstance(state_specification, state_type):
+
+            # FIX: 10/29/17: DON'T THESE BELONG IN _instantiate_state RATHER THAN HERE?
             if reference_value is not None and not iscompatible(reference_value, state_specification.value):
                 raise StateError("The value ({}) of the State specified in the call to _instantiate_state for {} ({}) "
                                  "does not match the type specified in the \'{}\' argument ({})".
@@ -2110,6 +2118,7 @@ def _parse_state_spec(state_type=None,
                                  "({}) is not compatible with the one specified in the \'{}\' argument ({})".
                                  format(state_specification.variable, owner.name,
                                         state_specification.name, VARIABLE, variable))
+            # FIX: 10/29/17 ***************************************************************
 
             if not state_specification.owner is owner:
                 raise StateError("The State specified in a call to _instantiate_state ({}) "
@@ -2203,10 +2212,12 @@ def _parse_state_spec(state_type=None,
     elif is_value_spec(state_specification):
         # FIX: 10/3/17 - SHOULD BOTH OF THESE BE THE SAME? XXX
         #                SHOULDN'T VALUE BE NONE UNTIL FUNCTION IS INSTANTIATED?? OR DEPEND ON STATE TYPE?
-        if reference_value is not None and not iscompatible(np.squeeze(reference_value), state_specification):
-            name = state_dict[NAME] or ""
-            raise StateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})".
-                             format(name, state_type.__name__, owner.name, state_specification, reference_value))
+        # FIX: 10/29/17: MOVED TO _instantiate_state WHERE IT BELONGS
+        # if reference_value is not None and not iscompatible(np.squeeze(reference_value), state_specification):
+        #     iscompatible(np.squeeze(reference_value), state_specification)
+        #     name = state_dict[NAME] or ""
+        #     raise StateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})".
+        #                      format(name, state_type.__name__, owner.name, state_specification, reference_value))
         state_dict[VARIABLE] = state_specification
         state_dict[REFERENCE_VALUE] = state_specification
 

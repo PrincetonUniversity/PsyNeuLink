@@ -514,6 +514,19 @@ class ParameterState(State_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
+    # MODIFIED 10/29/17 NEW:
+    def _validate_reference_value(self, reference_value):
+        """Validate that value of the State is compatible with the reference_value
+
+        reference_value is the value of the parameter to which the ParameterState is assigned
+        """
+        if reference_value is not None and not iscompatible(np.squeeze(reference_value), np.squeeze(self.value)):
+            iscompatible(np.squeeze(reference_value), np.squeeze(self.value))
+            name = self.name or ""
+            raise StateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})".
+                             format(name, self.componentName, self.owner.name, self.value, reference_value))
+    # MODIFIED 10/29/17 END
+
     def _instantiate_function(self, context=None):
         """Insure function is LinearCombination and that its output is compatible with param with which it is associated
 
