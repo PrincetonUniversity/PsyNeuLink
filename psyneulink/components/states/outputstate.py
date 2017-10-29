@@ -705,7 +705,6 @@ class OutputState(State_Base):
             except KeyError:
                 pass
 
-    # MODIFIED 10/29/17 NEW:
     def _validate_reference_value(self, reference_value):
         """Validate that value of the State is compatible with the reference_value
 
@@ -716,7 +715,6 @@ class OutputState(State_Base):
             raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible with "
                                    "its expected format ({})".
                                    format(name, self.componentName, self.owner.name, self.value, reference_value))
-    # MODIFIED 10/29/17 END
 
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate calculate function

@@ -389,10 +389,6 @@ def iscompatible(candidate, reference=None, **kargs):
 
     # MODIFIED 10/29/17 NEW:
     # IMPLEMENTATION NOTE: This allows a number in an ndarray to match a float or int
-    # if (isinstance(candidate, np.ndarray) and candidate.ndim == 0) and issubclass(match_type, numbers.Number):
-    # if ((isinstance(candidate, np.ndarray) and candidate.ndim == 0) and isinstance(reference, numbers.Number) or
-    #             (isinstance(reference, np.ndarray) and reference.ndim == 0) and isinstance(candidate, numbers.Number)
-    #     ):
     # If both the candidate and reference are either a number or an ndarray of dim 0, consider it a match
     if ((isinstance(candidate, numbers.Number) or (isinstance(candidate, np.ndarray) and candidate.ndim == 0)) or
             (isinstance(reference, numbers.Number) or (isinstance(reference, np.ndarray) and reference.ndim == 0))):

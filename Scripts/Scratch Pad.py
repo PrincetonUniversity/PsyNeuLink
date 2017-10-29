@@ -762,12 +762,12 @@ my_mech_1 = DDM()
 # my_mech_2 = ObjectiveMechanism(monitored_output_states=[{MECHANISM: my_mech_1,
 #                                                          OUTPUT_STATES: [DECISION_VARIABLE, RESPONSE_TIME]}])
 
-# # PROBLEM CASE:
-# my_mech_2 = TransferMechanism(input_states=[[32, 24], 'HELLO'])
+# # PROBLEM CASE:  GENERATES ERROR, BUT SHOULD GENERATE TWO INPUT_STATES,
+# #                ONE WITH [[32],[24]] AND OTHER WITH [[0]] AS VARIABLE INSTANCE DEFAULT
+my_mech_2 = TransferMechanism(input_states=[[32, 24], 'HELLO'])
 
-my_mech_2 = TransferMechanism(default_variable=[[0],[0]],
-                              input_states=[[32, 24], 'HELLO'])
-
+# my_mech_2 = TransferMechanism(default_variable=[[0,0],[0]],
+#                               input_states=[[32, 24], 'HELLO'])
 
 # my_mech_2.execute()
 
