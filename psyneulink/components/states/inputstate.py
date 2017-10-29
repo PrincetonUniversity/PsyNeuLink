@@ -92,6 +92,24 @@ the item of its owner's `variable <Mechanism_Base.variable>` to which the InputS
 the **default_variable** or **size** argument is specified in the owner Mechanism's constructor (see `Mechanism
 InputStates <Mechanism_InputStates>`), and is assumed in the description of InputState specifications below.
 
+COMMENT:
+*** ADD THIS BACK IN:
+* **default_variable** argument of its owner Mechanism's constructor -- this takes precedence over any of the is used
+to determine the format for the `variable <InputState.variable>` of each `InputState <InputState>`
+
+* *VARIABLE* entry of a State specification dictionary in the **monitored_output_state** argument (see above) --
+  note that the value of the entry specifies the `variable <InputState.variable>` attribute of the
+  *InputState* created for the monitored OutputState, and does not affect to the monitored OutputState itself.
+
+* *Projection* entry of a `tuple specification <InputState_Tuple_Specification>` -- the dimensions of the Projection's
+  matrix (specifically, the number of its dimensions minus the number of dimensions of the `value <OutputState.value>`
+  of the OutputState from which it projects) determines the size of the `variable <InputState.variable>` attribute of
+  the InputState created.
+COMMENT
+
+
+
+
 InputStates can be specified in a variety of ways, that fall into three broad categories:  specifying an InputState
 directly, by an `OutputState` or `Projection` that should project to it; or by using a `State specification dictionary
 <State_Specification` or tuple format to specify attributes for the InputState (including Projections to it). Each of
@@ -248,24 +266,6 @@ COMMENT
               the format of the InputState's `variable <InputState.variable>`;  the latter must therefore be consistent
               with the specification in the first item (i.e., for either the `variable <InputState.variable>` of the
               InputState, or the `value <OutputState.value>` of the OutputState specified to project to it.
-
-
-
-COMENT:
-*** ADD THIS BACK IN:
-* **default_variable** argument of its owner Mechanism's constructor -- this takes precedence over any of the is used to determine the
-format for
-  the `variable <InputState.variable>` of each `InputState <InputState>`
-
-* *VARIABLE* entry of a State specification dictionary in the **monitored_output_state** argument (see above) --
-  note that the value of the entry specifies the `variable <InputState.variable>` attribute of the
-  *InputState* created for the monitored OutputState, and does not affect to the monitored OutputState itself.
-
-* *Projection* entry of a `tuple specification <InputState_Tuple_Specification>` -- the dimensions of the Projection's
-  matrix (specifically, the number of its dimensions minus the number of dimensions of the `value <OutputState.value>`
-  of the OutputState from which it projects) determines the size of the `variable <InputState.variable>` attribute of
-  the InputState created.
-COMMENT
 
 .. _InputState_Projections:
 

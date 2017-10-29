@@ -39,31 +39,26 @@ Monitored OutputStates
 
 The **monitored_output_states** argument of the constructor specifies the `OutputStates <OutputState>` it monitors.
 This takes the place of the **input_states** argument used by most other forms of `Mechanism`, and is used by the
-ObjectiveMechanism to create an `InputState` for each OutputState it monitors, along with a `MappingProjection`
-from the OutputState to the InputState.  The **monitored_output_states** argument takes a list of State specifications,
-each item of which can be used to specify the OutputState to be monitored, as well as attributes of the InputState
-that is created and/or the MappingProjection from the one to the other.  Any of the means for `specifying an InputState
-<InputState_Specification>` can be used to specify an item in **monitored_output_states**.  Typically, this includes
-`specification of the OutputState <InputState_OutputState_Specification>` to be monitored. If an OutputState is not
-specified for a given item, the InputState is created but will be ignored until an OutputState (and MappingProjection)
-are specified for that InputState.  In general, the `value <OutputState.value>` of each specified OutputState determines
-the format of the `variable <InputState.variable>` of the InputState that is created for it on the ObjectiveMechanism.
-However, this can be modified using the ObjectiveMechanism's `default_value <ObjectiveMechanism.default_value>` or
-`size <ObjectiveMechanism.size>` attributes, or by also specifying a Projection from the OutputState to the InputState
-(see `Mechanism InputStates <Mechanism_InputStates>` for a more detailed discussion).
+ObjectiveMechanism to create an `InputState` for each OutputState it monitors, along with a `MappingProjection` from
+the OutputState to the InputState.  The **monitored_output_states** argument takes a list of items that can include
+any of the `forms of specification <InputState_Specification>` used in a standard **input_states** argument. For the
+**monitored_output_states** argument, this is usually a list of OutputStates to be monitored.  However, as with a
+standard **input_states** argument, items in the  **monitored_output_states** argument can also be used to `specify
+attributes of the InputState and/or MappingProjection to it created by the ObjectiveMechanism to monitor the specified
+OutputState.  In general, the `value <OutputState.value>` of each specified OutputState determines the format of the
+`variable <InputState.variable>` of the InputState that is created for it by the ObjectiveMechanism. However, this can
+be overridden using the ObjectiveMechanism's `default_variable <ObjectiveMechanism.default_variable>` or `size
+<ObjectiveMechanism.size>` attributes (see `Mechanism_InputState_Specification`), or by specifying a Projection from
+the OutputState to the InputState (see `InputState_OutputState_Specification`).  If an item in the
+**monitored_output_states** argument specifies an InputState for the ObjectiveMechanism, but not the OutputState to
+be monitored, the InputState is created but will be ignored until an OutputState (and MappingProjection from it) are
+specified for that InputState.
+
 
 COMMENT:
-An ObjectiveMechanism creates one `InputState` for each item in its **input_states** argument. By default,
-it uses the `value <OutputState.value>` of a monitored OutputState to determine the `variable
-<InputState.variable>` of the corresponding InputState.  However, this can be modified (see
-`ObjectiveMechanism_Monitored_Output_States_Examples` below), using any of the following:
-COMMENT
-
-COMMENT:
-Note that some forms of specification may
-depend on specifications made for the OutputState referenced, the Mechanism to which it belongs, and/or the Process
-or System to which that Mechanism
-belongs. These interactions (and the precedence afforded to each) are described below.
+Note that some forms of specification may depend on specifications made for the OutputState referenced, the Mechanism
+to which it belongs, and/or the Process or System to which that Mechanism belongs. These interactions (and the
+precedence afforded to each) are described below.
 
   * **OutputState** -- a reference to the `OutputState <OutputState>` of a Mechanism;  this creates an InputState
     with a `variable <InputState.variable>` that matches the format of the `value <OutputState.value>` of the

@@ -467,7 +467,7 @@ class OutputState(State_Base):
     variable : number, list or np.ndarray
         specifies the template for the OutputState's `variable <OutputState.variable>`.
 
-    size : int, list or np.ndarray of ints
+    size : int, list or ndarray of ints
         specifies variable as array(s) of zeros if **variable** is not passed as an argument;
         if **variable** is specified, it takes precedence over the specification of **size**.
 
