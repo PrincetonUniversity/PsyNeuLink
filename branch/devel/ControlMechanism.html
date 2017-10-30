@@ -280,7 +280,7 @@ one of two ways:</p>
 <div><ul class="simple">
 <li>in the <strong>control_signals</strong> argument of the System’s constructor, using one or more <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">ControlSignal specifications</span></a>;</li>
 <li>where the <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter is specified</span></a>, by including a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> or
-<a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> in a <a href="#id1"><span class="problematic" id="id2">`</span></a>tuple specification for the parameter.</li>
+<a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> in a <a class="reference internal" href="ParameterState.html#parameterstate-tuple-specification"><span class="std std-ref">tuple specification</span></a> for the parameter.</li>
 </ul>
 </div></blockquote>
 <p>When a ControlMechanism is created as part of a System, a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is created and assigned to the
@@ -515,9 +515,9 @@ unless they are <a class="reference internal" href="ControlSignal.html#controlsi
 <dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.add_monitored_output_states">
 <code class="descname">add_monitored_output_states</code><span class="sig-paren">(</span><em>monitored_output_states</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.add_monitored_output_states" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate OutputStates to be monitored by ControlMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>.</p>
-<p><strong>monitored_output_states</strong> can be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-outputstate-tuple"><span class="std std-ref">monitored_output_states tuple</span></a>, or list with any of these. If item is a Mechanism, its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary
-OutputState</span></a> is used. OutputStates must belong to Mechanisms in the same <a class="reference internal" href="System.html"><span class="doc">System</span></a> as
-the ControlMechanism.</p>
+<p><strong>monitored_output_states</strong> can be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, <a class="reference internal" href="InputState.html#inputstate-tuple-specification"><span class="std std-ref">tuple specification</span></a>, a <a class="reference internal" href="InputState.html#inputstate-specification-dictionary"><span class="std std-ref">State specification dicionary</span></a>,
+or list with any of these. If item is a Mechanism, its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> is used.
+OutputStates must belong to Mechanisms in the same <a class="reference internal" href="System.html"><span class="doc">System</span></a> as the ControlMechanism.</p>
 </dd></dl>
 
 <dl class="method">
