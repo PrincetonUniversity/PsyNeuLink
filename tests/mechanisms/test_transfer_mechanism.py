@@ -922,20 +922,20 @@ class TestTransferMechanismSize:
         T.execute()
 
     # STILL DEBUGGING:
-    # # ------------------------------------------------------------------------------------------------
-    # # TEST 15
-    # # Projection specification in Tuple
-    #
-    # def test_transfer_mech_input_states_projection_in_tuple_spec(self):
-    #
-    #     P = MappingProjection(sender=R2)
-    #     T = TransferMechanism(size=2,
-    #                           input_states=[(R2, None, None, P)])
-    #     assert len(T.input_state.path_afferents[0].sender.variable)==3
-    #     assert len(T.input_state.variable)==2
-    #     assert len(T.variable)==1
-    #     assert len(T.variable[0])==2
-    #     T.execute()
+    # ------------------------------------------------------------------------------------------------
+    # TEST 15
+    # Projection specification in Tuple
+
+    def test_transfer_mech_input_states_projection_in_tuple_spec(self):
+
+        P = MappingProjection(sender=R2)
+        T = TransferMechanism(size=2,
+                              input_states=[(R2, None, None, P)])
+        assert len(T.input_state.path_afferents[0].sender.variable)==3
+        assert len(T.input_state.variable)==2
+        assert len(T.variable)==1
+        assert len(T.variable[0])==2
+        T.execute()
 
     # ------------------------------------------------------------------------------------------------
     # TEST 16
