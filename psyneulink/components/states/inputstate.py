@@ -297,6 +297,8 @@ COMMENT
               <InputState.variable>` of the InputState, or the `value <OutputState.value>` of the OutputState specified
               to project to it.
 
+              .. _InputState_Projection_Specification:
+
               .. note::
                  If a Projection specification is for a `MappingProjection`, it can use the Projection itself or a
                  `matrix specification <Mapping_Matrix_Specification>`.  If it is a Projection, then its `value
