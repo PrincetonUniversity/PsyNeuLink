@@ -966,7 +966,7 @@ class State_Base(State):
 
             # Get sender State, weight, exponent and projection for each projection specification
             #    note: weight and exponent for connection have been assigned to Projection in _parse_connection_specs
-            sender, weight, exponent, projection_spec = connection
+            state, weight, exponent, projection_spec = connection
 
             # GET Projection --------------------------------------------------------
 
@@ -991,8 +991,34 @@ class State_Base(State):
             # Deferred init
             if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
 
+                proj_sender = projection.init_args[SENDER]
+                proj_receiver = projection.init_args[RECEIVER]
+
                 projection.init_args[RECEIVER] = self
+
+                # validate/parse sender
+                if proj_sender:
+                    # If the Projection already has State as its sender,
+                    #    it must be the same as the one specified in the connection spec
+                    if isinstance(proj_sender, State) and proj_sender != state:
+                        raise StateError("Projection assigned to {} of {} from {} already has a sender ({})".
+                                         format(self.name, self.owner.name, state.name, sender.name))
+                    # If the Projection has a Mechanism specified as its sender,
+                    #    and a State type was specified in the connection spec,
+                    #    try to get that State type for the Mechanism
+                    if isinstance(proj_sender, Mechanism) and inspect.isclass(state) and issubclass(state, State):
+                        sender = _get_state_for_socket(owner=self.owner,
+                                                       state_spec=proj_sender,
+                                                       state_types=state)
+                    projection.init_args[SENDER] = sender
+                else:
+                    sender = state
                 projection.init_args[SENDER] = sender
+
+                # validate receiver
+                if proj_receiver and not proj_receiver != self:
+                    raise StateError("Projection assigned to {} of {} already has a receiver ({})".
+                                     format(self.name, self.owner.name, proj_receiver.name))
 
                 # Construct and assign name
                 if isinstance(sender, State):
@@ -1335,7 +1361,6 @@ class State_Base(State):
 
             return projection
 
-
     def _get_primary_state(self, mechanism):
         raise StateError("PROGRAM ERROR: {} does not implement _get_primary_state method".
                          format(self.__class__.__name__))
@@ -1591,6 +1616,8 @@ class State_Base(State):
     def all_afferents(self):
         return self.path_afferents + self.mod_afferents
 
+    def _assign_default_name(self):
+        return False
 
 def _instantiate_state_list(owner,
                            state_list,              # list of State specs, (state_spec, params) tuples, or None
@@ -1709,11 +1736,15 @@ def _instantiate_state_list(owner,
                                    context=context)
 
         # Get name of state, and use as index to assign to states ContentAddressableList
-        if state.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        default_name = state._assign_default_name()
+        if default_name:
+             state_name = default_name
+        elif state.init_status is InitStatus.DEFERRED_INITIALIZATION:
             state_name = state.init_args[NAME]
         else:
             state_name = state.name
         states[state_name] = state
+
     return states
 
 
@@ -1770,12 +1801,13 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     Returns a State or None
     """
 
+
     # Parse reference value to get actual value (in case it is, itself, a specification dict)
     reference_value_dict = _parse_state_spec(owner=owner,
-                                               state_type=state_type,
-                                               state_spec=reference_value,
-                                               value=None,
-                                               params=None)
+                                             state_type=state_type,
+                                             state_spec=reference_value,
+                                             value=None,
+                                             params=None)
     # Its value is assigned to the VARIABLE entry (including if it was originally just a value)
     reference_value = reference_value_dict[VARIABLE]
 
@@ -1792,41 +1824,8 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                                           **state_spec)
 
 
-    # # FIX: 10/3/17: HANDLE NAME HERE
     if isinstance(parsed_state_spec, dict) and parsed_state_spec[NAME] is None:
         parsed_state_spec[NAME] = state_type.__name__
-    else:
-        pass
-
-
-
-    # if not state_name is state_spec and not state_name in states:
-    #     state_name = state_spec
-    # # Add index suffix to name if it has already been used
-    # # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
-    # else:
-    #     state_name = state_spec + '_' + str(index)
-    # state_spec_dict[NAME] = state_name
-    #
-    # # If state_spec has NAME entry
-    # if NAME in state_spec:
-    #     # If it has been used, add suffix to it
-    #     if state_name is state_spec[NAME]:
-    #         state_name = state_spec[NAME] + '_' + str(key)
-    #     # Otherwise, use it
-    #     else:
-    #         state_name = state_spec[NAME]
-    # state_spec_dict[NAME] = state_name
-    #
-    # # MODIFIED 9/3/17 NEW:
-    # # If only one State, don't add index suffix
-    # if num_states == 1:
-    #     state_name = 'Default_' + state_param_identifier
-    # # Add incremented index suffix for each State name
-    # else:
-    #     state_name = 'Default_' + state_param_identifier + "-" + str(index+1)
-    # # MODIFIED 9/3/17 END
-
 
     # STATE SPECIFICATION IS A State OBJECT ***************************************
     # Validate and return
@@ -1917,6 +1916,8 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 # FIX: 2/17/17:  COMMENTED THIS OUT SINCE IT CREATES AN ATTRIBUTE ON OWNER THAT IS NAMED <state.name.value>
 #                NOT SURE WHAT THE PURPOSE IS
 #     setattr(owner, state.name+'.value', state.value)
+
+    state._validate_against_reference_value(reference_value)
 
     return state
 
@@ -2128,17 +2129,6 @@ def _parse_state_spec(state_type=None,
                 projection = state_type
 
         if isinstance(state_specification, state_type):
-            if reference_value is not None and not iscompatible(reference_value, state_specification.value):
-                raise StateError("The value ({}) of the State specified in the call to _instantiate_state for {} ({}) "
-                                 "does not match the type specified in the \'{}\' argument ({})".
-                                 format(state_specification.value, owner.name,
-                                        state_specification.name, REFERENCE_VALUE, reference_value))
-            if variable and not iscompatible(variable, state_specification.variable):
-                raise StateError("The variable ({}) of the State specified in the call to _instantiate_state for {} "
-                                 "({}) is not compatible with the one specified in the \'{}\' argument ({})".
-                                 format(state_specification.variable, owner.name,
-                                        state_specification.name, VARIABLE, variable))
-
             if not state_specification.owner is owner:
                 raise StateError("The State specified in a call to _instantiate_state ({}) "
                                  "does belong to the {} specified in the \'{}\' argument ({})".
@@ -2229,7 +2219,7 @@ def _parse_state_spec(state_type=None,
 
     # value, so use as variable of State
     elif is_value_spec(state_specification):
-        # FIX: 10/3/17 - SHOULD BOTH OF THESE BE THE SAME?
+        # FIX: 10/3/17 - SHOULD BOTH OF THESE BE THE SAME? XXX
         #                SHOULDN'T VALUE BE NONE UNTIL FUNCTION IS INSTANTIATED?? OR DEPEND ON STATE TYPE?
         state_dict[VARIABLE] = state_specification
         state_dict[REFERENCE_VALUE] = state_specification
@@ -2289,10 +2279,11 @@ def _parse_state_spec(state_type=None,
                                                                  state_dict=state_dict,
                                                                  state_specific_params=params)
 
-                # FIX: IS ALL OF THIS NECESSARY?
                 if PROJECTIONS in params and params[PROJECTIONS] is not None:
                     #       (E.G., WEIGHTS AND EXPONENTS FOR InputState AND INDEX FOR OutputState)
                     # Get and parse projection specifications for the State
+                    if not isinstance(params[PROJECTIONS], list):
+                        params[PROJECTIONS] = [params[PROJECTIONS]]
                     projection_params = []
                     projection_params.extend(params[PROJECTIONS])
                     if projection_params:
@@ -2352,7 +2343,7 @@ def _get_state_for_socket(owner,
 
     If state_spec is:
         State name (str), then *mech* and *mech_state_attribute* args must be specified
-        Mechanism, then *state_spec* must be a Mechanism, and *state_type* must be specified; primary State is returned
+        Mechanism, then *state_type* must be specified; primary State is returned
         Projection, *projection_socket* arg must be specified;
                     Projection must be instantiated or in deferred_init, with projection_socket attribute assigned
 
@@ -2372,10 +2363,12 @@ def _get_state_for_socket(owner,
     if isinstance(mech_state_attribute, list):
         mech_state_attribute = mech_state_attribute[0]
 
+    # state_types should be a list, and state_type its first (or only) item
     if isinstance(state_types, list):
         state_type = state_types[0]
     else:
         state_type = state_types
+        state_types = [state_types]
 
     state_type_names = ", ".join([s.__name__ for s in state_types])
 

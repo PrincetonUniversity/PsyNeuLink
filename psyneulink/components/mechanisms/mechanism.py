@@ -122,17 +122,19 @@ Specifying States
 Every Mechanism has one or more `InputStates <InputState>`, `ParameterStates <ParameterState>`, and `OutputStates
 <OutputState>` (described `below <Mechanism_States>`) that allow it to receive and send `Projections <Projection>`,
 and to execute its `function <Mechanism_Base.function>`).  When a Mechanism is created, it automatically creates the
-ParameterStates it needs to represent its parameters, including those of its `function <Mechanism_Base.function>`. It
-also creates any InputStates and OutputStates required for the Projections it has been assigned. InputStates and
+ParameterStates it needs to represent its panon9rameters, including those of its `function <Mechanism_Base.function>`.
+It also creates any InputStates and OutputStates required for the Projections it has been assigned. InputStates and
 OutputStates, and corresponding Projections (including those from `ModulatorySignals <ModulatorySignal>`) can also be
-specified explicitly in the **input_states** and **output_states** arguments of the Mechanism's constructor (see `first
-example <Mechanism_Example_1>` below), or in a `parameter specification dictionary <ParameterState_Specification>`
-assigned to its **params** argument using entries with the keys *INPUT_STATES* and *OUTPUT_STATES*, respectively (see
-`second example <Mechanism_Example_2>` below).  While specifying in the arguments directly is simpler and more
-convenient, the dictionary format allows parameter sets to be created elsewhere and/or re-used.  The value of each
-entry can be any of the allowable forms for `specifying a state <State_Creation>`. InputStates and OutputStates can
-also be added to an existing Mechanism using its `add_states` method, although this is generally not needed and
-therefore not recommended.
+specified explicitly in the **input_states** and **output_states** arguments of the Mechanism's constructor (see
+`Mechanism_InputStates` and `Mechanism_OutputStates`, respectively, and the `first example <Mechanism_Example_1>`
+below).  They can also be specified in a `parameter specification dictionary <ParameterState_Specification>` assigned
+to the Mechanism's **params** argument, using entries with the keys *INPUT_STATES* and *OUTPUT_STATES*, respectively
+(see `second example <Mechanism_Example_2>` below).  While specifying the **input_states** and **output_states**
+arguments directly is simpler and more convenient, the dictionary format allows parameter sets to be created
+elsewhere and/or re-used.  The value of each entry can be any of the allowable forms for `specifying a state
+<State_Creation>`. InputStates and OutputStates can also be added to an existing Mechanism using its `add_states`
+method, although this is generally not needed and can have consequences that must be considered (e.g., see `note
+<Mechanism_Add_InputStates_Note>`), and therefore is not recommended.
 
 Examples
 ^^^^^^^^
@@ -178,12 +180,12 @@ Function
 
 The core of every Mechanism is its function, which transforms its input to generate its output.  The function is
 specified by the Mechanism's `function <Mechanism_Base.function>` attribute.  Every type of Mechanism has at least one
-(primary) function, and some have additional (auxiliary) ones (for example, `TransferMechanism` and `EVCControlMechanism`).
-Mechanism functions are generally from the PsyNeuLink `Function` class.  Most Mechanisms allow their function to be
-specified, using the `function` argument of the Mechanism's constructor.  The function can be specified using the
-name of `Function <Function>` class, or its constructor (including arguments that specify its parameters).  For
-example, the `function <TransferMechanism.function>` of a `TransferMechanism`, which is `Linear` by default, can be
-specified to be the `Logistic` function as follows::
+(primary) function, and some have additional (auxiliary) ones (for example, `TransferMechanism` and
+`EVCControlMechanism`). Mechanism functions are generally from the PsyNeuLink `Function` class.  Most Mechanisms
+allow their function to be specified, using the `function` argument of the Mechanism's constructor.  The function can
+be specified using the name of `Function <Function>` class, or its constructor (including arguments that specify its
+parameters).  For example, the `function <TransferMechanism.function>` of a `TransferMechanism`, which is `Linear` by
+default, can be specified to be the `Logistic` function as follows::
 
     my_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4))
 
@@ -303,13 +305,13 @@ COMMENT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The input to a Mechanism's `function <Mechanism_Base.function>` is provided by the Mechanism's `variable
-<Mechanism_Base.variable>` attribute.  This is a np.ndarray that is at least 2d, with one item of its outermost
-dimension (axis 0)  for each of the Mechanism's `Input_states <Mechanism_InputStates>`.  The result of the `function
-<Mechanism_Base.function>` is placed in the Mechanism's `value <Mechanism_Base.value>` attribute which is also at
-least a 2d array.  The Mechanism's `value <Mechanism_Base.value>` is referenced by its `OutputStates
-<Mechanism_OutputStates>` to generate their own `value <OutputState.value>` attributes, each of which is assigned as
-the value of an item of the list in the Mechanism's `output_values <Mechanism_Base.output_values>` attribute (see
-`Mechanism_OutputStates` below).
+<Mechanism_Base.variable>` attribute.  This is an ndarray that is at least 2d, with one item of its outermost
+dimension (axis 0) for each of the Mechanism's `input_states <Mechanism_Base.input_states>` (see
+`below <Mechanism_InputStates>`).  The result of the  `function <Mechanism_Base.function>` is placed in the
+Mechanism's `value <Mechanism_Base.value>` attribute which is  also at least a 2d array.  The Mechanism's `value
+<Mechanism_Base.value>` is referenced by its `OutputStates <Mechanism_OutputStates>` to generate their own `value
+<OutputState.value>` attributes, each of which is assigned as the value of an item of the list in the Mechanism's
+`output_values <Mechanism_Base.output_values>` attribute (see `Mechanism_OutputStates` below).
 
 .. note::
    The input to a Mechanism is not necessarily the same as the input to its `function <Mechanism_Base.function>`. The
@@ -349,38 +351,23 @@ The three types of States are shown schematically in the figure below, and descr
    `value <Mechanism_Base.value>`, the items of which are referenced by its OutputStates to determine their own
    `value <OutputState.value>`\\s (see `Mechanism_Variable_and_Value` above, and more detailed descriptions below).
 
-
 .. _Mechanism_InputStates:
 
 InputStates
 ^^^^^^^^^^^
 
-These receive and represent the input to a Mechanism. A Mechanism usually has only one (`primary <InputState_Primary>`)
-`InputState`, identified by its `input_state <Mechanism_Base.input_state>`, attribute.  However some Mechanisms have
-more  than one InputState. For example, a `ComparatorMechanism` has one InputState for its **SAMPLE** and another for
-its **TARGET** input. If a Mechanism has more than one InputState, they are listed in the Mechanism's `input_states
-<Mechanism_Base.input_states>` attribute (note the plural).  The `input_states <Mechanism_Base.input_states>` attribute
-is a ContentAddressableList -- a PsyNeuLink-defined subclass of the Python class
-`UserList <https://docs.python.org/3.6/library/collections.html?highlight=userlist#collections.UserList>`_ --
+These receive, aggregate and represent the input to a Mechanism, and provide this to the Mechanism's `function
+<Mechanism_Base.function>`. Usually, a Mechanism has only one (`primary <InputState_Primary>`) `InputState`,
+identified in its `input_state <Mechanism_Base.input_state>` attribute. However some Mechanisms have more than one
+InputState. For example, a `ComparatorMechanism` has one InputState for its **SAMPLE** and another for its **TARGET**
+input. All of the Mechanism's InputStates (including its primary InputState <InputState_Primary>` are listed in its
+`input_states <Mechanism_Base.input_states>` attribute (note the plural).  The `input_states
+<Mechanism_Base.input_states>` attribute is a ContentAddressableList -- a PsyNeuLink-defined subclass of the Python
+class `UserList <https://docs.python.org/3.6/library/collections.html?highlight=userlist#collections.UserList>`_ --
 that allows a specific InputState in the list to be accessed using its name as the index for the list (e.g.,
 ``my_mechanism['InputState name']``).
 
-COMMENT:
-[TBI:]
-If the InputState are created automatically, or are not assigned a name when specified, then each is named
-using the following template: [TBI]
-COMMENT
-
-Each InputState of a Mechanism can receive one or more `Projections <Projection>` from other Mechanisms.  The
-`PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) it receives are listed in
-its `path_afferents <InputState.path_afferents>` attribute.  If the Mechanism is an `ORIGIN` Mechanism of a
-`Process`, this includes a Projection from the `ProcessInputState <Process_Input_And_Output>` for that Process.  Any
-`GatingProjections <GatingProjection>` it receives are listed in its `mod_afferents <InputState.mod_afferents>`
-attribute.  The InputState's `function <InputState.InputState.function>` aggregates  the values received from its
-`path_afferents <InputState.path_afferents>`, `modulates <ModulatorySignal_Modulation>` this in response to any
-GatingProjections it receives, and assigns the result to the InputState's `value <InputState.value>` attribute.
-
-.. _Mechanism_Variable:
+.. _Mechanism_Variable_and_InputStates:
 
 The `value <InputState.value>` of each InputState for a Mechanism is assigned to a different item of the Mechanism's
 `variable <Mechanism_Base.variable>` attribute (a 2d np.array), as well as to a corresponding item of its `input_values
@@ -390,28 +377,111 @@ more convenient way of accessing the value of its individual items.  Because the
 between a Mechanism's InputStates and the items of its `variable <Mechanism_Base.variable>`, their lengths must be
 equal;  that is, the number of items in the Mechanism's `variable <Mechanism_Base.variable>` attribute (its size
 along axis 0) must equal the number of InputStates in its `input_states <Mechanism_Base.input_states>` attribute.
-Therefore, if any InputStates are specified in the constructor, the number of them must match the number of items in
-`variable <Mechanism_Base.variable>`.  However, if InputStates are added using the Mechanism's `add_states` method,
-then its `variable <Mechanism_Base.variable>` is extended to accommodate the number of InputStates added (note that
-this must be coordinated with the Mechanism's `function <Mechanism_Base.function>`, which takes the Mechanism's
-`variable <Mechanism_Base.variable>` as its input -- see `InputState documentation
-<InputStates_Mechanism_Variable_and_Function>` for a more detailed explanation). The order in which InputStates are
-specified in Mechanism's constructor, and/or added using its `add_states` method, determines the order of the items
-to which they are assigned assigned in he Mechanism's `variable <Mechanism_Base.variable>`, and are listed in its
-`input_values <Mechanism_Base.input_values>` attribute.
+Therefore, if any InputStates are `specified in the constructor <Mechanism_InputState_Specification>`, the number of
+them must match the number of items in `variable <Mechanism_Base.variable>`.  However, if InputStates are added using
+the Mechanism's `add_states` method, then its `variable <Mechanism_Base.variable>` is extended to accommodate the
+number of InputStates added (note that this must be coordinated with the Mechanism's `function
+<Mechanism_Base.function>`, which takes the Mechanism's `variable <Mechanism_Base.variable>` as its input.
 
+The order in which `InputStates are specified <Mechanism_InputState_Specification>` in the Mechanism's constructor,
+and/or `added <Mechanism_Add_InputStates>` using its `Mechanism_Base.add_states` method,  determines the order of the
+items to which they are assigned assigned in he Mechanism's `variable  <Mechanism_Base.variable>`, and are listed in
+its `input_states <Mechanism_Base.input_states>` and input_values <Mechanism_Base.input_values>` attribute.  Note
+that a Mechanism's `input_value <Mechanism_Base.input_value>` attribute has the same information as the
+Mechanism's `variable <Mechanism_Base.variable>`, but in a list rather than an ndarray.
+
+
+.. _Mechanism_InputState_Specification:
+
+**Specifying InputStates and a Mechanism's** `variable <Mechanism_Base.variable>` **Attribute**
+
+When a `Mechanism is created, the number and format of the items in its `variable <Mechanism_Base.variable>`
+attribute, as well as the number of InputStates it has and their `variable <InputState.variable>` and `value
+<InputState.value>` attributes, are determined by one of the following arguments in the Mechanism's constructor:
+
+* **default_variable** (at least 2d ndarray) -- determines the number and format of the items of the Mechanism's
+  `variable <Mechanism_Base>` attribute.  The number of items in its outermost dimension (axis 0) determines the
+  number of InputStates created for the Mechanism, and the format of each item determines the format for the
+  `variable <InputState.variable>` and `value  <InputState.value>` attributes of the corresponding InputState.
+  If any InputStates are specified in the **input_states** argument or an *INPUT_STATES* entry of
+  a specification dictionary assigned to the **params** argument of the Mechanism's constructor, then the number
+  must match the number of items in **default_variable**, or an error is generated.  The format of the items in
+  **default_variable** are used to specify the format of the `variable <InputState.variable>` or `value
+  <InputState.value>` of the corresponding InputStates for any that are not explicitly specified in the
+  **input_states** argument or *INPUT_STATES* entry (see below).
+
+* **size** (int, list or ndarray) -- specifies the number and format of items in the Mechanism's variable,
+  if **default_variable** is not specified.  The relationship to any specifications in the **input_states** argument or
+  *INPUT_STATES* entry of a **params** dictionary is the same as for the **default_variable** argument,
+  with the latter taking precedence (see above).
+
+* **input_states** (list) -- this can be used to explicitly `specify the InputStates <InputState_Specification>`
+  created for the Mechanism. Each item must be an `InputState specification <InputState_Specification>`, and the number
+  of items must match the number of items in the **default_variable** argument or **size** argument
+  if either of those is specified.  If the `variable <InputState.variable>` and/or `value <InputState.value>`
+  is `explicitly specified for an InputState <InputState_Variable_and_Value>` in the **input_states** argument or
+  *INPUT_STATES* entry of a **params** dictionary, it must be compatible with the value of the corresponding
+  item **default_variable**; otherwise, the format of the item in **default_variable** corresponding to the
+  InputState is used to specify the format of its `variable <InputState.variable>` (e.g., the InputState is
+  `specified using an OutputState <InputState_OutputState_Specification>` to project to it;).  If
+  **default_variable** is not specified, a default value is specified by the Mechanism.
 
 COMMENT:
-
-If more InputStates are specified than there are items in `variable <Mechanism_Base.variable>, the latter is extended
-to  match the former (see `InputState <InputStates_Mechanism_Variable_and_Function>` for a more detailed explanation).
-
-
-The number of input_states for the Mechanism must match the number of items specified for the Mechanism's
-``variable`` (that is, its size along its first dimension, axis 0).  An exception is if the Mechanism's `variable``
-has more than one item, but only a single InputState;  in that case, the ``value`` of that InputState must have the
-same number of items as the Mechanisms's ``variable``.
+*** ADD SOME EXAMPLES HERE
 COMMENT
+
+COMMENT:
+*** ADD THESE TO ABOVE WHEN IMPLEMENTED:
+    If more InputStates are specified than there are items in `variable <Mechanism_Base.variable>,
+        the latter is extended to  match the former.
+    If the Mechanism's `variable <Mechanism_Base.variable>` has more than one item, it may still be assigned
+        a single InputState;  in that case, the `value <InputState.value>` of that InputState must have the same
+        number of items as the Mechanisms's `variable <Mechanism_Base.variable>`.
+COMMENT
+
+* *INPUT_STATES* entry of a params dict (list) -- specifications are treated in the same manner as those in the
+  **input_states** argument, and take precedence over those.
+
+.. _Mechanism_Add_InputStates:
+
+**Adding InputStates**
+
+InputStates can be added to a Mechanism using its `add_states` method;  this extends its `variable
+<Mechanism_Base.variable>` by a number of items equal to the number of InputStates added, and each new item is assigned
+a value compatible with the `value <InputState.value>` of the corresponding InputState added.  The InputStates are
+appended to the end of the list in the Mechanism's `input_states <Mechanism_Base.input_states>` attribute.
+
+.. _Mechanism_Add_InputStates_Note:
+
+.. note::
+    Adding InputStates to a Mechanism using its `add_states` method may introduce an incompatibility with the
+    Mechanism's `function <Mechanism_Base.function>`, which takes the Mechanism's `variable <Mechanism_Base.variable>`
+    as its input; such an incompatibility will generate an error.  It is the user's responsibility to ensure that the
+    explicit assignment of InputStates to a Mechanism is coordinated with the assignment of its
+    `function <Mechanism_Base.function>`, so that the total number of InputStates (listed in the Mechanism's
+    `input_states <Mechanism_Base.input_states>` attribute matches the number of items expected for the input to the
+    function specified in the Mechanism's `function <Mechanism_Base.function>` attribute  (i.e., its size along axis 0).
+
+
+.. _Mechanism_InputState_Projections:
+
+**Projections to InputStates**
+
+Each InputState of a Mechanism can receive one or more `Projections <Projection>` from other Mechanisms.  When a
+Mechanism is created, a `MappingProjection` is created automatically for any OutputStates or Projections from them
+that are in its `InputState specification <InputState_Specification>`, using `AUTO_ASSIGN_MATRIX` as the Projection's
+`matrix specification <Mapping_Matrix_Specification>`.  However, if a specification in the **input_states** argument
+or an *INPUT_STATES* entry of a **params** dictionary cannot be resolved to an instantiated OutputState at the time the
+Mechanism is created, no MappingProjection is assigned to the InputState, and this must be done by some other means;
+any specifications in the Mechanism's `input_states <Mechanism_Base.monitored_output_states>` attribute that are not
+associated with an instantiated OutputState at the time the Mechanism is executed are ignored.
+
+The `PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) it receives are listed
+in its `path_afferents <InputState.path_afferents>` attribute.  If the Mechanism is an `ORIGIN` Mechanism of a
+`Process`, this includes a Projection from the `ProcessInputState <Process_Input_And_Output>` for that Process.  Any
+`GatingProjections <GatingProjection>` it receives are listed in its `mod_afferents <InputState.mod_afferents>`
+attribute.
+
 
 .. _Mechanism_ParameterStates:
 
@@ -495,13 +565,11 @@ Mechanism's constructor, by direct reference to the corresponding attribute of t
 constructed (e.g., ``my_mechanism.param``), or using the Mechanism's `assign_params` method. The Mechanism-specific
 attributes are listed below by their argument names / keywords, along with a description of how they are specified:
 
-COMMENT:
-    * **input_states** / *INPUT_STATES* - a list specifying specialized input_states used by a Mechanism type
-      (see :ref:`InputState specification <InputState_Creation>` for details of specification).
+    * **input_states** / *INPUT_STATES* - a list specifying the Mechanism's input_states
+      (see `InputState_Specification` for details of specification).
     ..
     * **output_states** / *OUTPUT_STATES* - specifies specialized OutputStates required by a Mechanism subclass
-      (see :ref:`OutputStates_Creation` for details of specification).
-COMMENT
+      (see `OutputState_Specification` for details of specification).
     ..
     * **monitor_for_control** / *MONITOR_FOR_CONTROL* - specifies which of the Mechanism's OutputStates is monitored by
       the `controller` for the System to which the Mechanism belongs (see `specifying monitored OutputStates
@@ -748,7 +816,7 @@ class Mechanism_Base(Mechanism):
     Attributes
     ----------
 
-    variable : ndarray : default self.instance_defaults.variable
+    variable : at least ndarray : default self.instance_defaults.variable
         used as input to the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array,
         with each item of axis 0 corresponding to a `value <InputState.value>` of one of the Mechanism's `InputStates
         <InputState>` (in the order they are listed in its `input_states <Mechanism_Base.input_states>` attribute), and
@@ -1273,7 +1341,7 @@ class Mechanism_Base(Mechanism):
                 pass
             else:
                 # INPUT_STATES not specified:
-                # - set to None, so that it is set to default (self.instance_defaults.variable) in instantiate_inputState
+                # - set to None, so it is set to default (self.instance_defaults.variable) in instantiate_inputState
                 # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
                 params[INPUT_STATES] = None
 
@@ -1617,8 +1685,12 @@ class Mechanism_Base(Mechanism):
 
         # Executing or simulating Process or System, get input by updating input_states
 
-        if input is None and (EXECUTING in context or EVC_SIMULATION in context) and (self.input_state.path_afferents != []):
-            variable = self._update_variable(self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context))
+        if (input is None
+            and (EXECUTING in context or EVC_SIMULATION in context)
+            and (self.input_state.path_afferents != [])):
+            variable = self._update_variable(self._update_input_states(runtime_params=runtime_params,
+                                                                       time_scale=time_scale,
+                                                                       context=context))
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
@@ -1975,7 +2047,7 @@ class Mechanism_Base(Mechanism):
         .. note::
             Adding States to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,
             which may produce an incompatibility with its `function <Mechanism_Base.function>` (see
-            `InputStates <InputStates_Mechanism_Variable_and_Function>` for a more detailed explanation).
+            `Mechanism InputStates` for a more detailed explanation).
 
         Arguments
         ---------

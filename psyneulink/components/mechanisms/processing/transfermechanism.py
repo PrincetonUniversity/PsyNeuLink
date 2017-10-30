@@ -118,9 +118,11 @@ import typecheck as tc
 
 from psyneulink.components.component import Component, function_type, method_type
 from psyneulink.components.functions.function import AdaptiveIntegrator, Linear
-from psyneulink.components.mechanisms.mechanism import MechanismError
+from psyneulink.components.mechanisms.mechanism import MechanismError, Mechanism
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE, StandardOutputStates, standard_output_states
+from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.states.outputstate import \
+    OutputState, PRIMARY_OUTPUT_STATE, StandardOutputStates, standard_output_states
 from psyneulink.globals.keywords import FUNCTION, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NOISE, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -406,7 +408,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states:tc.optional(tc.any(list, dict))=None,
+                 input_states:tc.optional(tc.any(list, dict, Mechanism, OutputState, InputState))=None,
                  function=Linear,
                  initial_value=None,
                  noise=0.0,

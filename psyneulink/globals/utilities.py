@@ -363,7 +363,10 @@ def iscompatible(candidate, reference=None, **kargs):
     else:
         match_type = type(reference)
         # If length specification is non-zero (i.e., use length) and reference is an object for which len is defined:
-        if kargs[kwCompatibilityLength] and isinstance(reference, (list, tuple, dict, np.ndarray)):
+        if (kargs[kwCompatibilityLength] and
+                (isinstance(reference, (list, tuple, dict)) or
+                         isinstance(reference, np.ndarray) and reference.ndim)
+            ):
             match_length = len(reference)
         else:
             match_length = 0
@@ -383,6 +386,14 @@ def iscompatible(candidate, reference=None, **kargs):
     # # Reference is a matrix or a keyword specification for one
     if is_matrix_spec(reference):
         return is_matrix(candidate)
+
+    # MODIFIED 10/29/17 NEW:
+    # IMPLEMENTATION NOTE: This allows a number in an ndarray to match a float or int
+    # If both the candidate and reference are either a number or an ndarray of dim 0, consider it a match
+    if ((isinstance(candidate, numbers.Number) or (isinstance(candidate, np.ndarray) and candidate.ndim == 0)) or
+            (isinstance(reference, numbers.Number) or (isinstance(reference, np.ndarray) and reference.ndim == 0))):
+        return True
+    # MODIFIED 10/29/17 END
 
     # IMPLEMENTATION NOTE:
     #   modified to allow numeric type mismatches (e.g., int and float;
@@ -731,7 +742,7 @@ class ContentAddressableList(UserList):
       * getting and setting entries in the list using keys (string), in addition to numeric indices.
         the key to use is specified by the **key** arg of the constructor, and must be a string attribute;
         * for getting an entry:
-          the key must match the keyed attribute of a component in the list; otherwise an exception is raised;
+          the key must match the keyed attribute of a Component in the list; otherwise an exception is raised;
         * for setting an entry:
             - the key must match the key of the component being assigned;
             - if there is already a component in the list the keyed vaue of which matches the key, it is replaced;
@@ -741,7 +752,7 @@ class ContentAddressableList(UserList):
             attributes of components in the list.
 
     IMPLEMENTATION NOTE:
-        This class allows components to be maintained in lists, while providing ordered storage
+        This class allows Components to be maintained in lists, while providing ordered storage
         and the convenience access and assignment by name (e.g., akin to a dict).
         Lists are used (instead of a dict or OrderedDict) since:
             - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from
@@ -843,10 +854,11 @@ class ContentAddressableList(UserList):
         except TypeError:
             # It must be a string
             if not isinstance(key, str):
-                raise UtilitiesError("Non-numer key used for {} ({})must be a string)".
+                raise UtilitiesError("Non-numeric key used for {} ({})must be a string)".
                                       format(self.name, key))
             # The specified string must also match the value of the attribute of the class used for addressing
             if not key == value.name:
+            # if not key == type(value).__name__:
                 raise UtilitiesError("The key of the entry for {} {} ({}) "
                                      "must match the value of its {} attribute ({})".
                                       format(self.name,

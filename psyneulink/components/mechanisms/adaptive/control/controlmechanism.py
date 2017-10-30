@@ -139,7 +139,7 @@ one of two ways:
     <ControlSignal_Specification>`;
 
   * where the `parameter is specified <ParameterState_Specification>`, by including a `ControlProjection` or
-    `ControlSignal` in a `tuple specification for the parameter.
+    `ControlSignal` in a `tuple specification <ParameterState_Tuple_Specification>` for the parameter.
 
 When a ControlMechanism is created as part of a System, a `ControlSignal` is created and assigned to the
 ControlMechanism for every parameter of any `Component <Component>` in the System that has been specified for control
@@ -848,10 +848,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
         """Instantiate OutputStates to be monitored by ControlMechanism's `objective_mechanism
         <ControlMechanism.objective_mechanism>`.
 
-        **monitored_output_states** can be a `Mechanism`, `OutputState`, `monitored_output_states tuple
-        <ObjectiveMechanism_OutputState_Tuple>`, or list with any of these. If item is a Mechanism, its `primary
-        OutputState <OutputState_Primary>` is used. OutputStates must belong to Mechanisms in the same `System` as
-        the ControlMechanism.
+        **monitored_output_states** can be a `Mechanism`, `OutputState`, `tuple specification
+        <InputState_Tuple_Specification>`, a `State specification dicionary <InputState_Specification_Dictionary>`,
+        or list with any of these. If item is a Mechanism, its `primary OutputState <OutputState_Primary>` is used.
+        OutputStates must belong to Mechanisms in the same `System` as the ControlMechanism.
         """
         output_states = self.objective_mechanism.add_monitored_output_states(
                                                                  monitored_output_states_specs=monitored_output_states,

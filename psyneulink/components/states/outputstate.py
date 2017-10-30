@@ -467,7 +467,7 @@ class OutputState(State_Base):
     variable : number, list or np.ndarray
         specifies the template for the OutputState's `variable <OutputState.variable>`.
 
-    size : int, list or np.ndarray of ints
+    size : int, list or ndarray of ints
         specifies variable as array(s) of zeros if **variable** is not passed as an argument;
         if **variable** is specified, it takes precedence over the specification of **size**.
 
@@ -705,6 +705,17 @@ class OutputState(State_Base):
             except KeyError:
                 pass
 
+    def _validate_against_reference_value(self, reference_value):
+        """Validate that State.variable is compatible with the reference_value
+
+        reference_value is the value of the Mechanism to which the OutputState is assigned
+        """
+        if reference_value is not None and not iscompatible(reference_value, self.variable):
+            name = self.name or ""
+            raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible "
+                                   "with its expected format ({})".
+                                   format(name, self.componentName, self.owner.name, self.variable, reference_value))
+
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate calculate function
         """
@@ -760,7 +771,6 @@ class OutputState(State_Base):
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
-
 
     @tc.typecheck
     def _parse_state_specific_params(self, owner, state_dict, state_specific_params):

@@ -153,14 +153,14 @@ from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.components.states.state import State_Base, _parse_state_spec
 from psyneulink.globals.defaults import defaultGatingPolicy
-from psyneulink.globals.keywords import GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, NAME, OWNER, PARAMS, REFERENCE_VALUE, STATES
+from psyneulink.globals.keywords import \
+    GATING_POLICY, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, \
+    INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
 __all__ = [
