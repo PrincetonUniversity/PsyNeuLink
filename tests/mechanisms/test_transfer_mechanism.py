@@ -921,7 +921,6 @@ class TestTransferMechanismSize:
         assert len(T.variable[0])==2
         T.execute()
 
-    # STILL DEBUGGING:
     # ------------------------------------------------------------------------------------------------
     # TEST 15
     # Projection specification in Tuple

@@ -864,6 +864,8 @@ class InputState(State_Base):
                             if isinstance(projection, dict):
                                 matrix = projection[MATRIX]
                             elif isinstance(projection, Projection):
+                                if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                                    continue
                                 matrix = projection.matrix
                             else:
                                 raise InputStateError("Unrecognized Projection specification for {} of {} ({})".

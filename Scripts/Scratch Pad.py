@@ -772,21 +772,21 @@ my_mech_1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
 #         assert projection.sender.owner is my_mech_1
 
 
-# MATCH OF default_variable and specification of multiple InputStates by value and string
-my_mech_2 = TransferMechanism(default_variable=[[0,0],[0]],
-                              input_states=[[32, 24], 'HELLO'])
-assert my_mech_2.input_states[1].name == 'HELLO'
-# # PROBLEM WITH input FOR RUN:
-# my_mech_2.execute()
+# # MATCH OF default_variable and specification of multiple InputStates by value and string
+# my_mech_2 = TransferMechanism(default_variable=[[0,0],[0]],
+#                               input_states=[[32, 24], 'HELLO'])
+# assert my_mech_2.input_states[1].name == 'HELLO'
+# # # PROBLEM WITH input FOR RUN:
+# # my_mech_2.execute()
 
-# OVERRIDE OF input_states (mis)specification by params dict INPUT_STATES entry specification
-my_mech_2 = TransferMechanism(default_variable=[[0,0],[0]],
-                              input_states=[[32], 'HELLO'],
-                              params = {INPUT_STATES:[[32, 24], 'HELLO']}
-                              )
-assert my_mech_2.input_states[1].name == 'HELLO'
-# # PROBLEM WITH input FOR RUN:
-# my_mech_2.execute()
+# # OVERRIDE OF input_states (mis)specification by params dict INPUT_STATES entry specification
+# my_mech_2 = TransferMechanism(default_variable=[[0,0],[0]],
+#                               input_states=[[32], 'HELLO'],
+#                               params = {INPUT_STATES:[[32, 24], 'HELLO']}
+#                               )
+# assert my_mech_2.input_states[1].name == 'HELLO'
+# # # PROBLEM WITH input FOR RUN:
+# # my_mech_2.execute()
 
 # # PROBLEM: SHOULD GENERATE TWO INPUT_STATES (
 # #                ONE WITH [[32],[24]] AND OTHER WITH [[0]] AS VARIABLE INSTANCE DEFAULT
@@ -810,7 +810,10 @@ assert my_mech_2.input_states[1].name == 'HELLO'
 
 # Projection specification in Tuple
 my_mech_3 = TransferMechanism(size=3)
-my_proj = MappingProjection(sender=my_mech_3)
+my_proj = MappingProjection(sender=my_mech_3, name='TEST_PROJ')
+
+# my_mech_2 = TransferMechanism(size=2,
+#                               input_states=[my_proj])
 
 my_mech_2 = TransferMechanism(size=2,
                               input_states=[(my_mech_3, None, None, my_proj)])

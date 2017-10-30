@@ -1003,10 +1003,18 @@ class State_Base(State):
                     if isinstance(proj_sender, State) and proj_sender != state:
                         raise StateError("Projection assigned to {} of {} from {} already has a sender ({})".
                                          format(self.name, self.owner.name, state.name, sender.name))
-                    # If the Projection has a Mechanism specified as its sender,
-                    #    and a State type was specified in the connection spec,
-                    #    try to get that State type for the Mechanism
-                    if isinstance(proj_sender, Mechanism) and inspect.isclass(state) and issubclass(state, State):
+                    # If the Projection has a Mechanism specified as its sender:
+                    elif isinstance(state, State):
+                        #    Connection spec (state) is specified as a State,
+                        #    so validate that State belongs to Mechanism and is of the correct type
+                        sender = _get_state_for_socket(owner=self.owner,
+                                                       mech=proj_sender,
+                                                       state_spec=state,
+                                                       state_types=state.__class__,
+                                                       projection_socket=SENDER)
+                    elif isinstance(proj_sender, Mechanism) and inspect.isclass(state) and issubclass(state, State):
+                        #    Connection spec (state) is specified as State type
+                        #    so try to get that State type for the Mechanism
                         sender = _get_state_for_socket(owner=self.owner,
                                                        state_spec=proj_sender,
                                                        state_types=state)
