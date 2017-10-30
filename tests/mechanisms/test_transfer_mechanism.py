@@ -9,6 +9,7 @@ from psyneulink.components.functions.function import ExponentialDist, GammaDist,
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.states.inputstate import InputStateError
 from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.globals.keywords import NAME, MECHANISM, INPUT_STATES, OUTPUT_STATES, PROJECTIONS
 from psyneulink.scheduling.timescale import TimeScale
@@ -736,17 +737,16 @@ class TestTransferMechanismSize:
         # # PROBLEM WITH input FOR RUN:
         # my_mech_2.execute()
 
-    # # STILL DEBUGGING:
-    # # ------------------------------------------------------------------------------------------------
-    # # TEST 2
-    # # Mismatch between InputState variable specification and corresponding item of owner Mechanism's variable
-    #
-    # def test_transfer_mech_input_states_mismatch_with_default_variable_error(self):
-    #
-    #     with pytest.raises(ComponentError) as error_text:
-    #         T = TransferMechanism(default_variable=[[0],[0]],
-    #                               input_states=[[32, 24], 'HELLO'])
-    #     assert "Value specified for" in str(error_text.value) and "with its expected format" in str(error_text.value)
+    # ------------------------------------------------------------------------------------------------
+    # TEST 2
+    # Mismatch between InputState variable specification and corresponding item of owner Mechanism's variable
+
+    def test_transfer_mech_input_states_mismatch_with_default_variable_error(self):
+
+        with pytest.raises(InputStateError) as error_text:
+            T = TransferMechanism(default_variable=[[0],[0]],
+                                  input_states=[[32, 24], 'HELLO'])
+        assert "Value specified for" in str(error_text.value) and "with its expected format" in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 3
@@ -954,6 +954,7 @@ class TestTransferMechanismSize:
 
     # # ------------------------------------------------------------------------------------------------
     # # TEST 17
+    # METHOD OF SPECIFICATION NOT YET IMPLEMENTED:
     # # MECHANISMS/OUTPUT_STATES entries in params specification dict
     #
     # def test_transfer_mech_input_states_mech_output_state_in_specification_dict_spec(self):
