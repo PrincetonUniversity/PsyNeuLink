@@ -836,6 +836,9 @@ class InputState(State_Base):
                             from psyneulink.components.projections.projection import _parse_projection_spec
                             sender_dim = projection_spec.state.value.ndim
                             matrix = projection_spec.projection[MATRIX]
+                            # MODIFIED 10/29/17 NEW:
+                            # matrix = projection_spec.projection.matrix
+                            # MODIFIED 10/29/17 END
                             # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
                             proj_val_shape = matrix.shape[sender_dim :]
                             state_dict[VARIABLE] = np.zeros(proj_val_shape)
@@ -849,7 +852,7 @@ class InputState(State_Base):
                                                  projections_spec,
                                                  Mechanism.__name__,
                                                  OutputState.__name__,
-                                                 Projection.__name))
+                                                 Projection.__name__))
 
             if len(tuple_spec) == 2:
                 pass

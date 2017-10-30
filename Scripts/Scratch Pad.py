@@ -911,7 +911,8 @@ my_mech_2.execute()
 
 # PROBLEM:
 # Projection specification in Tuple
-my_mech_2 = TransferMechanism(size=2, input_states=[(my_mech_3, None, None, my_proj)])
+my_mech_2 = TransferMechanism(size=2,
+                              input_states=[(my_mech_3, None, None, my_proj)])
 assert len(my_mech_2.input_state.path_afferents[0].sender.variable)==3
 assert len(my_mech_2.input_state.variable)==2
 assert len(my_mech_2.variable)==1

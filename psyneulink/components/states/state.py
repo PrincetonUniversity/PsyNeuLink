@@ -990,6 +990,7 @@ class State_Base(State):
 
             # Deferred init
             if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+
                 proj_sender = projection.init_args[SENDER]
                 proj_receiver = projection.init_args[RECEIVER]
 
@@ -1018,7 +1019,6 @@ class State_Base(State):
                 if proj_receiver and not proj_receiver != self:
                     raise StateError("Projection assigned to {} of {} already has a receiver ({})".
                                      format(self.name, self.owner.name, proj_receiver.name))
-
 
                 # Construct and assign name
                 if isinstance(sender, State):
@@ -2279,18 +2279,16 @@ def _parse_state_spec(state_type=None,
                                                                  state_dict=state_dict,
                                                                  state_specific_params=params)
 
-                # FIX: IS ALL OF THIS NECESSARY?
                 if PROJECTIONS in params and params[PROJECTIONS] is not None:
                     #       (E.G., WEIGHTS AND EXPONENTS FOR InputState AND INDEX FOR OutputState)
                     # Get and parse projection specifications for the State
-                    projections = params[PROJECTIONS]
-                    if not isinstance(projections, list):
-                        projections = [projections]
+                    if not isinstance(params[PROJECTIONS], list):
+                        params[PROJECTIONS] = [params[PROJECTIONS]]
                     projection_params = []
-                    projection_params.extend(projections)
+                    projection_params.extend(params[PROJECTIONS])
                     if projection_params:
-                        projections = _parse_connection_specs(state_type, owner, projection_params)
-                        for projection in [connection.projection for connection in projections]:
+                        params[PROJECTIONS] = _parse_connection_specs(state_type, owner, projection_params)
+                        for projection in [connection.projection for connection in params[PROJECTIONS]]:
                             if isinstance(projection, dict):
                                 projection[RECEIVER] = owner
                 # Update state_dict[PARAMS] with params
