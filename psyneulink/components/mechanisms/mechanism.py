@@ -397,7 +397,7 @@ Mechanism's `variable <Mechanism_Base.variable>`, but in a list rather than an n
 
 When a `Mechanism is created, the number and format of the items in its `variable <Mechanism_Base.variable>`
 attribute, as well as the number of InputStates it has and their `variable <InputState.variable>` and `value
-<InputState.value>` attributes are determined by one of the following arguments in the Mechanism's constructor:
+<InputState.value>` attributes, are determined by one of the following arguments in the Mechanism's constructor:
 
 * **default_variable** (at least 2d ndarray) -- determines the number and format of the items of the Mechanism's
   `variable <Mechanism_Base>` attribute.  The number of items in its outermost dimension (axis 0) determines the
@@ -427,7 +427,7 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   **default_variable** is not specified, a default value is specified by the Mechanism.
 
 COMMENT:
-*** ADD SOME EXMPLES HERE
+*** ADD SOME EXAMPLES HERE
 COMMENT
 
 COMMENT:

@@ -406,7 +406,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     default_variable : number, list or np.ndarray : default monitored_output_states
         specifies the format of the `variable <ObjectiveMechanism.variable>` for the `InputStates` of the
-        ObjectiveMechanism (see XXX***??? for details).
+        ObjectiveMechanism (see `Mechanism_InputState_Specification` for details).
 
     size : int, list or np.ndarray of ints
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;

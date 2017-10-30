@@ -84,35 +84,39 @@ were already created).
 Each InputState is assigned to an item of its owner Mechanism's `variable <Mechanism_Base.variable>` attribute (see
 `Mechanism InputStates <Mechanism_InputStates`), and the `value <InputState.value>` of the InputState must be
 compatible with (that is, have the same number and type of elements as) that item.  In almost all cases, this is also
-true of the InputState's `variable <InputState.variable>` attribute.  That is because the default `function
+true of the InputState's `variable <InputState.variable>` attribute.  This is because the default `function
 <InputState.function>` for an InputState is a `LinearCombination`, that combines the inputs received from the
 InputState's `Projections <Projection>` to generate its `value <InputState.value>`, which has the same format as its
-`variable <InputState.variable>`. Therefore, in practice, when creating an InputState, its `variable
-<InputState.variable>` attribute should also match the item of its owner's `variable <Mechanism_Base.variable>` to
-which the InputState is assigned.
+`variable <InputState.variable>`. Therefore, when creating an InputState, its `variable <InputState.variable>`
+attribute should also match the item of its owner's `variable <Mechanism_Base.variable>` to which the InputState is
+assigned.
+
+The format of an InputState's `variable <InputState.variable>` can be specified in a variety of ways.  The most
+straightforward is in the **variable** argument of its constructor.  More commonly it is determined by another
+means: the **default_variable** or **size** argument of its owner Mechanism's constructor, a specification for
+the InputState in the owner's **input_states** argument, or in the *INPUT_STATES* entry of a specification dictionary
+in the owner's **params** argument. Each of these have different consequences and requirements, that are described
+below, and in `Mechanism_InputState_Specification`.
 
 COMMENT:
-*** ADD THE FOLLOWING:
 
-The format of an InputState's `variable <InputState.variable>` can be specified in any the places listed below:
+*** INCORPORATE THE FOLLOWING UNDER InputState Specification BELOW:
 
-Mechanism constructor:
+* **default_variable** or **size** argument -- these determine the format of the owner Mechanism's `variable
+  <Mechanism_Base.variable>`, each item of which determines the `variable <InputState.variable>` of the corresponding
+  InputState (see `Mechanism_InputState_Specification`);
 
-* **default_variable** or **size** argument of its owner Mechanism's constructor -- this takes precedence over any of
-the is used
-to determine the format for the `variable <InputState.variable>` of each `InputState <InputState>`
+* **input_states** argument, using a value specification or the *VARIABLE* entry of an InputState specification
+  dictionary (see below);
 
-------
+* **params** argument, in an *INPUT_STATES* entry of a specification dictionary
 
-**input_states** arg:
+  Any explicit specification of the value for an InputState in either of these
+
 
 * value spec in **input_states** ar or  (see below)
 * *VARIABLE* or *VALUE* entry of a State specification dictionary in the **input_states** argument (see
   above)
-
-------
-
-InputState specification dictionary:
 
 * `OutputState or Projection <LINK>` spec (see below)
 
@@ -121,15 +125,17 @@ InputState specification dictionary:
   of the OutputState from which it projects) determines the size of the `variable <InputState.variable>` attribute of
   the InputState created.
 
-* *PROJECTIONS* entry of State spec dict
-
-*
+* *PROJECTIONS* entry of State spec dict - as with Projection entry above
 COMMENT
 
+.. _InputState_Forms_of_Specification:
+
+**Forms of Specification**
+
 InputStates can be specified in a variety of ways, that fall into three broad categories:  specifying an InputState
-directly, by an `OutputState` or `Projection` that should project to it; or by using a `State specification dictionary
+directly; by an `OutputState` or `Projection` that should project to it; or by using a `State specification dictionary
 <State_Specification` or tuple format to specify attributes for the InputState (including Projections to it). Each of
-these is describe below.
+these is described below:
 
     .. _InputState_Direct_Specification:
 
@@ -144,7 +150,7 @@ these is describe below.
       of the InputState (see :ref:`naming conventions <LINK>`).
     ..
     * **value** -- this creates a default InputState using the specified value as the InputState's `variable
-      <InputState.variable>`; the format must be compatible with the item of the owner Mechanism's `variable
+      <InputState.variable>`, the format of which must be compatible with the item of the owner Mechanism's `variable
       <Mechanism_Base.variable>` to which the InputState is assigned.
     ..
     * **string** -- this creates a default `InputState` using the string as its name; its `variable
@@ -256,11 +262,17 @@ COMMENT
       along with a Projection to it.  It can take several forms:
 
         * **2-item tuple** -- the first item can be either a value (specifying the `variable <InputState.variable>` for
-          the InputState, or a Mechanism or OutputState specification (see above) indicating an OutputState that should
-          project to it; the second item must be a `Projection specification <Projection_In_Context_Specification>`,
-          which can include a matrix specification `Mapping_Matrix_Specification`. This creates an InputState and the
-          specified Projection; it assigns the InputState as the Projection's  `receiver <Projection.receiver>` and,
-          if the first item specifies an OutputState, that is assigned as the Projection's `sender <Projection.sender>`.
+          the InputState, or a Mechanism or OutputState specification indicating an OutputState that should project to
+          it (see above); the second item must be a `Projection specification <Projection_In_Context_Specification>`.
+          This creates an InputState and the specified Projection.  If the Projection is a `MappingProjection`, its
+          `value <Projection.value>` is used to format of the InputState's `variable <InputState.variable>` (see
+          see `note <InputState_Projection_Specification>` below), and therefore must be compatible with the item of
+          the owner Mechanism's `variable <Mechanism_Base.variable>` attribute;   the InputState is assigned as the
+          Projection's `receiver <Projection.receiver>` and, if the first item specifies an  OutputState, that is
+          assigned as the Projection's `sender <Projection.sender>`.  If the specificaton is for 'ModulatoryProjection`,
+          it is created (along with a corresponding `ModulatorySignal`) if necessary, the InputState is assigned as
+          its `receiver <ModulatoryProjection.receiver>`, and the the Projection is assigned to the InputState's
+          `mod_afferents <InputState>` attribute.
 
         * **ConnectionTuple** -- this is an expanded version of the 2-item tuple that allows the specification of the
           `weight <InputState.weight>` and/or `exponent <InputState.exponent>` attributes of the InputState, as well as
@@ -279,11 +291,22 @@ COMMENT
               InputState before it is combined with others by the ObjectiveMechanism's `function
               <ObjectiveMechanism.function>` (see `ObjectiveMechanism_Weights_and_Exponents` for examples);
             |
-            * **Projection specification** (optional) -- this must `specify a Projection
-              <Projection_In_Context_Specification>`, the `value <Projection.value>` of which is used to determine
-              the format of the InputState's `variable <InputState.variable>`;  the latter must therefore be consistent
-              with the specification in the first item (i.e., for either the `variable <InputState.variable>` of the
-              InputState, or the `value <OutputState.value>` of the OutputState specified to project to it.
+            * **Projection specification** (optional) -- `specifies a Projection <Projection_In_Context_Specification>`
+              in the same manner as the second item of a 2-item tuple (see above);  it's `sender <Projection.sender>`
+              must be compatible with the specification in the first item (i.e., for either the `variable
+              <InputState.variable>` of the InputState, or the `value <OutputState.value>` of the OutputState specified
+              to project to it.
+
+              .. note::
+                 If a Projection specification is for a `MappingProjection`, it can use the Projection itself or a
+                 `matrix specification <Mapping_Matrix_Specification>`.  If it is a Projection, then its `value
+                 <Projection.value>` is used to determine the InputState's `variable <InputState.variable>`; if it
+                 is a matrix, then its receiver dimensionality determines the format of the InputState's `variable
+                 <InputState.variable>`. For a standard 2d weight matrix (i.e., one that maps a 1d array from its
+                 `sender <Projection.sender>` to a 1d array of its `receiver <Projection.receiver>`), the receiver
+                 dimensionality is its outer dimension (axis 1, or its number of columns).  However, if the `sender
+                 <Projection.sender>` has more than one dimension, then the dimensionality of the receiver is
+                 the overall dimension of the matrix minus the number of its sender's dimensions.
 
 .. _InputState_Projections:
 
@@ -835,10 +858,14 @@ class InputState(State_Base):
                             # FIX:           USING _get_state_for_socket
                             from psyneulink.components.projections.projection import _parse_projection_spec
                             sender_dim = projection_spec.state.value.ndim
-                            matrix = projection_spec.projection[MATRIX]
-                            # MODIFIED 10/29/17 NEW:
-                            # matrix = projection_spec.projection.matrix
-                            # MODIFIED 10/29/17 END
+                            projection = projection_spec.projection
+                            if isinstance(projection, dict):
+                                matrix = projection[MATRIX]
+                            elif isinstance(projection, Projection):
+                                matrix = projection.matrix
+                            else:
+                                raise InputStateError("Unrecognized Projection specification for {} of {} ({})".
+                                                      format(self.name, owner.name, projection_spec))
                             # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
                             proj_val_shape = matrix.shape[sender_dim :]
                             state_dict[VARIABLE] = np.zeros(proj_val_shape)

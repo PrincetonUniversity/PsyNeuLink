@@ -909,7 +909,6 @@ assert len(my_mech_2.variable)==1
 assert len(my_mech_2.variable[0])==2
 my_mech_2.execute()
 
-# PROBLEM:
 # Projection specification in Tuple
 my_mech_2 = TransferMechanism(size=2,
                               input_states=[(my_mech_3, None, None, my_proj)])

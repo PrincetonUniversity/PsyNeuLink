@@ -81,13 +81,13 @@ Projections
 
 A ModulatorySignal can be assigned one or more `ModulatoryProjections <ModulatoryProjection>`,
 using either the **projections** argument of its constructor, or in an entry of a dictionary assigned to the
-**params** argument with the key *PROJECTIONS*.  These will be assigned to its `efferents  <ModulatorySignal.efferents>`
+**params** argument with the key *PROJECTIONS*.  These are assigned to its `efferents  <ModulatorySignal.efferents>`
 attribute.  See `State Projections <State_Projections>` for additional details concerning the specification of
 Projections when creating a State.
 
 .. note::
    Although a ModulatorySignal can be assigned more than one `ModulatoryProjection <ModulatoryProjection>`, all of those
-   Projections will receive and convey the same modulatory value (received from the `AdaptiveMechanism
+   Projections receive and convey the same modulatory value (received from the `AdaptiveMechanism
    <AdaptiveMechanism>` to which the ModulatorySignal belongs), and use the same form of `modulation
    <ModulatorySignal_Modulation>`.  This is a common use for some ModulatorySignals (e.g., the use of a single
    `GatingSignal` to gate multiple `InputState(s) <InputState>` or `OutputState(s) <OutputState>`), but requires more
