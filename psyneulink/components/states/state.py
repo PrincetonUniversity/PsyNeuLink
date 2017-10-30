@@ -966,7 +966,7 @@ class State_Base(State):
 
             # Get sender State, weight, exponent and projection for each projection specification
             #    note: weight and exponent for connection have been assigned to Projection in _parse_connection_specs
-            sender, weight, exponent, projection_spec = connection
+            state, weight, exponent, projection_spec = connection
 
             # GET Projection --------------------------------------------------------
 
@@ -990,9 +990,35 @@ class State_Base(State):
 
             # Deferred init
             if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                proj_sender = projection.init_args[SENDER]
+                proj_receiver = projection.init_args[RECEIVER]
 
                 projection.init_args[RECEIVER] = self
+
+                # validate/parse sender
+                if proj_sender:
+                    # If the Projection already has State as its sender,
+                    #    it must be the same as the one specified in the connection spec
+                    if isinstance(proj_sender, State) and proj_sender != state:
+                        raise StateError("Projection assigned to {} of {} from {} already has a sender ({})".
+                                         format(self.name, self.owner.name, state.name, sender.name))
+                    # If the Projection has a Mechanism specified as its sender,
+                    #    and a State type was specified in the connection spec,
+                    #    try to get that State type for the Mechanism
+                    if isinstance(proj_sender, Mechanism) and inspect.isclass(state) and issubclass(state, State):
+                        sender = _get_state_for_socket(owner=self.owner,
+                                                       state_spec=proj_sender,
+                                                       state_types=state)
+                    projection.init_args[SENDER] = sender
+                else:
+                    sender = state
                 projection.init_args[SENDER] = sender
+
+                # validate receiver
+                if proj_receiver and not proj_receiver != self:
+                    raise StateError("Projection assigned to {} of {} already has a receiver ({})".
+                                     format(self.name, self.owner.name, proj_receiver.name))
+
 
                 # Construct and assign name
                 if isinstance(sender, State):
@@ -2257,11 +2283,14 @@ def _parse_state_spec(state_type=None,
                 if PROJECTIONS in params and params[PROJECTIONS] is not None:
                     #       (E.G., WEIGHTS AND EXPONENTS FOR InputState AND INDEX FOR OutputState)
                     # Get and parse projection specifications for the State
+                    projections = params[PROJECTIONS]
+                    if not isinstance(projections, list):
+                        projections = [projections]
                     projection_params = []
-                    projection_params.extend(params[PROJECTIONS])
+                    projection_params.extend(projections)
                     if projection_params:
-                        params[PROJECTIONS] = _parse_connection_specs(state_type, owner, projection_params)
-                        for projection in [connection.projection for connection in params[PROJECTIONS]]:
+                        projections = _parse_connection_specs(state_type, owner, projection_params)
+                        for projection in [connection.projection for connection in projections]:
                             if isinstance(projection, dict):
                                 projection[RECEIVER] = owner
                 # Update state_dict[PARAMS] with params
@@ -2316,7 +2345,7 @@ def _get_state_for_socket(owner,
 
     If state_spec is:
         State name (str), then *mech* and *mech_state_attribute* args must be specified
-        Mechanism, then *state_spec* must be a Mechanism, and *state_type* must be specified; primary State is returned
+        Mechanism, then *state_type* must be specified; primary State is returned
         Projection, *projection_socket* arg must be specified;
                     Projection must be instantiated or in deferred_init, with projection_socket attribute assigned
 
@@ -2336,10 +2365,12 @@ def _get_state_for_socket(owner,
     if isinstance(mech_state_attribute, list):
         mech_state_attribute = mech_state_attribute[0]
 
+    # state_types should be a list, and state_type its first (or only) item
     if isinstance(state_types, list):
         state_type = state_types[0]
     else:
         state_type = state_types
+        state_types = [state_types]
 
     state_type_names = ", ".join([s.__name__ for s in state_types])
 

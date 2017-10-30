@@ -682,7 +682,6 @@ class InputState(State_Base):
                 raise InputStateError("{} parameter of {} for {} ({}) must be an int or float".
                                       format(EXPONENT, self.name, self.owner.name, target_set[EXPONENT]))
 
-
     def _validate_against_reference_value(self, reference_value):
         """Validate that State.value is compatible with reference_value
 
@@ -767,6 +766,13 @@ class InputState(State_Base):
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
 
+    # def _assign_default_name(self):
+    #     """Assign index of '-1' to first default  InputState
+    #     Subsequent ones are indexed sequentially by Registry starting with '-2'
+    #     """
+    #     if self.name == self.componentName:
+    #         self.name = self.name+'-1'
+
 # MODIFIED 9/30/17 NEW:
     @tc.typecheck
     def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
@@ -803,28 +809,26 @@ class InputState(State_Base):
             tuple_spec = state_specific_params
             # Note: 1s item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
 
-            # # MODIFIED 10/25/17 OLD:
-            # # Get connection (afferent Projection(s)) specification from tuple
-            # PROJECTIONS_INDEX = len(tuple_spec)-1
-            # try:
-            #     projections_spec = tuple_spec[PROJECTIONS_INDEX]
-            # except IndexError:
-            #     projections_spec = None
-            # MODIFIED 10/25/17 NEW:
+            state_spec = tuple_spec[0]
+
             if len(tuple_spec) == 2:
-                projections_spec = tuple_spec[1]
+                if state_spec != self:
+                    # If state_spec is not the current state (self), treat as part of the projection specification
+                    projections_spec = tuple_spec
+                else:
+                    # Otherwise, just use 2nd item as projection spec
+                    projections_spec = tuple_spec[1]
             elif len(tuple_spec) == 4:
                 projections_spec = tuple_spec
-            # MODIFIED 10/25/17 END
 
             if projections_spec is not None:
+
                 try:
                     params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                        owner=owner,
                                                                        connections=[projections_spec])
                     for projection_spec in params_dict[PROJECTIONS]:
-                        # Insure that value of all of the Projections are consistent with the variable of the State
-                        #    or, if that is not specified, do so based on the value of the Projection(s):
+                        # Parse the value of all of the Projections to be comparable to variable of State
                         if state_dict[REFERENCE_VALUE] is None:
                             # FIX: 10/3/17 - PUTTING THIS HERE IS A HACK...
                             # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ConnectionTuple SPEC
@@ -847,9 +851,12 @@ class InputState(State_Base):
                                                  OutputState.__name__,
                                                  Projection.__name))
 
+            if len(tuple_spec) == 2:
+                pass
+
             # Tuple is (spec, weights, exponents<, afferent_source_spec>),
             #    for specification of weights and exponents,  + connection(s) (afferent projection(s)) to InputState
-            if len(tuple_spec) in {3, 4}:
+            elif len(tuple_spec) in {3, 4}:
 
                 weight = tuple_spec[WEIGHT_INDEX]
                 exponent = tuple_spec[EXPONENT_INDEX]

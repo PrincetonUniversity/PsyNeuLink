@@ -45,7 +45,7 @@ Execution
 """
 
 from psyneulink.components.projections.projection import Projection_Base
-from psyneulink.globals.keywords import PATHWAY_PROJECTION, NAME
+from psyneulink.globals.keywords import PATHWAY_PROJECTION, NAME, RECEIVER
 from psyneulink.components.component import InitStatus
 
 __all__ = []
@@ -98,6 +98,10 @@ class PathwayProjection_Base(Projection_Base):
                               self.receiver.owner.name
 
         elif self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+            if self.init_args[RECEIVER]:
+                receiver = self.init_args[RECEIVER]
+                if receiver.owner:
+                    receiver_name = "{}[{}]".format(receiver.owner.name, receiver_name)
             projection_name = self.className + " from " + sender_name + " to " + receiver_name
             self.init_args[NAME] = self.init_args[NAME] or projection_name
 

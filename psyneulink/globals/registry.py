@@ -224,7 +224,17 @@ def register_instance(entry, name, base_class, registry, sub_dict):
             entry.name += '-{0}'.format(renamed_instance_counts[entry.name])
         else:
             name_stripped_of_suffix = match.groups()[0]
+        # # MODIFIED 10/29/17 OLD:
         entry.name = numeric_suffix_pat.sub(r'\1-{0}'.format(renamed_instance_counts[name_stripped_of_suffix]), entry.name)
+        # # MODIFIED 10/29/17 NEW:
+        # try:
+        #     entry.name = numeric_suffix_pat.sub(r'\1-{0}'.
+        #                                         format(renamed_instance_counts[name_stripped_of_suffix]), entry.name)
+        # except KeyError:
+        #     entry.name = numeric_suffix_pat.sub(r'\1-{0}'.
+        #                                         format(renamed_instance_counts[entry.__class__.__name__]), entry.name)
+        # MODIFIED 10/29/17 END
+
 
     # Add instance to instanceDict:
     registry[sub_dict].instanceDict.update({entry.name: entry})
