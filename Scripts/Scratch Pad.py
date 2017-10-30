@@ -757,11 +757,9 @@ from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISIO
 from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES, PROJECTIONS, NAME, INPUT_STATES
 
 # # 10/29/17 NOT YET IMPLEMENTED:
-# my_mech_1 = DDM()
 my_mech_1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
 
 # InputState specification tests:
-
 
 # NOT YET IMPLEMENTED [10/29/17]:
 # MECHANISM/OUTPUT_STATES specification
@@ -774,32 +772,21 @@ my_mech_1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
 #         assert projection.sender.owner is my_mech_1
 
 
-# MATCH OF default_variable and specification of multiple InputStates by value and string
-my_mech_2 = TransferMechanism(default_variable=[[0,0],[0]],
-                              input_states=[[32, 24], 'HELLO'])
-assert my_mech_2.input_states[1].name == 'HELLO'
-# # PROBLEM WITH input FOR RUN:
-# my_mech_2.execute()
-
-# TEST:  Implement as error test
-# # Mismatch between InputState variable specification and corresponding item of owner Mechanism's variable
-# my_mech_2 = TransferMechanism(default_variable=[[0],[0]],
+# # MATCH OF default_variable and specification of multiple InputStates by value and string
+# my_mech_2 = TransferMechanism(default_variable=[[0,0],[0]],
 #                               input_states=[[32, 24], 'HELLO'])
-# assert (
-#     "Value specified for" in str(error_text.value)
-#     and "with its expected format" in str(error_text.value)
-# )
+# assert my_mech_2.input_states[1].name == 'HELLO'
+# # # PROBLEM WITH input FOR RUN:
+# # my_mech_2.execute()
 
-
-# OVERRIDE OF input_states (mis)specification by params dict INPUT_STATES entry specification
-my_mech_2 = TransferMechanism(default_variable=[[0,0],[0]],
-                              input_states=[[32], 'HELLO'],
-                              params = {INPUT_STATES:[[32, 24], 'HELLO']}
-                              )
-assert my_mech_2.input_states[1].name == 'HELLO'
-# # PROBLEM WITH input FOR RUN:
-# my_mech_2.execute()
-
+# # OVERRIDE OF input_states (mis)specification by params dict INPUT_STATES entry specification
+# my_mech_2 = TransferMechanism(default_variable=[[0,0],[0]],
+#                               input_states=[[32], 'HELLO'],
+#                               params = {INPUT_STATES:[[32, 24], 'HELLO']}
+#                               )
+# assert my_mech_2.input_states[1].name == 'HELLO'
+# # # PROBLEM WITH input FOR RUN:
+# # my_mech_2.execute()
 
 # # PROBLEM: SHOULD GENERATE TWO INPUT_STATES (
 # #                ONE WITH [[32],[24]] AND OTHER WITH [[0]] AS VARIABLE INSTANCE DEFAULT
@@ -820,98 +807,14 @@ assert my_mech_2.input_states[1].name == 'HELLO'
 # assert len(my_mech_3.variable[0])==2
 # assert len(my_mech_3.variable[1])==1
 
-# #  ********** ADDED TO TESTS:*********************************
-
-# Mechanism specification
-my_mech_2 = TransferMechanism(default_variable=[[0]],
-                              input_states=[my_mech_1])
-assert my_mech_2.input_state.path_afferents[0].sender == my_mech_1.output_state
-my_mech_2.execute()
-
-
-# Mechanism outside of list specification
-my_mech_2 = TransferMechanism(default_variable=[[0]],
-                              input_states=my_mech_1)
-assert my_mech_2.input_state.path_afferents[0].sender == my_mech_1.output_state
-my_mech_2.execute()
-
-
-# OutputState specification
-my_mech_2 = TransferMechanism(default_variable=[[0],[0]],
-                              input_states=[my_mech_1.output_states['FIRST'],
-                                            my_mech_1.output_states['SECOND']])
-assert my_mech_2.input_states.names[0] == 'InputState'
-assert my_mech_2.input_states.names[1] == 'InputState-1'
-for input_state in my_mech_2.input_states:
-    for projection in input_state.path_afferents:
-        assert projection.sender.owner is my_mech_1
-my_mech_2.execute()
-
-# OutputState specification with Names (and single item in PROJECTIONS outside of a list
-my_mech_2 = TransferMechanism(default_variable=[[0],[0]],
-                              input_states=[{NAME: 'FROM DECISION',
-                                             PROJECTIONS: [my_mech_1.output_states['FIRST']]},
-                                            {NAME: 'FROM RESPONSE_TIME',
-                                             PROJECTIONS: my_mech_1.output_states['SECOND']}])
-assert my_mech_2.input_states.names[0] == 'FROM DECISION'
-assert my_mech_2.input_states.names[1] == 'FROM RESPONSE_TIME'
-for input_state in my_mech_2.input_states:
-    for projection in input_state.path_afferents:
-        assert projection.sender.owner is my_mech_1
-my_mech_2.execute()
-
-
-# OutputState outside of list specification
-my_mech_2 = TransferMechanism(default_variable=[0],
-                              input_states=my_mech_1.output_states['FIRST'])
-assert my_mech_2.input_states.names[0] == 'InputState'
-my_mech_2.input_state.path_afferents[0].sender == my_mech_1.output_state
-my_mech_2.execute()
-
-
-my_mech_3 = TransferMechanism(size=3)
-
-# default_variable override of OutputState.value
-my_mech_2 = TransferMechanism(default_variable=[[0,0]],
-                              input_states=[my_mech_3])
-assert len(my_mech_2.input_state.path_afferents[0].sender.variable)==3
-assert len(my_mech_2.input_state.variable)==2
-assert len(my_mech_2.variable)==1
-assert len(my_mech_2.variable[0])==2
-my_mech_2.execute()
-
-
-# 2-item Tuple Specification
-# default_variable override of OutputState.value
-my_mech_2 = TransferMechanism(size=2, input_states=[(my_mech_3, np.zeros((3,2)))])
-assert len(my_mech_2.input_state.path_afferents[0].sender.variable)==3
-assert len(my_mech_2.input_state.variable)==2
-assert len(my_mech_2.variable)==1
-assert len(my_mech_2.variable[0])==2
-my_mech_2.execute()
-
-
-# ConnectionTuple Specification
-my_mech_2 = TransferMechanism(size=2, input_states=[(my_mech_3, None, None, np.zeros((3,2)))])
-assert len(my_mech_2.input_state.path_afferents[0].sender.variable)==3
-assert len(my_mech_2.input_state.variable)==2
-assert len(my_mech_2.variable)==1
-assert len(my_mech_2.variable[0])==2
-my_mech_2.execute()
-
-
-my_proj = MappingProjection(sender=my_mech_3)
-
-# Standalone Projection specification
-my_mech_2 = TransferMechanism(size=2,
-                              input_states=[my_proj])
-assert len(my_mech_2.input_state.path_afferents[0].sender.variable)==3
-assert len(my_mech_2.input_state.variable)==2
-assert len(my_mech_2.variable)==1
-assert len(my_mech_2.variable[0])==2
-my_mech_2.execute()
 
 # Projection specification in Tuple
+my_mech_3 = TransferMechanism(size=3)
+my_proj = MappingProjection(sender=my_mech_3, name='TEST_PROJ')
+
+# my_mech_2 = TransferMechanism(size=2,
+#                               input_states=[my_proj])
+
 my_mech_2 = TransferMechanism(size=2,
                               input_states=[(my_mech_3, None, None, my_proj)])
 assert len(my_mech_2.input_state.path_afferents[0].sender.variable)==3
@@ -920,16 +823,6 @@ assert len(my_mech_2.variable)==1
 assert len(my_mech_2.variable[0])==2
 my_mech_2.execute()
 
-
-# PROJECTIONS specification
-my_mech_2 = TransferMechanism(input_states=[{NAME: 'My InputState with Two Projections',
-                                             PROJECTIONS:[my_mech_1.output_states['FIRST'],
-                                                          my_mech_1.output_states['SECOND']]}])
-assert my_mech_2.input_state.name == 'My InputState with Two Projections'
-for input_state in my_mech_2.input_states:
-    for projection in input_state.path_afferents:
-        assert projection.sender.owner is my_mech_1
-my_mech_2.execute()
 
 #endregion
 
