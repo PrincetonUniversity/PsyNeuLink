@@ -14,10 +14,6 @@ from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.globals.keywords import NAME, MECHANISM, INPUT_STATES, OUTPUT_STATES, PROJECTIONS
 from psyneulink.scheduling.timescale import TimeScale
 
-# Used by test_transfer_mech_input_states tests:
-R1 = TransferMechanism(output_states=['FIRST','SECOND'])
-R2 = TransferMechanism(size=3)
-
 
 class TestTransferMechanismInputs:
     # VALID INPUTS
@@ -799,7 +795,7 @@ class TestTransferMechanismSize:
     # Mechanism specification
 
     def test_transfer_mech_input_states_mech_spec(self):
-
+        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
         T = TransferMechanism(default_variable=[[0]],
                                   input_states=[R1])
         assert T.input_state.path_afferents[0].sender == R1.output_state
@@ -810,7 +806,7 @@ class TestTransferMechanismSize:
     # Mechanism specification outside of a list
 
     def test_transfer_mech_input_states_standalone_mech_spec(self):
-
+        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
         # Mechanism outside of list specification
         T = TransferMechanism(default_variable=[[0]],
                                       input_states=R1)
@@ -822,7 +818,7 @@ class TestTransferMechanismSize:
     # OutputState specification
 
     def test_transfer_mech_input_states_output_state_spec(self):
-
+        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
         T = TransferMechanism(default_variable=[[0],[0]],
                                       input_states=[R1.output_states['FIRST'],
                                                     R1.output_states['SECOND']])
@@ -838,7 +834,7 @@ class TestTransferMechanismSize:
     # OutputState specification outside of a list
 
     def test_transfer_mech_input_states_stand_alone_output_state_spec(self):
-
+        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
         T = TransferMechanism(default_variable=[0],
                                       input_states=R1.output_states['FIRST'])
         assert T.input_states.names[0] == 'InputState'
@@ -850,7 +846,7 @@ class TestTransferMechanismSize:
     # OutputStates in PROJECTIONS entries of a specification dictiontary, using with names (and one outside of a list)
 
     def test_transfer_mech_input_states_specification_dict_spec(self):
-
+        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
         T = TransferMechanism(default_variable=[[0],[0]],
                                       input_states=[{NAME: 'FROM DECISION',
                                                      PROJECTIONS: [R1.output_states['FIRST']]},
@@ -885,7 +881,7 @@ class TestTransferMechanismSize:
     # 2-item tuple specification with default_variable override of OutputState.value
 
     def test_transfer_mech_input_states_2_item_tuple_spec(self):
-
+        R2 = TransferMechanism(size=3)
         T = TransferMechanism(size=2, input_states=[(R2, np.zeros((3,2)))])
         assert len(T.input_state.path_afferents[0].sender.variable)==3
         assert len(T.input_state.variable)==2
@@ -898,7 +894,7 @@ class TestTransferMechanismSize:
     # ConnectionTuple Specification
 
     def test_transfer_mech_input_states_connection_tuple_spec(self):
-
+        R2 = TransferMechanism(size=3)
         T = TransferMechanism(size=2, input_states=[(R2, None, None, np.zeros((3,2)))])
         assert len(T.input_state.path_afferents[0].sender.variable)==3
         assert len(T.input_state.variable)==2
@@ -911,7 +907,7 @@ class TestTransferMechanismSize:
     # Standalone Projection specification
 
     def test_transfer_mech_input_states_projection_spec(self):
-
+        R2 = TransferMechanism(size=3)
         P = MappingProjection(sender=R2)
         T = TransferMechanism(size=2,
                               input_states=[P])
@@ -926,7 +922,7 @@ class TestTransferMechanismSize:
     # Projection specification in Tuple
 
     def test_transfer_mech_input_states_projection_in_tuple_spec(self):
-
+        R2 = TransferMechanism(size=3)
         P = MappingProjection(sender=R2)
         T = TransferMechanism(size=2,
                               input_states=[(R2, None, None, P)])
@@ -941,7 +937,7 @@ class TestTransferMechanismSize:
     # PROJECTIONS specification in InputState specification dictionary
 
     def test_transfer_mech_input_states_projection_in_specification_dict_spec(self):
-
+        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
         T = TransferMechanism(input_states=[{NAME: 'My InputState with Two Projections',
                                                      PROJECTIONS:[R1.output_states['FIRST'],
                                                                   R1.output_states['SECOND']]}])
