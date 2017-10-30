@@ -368,7 +368,7 @@ from psyneulink.globals.keywords import \
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities \
-    import ContentAddressableList, ReadOnlyOrderedDict, is_numeric, is_value_spec, iscompatible
+    import ContentAddressableList, ReadOnlyOrderedDict, is_iterable, is_numeric, is_value_spec, iscompatible
 
 __all__ = [
     'ParameterState', 'ParameterStateError', 'state_type_keywords',
@@ -1053,10 +1053,10 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             # #                       which would make them inaccessible to the subsequent parse of state_spec
             from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
             from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
-            if (isinstance(function_param_value, Iterable)
-                and any(isinstance(item, (ModulatorySignal,
-                                          ModulatoryProjection_Base,
-                                          AdaptiveMechanism_Base)) for item in function_param_value)):
+            if (
+                is_iterable(function_param_value)
+                and any(isinstance(item, (ModulatorySignal, ModulatoryProjection_Base, AdaptiveMechanism_Base)) for item in function_param_value)
+            ):
                 reference_value = function_param_value
             else:
                 from copy import deepcopy

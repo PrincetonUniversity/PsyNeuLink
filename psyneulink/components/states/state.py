@@ -987,9 +987,6 @@ class State_Base(State):
 
     stateAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
 
-    class ClassDefaults(State.ClassDefaults):
-        variable = [0]
-
     registry = StateRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY

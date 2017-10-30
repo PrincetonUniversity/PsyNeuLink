@@ -775,9 +775,6 @@ class OutputState(State_Base):
     projectionSocket = RECEIVER
     modulators = [GATING_SIGNAL]
 
-    class ClassDefaults(State_Base.ClassDefaults):
-        variable = None
-
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically

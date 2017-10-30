@@ -234,11 +234,9 @@ Class Reference
 import typecheck as tc
 
 from psyneulink.components.functions.function import Integrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
-from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.shellclasses import Mechanism
-from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -379,10 +377,6 @@ class LCMechanism(ControlMechanism):
     # classPreferences = {
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
-
-    class ClassDefaults(AdaptiveMechanism_Base.ClassDefaults):
-        # This must be a list, as there may be more than one (e.g., one per control_signal)
-        variable = defaultControlAllocation
 
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION: Integrator,

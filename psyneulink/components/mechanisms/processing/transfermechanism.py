@@ -649,9 +649,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     standard_output_states = standard_output_states.copy()
 
-    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        variable = [[0]]
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

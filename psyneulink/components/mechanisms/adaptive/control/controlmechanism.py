@@ -538,7 +538,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     class ClassDefaults(AdaptiveMechanism_Base.ClassDefaults):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        variable = defaultControlAllocation
+        variable = np.array(defaultControlAllocation)
 
     from psyneulink.components.functions.function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()

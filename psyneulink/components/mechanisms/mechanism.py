@@ -1092,7 +1092,7 @@ class Mechanism_Base(Mechanism):
     suffix = " " + className
 
     class ClassDefaults(Mechanism.ClassDefaults):
-        variable = [0.0]
+        variable = np.array([[0]])
 
     registry = MechanismRegistry
 

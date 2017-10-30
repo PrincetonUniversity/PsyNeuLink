@@ -263,9 +263,6 @@ class GatingProjection(ModulatoryProjection_Base):
         sender=[GATING_SIGNAL]
         receiver=[INPUT_STATE, OUTPUT_STATE]
 
-    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
-        variable = 0.0
-
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_SENDER: GatingMechanism,
