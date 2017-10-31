@@ -1,10 +1,10 @@
 import numpy as np
 import pytest
 
+from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.states.inputstate import InputStateError
-from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS
+from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, VARIABLE
 
 
 class TestInputStateSpec:
@@ -34,12 +34,12 @@ class TestInputStateSpec:
 
     def test_mismatch_with_default_variable_error(self):
 
-        with pytest.raises(InputStateError) as error_text:
+        with pytest.raises(MechanismError) as error_text:
             T = TransferMechanism(
                 default_variable=[[0], [0]],
                 input_states=[[32, 24], 'HELLO']
             )
-        assert "Value specified for" in str(error_text.value) and "with its expected format" in str(error_text.value)
+        assert "not compatible with the specified default variable" in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 3
@@ -58,35 +58,35 @@ class TestInputStateSpec:
         # # PROBLEM WITH input FOR RUN:
         # my_mech_2.execute()
 
-    # # ------------------------------------------------------------------------------------------------
-    # # TEST 4
-    # # Specification using input_states without default_variable
-    #
-    # def test_transfer_mech_input_states_no_default_variable(self):
-    #
-    #     # PROBLEM: SHOULD GENERATE TWO INPUT_STATES (
-    #     #                ONE WITH [[32],[24]] AND OTHER WITH [[0]] AS VARIABLE INSTANCE DEFAULT
-    #     #                INSTEAD, SEEM TO IGNORE InputState SPECIFICATIONS AND JUST USE DEFAULT_VARIABLE
-    #     #                NOTE:  WORKS FOR ObjectiveMechanism, BUT NOT TransferMechanism
-    #     T = TransferMechanism(input_states=[[32, 24], 'HELLO'])
-    #     assert T.instance_defaults.variable.shape == np.array([[0, 0], [0]]).shape
-    #     assert len(T.input_states) == 2
-    #     assert T.input_states[1].name == 'HELLO'
+    # ------------------------------------------------------------------------------------------------
+    # TEST 4
+    # Specification using input_states without default_variable
 
-    # # ------------------------------------------------------------------------------------------------
-    # # TEST 5
-    # # Specification using INPUT_STATES entry in params specification dict without default_variable
-    #
-    # def test_transfer_mech_input_states_specification_dict_no_default_variable(self):
-    #
-    #     # PROBLEM: SHOULD GENERATE TWO INPUT_STATES (
-    #     #                ONE WITH [[32],[24]] AND OTHER WITH [[0]] AS VARIABLE INSTANCE DEFAULT
-    #     #                INSTEAD, SEEM TO IGNORE InputState SPECIFICATIONS AND JUST USE DEFAULT_VARIABLE
-    #     #                NOTE:  WORKS FOR ObjectiveMechanism, BUT NOT TransferMechanism
-    #     T = TransferMechanism(params = {INPUT_STATES:[[32, 24], 'HELLO']})
-    #     assert T.instance_defaults.variable.shape == np.array([[0, 0], [0]]).shape
-    #     assert len(T.input_states) == 2
-    #     assert T.input_states[1].name == 'HELLO'
+    def test_transfer_mech_input_states_no_default_variable(self):
+
+        # PROBLEM: SHOULD GENERATE TWO INPUT_STATES (
+        #                ONE WITH [[32],[24]] AND OTHER WITH [[0]] AS VARIABLE INSTANCE DEFAULT
+        #                INSTEAD, SEEM TO IGNORE InputState SPECIFICATIONS AND JUST USE DEFAULT_VARIABLE
+        #                NOTE:  WORKS FOR ObjectiveMechanism, BUT NOT TransferMechanism
+        T = TransferMechanism(input_states=[[32, 24], 'HELLO'])
+        assert T.instance_defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert len(T.input_states) == 2
+        assert T.input_states[1].name == 'HELLO'
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 5
+    # Specification using INPUT_STATES entry in params specification dict without default_variable
+
+    def test_transfer_mech_input_states_specification_dict_no_default_variable(self):
+
+        # PROBLEM: SHOULD GENERATE TWO INPUT_STATES (
+        #                ONE WITH [[32],[24]] AND OTHER WITH [[0]] AS VARIABLE INSTANCE DEFAULT
+        #                INSTEAD, SEEM TO IGNORE InputState SPECIFICATIONS AND JUST USE DEFAULT_VARIABLE
+        #                NOTE:  WORKS FOR ObjectiveMechanism, BUT NOT TransferMechanism
+        T = TransferMechanism(params={INPUT_STATES: [[32, 24], 'HELLO']})
+        assert T.instance_defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert len(T.input_states) == 2
+        assert T.input_states[1].name == 'HELLO'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 6
@@ -303,3 +303,96 @@ class TestInputStateSpec:
         for input_state in T.input_states:
             for projection in input_state.path_afferents:
                 assert projection.sender.owner is R1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 18
+    # String specification with variable specification
+
+    def test_dict_with_variable(self):
+        T = TransferMechanism(input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}])
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        assert len(T.input_states) == 1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 19
+    # String specification with variable specification conflicts with default_variable
+
+    def test_dict_with_variable_matches_default(self):
+        T = TransferMechanism(
+            default_variable=[0, 0],
+            input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}]
+        )
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        assert len(T.input_states) == 1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 20
+
+    def test_dict_with_variable_matches_default_2(self):
+        T = TransferMechanism(
+            default_variable=[[0, 0]],
+            input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}]
+        )
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        assert len(T.input_states) == 1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 21
+
+    def test_dict_with_variable_matches_default_multiple_input_states(self):
+        T = TransferMechanism(
+            default_variable=[[0, 0], [0]],
+            input_states=[
+                {NAME: 'FIRST', VARIABLE: [0, 0]},
+                {NAME: 'SECOND', VARIABLE: [0]}
+            ]
+        )
+        assert T.instance_defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert len(T.input_states) == 2
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 22
+
+    def test_dict_with_variable_mismatches_default(self):
+        with pytest.raises(MechanismError) as error_text:
+            T = TransferMechanism(
+                default_variable=[0],
+                input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}]
+            )
+        assert 'not compatible with the specified default variable' in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 23
+
+    def test_dict_with_variable_mismatches_default_multiple_input_states(self):
+        with pytest.raises(MechanismError) as error_text:
+            T = TransferMechanism(
+                default_variable=[[0], [0]],
+                input_states=[
+                    {NAME: 'FIRST', VARIABLE: [0, 0]},
+                    {NAME: 'SECOND', VARIABLE: [0]}
+                ]
+            )
+        assert 'not compatible with the specified default variable' in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 24
+
+    def test_dict_with_variable_matches_size(self):
+        T = TransferMechanism(
+            size=2,
+            input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}]
+        )
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        assert len(T.input_states) == 1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 25
+
+    def test_dict_with_variable_mismatches_size(self):
+        with pytest.raises(MechanismError) as error_text:
+            T = TransferMechanism(
+                size=1,
+                input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}]
+            )
+        assert 'not compatible with the default variable determined from size parameter' in str(error_text.value)
