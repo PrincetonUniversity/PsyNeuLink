@@ -359,7 +359,7 @@ class ObjectiveMechanismError(Exception):
 class ObjectiveMechanism(ProcessingMechanism_Base):
     """
     ObjectiveMechanism(               \
-        monitored_output_states,      \   # alias to input_states argument, which can still be used in a spec dict
+        monitored_output_states,         # alias to input_states argument, which can still be used in a spec dict
         default_variable,             \
         size,                         \
         function=LinearCombination,   \
