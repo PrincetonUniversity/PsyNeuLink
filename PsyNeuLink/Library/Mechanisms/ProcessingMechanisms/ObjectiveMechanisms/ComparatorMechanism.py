@@ -177,7 +177,7 @@ class ComparatorMechanism(ObjectiveMechanism):
         sample,                                         \
         target,                                         \
         input_states=[SAMPLE,TARGET]                    \
-        function=LinearCombination(weights=[[-1],[1]],  \
+        function=LinearCombination(weights=[[-1],[1]]), \
         output_states=[OUTCOME]                         \
         params=None,                                    \
         name=None,                                      \
@@ -348,8 +348,6 @@ class ComparatorMechanism(ObjectiveMechanism):
                                          name=TARGET,
                                          value=None)
 
-        print("Sample input type: {}".format(type(sample_input)))
-        print("Target input type: {}".format(type(target_input)))
 
         # IMPLEMENTATION NOTE: The following prevents the default from being updated by subsequent assignment
         #                     (in this case, to [OUTCOME, {NAME= MSE}]), but fails to expose default in IDE

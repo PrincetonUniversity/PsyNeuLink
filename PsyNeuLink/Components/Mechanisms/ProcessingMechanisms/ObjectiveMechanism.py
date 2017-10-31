@@ -328,6 +328,8 @@ import numbers
 import warnings
 from collections import namedtuple
 
+import numpy as np
+
 import typecheck as tc
 
 from PsyNeuLink.Components.Component import InitStatus
@@ -680,9 +682,15 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
        # For each InputState specified by monitored_output_states, add an item to self.variable
         #    - get specified constraint on variable and add item to self.variable
-        self.instance_defaults.variable = self.instance_defaults.variable or []
+        self.instance_defaults.variable = [] if self.instance_defaults.variable is None else self.instance_defaults.variable
         for i, input_state_dict in enumerate(input_state_dicts):
-            self.instance_defaults.variable.append(input_state_dict[VARIABLE])
+            try:
+                self.instance_defaults.variable.append(input_state_dict[VARIABLE])
+            except AttributeError:
+                self.instance_defaults.variable = np.append(self.instance_defaults.variable, input_state_dict[VARIABLE])
+
+        print("length of self.instance_defaults.variable = {}".format(len(self.instance_defaults.variable)))
+
 
         # Instantiate InputStates corresponding to OutputStates specified in specified monitored_output_states
         instantiated_input_states = super()._instantiate_input_states(input_states=input_state_dicts, context=context)

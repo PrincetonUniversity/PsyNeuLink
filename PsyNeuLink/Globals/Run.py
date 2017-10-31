@@ -807,7 +807,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                        for mech in stimuli.keys()):
                     raise RunError("Entry for {} is missing from specification of targets for run of {}".
                                    format(target.input_states[SAMPLE].
-                                          afferents[0].sender.owner.name,
+                                          path_afferents[0].sender.owner.name,
                                           object.name))
 
         # FIX: COULD JUST IGNORE THOSE, OR WARN ABOUT THEM IF VERBOSE?

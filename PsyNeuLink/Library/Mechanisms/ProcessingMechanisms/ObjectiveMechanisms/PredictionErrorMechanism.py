@@ -1,21 +1,41 @@
+# Princeton University licenses this file to You under the Apache License,
+# Version 2.0 (the "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
+
+import numpy as np
 import typecheck as tc
 
 from PsyNeuLink import CentralClock
 from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, \
-     TDLearning
+    LinearCombination
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
     import OUTCOME
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Globals.Keywords import INITIALIZING, INPUT_STATES, \
-    PREDICTION_ERROR_MECHANISM, REWARD, SAMPLE, T, TARGET, kwPreferenceSetName
+    PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, \
     kpReportOutputPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, \
     PreferenceLevel
 from PsyNeuLink.Globals.Utilities import is_numeric
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms \
-    .ComparatorMechanism import ComparatorMechanism, MSE
+    .ComparatorMechanism import ComparatorMechanism, ComparatorMechanismError, \
+    MSE
+
+
+class PredictionErrorMechanismError(ComparatorMechanismError):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+    def __str__(self):
+        return repr(self.error_value)
 
 
 class PredictionErrorMechanism(ComparatorMechanism):
@@ -24,13 +44,13 @@ class PredictionErrorMechanism(ComparatorMechanism):
         sample,                                              \
         target,                                              \
         input_states=[SAMPLE,TARGET]                         \
-        function=LinearCombination(weights=[[-1],[1]],       \
-        output_states=[OUTCOME]                              \
+        function=LinearCombination,                          \
+        output_states=[OUTCOME, MSE],                        \
         params=None,                                         \
         name=None,                                           \
         prefs=None)
 
-    Calculates the prediction error between the sample and the target
+    Calculates the prediction error between the predicted reward and the target
     """
     componentType = PREDICTION_ERROR_MECHANISM
 
@@ -39,26 +59,39 @@ class PredictionErrorMechanism(ComparatorMechanism):
         kwPreferenceSetName: 'PredictionErrorMechanismCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
+
+    class ClassDefaults(ComparatorMechanism.ClassDefaults):
+        variable = None
+
     paramClassDefaults = ComparatorMechanism.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
-                 sample: tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric,
-                                str))=None,
-                 target: tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric,
-                                 str)) =None,
+                 sample: tc.optional(tc.any(OutputState, Mechanism_Base, dict,
+                                            is_numeric,
+                                            str)) = None,
+                 target: tc.optional(
+                         tc.any(OutputState, Mechanism_Base, dict, is_numeric,
+                                str)) = None,
                  input_states=[SAMPLE, TARGET],
-                 function=TDLearning,
-                 output_states: tc.optional(tc.any(list, dict))=[OUTCOME, MSE],
+                 function=LinearCombination(weights=[[-1], [1]]),
+                 output_states: tc.optional(tc.any(list, dict)) = [OUTCOME,
+                                                                   MSE],
+                 learning_rate=0.3,
+                 gamma=.99,
+                 max_time_steps=0,
                  params=None,
                  name=None,
-                 prefs: is_pref_set=None,
+                 prefs: is_pref_set = None,
                  context=componentType + INITIALIZING):
         params = self._assign_args_to_param_dicts(sample=sample,
                                                   target=target,
                                                   function=function,
                                                   input_states=input_states,
                                                   output_states=output_states,
+                                                  learning_rate=learning_rate,
+                                                  gamma=gamma,
+                                                  max_time_steps=max_time_steps,
                                                   params=params)
 
         super().__init__(sample=sample,
@@ -72,49 +105,119 @@ class PredictionErrorMechanism(ComparatorMechanism):
                          context=context)
 
         self.integrator_function = AdaptiveIntegrator(
-            initializer=0,
-            owner=self,
-            context=context)
+                initializer=0,
+                owner=self,
+                context=context)
+        self.delta_integrator_function = AdaptiveIntegrator(
+                initializer=0,
+                owner=self,
+                context=context
+        )
         self.prev_val = self.integrator_function.previous_value
         self.t = 0
+        self._max_time_steps = max_time_steps
+        self.max_t = max_time_steps or 0
         self.load = True
-        self.eligibility_trace = [[]]
+        self.max_t_default = True if self.max_t != 0 else False
+        self.prev_delta = 0
+        # NOTE: assume gamma and lambda are 1
+        self.e = np.zeros(0)
+        self.utility_matrix = np.zeros(0)
+        print("Value = {}".format(self.value))
 
     def _execute(self, variable=None, runtime_params=None, clock=CentralClock,
                  time_scale=None, context=None):
         # TODO: update to take sample/reward from variable
         # sample = x(t) in Montague
-        if self.paramsCurrent:
-            sample = self.paramsCurrent[INPUT_STATES][SAMPLE].value
-            reward = self.paramsCurrent[INPUT_STATES][TARGET].value
-        elif variable:
-            sample = variable[0]
-            reward = variable[1]
+
+        if INITIALIZING in context:
+            return 0
         else:
-            sample = self.sample
-            reward = self.target
+            if self.paramsCurrent:
+                sample = self.paramsCurrent[INPUT_STATES][SAMPLE].value
+                reward = self.paramsCurrent[INPUT_STATES][TARGET].value
+            elif variable:
+                sample = variable[0]
+                reward = variable[1]
+            else:
+                sample = self.sample
+                reward = self.target
 
-        try:
-            v_t = variable[0]
-            self.integrator_function.execute(variable=sample, context=context)[0]
-            v_t_minus_1 = self.integrator_function.previous_value
-            values = [v_t, v_t_minus_1]
-        except AttributeError:
-            values = [0, 0]
+            print("sample = {}".format(sample))
+            print("target = {}".format(reward))
 
-        try:
-            t = self.t
-        except AttributeError:
-            self.t = t = 0
-        output_vector = self.function(variable=values,
-                                      params={T: t,
-                                              REWARD: reward})
-        # TODO: what should this return in load mode?
-        if self.load:
-            self.eligibility_trace.append(output_vector)
+            v_t = sample
+            if self.t == 0:
+                v_t_minus_1 = 0
+            else:
+                if self.load:
+                    if not self.max_t_default:
+                        np.append(self.e, 0)
+                        np.append(self.utility_matrix, v_t)
+                    self.utility_matrix[self.t] = v_t
+
+                v_t_minus_1 = self.utility_matrix[self.t - 1]
+
+                # v_t = self.get_value(v_t, self.t, self.learning_rate,
+                #                      self.prev_delta)
+                # v_t_minus_1 = self.get_value(
+                #     self.integrator_function.previous_value, self.t,
+                #     self.learning_rate, self.prev_delta)
+            v_t *= self.gamma
+            values = [v_t_minus_1, v_t]
+
+            output_vector = self.function(variable=values)
+            delta_t = reward[0] + output_vector[0]
+            if np.any(sample):
+                self.e[self.t] += 1
+                self._update_utility_matrix(self.learning_rate, delta_t)
+                self.prev_delta = delta_t
+                self._update_eligibility_trace()
+
             self.t += 1
-        if reward > 0:
-            self.load = False
-            self.t = 0
-        self.prev_val = output_vector[1]
-        return output_vector
+
+            if self.load:
+                if not self.max_t_default:
+                    if reward > 0:
+                        self.load = False
+                        self.max_t = self.t
+                        self.t = 0
+                else:
+                    if self.t == self.max_t:
+                        self.load = False
+                        self.t = 0
+
+
+            else:
+
+                # delta_t = self.eligibility_trace[self.t + 1] + output_vector[0]
+                # self.t += 1
+
+                if self.t == self.max_t:
+                    self.t = 0
+
+            return delta_t
+
+    def get_value(self, sample_value, t, alpha, prev_delta):
+        return sample_value * self.e[t] * alpha * prev_delta
+
+    def _update_eligibility_trace(self, lambda_=0.5, gamma=.99):
+        self.e = self.e * lambda_ * gamma
+
+    def _update_utility_matrix(self, alpha, delta):
+        self.utility_matrix += alpha * delta * self.e
+
+    def reset(self):
+        self.e.fill(0)
+
+    @property
+    def max_time_steps(self):
+        return self._max_time_steps
+
+    @max_time_steps.setter
+    def max_time_steps(self, value):
+        self.max_t_default = True
+        self.max_t = value
+        self.e = np.zeros(value)
+        self.utility_matrix = np.zeros(value)
+        print("max_t_default = {}".format(self.max_t_default))

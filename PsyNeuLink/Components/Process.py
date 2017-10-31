@@ -600,7 +600,7 @@ def process(process_spec=None,
         `TARGET` `ComparatorMechanism` corresponding to a `learning sequence <Process_Learning_Sequence>`
         specified for the Process.  Each item must be the same length as the `value <OutputState.value>` of the
         `OutputState specified for learning <LearningMechanism_Activation_Output>` of the last ProcessingMechanism
-        in the corresponding learning sequence (see `Process_Learning_Sequence` for additional detais).
+        in the corresponding learning sequence (see `Process_Learning_Sequence` for additional details).
 
     params : Optional[Dict[param keyword, param value]
         a `parameter dictionary <ParameterState_Specification>` that can include any of the parameters above;
@@ -1882,7 +1882,6 @@ class Process_Base(Process):
                 # Insure that each Process input value is compatible with corresponding variable of mechanism.input_state
                 # MODIFIED 4/3/17 NEW:
                 input_state_variable = mechanism.input_states[i].instance_defaults.variable
-                print("input state variable size: {}".format(np.shape(input_state_variable)))
                 # MODIFIED 4/3/17 END
                 if not iscompatible(process_input[i], input_state_variable):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "

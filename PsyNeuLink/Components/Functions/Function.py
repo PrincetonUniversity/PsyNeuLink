@@ -204,8 +204,32 @@ from numpy import abs, exp, tanh
 
 from PsyNeuLink.Components.Component import Component, ComponentError, function_type, method_type, parameter_keywords
 from PsyNeuLink.Components.ShellClasses import Function
-from PsyNeuLink.Globals.Keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ANGLE, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
-    LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+from PsyNeuLink.Globals.Keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
+    ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ANGLE, ARGUMENT_THERAPY_FUNCTION, \
+    AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, \
+    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, \
+    CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, \
+    DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, \
+    DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, \
+    EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, \
+    EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, \
+    FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, \
+    FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, \
+    HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, \
+    INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, \
+    INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
+    LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
+    LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, \
+    MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, \
+    NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, \
+    ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, \
+    PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, \
+    RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, \
+    SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, \
+    STANDARD_DEVIATION, SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
+    UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, \
+    UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, \
+    kwComponentCategory, kwPreferenceSetName, TDLEARNING_FUNCTION
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
@@ -1727,23 +1751,18 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
          name=None,        \
          prefs=None        \
          )
-
     .. _CombineMeans:
-
     Linearly combines the means of one or more arrays of values with optional scaling and/or offset applied to result.
-
     Takes the mean of the array in each item of its `variable <CombineMeans.variable>` argument, and combines them
     as specified by the `operation <CombineMeans.operation>` parameter, taking either their sum (the default) or their
     product.  The mean of each array can be individually weighted and/or exponentiated prior to being combined,
     and the resulting scalar can be multiplicatively transformed and/or additively offset.
-
     COMMENT:
         Description:
             Take means of elements of each array in variable arg,
                 and combine using arithmetic operation determined by OPERATION
             Use optional SCALE and OFFSET parameters to linearly transform the resulting array
             Returns a scalar
-
             Notes:
             * WEIGHTS and EXPONENTS can be:
                 - 1D: each array in variable is scaled by the corresponding element of WEIGHTS or EXPONENTS
@@ -1764,115 +1783,90 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
              + OPERATION (Operation Enum) - method used to combine the means of the arrays in variable (default: SUM)
                   SUM: sum of the means of the arrays in variable
                   PRODUCT: product of the means of the arrays in variable
-
         CombineMeans.function returns a scalar value
     COMMENT
-
     Arguments
     ---------
-
     variable : 1d or 2d np.array : default ClassDefaults.variable
         specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.
-
     weights : 1d or 2d np.array : default None
         specifies values used to multiply the elements of each array in `variable  <CombineMeans.variable>`.
         If it is 1d, its length must equal the number of items in `variable <CombineMeans.variable>`;
         if it is 2d, the length of each item must be the same as those in `variable <CombineMeans.variable>`,
         and there must be the same number of items as there are in `variable <CombineMeans.variable>`
         (see `weights <CombineMeans.weights>` for details)
-
     exponents : 1d or 2d np.array : default None
         specifies values used to exponentiate the elements of each array in `variable  <CombineMeans.variable>`.
         If it is 1d, its length must equal the number of items in `variable <CombineMeans.variable>`;
         if it is 2d, the length of each item must be the same as those in `variable <CombineMeans.variable>`,
         and there must be the same number of items as there are in `variable <CombineMeans.variable>`
         (see `exponents <CombineMeans.exponents>` for details)
-
     operation : SUM or PRODUCT : default SUM
         specifies whether the `function <CombineMeans.function>` takes the sum or product of the means of the arrays in
         `variable  <CombineMeans.variable>`.
-
     scale : float or np.ndarray : default None
         specifies a value by which to multiply the result of `function <CombineMeans.function>`
         (see `scale <CombineMeans.scale>` for details)
-
     offset : float or np.ndarray : default None
         specifies a value to add to the result of `function <CombineMeans.function>`
         (see `offset <CombineMeans.offset>` for details)
-
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
-
     owner : Component
         `component <Component>` to which to assign the Function.
-
     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
-
-
     Attributes
     ----------
-
     variable : 1d or 2d np.array
         contains the arrays to be combined by `function <CombineMeans>`.  If it is 1d, the array is simply
         linearly transformed by and `scale <CombineMeans.scale>` and `offset <CombineMeans.scale>`.
         If it is 2d, the arrays (all of which must be of equal length) are weighted and/or exponentiated as
         specified by `weights <CombineMeans.weights>` and/or `exponents <CombineMeans.exponents>`
         and then combined as specified by `operation <CombineMeans.operation>`.
-
     weights : 1d or 2d np.array : default NOne
         if it is 1d, each element is used to multiply all elements in the corresponding array of
         `variable <CombineMeans.variable>`;    if it is 2d, then each array is multiplied elementwise
         (i.e., the Hadamard Product is taken) with the corresponding array of `variable <CombineMeanss.variable>`.
         All :keyword:`weights` are applied before any exponentiation (if it is specified).
-
     exponents : 1d or 2d np.array : default None
         if it is 1d, each element is used to exponentiate the elements of the corresponding array of
-        `variable <CombineMeanss.variable>`;  if it is 2d, the element of each array is used to exponentiate
-        the correspnding element of the corresponding array of `variable <CombineMeans.variable>`.
+        `variable <CombineMeans.variable>`;  if it is 2d, the element of each array is used to exponentiate
+        the corresponding element of the corresponding array of `variable <CombineMeans.variable>`.
         In either case, exponentiating is applied after application of the `weights <CombineMeans.weights>`
         (if any are specified).
-
     operation : SUM or PRODUCT : default SUM
         determines whether the `function <CombineMeans.function>` takes the elementwise (Hadamard) sum or
         product of the arrays in `variable  <CombineMeans.variable>`.
-
     scale : float or np.ndarray : default None
         value is applied multiplicatively to each element of the array after applying the
         `operation <CombineMeans.operation>` (see `scale <CombineMeans.scale>` for details);
         this done before applying the `offset <CombineMeans.offset>` (if it is specified).
-
     offset : float or np.ndarray : default None
         value is added to each element of the array after applying the `operation <CombineMeans.operation>`
         and `scale <CombineMeans.scale>` (if it is specified).
-
     COMMENT:
     function : function
         applies the `weights <CombineMeans.weights>` and/or `exponents <CombineMeanss.weights>` to the
         arrays in `variable <CombineMeans.variable>`, then takes their sum or product (as specified by
         `operation <CombineMeans.operation>`), and finally applies `scale <CombineMeans.scale>` and/or
         `offset <CombineMeans.offset>`.
-
     functionOutputTypeConversion : Bool : False
         specifies whether `function output type conversion <Function_Output_Type_Conversion>` is enabled.
-
     functionOutputType : FunctionOutputType : None
         used to specify the return type for the `function <Function_Base.function>`;  `functionOuputTypeConversion`
         must be enabled and implemented for the class (see `FunctionOutputType <Function_Output_Type_Conversion>`
         for details).
     COMMENT
-
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
-
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
-
     """
 
     componentName = COMBINE_MEANS_FUNCTION
@@ -1900,7 +1894,6 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  operation: tc.enum(SUM, PRODUCT)=SUM,
                  scale=None,
                  offset=None,
-                 t: tc.optional(is_numeric)=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -1908,10 +1901,10 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(weights=weights,
-                                                  reward=reward,
+                                                  exponents=exponents,
+                                                  operation=operation,
                                                   scale=scale,
                                                   offset=offset,
-                                                  t=t,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -1919,8 +1912,6 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                          owner=owner,
                          prefs=prefs,
                          context=context)
-        if t is None:
-            self.t = 1
 
         if self.weights is not None:
             self.weights = np.atleast_2d(self.weights).reshape(-1, 1)
@@ -1937,10 +1928,8 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate weghts, exponents, scale and offset parameters
-
         Check that WEIGHTS and EXPONENTS are lists or np.arrays of numbers with length equal to variable
         Check that SCALE and OFFSET are either scalars or np.arrays of numbers with length and shape equal to variable
-
         Note: the checks of compatiability with variable are only performed for validation calls during execution
               (i.e., from check_args(), since during initialization or COMMAND_LINE assignment,
               a parameter may be re-assigned before variable assigned during is known
@@ -2015,34 +2004,26 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """Calculate and combine means of items in `variable <CombineMean.variable>`.
-
         Take mean of each item of `variable <CombineMean.variable>`;
         Apply `weights <CombineMeans.weights>` and/or `exponents <CombineMeanss.weights>` (if specified) to the means;
         Take their sum or product, as specified by `operation <CombineMeans.operation>`;
         Apply `scale <CombineMeans.scale>` (if specified) multiplicatively to the result;
         Apply `offset <CombineMeans.offset>` (if specified) to the result;
         Return scalar
-
         Arguments
         ---------
-
         variable : 1d or 2d np.array : default ClassDefaults.variable
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
-
         params : Optional[Dict[param keyword, param value]]
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
-
         time_scale :  TimeScale : default TimeScale.TRIAL
             specifies whether the function is executed on the time_step or trial time scale.
-
         Returns
         -------
-
         combined array : 1d np.array
             the result of linearly combining the arrays in `variable <CombineMeans.variable>`.
-
         """
 
         # Validate variable and assign to variable, and validate params
@@ -7904,7 +7885,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
     activation_function : Function or function : SoftMax
         the function of the Mechanism that generates `activation_output <Reinforcement.activation_output>`; must
-        return and array with a single non-zero value.
+        return an array with a single non-zero value.
 
     learning_rate : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
@@ -7966,6 +7947,11 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     def _validate_variable(self, variable, context=None):
         variable = self._update_variable(super()._validate_variable(variable, context))
 
+        print("variable (Reinforcement _validate_variable()) = {}".format(variable))
+
+        if context:
+            print("context = {}".format(context))
+
         if len(variable) != 3:
             raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
                                  format(self.name, variable))
@@ -7975,6 +7961,8 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         self.activation_output = variable[LEARNING_ACTIVATION_OUTPUT]
         self.error_signal = variable[LEARNING_ERROR_OUTPUT]
 
+        print("activation_output = {}".format(self.activation_output))
+
         if len(self.error_signal) != 1:
             raise ComponentError("Error term for {} (the third item of its variable arg) must be an array with a "
                                  "single element for {}".
@@ -7983,7 +7971,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         # Allow initializion with zero but not during a run (i.e., when called from check_args())
         if not INITIALIZING in context:
             if np.count_nonzero(self.activation_output) != 1:
-                raise ComponentError("First item ({}) of variable for {} must be an array with a single non-zero value "
+                raise ComponentError("Second item ({}) of variable for {} must be an array with a single non-zero value "
                                      "(if output Mechanism being trained uses softmax,"
                                      " its \'output\' arg may need to be set to to PROB)".
                                      format(variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
@@ -8040,6 +8028,10 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
         output = self.activation_output
         error = self.error_signal
+
+        print("output = {}".format(output))
+        print("error = {}".format(error))
+        print("self.activation_input = {}".format(self.activation_input))
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
@@ -8424,64 +8416,67 @@ class BackPropagation(LearningFunction):
 class TDLearning(Reinforcement):
     componentName = TDLEARNING_FUNCTION
 
+    class ClassDefaults(Reinforcement.ClassDefaults):
+        variable = [[0], [0]]
+        
+        
+
     def __init__(self,
                  default_variable=Reinforcement.ClassDefaults.variable,
-                 reward:tc.optional(tc.any(np.ndarray, list))=None,
+                 activation_function: tc.any(SoftMax, tc.enum(SoftMax))=SoftMax,
                  learning_rate=Reinforcement.default_learning_rate,
                  params=None,
                  owner=None,
                  prefs=None,
-                 context: str = componentName + INITIALIZING):
+                 context='TDLearning Function Init'):
         """
         Dummy function used to implement TD Learning via Reinforcement Learning
 
         Parameters
         ----------
         default_variable
-
         learning_rate: float: default 0.05
-
-        reward: 1d np.ndarray or List: default None
-            1-dimensional Numpy array or List representing the reward at each
-            timestep.
-        discount_factor: float: default 0.5
-            the discount factor or gamma value. Must
-            be between 0 and 1 inclusive. Values closer to 1 will weight
-            timesteps further from the reward in the past higher. Values closer
-            to 0 will weight time steps closer to reward higher.
-        initial_weights: 2d np.ndarray or List: default None
-            initial weights given to each action
-        goal_state: int: default None
-            the goal state to reach represented as an integer. Must be within
-            the range 0 - `len(reward)`
-        initial_state: int: default None
-            the state to start in represented as an integer. Must be within the
-            range 0 - `len(reward)`
-        initial_action: int: default None
-            first action to take from the `initial_state`. Must be within the
-            range 0 - `len(reward[initial_state])` and must correspond to a
-            valid action in `initial_state`
         params
         owner
         prefs
         context
         """
-
-        params = self._assign_args_to_param_dicts(
-            learning_rate=learning_rate,
-            reward=reward,
-            params=params)
-
-        super().__init__(default_variable, params, context=context, owner=owner,
+        # params = self._assign_args_to_param_dicts(learning_rate=learning_rate,
+                                                  # params=params)
+        super().__init__(default_variable=default_variable,
+                         activation_function=activation_function,
+                         learning_rate=learning_rate,
+                         params=params,
+                         context=context,
+                         owner=owner,
                          prefs=prefs)
 
-
     def _validate_variable(self, variable, context=None):
-        super()._validate_variable(variable, context)
+        variable = self._update_variable(super(Reinforcement, self)._validate_variable(variable, context))
+
+        if len(variable) != 3:
+            raise ComponentError("Variable for {} ({}) must have three items (input"
+                                ", output, and error arrays".format(self.name, variable))
+
+        self.activation_input = variable[LEARNING_ACTIVATION_INPUT]
+        self.activation_output = variable[LEARNING_ACTIVATION_OUTPUT]
+        self.error_signal = variable[LEARNING_ERROR_OUTPUT]
+
+        if len(self.error_signal) != 1:
+            raise ComponentError("Error term for {} (the third item of its "
+                                "variable arg) must be an array with a single "
+                                "element for {}".format(self.name, self.error_signal))
+
+        return variable
+
+
+
+
 
     def function(self, variable=None, params=None, time_scale=TimeScale.TRIAL,
                  context=None):
-        super().function()
+        return super().function(variable=variable, params=params,
+                                time_scale=TimeScale.TRIAL, context=context)
 
 
 # region *****************************************   OBJECTIVE FUNCTIONS
