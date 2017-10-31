@@ -1,6 +1,6 @@
 
-import PsyNeuLink.Components.Functions.Function as Function
-import PsyNeuLink.Globals.Keywords as kw
+import psyneulink.components.functions.function as Function
+import psyneulink.globals.keywords as kw
 import numpy as np
 import pytest
 
