@@ -812,7 +812,7 @@ class ArgumentTherapy(Function_Base):
                                })
 
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  propensity=10.0,
                  pertincacity=Manner.CONTRARIAN,
                  params=None,
@@ -1190,7 +1190,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
     """
     Reduce(                                     \
-         default_variable=ClassDefaults.variable, \
+         default_variable=None,                 \
          operation=SUM,                         \
          scale=1.0,                             \
          offset=0.0,                            \
@@ -1285,7 +1285,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  operation: tc.enum(SUM, PRODUCT) = SUM,
                  scale: parameter_spec = 1.0,
                  offset: parameter_spec = 0.0,
@@ -1558,7 +1558,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  # weights: tc.optional(parameter_spec)=None,
                  # exponents: tc.optional(parameter_spec)=None,
                  weights=None,
@@ -2031,7 +2031,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  # weights:tc.optional(parameter_spec)=None,
                  # exponents:tc.optional(parameter_spec)=None,
                  weights=None,
@@ -2280,7 +2280,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  gamma: tc.optional(float) = 1.0,
                  params=None,
                  owner=None,
@@ -2552,7 +2552,7 @@ class SoftMax(NormalizingFunction):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  gain: parameter_spec = 1.0,
                  output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
                  params: tc.optional(dict) = None,
@@ -2855,7 +2855,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  slope: parameter_spec = 1.0,
                  intercept: parameter_spec = 0.0,
                  params=None,
@@ -3068,7 +3068,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  rate: parameter_spec = 1.0,
                  scale: parameter_spec = 1.0,
                  params=None,
@@ -3226,7 +3226,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  gain: parameter_spec = 1.0,
                  bias: parameter_spec = 0.0,
                  offset: parameter_spec = 0.0,
@@ -6029,7 +6029,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=1.0,
+                 default_variable=None,
                  offset=0.0,
                  scale=1.0,
                  initial_w=0.0,
@@ -7150,7 +7150,7 @@ class BogaczEtAl(
     IntegratorFunction):  # --------------------------------------------------------------------------------
     """
     BogaczEtAl(                                 \
-        default_variable=ClassDefaults.variable,  \
+        default_variable=None,  \
         drift_rate=1.0,                         \
         threshold=1.0,                          \
         starting_point=0.0,                     \
@@ -7260,7 +7260,7 @@ class BogaczEtAl(
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  drift_rate:parameter_spec = 1.0,
                  starting_point: parameter_spec = 0.0,
                  threshold: parameter_spec = 1.0,
@@ -7449,7 +7449,7 @@ class NF_Results(IntEnum):
 class NavarroAndFuss(IntegratorFunction):
     """
     NavarroAndFuss(                             \
-        default_variable=ClassDefaults.variable,  \
+        default_variable=None,                  \
         drift_rate=1.0,                         \
         threshold=1.0,                          \
         starting_point=0.0,                     \
@@ -7563,7 +7563,7 @@ class NavarroAndFuss(IntegratorFunction):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  drift_rate: parameter_spec = 1.0,
                  starting_point: parameter_spec = 0.0,
                  threshold: parameter_spec = 1.0,
@@ -7731,7 +7731,7 @@ class NormalDist(DistributionFunction):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  mean=0.0,
                  standard_dev=1.0,
                  params=None,
@@ -7859,7 +7859,7 @@ class UniformToNormalDist(DistributionFunction):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  mean=0.0,
                  standard_dev=1.0,
                  params=None,
@@ -7961,7 +7961,7 @@ class ExponentialDist(DistributionFunction):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  beta=1.0,
                  params=None,
                  owner=None,
@@ -8062,7 +8062,7 @@ class UniformDist(DistributionFunction):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  low=0.0,
                  high=1.0,
                  params=None,
@@ -8167,7 +8167,7 @@ class GammaDist(DistributionFunction):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  scale=1.0,
                  dist_shape=1.0,
                  params=None,
@@ -8271,7 +8271,7 @@ class WaldDist(DistributionFunction):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  scale=1.0,
                  mean=1.0,
                  params=None,
@@ -8320,7 +8320,7 @@ class ObjectiveFunction(Function_Base):
 class Stability(ObjectiveFunction):
     """
     Stability(                                  \
-        default_variable=ClassDefaults.variable,  \
+        default_variable=None,                  \
         matrix=HOLLOW_MATRIX,                   \
         metric=ENERGY                           \
         transfer_fct=None                       \
@@ -8443,7 +8443,7 @@ COMMENT
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  matrix=HOLLOW_MATRIX,
                  # metric:is_distance_metric=ENERGY,
                  metric:tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric)=ENERGY,
@@ -8632,7 +8632,7 @@ COMMENT
 class Distance(ObjectiveFunction):
     """
     Distance(                                    \
-       default_variable=ClassDefaults.variable,  \
+       default_variable=None,                    \
        metric=EUCLIDEAN                          \
        normalize=False,                          \
        params=None,                              \
@@ -8707,7 +8707,7 @@ class Distance(ObjectiveFunction):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  metric:DistanceMetrics._is_metric=DIFFERENCE,
                  normalize:bool=False,
                  params=None,
@@ -8914,7 +8914,7 @@ class LearningFunction(Function_Base):
 class Hebbian(LearningFunction):  # -------------------------------------------------------------------------------
     """
     Hebbian(                                             \
-        default_variable=ClassDefaults.variable,         \
+        default_variable=None,                           \
         activation_function=Linear,                      \
         learning_rate=None,                              \
         params=None,                                     \
@@ -8998,7 +8998,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
@@ -9125,7 +9125,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 class Reinforcement(LearningFunction):  # -------------------------------------------------------------------------------
     """
     Reinforcement(                                       \
-        default_variable=ClassDefaults.variable,         \
+        default_variable=None,                           \
         activation_function=SoftMax,                     \
         learning_rate=None,                              \
         params=None,                                     \
@@ -9243,7 +9243,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  activation_function: tc.any(SoftMax, tc.enum(SoftMax)) = SoftMax,  # Allow class or instance
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
@@ -9381,7 +9381,7 @@ WT_MATRIX_RECEIVERS_DIM = 1
 class BackPropagation(LearningFunction):
     """
     BackPropagation(                                     \
-        default_variable=ClassDefaults.variable,         \
+        default_variable=None,                           \
         activation_derivative_fct=Logistic().derivative, \
         learning_rate=None,                              \
         params=None,                                     \
@@ -9537,7 +9537,7 @@ class BackPropagation(LearningFunction):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  # default_variable:tc.any(list, np.ndarray),
                  activation_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  # learning_rate: tc.optional(parameter_spec) = None,
