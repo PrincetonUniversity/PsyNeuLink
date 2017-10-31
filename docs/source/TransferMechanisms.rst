@@ -1,5 +1,5 @@
-TransferMechanisms
-==================
+Transfer Mechanisms
+===================
 
 **Base class**:
 

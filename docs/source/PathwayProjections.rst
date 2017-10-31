@@ -1,5 +1,5 @@
-PathwayProjections
-==================
+Pathway Projections
+===================
 
 .. _PathwayProjection_Subtypes:
 

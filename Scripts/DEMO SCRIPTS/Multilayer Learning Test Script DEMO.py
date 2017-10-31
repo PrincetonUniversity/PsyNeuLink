@@ -1,10 +1,10 @@
 import matplotlib
 
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import system
+from psyneulink.components.functions.function import Logistic
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.system import System
 
 matplotlib.use('TkAgg')
 
@@ -49,7 +49,7 @@ Output_Weights = MappingProjection(name='Output Weights',
                                    matrix=(np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
                          )
 
-my_process = process(default_variable=[0, 0],
+my_process = Process(default_variable=[0, 0],
                      pathway=[Input_Layer,
                                 Input_Weights,
                               Hidden_Layer_1,
@@ -89,7 +89,7 @@ my_process = process(default_variable=[0, 0],
 stim_list = {Input_Layer:[[-1, 30]]}
 target_list = {Output_Layer:[[0, 0, 1]]}
 
-my_system = system(processes=[my_process],
+my_system = System(processes=[my_process],
                    targets=[0, 0, 1],
                    learning_rate=1.0)
 

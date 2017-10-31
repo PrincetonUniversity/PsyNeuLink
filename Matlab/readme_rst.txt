@@ -1,8 +1,4 @@
-<<<<<<< HEAD:readme_rst.txt
-## Expected Value of Control Model ####
-=======
 ## Expected Value of Control Model
->>>>>>> 2d2611861a43b101598fa0f995f666786b9e323f:readme.txt
 
 1) Demo simulations
 

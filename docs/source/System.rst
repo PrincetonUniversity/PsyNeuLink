@@ -1,6 +1,6 @@
 System
 ======
 
-.. automodule:: System
+.. automodule:: psyneulink.components.system
    :members:
    :exclude-members: random

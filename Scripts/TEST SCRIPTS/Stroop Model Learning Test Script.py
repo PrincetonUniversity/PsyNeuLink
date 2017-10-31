@@ -1,9 +1,12 @@
-from PsyNeuLink.Components.Functions.Function import Linear, Logistic
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import *
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
+import numpy as np
+from psyneulink.components.process import Process
+from psyneulink.components.functions.function import Linear, Logistic
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.system import *
+from psyneulink.globals.keywords import *
+from psyneulink.globals.environment import CentralClock
+from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 
 process_prefs = {REPORT_OUTPUT_PREF: True,
                  VERBOSE_PREF: False}
@@ -45,7 +48,7 @@ HO_Weights = MappingProjection(name='Hidden-Output Weights',
                         matrix=HO_Weights_matrix
                         )
 
-color_naming_process = process(
+color_naming_process = Process(
     default_variable=[1, 2.5],
     pathway=[colors, CH_Weights, hidden, HO_Weights, response],
     learning=LEARNING,
@@ -53,7 +56,7 @@ color_naming_process = process(
     name='Color Naming',
     prefs=process_prefs)
 
-word_reading_process = process(
+word_reading_process = Process(
     default_variable=[.5, 3],
     pathway=[words, WH_Weights, hidden],
     name='Word Reading',
@@ -64,7 +67,7 @@ word_reading_process = process(
 # color_naming_process.execute()
 # word_reading_process.execute()
 
-mySystem = system(processes=[color_naming_process, word_reading_process],
+mySystem = System(processes=[color_naming_process, word_reading_process],
                   targets=[20,20],
                   name='Stroop Model',
                   prefs=system_prefs)

@@ -1,1 +1,1 @@
-|defaultControlAllocation| replace:: :attr:`Defaults.defaultControlAllocation`
+|defaultControlAllocation| replace:: :attr:`psyneulink.globals.defaults.defaultControlAllocation`

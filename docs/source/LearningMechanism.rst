@@ -1,6 +1,6 @@
 Learning Mechanism
 ==================
 
-.. automodule:: LearningMechanism
+.. automodule:: psyneulink.components.mechanisms.adaptive.learning.learningmechanism
    :members:
    :exclude-members: Linear, random

@@ -1,14 +1,14 @@
 import numpy as np
 
-from PsyNeuLink.Components.Functions.Function import BogaczEtAl, Linear, Logistic
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES
-from PsyNeuLink.Globals.Keywords import CYCLE, INITIALIZE_CYCLE, INTERNAL, ORIGIN, TERMINAL
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
+from psyneulink.components.functions.function import BogaczEtAl, Linear, Logistic
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.components.system import System
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES
+from psyneulink.globals.keywords import CYCLE, INITIALIZE_CYCLE, INTERNAL, ORIGIN, TERMINAL
+from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
+from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
 
 
 def test_danglingControlledMech():
@@ -47,19 +47,19 @@ def test_danglingControlledMech():
     Reward = TransferMechanism(name='Reward')
 
     # Processes:
-    ColorNamingProcess = process(
+    ColorNamingProcess = Process(
         default_variable=[0],
         pathway=[Color_Input, Color_Hidden, Output, Decision],
         name='Color Naming Process',
     )
 
-    WordReadingProcess = process(
+    WordReadingProcess = Process(
         default_variable=[0],
         pathway=[Word_Input, Word_Hidden, Output, Decision],
         name='Word Reading Process',
     )
 
-    RewardProcess = process(
+    RewardProcess = Process(
         default_variable=[0],
         pathway=[Reward],
         name='RewardProcess',
@@ -94,9 +94,9 @@ def test_danglingControlledMech():
     )
 
     # System:
-    mySystem = system(
+    mySystem = System(
         processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
-        controller=EVCMechanism,
+        controller=EVCControlMechanism,
         enable_controller=True,
         # monitor_for_control=[Reward, (DDM_PROBABILITY_UPPER_THRESHOLD, 1, -1)],
         name='EVC Gratton System',
@@ -113,10 +113,10 @@ class TestGraphAndInput:
         c = TransferMechanism(name='c')
         d = TransferMechanism(name='d')
 
-        p1 = process(pathway=[a, b, c], name='p1')
-        p2 = process(pathway=[a, b, d], name='p2')
+        p1 = Process(pathway=[a, b, c], name='p1')
+        p2 = Process(pathway=[a, b, d], name='p2')
 
-        s = system(
+        s = System(
             processes=[p1, p2],
             name='Branch System',
             initial_values={a: [1, 1]},
@@ -139,10 +139,10 @@ class TestGraphAndInput:
         c = TransferMechanism(name='c')
         d = TransferMechanism(name='d')
 
-        p1 = process(pathway=[a, b, c, d], name='p1')
-        p2 = process(pathway=[a, b, d], name='p2')
+        p1 = Process(pathway=[a, b, c, d], name='p1')
+        p2 = Process(pathway=[a, b, d], name='p2')
 
-        s = system(
+        s = System(
             processes=[p1, p2],
             name='Bypass System',
             initial_values={a: [1, 1]},
@@ -166,10 +166,10 @@ class TestGraphAndInput:
         d = TransferMechanism(name='d')
         e = TransferMechanism(name='e')
 
-        p1 = process(pathway=[a, b, c], name='p1')
-        p2 = process(pathway=[c, d, e], name='p2')
+        p1 = Process(pathway=[a, b, c], name='p1')
+        p2 = Process(pathway=[c, d, e], name='p2')
 
-        s = system(
+        s = System(
             processes=[p1, p2],
             name='Chain System',
             initial_values={a: [1, 1, 1]},
@@ -195,10 +195,10 @@ class TestGraphAndInput:
         d = TransferMechanism(name='d')
         e = TransferMechanism(name='e')
 
-        p1 = process(pathway=[a, b, e], name='p1')
-        p2 = process(pathway=[c, d, e], name='p2')
+        p1 = Process(pathway=[a, b, e], name='p1')
+        p2 = Process(pathway=[c, d, e], name='p2')
 
-        s = system(
+        s = System(
             processes=[p1, p2],
             name='Convergent System',
             initial_values={a: [1, 1]},
@@ -220,9 +220,9 @@ class TestGraphAndInput:
         a = TransferMechanism(name='a', default_variable=[0, 0])
         b = TransferMechanism(name='b', default_variable=[0, 0])
 
-        p1 = process(pathway=[a, b, a], name='p1')
+        p1 = Process(pathway=[a, b, a], name='p1')
 
-        s = system(
+        s = System(
             processes=[p1],
             name='Cyclic System with one Process',
             initial_values={a: [1, 1]},
@@ -242,10 +242,10 @@ class TestGraphAndInput:
         b = TransferMechanism(name='b', default_variable=[0, 0])
         c = TransferMechanism(name='c', default_variable=[0, 0])
 
-        p1 = process(pathway=[a, b, a], name='p1')
-        p2 = process(pathway=[a, c, a], name='p2')
+        p1 = Process(pathway=[a, b, a], name='p1')
+        p2 = Process(pathway=[a, c, a], name='p2')
 
-        s = system(
+        s = System(
             processes=[p1, p2],
             name='Cyclic System with two Processes',
             initial_values={a: [1, 1]},
@@ -269,10 +269,10 @@ class TestGraphAndInput:
         e = TransferMechanism(name='e', default_variable=[0])
         f = TransferMechanism(name='f')
 
-        p1 = process(pathway=[a, b, c, d], name='p1')
-        p2 = process(pathway=[e, c, f, b, d], name='p2')
+        p1 = Process(pathway=[a, b, c, d], name='p1')
+        p2 = Process(pathway=[e, c, f, b, d], name='p2')
 
-        s = system(
+        s = System(
             processes=[p1, p2],
             name='Cyclic System with Extended Loop',
             initial_values={a: [1, 1]},

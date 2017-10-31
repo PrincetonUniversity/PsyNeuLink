@@ -1,6 +1,6 @@
 import matplotlib
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+from psyneulink.components.mechanisms.processing.transfermechanism import *
 
 matplotlib.use('TkAgg')
 # LINEAR

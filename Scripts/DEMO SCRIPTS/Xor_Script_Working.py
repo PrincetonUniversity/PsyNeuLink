@@ -3,10 +3,10 @@
 
 # In[ ]:
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import system
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.system import System
 
 #The following code starts to build a 3 layer neural network
 
@@ -14,7 +14,7 @@ input_layer = TransferMechanism(name='Input Layer',
                        function=Linear,
                        default_variable = np.zeros((3,)))
 
-hidden_layer = TransferMechanism(name='Hidden Layer', 
+hidden_layer = TransferMechanism(name='Hidden Layer',
                                  function = Logistic,
                                  default_variable =[0, 0, 0])
 
@@ -30,7 +30,7 @@ hidden_output_weights = MappingProjection(name='Hidden-Output Weights',
 
 LearningRate = 0.3
 
-xor_process = process(default_variable=[0, 0, 1],
+xor_process = Process(default_variable=[0, 0, 1],
                                    pathway=[input_layer,
                                             input_hidden_weights,
                                             hidden_layer,
@@ -44,7 +44,7 @@ xor_process = process(default_variable=[0, 0, 1],
                                           REPORT_OUTPUT_PREF: False})
 
 
-xor_system = system(processes=[xor_process],
+xor_system = System(processes=[xor_process],
                          targets=[0],
                          # targets=[[0],[0]],
                          learning_rate=LearningRate,
@@ -58,7 +58,7 @@ target_list = {output_layer:[[0], [1], [1], [0]]}
 
 def print_header():
     print("\n\n**** TRIAL: ", CentralClock.trial+1)
-    
+
 def show_target():
     i = xor_system.input
     t = xor_system.target_input_states[0].value
@@ -68,7 +68,7 @@ def show_target():
     # # print(input_hidden_weights.matrix)
     # print('HIDDEN-OUTPUT WEIGHTS:')
     # print(hidden_output_weights.matrix)
-    
+
 
 xor_system.run(num_trials=3000,
                   inputs=input_list,

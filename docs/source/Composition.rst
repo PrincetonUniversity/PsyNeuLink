@@ -7,5 +7,5 @@ Compositions
    System
    Process
 
-.. automodule:: Composition
+.. automodule:: psyneulink.composition
    :members:

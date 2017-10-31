@@ -1,24 +1,22 @@
 import numpy as np
 import pytest
 
-from PsyNeuLink.Components.Functions.Function import Linear, BogaczEtAl, Exponential, DRIFT_RATE, THRESHOLD
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, MEAN, RESULT, VARIANCE
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet, kpVerbosePref, \
-    kpReportOutputPref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, DECISION_VARIABLE, \
-    PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
+from psyneulink.components.functions.function import BogaczEtAl, DRIFT_RATE, Exponential, Linear, THRESHOLD
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.components.system import System
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, MEAN, RESULT, VARIANCE
+from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpReportOutputPref, kpVerbosePref
+from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
+from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
 
 
 def test_EVC():
     # Mechanisms
     Input = TransferMechanism(
-        name='Input'
+        name='Input',
     )
     Reward = TransferMechanism(
         output_states=[RESULT, MEAN, VARIANCE],
@@ -70,14 +68,14 @@ def test_EVC():
     #         pstate.prefs.paramValidationPref = False
 
     # Processes:
-    TaskExecutionProcess = process(
+    TaskExecutionProcess = Process(
         # default_variable=[0],
         size=1,
         pathway=[(Input), IDENTITY_MATRIX, (Decision)],
         name='TaskExecutionProcess',
     )
 
-    RewardProcess = process(
+    RewardProcess = Process(
         # default_variable=[0],
         size=1,
         pathway=[(Reward)],
@@ -85,9 +83,9 @@ def test_EVC():
     )
 
     # System:
-    mySystem = system(
+    mySystem = System(
         processes=[TaskExecutionProcess, RewardProcess],
-        controller=EVCMechanism,
+        controller=EVCControlMechanism,
         enable_controller=True,
         monitor_for_control=[
             Reward,
@@ -287,35 +285,35 @@ def test_EVC_gratton():
     Reward = TransferMechanism(name='Reward')
 
     # Processes:
-    TargetControlProcess = process(
+    TargetControlProcess = Process(
         default_variable=[0],
         pathway=[Target_Stim, Target_Rep, Decision],
         prefs=process_prefs,
         name='Target Control Process'
     )
 
-    FlankerControlProcess = process(
+    FlankerControlProcess = Process(
         default_variable=[0],
         pathway=[Flanker_Stim, Flanker_Rep, Decision],
         prefs=process_prefs,
         name='Flanker Control Process'
     )
 
-    TargetAutomaticProcess = process(
+    TargetAutomaticProcess = Process(
         default_variable=[0],
         pathway=[Target_Stim, Automatic_Component, Decision],
         prefs=process_prefs,
         name='Target Automatic Process'
     )
 
-    FlankerAutomaticProcess = process(
+    FlankerAutomaticProcess = Process(
         default_variable=[0],
         pathway=[Flanker_Stim, Automatic_Component, Decision],
         prefs=process_prefs,
         name='Flanker1 Automatic Process'
     )
 
-    RewardProcess = process(
+    RewardProcess = Process(
         default_variable=[0],
         pathway=[Reward],
         prefs=process_prefs,
@@ -323,7 +321,7 @@ def test_EVC_gratton():
     )
 
     # System:
-    mySystem = system(
+    mySystem = System(
         processes=[
             TargetControlProcess,
             FlankerControlProcess,
@@ -331,11 +329,11 @@ def test_EVC_gratton():
             FlankerAutomaticProcess,
             RewardProcess
         ],
-        controller=EVCMechanism,
+        controller=EVCControlMechanism,
         enable_controller=True,
         monitor_for_control=[
             Reward,
-            Decision.PROBABILITY_UPPER_THRESHOLD
+            (Decision.PROBABILITY_UPPER_THRESHOLD, 1, -1)
         ],
         # monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],
         name='EVC Gratton System'
@@ -508,22 +506,22 @@ def test_laming_validation_specify_control_signals():
     )
 
     # Processes:
-    TaskExecutionProcess = process(
+    TaskExecutionProcess = Process(
         default_variable=[0],
         pathway=[Input, IDENTITY_MATRIX, Decision],
         name='TaskExecutionProcess'
     )
 
-    RewardProcess = process(
+    RewardProcess = Process(
         default_variable=[0],
         pathway=[Reward],
         name='RewardProcess'
     )
 
     # System:
-    mySystem = system(
+    mySystem = System(
         processes=[TaskExecutionProcess, RewardProcess],
-        controller=EVCMechanism,
+        controller=EVCControlMechanism,
         enable_controller=True,
         monitor_for_control=[
             Reward,

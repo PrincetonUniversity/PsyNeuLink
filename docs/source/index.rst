@@ -52,12 +52,17 @@ documented.  It does this in a manner that:
    such as:
 
    * MatLab (general purpose mathematical tools);
-   * TensorFlow, Teano (ODE's, deep learning);
+   * TensorFlow (ODE's, deep learning);
    * Emergent (broad class of neurally-plausible connectionist models);
    * ACT-R (symbolic, production system models).
 
 The goal is to encourage users to think about information processing in a "mind/brain-like" way, while imposing as few
 constraints as possible on what it is possible to implement or ask the model to do.
+
+.. note::
+   PsyNeuLink is alpha software, that is still being actively developed.  Although it is useable, and most of the
+   documented functionality is available, some features may not yet be fully implemented and/or subject to
+   modification.  Please report any bugs and/or suggestions for development to psyneulinkhelp@princeton.edu.
 
 .. _What_PsyNeuLink_is_NOT:
 
@@ -108,25 +113,23 @@ construction of models using PsyNeuLink.
 Installation
 ------------
 
-.. note::
-   PsyNeuLink is beta software, that is still being actively developed.  Although it is useable, and most of the
-   documented functionality is available, some features may not yet be fully implemented and/or subject to
-   modification.  Please report any bugs and/or suggestions for development to psyneulinkhelp@princeton.edu.
+PsyNeuLink is compatible with python versions >= 3.5, and is available through `PyPI <https://pypi.python.org/pypi/PsyNeuLink>`__:
 
-Because core elements of PsyNeuLink are still under development, it is not yet available through pypi/pip.
-Instead, you can clone the github repo (https://github.com/PrincetonUniversity/PsyNeuLink). Clone the master branch.
-Download the package with the green "Clone or download" button on the right side of the page and "Download ZIP."
+::
 
-Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal. Note: The
-repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get access.
+    pip install psyneulink
 
-PsyNeuLink is compatible with any version of python 3, but the tutorial (see below) requires a 3.5 installation with
-the latest versions of IPython, jupyter, and matplotlib installed.
-
-To install the package, navigate to the cloned directory in a terminal,
-switch to your preferred python3 environment, then run the command __"pip install ."__
-(make sure to include the period and to use the appropriate pip/pip3 command for python 3.5).
 All prerequisite packages will be automatically added to your environment.
+
+If you downloaded the source code, navigate to the cloned directory in a terminal,
+switch to your preferred python3 environment, then run
+
+::
+
+    pip install .
+
+Lists of required packages for PsyNeuLink, developing PsyNeuLink, and running the PsyNeuLink tutorial are also
+stored in pip-style `requirements.txt`, `dev_requirements.txt`, and `tutorial_requirements.txt` in the source code.
 
 If you have trouble installing the package, or run into other problems, please contact psyneulinkhelp@princeton.edu.
 
@@ -136,14 +139,37 @@ If you have trouble installing the package, or run into other problems, please c
 Tutorial
 --------
 
-The downloaded package includes a tutorial, that provides examples of how to create basic Components
+:download:`Download PsyNeuLink Tutorial.ipynb <../../tutorial/PsyNeuLink Tutorial.ipynb>`
+
+PsyNeuLink includes a tutorial, available :download:`here <../../tutorial/PsyNeuLink Tutorial.ipynb>`, that provides examples of how to create basic Components
 in PsyNeuLink, and combine them into Processes and a System.  The examples include construction of a simple
 decision making process using a Drift Diffusion Model, a neural network model of the Stroop effect, and a
 backpropagation network for learning the XOR problem.
 
-The tutorial can be run using the terminal command ``jupyter notebook`` within the root directory of the PsyNeuLink
-package. Once the jupyter notebook opens, within the list of files click on "PsyNeuLink Tutorial .ipynb".  This will
-open the tutorial, that will provide any additional information needed to get started.
+The tutorial currently requires python 3.5, and additional packages; to install the required tutorial packages, you may use PyPI:
+
+::
+
+    pip install psyneulink[tutorial]
+
+or if you downloaded the source:
+
+::
+
+    pip install .[tutorial]
+
+
+To access the tutorial, make sure you fulfill the requirements
+mentioned above, download the :download:`tutorial notebook <../../tutorial/PsyNeuLink Tutorial.ipynb>`, then run the terminal command
+
+::
+
+    jupyter notebook
+
+
+Once the notebook opens in your browser, navigate to the location where you saved the tutorial notebook, and
+click on "PsyNeuLink Tutorial.ipynb".
+
 
 
 .. _Contributors:
@@ -155,7 +181,7 @@ Contributors
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
 * **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
-* **Kevin Mantel**, Princeton Neuroscience Institute, Princeton University
+* **K. Mantel**, Princeton Neuroscience Institute, Princeton University
 * **Ted Willke**, Intel Labs, Intel Corporation
 * **Changyan Wang**, Princeton Neuroscience Institute, Princeton University
 * **Nate Wilson**, Princeton Neuroscience Institute, Princeton University
@@ -182,9 +208,7 @@ Table of Contents
    self
    BasicsAndSampler
    QuickReference
-   Components <Component>
-   Compositions <Composition>
-   Scheduling
+   Core
    Library
 
 .. _Indices_and_Tables:

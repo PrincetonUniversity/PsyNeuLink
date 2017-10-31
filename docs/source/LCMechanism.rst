@@ -1,6 +1,6 @@
 LCMechanism
 ===========
 
-.. automodule:: Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism
+.. automodule:: psyneulink.library.mechanisms.adaptivemechanisms.controlmechanisms.lcmechanism
    :members:
    :exclude-members: random, LinearCombination, Linear

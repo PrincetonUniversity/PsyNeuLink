@@ -1,5 +1,5 @@
-LearningMechanisms
-==================
+Learning Mechanisms
+===================
 
 **Base class**:
 
@@ -12,4 +12,4 @@ LearningMechanisms
 .. toctree::
    :maxdepth: 1
 
-[None]
+   AutoAssociativeLearningMechanism

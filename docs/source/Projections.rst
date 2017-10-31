@@ -2,7 +2,7 @@ Projections
 ===========
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
 
    PathwayProjections
    ModulatoryProjections

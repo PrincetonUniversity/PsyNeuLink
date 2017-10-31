@@ -1,34 +1,31 @@
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Components.System import System_Base, system
-from PsyNeuLink.Components.Process import Process_Base, process
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism import LCMechanism
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCMechanism import ITCMechanism
-from PsyNeuLink.Components.Functions.Function import FHNIntegrator, UtilityIntegrator
+from psyneulink.components.functions.function import FHNIntegrator
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.system import System
+from psyneulink.library.subsystems.agt.agtcontrolmechanism import AGTControlMechanism
+from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
 
-my_mech_1 = TransferMechanism()
+decision_mech = TransferMechanism(name='Decision_Mech')
 
-# my_ITC = ITCMechanism(monitored_output_states=my_mech,)
-# my_LC = LCMechanism(function=(FHNIntegrator(mode=(1.0, my_ITC))),
-#                     objective_mechanism=[my_mech])
+# my_AGT = AGTControlMechanism(monitored_output_states=decision_mech,)
+# my_LC = LCControlMechanism(function=(FHNIntegrator(mode=(1.0, my_AGT))),
+#                            objective_mechanism=[decision_mech])
 
-my_LC = LCMechanism(objective_mechanism=[my_mech_1],
-                    modulated_mechanisms=[my_mech_1])
-my_ITC = ITCMechanism(monitored_output_states=my_mech_1,
-                      control_signals=(FHNIntegrator.MODE,my_LC))
+my_LC = LCControlMechanism(objective_mechanism=[decision_mech],
+                    modulated_mechanisms=[decision_mech],
+                    name='LC')
 
-my_main_process = process(pathway=[my_mech_1])
-my_LC_process = process(pathway=[my_LC])
-my_system = system(processes=[my_main_process, my_LC_process])
+my_AGT = AGTControlMechanism(monitored_output_states=decision_mech,
+                      control_signals=(FHNIntegrator.MODE,my_LC),
+                      name='ITC')
+
+my_main_process = Process(pathway=[decision_mech], name='Decision_process')
+my_AGT_process = Process(pathway=[decision_mech, my_AGT], name='AGT_process')
+my_LC_process = Process(pathway=[decision_mech, my_LC], name='LC_process')
+my_system = System(processes=[my_main_process, my_LC_process, my_AGT_process], name='my_system')
+
 my_system.show()
-# my_system.show_graph()
+my_system.show_graph()
 
-inputs={my_mech_1:[0]}
+inputs={decision_mech:[[1],[1],[1]]}
 print(my_system.run(inputs=inputs))
-
-
-
-
-
-

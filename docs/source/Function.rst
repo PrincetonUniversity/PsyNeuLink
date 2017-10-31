@@ -4,7 +4,7 @@ Functions
 .. toctree::
    :maxdepth: 3
 
-.. automodule:: Function
+.. automodule:: psyneulink.components.functions.function
    :members: Function_Base,
              ModulationParam,
              ArgumentTherapy,
@@ -24,7 +24,7 @@ Functions
              DriftDiffusionIntegrator,
              OrnsteinUhlenbeckIntegrator,
              FHNIntegrator,
-             UtilityIntegrator,
+             AGTUtilityIntegrator,
              AccumulatorIntegrator,
              BogaczEtAl,
              NavarroAndFuss,
