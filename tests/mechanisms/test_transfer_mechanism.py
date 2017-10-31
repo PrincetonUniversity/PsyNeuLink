@@ -413,7 +413,6 @@ class TestTransferMechanismFunctions:
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)]).tolist()
         assert val == [[0.25 for i in range(VECTOR_SIZE)]]
 
-    '''
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism SoftMax")
@@ -428,7 +427,6 @@ class TestTransferMechanismFunctions:
         )
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)], bin_execute=True).tolist()
         assert val == [[0.25 for i in range(VECTOR_SIZE)]]
-    '''
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
