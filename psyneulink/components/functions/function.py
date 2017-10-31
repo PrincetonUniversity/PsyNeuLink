@@ -212,8 +212,8 @@ __all__ = [
 
 import functools
 import ctypes
-import PsyNeuLink.llvm as pnlvm
-from PsyNeuLink.llvm import helpers
+import psyneulink.llvm as pnlvm
+from psyneulink.llvm import helpers
 from llvmlite import ir
 
 EPSILON = np.finfo(float).eps

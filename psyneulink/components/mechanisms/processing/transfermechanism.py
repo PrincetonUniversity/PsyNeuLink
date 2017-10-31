@@ -136,7 +136,7 @@ __all__ = [
 
 import functools
 import ctypes
-import PsyNeuLink.llvm as pnlvm
+import psyneulink.llvm as pnlvm
 from llvmlite import ir
 
 # TransferMechanism parameter keywords:

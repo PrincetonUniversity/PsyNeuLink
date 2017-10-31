@@ -12,7 +12,7 @@ from llvmlite import binding,ir
 import ctypes
 import os
 
-from PsyNeuLink.llvm import builtins
+from psyneulink.llvm import builtins
 
 __dumpenv = os.environ.get("PNL_LLVM_DUMP")
 _module = ir.Module(name="PsyNeuLinkModule")

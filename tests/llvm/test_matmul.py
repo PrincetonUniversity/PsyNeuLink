@@ -2,7 +2,7 @@
 
 import ctypes
 import numpy as np
-import PsyNeuLink.llvm as pnlvm
+import psyneulink.llvm as pnlvm
 import timeit
 import pytest
 from llvmlite import ir

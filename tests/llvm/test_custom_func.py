@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import ctypes
-import PsyNeuLink.llvm as pnlvm
+import psyneulink.llvm as pnlvm
 import numpy as np
 import copy
 from llvmlite import ir

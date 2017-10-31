@@ -715,7 +715,7 @@ __all__ = [
     'Mechanism_Base', 'MechanismError'
 ]
 
-import PsyNeuLink.llvm as pnlvm
+import psyneulink.llvm as pnlvm
 
 logger = logging.getLogger(__name__)
 MechanismRegistry = {}
