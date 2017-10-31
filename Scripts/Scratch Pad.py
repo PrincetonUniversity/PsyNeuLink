@@ -754,10 +754,9 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, RESPONSE_TIME
-from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES, PROJECTIONS, NAME, INPUT_STATES
+from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES, PROJECTIONS, NAME, INPUT_STATES, VARIABLE
 
-# # 10/29/17 NOT YET IMPLEMENTED:
-my_mech_1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+# R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
 
 # InputState specification tests:
 
@@ -770,58 +769,6 @@ my_mech_1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
 # for input_state in my_mech_2.input_states:
 #     for projection in input_state.path_afferents:
 #         assert projection.sender.owner is my_mech_1
-
-
-# # MATCH OF default_variable and specification of multiple InputStates by value and string
-# my_mech_2 = TransferMechanism(default_variable=[[0,0],[0]],
-#                               input_states=[[32, 24], 'HELLO'])
-# assert my_mech_2.input_states[1].name == 'HELLO'
-# # # PROBLEM WITH input FOR RUN:
-# # my_mech_2.execute()
-
-# # OVERRIDE OF input_states (mis)specification by params dict INPUT_STATES entry specification
-# my_mech_2 = TransferMechanism(default_variable=[[0,0],[0]],
-#                               input_states=[[32], 'HELLO'],
-#                               params = {INPUT_STATES:[[32, 24], 'HELLO']}
-#                               )
-# assert my_mech_2.input_states[1].name == 'HELLO'
-# # # PROBLEM WITH input FOR RUN:
-# # my_mech_2.execute()
-
-# # PROBLEM: SHOULD GENERATE TWO INPUT_STATES (
-# #                ONE WITH [[32],[24]] AND OTHER WITH [[0]] AS VARIABLE INSTANCE DEFAULT
-# #                INSTEAD, SEEM TO IGNORE InputState SPECIFICATIONS AND JUST USE DEFAULT_VARIABLE
-# #                NOTE:  WORKS FOR ObjectiveMechanism, BUT NOT TransferMechanism
-#
-# # Specification using input_states without default_variable
-# my_mech_3 = TransferMechanism(input_states=[[32, 24], 'HELLO'])
-# assert len(my_mech_3.input_states)==2
-# assert my_mech_3.input_states[1].name == 'HELLO'
-# assert len(my_mech_3.variable[0])==2
-# assert len(my_mech_3.variable[1])==1
-#
-# # Specification using INPUT_STATES entry in params dict without default_variable
-# my_mech_3 = TransferMechanism(params = {INPUT_STATES:[[32, 24], 'HELLO']})
-# assert len(my_mech_3.input_states)==2
-# assert my_mech_3.input_states[1].name == 'HELLO'
-# assert len(my_mech_3.variable[0])==2
-# assert len(my_mech_3.variable[1])==1
-
-
-# Projection specification in Tuple
-my_mech_3 = TransferMechanism(size=3)
-my_proj = MappingProjection(sender=my_mech_3, name='TEST_PROJ')
-
-# my_mech_2 = TransferMechanism(size=2,
-#                               input_states=[my_proj])
-
-my_mech_2 = TransferMechanism(size=2,
-                              input_states=[(my_mech_3, None, None, my_proj)])
-assert len(my_mech_2.input_state.path_afferents[0].sender.variable)==3
-assert len(my_mech_2.input_state.variable)==2
-assert len(my_mech_2.variable)==1
-assert len(my_mech_2.variable[0])==2
-my_mech_2.execute()
 
 
 #endregion
