@@ -1,17 +1,17 @@
 import numpy as np
 import pytest
+
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferError
 
 from psyneulink.components.component import ComponentError
-from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, \
-    Reinforcement, SoftMax
+from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, SoftMax
 from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.inputstate import InputStateError
+from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS
 from psyneulink.globals.utilities import UtilitiesError
-from psyneulink.globals.keywords import NAME, MECHANISM, INPUT_STATES, OUTPUT_STATES, PROJECTIONS
 from psyneulink.scheduling.timescale import TimeScale
 
 
@@ -54,7 +54,7 @@ class TestTransferMechanismInputs:
 
         T = TransferMechanism(
             name='T',
-            default_variable=[[[0, 0, 0, 0]],[[1,1,1,1]]],
+            default_variable=[[[0, 0, 0, 0]], [[1, 1, 1, 1]]],
             integrator_mode=True
         )
         assert len(T.instance_defaults.variable) == 1 and len(T.instance_defaults.variable[0]) == 4 and (T.instance_defaults.variable[0] == 0).all()
@@ -386,7 +386,6 @@ class TestTransferMechanismTimeConstant:
         val = T.execute([1, 2, -3, 0]).tolist()
         assert val == [[10.98, 11.78, 7.779999999999999, 10.18]]  # testing noise changes to an integrator
 
-
     def test_transfer_mech_time_constant_0_8_list(self):
         with pytest.raises(TransferError) as error_text:
             T = TransferMechanism(
@@ -716,7 +715,6 @@ class TestTransferMechanismSize:
         assert len(T.instance_defaults.variable) == 1 and len(T.instance_defaults.variable[0]) == 2
         assert len(T.size) == 1 and T.size[0] == 2 and len(T.params['size']) == 1 and T.params['size'][0] == 2
 
-
     # ------------------------------------------------------------------------------------------------
 
     # InputState SPECIFICATIONS
@@ -727,8 +725,8 @@ class TestTransferMechanismSize:
 
     def test_transfer_mech_input_states_match_with_default_variable(self):
 
-        T = TransferMechanism(default_variable=[[0,0],[0]],
-                                      input_states=[[32, 24], 'HELLO'])
+        T = TransferMechanism(default_variable=[[0, 0], [0]],
+                              input_states=[[32, 24], 'HELLO'])
         assert T.input_states[1].name == 'HELLO'
         # # PROBLEM WITH input FOR RUN:
         # my_mech_2.execute()
@@ -740,7 +738,7 @@ class TestTransferMechanismSize:
     def test_transfer_mech_input_states_mismatch_with_default_variable_error(self):
 
         with pytest.raises(InputStateError) as error_text:
-            T = TransferMechanism(default_variable=[[0],[0]],
+            T = TransferMechanism(default_variable=[[0], [0]],
                                   input_states=[[32, 24], 'HELLO'])
         assert "Value specified for" in str(error_text.value) and "with its expected format" in str(error_text.value)
 
@@ -750,9 +748,9 @@ class TestTransferMechanismSize:
 
     def test_transfer_mech_input_states_override_by_dict_spec(self):
 
-        T = TransferMechanism(default_variable=[[0,0],[0]],
+        T = TransferMechanism(default_variable=[[0, 0], [0]],
                               input_states=[[32], 'HELLO'],
-                              params = {INPUT_STATES:[[32, 24], 'HELLO']}
+                              params={INPUT_STATES: [[32, 24], 'HELLO']}
                               )
         assert T.input_states[1].name == 'HELLO'
         # # PROBLEM WITH input FOR RUN:
@@ -771,8 +769,8 @@ class TestTransferMechanismSize:
     #     T = TransferMechanism(input_states=[[32, 24], 'HELLO'])
     #     assert len(T.input_states)==2
     #     assert T.input_states[1].name == 'HELLO'
-    #     assert len(T.variable[0])==2
-    #     assert len(T.variable[1])==1
+    #     assert len(T.instance_defaults.variable[0])==2
+    #     assert len(T.instance_defaults.variable[1])==1
 
     # # ------------------------------------------------------------------------------------------------
     # # TEST 5
@@ -787,8 +785,8 @@ class TestTransferMechanismSize:
     #     T = TransferMechanism(params = {INPUT_STATES:[[32, 24], 'HELLO']})
     #     assert len(T.input_states)==2
     #     assert T.input_states[1].name == 'HELLO'
-    #     assert len(T.variable[0])==2
-    #     assert len(T.variable[1])==1
+    #     assert len(T.instance_defaults.variable[0])==2
+    #     assert len(T.instance_defaults.variable[1])==1
 
     # ------------------------------------------------------------------------------------------------
     # TEST 6
@@ -797,7 +795,7 @@ class TestTransferMechanismSize:
     def test_transfer_mech_input_states_mech_spec(self):
         R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
         T = TransferMechanism(default_variable=[[0]],
-                                  input_states=[R1])
+                              input_states=[R1])
         assert T.input_state.path_afferents[0].sender == R1.output_state
         T.execute()
 
@@ -809,7 +807,7 @@ class TestTransferMechanismSize:
         R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
         # Mechanism outside of list specification
         T = TransferMechanism(default_variable=[[0]],
-                                      input_states=R1)
+                              input_states=R1)
         assert T.input_state.path_afferents[0].sender == R1.output_state
         T.execute()
 
@@ -819,9 +817,9 @@ class TestTransferMechanismSize:
 
     def test_transfer_mech_input_states_output_state_spec(self):
         R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
-        T = TransferMechanism(default_variable=[[0],[0]],
-                                      input_states=[R1.output_states['FIRST'],
-                                                    R1.output_states['SECOND']])
+        T = TransferMechanism(default_variable=[[0], [0]],
+                              input_states=[R1.output_states['FIRST'],
+                                            R1.output_states['SECOND']])
         assert T.input_states.names[0] == 'InputState'
         assert T.input_states.names[1] == 'InputState-1'
         for input_state in T.input_states:
@@ -836,7 +834,7 @@ class TestTransferMechanismSize:
     def test_transfer_mech_input_states_stand_alone_output_state_spec(self):
         R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
         T = TransferMechanism(default_variable=[0],
-                                      input_states=R1.output_states['FIRST'])
+                              input_states=R1.output_states['FIRST'])
         assert T.input_states.names[0] == 'InputState'
         T.input_state.path_afferents[0].sender == R1.output_state
         T.execute()
@@ -847,11 +845,11 @@ class TestTransferMechanismSize:
 
     def test_transfer_mech_input_states_specification_dict_spec(self):
         R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
-        T = TransferMechanism(default_variable=[[0],[0]],
-                                      input_states=[{NAME: 'FROM DECISION',
-                                                     PROJECTIONS: [R1.output_states['FIRST']]},
-                                                    {NAME: 'FROM RESPONSE_TIME',
-                                                     PROJECTIONS: R1.output_states['SECOND']}])
+        T = TransferMechanism(default_variable=[[0], [0]],
+                              input_states=[{NAME: 'FROM DECISION',
+                                             PROJECTIONS: [R1.output_states['FIRST']]},
+                                            {NAME: 'FROM RESPONSE_TIME',
+                                             PROJECTIONS: R1.output_states['SECOND']}])
         assert T.input_states.names[0] == 'FROM DECISION'
         assert T.input_states.names[1] == 'FROM RESPONSE_TIME'
         for input_state in T.input_states:
@@ -868,12 +866,12 @@ class TestTransferMechanismSize:
         R2 = TransferMechanism(size=3)
 
         # default_variable override of OutputState.value
-        T = TransferMechanism(default_variable=[[0,0]],
-                                      input_states=[R2])
-        assert len(T.input_state.path_afferents[0].sender.variable)==3
-        assert len(T.input_state.variable)==2
-        assert len(T.variable)==1
-        assert len(T.variable[0])==2
+        T = TransferMechanism(default_variable=[[0, 0]],
+                              input_states=[R2])
+        assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
+        assert len(T.input_state.instance_defaults.variable) == 2
+        assert len(T.instance_defaults.variable) == 1
+        assert len(T.instance_defaults.variable[0]) == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -882,11 +880,11 @@ class TestTransferMechanismSize:
 
     def test_transfer_mech_input_states_2_item_tuple_spec(self):
         R2 = TransferMechanism(size=3)
-        T = TransferMechanism(size=2, input_states=[(R2, np.zeros((3,2)))])
-        assert len(T.input_state.path_afferents[0].sender.variable)==3
-        assert len(T.input_state.variable)==2
-        assert len(T.variable)==1
-        assert len(T.variable[0])==2
+        T = TransferMechanism(size=2, input_states=[(R2, np.zeros((3, 2)))])
+        assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
+        assert len(T.input_state.instance_defaults.variable) == 2
+        assert len(T.instance_defaults.variable) == 1
+        assert len(T.instance_defaults.variable[0]) == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -895,11 +893,11 @@ class TestTransferMechanismSize:
 
     def test_transfer_mech_input_states_connection_tuple_spec(self):
         R2 = TransferMechanism(size=3)
-        T = TransferMechanism(size=2, input_states=[(R2, None, None, np.zeros((3,2)))])
-        assert len(T.input_state.path_afferents[0].sender.variable)==3
-        assert len(T.input_state.variable)==2
-        assert len(T.variable)==1
-        assert len(T.variable[0])==2
+        T = TransferMechanism(size=2, input_states=[(R2, None, None, np.zeros((3, 2)))])
+        assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
+        assert len(T.input_state.instance_defaults.variable) == 2
+        assert len(T.instance_defaults.variable) == 1
+        assert len(T.instance_defaults.variable[0]) == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -911,10 +909,10 @@ class TestTransferMechanismSize:
         P = MappingProjection(sender=R2)
         T = TransferMechanism(size=2,
                               input_states=[P])
-        assert len(T.input_state.path_afferents[0].sender.variable)==3
-        assert len(T.input_state.variable)==2
-        assert len(T.variable)==1
-        assert len(T.variable[0])==2
+        assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
+        assert len(T.input_state.instance_defaults.variable) == 2
+        assert len(T.instance_defaults.variable) == 1
+        assert len(T.instance_defaults.variable[0]) == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -926,10 +924,10 @@ class TestTransferMechanismSize:
         P = MappingProjection(sender=R2)
         T = TransferMechanism(size=2,
                               input_states=[(R2, None, None, P)])
-        assert len(T.input_state.path_afferents[0].sender.variable)==3
-        assert len(T.input_state.variable)==2
-        assert len(T.variable)==1
-        assert len(T.variable[0])==2
+        assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
+        assert len(T.input_state.instance_defaults.variable) == 2
+        assert len(T.instance_defaults.variable) == 1
+        assert len(T.instance_defaults.variable[0]) == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -939,8 +937,8 @@ class TestTransferMechanismSize:
     def test_transfer_mech_input_states_projection_in_specification_dict_spec(self):
         R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
         T = TransferMechanism(input_states=[{NAME: 'My InputState with Two Projections',
-                                             PROJECTIONS:[R1.output_states['FIRST'],
-                                                          R1.output_states['SECOND']]}])
+                                                     PROJECTIONS:[R1.output_states['FIRST'],
+                                                                  R1.output_states['SECOND']]}])
         assert T.input_state.name == 'My InputState with Two Projections'
         for input_state in T.input_states:
             for projection in input_state.path_afferents:
