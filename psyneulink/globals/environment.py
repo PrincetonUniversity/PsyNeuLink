@@ -675,12 +675,18 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
 
     object_type = _get_object_type(object)
 
+    # 10/31/17 KAM commented out "sequence format" branch of input parsing because:
+    # (1) All pytests still pass with it commented out
+    # (2) Cannot create a new pytest to cover this code -- i.e. system w/ 1 transfer mechanism throws error for:
+    # inputs = 1.0, inputs = [1.0], inputs = [[1.0]] ... inputs = [[[[[[1.0]]]]]]
+    # --> seems safe to move entirely to mechanism format of input specification without breaking any old scripts
+
     # Stimuli in Sequence format
-    if isinstance(stimuli, (list, np.ndarray)):
-        stim_list = _construct_from_stimulus_list(object, stimuli, is_target=is_target)
+    # if isinstance(stimuli, (list, np.ndarray)):
+    #     stim_list = _construct_from_stimulus_list(object, stimuli, is_target=is_target)
 
     # Stimuli in Mechanism format
-    elif isinstance(stimuli, dict):
+    if isinstance(stimuli, dict):
         stim_list = _construct_from_stimulus_dict(object, stimuli, is_target=is_target)
 
     elif is_target and isinstance(stimuli, function_type):
