@@ -535,7 +535,6 @@ class ParameterState(State_Base):
     #     kwPreferenceSetName: 'ParameterStateCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: CONTROL_PROJECTION})
     #endregion

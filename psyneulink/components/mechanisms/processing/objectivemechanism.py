@@ -535,6 +535,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
+    # ClassDefaults.variable = None;  Must be specified using either **input_states** or **monitored_output_states**
+    # kmantel: above needs to be clarified - can ClassDefaults.variable truly be anything? or should there be some format?
+    #   if the latter, we should specify one such valid assignment here, and override _validate_default_variable accordingly
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        function = LinearCombination
+
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

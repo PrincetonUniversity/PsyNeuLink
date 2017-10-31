@@ -786,6 +786,7 @@ class Component(object):
         def __init__(self):
             raise TypeError('ClassDefaults is not meant to be instantiated')
 
+        function = None
         exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
         variable = np.array([0])
 
@@ -1436,8 +1437,11 @@ class Component(object):
                             warnings.warn("{} is not a PsyNeuLink Function, "
                                           "therefore runtime_params cannot be used".format(default(arg).__name__))
                     else:
-                        raise ComponentError("Unrecognized object ({}) specified as function for {}".
-                                             format(function, self.name))
+                        try:
+                            params[FUNCTION] = self.ClassDefaults.function
+                        except AttributeError:
+                            raise ComponentError("Unrecognized object ({}) specified as function for {}".
+                                                 format(function, self.name))
 
                     ignore_FUNCTION_PARAMS = True
 

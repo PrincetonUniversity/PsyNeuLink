@@ -464,7 +464,7 @@ from psyneulink.components.functions.function import Linear, LinearCombination, 
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
+from psyneulink.globals.keywords import CLASS_DEFAULTS, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, is_numeric, iscompatible
@@ -687,6 +687,9 @@ class InputState(State_Base):
     # Note: the following enforce encoding as 1D np.ndarrays (one variable/value array per state)
     variableEncodingDim = 1
     valueEncodingDim = 1
+
+    class ClassDefaults(State_Base.ClassDefaults):
+        function = LinearCombination(operation=SUM, owner=CLASS_DEFAULTS)
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
@@ -1056,7 +1059,7 @@ class InputState(State_Base):
                                           format(InputState.__name__,
                                                  owner.name,
                                                  projections_spec,
-                                                 Mechanism.__name__,
+                                                 'Mechanism',
                                                  OutputState.__name__,
                                                  Projection.__name__))
 

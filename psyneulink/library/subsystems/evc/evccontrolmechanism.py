@@ -681,6 +681,9 @@ class EVCControlMechanism(ControlMechanism):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
+    class ClassDefaults(ControlMechanism.ClassDefaults):
+        function = ControlSignalGridSearch
+
     from psyneulink.components.functions.function import LinearCombination
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()

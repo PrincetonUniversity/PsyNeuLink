@@ -729,7 +729,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, ComponentError, component_keywords, function_type, method_type
-from psyneulink.components.functions.function import Function, LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_keyword
+from psyneulink.components.functions.function import Function, Linear, LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEXT, CONTROL_PROJECTION_PARAMS, \
@@ -990,6 +990,9 @@ class State_Base(State):
     className = STATE
     suffix = " " + className
     paramsType = None
+
+    class ClassDefaults(State.ClassDefaults):
+        function = Linear
 
     stateAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
 

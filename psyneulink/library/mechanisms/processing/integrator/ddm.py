@@ -329,6 +329,7 @@ Class Reference
 """
 import logging
 import random
+
 from collections import Iterable
 
 import numpy as np
@@ -342,8 +343,7 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, \
-    INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES, CLASS_DEFAULTS, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, object_has_single_value
@@ -702,6 +702,16 @@ class DDM(ProcessingMechanism_Base):
     classPreferences = {
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        function = BogaczEtAl(
+            drift_rate=1.0,
+            starting_point=0.0,
+            threshold=1.0,
+            noise=0.5,
+            t0=.200,
+            owner=CLASS_DEFAULTS
+        )
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
