@@ -2137,7 +2137,6 @@ def _parse_state_spec(state_type=None,
             # State is not of type specified in call to _instantiate_state, so assume it is for one to connect with
             # FIX: 10/3/17 - ??VALIDATE AGAINST OTHER OTHER SPECS (VARIABLE AND VALUE?) IN _instantiate_state
             # FIX:           OR WILL THAT BE HANDLED BELOW OR IN _parse_connection_spec??
-            # state_specification = ConnectionTuple(state=state, weight=None, exponent=None, projection=None)
             state_dict[PROJECTIONS] = ConnectionTuple(state=state_specification,
                                                       weight=None,
                                                       exponent=None,
@@ -2219,23 +2218,6 @@ def _parse_state_spec(state_type=None,
     # No state_specification in state_spec arg, so use state_dict from standard_args as State specification dictionary
     else:
 
-        # # DEPRECATED FORMAT:
-        # # Dictionary has a single entry in which the key is not a recognized keyword,
-        # #    so assume it is of the form {<STATE_NAME>:<STATE_SPECIFICATION_DICT>}:
-        # #    - assign STATE_NAME as name,
-        # #    - recursively call _parse_state_spec
-        # #    - which returns parsed state_dict (with key as value of the NAME entry)
-        # if len(state_dict) == 1:
-        #     name, state_spec = list(state_dict.items())[0]
-        #     if name not in (state_keywords | STANDARD_STATE_ARGS):
-        #         # Use name specified as key in initial state_specification
-        #         #     (overrides one in State specification dict if specified)
-        #         #    and assign its value as the new state_spec
-        #         # Recursively call _parse_state_spec
-        #         state_dict['name']=name
-        #         state_dict = _parse_state_spec(context=context, state_spec=state_spec, **state_dict, )
-        # else:
-
         # Standard state specification dict
         # Warn if VARIABLE was not in dict
         if not VARIABLE in state_dict and owner.prefs.verbosePref:
@@ -2246,7 +2228,7 @@ def _parse_state_spec(state_type=None,
             # FIX: 10/3/17 -
             # FIX: CONSOLIDATE THIS W/ CALL TO _parse_state_specific_params FOR State specification dict ABOVE
             # FIX: OR MAKE _parse_state_specs A METHOD ON State
-            # FIX:    AND OVERRIDE BY SUBCLASSES TO PARSE CLASS-SPECIFIC PARAMS FIRST (AS PER _parse_projectio_spec)
+            # FIX:    AND OVERRIDE BY SUBCLASSES TO PARSE CLASS-SPECIFIC PARAMS FIRST (AS PER _parse_projection_spec)
             params = state_type._parse_state_specific_params(state_type,
                                                              owner=owner,
                                                              state_dict=state_dict,
@@ -2279,8 +2261,6 @@ def _parse_state_spec(state_type=None,
     return state_dict
 
 
-# FIX: COMPARE WITH LIKES OF _parse_input_state_specification_dictionary TO MAKE SURE IT HAS SAME FUNCTIONALITY
-# FIX: INTEGRATE THIS INTO _parse_state_spec WITH "instantiate=True" and STATE CHARACTERISTICS
 # FIX: REPLACE mech_state_attribute WITH DETERMINATION FROM state_type
 # FIX:          ONCE STATE CONNECTION CHARACTERISTICS HAVE BEEN IMPLEMENTED IN REGISTRY
 @tc.typecheck
@@ -2355,16 +2335,7 @@ def _get_state_for_socket(owner,
                 # Otherwise, return first state_type (s)
                 return s
 
-        # # FIX: 10/24/17 - ??MOVE THIS TO State-SPECIFIC OR Projection-SPECIFIC METHOD OR DELETE
-        # # FIX:            OR DELETE IF SPECIFICATION OF MappingProjection AS DESTINATION IS PARSED EARLIER
-        # # If state_type is ParameterState, state_spec is MappingProjection, and projection_socket is RECEIVER,
-        # #    assume the request is from a LearningSignal for a LearningProjection and return the MATRIX ParameterState
-        # elif (ParameterState in state_type
-        #       and isinstance(state_spec, MappingProjection)
-        #       and projection_socket is RECEIVER):
-        #     return state_spec.parameter_states[MATRIX]
-
-        # FIX: 10/3/17 - ??IS THE FOLLOWING CORRECT:  ??HOW IS IT DIFFERENT FROM ABOVE?
+        # FIX: 10/3/17 - ??IS THE FOLLOWING NECESSARY?  ??HOW IS IT DIFFERENT FROM ABOVE?
         # Otherwise, get State types that are allowable for that projection_socket
         elif inspect.isclass(proj_type) and issubclass(proj_type, Projection):
             projection_socket_state_names = getattr(proj_type.sockets, projection_socket)
