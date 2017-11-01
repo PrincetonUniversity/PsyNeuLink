@@ -750,13 +750,15 @@ print ('TEST InputState SPECIFICATION')
 
 import numpy as np
 from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, RESPONSE_TIME
 from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES, PROJECTIONS, NAME, INPUT_STATES, VARIABLE
 
-# R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+R1 = TransferMechanism(input_states=[OutputState])
+
 
 # InputState specification tests:
 

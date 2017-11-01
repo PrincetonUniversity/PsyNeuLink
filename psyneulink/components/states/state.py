@@ -2125,8 +2125,10 @@ def _parse_state_spec(state_type=None,
                 # FIX:                but need primary **OutputState** of mech
                 state_specification = mech
                 projection = state_type
-
+        # Specified State is same as connectee's type (state_type),
+        #    so assume it is a reference to the State itself that is being (or has been) instantiated
         if isinstance(state_specification, state_type):
+            # Make sure that the specified State belongs to the Mechanism passed in the owner arg
             if not state_specification.owner is owner:
                 raise StateError("The State specified in a call to _instantiate_state ({}) "
                                  "does belong to the {} specified in the \'{}\' argument ({})".
@@ -2134,7 +2136,7 @@ def _parse_state_spec(state_type=None,
             return state_specification
 
         else:
-            # State is not of type specified in call to _instantiate_state, so assume it is for one to connect with
+            # State is not the same as connectee's type, so assume it is for one to connect with
             # FIX: 10/3/17 - ??VALIDATE AGAINST OTHER OTHER SPECS (VARIABLE AND VALUE?) IN _instantiate_state
             # FIX:           OR WILL THAT BE HANDLED BELOW OR IN _parse_connection_spec??
             state_dict[PROJECTIONS] = ConnectionTuple(state=state_specification,
@@ -2144,12 +2146,14 @@ def _parse_state_spec(state_type=None,
 
     # State class
     elif (inspect.isclass(state_specification) and issubclass(state_specification, State)):
-        # FIX: 10/3/17: ??TREAT AS ABOVE:  IF STATE CLASS != state_type, ASSUME IT IS FOR A State TO CONNECT WITH
+        # Specified type of State is same as connectee's type (state_type),
+        #    so assume it is a reference to the State itself to be instantiated
         if state_specification is state_type:
+            # Assign its variable to be the default for the class (since there is nothing else to go on)
             state_dict[VARIABLE] = state_specification.ClassDefaults.variable
         else:
-            raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
-                             "class of state being instantiated ({})".format(state_specification, state_type_name))
+            raise StateError("Specification of {} for {} (\'{}\') is insufficient to instantiate the {}".
+                format(state_type_name, owner.name, state_specification.__name__, State.__name__))
 
     # Projection specification (class, object, or matrix value (matrix keyword processed below):
     elif _is_projection_spec(state_specification, include_matrix_spec=False):
