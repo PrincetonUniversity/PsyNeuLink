@@ -638,28 +638,24 @@ def run(object,
 @tc.typecheck
 def _construct_stimulus_sets(object, stimuli, is_target=False):
     """Return an nparray of stimuli suitable for use as inputs arg for System.run()
-
-    If inputs is a list:
-        - the first item in the list can be a header:
-            it must contain the names of the origin mechanisms of the System
-            in the order in which the inputs are specified in each subsequent item
-        - the length of each item must equal the number of origin mechanisms in the System
-        - each item should contain a sub-list of inputs for each `ORIGIN` Mechanism in the System
-
     If inputs is a dict, for each entry:
         - the number of entries must equal the number of `ORIGIN` Mechanisms in the System
         - key must be the name of an origin Mechanism in the System
-        - value must be a list of input values for the Mechanism, one for each exeuction
+        - value must be:
+            (1) a list of input values for the Mechanism, one for each execution
+        OR
+            (2) a dictionary in which the keys are input states of the Mechanism and the values are input values for the
+            input states, one for each execution
         - the length of all value lists must be the same
 
-    Automatically assign input values to proper phases for Mechanism, and assigns zero to other phases
 
-    For each trial,
-       for each time_step
-           for each `ORIGIN` Mechanism:
-               if phase (from mech tuple) is modulus of time step:
-                   draw from each list; else pad with zero
     DIMENSIONS:
+    inputs = {MechanismA: [[[1.0]], [[2.0]], [[3.0]]],
+              MechanismB: {InputStateB1: [[1.0, 1.0], [2.0, 2.0], [3.0,3.0]],
+                           InputStateB2: [[1.0], [2.0], [3.0]]
+                          }
+              }
+
        axis 0: num_input_sets
        axis 1: object._phaseSpecMax
        axis 2: len(object.origin_mechanisms)
@@ -672,6 +668,15 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
     * Code below is not pretty, but needs to test for cases in which inputs have different sizes
 
     """
+
+    # Formerly the documentation also included instructions for list ("sequence") specification of inputs:
+    # If inputs is a list:
+    #     - the first item in the list can be a header:
+    #         it must contain the names of the origin mechanisms of the System
+    #         in the order in which the inputs are specified in each subsequent item
+    #     - the length of each item must equal the number of origin mechanisms in the System
+    #     - each item should contain a sub-list of inputs for each `ORIGIN` Mechanism in the System
+
 
     object_type = _get_object_type(object)
 
@@ -697,12 +702,19 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
             stim_type = 'targets'
         else:
             stim_type = 'inputs'
-        raise RunError("{} arg for {}._construct_stimulus_sets() must be a dict or list".
+        raise RunError("{} arg for {}._construct_stimulus_sets() must be a dict".
                           format(stim_type, object.name))
 
     stim_list_array = np.array(stim_list)
     return stim_list_array
 
+
+# THIS METHOD IS NOT CURRENTLY USED
+# On 10/31/17 KAM commented out the branch of _construct_stimulus_sets() that leads here because:
+# (1) All pytests still pass with it commented out (except for a few mechanism unit tests that were using process)
+# (2) Cannot create a system pytest to cover this code -- i.e. system w/ 1 transfer mechanism throws error for:
+# inputs = 1.0, inputs = [1.0], inputs = [[1.0]] ... inputs = [[[[[[1.0]]]]]]
+# --> seems safe to move entirely to mechanism format of input specification without breaking any old scripts
 def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
     object_type = _get_object_type(object)
 
