@@ -2110,7 +2110,6 @@ def _parse_state_spec(state_type=None,
         projection = None
 
         # Mechanism object:
-        # - call owner to get primary state of specified type
         if isinstance(state_specification, Mechanism):
             mech = state_specification
             # Instantiating State of specified Mechanism, so get primary State of state_type
@@ -2118,11 +2117,6 @@ def _parse_state_spec(state_type=None,
                 state_specification = state_type._get_primary_state(state_type, mech)
             # mech used to specify State to be connected with:
             else:
-                # FIX: 10/25/17 - IF CAN DISAMBIGUATE WHICH _state_type,
-                # FIX:                then call state_type._get_primary_state(state_type, mech)
-                # FIX:            TEST USING GilzenratModel and Gating Mechanism Test Scripts
-                # FIX:            IF owner is ObjectiveMechanism, state_type is InputState,
-                # FIX:                but need primary **OutputState** of mech
                 state_specification = mech
                 projection = state_type
         # Specified State is same as connectee's type (state_type),
