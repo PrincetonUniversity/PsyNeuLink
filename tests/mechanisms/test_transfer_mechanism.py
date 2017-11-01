@@ -8,7 +8,10 @@ from psyneulink.components.functions.function import ConstantIntegrator, Exponen
 from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.states.inputstate import InputStateError
 from psyneulink.globals.utilities import UtilitiesError
+from psyneulink.globals.keywords import NAME, MECHANISM, INPUT_STATES, OUTPUT_STATES, PROJECTIONS
 from psyneulink.scheduling.timescale import TimeScale
 
 
@@ -37,15 +40,15 @@ class TestTransferMechanismInputs:
         val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
         assert val == [[10.0, 10.0, 10.0, 10.0]]
 
-    def test_transfer_mech_inputs_list_of_fns(self):
-
-        T = TransferMechanism(
-            name='T',
-            default_variable=[0, 0],
-            integrator_mode=True
-        )
-        val = T.execute([NormalDist().execute(), ExponentialDist().execute()]).tolist()
-        assert val == [[0.4001572083672233, 0.7872011523172707]]
+    # def test_transfer_mech_inputs_list_of_fns(self):
+    #
+    #     T = TransferMechanism(
+    #         name='T',
+    #         default_variable=[0, 0, 0, 0],
+    #         integrator_mode=True
+    #     )
+    #     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
+    #     assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
 
     def test_transfer_mech_variable_3D_array(self):
 
@@ -280,7 +283,7 @@ class TestTransferMechanismFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[1.0, 1.0, 1.0, 1.0]]
+        assert val == [[0.25, 0.25, 0.25, 0.25]]
 
     def test_transfer_mech_normal_fun(self):
         with pytest.raises(TransferError) as error_text:
@@ -385,7 +388,7 @@ class TestTransferMechanismTimeConstant:
 
 
     def test_transfer_mech_time_constant_0_8_list(self):
-        with pytest.raises(ComponentError) as error_text:
+        with pytest.raises(TransferError) as error_text:
             T = TransferMechanism(
                 name='T',
                 default_variable=[0, 0, 0, 0],
@@ -395,8 +398,8 @@ class TestTransferMechanismTimeConstant:
             )
             T.execute([1, 1, 1, 1]).tolist()
         assert (
-            "Value of time_constant param" in str(error_text.value)
-            and "must be compatible with float" in str(error_text.value)
+            "time_constant parameter" in str(error_text.value)
+            and "must be a float" in str(error_text.value)
         )
 
     def test_transfer_mech_time_constant_2(self):
@@ -479,14 +482,14 @@ class TestTransferMechanismSize:
     # TEST 4
     # size = int, variable = list of functions
 
-    def test_transfer_mech_size_int_inputs_fns(self):
-        T = TransferMechanism(
-            name='T',
-            size=2,
-            integrator_mode=True
-        )
-        val = T.execute([NormalDist().execute(), ExponentialDist().execute()]).tolist()
-        assert val == [[0.4001572083672233, 0.7872011523172707]]
+    # def test_transfer_mech_size_int_inputs_fns(self):
+    #     T = TransferMechanism(
+    #         name='T',
+    #         size=4,
+    #         integrator_mode=True
+    #     )
+    #     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
+    #     assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
 
     # ------------------------------------------------------------------------------------------------
     # TEST 5
@@ -528,14 +531,14 @@ class TestTransferMechanismSize:
     # TEST 8
     # size = float, variable = list of functions
 
-    def test_transfer_mech_size_float_inputs_fns(self):
-        T = TransferMechanism(
-            name='T',
-            size=2.0,
-            integrator_mode=True
-        )
-        val = T.execute([NormalDist().execute(), ExponentialDist().execute()]).tolist()
-        assert val == [[0.4001572083672233, 0.7872011523172707]]
+    # def test_transfer_mech_size_float_inputs_fns(self):
+    #     T = TransferMechanism(
+    #         name='T',
+    #         size=4.0,
+    #         integrator_mode=True
+    #     )
+    #     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
+    #     assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
 
     # ------------------------------------------------------------------------------------------------
     # TEST 9
@@ -712,3 +715,250 @@ class TestTransferMechanismSize:
         )
         assert len(T.instance_defaults.variable) == 1 and len(T.instance_defaults.variable[0]) == 2
         assert len(T.size) == 1 and T.size[0] == 2 and len(T.params['size']) == 1 and T.params['size'][0] == 2
+
+
+    # ------------------------------------------------------------------------------------------------
+
+    # InputState SPECIFICATIONS
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 1
+    # Match of default_variable and specification of multiple InputStates by value and string
+
+    def test_transfer_mech_input_states_match_with_default_variable(self):
+
+        T = TransferMechanism(default_variable=[[0,0],[0]],
+                                      input_states=[[32, 24], 'HELLO'])
+        assert T.input_states[1].name == 'HELLO'
+        # # PROBLEM WITH input FOR RUN:
+        # my_mech_2.execute()
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 2
+    # Mismatch between InputState variable specification and corresponding item of owner Mechanism's variable
+
+    def test_transfer_mech_input_states_mismatch_with_default_variable_error(self):
+
+        with pytest.raises(InputStateError) as error_text:
+            T = TransferMechanism(default_variable=[[0],[0]],
+                                  input_states=[[32, 24], 'HELLO'])
+        assert "Value specified for" in str(error_text.value) and "with its expected format" in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 3
+    # Override of input_states (mis)specification by INPUT_STATES entry in params specification dict
+
+    def test_transfer_mech_input_states_override_by_dict_spec(self):
+
+        T = TransferMechanism(default_variable=[[0,0],[0]],
+                              input_states=[[32], 'HELLO'],
+                              params = {INPUT_STATES:[[32, 24], 'HELLO']}
+                              )
+        assert T.input_states[1].name == 'HELLO'
+        # # PROBLEM WITH input FOR RUN:
+        # my_mech_2.execute()
+
+    # # ------------------------------------------------------------------------------------------------
+    # # TEST 4
+    # # Specification using input_states without default_variable
+    #
+    # def test_transfer_mech_input_states_no_default_variable(self):
+    #
+    #     # PROBLEM: SHOULD GENERATE TWO INPUT_STATES (
+    #     #                ONE WITH [[32],[24]] AND OTHER WITH [[0]] AS VARIABLE INSTANCE DEFAULT
+    #     #                INSTEAD, SEEM TO IGNORE InputState SPECIFICATIONS AND JUST USE DEFAULT_VARIABLE
+    #     #                NOTE:  WORKS FOR ObjectiveMechanism, BUT NOT TransferMechanism
+    #     T = TransferMechanism(input_states=[[32, 24], 'HELLO'])
+    #     assert len(T.input_states)==2
+    #     assert T.input_states[1].name == 'HELLO'
+    #     assert len(T.variable[0])==2
+    #     assert len(T.variable[1])==1
+
+    # # ------------------------------------------------------------------------------------------------
+    # # TEST 5
+    # # Specification using INPUT_STATES entry in params specification dict without default_variable
+    #
+    # def test_transfer_mech_input_states_specification_dict_no_default_variable(self):
+    #
+    #     # PROBLEM: SHOULD GENERATE TWO INPUT_STATES (
+    #     #                ONE WITH [[32],[24]] AND OTHER WITH [[0]] AS VARIABLE INSTANCE DEFAULT
+    #     #                INSTEAD, SEEM TO IGNORE InputState SPECIFICATIONS AND JUST USE DEFAULT_VARIABLE
+    #     #                NOTE:  WORKS FOR ObjectiveMechanism, BUT NOT TransferMechanism
+    #     T = TransferMechanism(params = {INPUT_STATES:[[32, 24], 'HELLO']})
+    #     assert len(T.input_states)==2
+    #     assert T.input_states[1].name == 'HELLO'
+    #     assert len(T.variable[0])==2
+    #     assert len(T.variable[1])==1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 6
+    # Mechanism specification
+
+    def test_transfer_mech_input_states_mech_spec(self):
+        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+        T = TransferMechanism(default_variable=[[0]],
+                                  input_states=[R1])
+        assert T.input_state.path_afferents[0].sender == R1.output_state
+        T.execute()
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 7
+    # Mechanism specification outside of a list
+
+    def test_transfer_mech_input_states_standalone_mech_spec(self):
+        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+        # Mechanism outside of list specification
+        T = TransferMechanism(default_variable=[[0]],
+                                      input_states=R1)
+        assert T.input_state.path_afferents[0].sender == R1.output_state
+        T.execute()
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 8
+    # OutputState specification
+
+    def test_transfer_mech_input_states_output_state_spec(self):
+        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+        T = TransferMechanism(default_variable=[[0],[0]],
+                                      input_states=[R1.output_states['FIRST'],
+                                                    R1.output_states['SECOND']])
+        assert T.input_states.names[0] == 'InputState'
+        assert T.input_states.names[1] == 'InputState-1'
+        for input_state in T.input_states:
+            for projection in input_state.path_afferents:
+                assert projection.sender.owner is R1
+        T.execute()
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 9
+    # OutputState specification outside of a list
+
+    def test_transfer_mech_input_states_stand_alone_output_state_spec(self):
+        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+        T = TransferMechanism(default_variable=[0],
+                                      input_states=R1.output_states['FIRST'])
+        assert T.input_states.names[0] == 'InputState'
+        T.input_state.path_afferents[0].sender == R1.output_state
+        T.execute()
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 10
+    # OutputStates in PROJECTIONS entries of a specification dictiontary, using with names (and one outside of a list)
+
+    def test_transfer_mech_input_states_specification_dict_spec(self):
+        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+        T = TransferMechanism(default_variable=[[0],[0]],
+                                      input_states=[{NAME: 'FROM DECISION',
+                                                     PROJECTIONS: [R1.output_states['FIRST']]},
+                                                    {NAME: 'FROM RESPONSE_TIME',
+                                                     PROJECTIONS: R1.output_states['SECOND']}])
+        assert T.input_states.names[0] == 'FROM DECISION'
+        assert T.input_states.names[1] == 'FROM RESPONSE_TIME'
+        for input_state in T.input_states:
+            for projection in input_state.path_afferents:
+                assert projection.sender.owner is R1
+        T.execute()
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 11
+    # default_variable override of value of OutputState specification
+
+    def test_transfer_mech_input_states_default_variable_override(self):
+
+        R2 = TransferMechanism(size=3)
+
+        # default_variable override of OutputState.value
+        T = TransferMechanism(default_variable=[[0,0]],
+                                      input_states=[R2])
+        assert len(T.input_state.path_afferents[0].sender.variable)==3
+        assert len(T.input_state.variable)==2
+        assert len(T.variable)==1
+        assert len(T.variable[0])==2
+        T.execute()
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 12
+    # 2-item tuple specification with default_variable override of OutputState.value
+
+    def test_transfer_mech_input_states_2_item_tuple_spec(self):
+        R2 = TransferMechanism(size=3)
+        T = TransferMechanism(size=2, input_states=[(R2, np.zeros((3,2)))])
+        assert len(T.input_state.path_afferents[0].sender.variable)==3
+        assert len(T.input_state.variable)==2
+        assert len(T.variable)==1
+        assert len(T.variable[0])==2
+        T.execute()
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 13
+    # ConnectionTuple Specification
+
+    def test_transfer_mech_input_states_connection_tuple_spec(self):
+        R2 = TransferMechanism(size=3)
+        T = TransferMechanism(size=2, input_states=[(R2, None, None, np.zeros((3,2)))])
+        assert len(T.input_state.path_afferents[0].sender.variable)==3
+        assert len(T.input_state.variable)==2
+        assert len(T.variable)==1
+        assert len(T.variable[0])==2
+        T.execute()
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 14
+    # Standalone Projection specification
+
+    def test_transfer_mech_input_states_projection_spec(self):
+        R2 = TransferMechanism(size=3)
+        P = MappingProjection(sender=R2)
+        T = TransferMechanism(size=2,
+                              input_states=[P])
+        assert len(T.input_state.path_afferents[0].sender.variable)==3
+        assert len(T.input_state.variable)==2
+        assert len(T.variable)==1
+        assert len(T.variable[0])==2
+        T.execute()
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 15
+    # Projection specification in Tuple
+
+    def test_transfer_mech_input_states_projection_in_tuple_spec(self):
+        R2 = TransferMechanism(size=3)
+        P = MappingProjection(sender=R2)
+        T = TransferMechanism(size=2,
+                              input_states=[(R2, None, None, P)])
+        assert len(T.input_state.path_afferents[0].sender.variable)==3
+        assert len(T.input_state.variable)==2
+        assert len(T.variable)==1
+        assert len(T.variable[0])==2
+        T.execute()
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 16
+    # PROJECTIONS specification in InputState specification dictionary
+
+    def test_transfer_mech_input_states_projection_in_specification_dict_spec(self):
+        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+        T = TransferMechanism(input_states=[{NAME: 'My InputState with Two Projections',
+                                                     PROJECTIONS:[R1.output_states['FIRST'],
+                                                                  R1.output_states['SECOND']]}])
+        assert T.input_state.name == 'My InputState with Two Projections'
+        for input_state in T.input_states:
+            for projection in input_state.path_afferents:
+                assert projection.sender.owner is R1
+        T.execute()
+
+    # # ------------------------------------------------------------------------------------------------
+    # # TEST 17
+    # METHOD OF SPECIFICATION NOT YET IMPLEMENTED:
+    # # MECHANISMS/OUTPUT_STATES entries in params specification dict
+    #
+    # def test_transfer_mech_input_states_mech_output_state_in_specification_dict_spec(self):
+    #
+    #     # NOT YET IMPLEMENTED [10/29/17]:
+    #     T = TransferMechanism(input_states=[{MECHANISM: R1,
+    #                                                  OUTPUT_STATES: ['FIRST', 'SECOND']}])
+    #     assert len(T.input_states)==2
+    #     assert all(name in T.input_states.names for name in {'FIRST', 'SECOND'})
+    #     for input_state in T.input_states:
+    #         for projection in input_state.path_afferents:
+    #             assert projection.sender.owner is R1

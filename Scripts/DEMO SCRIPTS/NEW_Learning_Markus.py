@@ -1,5 +1,3 @@
-#from PsyNeuLink.Components.Functions.Function import Logistic , random_matrix
-# from PsyNeuLink.Components.Functions.Function import Logistic , random_matrix
 from psyneulink.components.functions.function import Linear, Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection

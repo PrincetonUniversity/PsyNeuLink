@@ -1,24 +1,15 @@
 # GLOBALS:
 
 # MECHANISMS:
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA, LCA_OUTPUT
 
 # COMPOSITIONS:
 
 # FUNCTIONS:
 
 # STATES:
-# from psyneulink.Components.States.OutputState import OutputState
-# from psyneulink.Globals.Keywords import PARAMETER_STATE_PARAMS
 
 
 # PROJECTIONS:
-# from psyneulink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-# from psyneulink.Components.Projections.ModulatoryProjections.ControlProjection import ControldProjection
-# from psyneulink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
 
 
 class ScratchPadError(Exception):
@@ -27,9 +18,7 @@ class ScratchPadError(Exception):
 
 # ----------------------------------------------- psyneulink -----------------------------------------------------------
 
-
 #region USER GUIDE
-# from psyneulink.Components.Process import Process
 
 #region SIMPLE NN EXAMPLE:
 
@@ -353,9 +342,6 @@ class ScratchPadError(Exception):
 
 #region TEST 2 Mechanisms and a Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-# from psyneulink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 #
 # my_mech_A = IntegratorMechanism()
 # my_mech_B = TransferMechanism()
@@ -367,12 +353,6 @@ class ScratchPadError(Exception):
 
 #region TEST Modulation @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-# from psyneulink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
-# from psyneulink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.EVCControlMechanism import EVCControlMechanism
-# from psyneulink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-# from psyneulink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-# from psyneulink.Components.Functions.Function import *
 #
 # My_Transfer_Mech_A = TransferMechanism(
 #                            function=Logistic(
@@ -416,13 +396,8 @@ class ScratchPadError(Exception):
 
 #region TEST Learning @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
 #     import ComparatorMechanism
-# from psyneulink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
 #     import LearningMechanism
-# from psyneulink.Components.Functions.Function import *
-# from psyneulink.Globals.Preferences.ComponentPreferenceSet import *
 #
 # my_Mech_A = TransferMechanism(size=10)
 # my_Mech_B = TransferMechanism(size=10)
@@ -628,9 +603,6 @@ class ScratchPadError(Exception):
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from psyneulink.Components.System import System_Base
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-# from psyneulink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 #
 # mech = DDM()
 #
@@ -773,11 +745,38 @@ class ScratchPadError(Exception):
 # TEST = True
 # endregion
 
+#region TEST InputState SPECIFICATION
+print ('TEST InputState SPECIFICATION')
+
+import numpy as np
+from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.states.outputstate import OutputState
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, RESPONSE_TIME
+from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES, PROJECTIONS, NAME, INPUT_STATES, VARIABLE
+
+R1 = TransferMechanism(input_states=[OutputState])
+
+
+# InputState specification tests:
+
+# NOT YET IMPLEMENTED [10/29/17]:
+# MECHANISM/OUTPUT_STATES specification
+# my_mech_2 = TransferMechanism(input_states=[{MECHANISM: my_mech_1,
+#                                              OUTPUT_STATES: [DECISION_VARIABLE, RESPONSE_TIME]}])
+# assert len(my_mech_2.input_states)==2
+# assert all(name in my_mech_2.input_states.names for name in {DECISION_VARIABLE, RESPONSE_TIME})
+# for input_state in my_mech_2.input_states:
+#     for projection in input_state.path_afferents:
+#         assert projection.sender.owner is my_mech_1
+
+
+#endregion
 
 #region TEST INPUT FORMATS
 
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-# from psyneulink.Components.States.InputState import InputState
 #
 # x = TransferMechanism([0,0,0],
 #              name='x')
@@ -796,9 +795,6 @@ class ScratchPadError(Exception):
 
 #region TEST INPUT FORMATS
 
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-# from psyneulink.Components.Process import Process
-# from psyneulink.Components.System import System
 #
 #
 # # UNEQUAL INPUT LENGTHS:
@@ -836,10 +832,6 @@ class ScratchPadError(Exception):
 
 #region TEST INSTANTATION OF Cyclic and Acyclic Systems @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from psyneulink.Components.System import System
-# from psyneulink.Components.Process import Process
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-# from psyneulink.Components.Process import MappingProjection
 #
 # a = TransferMechanism(name='a')
 # b = TransferMechanism(name='b')
@@ -862,14 +854,120 @@ class ScratchPadError(Exception):
 # endregion
 
 #region TEST MECHANISM @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-#
+
+# print("TEST MECHANISM")
 # from Components.Mechanisms.Mechanism import Mechanism, mechanism
 # from Components.Mechanisms.DDM import DDM
 
 # x = Mechanism(context=kwValidate)
 # test = isinstance(x,Mechanism)
 # temp = True
+
+#endregion
+
+#region TEST STATE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# print("TEST _instantiate_state and _parse_state_spec")
 #
+# def _get_args(frame):
+#     args, _, _, values = inspect.getargvalues(frame)
+#     return dict((key, value) for key, value in values.items() if key in args)
+#     # return zip(args, values)
+#
+# class State:
+#     pass
+#
+# def _instantiate_state(state_type,
+#                        owner,
+#                        reference_value=None,
+#                        name=None,
+#                        variable=None,
+#                        params=None,
+#                        prefs=None,
+#                        context=None,
+#                        **state_spec):
+#     print('\n_instantiate_state state_spec:',
+#           '\n\tcontext:',context,
+#           '\n\tstate_spec', state_spec)
+#     standard_args = _get_args(inspect.currentframe())
+#     _parse_state_spec(standard_args, **state_spec)
+#     # _parse_state_spec(state_spec, **standard_args)
+#
+# import inspect
+# def _parse_state_spec(
+#                       *standard_args,
+#                       **state_spec
+#                       ):
+#
+#     STATE_SPEC_ARG = 'state_spec'
+#     state_specific_dict = {}
+#     state_specification = None
+#
+#     # If there is a state_specs arg passed from _instantiate_state:
+#     if STATE_SPEC_ARG in state_spec:
+#
+#         # If it is a State specification dictionary
+#         if isinstance(state_spec[STATE_SPEC_ARG], dict):
+#             # Use the value of any standard args specified in the State specification dictionary
+#             #    to replace those explicitly specified in the call to _instantiate_state (i.e., passed in standard_args)
+#             state_specific_dict = state_spec[STATE_SPEC_ARG]
+#             standard_args.update({key: state_specific_dict[key] for key in state_specific_dict if key in standard_args})
+#             # Delete them from the State specification dictionary, leaving only state-specific items there
+#             for key in standard_args:
+#                 state_specific_dict.pop(key, None)
+#
+#         else:
+#             state_specification = state_spec[STATE_SPEC_ARG]
+#
+#         # Delete the State specification dictionary from state_spec
+#         del state_spec[STATE_SPEC_ARG]
+#
+#     state_dict = standard_args
+#
+#     if isinstance(state_specification, tuple):
+#         new_dict = _parse_state_spec(standard_args,
+#                                      state_spec=state_specification[0])
+#         state_dict.update(new_dict)
+#
+#     elif state_specific_dict:
+#         state_specification_dict=state_specific_dict.copy()
+#         if len(state_specification_dict) == 1:
+#             name, state_spec = list(state_specification_dict.items())[0]
+#             state_dict['name']=name
+#             state_dict = _parse_state_spec(state_dict, state_spec=state_spec)
+#
+#     if state_spec:
+#         print('Args other than standard args and state_spec were in _instantiate_state ({})'.
+#               format(state_spec))
+#
+#     print('\nstate_dict:')
+#     for arg, val in standard_args.items():
+#         print('\t{}: {}'.format(arg, val))
+#
+#     print('\nstate_specific_dict:')
+#     for arg, val in state_specific_dict.items():
+#         print('\t{}: {}'.format(arg, val))
+#
+#     print('\nstate_spec:', state_specification)
+#     # for arg, val in state_spec.items():
+#     #     print('\t{}: {}'.format(arg, val))
+#
+#     print('\nstate_specs:', state_spec)
+#
+#     return state_dict
+#
+# _instantiate_state(state_type = 'STATE TYPE',
+#                    owner='OWNER FROM INSTANTIATE STATE',
+#                    # name='NAME',
+#                    # state_spec=State,
+#                    # state_spec=('state_spec_tuple_item_1','state_spec_tuple_item_2'),
+#                    # state_spec=({'state_type': 'STATE HYPE'},23),
+#                    state_spec={'GLOMMETT':{'owner':'GLERULET'}},
+#                    # state_spec={'GLOMMETT':('state_spec_tuple_item_1','state_spec_tuple_item_2')},
+#                    hooblah=3,
+#                    # state_spec=({'name':'NAME IN DICT',
+#                    #              'owner':'OWNER IN DICT',
+#                    #              'goof':'HELLO'})
+#                    )
 #endregion
 
 #region TEST PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -889,7 +987,6 @@ class ScratchPadError(Exception):
 
 #region TEST LinearCombination FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from psyneulink.Components.Functions.Function import LinearCombination
 
 # x = LinearCombination()
 # # print (x.execute(([1, 1],[2, 2])))
@@ -904,7 +1001,6 @@ class ScratchPadError(Exception):
 
 #region TEST AGTUtilityIntegrator FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from psyneulink.Components.Functions.Function import AGTUtilityIntegrator
 # print("TEST AGTUtilityIntegrator FUNCTION")
 #
 # x = AGTUtilityIntegrator(initial_long_term_utility=0.1,
@@ -927,7 +1023,6 @@ class ScratchPadError(Exception):
 #region TEST COMBINE_MEANS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # import numpy as np
-# from psyneulink.Globals.Utilities import is_numeric
 # print("TEST CombineMeans Function")
 #
 #
@@ -945,7 +1040,6 @@ class ScratchPadError(Exception):
 
 #region TEST Hebbian @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from psyneulink.Components.Functions.Function import Hebbian
 # print("TEST Hebbian FUNCTION")
 #
 # x = Hebbian(default_variable=[0,0,0], learning_rate=[1,-1,3])
@@ -957,7 +1051,6 @@ class ScratchPadError(Exception):
 
 #region TEST RL @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from psyneulink.Components.Functions.Function import *
 #
 # rl = Reinforcement([[0,0,0], [0,0,0], [0]])
 # print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
@@ -980,7 +1073,6 @@ class ScratchPadError(Exception):
 
 #region TEST BogaczEtAl Derivative @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from psyneulink.Components.Functions.Function import *
 # #
 # x = BogaczEtAl()
 # print(x.function(params={DRIFT_RATE:1.0,
@@ -991,7 +1083,6 @@ class ScratchPadError(Exception):
 
 #region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from psyneulink.Components.Functions.Function import *
 # #
 # x = SoftMax()
 # # x = SoftMax(output=MAX_VAL)
@@ -1029,89 +1120,80 @@ class ScratchPadError(Exception):
 
 #endregion
 
-#region TEST Stroop Model @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-print ("TEST Stroop Model")
-
-import psyneulink as pnl
-import numpy as np
-from psyneulink import System, Process, TransferMechanism, DDM, MappingProjection, Linear, Logistic
-
-# FROM BASICS AND SAMPLER -------------------------------------
-
-# # Construct the Mechanisms:
-# colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
-# words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
-# output_layer = TransferMechanism(size=1, name='OUTPUT')
+# #region TEST Stroop Model @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# print ("TEST Stroop Model")
+# import psyneulink as pnl
+# import numpy as np
+# from psyneulink import System, Process, TransferMechanism, DDM, MappingProjection, Linear, Logistic
+#
+# # FROM BASICS AND SAMPLER -------------------------------------
+#
+# # # Construct the Mechanisms:
+# # colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
+# # words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
+# # output_layer = TransferMechanism(size=1, name='OUTPUT')
+# # decision_mech = DDM(name='DECISION')
+# #
+# # # Define a MappingProjection from each of the input layers to the output_layer
+# # input_to_output_weights = np.array([[1], [-1]])
+# #
+# # # Construct the Processes:
+# # colors_process = process(pathway=[colors_input_layer, input_to_output_weights, output_layer])
+# # words_process = process(pathway=[words_input_layer, input_to_output_weights, output_layer])
+# # decision_process = process(pathway=[output_layer, decision_mech])
+# #
+# # # Construct the System:
+# # my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
+#
+# # # SIMPLE STROOP ---------------
+# #
+# # colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
+# # words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
+# # output_layer = TransferMechanism(size=1, name='OUTPUT')
+# # decision_mech = DDM(name='DECISION')
+# #
+# # input_to_output_weights = MappingProjection(matrix=np.array([[1], [-1]]))
+# #
+# # colors_process = process(pathway=[colors_input_layer, input_to_output_weights, output_layer])
+# # words_process = process(pathway=[words_input_layer, input_to_output_weights, output_layer])
+# # decision_process = process(pathway=[output_layer, decision_mech])
+# #
+# # my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
+#
+# # # FULL STROOP ---------------
+# #
+# color_input = TransferMechanism(size=2, function=Linear, name='COLOR INPUT')
+# word_input = TransferMechanism(size=2, function=Linear, name='WORD INPUT')
+# task_input = TransferMechanism(size=2, function=Linear, name='TASK INPUT')
+# color_hidden = TransferMechanism(size=2, function=Logistic, name='COLOR HIDDEN')
+# word_hidden = TransferMechanism(size=2, function=Logistic, name='WORD HIDDEN')
+# output = TransferMechanism(size=1, function=Linear, name='OUTPUT')
 # decision_mech = DDM(name='DECISION')
 #
-# # Define a MappingProjection from each of the input layers to the output_layer
-# input_to_output_weights = np.array([[1], [-1]])
+# color_weights = MappingProjection(matrix=np.array([[1, -1], [-1, 1]]), name='COLOR_WEIGHTS')
+# word_weights = MappingProjection(matrix=np.array([[1, -1], [-1, 1]]), name='WORD_WEIGHTS')
+# output_weights = np.array([[1], [-1]])
+# color_task_weights = MappingProjection(matrix=np.array([[1, 1], [0, 0]]), name='COLOR_TASK_WEIGHTS')
+# word_task_weights = MappingProjection(matrix=np.array([[0, 0], [1, 1]]), name='WORD_TASK_WEIGHTS')
 #
-# # Construct the Processes:
-# colors_process = process(pathway=[colors_input_layer, input_to_output_weights, output_layer])
-# words_process = process(pathway=[words_input_layer, input_to_output_weights, output_layer])
-# decision_process = process(pathway=[output_layer, decision_mech])
+# color_process = Process(pathway=[color_input, color_weights, color_hidden, output_weights, output], name="COLORS")
+# word_process = Process(pathway=[word_input, word_weights, word_hidden, output_weights, output], name="WORDS")
+# color_task_process = Process(pathway=[task_input, color_task_weights, color_hidden], name="COLOR TASK")
+# word_task_process = Process(pathway=[task_input, word_task_weights, word_hidden], name="WORD TASK")
+# decision_process = Process(pathway=[output, decision_mech], name="DECISION")
 #
-# # Construct the System:
-# my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
-
-# # SIMPLE STROOP ---------------
-#
-# colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
-# words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
-# output_layer = TransferMechanism(size=1, name='OUTPUT')
-# decision_mech = DDM(name='DECISION')
-#
-# input_to_output_weights = MappingProjection(matrix=np.array([[1], [-1]]))
-#
-# colors_process = process(pathway=[colors_input_layer, input_to_output_weights, output_layer])
-# words_process = process(pathway=[words_input_layer, input_to_output_weights, output_layer])
-# decision_process = process(pathway=[output_layer, decision_mech])
-#
-# my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
-
-# # FULL STROOP ---------------
-#
-color_input = TransferMechanism(size=2, function=Linear, name='COLOR INPUT')
-word_input = TransferMechanism(size=2, function=Linear, name='WORD INPUT')
-task_input = TransferMechanism(size=2, function=Linear, name='TASK INPUT')
-color_hidden = TransferMechanism(size=2, function=Logistic, name='COLOR HIDDEN')
-word_hidden = TransferMechanism(size=2, function=Logistic, name='WORD HIDDEN')
-output = TransferMechanism(size=1, function=Linear, name='OUTPUT')
-decision_mech = DDM(name='DECISION')
-
-color_weights = MappingProjection(matrix=np.array([[1, -1], [-1, 1]]), name='COLOR_WEIGHTS')
-word_weights = MappingProjection(matrix=np.array([[1, -1], [-1, 1]]), name='WORD_WEIGHTS')
-output_weights = np.array([[1], [-1]])
-color_task_weights = MappingProjection(matrix=np.array([[1, 1], [0, 0]]), name='COLOR_TASK_WEIGHTS')
-word_task_weights = MappingProjection(matrix=np.array([[0, 0], [1, 1]]), name='WORD_TASK_WEIGHTS')
-
-color_process = Process(pathway=[color_input, color_weights, color_hidden, output_weights, output], name="COLORS")
-word_process = Process(pathway=[word_input, word_weights, word_hidden, output_weights, output], name="WORDS")
-color_task_process = Process(pathway=[task_input, color_task_weights, color_hidden], name="COLOR TASK")
-word_task_process = Process(pathway=[task_input, word_task_weights, word_hidden], name="WORD TASK")
-decision_process = Process(pathway=[output, decision_mech], name="DECISION")
-
-my_simple_Stroop = System(processes=[color_process, word_process,
-                                     color_task_process, word_task_process, decision_process])
-my_simple_Stroop.show_graph()
-
+# my_simple_Stroop = System(processes=[color_process, word_process,
+#                                      color_task_process, word_task_process, decision_process])
+# my_simple_Stroop.show_graph()
 
 # endregion
 
 # ----------------------------------------------- MECHANISM ------------------------------------------------------------
 
-# region TEST RecurrentTransferMechanism @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-# import numpy as np
+# # region TEST RecurrentTransferMechanism @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from psyneulink.components.functions.function import Logistic
-# from psyneulink.components.process import Process
-# from psyneulink.components.system import System
-# from psyneulink.globals.keywords import LEARNING
-# from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism \
+# import numpy as np
 #     import RecurrentTransferMechanism
-# from psyneulink.components.functions.function import Linear
 #
 # print("\nTEST RecurrentTransferMechanism\n")
 #
@@ -1133,7 +1215,7 @@ my_simple_Stroop.show_graph()
 # print ("\nmy_auto.input_state.path_afferents[0].matrix:\n",
 #        my_auto.input_state.path_afferents[0].matrix)
 #
-# my_process = Process(pathway=[my_auto])
+# my_process = process(pathway=[my_auto])
 #
 # my_auto.learning_enabled = False
 # print ("\n***INITIAL STATE WITH [1,1,0,0] AS INPUT")
@@ -1167,27 +1249,23 @@ my_simple_Stroop.show_graph()
 # for i in range(4):
 #     my_process.execute([1,0,0,0]),
 #     print('\nActivity: ', my_auto.value, '\n\nWeight matrix:\n', my_auto.matrix)
-
-
+#
+#
+# # #
+# # input_list = {my_auto:[1,1,1]}
+# # target_list = {my_auto:[0,0,0]}
 # #
-# input_list = {my_auto:[1,1,1]}
-# target_list = {my_auto:[0,0,0]}
-#
-# # print(my_process.run(inputs=input_list, targets=target_list, num_trials=5))
-#
-# my_system = System(processes=[my_process],
-#                    targets=[0,0,0])
-#
-# print(my_system.run(inputs=input_list,
-#                     targets=target_list,
-#                     num_trials=5))
+# # # print(my_process.run(inputs=input_list, targets=target_list, num_trials=5))
+# #
+# # my_system = system(processes=[my_process],
+# #                    targets=[0,0,0])
+# #
+# # print(my_system.run(inputs=input_list,
+# #                     targets=target_list,
+# #                     num_trials=5))
 
 # region TEST LCA @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from psyneulink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA import LCA, LCA_OUTPUT
-# from psyneulink.Components.System import System
-# from psyneulink.Components.Process import Process
-# from psyneulink.Globals.Keywords import LEARNING
 #
 # print("TEST LCA")
 #
@@ -1244,9 +1322,6 @@ my_simple_Stroop.show_graph()
 #endregion
 #region TEST ReportOUtput Pref @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from psyneulink.Components.Process import *
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-# from psyneulink.Components.Functions.Function import Linear
 #
 # my_mech = TransferMechanism(function=Linear())
 #
@@ -1264,10 +1339,6 @@ my_simple_Stroop.show_graph()
 
 #region TEST Matrix Assignment to MappingProjection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from psyneulink.Components.Process import *
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-# from psyneulink.Components.Functions.Function import Linear
-# from psyneulink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 #
 # my_mech = TransferMechanism(function=Linear())
 # my_mech2 = TransferMechanism(function=Linear())
@@ -1302,10 +1373,6 @@ my_simple_Stroop.show_graph()
 
 #region TEST Matrix Assignment to MappingProjection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from psyneulink.Components.Process import *
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-# from psyneulink.Components.Functions.Function import Linear, Logistic
-# from psyneulink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 #
 # color_naming = TransferMechanism(default_variable=[0,0],
 #                         function=Linear,
@@ -1335,6 +1402,69 @@ my_simple_Stroop.show_graph()
 #
 # Stroop_process.execute()
 #
+# endregion
+
+#region TEST Stroop Model @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# print ("TEST Stroop Model")
+#
+# import numpy as np
+#
+# # Construct the Mechanisms:
+# colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
+# words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
+# output_layer = TransferMechanism(size=1, name='OUTPUT')
+# decision_mech = DDM(name='DECISION')
+#
+# # Define a MappingProjection from each of the input layers to the output_layer
+# input_to_output_weights = MappingProjection(matrix=np.array([[1], [-1]]))
+#
+# # Construct the Processes:
+# colors_process = process(pathway=[colors_input_layer, input_to_output_weights, output_layer])
+# words_process = process(pathway=[words_input_layer, input_to_output_weights, output_layer])
+# decision_process = process(pathway=[output_layer, decision_mech])
+#
+# # Construct the System:
+# my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
+#
+# # SIMPLE STROOP ---------------
+#
+# colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
+# words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
+# output_layer = TransferMechanism(size=1, name='OUTPUT')
+# decision_mech = DDM(name='DECISION')
+#
+# input_to_output_weights = MappingProjection(matrix=np.array([[1], [-1]]))
+#
+# colors_process = process(pathway=[colors_input_layer, input_to_output_weights, output_layer])
+# words_process = process(pathway=[words_input_layer, input_to_output_weights, output_layer])
+# decision_process = process(pathway=[output_layer, decision_mech])
+#
+# my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
+#
+# # FULL STROOP ---------------
+#
+# color_input = TransferMechanism(size=2, function=Linear, name='COLOR INPUT')
+# word_input = TransferMechanism(size=2, function=Linear, name='WORD INPUT')
+# task_input = TransferMechanism(size=2, function=Linear, name='TASK INPUT')
+# color_hidden = TransferMechanism(size=2, function=Logistic, name='COLOR HIDDEN')
+# word_hidden = TransferMechanism(size=2, function=Logistic, name='WORD HIDDEN')
+# output = TransferMechanism(size=1, function=Linear, name='OUTPUT')
+# decision_mech = DDM(name='DECISION')
+#
+# input_weights = MappingProjection(matrix=np.array([[1, -1], [-1, 1]]))
+# output_weights = MappingProjection(matrix=np.array([[1], [-1]]))
+# color_task_weights = MappingProjection(matrix=np.array([[1], [0]]))
+# word_task_weights = MappingProjection(matrix=np.array([[0], [1]]))
+#
+# color_process = process(pathway=[color_input, input_weights, color_hidden, output_weights, output])
+# word_process = process(pathway=[word_input, input_weights, word_hidden, output_weights, output])
+# color_task_process = process(pathway=[task_input, color_task_weights, color_hidden])
+# word_task_process = process(pathway=[word_input, word_task_weights, word_hidden, output])
+# decision_process = process(pathway=[output_layer, decision_mech])
+#
+# my_simple_Stroop = system(processes=[colors_process, words_process,
+#                                      color_task_process, word_task_process, decision_process])
+
 # endregion
 
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
@@ -2476,15 +2606,15 @@ my_simple_Stroop.show_graph()
 # state = x._instantiate_state(state_type=ParameterState,
 #                               state_name='DDM_TEST_PARAM_STATE',
 #                               state_spec=100.0,
-#                               constraint_value=0.0,
-#                               constraint_value_name='DDM T0 CONSTRAINT',
+#                               reference_value=0.0,
+#                               reference_value_name='DDM T0 CONSTRAINT',
 #                               context='EXOGENOUS SPEC')
 # x.parameterStates['DDM_TEST_PARAM_STATE'] = state
 
 # x._instantiate_state_list(state_type=ParameterState,
 #                                    state_param_identifier='DDM_TEST',
-#                                    constraint_value=0.0,
-#                                    constraint_value_name='DDM T0 CONSTRAINT',
+#                                    reference_value=0.0,
+#                                    reference_value_name='DDM T0 CONSTRAINT',
 #                                    context='EXOGENOUS SPEC')
 
 #endregion
@@ -2725,7 +2855,6 @@ my_simple_Stroop.show_graph()
 # my_obj_2 = MyClass(name='goodbye')
 # my_obj_3 = MyClass(name='goodbye')
 #
-# from psyneulink.Globals.Utilities import ContentAddressableList
 #
 # my_list = ContentAddressableList(component_type=MyClass)
 # # my_list.append(my_state)
@@ -2745,12 +2874,6 @@ my_simple_Stroop.show_graph()
 
 # print("TEST parse_gated_state_spec")
 #
-# from psyneulink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import _parse_gating_signal_spec
-# from psyneulink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingSignal import GatingSignal
-# from psyneulink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import GatingMechanism
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-# from psyneulink.Components.Functions.Function import ModulationParam
-# from psyneulink.Components.States.OutputState import OutputState
 #
 # gating_mech = GatingMechanism()
 # mech_1 = DDM()
@@ -2794,8 +2917,6 @@ my_simple_Stroop.show_graph()
 
 # region TEST parse_monitored_output_state @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from psyneulink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import *
-# from psyneulink.Components.States.OutputState import OutputState
 #
 # print("TEST parse_monitored_output_state")
 #

@@ -13,16 +13,15 @@
 Overview
 --------
 
-An InputState receives the input to a Mechanism provided by the Projections to that Mechanism from others in a Process
-or System.  If the InputState belongs to an `ORIGIN` Mechanism (see
-`role of Mechanisms in Processes and Systems <Mechanism_Role_In_Processes_And_Systems>`), then it receives the input
-specified when that Process or System is `run <Run>`.  The Projections received by an InputState are
-listed in its `path_afferents <InputState.path_afferents>` attribute. Its
-`function <InputState.function>` combines the values of these inputs, and the result is assigned to an item
-corresponding to the InputState in the owner Mechanism's :keyword:`variable <Mechanism_Base.variable>` and
-`input_values <Mechanism_Base.input_values>` attributes  (see `Mechanism InputStates <Mechanism_InputStates>`
-for additional details about the role of InputStates in Mechanisms).
-
+An InputState receives the input to a `Mechanism` provided by the `Projections <Projection>` to that Mechanism from
+others in a `Process` or `System`.  If the InputState belongs to an `ORIGIN` Mechanism (see `role of Mechanisms in
+Processes and Systems <Mechanism_Role_In_Processes_And_Systems>`), then it receives the input specified when that
+Process or System is `run <Run>`.  The Projections received by an InputState are listed in its `path_afferents
+<InputState.path_afferents>` attribute.  Its `function <InputState.function>` combines the values of these inputs,
+and the result is assigned to an item corresponding to the InputState in the owner Mechanism's `variable
+<Mechanism_Base.variable>` and `input_values <Mechanism_Base.input_values>` attributes (see `Mechanism InputStates
+<Mechanism_InputStates>` for additional details about the role of InputStates in Mechanisms, and their assignment to
+the items of a Mechanism's `variable <Mechanism_Base.variable>` attribute).
 
 .. _InputState_Creation:
 
@@ -38,7 +37,7 @@ the `pathway <Process.pathway>`.
 .. _InputState_Deferred_Initialization:
 
 An InputState must be owned by a `Mechanism <Mechanism>`.  When InputState is specified in the constructor for a
-Mechanism (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as  its owner. If
+Mechanism (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as its owner. If
 the InputState is created directly, its `owner <InputState.owner>` can specified in the **owner**  argument of its
 constructor; otherwise, its initialization will be `deferred <State_Deferred_Initialization>` until it is assigned
 to an owner using the owner's `add_states` method.
@@ -50,21 +49,21 @@ Primary InputState
 
 Every Mechanism has at least one InputState, referred to as its *primary InputState*.  If InputStates are not
 `explicitly specified <InputState_Specification>` for a Mechanism, a primary InputState is automatically created
-and assigned to its `input_state <Mechanism_Base.input_state>` attribute (note the singular),
-and also to the first entry of the Mechanism's `input_states <Mechanism_Base.inpput_states>` attribute
-(note the plural).  The `value <InputState.value>` of the primary InputState is assigned as the first (and often
-only) item of the Mechanism's `input_values <Mechanism_Base.input_values>` attribute, which is the first item of the
-Mechanism's `variable <Mechanism_Base.variable>` attribute.
+and assigned to its `input_state <Mechanism_Base.input_state>` attribute (note the singular), and also to the first
+entry of the Mechanism's `input_states <Mechanism_Base.input_states>` attribute (note the plural).  The `value
+<InputState.value>` of the primary InputState is assigned as the first (and often only) item of the Mechanism's
+`variable <Mechanism_Base.variable>` and `input_values <Mechanism_Base.input_values>` attributes.
 
 .. _InputState_Specification:
 
 InputState Specification
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-If one or more custom InputStates need to be specified for a `Mechanism <Mechanism>` when it is created, this can be
-done in the **input_states** argument of the Mechanism's constructor, or in an *INPUT_STATES* entry of a parameter
-dictionary assigned to the constructor's **params** argument.  The latter takes precedence over the former (that is,
-if InputStates are specified in the parameter dictionary, any specified in the **input_states** argument are ignored).
+If one or more custom InputStates need to be specified for a `Mechanism <Mechanism>` when it is created, or the type
+of Mechanism requires their specification, this can be done in the **input_states** argument of the Mechanism's
+constructor, or in an *INPUT_STATES* entry of a parameter dictionary assigned to the constructor's **params**
+argument.  The latter takes precedence over the former (that is, if an *INPUT_STATES* entry is included in the
+parameter dictionary, any specified in the **input_states** argument are ignored).
 
 .. note::
     Assigning InputStates to a Mechanism in its constructor **replaces** any that are automatically generated for that
@@ -74,128 +73,242 @@ if InputStates are specified in the parameter dictionary, any specified in the *
     to the number of items in the Mechanism's <variable <Mechanism_Base.variable>` attribute.
 
 InputStates can also be **added** to a Mechanism, using the Mechanism's `add_states` method.  However, this has
-consequences for the Mechanism's `variable <Mechanism_Base.variable>` and possibly their relationship to the Mechanism's
-`function <Mechanism_Base.function>` (these are discussed `below <InputStates_Mechanism_Variable_and_Function>`).
-If the name of an InputState added to a Mechanism is the same as one that already exists, its name will be suffixed
-with a numerical index (incremented for each InputState with that name), and the InputState will be added to the list
-(that is, it will *not* replace ones that were already created).
+consequences for the Mechanism's `variable <Mechanism_Base.variable>` and possibly its relationship to the Mechanism's
+`function <Mechanism_Base.function>` (see `Mechanism_InputStates`). If the name of an InputState added to a Mechanism
+is the same as one that already exists, its name will be suffixed with a numerical index (incremented for each
+InputState with that name), and the InputState will be added to the list (that is, it will *not* replace ones that
+were already created).
 
-Specifying an InputState can be done in any of the ways listed below.  To create multiple InputStates,
-their specifications can be included in a list, or in a dictionary in which the key for each entry is a
-string specifying the name for the InputState to be created, and the value its specification.  Any of the following
-can be used to specify an InputState:
+.. _InputState_Variable_and_Value:
 
-    * An existing **InputState object** or the name of one.  Its `value <InputState.value>` must be compatible with
-      the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which it will be assigned.
-    ..
-    * The **InputState class**, keyword *INPUT_STATE*, or a string.  This creates a default InputState using the
-      first item of the owner Mechanism's `variable <Mechanism_Base.variable>` as the InputState's
-      `variable <InputState.variable>`. If the class name or *INPUT_STATE* keyword is used, a default name is
-      assigned to the State;  if a string is specified, it is used as the name of the InputState (see :ref:`naming
-      conventions <LINK>`).
-    ..
-    * A **value**.  This creates a default InputState using the specified value as InputState's
-      `variable <InputState.variable>`. This must be compatible with the item of the owner Mechanism's
-      `variable <Mechanism_Base.variable>`.
-    ..
-    * A **Projection subclass**. This creates a default InputState using the first item of the owner Mechanism's
-      `variable <Mechanism_Base.variable>` as the InputState's `variable <InputState.variable>`, and a `Projection
-      <Projection>` of the specified type to the InputState using its `variable <InputState.variable>` as the
-      template for the Projection's `value <Projection.value>`.
-    ..
+Each InputState is assigned to an item of its owner Mechanism's `variable <Mechanism_Base.variable>` attribute (see
+`Mechanism InputStates <Mechanism_InputStates`), and the `value <InputState.value>` of the InputState must be
+compatible with (that is, have the same number and type of elements as) that item.  In almost all cases, this is also
+true of the InputState's `variable <InputState.variable>` attribute.  This is because the default `function
+<InputState.function>` for an InputState is a `LinearCombination`, that combines the inputs received from the
+InputState's `Projections <Projection>` to generate its `value <InputState.value>`, which has the same format as its
+`variable <InputState.variable>`. Therefore, when creating an InputState, its `variable <InputState.variable>`
+attribute should also match the item of its owner's `variable <Mechanism_Base.variable>` to which the InputState is
+assigned.
 
-    COMMENT:
-       CONFIRM THAT THIS IS TRUE:
-    * A **Projection object**.  This creates a default InputState using the first item of the owner Mechanism's
-      `variable <Mechanism_Base.variable>` as the InputState's `variable <InputState.variable>`, and assigns the
-      State as the `Projection's <Projection>` `receiver <Projection.receiver>`. The Projection's `value
-      <Projection.value>` must be compatible with the InputState's `variable <InputState.variable>`.
-    COMMENT
+The format of an InputState's `variable <InputState.variable>` can be specified in a variety of ways.  The most
+straightforward is in the **variable** argument of its constructor.  More commonly it is determined by another
+means: the **default_variable** or **size** argument of its owner Mechanism's constructor, a specification for
+the InputState in the owner's **input_states** argument, or in the *INPUT_STATES* entry of a specification dictionary
+in the owner's **params** argument. Each of these have different consequences and requirements, that are described
+below, and in `Mechanism_InputState_Specification`.
+
+COMMENT:
+
+*** INCORPORATE THE FOLLOWING UNDER InputState Specification BELOW:
+
+* **default_variable** or **size** argument -- these determine the format of the owner Mechanism's `variable
+  <Mechanism_Base.variable>`, each item of which determines the `variable <InputState.variable>` of the corresponding
+  InputState (see `Mechanism_InputState_Specification`);
+
+* **input_states** argument, using a value specification or the *VARIABLE* entry of an InputState specification
+  dictionary (see below);
+
+* **params** argument, in an *INPUT_STATES* entry of a specification dictionary
+
+  Any explicit specification of the value for an InputState in either of these
+
+
+* value spec in **input_states** ar or  (see below)
+* *VARIABLE* or *VALUE* entry of a State specification dictionary in the **input_states** argument (see
+  above)
+
+* `OutputState or Projection <LINK>` spec (see below)
+
+* *Projection* entry of a `tuple specification <InputState_Tuple_Specification>` -- the dimensions of the Projection's
+  matrix (specifically, the number of its dimensions minus the number of dimensions of the `value <OutputState.value>`
+  of the OutputState from which it projects) determines the size of the `variable <InputState.variable>` attribute of
+  the InputState created.
+
+* *PROJECTIONS* entry of State spec dict - as with Projection entry above
+COMMENT
+
+.. _InputState_Forms_of_Specification:
+
+**Forms of Specification**
+
+InputStates can be specified in a variety of ways, that fall into three broad categories:  specifying an InputState
+directly; by an `OutputState` or `Projection` that should project to it; or by using a `State specification dictionary
+<State_Specification` or tuple format to specify attributes for the InputState (including Projections to it). Each of
+these is described below:
+
+    .. _InputState_Direct_Specification:
+
+    **Direct Specification**
+
+    * existing **InputState object** or the name of one -- its `value <InputState.value>` must be compatible with
+      the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which it is assigned.
     ..
+    * **InputState class**, keyword *INPUT_STATE*, or a string -- this creates a default InputState, using the
+      item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState is assigned as the
+      format for the InputState`s `variable <InputState.variable>`;  if a string is specified, it is used as the name
+      of the InputState (see :ref:`naming conventions <LINK>`).
+    ..
+    * **value** -- this creates a default InputState using the specified value as the InputState's `variable
+      <InputState.variable>`, the format of which must be compatible with the item of the owner Mechanism's `variable
+      <Mechanism_Base.variable>` to which the InputState is assigned.
+    ..
+    * **string** -- this creates a default `InputState` using the string as its name; its `variable
+      <InputState.variable>` is formatted in the same manner as an InputState class, keyword or string
+      specification (see above).  This can be used as a "place marker" for an InputState that will be assigned its
+      Projection(s) at a later time.
+
+    .. _InputState_OutputState_Specification:
+
+    **OutputState or Projection Specification**
+
+    * **OutputState** -- a reference to an existing `OutputState`;  this creates an InputState and a
+      MappingProjection to it from the specified OutputState.  By default, the OutputState's `value <OutputState.value>`
+      is used to format the InputState's `variable <InputState.variable>`, and an `IDENTITY_MATRIX` is used for the
+      MappingProjection.  However, if **default_variable** argument is specified in the constructor for the InputState's
+      owner Mechanism, then the corresponding item of its value is used as the format for the InputState's `variable
+      <InputState.variable>`, and `AUTO_ASSIGN` is used for the MappingProjection, which adjusts its `value
+      <Projection.value>` to match the InputState's `variable <InputState.variable>`.
+
+    * **Mechanism** -- the Mechanism's `primary OutputState <OutputState_Primary>` is used, and the InputState
+      (and MappingProjection to it) are created as for an OutputState specification (see above).
+    ..
+    * **Projection object**.  this creates a default InputState and assigns it as the `Projection's <Projection>`
+      `receiver <Projection.receiver>`;  the Projection's `value <Projection.value>` must be compatible with the
+      the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState is assigned.
+    ..
+    * **Projection subclass** -- this creates a default InputState, formattig its `variable <InputState.variable>`
+      in the same manner as an InputState class, keyword or string (see above), and using this as the format for the
+      Projection's `value <Projection.value>`.  Since the Projection's `sender <Projection.sender>` is unspecified,
+      its `initialization is deferred <Projection_Deferred_Initialization>`.  In some cases, initialization
+      can happen automatically -- for example, when a `ControlProjection` is created for the parameter of a Mechanism
+      that is included in a `System`, a `ControlSignal` is created as the Projection's `sender <Projection.sender>`
+      that is added to the System's `controller System_Base.controller` (see `System_Control`).  However, for cases
+      in which `deferred initialization <Component_Deferred_Init>` is not automatically completed, the Projection will
+      not be operational until its `sender <Projection.sender>` has been specified and its initialization completed.
 
     .. _InputState_Specification_Dictionary:
 
-    * A **State specification dictionary**.  This creates the specified InputState using the first item of the owner's
-      `variable <Mechanism_Base.variable>` as the InputState's `variable <InputState.variable>`.  In addition to the
-      standard entries of a `State specification dictionary <State_Specification>`, the dictionary can have:
-
-      - a *PROJECTIONS* entry -- the value can be a `Projection <Projection>`, a `Projection specification dictionary
-        <Projection_In_Context_Specification>`, or a list containing items that are either of those.  This can be
-        used to specify one or more afferent `PathwayProjections <PathwayProjection>` to the InpuState, and/or
-        `ModulatoryProjections <ModulatoryProjection>` for it to receive.
-      |
-      - a *WEIGHT* entry -- the value must be an integer or float, and is assigned as the value of the InputState's
-        `weight <InputState.weight>` attribute  (see `InputState_Weights_And_Exponents`);  this takes precedence over
-        any specification in the **weight** argument of the InputState's constructor.
-      |
-      - an *EXPONENT* entry -- the value must be an integer or float, and is assigned as the value of the InputState's
-        `exponent <InputState.exponent>` attribute  (see `InputState_Weights_And_Exponents`);  this takes precedence
-        over any specification in the **exponent** argument of the InputState's constructor.
-
-    ..
-    * A **2-item tuple**.  The first item must be a value, and the second a `ModulatoryProjection
-      <ModulatoryProjection>` specification. This creates a default InputState using the first item as the InputState's
-      `variable <InputState.variable>`, and assigns the InputState as a `receiver <ModulatoryProjection.receiver>` of
-      the type of ModulatoryProjection specified in the second item.
-
-    .. note::
-       In all cases, the resulting `value <InputState.value>` of the InputState must be compatible with (that is, have
-       the same number and type of elements as) as the corresponding item of its owner Mechanism's
-       `variable <Mechanism_Base.variable>` attribute (see `below <InputStates_Mechanism_Variable_and_Function>`).
+    **InputState Specification Dictionary or Tuple*
 
 COMMENT:
-   CHECK THIS:
-             reference_value IS THE ITEM OF variable CORRESPONDING TO THE InputState
+*** VERSION THAT ACCOMPANIES IMPLEMENTATION OF MECHANISM/OUTPUT_STATES:
+    * **InputState specification dictionary** -- this can be used to specify one or more InputStates, depending on
+      the entries included.  In the simplest case, it is used to specify a single InputState using any of the entries
+      that can be included in a `State specification dictionary <State_Specification>`, as well as well as the
+      following two entries specific to an InputState:
 COMMENT
+    * **InputState specification dictionary** -- this can be used to specify the attributes of an InputState,
+      using any of the entries that can be included in a `State specification dictionary <State_Specification>`,
+      as well as well as the following two entries specific to an InputState:
+      ..
+      * *WEIGHT*:<number>
+          the value must be an integer or float, and is assigned as the value of the InputState's `weight
+          <InputState.weight>` attribute  (see `InputState_Weights_And_Exponents`);  this takes precedence over any
+          specification in the **weight** argument of the InputState's constructor.
+      ..
+      * *EXPONENT*:<number>
+          the value must be an integer or float, and is assigned as the value of the InputState's `exponent
+          <InputState.exponent>` attribute  (see `InputState_Weights_And_Exponents`);  this takes precedence over any
+          specification in the **exponent** argument of the InputState's constructor.
 
-The values of a Mechanism's InputStates are assigned as items in its `input_values <Mechanism_Base.input_values>`
-attribute, in the order in which they are assigned in the constructor and/or added using the Mechanism's `add_states`
-method, and in which they are listed in the Mechanism's `input_states <Mechanism_Base.input_states>` attribute.  Note
-that a Mechanism's `input_value <Mechanism_Base.input_value>` attribute has the same information as the
-Mechanism's `variable <Mechanism_Base.variable>`, but in a different format:  the former is a list and the latter a
-2d np.array.
+      .. _InputState_Projections_Specification:
 
-
-.. _InputStates_Mechanism_Variable_and_Function:
-
-InputStates and a Mechanism's `variable <Mechanism_Base.variable>` and `function <Mechanism_Base.function>` Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A Mechanism must have one InputState for each item of its `variable <Mechanism_Base.variable>` (see
-`Mechanism <Mechanism_Variable>`).  The value specified in the **variable** or **size** arguments of the
-Mechanism's constructor determines the number of items in its `variable <Mechanism_Base>`, which ordinarily matches
-the size (along axis 0) of the input expected by its `function <Mechanism_Base.function>`.  Therefore,
-if any InputStates are specified in the constructor, the number of them must match the number of items in
-`variable <Mechanism_Base.variable>`.  InputStates can be added to a Mechanism using its `add_states` method;  this
-extends its `variable <Mechanism_Base.variable>` by a number of items equal to the number of InputStates
-added, and each new item is assigned a value compatible with the `value <InputState.value>` of the corresponding
-InputState added.
-
-.. note::
-    Adding InputStates to a Mechanism using its `add_states` method may introduce an incompatibility with the
-    Mechanism's `function <Mechanism_Base.function>`, which takes the Mechanism's `variable <Mechanism_Base.variable>`
-    as its input; such an incompatibility will generate an error.  It is the user's responsibility to ensure that the
-    explicit assignment of InputStates to a Mechanism is coordinated with the assignment of its
-    `function <Mechanism_Base.function>`, so that the total number of InputStates (listed in the Mechanism's
-    `input_states <Mechanism_Base.input_states>` attribute matches the number of items expected for the input to the
-    function specified in the Mechanism's `function <Mechanism_Base.function>` attribute  (i.e., its size along axis 0).
-
+      If a *PROJECTIONS* entry is included, it can include one or more `OutputState` and/or `PathwayProjection`
+      specifications for OutputStates that should project to it, as well one or more `ModulatorySignal` and/or
+      `ModulatoryProjection` specifications for ModulatorySignals that should project to it.
 
 COMMENT:
-However, if any InputStates are specified in its **input_states** argument or the *INPUT_STATES* entry of parameter
-dictionary assigned to its **params** argument, then the number of InputStates specified determines the number of
-items in the owner Mechanism's `variable <Mechanism_Base.variable>`, superseding any specification(s) in the
-**variable** and/or **size** arguments of the constructor.  Each item of the `variable <Mechanism_Base.variable>` is
-assigned a value compatible with the `value <InputState.value>` of the corresponding InputState). Similarly, if any
-InputStates are added to a Mechanism using its `add_states` method, then its `variable <Mechanism_Base.variable>`
-attribute is extended by a number of items equal to the number of InputStates added; and, again, each item is
-assigned a value compatible with the `value <InputState.value>` of the corresponding InputState.
+*** REINSTATE WHEN THESE FUNCTIONALITIES ARE IMPLEMENTED:
 
-with one exception: If the Mechanism's `variable <Mechanism_Base.variable>` has more than one item, it may still be
-assigned a single InputState;  in that case, the `value <InputState.value>` of that InputState must have the same
-number of items as the Mechanisms's `variable <Mechanism_Base.variable>`.
+      Alternatively, an InputState specification dictionary can be used to specify multiple InputStates.  If it includes
+      one or more keys that are strings not recognized as a keyword, then the keys are treated as the names of the
+      InputStates to be created, and the value of each as its specification.
+
+      Finally a dictionary can be used to specify a set of InputStates each of which receives a Projections from
+      an OutputState, all of which belong to the same Mechanism;  this is a convenience format, that allows those
+      OutputStates to be specified by their names.  This is done using the following pair of entries:
+
+        * *MECHANISM*:<`Mechanism <Mechanism>`>
+            this entry is used to specify the Mechanism to which the OutputStates belong. If it is appears in the
+            dictionary, then all of the items specified in the OUTPUT_STATES entry (see below) are assumed to be
+            from this Mechanism.  If the dictionary contains this entry but no *OUTPUT_STATES* entry, then the
+            Mechanism's `primary OutputState <OutputState_Primary>` is used.
+        ..
+        * *OUTPUT_STATES*:<List[<str or any of the other forms of specifications for an OutputState>, ...]>
+            this must be used with a *MECHANISM* entry, to list one or more of its OutputStates by their names;
+            if a string appears in the list that is not the name of an OutputState of the Mechanism in the *MECHANISM*
+            entry, it is treated as a string specification (i.e., for the creation of an InputState with that name,
+            but that is not assigned any Projection).  The list can also contain, in the place of an OutputState's
+            name, an InputState specification subdictionary;  this can be used to specify attributes of the InputState
+            (e.g., its weight and/or exponent), in addition to the OutputState and/or MappingProjection from it to the
+            InputState (specified in the *PROJECTIONS* entry of the subdictionary).
+
+        If an InputState specification dictionary containing a *MECHANISM* and *OUTPUT_STATES* entry also contains
+        other entries (e.g., *WEIGHTS* or *EXPONENTS* entries), their values are applied to all of the InputStates
+        created for the OutputStates specified in the *OUTPUT_STATES* entry, except any that use a specification
+        dictionary of their own containing the same entry.  For example, if a *WEIGHT* entry is included
+        along with the *MECHANISM* and *OUTPUT_STATES* entries, then the specified weight is assigned to the
+        `weight <InputState.weight>` attribute of the InputStates created for each of the OutputStates in the
+        *OUTPUT_STATES* list, except any that are specified in the list using a specification subdictionary that
+        includes its own *WEIGHT* entry;  in that case, the latter is assigned to the `weight <InputState.weight>`
+        attribute created for (only) that OutputState, while the *WEIGHT* entry in the outer dictionary is used for
+        all of the other InputStates.
 COMMENT
 
+    .. _InputState_Tuple_Specification:
+
+    * **Tuple specification** -- this is a convenience format that can be used to compactly specify an InputState
+      along with a Projection to it.  It can take several forms:
+
+        * **2-item tuple** -- the first item can be either a value (specifying the `variable <InputState.variable>` for
+          the InputState, or a Mechanism or OutputState specification indicating an OutputState that should project to
+          it (see above); the second item must be a `Projection specification <Projection_In_Context_Specification>`.
+          This creates an InputState and the specified Projection.  If the Projection is a `MappingProjection`, its
+          `value <Projection.value>` is used to format of the InputState's `variable <InputState.variable>` (see
+          see `note <InputState_Projection_Specification>` below), and therefore must be compatible with the item of
+          the owner Mechanism's `variable <Mechanism_Base.variable>` attribute;   the InputState is assigned as the
+          Projection's `receiver <Projection.receiver>` and, if the first item specifies an  OutputState, that is
+          assigned as the Projection's `sender <Projection.sender>`.  If the specificaton is for 'ModulatoryProjection`,
+          it is created (along with a corresponding `ModulatorySignal`) if necessary, the InputState is assigned as
+          its `receiver <ModulatoryProjection.receiver>`, and the the Projection is assigned to the InputState's
+          `mod_afferents <InputState>` attribute.
+
+        * **ConnectionTuple** -- this is an expanded version of the 2-item tuple that allows the specification of the
+          `weight <InputState.weight>` and/or `exponent <InputState.exponent>` attributes of the InputState, as well as
+          a Projection to it. Each tuple must have at least the three following items (in the order listed), and can
+          include the fourth:
+
+            * **State specification** -- specifies either the `variable <InputState.variable>` of the InputState, or a
+              specification for an OutputState (see above) that should project to it, which must be consistent with
+              the Projection specified in the fourth item if that is included (see below);
+            |
+            * **weight** -- must be an integer or a float; multiplies the `value <InputState.value>` of the InputState
+              before it is combined with others by the Mechanism's `function <Mechanism.function>` (see
+              `ObjectiveMechanism_Weights_and_Exponents` for examples);
+            |
+            * **exponent** -- must be an integer or float; exponentiates the `value <InputState.value>` of the
+              InputState before it is combined with others by the ObjectiveMechanism's `function
+              <ObjectiveMechanism.function>` (see `ObjectiveMechanism_Weights_and_Exponents` for examples);
+            |
+            * **Projection specification** (optional) -- `specifies a Projection <Projection_In_Context_Specification>`
+              in the same manner as the second item of a 2-item tuple (see above);  it's `sender <Projection.sender>`
+              must be compatible with the specification in the first item (i.e., for either the `variable
+              <InputState.variable>` of the InputState, or the `value <OutputState.value>` of the OutputState specified
+              to project to it.
+
+              .. _InputState_Projection_Specification:
+
+              .. note::
+                 If a Projection specification is for a `MappingProjection`, it can use the Projection itself or a
+                 `matrix specification <Mapping_Matrix_Specification>`.  If it is a Projection, then its `value
+                 <Projection.value>` is used to determine the InputState's `variable <InputState.variable>`; if it
+                 is a matrix, then its receiver dimensionality determines the format of the InputState's `variable
+                 <InputState.variable>`. For a standard 2d weight matrix (i.e., one that maps a 1d array from its
+                 `sender <Projection.sender>` to a 1d array of its `receiver <Projection.receiver>`), the receiver
+                 dimensionality is its outer dimension (axis 1, or its number of columns).  However, if the `sender
+                 <Projection.sender>` has more than one dimension, then the dimensionality of the receiver is
+                 the overall dimension of the matrix minus the number of its sender's dimensions.
 
 .. _InputState_Projections:
 
@@ -216,49 +329,73 @@ details concerning the specification of Projections when creating a State.
 Structure
 ---------
 
-Every InputState is owned by a `Mechanism <Mechanism>`. It can receive one or more
-`MappingProjections <MappingProjection>` from other Mechanisms, as well as from the Process or System to which its
-owner belongs (if it is the `ORIGIN` Mechanism for that Process or System).  The MappingProjections received by an
-InputState are listed in its `path_afferents <InputState.path_afferents>` attribute.  An InputState can also receive
-one or more `GatingProjections <GatingProjection>` and that regulate its value (see the descriptions of Modulation
-under `ModulatorySignals <ModulatorySignal_Modulation>` and `GatingSignals <GatingSignal_Modulation>` for additional
-details). The GatingProjections received by an InputState are listed in its `mod_afferents <InputState.mod_afferents>`
-attribute.
+Every InputState is owned by a `Mechanism <Mechanism>`. It can receive one or more `MappingProjections
+<MappingProjection>` from other Mechanisms, as well as from the Process or System to which its owner belongs (if it
+is the `ORIGIN` Mechanism for that Process or System).  The MappingProjections received by an InputState are listed
+in its `path_afferents <InputState.path_afferents>` attribute.  An InputState can also receive one or more
+`GatingProjections <GatingProjection>` and that regulate its value (see the descriptions of Modulation under
+`ModulatorySignals <ModulatorySignal_Modulation>` and `GatingSignals <GatingSignal_Modulation>` for additional details).
+The GatingProjections received by an InputState are listed in its `mod_afferents <InputState.mod_afferents>` attribute.
+
+An InputState has the following attributes:
+
+COMMENT:
+.. _InputState_Afferents:
+Afferent Projections
+~~~~~~~~~~~~~~~~~~~~
+
+*** FLESH OUT:
+`path_afferents <InputState.path_afferents>`
+`mod_afferents <InputState_mod_afferents>`
+COMMENT
+
+.. _InputState_Variable:
+
+Variable
+~~~~~~~~
+
+This serves as the template for the `value <Projection.value>` of the `Projections <Projection>` received by the
+InputState:  each must be compatible with (that is, match both the number and type of elements of) the InputState's
+`variable <InputState.variable>`.  In general, this must also be compatible with the item of the owner
+Mechanism's `variable <Mechanism_Base.variable>` to which the InputState is assigned (see `above
+<InputState_Variable_and_Value>`).
 
 .. _InputState_Weights_And_Exponents:
+
 
 Weights and Exponents
 ~~~~~~~~~~~~~~~~~~~~~
 
-Every InputState has a `weight <InputState.weight>`  and an `exponent <InputState.exponent>` attribute.  These can be
+Every InputState has a `weight <InputState.weight>` and an `exponent <InputState.exponent>` attribute.  These can be
 used by the Mechanism to which it belongs when that combines the `value <InputState.value>`\\s of its States (e.g.,
 an ObjectiveMechanism uses the weights and exponents assigned to its InputStates to determine how the values it monitors
 are combined by its `function <ObjectiveMechanism>`).  The value of each must be an integer or float, and the default
 is 1 for both.
 
-Variable, Function and Value
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _InputState_Function:
 
-Like all PsyNeuLink components, an InputState also has the three following core attributes:
+Function
+~~~~~~~~
 
-* `variable <InputState.variable>`:  this serves as a template for the `value <Projection.value>` of each Projection
-  that the InputState receives: each must match both the number and type of elements of the InputState's
-  `variable <InputState.variable>`.
-..
-* `function <InputState.function>`:  this aggregates the `value <Projection.value>` of all of the `Projections
-  <Projection>` received by the InputState, and assigns the result to the InputState's `value <InputState.value>`
-  attribute.  The default function is `LinearCombination` that performs an elementwise (Hadamard) sums the values.
-  However, the parameters of the `function <InputState.function>` -- and thus the `value <InputState.value>` of the
-  InputState -- can be modified by any `GatingProjections <GatingProjection>` received by the InputState (listed in its
-  `mod_afferents <InputState.mod_afferents>` attribute.  A custom function can also be specified, so long as it
-  generates a result that is compatible with the item of the Mechanism's `variable <Mechanism_Base.variable>` to
-  which the InputState corresponds (see `above <InputStates_Mechanism_Variable_and_Function>`.
-..
-* `value <InputState.value>`:  this is the aggregated value of the `Projections <Projection>` received by the
-  InputState and assigned to it by the InputState's `function <InputState.function>`, possibly modified by the
-  influence of any `GatingProjections <GatingProjection>` received by the InputState. It must be compatible with the
-  item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState has been
-  assigned.
+An InputState's `function <InputState.function>` aggregates the `value <Projection.value>` of all of the
+`Projections <Projection>` received by the InputState, and assigns the result to the InputState's `value
+<InputState.value>` attribute.  The default function is `LinearCombination` that performs an elementwise (Hadamard)
+sums the values. However, the parameters of the `function <InputState.function>` -- and thus the `value
+<InputState.value>` of the InputState -- can be modified by any `GatingProjections <GatingProjection>` received by
+the InputState (listed in its `mod_afferents <InputState.mod_afferents>` attribute.  A custom function can also be
+specified, so long as it generates a result that is compatible with the item of the Mechanism's `variable
+<Mechanism_Base.variable>` to which the `InputState is assigned <Mechanism_InputState>`.
+
+.. _InputState_Value:
+
+Value
+~~~~~
+The `value <InputState.value>` of an InputState is the result returned by its `function <InputState.function>`,
+after aggregating the value of the `PathProjections <PathwayProjection>` it receives, possibly modified by any
+`GatingProjections <GatingProjection>` received by the InputState. It must be compatible with the
+item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the `InputState has been assigned
+<Mechanism_Base.InputState>`.
+
 
 .. _InputState_Execution:
 
@@ -270,10 +407,9 @@ When this occurs, the InputState executes any `Projections <Projection>` it rece
 <InputState.function>` to aggregate the values received from any `MappingProjections <MappingProjection>` it receives
 (listed in its its `path_afferents  <InputState.path_afferents>` attribute) and modulate them in response to any
 `GatingProjections <GatingProjection>` (listed in its `mod_afferents <InputState.mod_afferents>` attribute),
-and then assigns the result to the InputState's `value <InputState.value>` attribute.
-This, in turn, is assigned to the item of the Mechanism's  `variable <Mechanism_Base.variable>` and
-`input_values <Mechanism_Base.input_values>` attributes  corresponding to that InputState (see `Mechanism
-variable and input_values attributes <Mechanism_Variable>` for additional details).
+and then assigns the result to the InputState's `value <InputState.value>` attribute. This, in turn, is assigned to
+the item of the Mechanism's  `variable <Mechanism_Base.variable>` and `input_values <Mechanism_Base.input_values>`
+attributes  corresponding to that InputState (see `Mechanism_Variable_and_InputStates` for additional details).
 
 .. _InputState_Class_Reference:
 
@@ -281,6 +417,7 @@ Class Reference
 ---------------
 
 """
+import numbers
 import warnings
 
 import numpy as np
@@ -288,8 +425,11 @@ import typecheck as tc
 
 from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination
+from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT
+from psyneulink.components.states.outputstate import OutputState
+from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
+    MECHANISM, OUTPUT_STATES, MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
@@ -297,6 +437,7 @@ from psyneulink.globals.utilities import append_type_to_name, iscompatible
 __all__ = [
     'InputState', 'InputStateError', 'state_type_keywords',
 ]
+
 state_type_keywords = state_type_keywords.update({INPUT_STATE})
 
 # InputStatePreferenceSet = ComponentPreferenceSet(log_pref=logPrefTypeDefault,
@@ -312,6 +453,9 @@ state_type_keywords = state_type_keywords.update({INPUT_STATE})
 #     ALL = TIME_STAMP
 #     DEFAULTS = NONE
 
+# STATE_SPEC_INDEX = 0 <- DECLARED IN State
+WEIGHT_INDEX = 1
+EXPONENT_INDEX = 2
 
 class InputStateError(Exception):
     def __init__(self, error_value):
@@ -393,10 +537,10 @@ class InputState(State_Base):
         `mod_afferents <InputState.mod_afferents>` attributes, respectively (see `InputState_Projections` for additional
         details).
 
-    weight : int or float : default 1
+    weight : number : default 1
         specifies the value of the `weight <InputState.weight>` attribute of the InputState.
 
-    exponent : int or float : default 1
+    exponent : number : default 1
         specifies the value of the `exponent <InputState.exponent>` attribute of the InputState.
 
     params : Optional[Dict[param keyword, param value]]
@@ -450,10 +594,10 @@ class InputState(State_Base):
         `mod_afferents <InputState.mod_afferents>` attribute).  The result (whether a value or an ndarray) is
         assigned to an item of the owner Mechanism's `variable <Mechanism_Base.variable>`.
 
-    weight : int or float
+    weight : number
         see `InputState_Weights_And_Exponents` for description.
 
-    exponent : int or float
+    exponent : number
         see `InputState_Weights_And_Exponents` for description.
 
     name : str : default <State subclass>-<index>
@@ -493,8 +637,10 @@ class InputState(State_Base):
     valueEncodingDim = 1
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION})
-
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
+                               MECHANISM: None,     # These are used to specifiy InputStates by projections to them
+                               OUTPUT_STATES: None  # from the OutputStates of a particular Mechanism (see docs)
+                               })
     #endregion
 
     @tc.typecheck
@@ -562,6 +708,16 @@ class InputState(State_Base):
                 raise InputStateError("{} parameter of {} for {} ({}) must be an int or float".
                                       format(EXPONENT, self.name, self.owner.name, target_set[EXPONENT]))
 
+    def _validate_against_reference_value(self, reference_value):
+        """Validate that State.value is compatible with reference_value
+
+        reference_value is the item of the owner Mechanism's variable to which the InputState is assigned
+        """
+        if reference_value is not None and not iscompatible(reference_value, self.value):
+            name = self.name or ""
+            raise InputStateError("Value specified for {} {} of {} ({}) is not compatible "
+                                  "with its expected format ({})".
+                                  format(name, self.componentName, self.owner.name, self.value, reference_value))
 
     def _instantiate_function(self, context=None):
         """Insure that function is LinearCombination and that output is compatible with owner.instance_defaults.variable
@@ -633,6 +789,134 @@ class InputState(State_Base):
             #    it is ignored in execute method (i.e., not combined with base_value)
             return None
 
+    def _get_primary_state(self, mechanism):
+        return mechanism.input_state
+
+    # def _assign_default_name(self):
+    #     """Assign index of '-1' to first default  InputState
+    #     Subsequent ones are indexed sequentially by Registry starting with '-2'
+    #     """
+    #     if self.name == self.componentName:
+    #         self.name = self.name+'-1'
+
+# MODIFIED 9/30/17 NEW:
+    @tc.typecheck
+    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
+        """Get weights, exponents and/or any connections specified in an InputState specification tuple
+
+        Tuple specification can be:
+            (state_spec, connections)
+            (state_spec, weights, exponents, connections)
+
+        Returns params dict with WEIGHT, EXPONENT and/or CONNECTIONS entries if any of these was specified.
+
+        """
+        # FIX: MAKE SURE IT IS OK TO USE DICT PASSED IN (as params) AND NOT INADVERTENTLY OVERWRITING STUFF HERE
+
+        # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputState SPECS
+        #      CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
+        #      THESE CAN BE USED BY THE InputState's LinearCombination Function
+        #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
+        #      THIS WOULD ALLOW AN ADDITONAL HIERARCHICAL LEVEL FOR NESTING ALGEBRAIC COMBINATION OF INPUT VALUES
+        #      TO A MECHANISM
+        from psyneulink.components.projections.projection import Projection, _parse_connection_specs
+
+        params_dict = {}
+
+        if isinstance(state_specific_params, dict):
+            # FIX: 10/3/17 - CHECK HERE THAT, IF MECHANISM ENTRY IS USED, A VARIABLE, WEIGHT AND/OR EXPONENT ENTRY
+            # FIX:                       IS APPLIED TO ALL THE OutputStates SPECIFIED IN OUTPUT_STATES
+            # FIX:                       UNLESS THEY THEMSELVES USE A State specification dict WITH ANY OF THOSE ENTRIES
+            # FIX:           USE ObjectiveMechanism EXAMPLES
+            return state_specific_params
+
+        elif isinstance(state_specific_params, tuple):
+
+            tuple_spec = state_specific_params
+            # Note: 1s item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
+
+            state_spec = tuple_spec[0]
+
+            if len(tuple_spec) == 2:
+                if state_spec != self:
+                    # If state_spec is not the current state (self), treat as part of the projection specification
+                    projections_spec = tuple_spec
+                else:
+                    # Otherwise, just use 2nd item as projection spec
+                    projections_spec = tuple_spec[1]
+            elif len(tuple_spec) == 4:
+                projections_spec = tuple_spec
+
+            if projections_spec is not None:
+
+                try:
+                    params_dict[PROJECTIONS] = _parse_connection_specs(self,
+                                                                       owner=owner,
+                                                                       connections=[projections_spec])
+                    for projection_spec in params_dict[PROJECTIONS]:
+                        # Parse the value of all of the Projections to be comparable to variable of State
+                        if state_dict[REFERENCE_VALUE] is None:
+                            # FIX: 10/3/17 - PUTTING THIS HERE IS A HACK...
+                            # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ConnectionTuple SPEC
+                            # FIX:           USING _get_state_for_socket
+                            from psyneulink.components.projections.projection import _parse_projection_spec
+                            sender_dim = projection_spec.state.value.ndim
+                            projection = projection_spec.projection
+                            if isinstance(projection, dict):
+                                matrix = projection[MATRIX]
+                            elif isinstance(projection, Projection):
+                                if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                                    continue
+                                matrix = projection.matrix
+                            else:
+                                raise InputStateError("Unrecognized Projection specification for {} of {} ({})".
+                                                      format(self.name, owner.name, projection_spec))
+                            # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
+                            proj_val_shape = matrix.shape[sender_dim :]
+                            state_dict[VARIABLE] = np.zeros(proj_val_shape)
+
+                except InputStateError:
+                    raise InputStateError("Tuple specification in {} specification dictionary "
+                                          "for {} ({}) is not a recognized specification for one or more "
+                                          "{}s, {}s, or {}s that project to it".
+                                          format(InputState.__name__,
+                                                 owner.name,
+                                                 projections_spec,
+                                                 Mechanism.__name__,
+                                                 OutputState.__name__,
+                                                 Projection.__name__))
+
+            if len(tuple_spec) == 2:
+                pass
+
+            # Tuple is (spec, weights, exponents<, afferent_source_spec>),
+            #    for specification of weights and exponents,  + connection(s) (afferent projection(s)) to InputState
+            elif len(tuple_spec) in {3, 4}:
+
+                weight = tuple_spec[WEIGHT_INDEX]
+                exponent = tuple_spec[EXPONENT_INDEX]
+
+                if weight is not None and not isinstance(weight, numbers.Number):
+                    raise InputStateError("Specification of the weight ({}) in tuple of {} specification dictionary "
+                                          "for {} must be a number".format(weight, InputState.__name__, owner.name))
+                params_dict[WEIGHT] = weight
+
+                if exponent is not None and not isinstance(exponent, numbers.Number):
+                    raise InputStateError("Specification of the exponent ({}) in tuple of {} specification dictionary "
+                                          "for {} must be a number".format(exponent, InputState.__name__, owner.name))
+                params_dict[EXPONENT] = exponent
+
+            else:
+                raise StateError("Tuple provided as state_spec for {} of {} ({}) must have either 2, 3 or 4 items".
+                                 format(InputState.__name__, owner.name, tuple_spec))
+
+        elif state_specific_params is not None:
+            raise InputStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
+                                  format(self.__class__.__name__, state_specific_params))
+
+        return params_dict
+# MODIFIED 9/30/17 END
+
     @property
     def pathway_projections(self):
         return self.path_afferents
@@ -661,7 +945,7 @@ def _instantiate_input_states(owner, input_states=None, context=None):
         - if there is only one InputState, it is assigned the full value
 
     Note: State._instantiate_state_list()
-              parses self.instance_defaults.variable (2D np.array, passed in constraint_value)
+              parses self.instance_defaults.variable (2D np.array, passed in reference_value)
               into individual 1D arrays, one for each input state
 
     (See State._instantiate_state_list() for additional details)
@@ -678,8 +962,8 @@ def _instantiate_input_states(owner, input_states=None, context=None):
                                          state_list=input_states,
                                          state_type=InputState,
                                          state_param_identifier=INPUT_STATE,
-                                         constraint_value=owner.instance_defaults.variable,
-                                         constraint_value_name=VARIABLE,
+                                         reference_value=owner.instance_defaults.variable,
+                                         reference_value_name=VARIABLE,
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)
@@ -690,6 +974,7 @@ def _instantiate_input_states(owner, input_states=None, context=None):
 
     # Check that number of input_states and their variables are consistent with owner.instance_defaults.variable,
     #    and adjust the latter if not
+    variable_item_is_OK = False
     for i, input_state in enumerate(owner.input_states):
         try:
             variable_item_is_OK = iscompatible(owner.instance_defaults.variable[i], input_state.value)

@@ -1,4 +1,3 @@
-# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 from psyneulink.components.functions.function import Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
@@ -50,7 +49,6 @@ z = Process(name="TEST LEARNER",
                    REPORT_OUTPUT_PREF: True})
 
 
-# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ObjectiveMechanisms.ComparatorMechanism \
 #                                                                                   import COMPARATOR_TARGET
 # Learned_Weights.monitoringMechanism.paramsCurrent[COMPARATOR_TARGET] = [1,1]
 
