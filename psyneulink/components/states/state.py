@@ -1784,8 +1784,8 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     + State class:
         implement default using reference_value
     + State object:
-        check owner is owner (if not, user is given options in _check_state_ownership)
         check compatibility of value with reference_value
+        check owner is owner (if not, user is given options in _check_state_ownership)
     + 2-item tuple:
         assign first item to state_spec
         assign second item to STATE_PARAMS{PROJECTIONS:<projection>}
@@ -1847,31 +1847,28 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                 state.reference_value = owner.instance_defaults.variable[0]
             state._deferred_init()
 
-        # FIX: FINISH THIS UP FOR REMAINIING STANDARD ARGS: REFERENCE_VALUE, PARAMS, PREFS
         if variable:
                 state.instance_defaults.variable = variable
-                # FIX: ??OR IS THIS THE CORRECT VERSION:
-                variable = owner._update_variable(params[VARIABLE])
-                variable = owner.instance_defaults.variable
 
-        # # FIX: 10/3/17 - PER THE FOLLOWING (FROM _parse_state_spec DOCSTRING):
-        # # FIX: DO THIS _parse_connection_specs??  IS THIS EVEN CORRECT?
-        # # *value* arg should generally be a constraint for the value of the State;  however,
+        # # FIX: 10/3/17 - CHECK THE FOLLOWING BY CALLING STATE-SPECIFIC METHOD?
+        # # FIX: DO THIS IN _parse_connection_specs?
+        # # *reference_value* arg should generally be a constraint for the value of the State;  however,
         # #     if state_spec is a Projection, and method is being called from:
-        # #         InputState, value should be the projection's value;
-        # #         ParameterState, value should be the projection's value;
-        # #         OutputState, value should be the projection's variable
-        # FIX: FOR VARIABLE, NEED TO KNOW state_type AND RELATIONSHIP TO ONWER'S VAR/VALUE:
-        # variable:
-        #    InputState: set of projections it receives
-        #    ParameterState: value of its sender
-        #    OutputState: value[INDEX] of its owner
-        # FIX: ----------------------------------------------------------
+        # #         InputState, reference_value should be the projection's value;
+        # #         ParameterState, reference_value should be the projection's value;
+        # #         OutputState, reference_value should be the projection's variable
+        # # variable:
+        # #   InputState: set of projections it receives
+        # #   ParameterState: value of its sender
+        # #   OutputState: value[INDEX] of its owner
+        # # FIX: ----------------------------------------------------------
 
-        # State's value is incompatible with Mechanism's variable
-        if not iscompatible(state.value, state.reference_value):
+        # FIX: THIS SHOULD ONLY APPLY TO InputState AND ParameterState; WHAT ABOUT OutputState?
+        # State's assigned value is incompatible with its reference_value (presumably its owner Mechanism's variable)
+        if not iscompatible(state.value, reference_value):
             raise StateError("{}'s value attribute ({}) is incompatible with the variable ({}) of its owner ({})".
                              format(state.name, state.value, state.reference_value, owner.name))
+
         # State has already been assigned to an owner
         if state.owner is not None and not state.owner is owner:
             raise StateError("State {} does not belong to the owner for which it is specified ({})".
@@ -1885,12 +1882,10 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     state_spec_dict.pop(VALUE, None)
 
-    # MODIFIED 10/3/17 OLD:
     #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
     if state_spec_dict[REFERENCE_VALUE] is None:
         state_spec_dict[REFERENCE_VALUE] = state_spec_dict[VARIABLE]
     state_spec_dict[REFERENCE_VALUE] = convert_to_np_array(state_spec_dict[REFERENCE_VALUE],1)
-    # MODIFIED 10/3/17 END
 
     # INSTANTIATE STATE:
 
@@ -1984,21 +1979,13 @@ def _parse_state_type(owner, state_spec):
     raise StateError("{} is not a legal State specification for {}".format(state_spec, owner.name))
 
 
-# FIX 5/23/17:  UPDATE TO ACCOMODATE (param, ControlSignal) TUPLE
-# FIX 9/28/17:  UPDATE TO ACCOMODATE (mech, weight, exponent<, matrix>) TUPLE FOR InputState
-# FIX 9/28/17:  UPDATE TO ACCOMODATE {MECHANISM:<>, OUTPUT_STATES:<>} for InputState
-# FIX 9/28/17:  UPDATE TO IMPLEMENT state specification dictionary as a Class
-# FIX 9/30/17:  ADD ARG THAT SPECIFIES WHETHER METHOD MUST RETURN AN INSTNATIATED STATE OR A STATE_SPEC_DICT
-# FIX: MAKE SURE IT IS OK TO USE DICT PASSED IN (as params) AND NOT INADVERTENTLY OVERWRITING STUFF HERE
-# FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputState SPECS
-#      CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
-#      THESE CAN BE USED BY THE InputState's LinearCombination Function
-#          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
-#      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
-#      TO A MECHANISM
 
 STATE_SPEC_INDEX = 0
 
+# FIX: CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
+#          THESE CAN BE USED BY THE InputState's LinearCombination Function
+#          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
+#          THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES TO A MECHANISM
 @tc.typecheck
 def _parse_state_spec(state_type=None,
                       owner=None,
@@ -2131,8 +2118,6 @@ def _parse_state_spec(state_type=None,
 
         else:
             # State is not the same as connectee's type, so assume it is for one to connect with
-            # FIX: 10/3/17 - ??VALIDATE AGAINST OTHER OTHER SPECS (VARIABLE AND VALUE?) IN _instantiate_state
-            # FIX:           OR WILL THAT BE HANDLED BELOW OR IN _parse_connection_spec??
             state_dict[PROJECTIONS] = ConnectionTuple(state=state_specification,
                                                       weight=None,
                                                       exponent=None,
