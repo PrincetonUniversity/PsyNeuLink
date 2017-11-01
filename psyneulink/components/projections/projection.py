@@ -669,59 +669,21 @@ class Projection_Base(Projection):
         # FIX: 10/3/17 SHOULD ADD CHECK THAT RECEIVER/SENDER SOCKET SPECIFICATIONS ARE CONSISTENT WITH
         # FIX:         PROJECTION_TYPE SPECIFIED BY THE CORRESPONDING STATE TYPES
 
-        if PROJECTION_SENDER in target_set:
-            sender_param = target_set[PROJECTION_SENDER]
-            sender_arg = self.sender
-            # PROJECTION_SENDER is either an instance or class of Mechanism or State:
-            if (isinstance(sender_param, (Mechanism, State)) or
-                    (inspect.isclass(sender_param) and issubclass(sender_param, (Mechanism, State)))):
-                # PROJECTION_SENDER is NOT the same as the default, use it
-                if sender_param is not self.paramClassDefaults[PROJECTION_SENDER]:
-                    self.sender = sender_param
-                # PROJECTION_SENDER IS same as default, but sender_arg was not provided, so use sender_param (=default)
-                elif sender_arg is None:
-                    self.sender = sender_param
-                # sender_arg is specified, and PROJECTION_SENDER is same as default, so check if sender_arg is valid
-                elif not (isinstance(sender_arg, (Mechanism, State, Process_Base)) or
-                              (inspect.isclass(sender_arg) and issubclass(sender_arg, (Mechanism, State)))):
-                    # sender_arg is not valid, so use PROJECTION_SENDER (=default)
-                    self.sender = sender_param
-                    if self.prefs.verbosePref:
-                        warnings.warn("{0} was not provided for {1} projection to {2}, "
-                                      "and sender arg ({3}) is not valid; default ({4}) will be used".
-                                      format(PROJECTION_SENDER,
-                                             self.name,
-                                             self.receiver.owner.name,
-                                             self.sender,
-                                             sender_param.__class__.__name__))
-                # sender_arg was provided and is valid and PROJECTION_SENDER is same as default, so use sender_arg
-                else:
-                    pass
-
-            # PROJECTION_SENDER is not valid, and:
-            else:
-                # sender_arg was not provided, use paramClassDefault
-                if self.sender is None:
-                    raise ProjectionError("{0} ({1}) is invalid and {} arg was not provided for {}".
-                                          format(PROJECTION_SENDER, sender_param, SENDER, self.name))
-                # sender arg is also invalid, so use paramClassDefault
-                elif not (isinstance(self.sender, (Mechanism, State, Process_Base)) or
-                              (inspect.isclass(self.sender) and issubclass(self.sender, (Mechanism, State)))):
-                    raise ProjectionError("Both {0} ({1}) and {} arg ({2}) are invalid for {}".
-                                          format(PROJECTION_SENDER, sender_param, SENDER, self.sender, self.name))
-                # sender_arg is valid, so use it
-                else:
-                    pass
-            if (self.sender is self.paramClassDefaults[PROJECTION_SENDER] and
-                    not (isinstance(self.sender, (Mechanism, State, Process_Base)) or
-                              (inspect.isclass(self.sender) and issubclass(self.sender, (Mechanism, State))))):
-                raise ProjectionError("Program error: {0} ({1}) and sender arg ({2}) for {3} are both "
-                                      "absent or invalid and default (paramClassDefault[{4}]) is also invalid".
-                                      format(PROJECTION_SENDER,
-                                              sender_param,
-                                             self.sender,
-                                             self.name,
-                                             self.paramClassDefaults[PROJECTION_SENDER]))
+        if (PROJECTION_SENDER in target_set and
+                not (target_set[PROJECTION_SENDER] in {None, self.paramClassDefaults[PROJECTION_SENDER]})):
+            # If PROJECTION_SENDER is specified it will be the sender
+            sender = target_set[PROJECTION_SENDER]
+            sender_string = PROJECTION_SENDER
+        else:
+            # PROJECTION_SENDER is not specified or None, so sender argument of constructor will be the sender
+            sender = self.sender
+            sender_string = "\'{}\' argument".format(SENDER)
+        if not ((isinstance(sender, (Mechanism, State)) or
+                (inspect.isclass(sender) and issubclass(sender, (Mechanism, State))))):
+            raise ProjectionError("Specification of {} for {} ({}) is invalid; "
+                                  "it must be a {}, {} or a class of one of these.".
+                                  format(sender_string, self.name, sender,
+                                         Mechanism.__name__, State.__name__))
 
     def _instantiate_attributes_before_function(self, context=None):
         self._instantiate_sender(context=context)
@@ -731,7 +693,6 @@ class Projection_Base(Projection):
 
         from psyneulink.components.states.parameterstate import _instantiate_parameter_states
         _instantiate_parameter_states(owner=self, context=context)
-
 
     def _instantiate_sender(self, context=None):
         """Assign self.sender to OutputState of sender and insure compatibility with self.instance_defaults.variable
@@ -744,9 +705,25 @@ class Projection_Base(Projection):
         Assign projection to sender's efferents attribute
         If self.value / self.instance_defaults.variable is None, set to sender.value
         """
-
         from psyneulink.components.states.outputstate import OutputState
         from psyneulink.components.states.parameterstate import ParameterState
+
+
+        # ASSIGN sender specification
+
+        # If PROJECTION_SENDER is not None or paramClassDefault, it was specified and was validated in _validate_params,
+        #    so assign it as sender
+        if not self.params[PROJECTION_SENDER] in {None, self.paramClassDefaults[PROJECTION_SENDER]}:
+            self.sender = self.params[PROJECTION_SENDER]
+        # PROJECTION_SENDER was not specified, so use paramClassDefaults
+        elif self.sender is None:
+            self.sender = self.paramClassDefaults[PROJECTION_SENDER]
+        # Final validation (against a PROGRAM ERROR)
+        elif not (isinstance(self.sender, (Mechanism, State, Process_Base)) or
+                           (inspect.isclass(self.sender) and issubclass(self.sender, (Mechanism, State)))):
+            raise ProjectionError("PROGRAM ERROR: Invalid specification for {} ({1}) of {} "
+                                  "(including paramClassDefaults: {}".
+                                  format(SENDER, self.sender, self.name, self.paramClassDefaults[PROJECTION_SENDER]))
 
         # If sender is specified as a Mechanism (rather than a State),
         #     get relevant OutputState and assign it to self.sender
