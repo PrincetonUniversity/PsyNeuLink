@@ -613,22 +613,11 @@ class Projection_Base(Projection):
             # of deferred init
             pass
 
-# FIX: 6/23/16 NEEDS ATTENTION *******************************************************A
-#      NOTE: SENDER IS NOT YET KNOWN FOR DEFAULT control_signal
-#      WHY IS self.sender IMPLEMENTED WHEN sender IS NOT??
-
         self.sender = sender
         self.receiver = receiver
 
-
-# MODIFIED 6/12/16:  VARIABLE & SENDER ASSIGNMENT MESS:
-        # ADD _validate_variable, THAT CHECKS FOR SENDER?
-        # WHERE DOES DEFAULT SENDER GET INSTANTIATED??
-        # VARIABLE ASSIGNMENT SHOULD OCCUR AFTER THAT
-
-# MODIFIED 6/12/16:  ADDED ASSIGNMENT HERE -- BUT SHOULD GET RID OF IT??
-        # AS ASSIGNMENT SHOULD BE DONE IN _validate_variable, OR WHEREVER SENDER IS DETERMINED??
-# FIX:  NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR STATE
+        # FIX: ADD _validate_variable, THAT CHECKS FOR SENDER?
+        # FIX: NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR STATE
         try:
             variable = self._update_variable(sender.value)
         except:
@@ -640,24 +629,15 @@ class Projection_Base(Projection):
             except AttributeError:
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 
-        # MODIFIED 6/27/17 NEW: commented this out because this is throwing an error as follows: -Changyan
-        # AttributeError: 'MappingProjection' object has no attribute '_prefs'
-        # MODIFIED 4/21/17 NEW: [MOVED FROM MappingProjection._instantiate_receiver]
-        # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) InputState
+         # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) InputState
         if isinstance(self.receiver, Mechanism):
-            # if (len(self.receiver.input_states) > 1 and
-            #         (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
-            #     print("{0} has more than one InputState; {1} was assigned to the first one".
-            #           format(self.receiver.owner.name, self.name))
+            if (len(self.receiver.input_states) > 1 and
+                    (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
+                print("{0} has more than one InputState; {1} has been assigned to the first one".
+                      format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.input_state
-        # MODIFIED 4/21/17 END
 
-
-# FIX: SHOULDN'T default_variable HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlProjection??
-# FIX:  ?LEAVE IT TO _validate_variable, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
-# MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
-#                   (TO HANDLE INSTANTIATION OF DEFAULT ControlProjection SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
-        # Validate variable, function and params, and assign params to paramInstanceDefaults
+       # Validate variable, function and params, and assign params to paramInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         super(Projection_Base, self).__init__(default_variable=variable,
                                               param_defaults=params,
@@ -686,15 +666,11 @@ class Projection_Base(Projection):
 
         super(Projection, self)._validate_params(request_set, target_set, context)
 
-        # try:
-        #     sender_param = target_set[PROJECTION_SENDER]
-        # except KeyError:
-        #     # This should never happen, since PROJECTION_SENDER is a required param
-        #     raise ProjectionError("Program error: required param \'{0}\' missing in {1}".
-        #                           format(PROJECTION_SENDER, self.name))
-
         # FIX: 10/3/17 SHOULD ADD CHECK THAT RECEIVER/SENDER SOCKET SPECIFICATIONS ARE CONSISTENT WITH
-        # FIX:         PROJECTION_TYPE TYPE SPECIFIED BY THE CORRESPONDING STATE TYPES
+        # FIX:         PROJECTION_TYPE SPECIFIED BY THE CORRESPONDING STATE TYPES
+        # FIX:         CALL _parse_projection_spec TO VALIDATE?
+
+        # FIX: 10/31/17: THE FOLLOWING SHOULD BE MOVED TO _instantiate_sender
 
         if PROJECTION_SENDER in target_set:
             sender_param = target_set[PROJECTION_SENDER]
@@ -715,12 +691,7 @@ class Projection_Base(Projection):
                                                                           sender_param.__class__.__name__))
                 # it IS the same as the default, so check if sender arg (self.sender) is valid
                 elif not (isinstance(self.sender, (Mechanism, State, Process_Base)) or
-                              # # MODIFIED 12/1/16 OLD:
-                              # (inspect.isclass(self.sender) and
-                              #      (issubclass(self.sender, Mechanism) or issubclass(self.sender, State)))):
-                              # MODIFIED 12/1/16 NEW:
                               (inspect.isclass(self.sender) and issubclass(self.sender, (Mechanism, State)))):
-                              # MODIFIED 12/1/16 END
                     # sender arg (self.sender) is not valid, so use PROJECTION_SENDER (= default)
                     self.sender = sender_param
                     if self.prefs.verbosePref:
@@ -736,6 +707,7 @@ class Projection_Base(Projection):
                 # IS the same as the default, and sender arg was provided, so use sender arg
                 else:
                     pass
+
             # PROJECTION_SENDER is not valid, and:
             else:
                 # sender arg was not provided, use paramClassDefault
@@ -762,10 +734,7 @@ class Projection_Base(Projection):
                     raise ProjectionError("Program error: {0} ({1}) and sender arg ({2}) for {3} are both "
                                           "absent or invalid and default (paramClassDefault[{4}]) is also invalid".
                                           format(PROJECTION_SENDER,
-                                                 # sender_param.__name__,
-                                                 # self.sender.__name__,
-                                                 # self.paramClassDefaults[PROJECTION_SENDER].__name__))
-                                                 sender_param,
+                                                  sender_param,
                                                  self.sender,
                                                  self.name,
                                                  self.paramClassDefaults[PROJECTION_SENDER]))
