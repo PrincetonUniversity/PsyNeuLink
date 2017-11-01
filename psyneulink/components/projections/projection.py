@@ -583,7 +583,6 @@ class Projection_Base(Projection):
                           registry=ProjectionRegistry,
                           context=context)
 
-        # # MODIFIED 9/11/16 NEW:
         # Create projection's _stateRegistry and ParameterState entry
         self._stateRegistry = {}
 
@@ -653,7 +652,8 @@ class Projection_Base(Projection):
         - if it is different from paramClassDefaults[PROJECTION_SENDER], use it
         - if it is the same or is invalid, check if sender arg was provided to __init__ and is valid
         - if sender arg is valid use it (if PROJECTION_SENDER can't be used);
-        - otherwise use paramClassDefaults[PROJECTION_SENDER]
+        - if both were not provided, use paramClassDefaults[PROJECTION_SENDER]
+        - otherwise, if one was not provided and the other is invalid, generate error
         - when done, sender is assigned to self.sender
 
         Note: check here only for sender's type, NOT content (e.g., length, etc.); that is done in _instantiate_sender
@@ -668,31 +668,23 @@ class Projection_Base(Projection):
 
         # FIX: 10/3/17 SHOULD ADD CHECK THAT RECEIVER/SENDER SOCKET SPECIFICATIONS ARE CONSISTENT WITH
         # FIX:         PROJECTION_TYPE SPECIFIED BY THE CORRESPONDING STATE TYPES
-        # FIX:         CALL _parse_projection_spec TO VALIDATE?
-
-        # FIX: 10/31/17: THE FOLLOWING SHOULD BE MOVED TO _instantiate_sender
 
         if PROJECTION_SENDER in target_set:
             sender_param = target_set[PROJECTION_SENDER]
+            sender_arg = self.sender
             # PROJECTION_SENDER is either an instance or class of Mechanism or State:
             if (isinstance(sender_param, (Mechanism, State)) or
                     (inspect.isclass(sender_param) and issubclass(sender_param, (Mechanism, State)))):
-                # it is NOT the same as the default, use it
+                # PROJECTION_SENDER is NOT the same as the default, use it
                 if sender_param is not self.paramClassDefaults[PROJECTION_SENDER]:
                     self.sender = sender_param
-                # it IS the same as the default, but sender arg was not provided, so use it (= default):
-                elif self.sender is None:
+                # PROJECTION_SENDER IS same as default, but sender_arg was not provided, so use sender_param (=default)
+                elif sender_arg is None:
                     self.sender = sender_param
-                    if self.prefs.verbosePref:
-                        warnings.warn("Neither {0} nor sender arg was provided for {1} projection to {2}; "
-                                      "default ({3}) will be used".format(PROJECTION_SENDER,
-                                                                          self.name,
-                                                                          self.receiver.owner.name,
-                                                                          sender_param.__class__.__name__))
-                # it IS the same as the default, so check if sender arg (self.sender) is valid
-                elif not (isinstance(self.sender, (Mechanism, State, Process_Base)) or
-                              (inspect.isclass(self.sender) and issubclass(self.sender, (Mechanism, State)))):
-                    # sender arg (self.sender) is not valid, so use PROJECTION_SENDER (= default)
+                # sender_arg is specified, and PROJECTION_SENDER is same as default, so check if sender_arg is valid
+                elif not (isinstance(sender_arg, (Mechanism, State, Process_Base)) or
+                              (inspect.isclass(sender_arg) and issubclass(sender_arg, (Mechanism, State)))):
+                    # sender_arg is not valid, so use PROJECTION_SENDER (=default)
                     self.sender = sender_param
                     if self.prefs.verbosePref:
                         warnings.warn("{0} was not provided for {1} projection to {2}, "
@@ -702,42 +694,34 @@ class Projection_Base(Projection):
                                              self.receiver.owner.name,
                                              self.sender,
                                              sender_param.__class__.__name__))
-
-        # FIX: IF PROJECTION, PUT HACK HERE TO ACCEPT AND FORGO ANY FURTHER PROCESSING??
-                # IS the same as the default, and sender arg was provided, so use sender arg
+                # sender_arg was provided and is valid and PROJECTION_SENDER is same as default, so use sender_arg
                 else:
                     pass
 
             # PROJECTION_SENDER is not valid, and:
             else:
-                # sender arg was not provided, use paramClassDefault
+                # sender_arg was not provided, use paramClassDefault
                 if self.sender is None:
-                    self.sender = self.paramClassDefaults[PROJECTION_SENDER]
-                    if self.prefs.verbosePref:
-                        warnings.warn("{0} ({1}) is invalid and sender arg ({2}) was not provided;"
-                                      " default {3} will be used".
-                                      format(PROJECTION_SENDER, sender_param, self.sender,
-                                             self.paramClassDefaults[PROJECTION_SENDER]))
+                    raise ProjectionError("{0} ({1}) is invalid and {} arg was not provided for {}".
+                                          format(PROJECTION_SENDER, sender_param, SENDER, self.name))
                 # sender arg is also invalid, so use paramClassDefault
-                elif not isinstance(self.sender, (Mechanism, State)):
-                    self.sender = self.paramClassDefaults[PROJECTION_SENDER]
-                    if self.prefs.verbosePref:
-                        warnings.warn("Both {0} ({1}) and sender arg ({2}) are both invalid; default {3} will be used".
-                                      format(PROJECTION_SENDER, sender_param, self.sender,
-                                             self.paramClassDefaults[PROJECTION_SENDER]))
+                elif not (isinstance(self.sender, (Mechanism, State, Process_Base)) or
+                              (inspect.isclass(self.sender) and issubclass(self.sender, (Mechanism, State)))):
+                    raise ProjectionError("Both {0} ({1}) and {} arg ({2}) are invalid for {}".
+                                          format(PROJECTION_SENDER, sender_param, SENDER, self.sender, self.name))
+                # sender_arg is valid, so use it
                 else:
-                    self.sender = self.paramClassDefaults[PROJECTION_SENDER]
-                    if self.prefs.verbosePref:
-                        warnings.warn("{0} ({1}) is invalid; sender arg ({2}) will be used".
-                                      format(PROJECTION_SENDER, sender_param, self.sender))
-                if not isinstance(self.paramClassDefaults[PROJECTION_SENDER], (Mechanism, State)):
-                    raise ProjectionError("Program error: {0} ({1}) and sender arg ({2}) for {3} are both "
-                                          "absent or invalid and default (paramClassDefault[{4}]) is also invalid".
-                                          format(PROJECTION_SENDER,
-                                                  sender_param,
-                                                 self.sender,
-                                                 self.name,
-                                                 self.paramClassDefaults[PROJECTION_SENDER]))
+                    pass
+            if (self.sender is self.paramClassDefaults[PROJECTION_SENDER] and
+                    not (isinstance(self.sender, (Mechanism, State, Process_Base)) or
+                              (inspect.isclass(self.sender) and issubclass(self.sender, (Mechanism, State))))):
+                raise ProjectionError("Program error: {0} ({1}) and sender arg ({2}) for {3} are both "
+                                      "absent or invalid and default (paramClassDefault[{4}]) is also invalid".
+                                      format(PROJECTION_SENDER,
+                                              sender_param,
+                                             self.sender,
+                                             self.name,
+                                             self.paramClassDefaults[PROJECTION_SENDER]))
 
     def _instantiate_attributes_before_function(self, context=None):
         self._instantiate_sender(context=context)
