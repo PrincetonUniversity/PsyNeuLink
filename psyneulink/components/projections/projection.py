@@ -976,7 +976,8 @@ def _parse_projection_spec(projection_spec,
         # FIX: NOT SURE WHICH TO GIVE PRECEDENCE: SPEC IN ConnectionTuple OR INSTANTIATED Projection:
         if ((proj_spec_dict[WEIGHT] is not None and projection.weight is not None) or
             (proj_spec_dict[EXPONENT] is not None and projection.exponent is not None)):
-            assert False, "Conflict in weight and/or exponent specs between Projection and ConnectionTuple"
+            raise ProjectionError("PROGRAM ERROR: Conflict in weight and/or exponent specs "
+                                  "between Projection and ConnectionTuple")
         projection._weight = proj_spec_dict[WEIGHT] or projection.weight
         projection._exponent = proj_spec_dict[EXPONENT] or projection.exponent
         if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
@@ -1005,10 +1006,7 @@ def _parse_projection_spec(projection_spec,
 
     # State class
     elif inspect.isclass(projection_spec) and issubclass(projection_spec, State):
-        # Create default instance of state and assign as ??sender or ??receiver
-        #    (it may use deferred_init since owner may not yet be known)
-        # FIX: 10/3/17 - INSTANTIATING A STATE DOESN"T CURRENTLY WORK:
-        # proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]()
+        # Assign default Projection type for State's class
         proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
 
     # Dict
@@ -1251,9 +1249,7 @@ def _parse_connection_specs(connectee_state_type,
         Modulators = []
         MOD_KEYWORD = None
     elif isinstance(owner, GatingMechanism) and issubclass(connectee_state_type, GatingSignal):
-        # FIX:
         ConnectsWith = [InputState, OutputState]
-        # FIX:
         connect_with_attr = [INPUT_STATES, OUTPUT_STATES]
         # CONNECTIONS_KEYWORD = GATED_STATES
         PROJECTION_SOCKET = RECEIVER
@@ -1282,7 +1278,6 @@ def _parse_connection_specs(connectee_state_type,
 
         # FIX: 10/3/17 - IF IT IS ALREADY A PROJECTION OF THE CORRECT TYPE FOR THE CONNECTEE:
         # FIX:               ?? RETURN AS IS, AND/OR PARSE INTO DICT??
-
         # If a Mechanism, State, or State type is used to specify the connection on its own (i.e., w/o dict or tuple)
         #     put in ConnectionTuple as both State spec and Projection spec (to get Projection for that State)
         #     along with defaults for weight and exponent, and call _parse_connection_specs recursively
