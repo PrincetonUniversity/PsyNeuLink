@@ -583,7 +583,6 @@ class Projection_Base(Projection):
                           registry=ProjectionRegistry,
                           context=context)
 
-        # # MODIFIED 9/11/16 NEW:
         # Create projection's _stateRegistry and ParameterState entry
         self._stateRegistry = {}
 
@@ -669,7 +668,6 @@ class Projection_Base(Projection):
 
         # FIX: 10/3/17 SHOULD ADD CHECK THAT RECEIVER/SENDER SOCKET SPECIFICATIONS ARE CONSISTENT WITH
         # FIX:         PROJECTION_TYPE SPECIFIED BY THE CORRESPONDING STATE TYPES
-        # FIX:         CALL _parse_projection_spec TO VALIDATE?
 
         if PROJECTION_SENDER in target_set:
             sender_param = target_set[PROJECTION_SENDER]
