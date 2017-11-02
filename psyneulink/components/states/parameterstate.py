@@ -105,7 +105,7 @@ The specification of the initial value of a parameter can take any of the follow
 
     * **Modulatory specification** -- this can be an existing `ControlSignal` or `ControlProjection`,
       a `LearningSignal` or `LearningProjection`, a constructor or the class name for any of these, or the
-      keywords *CONTROL*, *CONTROL_PROJECTION*, *LEARNING*, or *LEARNING_PROJECTION.  Any of these create a default
+      keywords *CONTROL*, *CONTROL_PROJECTION*, *LEARNING*, or *LEARNING_PROJECTION*.  Any of these create a default
       ParameterState, assign the parameter's default value as the ParameterState's `value <ParameterState.value>`,
       and assign the parameter's name as the name of the ParameterState.  They also create and/or assign the
       corresponding ModulatorySignal and ModulatoryProjection, and assign the ParameterState as the
@@ -183,7 +183,7 @@ In the following example, a `MappingProjection` is created, and its
 The example below shows how to specify the parameters in the first example using a parameter specification dictionary::
 
     my_mechanism = RecurrentTransferMechanism(
-                              size=5
+                              size=5,
                               params={NOISE:5,
                                       'size':ControlSignal,
                                       FUNCTION:Logistic,

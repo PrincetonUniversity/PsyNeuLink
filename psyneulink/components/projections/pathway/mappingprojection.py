@@ -46,7 +46,7 @@ MappingProjections are also generated automatically in the following circumstanc
   * by a `LearningMechanism`, between it and the other components required to implement learning
     (see `LearningMechanism_Learning_Configurations` for details);
   ..
-  * by a `ControlMechanism <ControlMechanism>`, from the *OUTCOME* `OutputState of the `ObjectiveMechanism` that `it
+  * by a `ControlMechanism <ControlMechanism>`, from the *OUTCOME* `OutputState` of the `ObjectiveMechanism` that `it
     creates <ControlMechanism_ObjectiveMechanism>` to its *ERROR_SIGNAL* `InputState`, and from the `OutputStates
     <OutputState>` listed in the ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
     attribute to the ObjectiveMechanism's `primary InputState <InputState_Primary>` (as described above; an
@@ -145,7 +145,7 @@ allows a MappingProjection to be created before its `sender <MappingProjection.s
 specifying its **sender** or **receiver** arguments. However, for the MappingProjection to be operational,
 initialization must be completed by calling its `deferred_init` method.  This is not necessary if the MappingProjection
 is specified in the `pathway <Process.pathway>` of `Process`, or anywhere else that its `sender
-<MappingProjection.sender>` and receiver <MappingProjection.receiver>` can be determined by context.
+<MappingProjection.sender>` and `receiver <MappingProjection.receiver>` can be determined by context.
 
 .. _Mapping_Structure:
 

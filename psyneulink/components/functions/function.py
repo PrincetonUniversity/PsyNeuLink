@@ -2596,11 +2596,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
     variable : number or np.array
         contains value to be transformed.
 
-    gain : float
+    gain : float : default 1.0
         value by which each element of `variable <Logistic.variable>` is multiplied before applying the
         `bias <Linear.bias>` (if it is specified).
 
-    bias : float
+    bias : float : default 0.0
         value added to each element of `variable <Logistic.variable>` after applying the `gain <Logistic.gain>`
         (if it is specified).
 

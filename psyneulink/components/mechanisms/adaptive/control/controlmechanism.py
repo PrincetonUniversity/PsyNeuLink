@@ -252,7 +252,7 @@ that specifies the OutputStates to be monitored by its `objective_mechanism <Con
 
 This creates an ObjectiveMechanism for the ControlMechanism that monitors the `primary OutputState
 <OutputState_Primary>` of ``my_Transfer_mech_A`` and the *RESPONSE_TIME* OutputState of ``my_DDM``;  its function
-first multiplies the former by 2 before, then takes product of ther values and passes the result as the input to the
+first multiplies the former by 2 before, then takes product of their values and passes the result as the input to the
 ControlMechanism.  The ControlMechanism's `function <ControlMechanism.function>` uses this value to determine
 the allocation for its ControlSignals, that control the value of the `threshold <DDM.threshold>` parameter of
 ``my_DDM`` and the  `gain <Logistic.gain>` parameter of the `Logistic` Function for ``my_transfer_mech_B``.
@@ -547,8 +547,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         from psyneulink.components.states.state import _parse_state_spec
 
         super(ControlMechanism, self)._validate_params(request_set=request_set,
-                                                                 target_set=target_set,
-                                                                 context=context)
+                                                       target_set=target_set,
+                                                       context=context)
         if SYSTEM in target_set:
             if not isinstance(target_set[SYSTEM], System_Base):
                 raise KeyError

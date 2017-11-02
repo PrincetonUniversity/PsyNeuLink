@@ -201,9 +201,9 @@ The parameters for a Mechanism's primary function can also be specified as entri
 constructor.  For example, the parameters of the `Logistic` function in the example above can
 also be assigned as follows::
 
-    my_mechanism = TransferMechanism(function=Logistic
+    my_mechanism = TransferMechanism(function=Logistic,
                                      params={FUNCTION_PARAMS: {GAIN:1.0,
-                                                               BIAS=-4.0})
+                                                               BIAS:-4.0})
 
 Again, while not as simple as specifying these as arguments in the function's construtor, this format is more flexible.
 Any values specified in the parameter dictionary will **override** any specified within the constructor for the function
@@ -930,7 +930,7 @@ class Mechanism_Base(Mechanism):
 
     COMMENT:
         phaseSpec : int or float :  default 0
-            determines the `TIME_STEP`\ (s) at which the Mechanism is executed as part of a System
+            determines the `TIME_STEP` (s) at which the Mechanism is executed as part of a System
             (see :ref:`Process_Mechanisms` for specification, and :ref:`System Phase <System_Execution_Phase>`
             for how phases are used).
     COMMENT

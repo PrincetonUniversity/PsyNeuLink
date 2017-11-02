@@ -158,7 +158,7 @@ These can be used in the list of OutputStates specified for a TransferMechanism 
                                 function=Logistic(),
                                 output_states=[TRANSFER_OUTPUT.RESULT,
                                                TRANSFER_OUTPUT.MEAN,
-                                               TRANSFER_OUTPUT.VARIANCE)
+                                               TRANSFER_OUTPUT.VARIANCE])
 
 In this example, ``my_mech`` is configured with three OutputStates;  the first will be named *RESULT* and will
 represent logistic transform of the 2-element input vector;  the second will be named  *MEAN* and will represent mean
@@ -183,11 +183,14 @@ by including *INDEX* and *CALCULATE* entries in a  `specification dictionary <Ou
 OutputState, as in the following example::
 
     my_mech = DDM(function=BogaczEtAl(),
-                  output_states=[ DDM.DECISION_VARIABLE,
-                                  DDM.PROB_UPPER_THRESHOLD,
+                  output_states=[ DDM_OUTPUT.DECISION_VARIABLE,
+                                  DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
                                   {NAME: 'DECISION ENTROPY',
-                                   INDEX: 2},
+                                   INDEX: 2,
                                    CALCULATE: Entropy().function }])
+COMMENT:
+    what is this Entropy() class???
+COMMENT
 
 COMMENT:
    ADD VERSION IN WHICH INDEX IS SPECIFICED USING DDM_standard_output_states
@@ -221,9 +224,9 @@ or::
 
     my_mech = DDM(function=BogaczEtAl(),
                   output_states=[ DDM.DECISION_VARIABLE,
-                                  DDM.PROB_UPPER_THRESHOLD)
+                                  DDM.PROB_UPPER_THRESHOLD])
 
-    my_mech.add_state(decsion_entropy_output_state)
+    my_mech.add_states(decision_entropy_output_state)
 
 
 .. _OutputState_Projections:
@@ -340,8 +343,8 @@ from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.keywords import \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, \
-    STATE, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, RESULT, INDEX, \
-    CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE
+    STATE, OUTPUT_STATE, OUTPUT_STATE_PARAMS, RESULT, INDEX, CALCULATE, MEAN, \
+    MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import UtilitiesError, iscompatible, type_match

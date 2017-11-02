@@ -357,9 +357,11 @@ class ObjectiveMechanismError(Exception):
 
 
 class ObjectiveMechanism(ProcessingMechanism_Base):
+    # monitored_output_states is an alias to input_states argument, which can
+    # still be used in a spec dict
     """
     ObjectiveMechanism(               \
-        monitored_output_states,      \   # alias to input_states argument, which can still be used in a spec dict
+        monitored_output_states,      \
         default_variable,             \
         size,                         \
         function=LinearCombination,   \
@@ -400,7 +402,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     ---------
 
     monitored_output_states : List[`OutputState`, `Mechanism`, str, value, dict, `MonitoredOutputStatesOption`] or dict
-        specifies the OutputStates, the `value <OutputState.value>`\\s of which will be monitored, and evaluated by
+        specifies the OutputStates, the `values <OutputState.value>` of which will be monitored, and evaluated by
         the ObjectiveMechanism's `function <ObjectiveMechanism>` (see `ObjectiveMechanism_Monitored_Output_States`
         for details of specification).
 
@@ -453,7 +455,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         the input to Mechanism's `function <TransferMechanism.function>`.
 
     monitored_output_states : ContentAddressableList[OutputState]
-        determines the OutputStates, the `value <OutputState.value>`\\s of which are monitored, and evaluated by the
+        determines the OutputStates, the `values <OutputState.value>` of which are monitored, and evaluated by the
         ObjectiveMechanism's `function <ObjectiveMechanism.function>`.  Each item in the list refers to an
         `OutputState` containing the value to be monitored, with a `MappingProjection` from it to the
         corresponding `InputState` listed in the `input_states <ObjectiveMechanism.input_states>` attribute.
