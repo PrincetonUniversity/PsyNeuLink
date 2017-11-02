@@ -118,6 +118,55 @@ class LeabraError(Exception):
 
 class LeabraFunction(Function_Base):
     """
+    LeabraFunction(             \
+        default_variable=None,  \
+        network=None,           \
+        params=None,            \
+        owner=None,             \
+        prefs=None)
+
+    .. _LeabraFunction:
+
+    Transform variable by providing it as input to the leabra network inside the LeabraFunction.
+
+    Arguments
+    ---------
+
+    default_variable : number or np.array : default np.zeros() (array of zeros)
+        specifies a template for the input to the leabra network.
+
+    network : leabra.Network
+        specifies the leabra network to be used.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        contains value to be transformed.
+
+    network : leabra.Network
+        the leabra network that is being used
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
 
     """
 
@@ -152,7 +201,8 @@ class LeabraFunction(Function_Base):
                                                   params=params)
 
         if default_variable is None:
-            default_variable = np.zeros(len(self.network.layers[0].units))  # len(self.network.layers[0].units) is the size of the input layer
+            input_size = len(self.network.layers[0].units)
+            default_variable = np.zeros(input_size)
 
         super().__init__(default_variable=default_variable,
                          params=params,
