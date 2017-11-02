@@ -1,3 +1,6 @@
+import psyneulink as pnl
+import numpy as np
+
 # GLOBALS:
 
 # MECHANISMS:
@@ -15,6 +18,11 @@
 class ScratchPadError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
+
+
+# print (pnl.iscompatible([[2,3],[0]], [[0,0],np.array([0])]))
+print (pnl.iscompatible([[0,0],[0]], [[0,0],np.array([0])]))
+
 
 # ----------------------------------------------- psyneulink -----------------------------------------------------------
 
@@ -746,32 +754,32 @@ class ScratchPadError(Exception):
 # endregion
 
 #region TEST InputState SPECIFICATION
-print ('TEST InputState SPECIFICATION')
-
-import numpy as np
-from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.states.outputstate import OutputState
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, RESPONSE_TIME
-from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES, PROJECTIONS, NAME, INPUT_STATES, VARIABLE
-
-R1 = TransferMechanism(input_statGes=[OutputState])
-
-
-# InputState specification tests:
-
-# NOT YET IMPLEMENTED [10/29/17]:
-# MECHANISM/OUTPUT_STATES specification
-# my_mech_2 = TransferMechanism(input_states=[{MECHANISM: my_mech_1,
-#                                              OUTPUT_STATES: [DECISION_VARIABLE, RESPONSE_TIME]}])
-# assert len(my_mech_2.input_states)==2
-# assert all(name in my_mech_2.input_states.names for name in {DECISION_VARIABLE, RESPONSE_TIME})
-# for input_state in my_mech_2.input_states:
-#     for projection in input_state.path_afferents:
-#         assert projection.sender.owner is my_mech_1
-
+# print ('TEST InputState SPECIFICATION')
+#
+# import numpy as np
+# from psyneulink.components.states.inputstate import InputState
+# from psyneulink.components.states.outputstate import OutputState
+# from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+# from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+# from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+# from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, RESPONSE_TIME
+# from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES, PROJECTIONS, NAME, INPUT_STATES, VARIABLE
+#
+# R1 = TransferMechanism(input_states=[OutputState])
+#
+#
+# # InputState specification tests:
+#
+# # NOT YET IMPLEMENTED [10/29/17]:
+# # MECHANISM/OUTPUT_STATES specification
+# # my_mech_2 = TransferMechanism(input_states=[{MECHANISM: my_mech_1,
+# #                                              OUTPUT_STATES: [DECISION_VARIABLE, RESPONSE_TIME]}])
+# # assert len(my_mech_2.input_states)==2
+# # assert all(name in my_mech_2.input_states.names for name in {DECISION_VARIABLE, RESPONSE_TIME})
+# # for input_state in my_mech_2.input_states:
+# #     for projection in input_state.path_afferents:
+# #         assert projection.sender.owner is my_mech_1
+#
 
 #endregion
 
