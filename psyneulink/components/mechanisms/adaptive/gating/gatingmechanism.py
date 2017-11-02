@@ -158,6 +158,7 @@ Class Reference
 
 import numpy as np
 import typecheck as tc
+import warnings
 
 from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import ModulationParam, _is_modulation_param
@@ -392,8 +393,18 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         super()._instantiate_output_states(context=context)
 
-        # Reassign gating_signals to capture any user_defined GatingSignals instantiated by in call to super
+        # Reassign gating_signals to capture any user_defined GatingSignals (OutputStates) instantiated in call to super
         self._gating_signals = [state for state in self.output_states if isinstance(state, GatingSignal)]
+
+        # If the GatingMechanism's policy has more than one item,
+        #    warn if the number of items does not equal the number of its GatingSignals
+        #    (note:  there must be fewer GatingSignals than items in gating_policy,
+        #            as the reverse is an error that is checked for in _instantiate_gating_signal)
+        if len(self.gating_policy)>1 and len(self.gating_signals) != len(self.gating_policy):
+            if self.verbosePref:
+                warnings.warning("The number of {}s for {} ({}) does not equal the number of items in its {} ({})".
+                                 format(GatingSignal.__name__, self.name, len(self.gating_signals),
+                                        GATING_POLICY, len(self.gating_policy)))
 
     def _instantiate_gating_signal(self, gating_signal, index:int=0, context=None):
         """Instantiate GatingSignal OutputState and assign (if specified) or instantiate GatingProjection
@@ -429,22 +440,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         from psyneulink.components.states.state import _instantiate_state
 
-        # if not hasattr(self, GATING_POLICY) or self.gating_policy is None:
-        #     self.gating_policy = np.atleast_2d(defaultGatingPolicy)
-        # else:
-        #     self.gating_policy = np.append(self.gating_policy, [defaultGatingPolicy], axis=0)
-        #
-        # # Update self.value to reflect change in gating_policy (and the new number of gating_signals).
-        # #    This is necessary, since function isn't fully executed during init (in _instantiate_function);
-        # #    it returns the default_gating policy which has only a single item,
-        # #    however validation of indices for OutputStates requires proper number of items be in self.value
-        # self.value = self.gating_policy
-        # self._default_value = self.value
-
-
-        # PARSE gating_signal SPECIFICATION -----------------------------------------------------------------------
-
-        # Parses control_signal specifications (in call to State._parse_state_spec)
+        # Parse gating_signal specifications (in call to State._parse_state_spec)
         #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
         gating_signal = _instantiate_state(state_type=GatingSignal,
                                             owner=self,
@@ -458,33 +454,16 @@ class GatingMechanism(AdaptiveMechanism_Base):
         except AttributeError:
             self.gating_projections = gating_signal.efferents.copy()
 
-        # ADD GatingSignal TO output_states LIST
+        # Validate index
+        try:
+            self.gating_policy[gating_signal.index]
+        except IndexError:
+            raise GatingMechanismError("Index specified for {} of {} ({}) "
+                                       "exceeds the number of items of its {} ({})".
+                                       format(GatingSignal.__name__, self.name, gating_signal.index,
+                                              GATING_POLICY, len(self.gating_policy)))
 
-        # GatingSignal index attribute IS specified
-        if gating_signal.index is not None:
-            # validate it
-            try:
-                self.gating_policy[gating_signal.index]
-            except IndexError:
-                raise GatingMechanismError("Index specified for {} of {} ({}) "
-                                           "is beyond the number of items of its {} ({})".
-                                           format(GatingSignal.__name__, self.name, gating_signal.index,
-                                                  GATING_POLICY, len(self.gating_policy)))
-        # GatingSignal's index attribute is NOT specified:
-        elif len(self.gating_policy)==1:
-            # gating_policy has a single item (as it does by default), so use only that (index=0);
-            gating_signal.index = 0
-        else:
-            # gating_policy has multiple items, so try to assign to the corresponding item (using index passed as arg)
-            gating_signal.index = index
-            try:
-                self.gating_policy[gating_signal.index]
-            except IndexError:
-                raise GatingMechanismError("PROGRAM ERROR: Index for {} of {} ({}) "
-                                           "exceeds number of items in its {} ({}))".
-                                           format(GatingSignal.__name__, self.name, index,
-                                                  GATING_POLICY, len(self.gating_policy)))
-
+        # Add GatingSignal TO output_states LIST
         self._output_states.append(gating_signal)
 
         return gating_signal

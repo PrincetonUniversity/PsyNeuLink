@@ -413,7 +413,7 @@ class GatingSignal(ModulatorySignal):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 index=PRIMARY_OUTPUT_STATE,
+                 index=None,
                  calculate=Linear,
                  function=LinearCombination(operation=SUM),
                  modulation:tc.optional(_is_modulation_param)=None,
@@ -423,8 +423,13 @@ class GatingSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  context=None):
 
-        # Note: index and calculate are not used by GatingSignal;
-        #       they are included here for consistency with OutputState and possible use by subclasses.
+        # Note: calculate is not currently used by GatingSignal;
+        #       it is included here for consistency with OutputState and possible use by subclasses.
+        if index is None and owner is not None:
+            if len(owner.gating_policy)==1:
+                index = PRIMARY_OUTPUT_STATE
+            else:
+                index = SEQUENTIAL
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
