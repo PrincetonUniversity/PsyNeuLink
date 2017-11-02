@@ -299,7 +299,7 @@ class KWTA(RecurrentTransferMechanism):
 
     name : str : default KWTA-<index>
         a string used for the name of the mechanism.
-        If not is specified, a default is assigned by `MechanismRegistry`
+        If is not specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
