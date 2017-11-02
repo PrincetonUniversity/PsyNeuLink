@@ -433,8 +433,6 @@ def iscompatible(candidate, reference=None, **kargs):
         if isinstance(candidate, numbers.Number):
             return True
         if number_only:
-            if isinstance(candidate, numbers.Number):
-                return True
             if isinstance(candidate, np.ndarray) and candidate.ndim ==0 and np.isreal(candidate):
                 return True
             if not isinstance(candidate, (list, tuple, np.ndarray, np.matrix)):
@@ -469,6 +467,14 @@ def iscompatible(candidate, reference=None, **kargs):
                     # If reference was provided, compare element by element
                     elif all(isinstance(c, type(r)) for c, r in zip(candidate,reference)):
                         return True
+                    # elif all(iscompatible(c, r) for c, r in zip(candidate,reference)):
+                    #     return True
+                    # elif not all(isinstance(c, type(r)) for c, r in zip(candidate,reference)):
+                    #     for c, r in zip(candidate,reference):
+                    #         # if isinstance(c, type(r)):
+                    #         if not iscompatible(c,r):
+                    #             return False
+                    #     return True
                     # Deal with ints in one and floats in the other
                     elif all((isinstance(c, numbers.Number) and isinstance(r, numbers.Number))
                              for c, r in zip(candidate,reference)):

@@ -1,5 +1,5 @@
-import psyneulink as pnl
 import numpy as np
+import psyneulink as pnl
 
 # GLOBALS:
 
@@ -19,9 +19,10 @@ class ScratchPadError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
+# print (pnl.iscompatible([[2,3],[0]], [[0,0],[0]]))
 
-# print (pnl.iscompatible([[2,3],[0]], [[0,0],np.array([0])]))
-print (pnl.iscompatible([[0,0],[0]], [[0,0],np.array([0])]))
+print (pnl.iscompatible([[2,3],[0]], [[0,0],np.array([0])]))
+# print (pnl.iscompatible([[1,0],[0]], [[0,0],np.array([0])]))
 
 
 # ----------------------------------------------- psyneulink -----------------------------------------------------------
@@ -766,7 +767,7 @@ print (pnl.iscompatible([[0,0],[0]], [[0,0],np.array([0])]))
 # from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES, PROJECTIONS, NAME, INPUT_STATES, VARIABLE
 #
 # R1 = TransferMechanism(input_states=[OutputState])
-#
+
 #
 # # InputState specification tests:
 #
