@@ -749,7 +749,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 return sum(nested_len(y) for y in x)
             except:
                 return 1
-        ret = np.zeros(nested_len(variable))
+        ret = np.zeros(nested_len(variable)) #default is numpy.float64
         par_struct_ty, context_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
         if self.nv_state is None:
@@ -759,7 +759,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         ct_context = self.nv_state
         ct_param = par_struct_ty(transfer_params, integrator_params)
 
-        variable = np.asarray(variable)
+        variable = np.asarray(variable, dtype=np.float64)
         # This is bit hacky because numpy can't cast to arrays
         ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
         ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
