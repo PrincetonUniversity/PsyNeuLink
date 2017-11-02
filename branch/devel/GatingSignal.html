@@ -262,8 +262,8 @@ gated by the GatingSignal (and that will receive a <a class="reference internal"
 </ul>
 <p>The dictionary can also contain entries for any other GatingSignal attributes to be specified
 (e.g., a <em>MODULATION</em> entry, the value of which determines how the GatingSignal modulates the
-<a class="reference internal" href="State.html#psyneulink.components.states.state.State_Base.value" title="psyneulink.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the State(s) that it gates); see <a class="reference internal" href="#gatingsignal-structure"><span class="std std-ref">below</span></a>
-for a description of GatingSignal attributes.</p>
+<a class="reference internal" href="State.html#psyneulink.components.states.state.State_Base.value" title="psyneulink.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the State(s) that it gates; or an <em>INDEX</em> entry specifying which item
+of the GatingMechanism’s <a class="reference internal" href="GatingMechanism.html#psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_policy" title="psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a> it should use as its <code class="xref any docutils literal"><span class="pre">value</span></code>).</p>
 </li>
 </ul>
 </div></blockquote>
@@ -406,6 +406,8 @@ of one more <a class="reference internal" href="InputState.html"><span class="do
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>owner</strong> (<a class="reference internal" href="GatingMechanism.html#psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism" title="psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism"><em>GatingMechanism</em></a>) – specifies the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which to assign the GatingSignal.</li>
+<li><strong>index</strong> (<em>int : default PRIMARY_OUTPUT_STATE</em>) – specifies the item of the owner GatingMechanism’s <a class="reference internal" href="GatingMechanism.html#psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_policy" title="psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a> used as the
+GatingSignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.value" title="psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
 <li><strong>function</strong> (<em>Function</em><em> or </em><em>method : default Linear</em>) – specifies the function used to determine the value of the GatingSignal from the value of its
 <code class="xref any docutils literal"><span class="pre">owner</span></code>.</li>
 <li><strong>modulation</strong> (<em>ModulationParam : default ModulationParam.MULTIPLICATIVE</em>) – specifies the way in which the <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.value" title="psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> the GatingSignal is used to modify the
@@ -452,6 +454,13 @@ passes the input to the GatingMechanism as value for the GatingSignal.</p>
 <code class="descname">value</code><a class="headerlink" href="#psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.value" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>number, list or np.ndarray</em> – result of the GatingSignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.function" title="psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
 (same as its <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.gating_signal" title="psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.gating_signal"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signal</span></code></a>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.index">
+<code class="descname">index</code><a class="headerlink" href="#psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.index" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – the item of the owner GatingMechanism’s <a class="reference internal" href="GatingMechanism.html#psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_policy" title="psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a> used as the
+GatingSignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.value" title="psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
