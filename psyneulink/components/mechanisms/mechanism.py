@@ -708,7 +708,7 @@ from psyneulink.globals.defaults import timeScaleSystemDefault
 from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_2d_input, convert_to_np_array, iscompatible, kwCompatibilityNumeric
+from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, cconvert_to_np_array, iscompatible, kwCompatibilityNumeric
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
 __all__ = [
@@ -1834,9 +1834,9 @@ class Mechanism_Base(Mechanism):
 
     def _get_variable_from_input(self, input):
 
-        num_input_states = len(self.input_states)
-        input = convert_to_2d_input(input, num_input_states=num_input_states)
+        input = np.atleast_2d(input)
         num_inputs = np.size(input, 0)
+        num_input_states = len(self.input_states)
         if num_inputs != num_input_states:
             # Check if inputs are of different lengths (indicated by dtype == np.dtype('O'))
             num_inputs = np.size(input)
