@@ -113,19 +113,20 @@ def register_category(entry,
         try:
            entry.ConnectsWith
         except AttributeError:
-            raise RegistryError("{} does not have ConnectsWith attribute".format(entry.__name__))
+            raise RegistryError("PROGRAM ERROR: {} must implement a ConnectsWith attribute".format(entry.__name__))
         try:
            entry.ConnectsWithAttribute
         except AttributeError:
-            raise RegistryError("{} does not have ConnectsWithAttribute attribute".format(entry.__name__))
+            raise RegistryError("PROGRAM ERROR: {} must implement a ConnectsWithAttribute attribute".
+                                format(entry.__name__))
         try:
            entry.ProjectionSocket
         except AttributeError:
-            raise RegistryError("{} does not have ProjectionSocket attribute".format(entry.__name__))
+            raise RegistryError("PROGRAM ERROR: {} must implement a ProjectionSocket attribute".format(entry.__name__))
         try:
            entry.Modulators
         except AttributeError:
-            raise RegistryError("{} does not have Modulators attribute".format(entry.__name__))
+            raise RegistryError("PROGRAM ERROR: {} must implement a Modulators attribute".format(entry.__name__))
 
 
     from psyneulink.components.component import Component
