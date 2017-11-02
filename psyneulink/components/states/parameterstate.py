@@ -287,7 +287,9 @@ from psyneulink.components.component import Component, function_type, method_typ
 from psyneulink.components.functions.function import Linear, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
-from psyneulink.globals.keywords import CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, VALUE
+from psyneulink.globals.keywords import CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, \
+    PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, VALUE, \
+    CONTROL_SIGNAL, CONTROL_SIGNALS, LEARNING_SIGNAL, LEARNING_SIGNALS, SENDER
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, is_numeric, is_value_spec, iscompatible
@@ -449,6 +451,12 @@ class ParameterState(State_Base):
 
     componentType = PARAMETER_STATE
     paramsType = PARAMETER_STATE_PARAMS
+
+    ConnectsWith = [CONTROL_SIGNAL, LEARNING_SIGNAL]
+    ConnectsWithAttribute = [CONTROL_SIGNALS, LEARNING_SIGNALS]
+    ProjectionSocket = SENDER
+    Modulators = [CONTROL_SIGNAL, LEARNING_SIGNAL]
+
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

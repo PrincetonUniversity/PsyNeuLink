@@ -321,7 +321,8 @@ from psyneulink.globals.keywords import \
     INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
     MECHANISM, NAME, OUTPUT_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, \
     PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, \
-    STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
+    STANDARD_ARGS, STATE, STATES, WEIGHT, CONTROLLED_PARAMS, LEARNED_PARAM, GATED_STATES, \
+    kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, iscompatible, type_match, is_matrix
@@ -1199,67 +1200,85 @@ def _parse_connection_specs(connectee_state_type,
     else:
         BaseSpec = connectee_state_type
 
-    # Request for afferent Projections (projection socket is SENDER)
-    if issubclass(connectee_state_type, InputState):
-        ConnectsWith = [OutputState,          # types of States to which the connectee can connect
-                        ProcessInputState,
-                        SystemInputState,
-                        LearningSignal,
-                        GatingSignal]
-        connect_with_attr = OUTPUT_STATES    # attribute that holds the ConnectsWith States
-        CONNECTIONS_KEYWORD = OUTPUT_STATES  # keyword used in a State specification dictionary for connection specs
-        PROJECTION_SOCKET = SENDER           # socket of the Projection that connects to the ConnectsWith State
-        Modulators = [GatingSignal]          # type of ModulatorySignals the connectee can receive
-        # MOD_KEYWORD = GATING_SIGNALS         # keyword used in a State specification dictionary for Modulatory specs
-    elif isinstance(owner, Mechanism) and issubclass(connectee_state_type, ParameterState):
-        ConnectsWith = [ControlSignal]
-        connect_with_attr = CONTROL_SIGNALS
-        CONNECTIONS_KEYWORD = CONTROL_SIGNALS
-        PROJECTION_SOCKET = SENDER
-        Modulators = [ControlSignal]
-        # MOD_KEYWORD = CONTROL_SIGNALS
-    elif isinstance(owner, MappingProjection) and issubclass(connectee_state_type, ParameterState):
-        ConnectsWith = [LearningSignal, ControlSignal]
-        connect_with_attr = LEARNING_SIGNALS
-        CONNECTIONS_KEYWORD = LEARNING_SIGNALS
-        PROJECTION_SOCKET = SENDER
-        Modulators = [LearningSignal]
-        MOD_KEYWORD = LEARNING_SIGNALS
+    # # Request for afferent Projections (projection socket is SENDER)
+    # if issubclass(connectee_state_type, InputState):
+    #     ConnectsWith = [OutputState,          # types of States to which the connectee can connect
+    #                     ProcessInputState,
+    #                     SystemInputState,
+    #                     LearningSignal,
+    #                     GatingSignal]
+    #     connect_with_attr = OUTPUT_STATES    # attribute that holds the ConnectsWith States
+    #     PROJECTION_SOCKET = SENDER           # socket of the Projection that connects to the ConnectsWith State
+    #     Modulators = [GatingSignal]          # type of ModulatorySignals the connectee can receive
+    #     CONNECTIONS_KEYWORD = OUTPUT_STATES  # keyword used in a State specification dictionary for connection specs
+    #     MOD_KEYWORD = GATING_SIGNALS         # keyword used in a State specification dictionary for Modulatory specs
+    # elif isinstance(owner, Mechanism) and issubclass(connectee_state_type, ParameterState):
+    #     ConnectsWith = [ControlSignal, LearningSignal]
+    #     connect_with_attr = [CONTROL_SIGNALS, LEARNING_SIGNALS]
+    #     PROJECTION_SOCKET = SENDER
+    #     Modulators = [ControlSignal]
+    #     CONNECTIONS_KEYWORD = CONTROL_SIGNALS
+    #     MOD_KEYWORD = CONTROL_SIGNALS
+    # elif isinstance(owner, MappingProjection) and issubclass(connectee_state_type, ParameterState):
+    #     ConnectsWith = [LearningSignal, ControlSignal]
+    #     connect_with_attr = [LEARNING_SIGNALS, CONTROL_SIGNALS]
+    #     PROJECTION_SOCKET = SENDER
+    #     Modulators = [LearningSignal]
+    #     CONNECTIONS_KEYWORD = LEARNING_SIGNALS
+    #     MOD_KEYWORD = LEARNING_SIGNALS
+    #
+    # # Request for efferent Projections (projection socket is RECEIVER)
+    # elif isinstance(owner, ProcessingMechanism_Base) and issubclass(connectee_state_type, OutputState):
+    #     ConnectsWith = [InputState]
+    #     connect_with_attr = INPUT_STATES
+    #     PROJECTION_SOCKET = RECEIVER
+    #     Modulators = [GatingSignal]
+    #     CONNECTIONS_KEYWORD = INPUT_STATES
+    #     MOD_KEYWORD = GATING_SIGNALS
+    # elif isinstance(owner, ControlMechanism) and issubclass(connectee_state_type, ControlSignal):
+    #     ConnectsWith = [ParameterState]
+    #     connect_with_attr = PARAMETER_STATES
+    #     PROJECTION_SOCKET = RECEIVER
+    #     Modulators = []
+    #     CONNECTIONS_KEYWORD = CONTROLLED_PARAMS
+    #     MOD_KEYWORD = None
+    # elif isinstance(owner, LearningMechanism) and issubclass(connectee_state_type, LearningSignal):
+    #     ConnectsWith = [ParameterState]
+    #     connect_with_attr = PARAMETER_STATES
+    #     PROJECTION_SOCKET = RECEIVER
+    #     Modulators = []
+    #     CONNECTIONS_KEYWORD = LEARNED_PARAM
+    #     MOD_KEYWORD = None
+    # elif isinstance(owner, GatingMechanism) and issubclass(connectee_state_type, GatingSignal):
+    #     ConnectsWith = [InputState, OutputState]
+    #     connect_with_attr = [INPUT_STATES, OUTPUT_STATES]
+    #     PROJECTION_SOCKET = RECEIVER
+    #     Modulators = []
+    #     CONNECTIONS_KEYWORD = GATED_STATES
+    #     MOD_KEYWORD = None
 
-    # Request for efferent Projections (projection socket is RECEIVER)
-    elif isinstance(owner, ProcessingMechanism_Base) and issubclass(connectee_state_type, OutputState):
-        ConnectsWith = [InputState]
-        connect_with_attr = INPUT_STATES
-        CONNECTIONS_KEYWORD = INPUT_STATES
-        PROJECTION_SOCKET = RECEIVER
-        Modulators = [GatingSignal]
-        MOD_KEYWORD = GATING_SIGNALS
-    elif isinstance(owner, ControlMechanism) and issubclass(connectee_state_type, ControlSignal):
-        ConnectsWith = [ParameterState]
-        connect_with_attr = PARAMETER_STATES
-        # CONNECTIONS_KEYWORD = CONTROLLED_PARAMS
-        PROJECTION_SOCKET = RECEIVER
-        Modulators = []
-        MOD_KEYWORD = None
-    elif isinstance(owner, LearningMechanism) and issubclass(connectee_state_type, LearningSignal):
-        ConnectsWith = [ParameterState]
-        connect_with_attr = PARAMETER_STATES
-        # CONNECTIONS_KEYWORD = LEARNED_PROJECTIONS
-        PROJECTION_SOCKET = RECEIVER
-        Modulators = []
-        MOD_KEYWORD = None
-    elif isinstance(owner, GatingMechanism) and issubclass(connectee_state_type, GatingSignal):
-        ConnectsWith = [InputState, OutputState]
-        connect_with_attr = [INPUT_STATES, OUTPUT_STATES]
-        # CONNECTIONS_KEYWORD = GATED_STATES
-        PROJECTION_SOCKET = RECEIVER
-        Modulators = []
-        MOD_KEYWORD = None
+    from psyneulink.components.states.state import StateRegistry
+    try:
+       ConnectsWith = [StateRegistry[name].subclass for name in connectee_state_type.ConnectsWith]
+    except AttributeError:
+        raise ProjectionError("{} does not have ConnectsWith attribute".
+                              format(connectee_state_type.__name__))
+    try:
+       connect_with_attr = connectee_state_type.ConnectsWithAttribute
+    except AttributeError:
+        raise ProjectionError("{} does not have ConnectsWithAttribute attribute".
+                              format(connectee_state_type.__name__))
+    try:
+       PROJECTION_SOCKET = connectee_state_type.ProjectionSocket
+    except AttributeError:
+        raise ProjectionError("{} does not have ProjectionSocket attribute".
+                              format(connectee_state_type.__name__))
+    try:
+       Modulators = [StateRegistry[name].subclass for name in connectee_state_type.Modulators]
+    except AttributeError:
+        raise ProjectionError("{} does not have Modulators attribute".
+                              format(connectee_state_type.__name__))
 
-    else:
-        raise ProjectionError("Called for {} with unsupported owner type ({}), connectee_state_type ({}), "
-                         "or combination of them".
-                         format(owner.name, owner.__class__.__name__, connectee_state_type.__name__))
 
     # FIX: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

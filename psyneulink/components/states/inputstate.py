@@ -429,7 +429,8 @@ from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
-    MECHANISM, OUTPUT_STATES, MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE
+    MECHANISM, OUTPUT_STATES, MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE, \
+    OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE, LEARNING_SIGNAL, GATING_SIGNAL, SENDER
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
@@ -624,6 +625,15 @@ class InputState(State_Base):
 
     componentType = INPUT_STATE
     paramsType = INPUT_STATE_PARAMS
+
+    ConnectsWith = [OUTPUT_STATE,
+                    PROCESS_INPUT_STATE,
+                    SYSTEM_INPUT_STATE,
+                    LEARNING_SIGNAL,
+                    GATING_SIGNAL]
+    ConnectWithAttribute = OUTPUT_STATES
+    ProjectionSocket = SENDER
+    Modulators = [GATING_SIGNAL]
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

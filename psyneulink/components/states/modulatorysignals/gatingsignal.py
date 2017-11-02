@@ -234,8 +234,9 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
 from psyneulink.components.states.outputstate import OutputState, PRIMARY_OUTPUT_STATE
 from psyneulink.components.states.state import State_Base
-from psyneulink.globals.keywords import GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, INPUT_STATE, MECHANISM, NAME, \
-    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION_TYPE, STATES, SUM, GATE
+from psyneulink.globals.keywords import \
+    GATING_PROJECTION, GATING_SIGNAL, GATE, RECEIVER, SUM, PROJECTION_TYPE, \
+    INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -392,6 +393,11 @@ class GatingSignal(ModulatorySignal):
     componentType = GATING_SIGNAL
     componentName = 'GatingSignal'
     paramsType = OUTPUT_STATE_PARAMS
+
+    ConnectsWith = [INPUT_STATE, OUTPUT_STATE]
+    ConnectsWithAttribute = [INPUT_STATES, OUTPUT_STATES]
+    ProjectionSocket = RECEIVER
+    Modulators = []
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
