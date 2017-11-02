@@ -2,8 +2,6 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
 
-# from PsyNeuLink.Globals.Run import run, construct_inputs
-# from PsyNeuLink.Components.Process import MappingProjection
 
 # INPUT SEQUENCES FOR TESTING:
 # FACTORS (# levels to test):

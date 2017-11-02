@@ -18,12 +18,12 @@ import numbers
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.functions.function import Hebbian, Linear, is_function_type, GilzenratIntegrator
+from psyneulink.components.functions.function import Hebbian, Linear, is_function_type, LCAIntegrator
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE, StandardOutputStates
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
-from psyneulink.globals.keywords import GILZENRAT_INTEGRATOR_FUNCTION, INITIALIZER, NOISE, RATE, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MEAN, MEDIAN, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
+from psyneulink.globals.keywords import INITIALIZER, NOISE, RATE, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MEAN, MEDIAN, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
@@ -484,11 +484,11 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
 
         if not self.integrator_function:
 
-            self.integrator_function = GilzenratIntegrator(
+            self.integrator_function = LCAIntegrator(
                                         variable,
                                         initializer=self.initial_value,
                                         noise=self.noise,
-                                        rate= self.time_constant,
+                                        rate=-1.0,
                                         time_step_size=self.time_step_size,
                                         owner=self)
 
@@ -496,7 +496,7 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
                                                     # Should we handle runtime params?
                                                           params={INITIALIZER: self.initial_value,
                                                                   NOISE: self.noise,
-                                                                  RATE: self.time_constant},
+                                                                  RATE: -1.0},
                                                           context=context
 
                                                          )

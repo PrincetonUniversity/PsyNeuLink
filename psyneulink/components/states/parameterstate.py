@@ -287,7 +287,9 @@ from psyneulink.components.component import Component, function_type, method_typ
 from psyneulink.components.functions.function import Linear, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
-from psyneulink.globals.keywords import CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTION_TYPE, VALUE
+from psyneulink.globals.keywords import CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, \
+    PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, VALUE, \
+    CONTROL_SIGNAL, CONTROL_SIGNALS, LEARNING_SIGNAL, LEARNING_SIGNALS, SENDER
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, is_numeric, is_value_spec, iscompatible
@@ -450,6 +452,12 @@ class ParameterState(State_Base):
     componentType = PARAMETER_STATE
     paramsType = PARAMETER_STATE_PARAMS
 
+    ConnectsWith = [CONTROL_SIGNAL, LEARNING_SIGNAL]
+    ConnectsWithAttribute = [CONTROL_SIGNALS, LEARNING_SIGNALS]
+    ProjectionSocket = SENDER
+    Modulators = [CONTROL_SIGNAL, LEARNING_SIGNAL]
+
+
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
@@ -514,6 +522,18 @@ class ParameterState(State_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
+    def _validate_against_reference_value(self, reference_value):
+        """Validate that value of the State is compatible with the reference_value
+
+        reference_value is the value of the parameter to which the ParameterState is assigned
+        """
+        if reference_value is not None and not iscompatible(np.squeeze(reference_value), np.squeeze(self.value)):
+            iscompatible(np.squeeze(reference_value), np.squeeze(self.value))
+            name = self.name or ""
+            raise ParameterStateError("Value specified for {} {} of {} ({}) is not compatible "
+                                      "with its expected format ({})".
+                                      format(name, self.componentName, self.owner.name, self.value, reference_value))
+
     def _instantiate_function(self, context=None):
         """Insure function is LinearCombination and that its output is compatible with param with which it is associated
 
@@ -530,7 +550,7 @@ class ParameterState(State_Base):
         # # Insure that output of function (self.value) is compatible with relevant parameter's reference_value
         if not iscompatible(self.value, self.reference_value):
             raise ParameterStateError("Value ({0}) of the {1} ParameterState for the {2} Mechanism is not compatible "
-                                      "the type of value expected for that parameter ({3})".
+                                      "with the type of value expected for that parameter ({3})".
                                            format(self.value,
                                                   self.name,
                                                   self.owner.name,
@@ -559,6 +579,61 @@ class ParameterState(State_Base):
                                     pathway_proj_names))
 
         self._instantiate_projections_to_state(projections=projections, context=context)
+
+    # MODIFIED 9/30/17 NEW:
+    @tc.typecheck
+    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
+        """Get connections specified in a ParameterState specification tuple
+
+        Tuple specification can be:
+            (state_spec, projections)
+        Assumes that state_spec has already been extracted and used by _parse_state_spec
+
+        Returns params dict with PROJECTIONS entries if any of these was specified.
+
+        """
+        from psyneulink.components.projections.projection import _parse_connection_specs
+
+        params_dict = {}
+
+        if isinstance(state_specific_params, dict):
+            return state_specific_params
+
+        elif isinstance(state_specific_params, tuple):
+
+            tuple_spec = state_specific_params
+
+            # Note: 1st item is assumed to be a specification for the ParameterState itself, handled in _parse_state_spec()
+
+            # Get connection (afferent Projection(s)) specification from tuple
+            PROJECTIONS_INDEX = len(tuple_spec)-1
+            # Get projection_spec and parse
+            try:
+                projections_spec = tuple_spec[PROJECTIONS_INDEX]
+                # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
+            except IndexError:
+                projections_spec = None
+
+            if projections_spec:
+                try:
+                    params_dict[PROJECTIONS] = _parse_connection_specs(self,
+                                                                       owner=owner,
+                                                                       connections=projections_spec)
+                except ParameterStateError:
+                    raise ParameterStateError("Item {} of tuple specification in {} specification dictionary "
+                                          "for {} ({}) is not a recognized specification".
+                                          format(PROJECTIONS_INDEX,
+                                                 ParameterState.__name__,
+                                                 owner.name,
+                                                 projections_spec))
+
+        elif state_specific_params is not None:
+            raise ParameterStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
+                                  format(self.__class__.__name__, state_specific_params))
+
+        return params_dict
+# MODIFIED 9/30/17 END
+
 
     def _execute(self, function_params, context):
         """Call self.function with current parameter value as the variable
@@ -714,7 +789,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     else:
         return
 
-    # Assign parameterStates to component for parameters of its function (function_params), except for ones that are:
+    # Assign ParameterStates to Component for parameters of its function (function_params), except for ones that are:
     #    - another component
     #    - a function or method
     #    - have a value of None (see IMPLEMENTATION_NOTE below)
@@ -728,7 +803,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             #    in the FUNCTION_PARAMS dict of its owner for ALL of the function's params;  however, their values
             #    will be set to None (and there may not be any relevant paramClassDefaults or a way to determine a
             #    default; e.g., the length of the array for the weights or exponents params for LinearCombination).
-            #    Therefore, None will be passed as the constraint_value, which will cause validation of the
+            #    Therefore, None will be passed as the reference_value, which will cause validation of the
             #    ParameterState's function (in _instantiate_function()) to fail.
             #  Current solution is to simply not instantiate a ParameterState for any function_param that has
             #    not been explicitly specified
@@ -748,21 +823,23 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                           "with the same name as a parameter of the component itself".
                                           format(function_name, owner.name, function_param_name))
 
-            # Use function_param_value as constraint
-            # IMPLEMENTATION NOTE:  need to copy, since _instantiate_state() calls _parse_state_value()
-            #                       for constraints before state_spec, which moves items to subdictionaries,
-            #                       which would make them inaccessible to the subsequent parse of state_spec
+            # # FIX: 10/3/17 - ??MOVE THIS TO _parse_state_specific_params ----------------
+            # # Use function_param_value as constraint
+            # # IMPLEMENTATION NOTE:  need to copy, since _instantiate_state() calls _parse_state_value()
+            # #                       for constraints before state_spec, which moves items to subdictionaries,
+            # #                       which would make them inaccessible to the subsequent parse of state_spec
             from copy import deepcopy
-            constraint_value = deepcopy(function_param_value)
+            reference_value = deepcopy(function_param_value)
+            # # FIX: ----------------------------------------------------------------------
 
             # Assign parameterState for function_param to the component
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
-                                      state_name=function_param_name,
+                                      name=function_param_name,
                                       state_spec=function_param_value,
-                                      state_params=None,
-                                      constraint_value=constraint_value,
-                                      constraint_value_name=function_param_name,
+                                      reference_value=reference_value,
+                                      reference_value_name=function_param_name,
+                                      params=None,
                                       context=context)
             if state:
                 owner._parameter_states[function_param_name] = state
@@ -770,11 +847,10 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     elif _is_legal_param_value(owner, param_value):
         state = _instantiate_state(owner=owner,
                                   state_type=ParameterState,
-                                  state_name=param_name,
-                                  state_spec=param_value,
-                                  state_params=None,
-                                  constraint_value=param_value,
-                                  constraint_value_name=param_name,
+                                  name=param_name,
+                                  reference_value=param_value,
+                                  reference_value_name=param_name,
+                                  params=None,
                                   context=context)
         if state:
             owner._parameter_states[param_name] = state

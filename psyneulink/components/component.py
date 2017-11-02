@@ -339,6 +339,7 @@ COMMENT
 import inspect
 import numbers
 import warnings
+
 from collections import Iterable, OrderedDict
 from enum import Enum, IntEnum
 
@@ -349,7 +350,8 @@ from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, C
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
-from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_to_np_array, is_same_function_spec, iscompatible, kwCompatibilityLength
+from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_to_np_array, \
+    is_same_function_spec, iscompatible, kwCompatibilityLength, is_matrix
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
@@ -1753,7 +1755,6 @@ class Component(object):
 
         # if request_set has been passed or created then validate and, if OK, assign params to target_set
         if request_set:
-            # MODIFIED 4/18/17 NEW:
             # For params that are a 2-item tuple, extract the value
             #    both for validation and assignment (tuples are left intact in user_params_for_instantiation dict
             #    which is used it instantiate the specified Components in the 2nd item of the tuple)
@@ -1764,11 +1765,15 @@ class Component(object):
                 if isinstance(param_value, tuple):
                     param_value = self._get_param_value_from_tuple(param_value)
                     request_set[param_name] = param_value
-            # MODIFIED 4/18/17 END NEW
             try:
-                self._validate_params(variable=variable, request_set=request_set, target_set=target_set, context=context)
+                self._validate_params(variable=variable,
+                                      request_set=request_set,
+                                      target_set=target_set,
+                                      context=context)
             except TypeError:
-                self._validate_params(request_set=request_set, target_set=target_set, context=context)
+                self._validate_params(request_set=request_set,
+                                      target_set=target_set,
+                                      context=context)
 
     def assign_params(self, request_set=None, context=None):
         """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary
@@ -2057,8 +2062,6 @@ class Component(object):
             #    then simply assign value to paramClassDefault (implication of not specifying it explicitly);
             #    this also allows it to pass the test below and function execution to occur for initialization;
             from psyneulink.components.shellclasses import Projection
-            # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-            # from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
             if (((isinstance(param_value, str) and
                           param_value in {CONTROL_PROJECTION, LEARNING_PROJECTION, LEARNING}) or
                 isinstance(param_value, Projection) or  # These should be just ControlProjection or LearningProjection
@@ -2078,7 +2081,6 @@ class Component(object):
 
             # Check if param value is of same type as one with the same name in paramClassDefaults;
             #    don't worry about length
-
             if iscompatible(param_value, self.paramClassDefaults[param_name], **{kwCompatibilityLength:0}):
                 # If param is a dict, check that entry exists in paramClassDefaults
                 # IMPLEMENTATION NOTE:
@@ -2159,23 +2161,32 @@ class Component(object):
             elif hasattr(param_value, FUNCTION) and callable(param_value.function):
                 target_set[param_name] = param_value
 
+            # It has already passed as the name of a valid param, so let it pass;
+            #    value should be validated in subclass _validate_params override
+            elif isinstance(param_name, str):
+                # FIX: 10/3/17 - THIS IS A HACK;  IT SHOULD BE HANDLED EITHER
+                # FIX:           MORE GENERICALLY OR LOCALLY (E.G., IN OVERRIDE OF _validate_params)
+                if param_name == 'matrix':
+                    if is_matrix(self.paramClassDefaults[param_name]):
+                        # FIX:  ?? ASSIGN VALUE HERE, OR SIMPLY ALLOW AND ASSUME IT WILL BE PARSED ELSEWHERE
+                        # param_value = self.paramClassDefaults[param_name]
+                        # target_set[param_name] = param_value
+                        target_set[param_name] = param_value
+                    else:
+                        raise ComponentError("Value of {} param for {} ({}) must be a valid matrix specification".
+                                             format(param_name, self.name, param_value))
+                target_set[param_name] = param_value
+
             # Parameter is not a valid type
             else:
                 if type(self.paramClassDefaults[param_name]) is type:
                     type_name = 'the name of a subclass of ' + self.paramClassDefaults[param_name].__base__.__name__
-                else:
-                    type_name = self.paramClassDefaults[param_name].__class__.__name__
-                if param_name == 'matrix':
-                    raise ComponentError("Value of {} param for {} ({}) must be a valid matrix specification".
-                                    format(param_name, self.name, param_value))
-                raise ComponentError("Value of {} param for {} ({}) must be compatible with {}".
+                raise ComponentError("Value of {} param for {} ({}) is not compatible with {}".
                                     format(param_name, self.name, param_value, type_name))
 
     def _get_param_value_from_tuple(self, param_spec):
         """Returns param value (first item) of a (value, projection) tuple
         """
-        # from PsyNeuLink.Components.Projections.Modulatory.ControlProjection import ControlProjection
-        # from PsyNeuLink.Components.Projections.Modulatory.LearningProjection import LearningProjection
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
         ALLOWABLE_TUPLE_SPEC_KEYWORDS = {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING}

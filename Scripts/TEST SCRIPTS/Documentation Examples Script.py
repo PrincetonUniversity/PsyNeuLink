@@ -8,7 +8,6 @@ from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.library.mechanisms.processing.integrator import ddm
 
-# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 
 #region PROCESS EXAMPLES ********************************************************************
 

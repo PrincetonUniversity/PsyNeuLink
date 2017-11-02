@@ -87,8 +87,8 @@ it will *not* replace ones that were already created).
 
 Specifying an OutputState can be done in any of the ways listed below.  To create multiple OutputStates, their
 specifications can be included in a list, or in a dictionary in which the key for each entry is a string specifying
-the name for the OutputState to be created, and the value its specification.  Any of the following can be used to
-specify an OutputState:
+the name for the OutputState to be created, and the value is its specification.  Any of the following can be used to
+as the specification for each OutputState:
 
     * An **existing OutputState object** or the name of one.  Its `variable <OutputState.variable>` must match (in the
       number and type of its elements) the item of the owner Mechanism's `value <Mechanism_Base.value>` to
@@ -106,18 +106,26 @@ specify an OutputState:
       (the first item by default, or the one designated by its `index <OutputState.index>` attribute).  A default
       name is assigned based on the name of the Mechanism (see :ref:`naming conventions <LINK>`).
     ..
-    * A **State specification dictionary**.  This creates the specified OutputState using the item of the owner
-      `value <Mechanism_Base.value>` specified by the *INDEX* entry  as OutputState's `variable <OutputState.variable>`.
-      In addition to the standard entries of a `State specification dictionary <State_Specification>`, the dictionary
-      can have a *PROJECTIONS* entry, the value of which can be a `Projection <Projection>`, a
-      `Projection specification dictionary <Projection_In_Context_Specification>`, or a list containing items that
-      are either of those.  This can be used to specify one or more efferent `PathwayProjections <PathwayProjection>`
-      from the OutpuState, and/or `ModulatoryProjections <ModulatoryProjection>` for it to receive.
+    * A **State specification dictionary**.  This creates the specified OutputState, and can use any of the standard
+      entries of a `State specification dictionary <State_Specification>`.  The *PROJECTIONS* or *MECHANISMS* entry can
+      be used to specify one or more efferent `PathwayProjections <PathwayProjection>` from the OutputState, and/or
+      `ModulatoryProjections <ModulatoryProjection>` for it to receive. In addition to the standard entries of a State
+      specification dictionary, the dictionary can have any of the following *KEY*:<value> entries:
+
+      - *INDEX*:<int> - specifies the OutputState's value of the `index <OutputState.index>` attribute; if this is
+        not included, the first item of the owner Mechanism's `value <Mechanism_Base.value>` is assigned as the
+        the OutputState's `variable <OutputState.variable>` (see `description below <OutputState_Index>` for additional
+        details).
+
+      - *CALCULATE*:<function> - specifies the function assigned as the OutputState's `calculate
+        <OutputState.calculate>` attribute;  if this is not included, and identity function is used to assign the
+        OutputState's `variable <OutputState.variable>` as its `value <OutputState.value>` (see `description below
+        <OutputState_Calculate>` for additional details).
+
     ..
-    * A **2-item tuple**.  The first item must be a value, and the second a `ModulatoryProjection
-      <ModulatoryProjection>` specification. This creates a default OutputState using the first item as the
-      OutputState's `variable <OutputState.variable>`, and assigns the OutputState as the `receiver
-      <ModualtoryProjection.receiver>` of the type of ModulatoryProjection specified in the second item.
+    * A **tuple**.  The first item must be any of the OutputState specifications above, the second item a
+      `ModulatoryProjection <ModulatoryProjection>` specification (or `None`), and the third (optional) item an integer
+      specifying the `index <OutputState.index>` for the OutputState.
 
     .. note::
        In all cases, the `variable <OutputState.variable>` of the OutputState must match (have the same number and
@@ -321,17 +329,22 @@ Class Reference
 
 """
 
+import numbers
+
 import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination, is_function_type
+from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import CALCULATE, INDEX, MAPPING_PROJECTION, MEAN, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE
+from psyneulink.globals.keywords import \
+    PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, INPUT_STATE, INPUT_STATES, RECEIVER, GATING_SIGNAL, \
+    STATE, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, RESULT, INDEX, \
+    CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import UtilitiesError
-from psyneulink.globals.utilities import iscompatible, type_match
+from psyneulink.globals.utilities import UtilitiesError, iscompatible, type_match
 
 __all__ = [
     'make_readonly_property', 'OUTPUTS', 'OutputState', 'OutputStateError', 'PRIMARY_OUTPUT_STATE', 'SEQUENTIAL',
@@ -346,6 +359,7 @@ state_type_keywords = state_type_keywords.update({OUTPUT_STATE})
 #     ALL = TIME_STAMP
 #     DEFAULTS = NONE
 
+OUTPUT_STATE_TYPE = 'output_state_type'
 PRIMARY_OUTPUT_STATE = 0
 SEQUENTIAL = 'SEQUENTIAL'
 
@@ -453,7 +467,7 @@ class OutputState(State_Base):
     variable : number, list or np.ndarray
         specifies the template for the OutputState's `variable <OutputState.variable>`.
 
-    size : int, list or np.ndarray of ints
+    size : int, list or ndarray of ints
         specifies variable as array(s) of zeros if **variable** is not passed as an argument;
         if **variable** is specified, it takes precedence over the specification of **size**.
 
@@ -556,8 +570,13 @@ class OutputState(State_Base):
 
     #region CLASS ATTRIBUTES
 
-    componentType = OUTPUT_STATES
+    componentType = OUTPUT_STATE
     paramsType = OUTPUT_STATE_PARAMS
+
+    ConnectsWith = [INPUT_STATE]
+    ConnectsWithAttribute = INPUT_STATES
+    ProjectionSocket = RECEIVER
+    Modulators = [GATING_SIGNAL]
 
     class ClassDefaults(State_Base.ClassDefaults):
         variable = None
@@ -691,6 +710,17 @@ class OutputState(State_Base):
             except KeyError:
                 pass
 
+    def _validate_against_reference_value(self, reference_value):
+        """Validate that State.variable is compatible with the reference_value
+
+        reference_value is the value of the Mechanism to which the OutputState is assigned
+        """
+        if reference_value is not None and not iscompatible(reference_value, self.variable):
+            name = self.name or ""
+            raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible "
+                                   "with its expected format ({})".
+                                   format(name, self.componentName, self.owner.name, self.variable, reference_value))
+
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate calculate function
         """
@@ -744,6 +774,109 @@ class OutputState(State_Base):
 
         return type_match(self.calculate(self.owner.value[self.index]), type(value))
 
+    def _get_primary_state(self, mechanism):
+        return mechanism.output_state
+
+    @tc.typecheck
+    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
+        """Get index and/or connections specified in an OutputState specification tuple
+
+        Tuple specification can be:
+            (state_spec, connections)
+            (state_spec, index, connections)
+
+        Returns params dict with INDEX and/or CONNECTIONS entries if either of these was specified
+
+        """
+        # FIX: MAKE SURE IT IS OK TO USE DICT PASSED IN (as params) AND NOT INADVERTENTLY OVERWRITING STUFF HERE
+
+        # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputState SPECS
+        #      CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
+        #      THESE CAN BE USED BY THE InputState's LinearCombination Function
+        #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
+        #      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
+        #      TO A MECHANISM
+        from psyneulink.components.projections.projection import _parse_connection_specs, ConnectionTuple
+        from psyneulink.components.system import MonitoredOutputStatesOption
+
+        params_dict = {}
+
+        if isinstance(state_specific_params, dict):
+            if PROJECTIONS in state_dict:
+                params_dict[PROJECTIONS] = state_dict[PROJECTIONS]
+            return state_specific_params
+
+        elif isinstance(state_specific_params, ConnectionTuple):
+            params_dict[PROJECTIONS] = _parse_connection_specs(self,
+                                                               owner=owner,
+                                                               connections=[state_specific_params])
+
+        elif isinstance(state_specific_params, tuple):
+
+            tuple_spec = state_specific_params
+            INDEX_INDEX = 1
+            PROJECTIONS_INDEX = len(tuple_spec)-1
+
+            # Specification is a MonitoredOutputStatesOptions (pass from System)
+            if len(tuple_spec)==1:
+                if not isinstance(tuple_spec[0], MonitoredOutputStatesOption):
+                    raise OutputStateError("Tuple provided in {} specification dictionary for {} has a single item ({})"
+                                           "which should be a value of {}".format(OutputState.__name__,
+                                                                                  owner.name,
+                                                                                  tuple_spec,
+                                                                                  MonitoredOutputStatesOption.__name__))
+                return tuple_spec[0]
+
+            # Note:  first item is assumed to be a specification for the OutputState itself, handled in _parse_state_spec()
+            # FIX: TEST FOR LEN OF TUPLE AND RAISE EXCEPTION OF < 2
+            elif not len(tuple_spec) in {2,3} :
+                raise OutputStateError("Tuple provided in {} specification dictionary for {} ({}) must have "
+                                       "either 2 ({} and {}) or 3 (optional additional {}) items, "
+                                       "or must be a {}".
+                                       format(OutputState.__name__, owner.name, tuple_spec,
+                                              STATE, PROJECTION, INDEX, ConnectionTuple.__name__))
+
+
+            # Get PROJECTIONS specification (efferents) from tuple
+            try:
+                projections_spec = tuple_spec[PROJECTIONS_INDEX]
+                # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
+            except IndexError:
+                projections_spec = None
+            if projections_spec:
+                try:
+                    # params_dict[CONNECTIONS] = _parse_connection_specs(self.__class__,
+                    params_dict[PROJECTIONS] = _parse_connection_specs(self.__class__,
+                                                                             owner=owner,
+                                                                             connections={projections_spec})
+                except OutputStateError:
+                    raise OutputStateError("Item {} of tuple specification in {} specification dictionary "
+                                          "for {} ({}) is not a recognized specification for one or more "
+                                          "{}s, {}s, or {}s that project from it".
+                                          format(PROJECTIONS_INDEX,
+                                                 OutputState.__name__,
+                                                 owner.name,
+                                                 projections_spec,
+                                                 Mechanism.__name__,
+                                                 OutputState.__name__,
+                                                 Projection.__name))
+
+            # Get INDEX specification from (state_spec, index, connections) tuple:
+            if len(tuple_spec) == 3:
+
+                index = tuple_spec[INDEX_INDEX]
+
+                if index is not None and not isinstance(index, numbers.Number):
+                    raise OutputStateError("Specification of the index ({}) in tuple of {} specification dictionary "
+                                           "for {} must be a number".format(index, OutputState.__name__, owner.name))
+                params_dict[INDEX] = index
+
+        elif state_specific_params is not None:
+            raise OutputStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
+                                  format(self.__class__.__name__, state_specific_params))
+
+        return params_dict
+
     @property
     def pathway_projections(self):
         return self.efferents
@@ -751,7 +884,6 @@ class OutputState(State_Base):
     @pathway_projections.setter
     def pathway_projections(self, assignment):
         self.efferents = assignment
-
 
 
 def _instantiate_output_states(owner, output_states=None, context=None):
@@ -769,7 +901,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
              if it is dict, look for INDEX entry
              if it is anything else, assume index is PRIMARY_OUTPUT_STATE
          get indexed value from output.value
-         append the indexed value to constraint_value
+         append the indexed value to reference_value
              so that it matches specification of OutputStates (by # and function return values)
          instantiate Calculate function if specified
 
@@ -789,7 +921,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     Returns list of instantiated OutputStates
     """
 
-    constraint_value = []
+    reference_value = []
 
     # Get owner.value
     # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?  JUST USE RETURN VALUE??
@@ -866,17 +998,22 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                     raise OutputStateError("PROGRAM ERROR: unrecognized item ({}) in output_states specification for {}"
                                            .format(output_state, owner.name))
 
-            constraint_value.append(output_state_value)
+            reference_value.append(output_state_value)
 
     else:
-        constraint_value = owner_value
+        reference_value = owner_value
+
+    if hasattr(owner, OUTPUT_STATE_TYPE):
+        output_state_type = owner.output_state_type
+    else:
+        output_state_type = OutputState
 
     state_list = _instantiate_state_list(owner=owner,
                                          state_list=output_states,
-                                         state_type=OutputState,
+                                         state_type=output_state_type,
                                          state_param_identifier=OUTPUT_STATE,
-                                         constraint_value=constraint_value,
-                                         constraint_value_name="output",
+                                         reference_value=reference_value,
+                                         reference_value_name="output",
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
@@ -886,6 +1023,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         owner._output_states = state_list
 
     return state_list
+
 
 class StandardOutputStatesError(Exception):
     def __init__(self, error_value):
@@ -969,9 +1107,9 @@ class StandardOutputStates():
                                                        len(output_state_dicts)))
 
             if not all(isinstance(item, int) for item in indices):
-                raise StandardOutputStatesError("All the items in the list of indices provided to {} for {} ({}) "
+                raise StandardOutputStatesError("All the items in the list of indices provided to {} for {} of {}) "
                                                "must be ints".
-                                               format(self.__class__.__name__, self.name, owner.name, index))
+                                               format(self.__class__.__name__, self.name, owner.name))
 
             for index, state_dict in zip(indices, self.data):
                 state_dict[INDEX] = index

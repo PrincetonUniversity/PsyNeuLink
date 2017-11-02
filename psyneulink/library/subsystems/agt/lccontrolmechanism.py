@@ -143,7 +143,7 @@ customized in a variety of ways:
       (see `ObjectiveMechanism_Weights_and_Exponents_Example` for an example);
     ..
     * using a list to specify the OutputStates to be monitored  (and the `tuples format
-      <ObjectiveMechanism_OutputState_Tuple>` to specify weights and/or exponents for them) in the
+      <InputState_Tuple_Specification>` to specify weights and/or exponents for them) in the
       **objective_mechanism** argument of the EVCControlMechanism's constructor;
     ..
     * using the  **monitored_output_states** argument of the `objective_mechanism <LCControlMechanism.objective_mechanism>`'s

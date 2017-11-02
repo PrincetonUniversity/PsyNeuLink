@@ -63,7 +63,7 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
-        'toposort',
+        'toposort==1.4',
         'numpy',
         'typecheck-decorator==1.2',
         # mpi4py only if MPI_IMPLEMENTATION becomes True

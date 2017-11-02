@@ -3,7 +3,6 @@ from psyneulink.components.projections.modulatory.learningprojection import Lear
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.system import *
 
-# from PsyNeuLink.Globals.Run import run, construct_inputs
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic(),
