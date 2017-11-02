@@ -505,6 +505,22 @@ class TestTransferMechanismTimeConstant:
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
+    def test_transfer_mech_time_constant_0_8_llvm(self):
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            function=Linear(),
+            time_constant=0.8,
+            integrator_mode=True
+        )
+        val = T.execute([1 for i in range(VECTOR_SIZE)], bin_execute=True).tolist()
+        assert val == [[0.8 for i in range(VECTOR_SIZE)]]
+        val = T.execute([1 for i in range(VECTOR_SIZE)], bin_execute=True).tolist()
+        assert val == [[0.96 for i in range(VECTOR_SIZE)]]
+
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear TimeConstant=1")
     def test_transfer_mech_time_constant_1_0(self, benchmark):
         T = TransferMechanism(
@@ -578,6 +594,24 @@ class TestTransferMechanismTimeConstant:
         assert val == [[0.9, 0.9, 0.9, 0.9]]
         T.noise = 10
         val = T.execute([1, 2, -3, 0]).tolist()
+        assert val == [[10.98, 11.78, 7.779999999999999, 10.18]]  # testing noise changes to an integrator
+
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    def test_transfer_mech_time_constant_0_8_initial_0_5_llvm(self):
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0, 0, 0, 0],
+            function=Linear(),
+            time_constant=0.8,
+            initial_value=np.array([[.5, .5, .5, .5]]),
+            integrator_mode=True
+        )
+        val = T.execute([1, 1, 1, 1], bin_execute=True).tolist()
+        assert val == [[0.9, 0.9, 0.9, 0.9]]
+        T.noise = 10
+        val = T.execute([1, 2, -3, 0], bin_execute=True).tolist()
         assert val == [[10.98, 11.78, 7.779999999999999, 10.18]]  # testing noise changes to an integrator
 
 

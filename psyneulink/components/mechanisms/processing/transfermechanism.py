@@ -756,6 +756,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             initializer_t = self.function_object.get_context_initializer()
             initializer_i = self.integrator_function.get_context_initializer()
             self.nv_state = context_struct_ty(initializer_t, initializer_i)
+
         ct_context = self.nv_state
         ct_param = par_struct_ty(transfer_params, integrator_params)
 
@@ -764,7 +765,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
         ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
 
-        bf(ct_param, ct_context, ct_vi, ct_vo)
+        bf(ct_param, ctypes.byref(ct_context), ct_vi, ct_vo)
 
         return ret
 

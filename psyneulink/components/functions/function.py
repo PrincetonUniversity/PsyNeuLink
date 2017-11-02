@@ -5111,6 +5111,7 @@ class AdaptiveIntegrator(
 
         vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
         builder.store(res, vo_ptr)
+        builder.store(res, prev_ptr)
 
 
     def _gen_llvm_function(self):
@@ -5179,6 +5180,7 @@ class AdaptiveIntegrator(
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
+        # ct_old also contains the correct value
         if not context or not INITIALIZING in context:
             self.previous_value = ret
 
