@@ -10,8 +10,8 @@
 #
 
 import re
-
 from collections import namedtuple
+import inspect
 
 from psyneulink.globals.keywords import CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_STATE, MAPPING_PROJECTION, OUTPUT_STATE, PARAMETER_STATE, kwComponentCategory, kwComponentPreferenceSet, kwMechanismComponentCategory, kwPreferenceSet, kwProcessComponentCategory, kwProjectionComponentCategory, kwStateComponentCategory, kwSystemComponentCategory
 
@@ -106,27 +106,19 @@ def register_category(entry,
     :return:
     """
 
+    # Insure that State subclasses have required connection attribs
     # IMPLEMENTATION NOTE:  Move to State when that is implemented as ABC
-    import inspect
-    from psyneulink.components.states.state import State, State_Base
+    state_required_attribs = {'ConnectsWith',
+                              'ConnectsWithAttribute',
+                              'ProjectionSocket',
+                              'Modulators'}
+    from psyneulink.components.states.state import State_Base, State
     if inspect.isclass(entry) and issubclass(entry, State) and not entry == State_Base:
-        try:
-           entry.ConnectsWith
-        except AttributeError:
-            raise RegistryError("PROGRAM ERROR: {} must implement a ConnectsWith attribute".format(entry.__name__))
-        try:
-           entry.ConnectsWithAttribute
-        except AttributeError:
-            raise RegistryError("PROGRAM ERROR: {} must implement a ConnectsWithAttribute attribute".
-                                format(entry.__name__))
-        try:
-           entry.ProjectionSocket
-        except AttributeError:
-            raise RegistryError("PROGRAM ERROR: {} must implement a ProjectionSocket attribute".format(entry.__name__))
-        try:
-           entry.Modulators
-        except AttributeError:
-            raise RegistryError("PROGRAM ERROR: {} must implement a Modulators attribute".format(entry.__name__))
+        for attrib in state_required_attribs:
+            try:
+               getattr(entry, attrib)
+            except AttributeError:
+                raise RegistryError("PROGRAM ERROR: {} must implement a {} attribute".format(entry.__name__, attrib))
 
 
     from psyneulink.components.component import Component
