@@ -45,11 +45,12 @@ s = System(processes=[p1, p2])
 
 print('Running Leabra in PsyNeuLink...')
 start_time = time.process_time()
-tmp = s.run(inputs={T1: input_pattern.copy(), T2: training_pattern.copy()})
+outputs = s.run(inputs={T1: input_pattern.copy(), T2: training_pattern.copy()})
 end_time = time.process_time()
 
 print('PNL time to run: ', end_time - start_time, "seconds")
-print('PNL Output: ', tmp, type(tmp))
+print('PNL Outputs Over Time: ', outputs, type(outputs))
+print('PNL Final Output: ', outputs[-1], type(outputs[-1]))
 
 
 random.seed(random_seed_value)
