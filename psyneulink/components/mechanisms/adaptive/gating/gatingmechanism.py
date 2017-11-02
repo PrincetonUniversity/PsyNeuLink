@@ -398,6 +398,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
     def _instantiate_gating_signal(self, gating_signal, index:int=0, context=None):
         """Instantiate GatingSignal OutputState and assign (if specified) or instantiate GatingProjection
 
+        # Extends gating_policy and to accommodate instantiated projection
+
         Notes:
         * gating_signal arg can be a:
             - GatingSignal object;
@@ -427,17 +429,17 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         from psyneulink.components.states.state import _instantiate_state
 
-        if not hasattr(self, GATING_POLICY) or self.gating_policy is None:
-            self.gating_policy = np.atleast_2d(defaultGatingPolicy)
-        else:
-            self.gating_policy = np.append(self.gating_policy, [defaultGatingPolicy], axis=0)
-
-        # Update self.value to reflect change in gating_policy (and the new number of gating_signals).
-        #    This is necessary, since function isn't fully executed during init (in _instantiate_function);
-        #    it returns the default_gating policy which has only a single item,
-        #    however validation of indices for OutputStates requires proper number of items be in self.value
-        self.value = self.gating_policy
-        self._default_value = self.value
+        # if not hasattr(self, GATING_POLICY) or self.gating_policy is None:
+        #     self.gating_policy = np.atleast_2d(defaultGatingPolicy)
+        # else:
+        #     self.gating_policy = np.append(self.gating_policy, [defaultGatingPolicy], axis=0)
+        #
+        # # Update self.value to reflect change in gating_policy (and the new number of gating_signals).
+        # #    This is necessary, since function isn't fully executed during init (in _instantiate_function);
+        # #    it returns the default_gating policy which has only a single item,
+        # #    however validation of indices for OutputStates requires proper number of items be in self.value
+        # self.value = self.gating_policy
+        # self._default_value = self.value
 
 
         # PARSE gating_signal SPECIFICATION -----------------------------------------------------------------------
@@ -547,6 +549,10 @@ class GatingMechanism(AdaptiveMechanism_Base):
             for projection in self.output_states[state_name].efferents:
                 print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
         print ("\n---------------------------------------------------------")
+
+    @property
+    def gating_policy(self):
+        return self.value
 
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
