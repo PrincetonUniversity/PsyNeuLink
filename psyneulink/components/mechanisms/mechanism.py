@@ -410,8 +410,11 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   <InputState.value>` of the corresponding InputStates for any that are not explicitly specified in the
   **input_states** argument or *INPUT_STATES* entry (see below).
 
-* **size** (int, list or ndarray) -- specifies the number and format of items in the Mechanism's variable,
-  if **default_variable** is not specified.  The relationship to any specifications in the **input_states** argument or
+* **size** (int, list or ndarray) -- specifies the number and length of items in the Mechanism's variable,
+  if **default_variable** is not specified. For example, the following mechanisms are equivalent::
+    T1 = TransferMechanism(size = [3, 2])
+    T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
+  The relationship to any specifications in the **input_states** argument or
   *INPUT_STATES* entry of a **params** dictionary is the same as for the **default_variable** argument,
   with the latter taking precedence (see above).
 
@@ -708,7 +711,7 @@ from psyneulink.globals.defaults import timeScaleSystemDefault
 from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, cconvert_to_np_array, iscompatible, kwCompatibilityNumeric
+from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
 __all__ = [

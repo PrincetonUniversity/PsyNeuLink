@@ -470,6 +470,9 @@ class OutputState(State_Base):
     size : int, list or ndarray of ints
         specifies variable as array(s) of zeros if **variable** is not passed as an argument;
         if **variable** is specified, it takes precedence over the specification of **size**.
+        As an example, the following mechanisms are equivalent::
+            T1 = TransferMechanism(size = [3, 2])
+            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     function : Function, function, or method : default LinearCombination(operation=SUM)
         specifies the function used to transform the item of the owner Mechanism's `value <Mechanism_Base.value>`
