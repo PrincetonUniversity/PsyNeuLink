@@ -757,7 +757,7 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, RESPONSE_TIME
 from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES, PROJECTIONS, NAME, INPUT_STATES, VARIABLE
 
-R1 = TransferMechanism(input_states=[OutputState])
+R1 = TransferMechanism(input_statGes=[OutputState])
 
 
 # InputState specification tests:
