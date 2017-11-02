@@ -1083,6 +1083,16 @@ def _parse_connection_specs(connectee_state_type,
                 usually it is a Mechanism or State to/from which the connectee_state_type should send/receive the Projection,
                 so calling the method "_parse_projections" would be misleading.
 
+    CONNECTION CHARACTERISTICS DECLARED BY EACH TYPE (SUBCLASS) OF State:
+        ConnectsWith : State
+           - specifies the type (subclass) of State to which the connectee_state_type should be assigned projection(s)
+        connect_with_attr : str
+           - specifies the name of the attribute of the Mechanism that holds the states of the ConnectsWith's type
+        PROJECTION_SOCKET : [SENDER or RECEIVER]
+           - specifies for this method whether to use a Projection's sender or receiver for the connection
+        Modulator : ModulatorySignal
+           -  class of ModulatorySignal that can send ModulatoryProjection to the connectee_state_type
+
     This method deals with CONNECTION specifications that are made in one of the following places/ways:
         - *PROJECTIONS* entry of a State specification dict [SYNONYM: *PROJECTIONS* - for backward compatiability];
         - last item of a State specification tuple.
@@ -1152,76 +1162,21 @@ def _parse_connection_specs(connectee_state_type,
 
     """
 
-    # FIX: vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    # FIX: MOVE HANDLING OF ALL THIS TO REGISTRY
-
-    from psyneulink.components.system import SystemInputState
-    from psyneulink.components.process import ProcessInputState
-    from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-    from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
-    from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-    from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
-    from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
     from psyneulink.components.states.state import _get_state_for_socket
-    from psyneulink.components.states.inputstate import InputState
-    from psyneulink.components.states.outputstate import OutputState
-    from psyneulink.components.states.parameterstate import ParameterState
-    from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-    from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
-    from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
-    from psyneulink.globals.keywords import SENDER, RECEIVER, INPUT_STATES, OUTPUT_STATES, \
-                                            LEARNING_SIGNALS, CONTROL_SIGNALS, GATING_SIGNALS
-
-    # BaseSpec = connectee_state_type
-
-    # CONNECTION CHARACTERISTICS THAT MUST BE DECLARED BY EACH TYPE (SUBCLASS) OF State
-    # ConnectsWith : State
-    #    - specifies the type (subclass) of State to which the connectee_state_type should be assigned projection(s)
-    #    - [TBI] subclass' attribute: connect_with [??CURRENTLY:  PROJECTION_TYPE]
-    # connect_with_attr : str
-    #    - specifies the name of the attribute of the Mechanism that holds the states of the ConnectsWith's type
-    #    - [TBI] subclass' attribute: connect_with_attr
-    # CONNECTIONS_KEYWORD : str
-    #    - specifies the keyword used in State specification dictionary for entry specifying States to connect to
-    #    - [TBI] subclass' attribute: connect_with_keyword
-    # PROJECTION_SOCKET : [SENDER or RECEIVER]
-    #    - specifies for this method whether to use a Projection's sender or receiver for the connection
-    #    - [TBI] subclass' attribute: projection_socket
-    # Modulator : ModulatorySignal
-    #    -  class of ModulatorySignal that can send ModulatoryProjection to the connectee_state_type
-    #    - [TBI] subclass' attribute: modulator
-    # MOD_KEYWORD : str
-    #    - specifies the keyword used in State specification dictionary for entry specifying ModulatorySignal
-    #    - [TBI] subclass' attribute: mod_keyword
+    from psyneulink.components.states.state import StateRegistry
 
     if not inspect.isclass(connectee_state_type):
         raise ProjectionError("Called for {} with \'connectee_state_type\' arg ({}) that is not a class".
                          format(owner.name, connectee_state_type))
-    else:
-        BaseSpec = connectee_state_type
 
-    from psyneulink.components.states.state import StateRegistry
-    try:
-       ConnectsWith = [StateRegistry[name].subclass for name in connectee_state_type.ConnectsWith]
-    except AttributeError:
-        raise ProjectionError("{} does not have ConnectsWith attribute".format(connectee_state_type.__name__))
-    try:
-       connect_with_attr = connectee_state_type.ConnectsWithAttribute
-    except AttributeError:
-        raise ProjectionError("{} does not have ConnectsWithAttribute attribute".format(connectee_state_type.__name__))
-    try:
-       PROJECTION_SOCKET = connectee_state_type.ProjectionSocket
-    except AttributeError:
-        raise ProjectionError("{} does not have ProjectionSocket attribute".format(connectee_state_type.__name__))
-    try:
-       Modulators = [StateRegistry[name].subclass for name in connectee_state_type.Modulators]
-    except AttributeError:
-        raise ProjectionError("{} does not have Modulators attribute".format(connectee_state_type.__name__))
-
+    # Get connection attributes
+    ConnectsWith = [StateRegistry[name].subclass for name in connectee_state_type.ConnectsWith]
+    connect_with_attr = connectee_state_type.ConnectsWithAttribute
+    PROJECTION_SOCKET = connectee_state_type.ProjectionSocket
+    Modulators = [StateRegistry[name].subclass for name in connectee_state_type.Modulators]
 
     DEFAULT_WEIGHT = None
     DEFAULT_EXPONENT = None
-    # DEFAULT_PROJECTION = PROJECTION_TYPE
     DEFAULT_PROJECTION = None
 
     # Convert to list for subsequent processing

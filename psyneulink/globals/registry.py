@@ -106,6 +106,28 @@ def register_category(entry,
     :return:
     """
 
+    # IMPLEMENTATION NOTE:  Move to State when that is implemented as ABC
+    import inspect
+    from psyneulink.components.states.state import State, State_Base
+    if inspect.isclass(entry) and issubclass(entry, State) and not entry == State_Base:
+        try:
+           entry.ConnectsWith
+        except AttributeError:
+            raise RegistryError("{} does not have ConnectsWith attribute".format(entry.__name__))
+        try:
+           entry.ConnectsWithAttribute
+        except AttributeError:
+            raise RegistryError("{} does not have ConnectsWithAttribute attribute".format(entry.__name__))
+        try:
+           entry.ProjectionSocket
+        except AttributeError:
+            raise RegistryError("{} does not have ProjectionSocket attribute".format(entry.__name__))
+        try:
+           entry.Modulators
+        except AttributeError:
+            raise RegistryError("{} does not have Modulators attribute".format(entry.__name__))
+
+
     from psyneulink.components.component import Component
     from psyneulink.globals.preferences.preferenceset import PreferenceSet
     if not issubclass(base_class, (Component, PreferenceSet)):
