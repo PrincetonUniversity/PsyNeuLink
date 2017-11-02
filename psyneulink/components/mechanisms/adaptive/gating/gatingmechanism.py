@@ -458,10 +458,33 @@ class GatingMechanism(AdaptiveMechanism_Base):
         except AttributeError:
             self.gating_projections = gating_signal.efferents.copy()
 
-        # Add GatingSignal to output_states list
-        # All GatingSignals use a single gating policy value by default
-        # FIX: 10/24/17 - THIS SHOULD BE RECONCILED WITH GATING POLICY ABOVE AND OUTPUT OF FUNCTION
-        gating_signal.index = index
+        # ADD GatingSignal TO output_states LIST
+
+        # GatingSignal index attribute IS specified
+        if gating_signal.index is not None:
+            # validate it
+            try:
+                self.gating_policy[gating_signal.index]
+            except IndexError:
+                raise GatingMechanismError("Index specified for {} of {} ({}) "
+                                           "is beyond the number of items of its {} ({})".
+                                           format(GatingSignal.__name__, self.name, gating_signal.index,
+                                                  GATING_POLICY, len(self.gating_policy)))
+        # GatingSignal's index attribute is NOT specified:
+        elif len(self.gating_policy)==1:
+            # gating_policy has a single item (as it does by default), so use only that (index=0);
+            gating_signal.index = 0
+        else:
+            # gating_policy has multiple items, so try to assign to the corresponding item (using index passed as arg)
+            gating_signal.index = index
+            try:
+                self.gating_policy[gating_signal.index]
+            except IndexError:
+                raise GatingMechanismError("PROGRAM ERROR: Index for {} of {} ({}) "
+                                           "exceeds number of items in its {} ({}))".
+                                           format(GatingSignal.__name__, self.name, index,
+                                                  GATING_POLICY, len(self.gating_policy)))
+
         self._output_states.append(gating_signal)
 
         return gating_signal
