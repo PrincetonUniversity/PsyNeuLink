@@ -71,8 +71,9 @@ InputState(s) and/or OutputState(s) it gates must be specified. This can take an
 
     The dictionary can also contain entries for any other GatingSignal attributes to be specified
     (e.g., a *MODULATION* entry, the value of which determines how the GatingSignal modulates the
-    `value <State_Base.value>` of the State(s) that it gates); see `below <GatingSignal_Structure>`
-    for a description of GatingSignal attributes.
+    `value <State_Base.value>` of the State(s) that it gates; or an *INDEX* entry specifying which item
+    of the GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` it should use as its `value
+    <GatingSignal,value>`).
 
 .. _GatingSignal_Structure:
 
@@ -299,6 +300,10 @@ class GatingSignal(ModulatorySignal):
     owner : GatingMechanism
         specifies the `GatingMechanism` to which to assign the GatingSignal.
 
+    index : int : default PRIMARY_OUTPUT_STATE
+        specifies the item of the owner GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` used as the
+        GatingSignal's `value <GatingSignal.value>`.
+
     function : Function or method : default Linear
         specifies the function used to determine the value of the GatingSignal from the value of its
         `owner <GatingMechanism.owner>`.
@@ -345,6 +350,10 @@ class GatingSignal(ModulatorySignal):
     value : number, list or np.ndarray
         result of the GatingSignal's `function <GatingSignal.function>`
         (same as its `gating_signal <GatingSignal.gating_signal>`).
+
+    index : int
+        the item of the owner GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` used as the
+        GatingSignal's `value <GatingSignal.value>`.
 
     gating_signal : number, list or np.ndarray
         result of the GatingSignal's `function <GatingSignal.function>` (same as its `value <GatingSignal.value>`).

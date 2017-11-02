@@ -1278,6 +1278,7 @@ def _parse_connection_specs(connectee_state_type,
 
         # FIX: 10/3/17 - IF IT IS ALREADY A PROJECTION OF THE CORRECT TYPE FOR THE CONNECTEE:
         # FIX:               ?? RETURN AS IS, AND/OR PARSE INTO DICT??
+
         # If a Mechanism, State, or State type is used to specify the connection on its own (i.e., w/o dict or tuple)
         #     put in ConnectionTuple as both State spec and Projection spec (to get Projection for that State)
         #     along with defaults for weight and exponent, and call _parse_connection_specs recursively

@@ -94,23 +94,33 @@ as the input to the GatingMechanism's `function <GatingMechanism.function>`.
 Function
 ~~~~~~~~
 
-A GatingMechanism's `function <GatingMechanism.function>` uses the `value <InputState.value>` of its
-`primary InputState  <InputState_Primary>` to generate an `gating_policy <GatingMechanism.gating_policy>`,
-each item of which is  assigned as the `value <GatingSignal.value>` of a corresponding `GatingSignal` in its
-`gating_signals <GatingMechanism.gating_signals>` attribute.
-
+A GatingMechanism's `function <GatingMechanism.function>` uses the `value <InputState.value>` of its `primary
+InputState  <InputState_Primary>` to generate an `gating_policy <GatingMechanism.gating_policy>`.  The default
+`function <GatingMechanism.function>` for a GatingMechanism is a `Linear` identity function, that simply takes
+the `value <InputState.value>` of its `primary InputState <InputState_Primary>` and assigns this as the single item
+of its `gating_policy <GatingMechanism.gating_policy>`.  This can be replaced by a `Function` that generates
+a `gating_policy <GatingMechanism.gating_policy>` with multiple values, which may be useful if the GatingMechanism
+is assigned more than one `GatingSignal`.
+\
 .. _GatingMechanism_Output:
 
 Output
 ~~~~~~
 
 A GatingMechanism has a `GatingSignal` for each `InputState` and/or `OutputState` specified in its `gating_signals
-<GatingMechanism.gating_signals>` attribute, to which it sends a `GatingProjection`.  The `value <GatingSignal.value>`
-of each GatingSignal is assigned the value of the corresponding item in the GatingMechanism's `gating_policy
-<GatingMechanism.gating_policy>` attribute.  GatingSignals are a type of `OutputState`, and so they are also listed
+<GatingMechanism.gating_signals>` attribute, to which it sends a `GatingProjection`.  If the GatingMechanism's
+`function <GatingMechanism.function>` generates a `gating_policy <GatingMechanism.gating_policy>` with a single value
+(the default), then this is used as the `value <GatingSignal.value>` of all of the GatingMechanism's `gating_signals
+<GatingMechanism.gating_signals>`.  If the `gating_policy <GatingMechanism.gating_policy>` has multiple items, and this
+is the same as the number of GatingSignals, then each GatingSignal is assigned the value of the corresponding item in
+the `gating_policy <GatingMechanism.gating_policy>`.  If there is a different number of `gating_signals
+<GatingMechanism.gating_signals>` than the number of items in the `gating_policy <GatingMechanism.gating_policy>`,
+then the `index <GatingSignal.index>` attribute of each GatingSignal must be specified (e.g., in a `specification
+dictionary <GatingSignal_Specification>` in the **gating_signal** argument of the GatingMechanism's constructor),
+or an error is generated.  The GatingSignals of a GatingMechanism are listed in its `gating_signals
+<GatingMechanism.gating_signals>` attribute.  Since GatingSignals are a type of `OutputState`, they are also listed
 in the GatingMechanism's `output_states <Mechanism_Base.output_states>` attribute. The InputStates and/or OutputStates
 modulated by a GatingMechanism's GatingSignals can be displayed using its :func:`show <GatingMechanism.show>` method.
-
 
 .. _GatingMechanism_Execution:
 
@@ -365,7 +375,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
     def _instantiate_output_states(self, context=None):
 
-        from psyneulink.components.states.state import _instantiate_state
         from psyneulink.globals.registry import register_category
 
         # Create registry for GatingSignals (to manage names)
@@ -379,52 +388,15 @@ class GatingMechanism(AdaptiveMechanism_Base):
             self._output_states = []
 
             for i, gating_signal in enumerate(self.gating_signals):
-
-                # FIX: 10/24/17 - THIS NEEDS TO BE RECONCILED WITH INDEX ASSIGNMENTS BELOW
-                if not hasattr(self, GATING_POLICY) or self.gating_policy is None:
-                    self.gating_policy = np.atleast_2d(defaultGatingPolicy)
-                else:
-                    self.gating_policy = np.append(self.gating_policy, [defaultGatingPolicy], axis=0)
-
-                # Update self.value to reflect change in gating_policy (and the new number of gating_signals).
-                #    This is necessary, since function isn't fully executed during init (in _instantiate_function);
-                #    it returns the default_gating policy which has only a single item,
-                #    however validation of indices for OutputStates requires proper number of items be in self.value
-                self.value = self.gating_policy
-                self._default_value = self.value
-
-
-                # PARSE gating_signal SPECIFICATION -----------------------------------------------------------------------
-
-                # Parses control_signal specifications (in call to State._parse_state_spec)
-                #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
-                gating_signal = _instantiate_state(state_type=GatingSignal,
-                                                    owner=self,
-                                                    reference_value=defaultGatingPolicy,
-                                                    modulation=self.modulation,
-                                                    state_spec=gating_signal)
-
-                # Add GatingProjection to GatingMechanism's list of GatingProjections
-                try:
-                    self.gating_projections.extend(gating_signal.efferents)
-                except AttributeError:
-                    self.gating_projections = gating_signal.efferents.copy()
-
-                # Add GatingSignal to output_states list
-                # All GatingSignals use a single gating policy value by default
-                # FIX: 10/24/17 - THIS SHOULD BE RECONCILED WITH GATING POLICY ABOVE AND OUTPUT OF FUNCTION
-                gating_signal.index = 0
-                self._output_states.append(gating_signal)
+                self._instantiate_gating_signal(gating_signal, index=i, context=context)
 
         super()._instantiate_output_states(context=context)
 
         # Reassign gating_signals to capture any user_defined GatingSignals instantiated by in call to super
         self._gating_signals = [state for state in self.output_states if isinstance(state, GatingSignal)]
 
-    def _instantiate_gating_signal(self, gating_signal=None, context=None):
+    def _instantiate_gating_signal(self, gating_signal, index:int=0, context=None):
         """Instantiate GatingSignal OutputState and assign (if specified) or instantiate GatingProjection
-
-        # Extends gating_policy and to accommodate instantiated projection
 
         Notes:
         * gating_signal arg can be a:
@@ -441,70 +413,56 @@ class GatingMechanism(AdaptiveMechanism_Base):
         * State._parse_state_spec() is used to parse gating_signal arg
         * params are expected to be for (i.e., to be passed to) GatingSignal;
         * wait to instantiate deferred_init() projections until after GatingSignal is instantiated,
-            so that correct OutputState can be assigned as its sender;
-        * index of OutputState is incremented based on number of GatingSignals already instantiated;
-            this means that the GatingMechanism's function must return as many items as it has GatingSignals,
-            with each item of the function's value used by a corresponding GatingSignal.
+            so that correct OutputState can be assigned as its sender
+        # * index of OutputState is incremented based on number of GatingSignals already instantiated;
+        #     this means that the GatingMechanism's function must return as many items as it has GatingSignals,
+        #     with each item of the function's value used by a corresponding GatingSignal.
             Note: multiple GatingProjections can be assigned to the same GatingSignal to achieve "divergent gating"
                   (that is, gating of many states with a single value -- e.g., LC)
+        * index of OutputState is assigned to [0], so that all GatingSignals use the same single value produced
+            returned by a GatingMechanism's function
 
         Returns GatingSignal (OutputState)
         """
 
-        from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
-        from psyneulink.components.projections.projection import _validate_receiver
+        from psyneulink.components.states.state import _instantiate_state
 
-        # EXTEND gating_policy TO ACCOMMODATE NEW GatingSignal -------------------------------------------------
-        #        also used to determine constraint on GatingSignal value
+        if not hasattr(self, GATING_POLICY) or self.gating_policy is None:
+            self.gating_policy = np.atleast_2d(defaultGatingPolicy)
+        else:
+            self.gating_policy = np.append(self.gating_policy, [defaultGatingPolicy], axis=0)
 
-        # if not hasattr(self, GATING_POLICY) or self.gating_policy is None:
-        #     self.gating_policy = np.array(defaultGatingPolicy)
-        # else:
-        #     self.gating_policy = np.append(self.gating_policy, defaultGatingPolicy)
-        #
-        # # GET index FOR GatingSignal OutputState
-        # try:
-        #     # If there are as many OutputStates as items in self.value, assume that each
-        #     if len(self.gating_signals) == len(self.value):
-        #         output_state_index = len(self.gating_signals) - 1
-        #     else:
-        #         output_state_index = 0
-        # except (AttributeError, TypeError):
-        #     output_state_index = 0
-        #
-        #
-        # # PARSE gating_signal SPECIFICATION -----------------------------------------------------------------------
-        #
-        # from psyneulink.components.states.state import _instantiate_state
-        # # Parses control_signal specifications (in call to State._parse_state_spec)
-        # #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
-        # gating_signal = _instantiate_state(state_type=GatingSignal,
-        #                                     owner=self,
-        #                                     reference_value=defaultGatingPolicy,
-        #                                     modulation=self.modulation,
-        #                                     state_spec=gating_signal)
-        #
-        # # Add GatingProjection to GatingMechanism's list of GatingProjections
-        # try:
-        #     self.gating_projections.extend(gating_signal.efferents)
-        # except AttributeError:
-        #     self.gating_projections = gating_signal.efferents.copy()
-        #
-        # # FIX: CONSIDER OVERRIDING output_states PROPERTY WITH ASSIGNMENT TO gating_signals
-        # # FIX: 10/3/17 - REVISE TO CALL super()._instantiate_output_states
-        # # UPDATE output_states
-        # try:
-        #     self.output_states[gating_signal.name] = gating_signal
-        # except (AttributeError, TypeError):
-        #     self.output_states = ContentAddressableList(component_type=State_Base,
-        #                                                 list=[gating_signal],
-        #                                                 name=self.name + '.output_states')
-        # # Add index assignment to OutputState
-        # gating_signal.index = output_state_index
-        # # (Re-)assign gating_signals attribute to output_states
-        # self._gating_signals = self.output_states
-        #
-        # return gating_signal
+        # Update self.value to reflect change in gating_policy (and the new number of gating_signals).
+        #    This is necessary, since function isn't fully executed during init (in _instantiate_function);
+        #    it returns the default_gating policy which has only a single item,
+        #    however validation of indices for OutputStates requires proper number of items be in self.value
+        self.value = self.gating_policy
+        self._default_value = self.value
+
+
+        # PARSE gating_signal SPECIFICATION -----------------------------------------------------------------------
+
+        # Parses control_signal specifications (in call to State._parse_state_spec)
+        #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
+        gating_signal = _instantiate_state(state_type=GatingSignal,
+                                            owner=self,
+                                            reference_value=defaultGatingPolicy,
+                                            modulation=self.modulation,
+                                            state_spec=gating_signal)
+
+        # Add GatingProjection to GatingMechanism's list of GatingProjections
+        try:
+            self.gating_projections.extend(gating_signal.efferents)
+        except AttributeError:
+            self.gating_projections = gating_signal.efferents.copy()
+
+        # Add GatingSignal to output_states list
+        # All GatingSignals use a single gating policy value by default
+        # FIX: 10/24/17 - THIS SHOULD BE RECONCILED WITH GATING POLICY ABOVE AND OUTPUT OF FUNCTION
+        gating_signal.index = index
+        self._output_states.append(gating_signal)
+
+        return gating_signal
 
     def _instantiate_attributes_after_function(self, context=None):
         """Take over as default GatingMechanism (if specified) and implement any specified GatingProjections
