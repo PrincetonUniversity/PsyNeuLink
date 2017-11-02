@@ -5076,7 +5076,9 @@ class AdaptiveIntegrator(
 
     def get_context_initializer(self, data=None):
         if data is None:
-            data = [0.0 for x in range(self._variable_length)]
+            # previous value should be extended version of the initializer
+            # for some reason it's nested list
+            data = self.previous_value[0]
         return tuple([tuple(data)])
 
 

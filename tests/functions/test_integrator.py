@@ -6,13 +6,14 @@ import pytest
 
 SIZE=1000
 test_var = np.random.rand(SIZE)
+test_initializer = np.random.rand(SIZE)
 test_noise_arr = np.random.rand(SIZE)
 
 RAND0_1 = np.random.random()
 RAND2 = np.random.rand()
 RAND3 = np.random.rand()
 
-def AdaptiveIntFun(init, value, iterations, rate, noise, offset):
+def AdaptiveIntFun(init, value, iterations, rate, noise, offset, **kwargs):
     val = np.full_like(value, init)
     for i in range(iterations):
         val = (1 - rate) * val + rate * value + noise + offset
@@ -21,12 +22,16 @@ def AdaptiveIntFun(init, value, iterations, rate, noise, offset):
 test_data = [
     (Function.AdaptiveIntegrator, test_var, {'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, None, AdaptiveIntFun),
     (Function.AdaptiveIntegrator, test_var, {'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, None, AdaptiveIntFun),
+    (Function.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, None, AdaptiveIntFun),
+    (Function.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, None, AdaptiveIntFun),
 ]
 
 # use list, naming function produces ugly names
 names = [
     "AdaptiveIntegrator",
     "AdaptiveIntegrator Noise Array",
+    "AdaptiveIntegrator Initializer",
+    "AdaptiveIntegrator Initializer Noise Array",
 ]
 
 GROUP_PREFIX="Integrator "
