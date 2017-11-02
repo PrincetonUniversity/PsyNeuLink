@@ -569,6 +569,11 @@ kwInitialPoint = 'initial_point'
 
 MODULATION = 'modulation'
 
+# LearningMechanism:
+LEARNING_SIGNALS = 'learning_signals'
+LEARNING_SIGNAL_SPECS = 'LEARNING_SIGNAL_SPECS'
+LEARNED_PARAM = 'learned_param'
+
 # ControlMechanism / EVCControlMechanism
 OBJECTIVE_MECHANISM = "objective_mechanism"
 MONITOR_FOR_CONTROL = "monitor_for_control"
@@ -576,9 +581,6 @@ PREDICTION_MECHANISM = "Prediction Mechanism"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
-LEARNING_SIGNALS = 'learning_signals'
-LEARNING_SIGNAL_SPECS = 'LEARNING_SIGNAL_SPECS'
-LEARNED_PARAM = 'learned_param'
 CONTROL_SIGNALS = 'control_signals'
 CONTROL_SIGNAL_SPECS = 'CONTROL_SIGNAL_SPECS'
 CONTROLLED_PARAMS = 'CONTROLLED_PARAMS'
@@ -592,11 +594,13 @@ SYSTEM_DEFAULT_CONTROLLER = "DefaultController"
 EVC_SIMULATION = 'SIMULATING'
 ALLOCATION_SAMPLES = "allocation_samples"
 
+
 # GatingMechanism
 MAKE_DEFAULT_GATING_MECHANISM = "make_default_gating_mechanism"
 GATING_SIGNALS = 'gating_signals'
 GATING_SIGNAL_SPECS = 'GATING_SIGNAL_SPECS'
 GATE = 'GATE'
+GATED_STATES = 'GATED_STATES'
 GATING_PROJECTIONS = 'GatingProjections'
 GATING_POLICY = 'gating_policy'
 

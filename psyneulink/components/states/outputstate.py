@@ -339,7 +339,7 @@ from psyneulink.components.functions.function import Linear, LinearCombination, 
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.keywords import \
-    PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, \
+    PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, INPUT_STATE, INPUT_STATES, RECEIVER, GATING_SIGNAL, \
     STATE, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, RESULT, INDEX, \
     CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -572,6 +572,11 @@ class OutputState(State_Base):
 
     componentType = OUTPUT_STATE
     paramsType = OUTPUT_STATE_PARAMS
+
+    ConnectsWith = [INPUT_STATE]
+    ConnectsWithAttribute = INPUT_STATES
+    ProjectionSocket = RECEIVER
+    Modulators = [GATING_SIGNAL]
 
     class ClassDefaults(State_Base.ClassDefaults):
         variable = None
