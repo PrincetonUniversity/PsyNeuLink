@@ -1261,23 +1261,19 @@ def _parse_connection_specs(connectee_state_type,
     try:
        ConnectsWith = [StateRegistry[name].subclass for name in connectee_state_type.ConnectsWith]
     except AttributeError:
-        raise ProjectionError("{} does not have ConnectsWith attribute".
-                              format(connectee_state_type.__name__))
+        raise ProjectionError("{} does not have ConnectsWith attribute".format(connectee_state_type.__name__))
     try:
        connect_with_attr = connectee_state_type.ConnectsWithAttribute
     except AttributeError:
-        raise ProjectionError("{} does not have ConnectsWithAttribute attribute".
-                              format(connectee_state_type.__name__))
+        raise ProjectionError("{} does not have ConnectsWithAttribute attribute".format(connectee_state_type.__name__))
     try:
        PROJECTION_SOCKET = connectee_state_type.ProjectionSocket
     except AttributeError:
-        raise ProjectionError("{} does not have ProjectionSocket attribute".
-                              format(connectee_state_type.__name__))
+        raise ProjectionError("{} does not have ProjectionSocket attribute".format(connectee_state_type.__name__))
     try:
        Modulators = [StateRegistry[name].subclass for name in connectee_state_type.Modulators]
     except AttributeError:
-        raise ProjectionError("{} does not have Modulators attribute".
-                              format(connectee_state_type.__name__))
+        raise ProjectionError("{} does not have Modulators attribute".format(connectee_state_type.__name__))
 
 
     # FIX: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

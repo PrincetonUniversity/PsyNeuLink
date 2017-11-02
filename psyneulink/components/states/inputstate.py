@@ -631,7 +631,7 @@ class InputState(State_Base):
                     SYSTEM_INPUT_STATE,
                     LEARNING_SIGNAL,
                     GATING_SIGNAL]
-    ConnectWithAttribute = OUTPUT_STATES
+    ConnectsWithAttribute = OUTPUT_STATES
     ProjectionSocket = SENDER
     Modulators = [GATING_SIGNAL]
 
