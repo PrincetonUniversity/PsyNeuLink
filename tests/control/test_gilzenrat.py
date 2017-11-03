@@ -178,7 +178,7 @@ class TestGilzenratFullModel:
 
         # Implement self-excitatory (auto) and mutually inhibitory (hetero) connections within the decision layer
         decision_layer = GilzenratTransferMechanism(size=2,
-                                                    initial_value=np.array([[1.0]]),
+                                                    initial_value=np.array([[1, 0]]),
                                                     matrix=np.matrix([[1, 0], [0, -1]]),
                                                     # auto=1.0,
                                                     # hetero=-1.0,
