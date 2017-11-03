@@ -426,9 +426,12 @@ class LeabraMechanism(ProcessingMechanism_Base):
             output_size = len(leabra_network.layers[-1].units)
             hidden_layers = len(leabra_network.layers) - 2
             hidden_sizes = list(map(lambda x: len(x.units), leabra_network.layers))[1:-2]
+            training_flag = None
         else:
             if hidden_sizes is None:
                 hidden_sizes = input_size
+            if training_flag is None:
+                training_flag = False
             leabra_network = build_network(input_size, output_size, hidden_layers, hidden_sizes, training_flag)
 
         function = LeabraFunction(network=leabra_network)
@@ -470,8 +473,8 @@ class LeabraMechanism(ProcessingMechanism_Base):
             for i in range(len(conns)):
                 conns[i].spec.lrule = 'None'  # change each connection's learning rule to None
             self._training_flag = value
-        else:
-            pass
+        elif value is None:
+            self._training_flag = value
 
     @property
     def network(self):
