@@ -464,11 +464,11 @@ def iscompatible(candidate, reference=None, **kargs):
                     # No reference,so item by item comparison is not relevant
                     if reference is None:
                         return True
-                    # If reference was provided, compare element by element
-                    elif all(isinstance(c, type(r)) for c, r in zip(candidate,reference)):
-                        return True
-                    # elif all(iscompatible(c, r) for c, r in zip(candidate,reference)):
+                    # # If reference was provided, compare element by element
+                    # elif all(isinstance(c, type(r)) for c, r in zip(candidate,reference)):
                     #     return True
+                    elif all(iscompatible(c, r) for c, r in zip(candidate,reference)):
+                        return True
                     # elif not all(isinstance(c, type(r)) for c, r in zip(candidate,reference)):
                     #     for c, r in zip(candidate,reference):
                     #         # if isinstance(c, type(r)):
