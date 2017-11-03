@@ -1083,14 +1083,14 @@ def _parse_connection_specs(connectee_state_type,
                 usually it is a Mechanism or State to/from which the connectee_state_type should send/receive the Projection,
                 so calling the method "_parse_projections" would be misleading.
 
-    CONNECTION CHARACTERISTICS DECLARED BY EACH TYPE (SUBCLASS) OF State:
+    Connection attributes declared for each type (subclass) of State that are used here:
         ConnectsWith : State
            - specifies the type (subclass) of State to which the connectee_state_type should be assigned projection(s)
-        connect_with_attr : str
+        ConnectsWithAttribute : str
            - specifies the name of the attribute of the Mechanism that holds the states of the ConnectsWith's type
-        PROJECTION_SOCKET : [SENDER or RECEIVER]
+        ProjectionSocket : [SENDER or RECEIVER]
            - specifies for this method whether to use a Projection's sender or receiver for the connection
-        Modulator : ModulatorySignal
+        Modulators : ModulatorySignal
            -  class of ModulatorySignal that can send ModulatoryProjection to the connectee_state_type
 
     This method deals with CONNECTION specifications that are made in one of the following places/ways:
@@ -1173,7 +1173,7 @@ def _parse_connection_specs(connectee_state_type,
     ConnectsWith = [StateRegistry[name].subclass for name in connectee_state_type.ConnectsWith]
     connect_with_attr = connectee_state_type.ConnectsWithAttribute
     PROJECTION_SOCKET = connectee_state_type.ProjectionSocket
-    Modulators = [StateRegistry[name].subclass for name in connectee_state_type.Modulators]
+    modulators = [StateRegistry[name].subclass for name in connectee_state_type.Modulators]
 
     DEFAULT_WEIGHT = None
     DEFAULT_EXPONENT = None
@@ -1372,7 +1372,7 @@ def _parse_connection_specs(connectee_state_type,
                                                          state_type=connectee_state_type)
 
                 _validate_connection_request(owner,
-                                             ConnectsWith + Modulators,
+                                             ConnectsWith + modulators,
                                              projection_spec,
                                              PROJECTION_SOCKET,
                                              connectee_state_type)
