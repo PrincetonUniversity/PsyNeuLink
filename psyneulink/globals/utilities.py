@@ -469,6 +469,7 @@ def iscompatible(candidate, reference=None, **kargs):
                     # elif all(isinstance(c, type(r)) for c, r in zip(candidate,reference)):
                     #     return True
                     # MODIFIED 11/2/17 NEW:
+                    # Recursively call iscompatible to check elements
                     elif all(iscompatible(c, r) for c, r in zip(candidate,reference)):
                         return True
                     # MODIFIED 11/2/17 END:
