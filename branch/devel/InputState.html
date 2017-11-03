@@ -527,7 +527,12 @@ each of which must match the format (number and types of elements) of the InputS
 <dt id="psyneulink.components.states.inputstate.InputState.size">
 <code class="descname">size</code><a class="headerlink" href="#psyneulink.components.states.inputstate.InputState.size" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>int, list or np.ndarray of ints</em> – specifies variable as array(s) of zeros if <strong>variable</strong> is not passed as an argument;
-if <strong>variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.</p>
+if <strong>variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.
+As an example, the following mechanisms are equivalent:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">T1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="n">T2</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="attribute">
