@@ -536,12 +536,14 @@ def build_network(n_input, n_output, n_hidden, hidden_sizes=None, training_flag=
 
     return network
 
+
 def test_network(network, input_pattern):
     assert len(network.layers[0].units) == len(input_pattern)
     network.set_inputs({'input_layer': input_pattern})
 
     network.trial()
     return [unit.act_m for unit in network.layers[-1].units]
+
 
 def train_network(network, input_pattern, output_pattern):
     """Run one trial on the network"""
