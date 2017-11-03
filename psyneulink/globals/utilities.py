@@ -460,21 +460,29 @@ def iscompatible(candidate, reference=None, **kargs):
             if not match_length:
                 return True
             else:
+                cr = zip(candidate, reference)
                 if len(candidate) == match_length:
                     # No reference,so item by item comparison is not relevant
                     if reference is None:
                         return True
-                    # If reference was provided, compare element by element
-                    elif all(isinstance(c, type(r)) for c, r in zip(candidate,reference)):
-                        return True
+                    # If reference was provided, compare element by element for type compatibility
+                    elif all(isinstance(c, type(r)) for c, r in cr):
+                        # and length (if the elements are not numbers)
+                        if not isinstance(candidate[0], numbers.Number):
+                            if all(len(c)==len(r) for c, r in cr):
+                                return True
+                            else:
+                                return False
+                        else:
+                            return True
                     # MODIFIED 11/2/17 NEW:
-                    # Recursively call iscompatible to check elements
-                    elif all(iscompatible(c, r) for c, r in zip(candidate,reference)):
+                    # If items of c and r are not of the same time, call iscompatible recursively to check
+                    elif all(iscompatible(c, r) for c, r in cr):
                         return True
                     # MODIFIED 11/2/17 END:
                     # Deal with ints in one and floats in the other
                     elif all((isinstance(c, numbers.Number) and isinstance(r, numbers.Number))
-                             for c, r in zip(candidate,reference)):
+                             for c, r in cr):
                         return True
                     else:
                         return False
