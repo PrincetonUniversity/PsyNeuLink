@@ -466,15 +466,15 @@ def iscompatible(candidate, reference=None, **kargs):
                     if reference is None:
                         return True
                     # If reference was provided, compare element by element for type compatibility
-                    elif all(isinstance(c, type(r)) for c, r in cr):
-                        # and length (if the elements are not numbers)
-                        if not isinstance(candidate[0], numbers.Number):
-                            if all(len(c)==len(r) for c, r in cr):
-                                return True
-                            else:
-                                return False
-                        else:
-                            return True
+                    # elif all(isinstance(c, type(r)) for c, r in cr):
+                    #     # and length (if the elements are not numbers)
+                    #     if not isinstance(candidate[0], numbers.Number):
+                    #         if all(len(c)==len(r) for c, r in cr):
+                    #             return True
+                    #         else:
+                    #             return False
+                    #     else:
+                    #         return True
                     # MODIFIED 11/2/17 NEW:
                     # If items of c and r are not of the same time, call iscompatible recursively to check
                     elif all(iscompatible(c, r) for c, r in cr):
