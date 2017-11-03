@@ -21,8 +21,11 @@ class ScratchPadError(Exception):
 
 # print (pnl.iscompatible([[2,3],[0]], [[0,0],[0]]))
 
-print (pnl.iscompatible([[2,3],[0]], [[0,0],np.array([0])]))
+# print (pnl.iscompatible([[2,3],[1]], [[0,0],np.array([0])]))
 # print (pnl.iscompatible([[1,0],[0]], [[0,0],np.array([0])]))
+print (pnl.iscompatible(np.array([[1,0]]), np.array([[1,1]])))
+
+
 
 
 # ----------------------------------------------- psyneulink -----------------------------------------------------------
