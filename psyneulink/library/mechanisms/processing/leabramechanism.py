@@ -296,9 +296,10 @@ class LeabraMechanism(ProcessingMechanism_Base):
     hidden_layers : int : default 0
         an integer specifying how many hidden layers are in the leabra network.
 
-    hidden_sizes : List[int]
-        if specified, this should be a list of integers, specifying the size of each hidden layer. The number of
-        integers in **hidden_sizes** should be equal to the number of hidden layers.
+    hidden_sizes : int or List[int] : default input_size
+        if specified, this should be a list of integers, specifying the size of each hidden layer. If **hidden_sizes**
+        if a list, the number of integers in **hidden_sizes** should be equal to the number of hidden layers. If not
+        specified, hidden layers will default to the same size as the input layer.
 
     training_flag : boolean
         a boolean specifying whether the leabra network should be learning. If True, the leabra network will adjust
@@ -345,9 +346,8 @@ class LeabraMechanism(ProcessingMechanism_Base):
     hidden_layers : int : default 0
         an integer specifying how many hidden layers are in the leabra network.
 
-    hidden_sizes : List[int]
-        if specified, this should be a list of integers, specifying the size of each hidden layer. The number of
-        integers in **hidden_sizes** should be equal to the number of hidden layers.
+    hidden_sizes : int or List[int] : default input_size
+        an integer or list of integers, specifying the size of each hidden layer.
 
     training_flag : boolean
         a boolean specifying whether the leabra network should be learning. If True, the leabra network will adjust
