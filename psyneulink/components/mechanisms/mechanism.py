@@ -410,8 +410,11 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   <InputState.value>` of the corresponding InputStates for any that are not explicitly specified in the
   **input_states** argument or *INPUT_STATES* entry (see below).
 
-* **size** (int, list or ndarray) -- specifies the number and format of items in the Mechanism's variable,
-  if **default_variable** is not specified.  The relationship to any specifications in the **input_states** argument or
+* **size** (int, list or ndarray) -- specifies the number and length of items in the Mechanism's variable,
+  if **default_variable** is not specified. For example, the following mechanisms are equivalent::
+    T1 = TransferMechanism(size = [3, 2])
+    T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
+  The relationship to any specifications in the **input_states** argument or
   *INPUT_STATES* entry of a **params** dictionary is the same as for the **default_variable** argument,
   with the latter taking precedence (see above).
 
@@ -708,7 +711,7 @@ from psyneulink.globals.defaults import timeScaleSystemDefault
 from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
+from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
 __all__ = [
@@ -930,7 +933,7 @@ class Mechanism_Base(Mechanism):
 
     COMMENT:
         phaseSpec : int or float :  default 0
-            determines the `TIME_STEP`\ (s) at which the Mechanism is executed as part of a System
+            determines the `TIME_STEP` (s) at which the Mechanism is executed as part of a System
             (see :ref:`Process_Mechanisms` for specification, and :ref:`System Phase <System_Execution_Phase>`
             for how phases are used).
     COMMENT
@@ -1044,6 +1047,8 @@ class Mechanism_Base(Mechanism):
         """
 
         # Forbid direct call to base class constructor
+        # this context stuff is confusing: when do I use super().__init__(context=self)
+        # and when do I use super().__init__(context=context)?
         if context is None or (not isinstance(context, type(self)) and not VALIDATE in context):
             raise MechanismError("Direct call to abstract class Mechanism() is not allowed; "
                                  "use a subclass")
@@ -1833,7 +1838,7 @@ class Mechanism_Base(Mechanism):
     def _get_variable_from_input(self, input):
 
         input = np.atleast_2d(input)
-        num_inputs = np.size(input,0)
+        num_inputs = np.size(input, 0)
         num_input_states = len(self.input_states)
         if num_inputs != num_input_states:
             # Check if inputs are of different lengths (indicated by dtype == np.dtype('O'))

@@ -629,9 +629,11 @@ class Projection_Base(Projection):
             except AttributeError:
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 
-         # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) InputState
+        # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) InputState
+        # MODIFIED 11/1/17 CW: Added " hasattr(self, "prefs") and" in order to avoid errors. Otherwise, this was being
+        # called and yielding an error: " AttributeError: 'MappingProjection' object has no attribute '_prefs' "
         if isinstance(self.receiver, Mechanism):
-            if (len(self.receiver.input_states) > 1 and
+            if (len(self.receiver.input_states) > 1 and hasattr(self, 'prefs') and
                     (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
                 print("{0} has more than one InputState; {1} has been assigned to the first one".
                       format(self.receiver.owner.name, self.name))

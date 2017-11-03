@@ -1020,3 +1020,4 @@ def get_class_attributes(cls):
     return [item
             for item in inspect.getmembers(cls)
             if item[0] not in boring]
+
