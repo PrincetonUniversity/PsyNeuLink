@@ -61,7 +61,7 @@ class TestLeabraMechanismPrecision:
         in_size = 4
         out_size = 4
         num_hidden = 1
-        num_trials = 10
+        num_trials = 2
         train = False
         inputs = [[0, 1, -1, 2]] * num_trials
         train_data = [[0] * out_size] * num_trials
@@ -90,11 +90,11 @@ class TestLeabraMechanismPrecision:
         p2_net = Process(pathway=[T2_net, proj_net, L_net])
         s_net = System(processes=[p1_net, p2_net])
         for i in range(num_trials):
-            out_spec = s_spec.run(inputs={T1_spec: inputs[i], T2_spec: np.zeros(out_size)})
+            out_spec = s_spec.run(inputs={T1_spec: inputs[i], T2_spec: train_data[i]})
             pnl_output_spec = out_spec[-1][0]
             leabra_output = run_network(leabra_net, inputs[i])
             diffs_spec = np.abs(np.array(pnl_output_spec) - np.array(leabra_output))
-            out_net = s_net.run(inputs={T1_net: inputs[i], T2_net: np.zeros(out_size)})
+            out_net = s_net.run(inputs={T1_net: inputs[i], T2_net: train_data[i]})
             pnl_output_net = out_net[-1][0]
             diffs_net = np.abs(np.array(pnl_output_net) - np.array(leabra_output))
             assert all(diffs_spec < precision) and all(diffs_net < precision)
@@ -105,8 +105,111 @@ class TestLeabraMechanismPrecision:
         diffs_spec = np.abs(pnl_output_spec - leabra_output)
         out_net = s_net.run(inputs={T1_net: inputs, T2_net: train_data})
         pnl_output_net = np.array(out_net[-1][0])
-        print('diffs_spec: ', diffs_spec)
-        print('pnl_output_spec: ', pnl_output_spec)
-        print('pnl_output_net: ', pnl_output_net)
         diffs_net = np.abs(pnl_output_net - leabra_output)
         assert all(diffs_spec < precision) and all(diffs_net < precision)
+
+    def test_leabra_prec_with_train(self):
+        in_size = 4
+        out_size = 4
+        num_hidden = 1
+        num_trials = 4
+        train = True
+        inputs = [[0, 1, .5, -.2]] * num_trials
+        train_data = [[.2, .5, 1, -.5]] * num_trials
+        precision = 0.00001  # how far we accept error between PNL and Leabra output
+        random_seed = 1  # because Leabra network initializes with small random weights
+        random.seed(random_seed)
+        L_spec = LeabraMechanism(input_size=in_size, output_size=out_size, hidden_layers=num_hidden, training_flag=train)
+        random.seed(random_seed)
+        leabra_net = build_network(in_size, out_size, num_hidden, None, train)
+        leabra_net2 = copy.deepcopy(leabra_net)
+        L_net = LeabraMechanism(leabra_net2)
+        # leabra_net should be identical to the network inside L_net
+
+        T1_spec = TransferMechanism(name='T1', size=in_size, function=Linear)
+        T2_spec = TransferMechanism(name='T2', size=out_size, function=Linear)
+        T1_net = TransferMechanism(name='T1', size=in_size, function=Linear)
+        T2_net = TransferMechanism(name='T2', size=out_size, function=Linear)
+
+        p1_spec = Process(pathway=[T1_spec, L_spec])
+        proj_spec = MappingProjection(sender=T2_spec, receiver=L_spec.input_states[1])
+        p2_spec = Process(pathway=[T2_spec, proj_spec, L_spec])
+        s_spec = System(processes=[p1_spec, p2_spec])
+
+        p1_net = Process(pathway=[T1_net, L_net])
+        proj_net = MappingProjection(sender=T2_net, receiver=L_net.input_states[1])
+        p2_net = Process(pathway=[T2_net, proj_net, L_net])
+        s_net = System(processes=[p1_net, p2_net])
+        for i in range(num_trials):
+            out_spec = s_spec.run(inputs={T1_spec: inputs[i], T2_spec: train_data[i]})
+            pnl_output_spec = out_spec[-1][0]
+            leabra_output = train_network(leabra_net, inputs[i], train_data[i])
+            diffs_spec = np.abs(np.array(pnl_output_spec) - np.array(leabra_output))
+            out_net = s_net.run(inputs={T1_net: inputs[i], T2_net: train_data[i]})
+            pnl_output_net = out_net[-1][0]
+            diffs_net = np.abs(np.array(pnl_output_net) - np.array(leabra_output))
+            assert all(diffs_spec < precision) and all(diffs_net < precision)
+        out_spec = s_spec.run(inputs={T1_spec: inputs, T2_spec: train_data})
+        pnl_output_spec = np.array(out_spec[-1][0])
+        for i in range(len(inputs)):
+            leabra_output = np.array(train_network(leabra_net, inputs[i], train_data[i]))
+        diffs_spec = np.abs(pnl_output_spec - leabra_output)
+        out_net = s_net.run(inputs={T1_net: inputs, T2_net: train_data})
+        pnl_output_net = np.array(out_net[-1][0])
+        diffs_net = np.abs(pnl_output_net - leabra_output)
+        assert all(diffs_spec < precision) and all(diffs_net < precision)
+
+    # do one round of training, one round of non-training
+    def test_leabra_prec_half_train(self):
+        in_size = 4
+        out_size = 4
+        num_hidden = 1
+        num_trials = 2
+        train = True
+        inputs = [[0, 1, .5, -.2]] * num_trials
+        train_data = [[.2, .5, 1, -.5]] * num_trials
+        precision = 0.00001  # how far we accept error between PNL and Leabra output
+        random_seed = 1  # because Leabra network initializes with small random weights
+        random.seed(random_seed)
+        L_spec = LeabraMechanism(input_size=in_size, output_size=out_size, hidden_layers=num_hidden, training_flag=train)
+        random.seed(random_seed)
+        leabra_net = build_network(in_size, out_size, num_hidden, None, train)
+        leabra_net2 = copy.deepcopy(leabra_net)
+        L_net = LeabraMechanism(leabra_net2)
+        # leabra_net should be identical to the network inside L_net
+
+        T1_spec = TransferMechanism(name='T1', size=in_size, function=Linear)
+        T2_spec = TransferMechanism(name='T2', size=out_size, function=Linear)
+        T1_net = TransferMechanism(name='T1', size=in_size, function=Linear)
+        T2_net = TransferMechanism(name='T2', size=out_size, function=Linear)
+
+        p1_spec = Process(pathway=[T1_spec, L_spec])
+        proj_spec = MappingProjection(sender=T2_spec, receiver=L_spec.input_states[1])
+        p2_spec = Process(pathway=[T2_spec, proj_spec, L_spec])
+        s_spec = System(processes=[p1_spec, p2_spec])
+
+        p1_net = Process(pathway=[T1_net, L_net])
+        proj_net = MappingProjection(sender=T2_net, receiver=L_net.input_states[1])
+        p2_net = Process(pathway=[T2_net, proj_net, L_net])
+        s_net = System(processes=[p1_net, p2_net])
+        for i in range(num_trials):  # training round
+            out_spec = s_spec.run(inputs={T1_spec: inputs[i], T2_spec: train_data[i]})
+            pnl_output_spec = out_spec[-1][0]
+            leabra_output = train_network(leabra_net, inputs[i], train_data[i])
+            diffs_spec = np.abs(np.array(pnl_output_spec) - np.array(leabra_output))
+            out_net = s_net.run(inputs={T1_net: inputs[i], T2_net: train_data[i]})
+            pnl_output_net = out_net[-1][0]
+            diffs_net = np.abs(np.array(pnl_output_net) - np.array(leabra_output))
+            assert all(diffs_spec < precision) and all(diffs_net < precision)
+
+        L_net.training_flag = False
+        L_spec.training_flag = False
+        for i in range(num_trials):  # non-training round
+            out_spec = s_spec.run(inputs={T1_spec: inputs[i], T2_spec: train_data[i]})
+            pnl_output_spec = out_spec[-1][0]
+            leabra_output = run_network(leabra_net, inputs[i])
+            diffs_spec = np.abs(np.array(pnl_output_spec) - np.array(leabra_output))
+            out_net = s_net.run(inputs={T1_net: inputs[i], T2_net: train_data[i]})
+            pnl_output_net = out_net[-1][0]
+            diffs_net = np.abs(np.array(pnl_output_net) - np.array(leabra_output))
+            assert all(diffs_spec < precision) and all(diffs_net < precision)
