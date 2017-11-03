@@ -301,11 +301,13 @@ class LeabraMechanism(ProcessingMechanism_Base):
         if a list, the number of integers in **hidden_sizes** should be equal to the number of hidden layers. If not
         specified, hidden layers will default to the same size as the input layer.
 
-    training_flag : boolean
+    training_flag : boolean : default None
         a boolean specifying whether the leabra network should be learning. If True, the leabra network will adjust
         its weights using the "leabra" algorithm, based on the training pattern (which is read from its second output
         state). The `training_flag` attribute can be changed after initialization, causing the leabra network to
-        start/stop learning.
+        start/stop learning. If None, `training_flag` will default to False if **leabra_net** argument is not provided.
+        If **leabra_net** argument is provided and `training_flag` is None, then the existing learning rules of the
+        **leabra_net** will be preserved.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
