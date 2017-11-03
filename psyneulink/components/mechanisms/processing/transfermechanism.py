@@ -491,9 +491,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                     raise Exception(
                         "initial_value is {}, type {}\nself.instance_defaults.variable is {}, type {}".format(
                             initial_value,
-                            type(initial_value),
+                            type(initial_value).__name__,
                             self.instance_defaults.variable,
-                            type(self.instance_defaults.variable),
+                            type(self.instance_defaults.variable).__name__,
                         )
                     )
                     raise TransferError(
