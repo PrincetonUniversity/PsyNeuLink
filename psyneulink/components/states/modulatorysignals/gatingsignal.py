@@ -71,8 +71,9 @@ InputState(s) and/or OutputState(s) it gates must be specified. This can take an
 
     The dictionary can also contain entries for any other GatingSignal attributes to be specified
     (e.g., a *MODULATION* entry, the value of which determines how the GatingSignal modulates the
-    `value <State_Base.value>` of the State(s) that it gates); see `below <GatingSignal_Structure>`
-    for a description of GatingSignal attributes.
+    `value <State_Base.value>` of the State(s) that it gates; or an *INDEX* entry specifying which item
+    of the GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` it should use as its `value
+    <GatingSignal,value>`).
 
 .. _GatingSignal_Structure:
 
@@ -233,8 +234,9 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
 from psyneulink.components.states.outputstate import OutputState, PRIMARY_OUTPUT_STATE
 from psyneulink.components.states.state import State_Base
-from psyneulink.globals.keywords import GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, INPUT_STATE, MECHANISM, NAME, \
-    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION_TYPE, STATES, SUM, GATE
+from psyneulink.globals.keywords import \
+    GATING_PROJECTION, GATING_SIGNAL, GATE, RECEIVER, SUM, PROJECTION_TYPE, \
+    INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -299,6 +301,10 @@ class GatingSignal(ModulatorySignal):
     owner : GatingMechanism
         specifies the `GatingMechanism` to which to assign the GatingSignal.
 
+    index : int : default PRIMARY_OUTPUT_STATE
+        specifies the item of the owner GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` used as the
+        GatingSignal's `value <GatingSignal.value>`.
+
     function : Function or method : default Linear
         specifies the function used to determine the value of the GatingSignal from the value of its
         `owner <GatingMechanism.owner>`.
@@ -346,6 +352,10 @@ class GatingSignal(ModulatorySignal):
         result of the GatingSignal's `function <GatingSignal.function>`
         (same as its `gating_signal <GatingSignal.gating_signal>`).
 
+    index : int
+        the item of the owner GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` used as the
+        GatingSignal's `value <GatingSignal.value>`.
+
     gating_signal : number, list or np.ndarray
         result of the GatingSignal's `function <GatingSignal.function>` (same as its `value <GatingSignal.value>`).
 
@@ -384,6 +394,11 @@ class GatingSignal(ModulatorySignal):
     componentName = 'GatingSignal'
     paramsType = OUTPUT_STATE_PARAMS
 
+    ConnectsWith = [INPUT_STATE, OUTPUT_STATE]
+    ConnectsWithAttribute = [INPUT_STATES, OUTPUT_STATES]
+    ProjectionSocket = RECEIVER
+    Modulators = []
+
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
@@ -404,7 +419,7 @@ class GatingSignal(ModulatorySignal):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 index=PRIMARY_OUTPUT_STATE,
+                 index=None,
                  calculate=Linear,
                  function=LinearCombination(operation=SUM),
                  modulation:tc.optional(_is_modulation_param)=None,
@@ -414,8 +429,13 @@ class GatingSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  context=None):
 
-        # Note: index and calculate are not used by GatingSignal;
-        #       they are included here for consistency with OutputState and possible use by subclasses.
+        # Note: calculate is not currently used by GatingSignal;
+        #       it is included here for consistency with OutputState and possible use by subclasses.
+        if index is None and owner is not None:
+            if len(owner.gating_policy)==1:
+                index = PRIMARY_OUTPUT_STATE
+            else:
+                index = SEQUENTIAL
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,

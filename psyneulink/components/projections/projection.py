@@ -321,7 +321,8 @@ from psyneulink.globals.keywords import \
     INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
     MECHANISM, NAME, OUTPUT_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, \
     PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, \
-    STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
+    STANDARD_ARGS, STATE, STATES, WEIGHT, CONTROLLED_PARAMS, LEARNED_PARAM, GATED_STATES, \
+    kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, iscompatible, type_match, is_matrix
@@ -583,7 +584,6 @@ class Projection_Base(Projection):
                           registry=ProjectionRegistry,
                           context=context)
 
-        # # MODIFIED 9/11/16 NEW:
         # Create projection's _stateRegistry and ParameterState entry
         self._stateRegistry = {}
 
@@ -613,22 +613,11 @@ class Projection_Base(Projection):
             # of deferred init
             pass
 
-# FIX: 6/23/16 NEEDS ATTENTION *******************************************************A
-#      NOTE: SENDER IS NOT YET KNOWN FOR DEFAULT control_signal
-#      WHY IS self.sender IMPLEMENTED WHEN sender IS NOT??
-
         self.sender = sender
         self.receiver = receiver
 
-
-# MODIFIED 6/12/16:  VARIABLE & SENDER ASSIGNMENT MESS:
-        # ADD _validate_variable, THAT CHECKS FOR SENDER?
-        # WHERE DOES DEFAULT SENDER GET INSTANTIATED??
-        # VARIABLE ASSIGNMENT SHOULD OCCUR AFTER THAT
-
-# MODIFIED 6/12/16:  ADDED ASSIGNMENT HERE -- BUT SHOULD GET RID OF IT??
-        # AS ASSIGNMENT SHOULD BE DONE IN _validate_variable, OR WHEREVER SENDER IS DETERMINED??
-# FIX:  NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR STATE
+        # FIX: ADD _validate_variable, THAT CHECKS FOR SENDER?
+        # FIX: NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR STATE
         try:
             variable = self._update_variable(sender.value)
         except:
@@ -640,24 +629,15 @@ class Projection_Base(Projection):
             except AttributeError:
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 
-        # MODIFIED 6/27/17 NEW: commented this out because this is throwing an error as follows: -Changyan
-        # AttributeError: 'MappingProjection' object has no attribute '_prefs'
-        # MODIFIED 4/21/17 NEW: [MOVED FROM MappingProjection._instantiate_receiver]
-        # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) InputState
+         # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) InputState
         if isinstance(self.receiver, Mechanism):
-            # if (len(self.receiver.input_states) > 1 and
-            #         (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
-            #     print("{0} has more than one InputState; {1} was assigned to the first one".
-            #           format(self.receiver.owner.name, self.name))
+            if (len(self.receiver.input_states) > 1 and
+                    (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
+                print("{0} has more than one InputState; {1} has been assigned to the first one".
+                      format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.input_state
-        # MODIFIED 4/21/17 END
 
-
-# FIX: SHOULDN'T default_variable HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlProjection??
-# FIX:  ?LEAVE IT TO _validate_variable, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
-# MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
-#                   (TO HANDLE INSTANTIATION OF DEFAULT ControlProjection SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
-        # Validate variable, function and params, and assign params to paramInstanceDefaults
+       # Validate variable, function and params, and assign params to paramInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         super(Projection_Base, self).__init__(default_variable=variable,
                                               param_defaults=params,
@@ -673,7 +653,8 @@ class Projection_Base(Projection):
         - if it is different from paramClassDefaults[PROJECTION_SENDER], use it
         - if it is the same or is invalid, check if sender arg was provided to __init__ and is valid
         - if sender arg is valid use it (if PROJECTION_SENDER can't be used);
-        - otherwise use paramClassDefaults[PROJECTION_SENDER]
+        - if both were not provided, use paramClassDefaults[PROJECTION_SENDER]
+        - otherwise, if one was not provided and the other is invalid, generate error
         - when done, sender is assigned to self.sender
 
         Note: check here only for sender's type, NOT content (e.g., length, etc.); that is done in _instantiate_sender
@@ -686,89 +667,24 @@ class Projection_Base(Projection):
 
         super(Projection, self)._validate_params(request_set, target_set, context)
 
-        # try:
-        #     sender_param = target_set[PROJECTION_SENDER]
-        # except KeyError:
-        #     # This should never happen, since PROJECTION_SENDER is a required param
-        #     raise ProjectionError("Program error: required param \'{0}\' missing in {1}".
-        #                           format(PROJECTION_SENDER, self.name))
-
         # FIX: 10/3/17 SHOULD ADD CHECK THAT RECEIVER/SENDER SOCKET SPECIFICATIONS ARE CONSISTENT WITH
-        # FIX:         PROJECTION_TYPE TYPE SPECIFIED BY THE CORRESPONDING STATE TYPES
+        # FIX:         PROJECTION_TYPE SPECIFIED BY THE CORRESPONDING STATE TYPES
 
-        if PROJECTION_SENDER in target_set:
-            sender_param = target_set[PROJECTION_SENDER]
-            # PROJECTION_SENDER is either an instance or class of Mechanism or State:
-            if (isinstance(sender_param, (Mechanism, State)) or
-                    (inspect.isclass(sender_param) and issubclass(sender_param, (Mechanism, State)))):
-                # it is NOT the same as the default, use it
-                if sender_param is not self.paramClassDefaults[PROJECTION_SENDER]:
-                    self.sender = sender_param
-                # it IS the same as the default, but sender arg was not provided, so use it (= default):
-                elif self.sender is None:
-                    self.sender = sender_param
-                    if self.prefs.verbosePref:
-                        warnings.warn("Neither {0} nor sender arg was provided for {1} projection to {2}; "
-                                      "default ({3}) will be used".format(PROJECTION_SENDER,
-                                                                          self.name,
-                                                                          self.receiver.owner.name,
-                                                                          sender_param.__class__.__name__))
-                # it IS the same as the default, so check if sender arg (self.sender) is valid
-                elif not (isinstance(self.sender, (Mechanism, State, Process_Base)) or
-                              # # MODIFIED 12/1/16 OLD:
-                              # (inspect.isclass(self.sender) and
-                              #      (issubclass(self.sender, Mechanism) or issubclass(self.sender, State)))):
-                              # MODIFIED 12/1/16 NEW:
-                              (inspect.isclass(self.sender) and issubclass(self.sender, (Mechanism, State)))):
-                              # MODIFIED 12/1/16 END
-                    # sender arg (self.sender) is not valid, so use PROJECTION_SENDER (= default)
-                    self.sender = sender_param
-                    if self.prefs.verbosePref:
-                        warnings.warn("{0} was not provided for {1} projection to {2}, "
-                                      "and sender arg ({3}) is not valid; default ({4}) will be used".
-                                      format(PROJECTION_SENDER,
-                                             self.name,
-                                             self.receiver.owner.name,
-                                             self.sender,
-                                             sender_param.__class__.__name__))
-
-        # FIX: IF PROJECTION, PUT HACK HERE TO ACCEPT AND FORGO ANY FURTHER PROCESSING??
-                # IS the same as the default, and sender arg was provided, so use sender arg
-                else:
-                    pass
-            # PROJECTION_SENDER is not valid, and:
-            else:
-                # sender arg was not provided, use paramClassDefault
-                if self.sender is None:
-                    self.sender = self.paramClassDefaults[PROJECTION_SENDER]
-                    if self.prefs.verbosePref:
-                        warnings.warn("{0} ({1}) is invalid and sender arg ({2}) was not provided;"
-                                      " default {3} will be used".
-                                      format(PROJECTION_SENDER, sender_param, self.sender,
-                                             self.paramClassDefaults[PROJECTION_SENDER]))
-                # sender arg is also invalid, so use paramClassDefault
-                elif not isinstance(self.sender, (Mechanism, State)):
-                    self.sender = self.paramClassDefaults[PROJECTION_SENDER]
-                    if self.prefs.verbosePref:
-                        warnings.warn("Both {0} ({1}) and sender arg ({2}) are both invalid; default {3} will be used".
-                                      format(PROJECTION_SENDER, sender_param, self.sender,
-                                             self.paramClassDefaults[PROJECTION_SENDER]))
-                else:
-                    self.sender = self.paramClassDefaults[PROJECTION_SENDER]
-                    if self.prefs.verbosePref:
-                        warnings.warn("{0} ({1}) is invalid; sender arg ({2}) will be used".
-                                      format(PROJECTION_SENDER, sender_param, self.sender))
-                if not isinstance(self.paramClassDefaults[PROJECTION_SENDER], (Mechanism, State)):
-                    raise ProjectionError("Program error: {0} ({1}) and sender arg ({2}) for {3} are both "
-                                          "absent or invalid and default (paramClassDefault[{4}]) is also invalid".
-                                          format(PROJECTION_SENDER,
-                                                 # sender_param.__name__,
-                                                 # self.sender.__name__,
-                                                 # self.paramClassDefaults[PROJECTION_SENDER].__name__))
-                                                 sender_param,
-                                                 self.sender,
-                                                 self.name,
-                                                 self.paramClassDefaults[PROJECTION_SENDER]))
+        if (PROJECTION_SENDER in target_set and
+                not (target_set[PROJECTION_SENDER] in {None, self.paramClassDefaults[PROJECTION_SENDER]})):
+            # If PROJECTION_SENDER is specified it will be the sender
+            sender = target_set[PROJECTION_SENDER]
+            sender_string = PROJECTION_SENDER
+        else:
+            # PROJECTION_SENDER is not specified or None, so sender argument of constructor will be the sender
+            sender = self.sender
+            sender_string = "\'{}\' argument".format(SENDER)
+        if not ((isinstance(sender, (Mechanism, State)) or
+                (inspect.isclass(sender) and issubclass(sender, (Mechanism, State))))):
+            raise ProjectionError("Specification of {} for {} ({}) is invalid; "
+                                  "it must be a {}, {} or a class of one of these.".
+                                  format(sender_string, self.name, sender,
+                                         Mechanism.__name__, State.__name__))
 
     def _instantiate_attributes_before_function(self, context=None):
         self._instantiate_sender(context=context)
@@ -778,7 +694,6 @@ class Projection_Base(Projection):
 
         from psyneulink.components.states.parameterstate import _instantiate_parameter_states
         _instantiate_parameter_states(owner=self, context=context)
-
 
     def _instantiate_sender(self, context=None):
         """Assign self.sender to OutputState of sender and insure compatibility with self.instance_defaults.variable
@@ -791,9 +706,25 @@ class Projection_Base(Projection):
         Assign projection to sender's efferents attribute
         If self.value / self.instance_defaults.variable is None, set to sender.value
         """
-
         from psyneulink.components.states.outputstate import OutputState
         from psyneulink.components.states.parameterstate import ParameterState
+
+
+        # ASSIGN sender specification
+
+        # If PROJECTION_SENDER is not None or paramClassDefault, it was specified and was validated in _validate_params,
+        #    so assign it as sender
+        if not self.params[PROJECTION_SENDER] in {None, self.paramClassDefaults[PROJECTION_SENDER]}:
+            self.sender = self.params[PROJECTION_SENDER]
+        # PROJECTION_SENDER was not specified, so use paramClassDefaults
+        elif self.sender is None:
+            self.sender = self.paramClassDefaults[PROJECTION_SENDER]
+        # Final validation (against a PROGRAM ERROR)
+        elif not (isinstance(self.sender, (Mechanism, State, Process_Base)) or
+                           (inspect.isclass(self.sender) and issubclass(self.sender, (Mechanism, State)))):
+            raise ProjectionError("PROGRAM ERROR: Invalid specification for {} ({1}) of {} "
+                                  "(including paramClassDefaults: {}".
+                                  format(SENDER, self.sender, self.name, self.paramClassDefaults[PROJECTION_SENDER]))
 
         # If sender is specified as a Mechanism (rather than a State),
         #     get relevant OutputState and assign it to self.sender
@@ -1046,7 +977,8 @@ def _parse_projection_spec(projection_spec,
         # FIX: NOT SURE WHICH TO GIVE PRECEDENCE: SPEC IN ConnectionTuple OR INSTANTIATED Projection:
         if ((proj_spec_dict[WEIGHT] is not None and projection.weight is not None) or
             (proj_spec_dict[EXPONENT] is not None and projection.exponent is not None)):
-            assert False, "Conflict in weight and/or exponent specs between Projection and ConnectionTuple"
+            raise ProjectionError("PROGRAM ERROR: Conflict in weight and/or exponent specs "
+                                  "between Projection and ConnectionTuple")
         projection._weight = proj_spec_dict[WEIGHT] or projection.weight
         projection._exponent = proj_spec_dict[EXPONENT] or projection.exponent
         if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
@@ -1075,10 +1007,7 @@ def _parse_projection_spec(projection_spec,
 
     # State class
     elif inspect.isclass(projection_spec) and issubclass(projection_spec, State):
-        # Create default instance of state and assign as ??sender or ??receiver
-        #    (it may use deferred_init since owner may not yet be known)
-        # FIX: 10/3/17 - INSTANTIATING A STATE DOESN"T CURRENTLY WORK:
-        # proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]()
+        # Assign default Projection type for State's class
         proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
 
     # Dict
@@ -1154,6 +1083,16 @@ def _parse_connection_specs(connectee_state_type,
                 usually it is a Mechanism or State to/from which the connectee_state_type should send/receive the Projection,
                 so calling the method "_parse_projections" would be misleading.
 
+    CONNECTION CHARACTERISTICS DECLARED BY EACH TYPE (SUBCLASS) OF State:
+        ConnectsWith : State
+           - specifies the type (subclass) of State to which the connectee_state_type should be assigned projection(s)
+        connect_with_attr : str
+           - specifies the name of the attribute of the Mechanism that holds the states of the ConnectsWith's type
+        PROJECTION_SOCKET : [SENDER or RECEIVER]
+           - specifies for this method whether to use a Projection's sender or receiver for the connection
+        Modulator : ModulatorySignal
+           -  class of ModulatorySignal that can send ModulatoryProjection to the connectee_state_type
+
     This method deals with CONNECTION specifications that are made in one of the following places/ways:
         - *PROJECTIONS* entry of a State specification dict [SYNONYM: *PROJECTIONS* - for backward compatiability];
         - last item of a State specification tuple.
@@ -1223,124 +1162,21 @@ def _parse_connection_specs(connectee_state_type,
 
     """
 
-    # FIX: vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    # FIX: MOVE HANDLING OF ALL THIS TO REGISTRY
-
-    from psyneulink.components.system import SystemInputState
-    from psyneulink.components.process import ProcessInputState
-    from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-    from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
-    from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-    from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
-    from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
     from psyneulink.components.states.state import _get_state_for_socket
-    from psyneulink.components.states.inputstate import InputState
-    from psyneulink.components.states.outputstate import OutputState
-    from psyneulink.components.states.parameterstate import ParameterState
-    from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-    from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
-    from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
-    from psyneulink.globals.keywords import SENDER, RECEIVER, INPUT_STATES, OUTPUT_STATES, \
-                                            LEARNING_SIGNALS, CONTROL_SIGNALS, GATING_SIGNALS
-
-    # BaseSpec = connectee_state_type
-
-    # CONNECTION CHARACTERISTICS THAT MUST BE DECLARED BY EACH TYPE (SUBCLASS) OF State
-    # ConnectsWith : State
-    #    - specifies the type (subclass) of State to which the connectee_state_type should be assigned projection(s)
-    #    - [TBI] subclass' attribute: connect_with [??CURRENTLY:  PROJECTION_TYPE]
-    # connect_with_attr : str
-    #    - specifies the name of the attribute of the Mechanism that holds the states of the ConnectsWith's type
-    #    - [TBI] subclass' attribute: connect_with_attr
-    # CONNECTIONS_KEYWORD : str
-    #    - specifies the keyword used in State specification dictionary for entry specifying States to connect to
-    #    - [TBI] subclass' attribute: connect_with_keyword
-    # PROJECTION_SOCKET : [SENDER or RECEIVER]
-    #    - specifies for this method whether to use a Projection's sender or receiver for the connection
-    #    - [TBI] subclass' attribute: projection_socket
-    # Modulator : ModulatorySignal
-    #    -  class of ModulatorySignal that can send ModulatoryProjection to the connectee_state_type
-    #    - [TBI] subclass' attribute: modulator
-    # MOD_KEYWORD : str
-    #    - specifies the keyword used in State specification dictionary for entry specifying ModulatorySignal
-    #    - [TBI] subclass' attribute: mod_keyword
+    from psyneulink.components.states.state import StateRegistry
 
     if not inspect.isclass(connectee_state_type):
         raise ProjectionError("Called for {} with \'connectee_state_type\' arg ({}) that is not a class".
                          format(owner.name, connectee_state_type))
-    else:
-        BaseSpec = connectee_state_type
 
-    # Request for afferent Projections (projection socket is SENDER)
-    if issubclass(connectee_state_type, InputState):
-        ConnectsWith = [OutputState,          # types of States to which the connectee can connect
-                        ProcessInputState,
-                        SystemInputState,
-                        LearningSignal,
-                        GatingSignal]
-        connect_with_attr = OUTPUT_STATES    # attribute that holds the ConnectsWith States
-        CONNECTIONS_KEYWORD = OUTPUT_STATES  # keyword used in a State specification dictionary for connection specs
-        PROJECTION_SOCKET = SENDER           # socket of the Projection that connects to the ConnectsWith State
-        Modulators = [GatingSignal]          # type of ModulatorySignals the connectee can receive
-        # MOD_KEYWORD = GATING_SIGNALS         # keyword used in a State specification dictionary for Modulatory specs
-    elif isinstance(owner, Mechanism) and issubclass(connectee_state_type, ParameterState):
-        ConnectsWith = [ControlSignal]
-        connect_with_attr = CONTROL_SIGNALS
-        CONNECTIONS_KEYWORD = CONTROL_SIGNALS
-        PROJECTION_SOCKET = SENDER
-        Modulators = [ControlSignal]
-        # MOD_KEYWORD = CONTROL_SIGNALS
-    elif isinstance(owner, MappingProjection) and issubclass(connectee_state_type, ParameterState):
-        ConnectsWith = [LearningSignal, ControlSignal]
-        connect_with_attr = LEARNING_SIGNALS
-        CONNECTIONS_KEYWORD = LEARNING_SIGNALS
-        PROJECTION_SOCKET = SENDER
-        Modulators = [LearningSignal]
-        MOD_KEYWORD = LEARNING_SIGNALS
-
-    # Request for efferent Projections (projection socket is RECEIVER)
-    elif isinstance(owner, ProcessingMechanism_Base) and issubclass(connectee_state_type, OutputState):
-        ConnectsWith = [InputState]
-        connect_with_attr = INPUT_STATES
-        CONNECTIONS_KEYWORD = INPUT_STATES
-        PROJECTION_SOCKET = RECEIVER
-        Modulators = [GatingSignal]
-        MOD_KEYWORD = GATING_SIGNALS
-    elif isinstance(owner, ControlMechanism) and issubclass(connectee_state_type, ControlSignal):
-        ConnectsWith = [ParameterState]
-        connect_with_attr = PARAMETER_STATES
-        # CONNECTIONS_KEYWORD = CONTROLLED_PARAMS
-        PROJECTION_SOCKET = RECEIVER
-        Modulators = []
-        MOD_KEYWORD = None
-    elif isinstance(owner, LearningMechanism) and issubclass(connectee_state_type, LearningSignal):
-        ConnectsWith = [ParameterState]
-        connect_with_attr = PARAMETER_STATES
-        # CONNECTIONS_KEYWORD = LEARNED_PROJECTIONS
-        PROJECTION_SOCKET = RECEIVER
-        Modulators = []
-        MOD_KEYWORD = None
-    elif isinstance(owner, GatingMechanism) and issubclass(connectee_state_type, GatingSignal):
-        # FIX:
-        ConnectsWith = [InputState, OutputState]
-        # FIX:
-        connect_with_attr = [INPUT_STATES, OUTPUT_STATES]
-        # CONNECTIONS_KEYWORD = GATED_STATES
-        PROJECTION_SOCKET = RECEIVER
-        Modulators = []
-        MOD_KEYWORD = None
-
-    else:
-        raise ProjectionError("Called for {} with unsupported owner type ({}), connectee_state_type ({}), "
-                         "or combination of them".
-                         format(owner.name, owner.__class__.__name__, connectee_state_type.__name__))
-
-    # FIX: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
+    # Get connection attributes
+    ConnectsWith = [StateRegistry[name].subclass for name in connectee_state_type.ConnectsWith]
+    connect_with_attr = connectee_state_type.ConnectsWithAttribute
+    PROJECTION_SOCKET = connectee_state_type.ProjectionSocket
+    Modulators = [StateRegistry[name].subclass for name in connectee_state_type.Modulators]
 
     DEFAULT_WEIGHT = None
     DEFAULT_EXPONENT = None
-    # DEFAULT_PROJECTION = PROJECTION_TYPE
     DEFAULT_PROJECTION = None
 
     # Convert to list for subsequent processing

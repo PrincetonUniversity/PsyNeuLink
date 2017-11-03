@@ -294,7 +294,11 @@ from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE
 from psyneulink.components.states.parameterstate import _get_parameter_state
 from psyneulink.components.states.state import State_Base
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, MECHANISM, MODULATION, NAME, OFF, ON, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, SEPARATOR_BAR, SLOPE, SUM, kwAssign
+from psyneulink.globals.keywords import \
+    ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, \
+    FUNCTION, FUNCTION_PARAMS, INTERCEPT, MECHANISM, MODULATION, NAME, OFF, ON, \
+    PARAMETER_STATE, PARAMETER_STATES, OUTPUT_STATE_PARAMS, \
+    PROJECTION_TYPE, RECEIVER, SEPARATOR_BAR, SLOPE, SUM, kwAssign
 from psyneulink.globals.log import LogEntry, LogLevel
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -609,6 +613,11 @@ class ControlSignal(ModulatorySignal):
 
     componentType = CONTROL_SIGNAL
     paramsType = OUTPUT_STATE_PARAMS
+
+    ConnectsWith = [PARAMETER_STATE]
+    ConnectsWithAttribute = [PARAMETER_STATES]
+    ProjectionSocket = RECEIVER
+    Modulators = []
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

@@ -10,8 +10,8 @@
 #
 
 import re
-
 from collections import namedtuple
+import inspect
 
 from psyneulink.globals.keywords import CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_STATE, MAPPING_PROJECTION, OUTPUT_STATE, PARAMETER_STATE, kwComponentCategory, kwComponentPreferenceSet, kwMechanismComponentCategory, kwPreferenceSet, kwProcessComponentCategory, kwProjectionComponentCategory, kwStateComponentCategory, kwSystemComponentCategory
 
@@ -105,6 +105,21 @@ def register_category(entry,
     :param default:
     :return:
     """
+
+    # Insure that State subclasses have required connection attribs
+    # IMPLEMENTATION NOTE:  Move to State when that is implemented as ABC
+    state_required_attribs = {'ConnectsWith',
+                              'ConnectsWithAttribute',
+                              'ProjectionSocket',
+                              'Modulators'}
+    from psyneulink.components.states.state import State_Base, State
+    if inspect.isclass(entry) and issubclass(entry, State) and not entry == State_Base:
+        for attrib in state_required_attribs:
+            try:
+               getattr(entry, attrib)
+            except AttributeError:
+                raise RegistryError("PROGRAM ERROR: {} must implement a {} attribute".format(entry.__name__, attrib))
+
 
     from psyneulink.components.component import Component
     from psyneulink.globals.preferences.preferenceset import PreferenceSet
