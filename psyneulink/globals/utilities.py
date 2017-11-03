@@ -433,8 +433,6 @@ def iscompatible(candidate, reference=None, **kargs):
         if isinstance(candidate, numbers.Number):
             return True
         if number_only:
-            if isinstance(candidate, numbers.Number):
-                return True
             if isinstance(candidate, np.ndarray) and candidate.ndim ==0 and np.isreal(candidate):
                 return True
             if not isinstance(candidate, (list, tuple, np.ndarray, np.matrix)):
