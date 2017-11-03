@@ -460,25 +460,23 @@ def iscompatible(candidate, reference=None, **kargs):
             if not match_length:
                 return True
             else:
-                # Can't zip numpy objects, so convert to list
-                if isinstance(candidate, np.ndarray):
-                    candidate = candidate.tolist()
-                if isinstance(reference, np.ndarray):
-                    reference = reference.tolist()
-                cr = zip(candidate, reference)
                 if len(candidate) == match_length:
                     # No reference, so item by item comparison is not relevant
                     if reference is None:
                         return True
-                    # If items of c and r are not of the same time, call iscompatible recursively to check
-                    elif all(iscompatible(c, r) for c, r in cr):
+                    # Otherwise, carry out recursive elementwise comparison
+                    if isinstance(candidate, np.matrix):
+                        candidate = np.asarray(candidate)
+                    if isinstance(reference, np.matrix):
+                        reference = np.asarray(reference)
+                    cr = zip(candidate, reference)
+                    if all(iscompatible(c, r, **kargs) for c, r in cr):
                         return True
+                    # IMPLEMENTATION NOTE:  ??No longer needed given recursive call above
                     # Deal with ints in one and floats in the other
-                    elif all((isinstance(c, numbers.Number) and isinstance(r, numbers.Number))
-                             for c, r in cr):
-                        return True
-                    else:
-                        return False
+                    # # elif all((isinstance(c, numbers.Number) and isinstance(r, numbers.Number))
+                    # #          for c, r in cr):
+                    # #     return True
                 else:
                     return False
         else:
