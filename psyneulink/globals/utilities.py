@@ -465,16 +465,13 @@ def iscompatible(candidate, reference=None, **kargs):
                     if reference is None:
                         return True
                     # If reference was provided, compare element by element
-                    elif all(isinstance(c, type(r)) for c, r in zip(candidate,reference)):
+                    # MODIFIED 11/2/17 OLD:
+                    # elif all(isinstance(c, type(r)) for c, r in zip(candidate,reference)):
+                    #     return True
+                    # MODIFIED 11/2/17 NEW:
+                    elif all(iscompatible(c, r) for c, r in zip(candidate,reference)):
                         return True
-                    # elif all(iscompatible(c, r) for c, r in zip(candidate,reference)):
-                    #     return True
-                    # elif not all(isinstance(c, type(r)) for c, r in zip(candidate,reference)):
-                    #     for c, r in zip(candidate,reference):
-                    #         # if isinstance(c, type(r)):
-                    #         if not iscompatible(c,r):
-                    #             return False
-                    #     return True
+                    # MODIFIED 11/2/17 END:
                     # Deal with ints in one and floats in the other
                     elif all((isinstance(c, numbers.Number) and isinstance(r, numbers.Number))
                              for c, r in zip(candidate,reference)):
