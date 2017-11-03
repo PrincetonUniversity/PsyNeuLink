@@ -461,26 +461,22 @@ def iscompatible(candidate, reference=None, **kargs):
                 return True
             else:
                 if len(candidate) == match_length:
-                    # No reference,so item by item comparison is not relevant
+                    # No reference, so item by item comparison is not relevant
                     if reference is None:
                         return True
-                    # # If reference was provided, compare element by element
-                    # elif all(isinstance(c, type(r)) for c, r in zip(candidate,reference)):
-                    #     return True
-                    elif all(iscompatible(c, r) for c, r in zip(candidate,reference)):
+                    # Otherwise, carry out recursive elementwise comparison
+                    if isinstance(candidate, np.matrix):
+                        candidate = np.asarray(candidate)
+                    if isinstance(reference, np.matrix):
+                        reference = np.asarray(reference)
+                    cr = zip(candidate, reference)
+                    if all(iscompatible(c, r, **kargs) for c, r in cr):
                         return True
-                    # elif not all(isinstance(c, type(r)) for c, r in zip(candidate,reference)):
-                    #     for c, r in zip(candidate,reference):
-                    #         # if isinstance(c, type(r)):
-                    #         if not iscompatible(c,r):
-                    #             return False
-                    #     return True
+                    # IMPLEMENTATION NOTE:  ??No longer needed given recursive call above
                     # Deal with ints in one and floats in the other
-                    elif all((isinstance(c, numbers.Number) and isinstance(r, numbers.Number))
-                             for c, r in zip(candidate,reference)):
-                        return True
-                    else:
-                        return False
+                    # # elif all((isinstance(c, numbers.Number) and isinstance(r, numbers.Number))
+                    # #          for c, r in cr):
+                    # #     return True
                 else:
                     return False
         else:
