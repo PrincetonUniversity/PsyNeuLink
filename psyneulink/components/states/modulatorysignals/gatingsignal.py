@@ -394,10 +394,10 @@ class GatingSignal(ModulatorySignal):
 
     stateAttributes = ModulatorySignal.stateAttributes | {GATE}
 
-    ConnectsWith = [INPUT_STATE, OUTPUT_STATE]
-    ConnectsWithAttribute = [INPUT_STATES, OUTPUT_STATES]
-    ProjectionSocket = RECEIVER
-    Modulators = []
+    connectsWith = [INPUT_STATE, OUTPUT_STATE]
+    connectsWithAttribute = [INPUT_STATES, OUTPUT_STATES]
+    projectionSocket = RECEIVER
+    modulators = []
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

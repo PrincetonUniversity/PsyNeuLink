@@ -454,10 +454,10 @@ class ParameterState(State_Base):
 
     stateAttributes = State_Base.stateAttributes
 
-    ConnectsWith = [CONTROL_SIGNAL, LEARNING_SIGNAL]
-    ConnectsWithAttribute = [CONTROL_SIGNALS, LEARNING_SIGNALS]
-    ProjectionSocket = SENDER
-    Modulators = [CONTROL_SIGNAL, LEARNING_SIGNAL]
+    connectsWith = [CONTROL_SIGNAL, LEARNING_SIGNAL]
+    connectsWithAttribute = [CONTROL_SIGNALS, LEARNING_SIGNALS]
+    projectionSocket = SENDER
+    modulators = [CONTROL_SIGNAL, LEARNING_SIGNAL]
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

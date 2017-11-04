@@ -116,22 +116,22 @@ def register_category(entry,
             raise RegistryError("PROGRAM ERROR: {} must implement a stateSpecificParams attribute".
                                 format(entry.__name__))
         try:
-           entry.ConnectsWith
+           entry.connectsWith
         except AttributeError:
-            raise RegistryError("PROGRAM ERROR: {} must implement a ConnectsWith attribute".format(entry.__name__))
+            raise RegistryError("PROGRAM ERROR: {} must implement a connectsWith attribute".format(entry.__name__))
         try:
-           entry.ConnectsWithAttribute
+           entry.connectsWithAttribute
         except AttributeError:
-            raise RegistryError("PROGRAM ERROR: {} must implement a ConnectsWithAttribute attribute".
+            raise RegistryError("PROGRAM ERROR: {} must implement a connectsWithAttribute attribute".
                                 format(entry.__name__))
         try:
-           entry.ProjectionSocket
+           entry.projectionSocket
         except AttributeError:
-            raise RegistryError("PROGRAM ERROR: {} must implement a ProjectionSocket attribute".format(entry.__name__))
+            raise RegistryError("PROGRAM ERROR: {} must implement a projectionSocket attribute".format(entry.__name__))
         try:
-           entry.Modulators
+           entry.modulators
         except AttributeError:
-            raise RegistryError("PROGRAM ERROR: {} must implement a Modulators attribute".format(entry.__name__))
+            raise RegistryError("PROGRAM ERROR: {} must implement a modulators attribute".format(entry.__name__))
 
 
     from psyneulink.components.component import Component

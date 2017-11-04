@@ -628,14 +628,14 @@ class InputState(State_Base):
 
     stateAttributes = State_Base.stateAttributes | {WEIGHT, EXPONENT}
 
-    ConnectsWith = [OUTPUT_STATE,
+    connectsWith = [OUTPUT_STATE,
                     PROCESS_INPUT_STATE,
                     SYSTEM_INPUT_STATE,
                     LEARNING_SIGNAL,
                     GATING_SIGNAL]
-    ConnectsWithAttribute = OUTPUT_STATES
-    ProjectionSocket = SENDER
-    Modulators = [GATING_SIGNAL]
+    connectsWithAttribute = OUTPUT_STATES
+    projectionSocket = SENDER
+    modulators = [GATING_SIGNAL]
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

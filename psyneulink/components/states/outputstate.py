@@ -575,10 +575,10 @@ class OutputState(State_Base):
 
     stateAttributes = State_Base.stateAttributes | {INDEX, CALCULATE}
 
-    ConnectsWith = [INPUT_STATE]
-    ConnectsWithAttribute = INPUT_STATES
-    ProjectionSocket = RECEIVER
-    Modulators = [GATING_SIGNAL]
+    connectsWith = [INPUT_STATE]
+    connectsWithAttribute = INPUT_STATES
+    projectionSocket = RECEIVER
+    modulators = [GATING_SIGNAL]
 
     class ClassDefaults(State_Base.ClassDefaults):
         variable = None

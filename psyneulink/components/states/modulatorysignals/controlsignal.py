@@ -623,10 +623,10 @@ class ControlSignal(ModulatorySignal):
 
     stateAttributes = ModulatorySignal.stateAttributes | {ALLOCATION_SAMPLES}
 
-    ConnectsWith = [PARAMETER_STATE]
-    ConnectsWithAttribute = [PARAMETER_STATES]
-    ProjectionSocket = RECEIVER
-    Modulators = []
+    connectsWith = [PARAMETER_STATE]
+    connectsWithAttribute = [PARAMETER_STATES]
+    projectionSocket = RECEIVER
+    modulators = []
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
