@@ -336,7 +336,7 @@ class LearningSignal(ModulatorySignal):
     componentType = LEARNING_SIGNAL
     paramsType = OUTPUT_STATE_PARAMS
 
-    stateSpecificParams = ModulatorySignal.stateSpecificParams
+    stateAttributes = ModulatorySignal.stateAttributes
 
     ConnectsWith = [PARAMETER_STATE]
     ConnectsWithAttribute = [PARAMETER_STATES]

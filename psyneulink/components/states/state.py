@@ -311,7 +311,15 @@ import typecheck as tc
 from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, function_type
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
-from psyneulink.globals.keywords import CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OWNER, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
+from psyneulink.globals.keywords import \
+    CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
+    GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, \
+    LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
+    MAPPING_PROJECTION_PARAMS, MECHANISM, \
+    MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OWNER, PARAMS, PATHWAY_PROJECTIONS, \
+    PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, \
+    SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, \
+    kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
 from psyneulink.globals.log import LogEntry, LogLevel
 from psyneulink.globals.preferences.componentpreferenceset import kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -554,6 +562,8 @@ class State_Base(State):
     className = STATE
     suffix = " " + className
     paramsType = None
+
+    stateAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
 
     class ClassDefaults(State.ClassDefaults):
         variable = [0]
@@ -2059,8 +2069,9 @@ def _parse_state_spec(state_type=None,
 
         # Delete the State specification dictionary from state_spec
         del state_spec[STATE_SPEC_ARG]
-        if REFERENCE_VALUE_NAME in state_spec:
-            del state_spec[REFERENCE_VALUE_NAME]
+
+    if REFERENCE_VALUE_NAME in state_spec:
+        del state_spec[REFERENCE_VALUE_NAME]
 
     if state_spec:
         if owner.verbosePref:
@@ -2216,6 +2227,20 @@ def _parse_state_spec(state_type=None,
                                                              owner=owner,
                                                              state_dict=state_dict,
                                                              state_specific_params=params)
+
+            # Check for single unrecognized key in params, used for {<STATE_NAME>:[<projection_specs>] format
+            unrecognized_keys = [key for key in params if not key in state_type.stateAttributes]
+            if unrecognized_keys:
+                if len(unrecognized_keys)==1:
+                    key = unrecognized_keys[0]
+                    state_dict[NAME] = key
+                    state_dict[PROJECTIONS] = params[key]
+                else:
+                    raise StateError("There is more than one entry of the {} specification dictionary for {} ({}) "
+                                     "that is not a keyword; there should be only one (used to name the State, "
+                                     "with a list of Projection specifications".
+                                     format(state_type.__name__, owner.name,
+                                            ", ".join([s for s in list(state_specific_args.keys())])))
 
             if PROJECTIONS in params and params[PROJECTIONS] is not None:
                 #       (E.G., WEIGHTS AND EXPONENTS FOR InputState AND INDEX FOR OutputState)

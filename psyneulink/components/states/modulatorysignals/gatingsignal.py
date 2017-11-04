@@ -392,7 +392,7 @@ class GatingSignal(ModulatorySignal):
     componentName = 'GatingSignal'
     paramsType = OUTPUT_STATE_PARAMS
 
-    stateSpecificParams = ModulatorySignal.stateSpecificParams | {GATE}
+    stateAttributes = ModulatorySignal.stateAttributes | {GATE}
 
     ConnectsWith = [INPUT_STATE, OUTPUT_STATE]
     ConnectsWithAttribute = [INPUT_STATES, OUTPUT_STATES]

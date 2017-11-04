@@ -626,7 +626,7 @@ class InputState(State_Base):
     componentType = INPUT_STATE
     paramsType = INPUT_STATE_PARAMS
 
-    stateSpecificParams = {WEIGHT, EXPONENT}
+    stateAttributes = State_Base.stateAttributes | {WEIGHT, EXPONENT}
 
     ConnectsWith = [OUTPUT_STATE,
                     PROCESS_INPUT_STATE,

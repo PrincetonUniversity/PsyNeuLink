@@ -338,7 +338,7 @@ class ModulatorySignal(OutputState):
     componentType = MODULATORY_SIGNAL
     # paramsType = OUTPUT_STATE_PARAMS
 
-    stateSpecificParams =  OutputState.stateSpecificParams | {MODULATION}
+    stateAttributes =  OutputState.stateAttributes | {MODULATION}
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

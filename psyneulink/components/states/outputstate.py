@@ -573,7 +573,7 @@ class OutputState(State_Base):
     componentType = OUTPUT_STATE
     paramsType = OUTPUT_STATE_PARAMS
 
-    stateSpecificParams = {INDEX, CALCULATE}
+    stateAttributes = State_Base.stateAttributes | {INDEX, CALCULATE}
 
     ConnectsWith = [INPUT_STATE]
     ConnectsWithAttribute = INPUT_STATES

@@ -621,7 +621,7 @@ class ControlSignal(ModulatorySignal):
     componentType = CONTROL_SIGNAL
     paramsType = OUTPUT_STATE_PARAMS
 
-    stateSpecificParams = ModulatorySignal.stateSpecificParams | {ALLOCATION_SAMPLES}
+    stateAttributes = ModulatorySignal.stateAttributes | {ALLOCATION_SAMPLES}
 
     ConnectsWith = [PARAMETER_STATE]
     ConnectsWithAttribute = [PARAMETER_STATES]
@@ -1023,7 +1023,7 @@ class ControlSignal(ModulatorySignal):
         else:
             params_dict[PROJECTIONS] = []
 
-        for param in self.stateSpecificParams:
+        for param in self.stateAttributes:
             if param in state_specific_params:
                 params_dict[param] = state_specific_params[param]
 
