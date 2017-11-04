@@ -1497,7 +1497,7 @@ def _validate_connection_request(
             # FIX: 11/4/17 - THIS IS A MAJOR HACK TO DEAL WITH THE CASE IN WHICH THE connectee_state IS AN OutputState
             # FIX:               THE projection_socket FOR WHICH IS USUALLY A RECEIVER;
             # FIX:           HOWEVER, IF THE projection_spec IS A GatingSignal
-            # FI:                THEN THE projection_socket MUST BE SENDER
+            # FIX:               THEN THE projection_socket MUST BE SENDER
             from psyneulink.components.states.outputstate import OutputState
             from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
             if connectee_state is OutputState and isinstance(projection_spec, GatingProjection):
