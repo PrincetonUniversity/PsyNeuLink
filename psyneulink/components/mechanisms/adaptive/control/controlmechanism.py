@@ -741,8 +741,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
             self._output_states = []
 
-            for control_signal in self.control_signals:
-                self._instantiate_control_signal(control_signal, context=context)
+            for i, control_signal in enumerate(self.control_signals):
+                self._instantiate_control_signal(control_signal, index=i, context=context)
 
 
         super()._instantiate_output_states(context=context)
@@ -761,7 +761,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                         ALLOCATION_POLICY, len(self.allocation_policy)))
 
 
-    def _instantiate_control_signal(self, control_signal, context=None):
+    def _instantiate_control_signal(self, control_signal, index=0, context=None):
 
         # EXTEND allocation_policy TO ACCOMMODATE NEW ControlSignal -------------------------------------------------
         #        also used to determine constraint on ControlSignal value
@@ -786,7 +786,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                             modulation=self.modulation,
                                             state_spec=control_signal)
 
-        # control_signal.index = i
+        control_signal.index = index
         # Validate index
         try:
             self.allocation_policy[control_signal.index]
