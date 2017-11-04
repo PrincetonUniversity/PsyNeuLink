@@ -86,10 +86,14 @@ Class Reference
 """
 
 import warnings
-import leabra
 import numbers
 import numpy as np
 import typecheck as tc
+try:
+    import leabra
+    leabra_available = True
+except ImportError:
+    leabra_available = False
 
 from psyneulink.components.component import Component, function_type, method_type, parameter_keywords
 from psyneulink.components.functions.function import AdaptiveIntegrator, Function_Base, Linear
@@ -195,6 +199,9 @@ class LeabraFunction(Function_Base):
                  owner=None,
                  prefs=None,
                  context=componentName + INITIALIZING):
+
+        if not leabra_available:
+            raise LeabraError('leabra python module is not installed')
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(network=network,
@@ -422,6 +429,9 @@ class LeabraMechanism(ProcessingMechanism_Base):
                  name=None,
                  prefs: is_pref_set = None,
                  context=componentType + INITIALIZING):
+        if not leabra_available:
+            raise LeabraError('leabra python module is not installed')
+
         if leabra_net is not None:
             leabra_network = leabra_net
             input_size = len(leabra_network.layers[0].units)

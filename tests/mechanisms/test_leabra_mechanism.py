@@ -1,8 +1,12 @@
 import numpy as np
 import pytest
-import leabra
 import random
 import copy
+try:
+    import leabra
+    leabra_available = True
+except ImportError:
+    leabra_available = False
 
 from psyneulink.library.mechanisms.processing.leabramechanism import LeabraMechanism, build_network, train_network
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -11,6 +15,7 @@ from psyneulink.components.functions.function import Linear
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
 
+@pytest.mark.skipif(not leabra_available, reason='Leabra package is unavailable')
 class TestLeabraMechanismInit:
 
     def test_leabra_init_empty(self):
@@ -48,6 +53,7 @@ class TestLeabraMechanismInit:
         assert len(val[0]) == 4
 
 # identical to test_network; but run_network has a different name to avoid pytest collisions
+@pytest.mark.skipif(not leabra_available, reason='Leabra package is unavailable')
 def run_network(network, input_pattern):
     assert len(network.layers[0].units) == len(input_pattern)
     network.set_inputs({'input_layer': input_pattern})
@@ -55,6 +61,7 @@ def run_network(network, input_pattern):
     network.trial()
     return [unit.act_m for unit in network.layers[-1].units]
 
+@pytest.mark.skipif(not leabra_available, reason='Leabra package is unavailable')
 class TestLeabraMechanismPrecision:
 
     def test_leabra_prec_no_train(self):
