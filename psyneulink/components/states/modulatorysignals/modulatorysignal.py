@@ -338,6 +338,8 @@ class ModulatorySignal(OutputState):
     componentType = MODULATORY_SIGNAL
     # paramsType = OUTPUT_STATE_PARAMS
 
+    stateSpecificParams =  OutputState.stateSpecificParams | {MODULATION}
+
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
@@ -446,7 +448,7 @@ class ModulatorySignal(OutputState):
             projection._assign_default_projection_name(state=self)
 
     def _assign_default_name(self):
-    
+
         # If the name is not a default name for the class,
         #    or the ModulatorySignal has no projections (which are used to name it)
         #    then return
@@ -454,13 +456,13 @@ class ModulatorySignal(OutputState):
                  or self.__class__.__name__ + '-' in self.name) or
                     len(self.efferents)==0):
             return self.name
-    
+
         # Construct default name
         receiver_names = []
         receiver_owner_names = []
         receiver_owner_receiver_names = []
         class_name = self.__class__.__name__
-    
+
         for projection in self.efferents:
             receiver = projection.receiver
             receiver_name = receiver.name
@@ -468,23 +470,23 @@ class ModulatorySignal(OutputState):
             receiver_names.append(receiver_name)
             receiver_owner_names.append(receiver_owner_name)
             receiver_owner_receiver_names.append("{} {}".format(receiver_owner_name, receiver_name))
-    
+
         # Only one param: "<Mech> <param> ControlSignal" (e.g., Decision drift_rate ControlSignal)
         if len(receiver_owner_receiver_names) == 1:
             default_name = receiver_owner_receiver_names[0] + " " + class_name
-    
+
         # Multiple params all for same mech: "<Mech> params ControlSignal" (e.g., Decision params ControlSignal)
         elif all(name is receiver_owner_names[0] for name in receiver_owner_names):
             default_name = "{} ({}) {}".format(receiver_owner_names[0], ", ".join(receiver_names), class_name)
-    
+
         # Mult params for diff mechs: "<ControlMechanism> divergent ControlSignal" (e.g., EVC divergent ControlSignal)
         else:
             default_name = self.name + " divergent " + class_name
-    
+
         self.name = default_name
 
         return self.name
-    
+
 
 # MODIFIED 9/30/17 NEW:
 # FIX: THIS IS GENERIC FOR MODULATORY SIGNALS, BUT SHOULD BE IMPLEMENTED FOR EACH SUBCLASS

@@ -111,6 +111,11 @@ def register_category(entry,
     from psyneulink.components.states.state import State, State_Base
     if inspect.isclass(entry) and issubclass(entry, State) and not entry == State_Base:
         try:
+           entry.stateSpecificParams
+        except AttributeError:
+            raise RegistryError("PROGRAM ERROR: {} must implement a stateSpecificParams attribute".
+                                format(entry.__name__))
+        try:
            entry.ConnectsWith
         except AttributeError:
             raise RegistryError("PROGRAM ERROR: {} must implement a ConnectsWith attribute".format(entry.__name__))

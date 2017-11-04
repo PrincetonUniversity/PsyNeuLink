@@ -326,8 +326,6 @@ __all__ = [
 # defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
 DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.3)
 
-STATE_SPECIFIC_PARAMS = {ALLOCATION_SAMPLES, MODULATION}
-
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
 # ControlSignal Costs
@@ -622,6 +620,8 @@ class ControlSignal(ModulatorySignal):
 
     componentType = CONTROL_SIGNAL
     paramsType = OUTPUT_STATE_PARAMS
+
+    stateSpecificParams = ModulatorySignal.stateSpecificParams | {ALLOCATION_SAMPLES}
 
     ConnectsWith = [PARAMETER_STATE]
     ConnectsWithAttribute = [PARAMETER_STATES]
@@ -1023,7 +1023,7 @@ class ControlSignal(ModulatorySignal):
         else:
             params_dict[PROJECTIONS] = []
 
-        for param in STATE_SPECIFIC_PARAMS:
+        for param in self.stateSpecificParams:
             if param in state_specific_params:
                 params_dict[param] = state_specific_params[param]
 

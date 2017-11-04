@@ -336,6 +336,8 @@ class LearningSignal(ModulatorySignal):
     componentType = LEARNING_SIGNAL
     paramsType = OUTPUT_STATE_PARAMS
 
+    stateSpecificParams = ModulatorySignal.stateSpecificParams
+
     ConnectsWith = [PARAMETER_STATE]
     ConnectsWithAttribute = [PARAMETER_STATES]
     ProjectionSocket = RECEIVER

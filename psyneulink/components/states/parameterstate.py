@@ -452,6 +452,8 @@ class ParameterState(State_Base):
     componentType = PARAMETER_STATE
     paramsType = PARAMETER_STATE_PARAMS
 
+    stateSpecificParams = {}
+
     ConnectsWith = [CONTROL_SIGNAL, LEARNING_SIGNAL]
     ConnectsWithAttribute = [CONTROL_SIGNALS, LEARNING_SIGNALS]
     ProjectionSocket = SENDER
