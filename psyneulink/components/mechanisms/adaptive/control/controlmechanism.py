@@ -303,6 +303,7 @@ import typecheck as tc
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.shellclasses import System_Base
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, OBJECTIVE_MECHANISM, PRODUCT, PROJECTIONS, SYSTEM, VARIABLE, WEIGHT
@@ -721,7 +722,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def _instantiate_output_states(self, context=None):
 
         from psyneulink.globals.registry import register_category
-        from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
         from psyneulink.components.states.state import State_Base
 
         # Create registry for ControlSignals (to manage names)
@@ -741,60 +741,86 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
             self._output_states = []
 
-            for i, control_signal in enumerate(self.control_signals):
+            for control_signal in self.control_signals:
+                self._instantiate_control_signal(control_signal, context=context)
 
-                # EXTEND allocation_policy TO ACCOMMODATE NEW ControlSignal -------------------------------------------------
-                #        also used to determine constraint on ControlSignal value
-                if self.allocation_policy is None:
-                    self.allocation_policy = np.atleast_2d(defaultControlAllocation)
-                else:
-                    self.allocation_policy = np.append(self.allocation_policy, [defaultControlAllocation], axis=0)
-
-                # Update self.value to reflect change in allocation_policy (and the new number of  control_signals).
-                #    This is necessary, since function is not fully executed during init (in _instantiate_function);
-                #    it returns the default_allocation policy which has only a single item,
-                #    however validation of indices for OutputStates requires proper number of items be in self.value
-                self.value = self.allocation_policy
-                self._default_value = self.value
-
-                from psyneulink.components.states.state import _instantiate_state
-                # Parses control_signal specifications (in call to State._parse_state_spec)
-                #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
-                control_signal = _instantiate_state(state_type=ControlSignal,
-                                                    owner=self,
-                                                    reference_value=defaultControlAllocation,
-                                                    modulation=self.modulation,
-                                                    state_spec=control_signal)
-
-                # Add ControlProjection to ControlMechanism's list of ControlProjections
-                try:
-                    self.control_projections.extend(control_signal.efferents)
-                except AttributeError:
-                    self.control_projections = control_signal.efferents.copy()
-
-                # Update control_signal_costs to accommodate instantiated Projection
-                try:
-                    self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
-                except AttributeError:
-                    self.control_signal_costs = np.empty((1,1))
-
-                # UPDATE output_states AND control_projections -------------------------------------------------------------
-
-                # TBI: For control mechanisms that accumulate, starting output must be equal to the initial "previous value"
-                # so that modulation that occurs BEFORE the control mechanism executes is computed appropriately
-                # if (isinstance(self.function_object, Integrator)):
-                #     control_signal._intensity = function_object.initializer
-
-                # Add ControlSignal to output_states list
-                control_signal.index = i
-                self._output_states.append(control_signal)
 
         super()._instantiate_output_states(context=context)
 
         # Reassign control_signals to capture any user_defined ControlSignals instantiated by in call to super
         self._control_signals = [state for state in self.output_states if isinstance(state, ControlSignal)]
 
-    # def _instantiate_control_signal(self, cntrol_signal, index:int=0, context=None):
+        # If the ControlMechanism's allocation_policy has more than one item,
+        #    warn if the number of items does not equal the number of its ControlSignals
+        #    (note:  there must be fewer ControlSignals than items in allocation_policy,
+        #            as the reverse is an error that is checked for in _instantiate_control_signal)
+        if len(self.allocation_policy)>1 and len(self.control_signals) != len(self.allocation_policy):
+            if self.verbosePref:
+                warnings.warning("The number of {}s for {} ({}) does not equal the number of items in its {} ({})".
+                                 format(ControlSignal.__name__, self.name, len(self.control_signals),
+                                        ALLOCATION_POLICY, len(self.allocation_policy)))
+
+
+    def _instantiate_control_signal(self, control_signal, context=None):
+
+        # EXTEND allocation_policy TO ACCOMMODATE NEW ControlSignal -------------------------------------------------
+        #        also used to determine constraint on ControlSignal value
+        if self.allocation_policy is None:
+            self.allocation_policy = np.atleast_2d(defaultControlAllocation)
+        else:
+            self.allocation_policy = np.append(self.allocation_policy, [defaultControlAllocation], axis=0)
+
+        # Update self.value to reflect change in allocation_policy (and the new number of  control_signals).
+        #    This is necessary, since function is not fully executed during init (in _instantiate_function);
+        #    it returns the default_allocation policy which has only a single item,
+        #    however validation of indices for OutputStates requires proper number of items be in self.value
+        self.value = self.allocation_policy
+        self._default_value = self.value
+
+        from psyneulink.components.states.state import _instantiate_state
+        # Parses control_signal specifications (in call to State._parse_state_spec)
+        #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
+        control_signal = _instantiate_state(state_type=ControlSignal,
+                                            owner=self,
+                                            reference_value=defaultControlAllocation,
+                                            modulation=self.modulation,
+                                            state_spec=control_signal)
+
+        # control_signal.index = i
+        # Validate index
+        try:
+            self.allocation_policy[control_signal.index]
+        except IndexError:
+            raise ControlMechanismError("Index specified for {} of {} ({}) "
+                                       "exceeds the number of items of its {} ({})".
+                                       format(ControlSignal.__name__, self.name, control_signal.index,
+                                              ALLOCATION_POLICY, len(self.allocation_policy)))
+
+        # Add ControlProjection(s) to ControlMechanism's list of ControlProjections
+        try:
+            self.control_projections.extend(control_signal.efferents)
+        except AttributeError:
+            self.control_projections = control_signal.efferents.copy()
+
+        # Update control_signal_costs to accommodate instantiated Projection
+        try:
+            self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
+        except AttributeError:
+            self.control_signal_costs = np.empty((1,1))
+
+        # UPDATE output_states AND control_projections -------------------------------------------------------------
+
+        # TBI: For control mechanisms that accumulate, starting output must be equal to the initial "previous value"
+        # so that modulation that occurs BEFORE the control mechanism executes is computed appropriately
+        # if (isinstance(self.function_object, Integrator)):
+        #     control_signal._intensity = function_object.initializer
+
+        # Add ControlSignal to output_states list
+        self._output_states.append(control_signal)
+
+        return control_signal
+
+
 
     def _execute(self,
                     variable=None,

@@ -675,8 +675,7 @@ class ControlSignal(ModulatorySignal):
             if len(owner.allocation_policy)==1:
                 index = PRIMARY
             else:
-                index = SEQUENTIAL
-
+                index = PRIMARY
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,

@@ -446,12 +446,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                             modulation=self.modulation,
                                             state_spec=gating_signal)
 
-        # Add GatingProjection to GatingMechanism's list of GatingProjections
-        try:
-            self.gating_projections.extend(gating_signal.efferents)
-        except AttributeError:
-            self.gating_projections = gating_signal.efferents.copy()
-
         # Validate index
         try:
             self.gating_policy[gating_signal.index]
@@ -463,6 +457,12 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # Add GatingSignal TO output_states LIST
         self._output_states.append(gating_signal)
+
+        # Add GatingProjection(s) to GatingMechanism's list of GatingProjections
+        try:
+            self.gating_projections.extend(gating_signal.efferents)
+        except AttributeError:
+            self.gating_projections = gating_signal.efferents.copy()
 
         return gating_signal
 
