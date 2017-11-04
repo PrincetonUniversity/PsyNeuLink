@@ -2227,14 +2227,18 @@ def _parse_state_spec(state_type=None,
                                                              owner=owner,
                                                              state_dict=state_dict,
                                                              state_specific_params=params)
-
+            # FIX: 11/4/17 - STILL NEEDS WORK:
+            # FIX:   PROJECTIONS FROM UNRECOGNIZED KEY ENTRY MAY BE REDUNDANT OR CONFLICT WITH ONE ALREADY IN PARAMS
+            # FIX:   NEEDS TO BE BETTER COORDINATED WITH _parse_state_specific_params
+            # FIX:   REGARDING WHAT IS IN state_specific_args VS params (see REF_VAL_NAME BRANCH)
+            # FIX:   ALSO, ??DOES PROJECTIONS ENTRY BELONG IN param OR state_dict?
             # Check for single unrecognized key in params, used for {<STATE_NAME>:[<projection_specs>] format
-            unrecognized_keys = [key for key in params if not key in state_type.stateAttributes]
+            unrecognized_keys = [key for key in state_specific_args if not key in state_type.stateAttributes]
             if unrecognized_keys:
                 if len(unrecognized_keys)==1:
                     key = unrecognized_keys[0]
                     state_dict[NAME] = key
-                    state_dict[PROJECTIONS] = params[key]
+                    params[PROJECTIONS] = state_specific_args[key]
                 else:
                     raise StateError("There is more than one entry of the {} specification dictionary for {} ({}) "
                                      "that is not a keyword; there should be only one (used to name the State, "
