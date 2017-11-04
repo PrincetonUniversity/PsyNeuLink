@@ -2221,8 +2221,6 @@ def _parse_state_spec(state_type=None,
 
             # FIX: 10/3/17 -
             # FIX: CONSOLIDATE THIS W/ CALL TO _parse_state_specific_params FOR State specification dict ABOVE
-            # FIX: OR MAKE _parse_state_specs A METHOD ON State
-            # FIX:    AND OVERRIDE BY SUBCLASSES TO PARSE CLASS-SPECIFIC PARAMS FIRST (AS PER _parse_projection_spec)
             params = state_type._parse_state_specific_params(state_type,
                                                              owner=owner,
                                                              state_dict=state_dict,
@@ -2255,9 +2253,6 @@ def _parse_state_spec(state_type=None,
                 projection_params.extend(params[PROJECTIONS])
                 if projection_params:
                     params[PROJECTIONS] = _parse_connection_specs(state_type, owner, projection_params)
-                    for projection in [connection.projection for connection in params[PROJECTIONS]]:
-                        if isinstance(projection, dict):
-                            projection[RECEIVER] = owner
             # Update state_dict[PARAMS] with params
             if state_dict[PARAMS] is None:
                 state_dict[PARAMS] = {}
