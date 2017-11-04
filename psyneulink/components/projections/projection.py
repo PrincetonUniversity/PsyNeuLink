@@ -1208,6 +1208,9 @@ def _parse_connection_specs(connectee_state_type,
             # FIX: 10/24/17 - IF connectee_state_type IS LearningSignal AND projection_spec is A MappingProjection
             # FIX:            THEN THE LATTER SHOULD BE TREATED AS A DESTINATION RATHER THAN AN ACTUAL projection_spec
             # FIX:            OR connection SHOULD BE LearningSignal AND projection_spec SHOULD BE THE DESITNATION
+            # FIX: 11/4/17 - IF connectee_state_type IS OutputState AND projection_spec is A GatingProjection
+            # FIX:            THEN THE LATTER SHOULD BE TREATED AS A SOURCE RATHER THAN AN ACTUAL projection_spec
+            # FIX:            OR connection SHOULD BE GatingSignal AND projection_spec SHOULD BE THE DESITNATION
             connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
 
@@ -1351,8 +1354,12 @@ def _parse_connection_specs(connectee_state_type,
                     state_type = state_spec
                 else:
                     state_type = state_spec.__class__
+
+                # Test that state_type is the list for state's connects_with
                 # FIX: 10/3/17 - CHANGE THIS TO "ANY" TEST
-                if not any(issubclass(connects_with_state, state_type) for connects_with_state in connects_with):
+                # FIX: 11/4/17 - NEED TO ADD MODULATORS TO connects_with HERE
+                if not any(issubclass(connects_with_state, state_type)
+                           for connects_with_state in connects_with + modulators):
                     spec = projection_spec or state_type.__name__
                     raise ProjectionError("Projection specification (\'{}\') for an incompatible connection: "
                                           "{} with {} of {} ; should be one of the following: {}".
@@ -1484,18 +1491,25 @@ def _validate_connection_request(
                 else:
                     return _validate_projection_type(projection_spec.__class__)
 
-
         # Projection has been instantiated
         else:
             # Determine whether the State to which the Projection's socket has been assigned is in connect_with_states
+            # FIX: 11/4/17 - THIS IS A MAJOR HACK TO DEAL WITH THE CASE IN WHICH THE connectee_stater IS AN OutputState
+            # FIX:           THE projection_socket FOR WHICH IS USUALLY A RECEIVER;  HOWEVER, IF IT IS A GatingSignal
+            # FIX:           THEN THE projection_socket NEEDS TO BE SENDER
+            from psyneulink.components.states.outputstate import OutputState
+            from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
+            if connectee_state is OutputState and isinstance(projection_spec, GatingProjection):
+                projection_socket = SENDER
             projection_socket_state = getattr(projection_spec, projection_socket)
             # if projection_socket_state is in connect_with_states:
             if  issubclass(projection_socket_state.__class__, connect_with_states):
+            # if  issubclass(projection_socket_state.__class__, connectee_state):
                 return True
 
         # None of the above worked, so must be incompatible
         raise ProjectionError("{} specified to be connected with{} {} "
-                              "is not compatible with the {} of the specified {} ({})".
+                              "is not consistent with the {} of the specified {} ({})".
                               format(State.__name__, connectee_str, owner.name,
                                      projection_socket, Projection.__name__, projection_spec))
 
