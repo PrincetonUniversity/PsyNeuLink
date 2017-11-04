@@ -347,7 +347,7 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import UtilitiesError, iscompatible, type_match
 
 __all__ = [
-    'make_readonly_property', 'OUTPUTS', 'OutputState', 'OutputStateError', 'PRIMARY_OUTPUT_STATE', 'SEQUENTIAL',
+    'make_readonly_property', 'OUTPUTS', 'OutputState', 'OutputStateError', 'PRIMARY', 'SEQUENTIAL',
     'standard_output_states', 'StandardOutputStates', 'StandardOutputStatesError', 'state_type_keywords',
 ]
 
@@ -360,7 +360,7 @@ state_type_keywords = state_type_keywords.update({OUTPUT_STATE})
 #     DEFAULTS = NONE
 
 OUTPUT_STATE_TYPE = 'output_state_type'
-PRIMARY_OUTPUT_STATE = 0
+PRIMARY = 0
 SEQUENTIAL = 'SEQUENTIAL'
 
 # Standard OutputStates
@@ -414,7 +414,7 @@ class OutputState(State_Base):
     variable=None,                             \
     size=None,                                 \
     function=LinearCombination(operation=SUM), \
-    index=PRIMARY_OUTPUT_STATE,                \
+    index=PRIMARY,                \
     calculate=Linear,                          \
     projections=None,                          \
     params=None,                               \
@@ -476,7 +476,7 @@ class OutputState(State_Base):
         designated by the OutputState's `index <OutputState.index>` attribute, under the possible influence of
         `GatingProjections <GatingProjection>` received by the OutputState.
 
-    index : int : default PRIMARY_OUTPUT_STATE
+    index : int : default PRIMARY
         specifies the item of the owner Mechanism's `value <Mechanism_Base.value>` used as input for the
         function specified by the OutputState's `calculate <OutputState.calculate>` attribute, to determine the
         OutputState's `value <OutputState.value>`.
@@ -599,7 +599,7 @@ class OutputState(State_Base):
                  variable=None,
                  size=None,
                  function=LinearCombination(operation=SUM),
-                 index=PRIMARY_OUTPUT_STATE,
+                 index=PRIMARY,
                  calculate:is_function_type=Linear,
                  projections=None,
                  params=None,
@@ -899,7 +899,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
          check for index param:
              if it is a State, get from index attribute
              if it is dict, look for INDEX entry
-             if it is anything else, assume index is PRIMARY_OUTPUT_STATE
+             if it is anything else, assume index is PRIMARY
          get indexed value from output.value
          append the indexed value to reference_value
              so that it matches specification of OutputStates (by # and function return values)
@@ -960,8 +960,8 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     if output_states:
         for i, output_state in enumerate(output_states):
 
-            # Default is PRIMARY_OUTPUT_STATE
-            index = PRIMARY_OUTPUT_STATE
+            # Default is PRIMARY
+            index = PRIMARY
             output_state_value = owner_value[index]
 
             # output_state is:
@@ -1119,10 +1119,10 @@ class StandardOutputStates():
             for index, state_dict in enumerate(self.data):
                 state_dict[INDEX] = index
 
-        # Assign PRIMARY_OUTPUT_STATE as INDEX for all OutputStates in output_state_dicts
-        elif indices is PRIMARY_OUTPUT_STATE:
+        # Assign PRIMARY as INDEX for all OutputStates in output_state_dicts
+        elif indices is PRIMARY:
             for state_dict in self.data:
-                state_dict[INDEX] = PRIMARY_OUTPUT_STATE
+                state_dict[INDEX] = PRIMARY
 
         # No indices specification, so assign None to INDEX for all OutputStates in output_state_dicts
         else:

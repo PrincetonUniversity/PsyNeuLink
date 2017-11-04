@@ -227,12 +227,9 @@ Class Reference
 
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination, _is_modulation_param
-from psyneulink.components.shellclasses import Mechanism
-from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
-from psyneulink.components.states.outputstate import OutputState, PRIMARY_OUTPUT_STATE
+from psyneulink.components.states.outputstate import PRIMARY, SEQUENTIAL
 from psyneulink.components.states.state import State_Base
 from psyneulink.globals.keywords import \
     GATING_PROJECTION, GATING_SIGNAL, GATE, RECEIVER, SUM, PROJECTION_TYPE, \
@@ -260,6 +257,7 @@ class GatingSignal(ModulatorySignal):
     """
     GatingSignal(                                   \
         owner,                                      \
+        index=PRIMARY                  \
         function=LinearCombination(operation=SUM),  \
         modulation=ModulationParam.MULTIPLICATIVE,  \
         projections=None,                           \
@@ -301,7 +299,7 @@ class GatingSignal(ModulatorySignal):
     owner : GatingMechanism
         specifies the `GatingMechanism` to which to assign the GatingSignal.
 
-    index : int : default PRIMARY_OUTPUT_STATE
+    index : int : default PRIMARY
         specifies the item of the owner GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` used as the
         GatingSignal's `value <GatingSignal.value>`.
 
@@ -433,7 +431,7 @@ class GatingSignal(ModulatorySignal):
         #       it is included here for consistency with OutputState and possible use by subclasses.
         if index is None and owner is not None:
             if len(owner.gating_policy)==1:
-                index = PRIMARY_OUTPUT_STATE
+                index = PRIMARY
             else:
                 index = SEQUENTIAL
 

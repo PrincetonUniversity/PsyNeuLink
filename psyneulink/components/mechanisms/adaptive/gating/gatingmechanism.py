@@ -388,8 +388,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
             self._output_states = []
 
-            for i, gating_signal in enumerate(self.gating_signals):
-                self._instantiate_gating_signal(gating_signal, index=i, context=context)
+            for gating_signal in self.gating_signals:
+                self._instantiate_gating_signal(gating_signal, context=context)
 
         super()._instantiate_output_states(context=context)
 
@@ -406,10 +406,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                  format(GatingSignal.__name__, self.name, len(self.gating_signals),
                                         GATING_POLICY, len(self.gating_policy)))
 
-    def _instantiate_gating_signal(self, gating_signal, index:int=0, context=None):
+    def _instantiate_gating_signal(self, gating_signal, context=None):
         """Instantiate GatingSignal OutputState and assign (if specified) or instantiate GatingProjection
-
-        # Extends gating_policy and to accommodate instantiated projection
 
         Notes:
         * gating_signal arg can be a:

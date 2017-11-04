@@ -172,7 +172,7 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import Linear, LinearCombination, ModulationParam, _is_modulation_param
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE
+from psyneulink.components.states.outputstate import PRIMARY
 from psyneulink.components.states.state import State_Base
 from psyneulink.globals.keywords import \
     LEARNED_PARAM, LEARNING_SIGNAL, LEARNING_PROJECTION, \
@@ -362,7 +362,7 @@ class LearningSignal(ModulatorySignal):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 index=PRIMARY_OUTPUT_STATE,
+                 index=PRIMARY,
                  calculate=Linear,
                  function=LinearCombination(operation=SUM),
                  learning_rate: tc.optional(parameter_spec) = None,

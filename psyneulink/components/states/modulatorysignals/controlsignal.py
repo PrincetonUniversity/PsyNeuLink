@@ -290,7 +290,7 @@ from psyneulink.components.functions.function import CombinationFunction, Expone
     LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
 from psyneulink.components.shellclasses import Function
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE
+from psyneulink.components.states.outputstate import PRIMARY, SEQUENTIAL
 from psyneulink.components.states.parameterstate import _get_parameter_state
 from psyneulink.components.states.state import State_Base
 from psyneulink.globals.defaults import defaultControlAllocation
@@ -410,6 +410,7 @@ class ControlSignal(ModulatorySignal):
     """
     ControlSignal(                                       \
         owner,                                           \
+\       index=SEQUENTIAL,                                \
         function=LinearCombination(operation=SUM),       \
         costs_options=ControlSignalCosts.DEFAULTS,       \
         intensity_cost_function=Exponential,             \
@@ -456,6 +457,10 @@ class ControlSignal(ModulatorySignal):
 
     owner : ControlMechanism
         specifies the `ControlMechanism <ControlMechanism>` to which to assign the ControlSignal.
+
+    index : int : default SEQUENTIAL
+        specifies the item of the owner ControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>`
+        used as the ControlSignal's `value <ControlSignal.value>`.
 
     function : Function or method : default Linear
         specifies the function used to determine the `intensity` of the ControlSignal from its `allocation`.
@@ -543,6 +548,10 @@ class ControlSignal(ModulatorySignal):
 
     last_intensity : float
         the `intensity` of the ControlSignal on the previous execution of its `owner <ControlSignal.owner>`.
+
+    index : int
+        the item of the owner ControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>` used as the
+        ControlSignal's `value <ControlSignal.value>`.
 
     control_signal : float
         result of the ControlSignal's `function <ControlSignal.function>`; same as `intensity`.
@@ -640,7 +649,7 @@ class ControlSignal(ModulatorySignal):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 index=PRIMARY_OUTPUT_STATE,
+                 index=PRIMARY,
                  calculate=Linear,
                  function=LinearCombination(operation=SUM),
                  cost_options:tc.any(ControlSignalCosts, list)=ControlSignalCosts.DEFAULTS,
@@ -694,7 +703,7 @@ class ControlSignal(ModulatorySignal):
 
         Checks if:
         - cost functions are all appropriate
-        - allocation_samples is a list with 2 numbers
+        - allocation_samples is a list or 1d np.array
         - all cost functions are references to valid ControlProjection costFunctions (listed in self.costFunctions)
         - IntensityFunction is identity function, in which case ignoreIntensityFunction flag is set (for efficiency)
 

@@ -138,7 +138,7 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE, StandardOutputStates
+from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state
 from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, HETERO, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, VARIANCE
@@ -529,7 +529,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
-                                                               indices=PRIMARY_OUTPUT_STATE)
+                                                               indices=PRIMARY)
 
         super().__init__(default_variable=default_variable,
                          size=size,

@@ -503,7 +503,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  system:tc.optional(System_Base)=None,
                  objective_mechanism=None,
                  function = Linear(slope=1, intercept=0),
-                 # control_signals:tc.optional(list) = None,
                  control_signals=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
@@ -794,6 +793,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # Reassign control_signals to capture any user_defined ControlSignals instantiated by in call to super
         self._control_signals = [state for state in self.output_states if isinstance(state, ControlSignal)]
+
+    # def _instantiate_control_signal(self, cntrol_signal, index:int=0, context=None):
 
     def _execute(self,
                     variable=None,
