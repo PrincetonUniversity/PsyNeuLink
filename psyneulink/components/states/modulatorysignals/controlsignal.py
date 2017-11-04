@@ -649,7 +649,7 @@ class ControlSignal(ModulatorySignal):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 index=PRIMARY,
+                 index=None,
                  calculate=Linear,
                  function=LinearCombination(operation=SUM),
                  cost_options:tc.any(ControlSignalCosts, list)=ControlSignalCosts.DEFAULTS,
@@ -668,6 +668,15 @@ class ControlSignal(ModulatorySignal):
         # Note index and calculate are not used by ControlSignal, but included here for consistency with OutputState
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
             allocation_samples =  params[ALLOCATION_SAMPLES]
+
+        # Note: calculate is not currently used by GatingSignal;
+        #       it is included here for consistency with OutputState and possible use by subclasses.
+        if index is None and owner is not None:
+            if len(owner.allocation_policy)==1:
+                index = PRIMARY
+            else:
+                index = SEQUENTIAL
+
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
