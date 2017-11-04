@@ -1494,15 +1494,15 @@ def _validate_connection_request(
         # Projection has been instantiated
         else:
             # Determine whether the State to which the Projection's socket has been assigned is in connect_with_states
-            # FIX: 11/4/17 - THIS IS A MAJOR HACK TO DEAL WITH THE CASE IN WHICH THE connectee_stater IS AN OutputState
-            # FIX:           THE projection_socket FOR WHICH IS USUALLY A RECEIVER;  HOWEVER, IF IT IS A GatingSignal
-            # FIX:           THEN THE projection_socket NEEDS TO BE SENDER
+            # FIX: 11/4/17 - THIS IS A MAJOR HACK TO DEAL WITH THE CASE IN WHICH THE connectee_state IS AN OutputState
+            # FIX:               THE projection_socket FOR WHICH IS USUALLY A RECEIVER;
+            # FIX:           HOWEVER, IF THE projection_spec IS A GatingSignal
+            # FI:                THEN THE projection_socket MUST BE SENDER
             from psyneulink.components.states.outputstate import OutputState
             from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
             if connectee_state is OutputState and isinstance(projection_spec, GatingProjection):
                 projection_socket = SENDER
             projection_socket_state = getattr(projection_spec, projection_socket)
-            # if projection_socket_state is in connect_with_states:
             if  issubclass(projection_socket_state.__class__, connect_with_states):
             # if  issubclass(projection_socket_state.__class__, connectee_state):
                 return True
