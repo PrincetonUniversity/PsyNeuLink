@@ -306,7 +306,7 @@ from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.components.states.outputstate import OutputState, PRIMARY_OUTPUT_STATE, standard_output_states
+from psyneulink.components.states.outputstate import OutputState, PRIMARY, standard_output_states
 from psyneulink.components.states.state import _parse_state_spec
 from psyneulink.globals.keywords import CONTROL, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, STATE_TYPE,\
     OBJECTIVE_MECHANISM, SENDER, TIME_SCALE, VARIABLE, WEIGHTS, kwPreferenceSetName, DEFAULT_MATRIX, DEFAULT_VARIABLE
@@ -411,6 +411,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     size : int, list or np.ndarray of ints
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
         if **default_variable** is specified, it takes precedence over the specification of **size**.
+        As an example, the following mechanisms are equivalent::
+            T1 = TransferMechanism(size = [3, 2])
+            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     COMMENT:
     input_states :  List[InputState, value, str or dict] or Dict[] : default None
@@ -573,7 +576,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
-                                                               indices=PRIMARY_OUTPUT_STATE)
+                                                               indices=PRIMARY)
 
         super().__init__(variable=default_variable,
                          size=size,

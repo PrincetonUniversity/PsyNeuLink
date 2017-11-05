@@ -581,6 +581,9 @@ class InputState(State_Base):
     size : int, list or np.ndarray of ints
         specifies variable as array(s) of zeros if **variable** is not passed as an argument;
         if **variable** is specified, it takes precedence over the specification of **size**.
+        As an example, the following mechanisms are equivalent::
+            T1 = TransferMechanism(size = [3, 2])
+            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     function : CombinationFunction : default LinearCombination(operation=SUM))
         performs an element-wise (Hadamard) aggregation of the `value <Projection.Projection.value>` of each Projection
@@ -626,14 +629,16 @@ class InputState(State_Base):
     componentType = INPUT_STATE
     paramsType = INPUT_STATE_PARAMS
 
-    ConnectsWith = [OUTPUT_STATE,
+    stateAttributes = State_Base.stateAttributes | {WEIGHT, EXPONENT}
+
+    connectsWith = [OUTPUT_STATE,
                     PROCESS_INPUT_STATE,
                     SYSTEM_INPUT_STATE,
                     LEARNING_SIGNAL,
                     GATING_SIGNAL]
-    ConnectsWithAttribute = OUTPUT_STATES
-    ProjectionSocket = SENDER
-    Modulators = [GATING_SIGNAL]
+    connectsWithAttribute = [OUTPUT_STATES]
+    projectionSocket = SENDER
+    modulators = [GATING_SIGNAL]
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

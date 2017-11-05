@@ -230,6 +230,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
     size : int, list or 1d np.array of ints
         specifies default_gating_policy as an array of zeros if **default_gating_policy** is not passed as an
         argument;  if **default_gating_policy** is specified, it takes precedence over the specification of **size**.
+        As an example, the following mechanisms are equivalent::
+            T1 = TransferMechanism(size = [3, 2])
+            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies the function used to transform the GatingMechanism's `variable <GatingMechanism.variable>`
@@ -366,11 +369,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                                       context=context)
 
         if GATING_SIGNALS in target_set and target_set[GATING_SIGNALS]:
-
             if not isinstance(target_set[GATING_SIGNALS], list):
-                raise GatingMechanismError("{} arg of {} must be list".
-                                           format(GATING_SIGNAL, self.name))
-
+                target_set[GATING_SIGNALS] = [target_set[GATING_SIGNALS]]
             for gating_signal in target_set[GATING_SIGNALS]:
                 _parse_state_spec(state_type=GatingSignal, owner=self, state_spec=gating_signal)
 
@@ -388,8 +388,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
             self._output_states = []
 
-            for i, gating_signal in enumerate(self.gating_signals):
-                self._instantiate_gating_signal(gating_signal, index=i, context=context)
+            for gating_signal in self.gating_signals:
+                self._instantiate_gating_signal(gating_signal, context=context)
 
         super()._instantiate_output_states(context=context)
 
@@ -406,10 +406,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                  format(GatingSignal.__name__, self.name, len(self.gating_signals),
                                         GATING_POLICY, len(self.gating_policy)))
 
-    def _instantiate_gating_signal(self, gating_signal, index:int=0, context=None):
+    def _instantiate_gating_signal(self, gating_signal, context=None):
         """Instantiate GatingSignal OutputState and assign (if specified) or instantiate GatingProjection
-
-        # Extends gating_policy and to accommodate instantiated projection
 
         Notes:
         * gating_signal arg can be a:
@@ -448,12 +446,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                             modulation=self.modulation,
                                             state_spec=gating_signal)
 
-        # Add GatingProjection to GatingMechanism's list of GatingProjections
-        try:
-            self.gating_projections.extend(gating_signal.efferents)
-        except AttributeError:
-            self.gating_projections = gating_signal.efferents.copy()
-
         # Validate index
         try:
             self.gating_policy[gating_signal.index]
@@ -465,6 +457,12 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # Add GatingSignal TO output_states LIST
         self._output_states.append(gating_signal)
+
+        # Add GatingProjection(s) to GatingMechanism's list of GatingProjections
+        try:
+            self.gating_projections.extend(gating_signal.efferents)
+        except AttributeError:
+            self.gating_projections = gating_signal.efferents.copy()
 
         return gating_signal
 

@@ -373,6 +373,9 @@ class ParameterState(State_Base):
     size : int, list or np.ndarray of ints
         specifies variable as array(s) of zeros if **variable** is not passed as an argument;
         if **variable** is specified, it takes precedence over the specification of **size**.
+        As an example, the following mechanisms are equivalent::
+            T1 = TransferMechanism(size = [3, 2])
+            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     function : Function or method : default LinearCombination(operation=SUM)
         specifies the function used to convert the parameter's attribute value (same as the ParameterState's
@@ -452,11 +455,12 @@ class ParameterState(State_Base):
     componentType = PARAMETER_STATE
     paramsType = PARAMETER_STATE_PARAMS
 
-    ConnectsWith = [CONTROL_SIGNAL, LEARNING_SIGNAL]
-    ConnectsWithAttribute = [CONTROL_SIGNALS, LEARNING_SIGNALS]
-    ProjectionSocket = SENDER
-    Modulators = [CONTROL_SIGNAL, LEARNING_SIGNAL]
+    stateAttributes = State_Base.stateAttributes
 
+    connectsWith = [CONTROL_SIGNAL, LEARNING_SIGNAL]
+    connectsWithAttribute = [CONTROL_SIGNALS, LEARNING_SIGNALS]
+    projectionSocket = SENDER
+    modulators = [CONTROL_SIGNAL, LEARNING_SIGNAL]
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

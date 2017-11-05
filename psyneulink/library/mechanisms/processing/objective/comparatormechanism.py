@@ -132,7 +132,7 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.states.outputstate import OutputState, PRIMARY_OUTPUT_STATE, StandardOutputStates
+from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates
 from psyneulink.components.states.state import _parse_state_spec
 from psyneulink.globals.keywords import CALCULATE, COMPARATOR_MECHANISM, INPUT_STATES, NAME, SAMPLE, TARGET, TIME_SCALE, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
@@ -349,7 +349,7 @@ class ComparatorMechanism(ObjectiveMechanism):
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
-                                                               indices=PRIMARY_OUTPUT_STATE)
+                                                               indices=PRIMARY)
 
         super().__init__(# monitored_output_states=[sample, target],
                          monitored_output_states = input_states,

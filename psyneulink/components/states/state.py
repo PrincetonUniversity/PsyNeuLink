@@ -311,7 +311,15 @@ import typecheck as tc
 from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, function_type
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
-from psyneulink.globals.keywords import CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OWNER, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
+from psyneulink.globals.keywords import \
+    CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
+    GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, \
+    LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
+    MAPPING_PROJECTION_PARAMS, MECHANISM, \
+    MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OWNER, PARAMS, PATHWAY_PROJECTIONS, \
+    PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, \
+    SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, \
+    kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
 from psyneulink.globals.log import LogEntry, LogLevel
 from psyneulink.globals.preferences.componentpreferenceset import kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -554,6 +562,8 @@ class State_Base(State):
     className = STATE
     suffix = " " + className
     paramsType = None
+
+    stateAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
 
     class ClassDefaults(State.ClassDefaults):
         variable = [0]
@@ -2059,8 +2069,9 @@ def _parse_state_spec(state_type=None,
 
         # Delete the State specification dictionary from state_spec
         del state_spec[STATE_SPEC_ARG]
-        if REFERENCE_VALUE_NAME in state_spec:
-            del state_spec[REFERENCE_VALUE_NAME]
+
+    if REFERENCE_VALUE_NAME in state_spec:
+        del state_spec[REFERENCE_VALUE_NAME]
 
     if state_spec:
         if owner.verbosePref:
@@ -2210,12 +2221,71 @@ def _parse_state_spec(state_type=None,
 
             # FIX: 10/3/17 -
             # FIX: CONSOLIDATE THIS W/ CALL TO _parse_state_specific_params FOR State specification dict ABOVE
-            # FIX: OR MAKE _parse_state_specs A METHOD ON State
-            # FIX:    AND OVERRIDE BY SUBCLASSES TO PARSE CLASS-SPECIFIC PARAMS FIRST (AS PER _parse_projection_spec)
             params = state_type._parse_state_specific_params(state_type,
                                                              owner=owner,
                                                              state_dict=state_dict,
                                                              state_specific_params=params)
+
+            if PROJECTIONS in state_dict:
+                if not isinstance(state_dict[PROJECTIONS], list):
+                    params[PROJECTIONS] = [params[PROJECTIONS]]
+                params[PROJECTIONS].appdend(state_dict[PROJECTIONS])
+
+            # MECHANISM entry specifies Mechanism with one or more States to connect with,
+            #    and the names of them in <STATES> entries: {MECHANISM: <Mechanism>, <STATES>:[<State.name>, ...]}
+            if MECHANISM in state_specific_args:
+
+                if not PROJECTIONS in params:
+                    params[PROJECTIONS] = []
+
+                mech = state_specific_args[MECHANISM]
+                if not isinstance(mech, Mechanism):
+                    raise StateError("Value of the {} entry ({}) in the specification dictionary "
+                                     "for {} of {} is not a {}".
+                                     format(MECHANISM, mech, state_type.__name__, owner.name, Mechanism.__name__))
+
+                for STATES in state_type.connectsWithAttribute:
+
+                   if STATES in state_specific_args:
+                        states = state_specific_args[STATES]
+                        if not isinstance(states, list):
+                            states = [states]
+                        for state in states:
+                            try:
+                                state_attr = getattr(mech, STATES)
+                                state = state_attr[state]
+                            except:
+                                raise StateError("Unrecognized name ({}) for a {} of {} in specification of {} for {}".
+                                                 format(state, state, mech.name, state_type.__name__, owner.name))
+                            params[PROJECTIONS].append(state)
+                        # Delete <STATES> entry as it is not a parameter of a State
+                        del state_specific_args[STATES]
+
+                # Delete MECHANISM entry as it is not a parameter of a State
+                del state_specific_args[MECHANISM]
+
+            # FIX: 11/4/17 - MAY STILL NEED WORK:
+            # FIX:   PROJECTIONS FROM UNRECOGNIZED KEY ENTRY MAY BE REDUNDANT OR CONFLICT WITH ONE ALREADY IN PARAMS
+            # FIX:   NEEDS TO BE BETTER COORDINATED WITH _parse_state_specific_params
+            # FIX:   REGARDING WHAT IS IN state_specific_args VS params (see REF_VAL_NAME BRANCH)
+            # FIX:   ALSO, ??DOES PROJECTIONS ENTRY BELONG IN param OR state_dict?
+            # Check for single unrecognized key in params, used for {<STATE_NAME>:[<projection_spec>,...]} format
+            unrecognized_keys = [key for key in state_specific_args if not key in state_type.stateAttributes]
+            if unrecognized_keys:
+                if len(unrecognized_keys)==1:
+                    key = unrecognized_keys[0]
+                    state_dict[NAME] = key
+                    params[PROJECTIONS] = state_specific_args[key]
+                else:
+                    raise StateError("There is more than one entry of the {} specification dictionary for {} ({}) "
+                                     "that is not a keyword; there should be only one (used to name the State, "
+                                     "with a list of Projection specifications".
+                                     format(state_type.__name__, owner.name,
+                                            ", ".join([s for s in list(state_specific_args.keys())])))
+
+            for param in state_type.stateAttributes:
+                if param in state_specific_args:
+                    params[param] = state_specific_args[param]
 
             if PROJECTIONS in params and params[PROJECTIONS] is not None:
                 #       (E.G., WEIGHTS AND EXPONENTS FOR InputState AND INDEX FOR OutputState)
@@ -2226,9 +2296,7 @@ def _parse_state_spec(state_type=None,
                 projection_params.extend(params[PROJECTIONS])
                 if projection_params:
                     params[PROJECTIONS] = _parse_connection_specs(state_type, owner, projection_params)
-                    for projection in [connection.projection for connection in params[PROJECTIONS]]:
-                        if isinstance(projection, dict):
-                            projection[RECEIVER] = owner
+
             # Update state_dict[PARAMS] with params
             if state_dict[PARAMS] is None:
                 state_dict[PARAMS] = {}

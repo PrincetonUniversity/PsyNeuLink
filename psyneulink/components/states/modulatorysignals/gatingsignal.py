@@ -227,15 +227,13 @@ Class Reference
 
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination, _is_modulation_param
-from psyneulink.components.shellclasses import Mechanism
-from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
-from psyneulink.components.states.outputstate import OutputState, PRIMARY_OUTPUT_STATE
-from psyneulink.components.states.state import State_Base
+from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.states.outputstate import OutputState, PRIMARY, SEQUENTIAL
+from psyneulink.components.states.state import State_Base, State
 from psyneulink.globals.keywords import \
-    GATING_PROJECTION, GATING_SIGNAL, GATE, RECEIVER, SUM, PROJECTION_TYPE, \
+    MECHANISM, NAME, GATING_PROJECTION, GATING_SIGNAL, GATE, RECEIVER, SUM, PROJECTION_TYPE, \
     INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -260,6 +258,7 @@ class GatingSignal(ModulatorySignal):
     """
     GatingSignal(                                   \
         owner,                                      \
+        index=PRIMARY                  \
         function=LinearCombination(operation=SUM),  \
         modulation=ModulationParam.MULTIPLICATIVE,  \
         projections=None,                           \
@@ -301,7 +300,7 @@ class GatingSignal(ModulatorySignal):
     owner : GatingMechanism
         specifies the `GatingMechanism` to which to assign the GatingSignal.
 
-    index : int : default PRIMARY_OUTPUT_STATE
+    index : int : default PRIMARY
         specifies the item of the owner GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` used as the
         GatingSignal's `value <GatingSignal.value>`.
 
@@ -394,10 +393,12 @@ class GatingSignal(ModulatorySignal):
     componentName = 'GatingSignal'
     paramsType = OUTPUT_STATE_PARAMS
 
-    ConnectsWith = [INPUT_STATE, OUTPUT_STATE]
-    ConnectsWithAttribute = [INPUT_STATES, OUTPUT_STATES]
-    ProjectionSocket = RECEIVER
-    Modulators = []
+    stateAttributes = ModulatorySignal.stateAttributes | {GATE}
+
+    connectsWith = [INPUT_STATE, OUTPUT_STATE]
+    connectsWithAttribute = [INPUT_STATES, OUTPUT_STATES]
+    projectionSocket = RECEIVER
+    modulators = []
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -433,7 +434,7 @@ class GatingSignal(ModulatorySignal):
         #       it is included here for consistency with OutputState and possible use by subclasses.
         if index is None and owner is not None:
             if len(owner.gating_policy)==1:
-                index = PRIMARY_OUTPUT_STATE
+                index = PRIMARY
             else:
                 index = SEQUENTIAL
 
@@ -459,6 +460,35 @@ class GatingSignal(ModulatorySignal):
                          name=name,
                          prefs=prefs,
                          context=self)
+
+    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
+        """Get ControlSignal specified for a parameter or in a 'control_signals' argument
+
+        Tuple specification can be:
+            (parameter_name, Mechanism)
+            [TBI:] (parameter_name, Mechanism, weight, exponent, projection_specs)
+
+        Returns params dict with CONNECTIONS entries if any of these was specified.
+
+        """
+        from psyneulink.globals.keywords import PROJECTIONS
+
+        params_dict = {}
+
+        # FIX: 11/4/17: MOVE TO _parse_state_spec
+        if PROJECTIONS in state_specific_params:
+            params_dict[PROJECTIONS] = state_specific_params[PROJECTIONS]
+        else:
+            params_dict[PROJECTIONS] = []
+
+        for param in self.stateAttributes:
+            if param in state_specific_params:
+                params_dict[param] = state_specific_params[param]
+
+        if isinstance(state_specific_params, dict):
+            pass
+
+        return params_dict
 
     def _execute(self, function_params, context):
         return float(super()._execute(function_params=function_params, context=context))

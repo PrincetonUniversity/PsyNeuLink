@@ -939,26 +939,23 @@ class TestTransferMechanismSize:
     def test_transfer_mech_input_states_projection_in_specification_dict_spec(self):
         R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
         T = TransferMechanism(input_states=[{NAME: 'My InputState with Two Projections',
-                                                     PROJECTIONS:[R1.output_states['FIRST'],
-                                                                  R1.output_states['SECOND']]}])
+                                             PROJECTIONS:[R1.output_states['FIRST'],
+                                                          R1.output_states['SECOND']]}])
         assert T.input_state.name == 'My InputState with Two Projections'
         for input_state in T.input_states:
             for projection in input_state.path_afferents:
                 assert projection.sender.owner is R1
         T.execute()
 
-    # # ------------------------------------------------------------------------------------------------
-    # # TEST 17
-    # METHOD OF SPECIFICATION NOT YET IMPLEMENTED:
-    # # MECHANISMS/OUTPUT_STATES entries in params specification dict
-    #
-    # def test_transfer_mech_input_states_mech_output_state_in_specification_dict_spec(self):
-    #
-    #     # NOT YET IMPLEMENTED [10/29/17]:
-    #     T = TransferMechanism(input_states=[{MECHANISM: R1,
-    #                                                  OUTPUT_STATES: ['FIRST', 'SECOND']}])
-    #     assert len(T.input_states)==2
-    #     assert all(name in T.input_states.names for name in {'FIRST', 'SECOND'})
-    #     for input_state in T.input_states:
-    #         for projection in input_state.path_afferents:
-    #             assert projection.sender.owner is R1
+    # ------------------------------------------------------------------------------------------------
+    # TEST 17
+    # MECHANISMS/OUTPUT_STATES entries in params specification dict
+
+    def test_transfer_mech_input_states_mech_output_state_in_specification_dict_spec(self):
+        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+        T = TransferMechanism(input_states=[{MECHANISM: R1,
+                                             OUTPUT_STATES: ['FIRST', 'SECOND']}])
+        assert len(T.input_states)==1
+        for input_state in T.input_states:
+            for projection in input_state.path_afferents:
+                assert projection.sender.owner is R1
