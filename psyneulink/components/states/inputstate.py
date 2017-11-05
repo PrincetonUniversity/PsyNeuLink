@@ -218,45 +218,7 @@ COMMENT
       specifications for OutputStates that should project to it, as well one or more `ModulatorySignal` and/or
       `ModulatoryProjection` specifications for ModulatorySignals that should project to it.
 
-COMMENT:
-*** REINSTATE WHEN THESE FUNCTIONALITIES ARE IMPLEMENTED:
-
-      Alternatively, an InputState specification dictionary can be used to specify multiple InputStates.  If it includes
-      one or more keys that are strings not recognized as a keyword, then the keys are treated as the names of the
-      InputStates to be created, and the value of each as its specification.
-
-      Finally a dictionary can be used to specify a set of InputStates each of which receives a Projections from
-      an OutputState, all of which belong to the same Mechanism;  this is a convenience format, that allows those
-      OutputStates to be specified by their names.  This is done using the following pair of entries:
-
-        * *MECHANISM*:<`Mechanism <Mechanism>`>
-            this entry is used to specify the Mechanism to which the OutputStates belong. If it is appears in the
-            dictionary, then all of the items specified in the OUTPUT_STATES entry (see below) are assumed to be
-            from this Mechanism.  If the dictionary contains this entry but no *OUTPUT_STATES* entry, then the
-            Mechanism's `primary OutputState <OutputState_Primary>` is used.
-        ..
-        * *OUTPUT_STATES*:<List[<str or any of the other forms of specifications for an OutputState>, ...]>
-            this must be used with a *MECHANISM* entry, to list one or more of its OutputStates by their names;
-            if a string appears in the list that is not the name of an OutputState of the Mechanism in the *MECHANISM*
-            entry, it is treated as a string specification (i.e., for the creation of an InputState with that name,
-            but that is not assigned any Projection).  The list can also contain, in the place of an OutputState's
-            name, an InputState specification subdictionary;  this can be used to specify attributes of the InputState
-            (e.g., its weight and/or exponent), in addition to the OutputState and/or MappingProjection from it to the
-            InputState (specified in the *PROJECTIONS* entry of the subdictionary).
-
-        If an InputState specification dictionary containing a *MECHANISM* and *OUTPUT_STATES* entry also contains
-        other entries (e.g., *WEIGHTS* or *EXPONENTS* entries), their values are applied to all of the InputStates
-        created for the OutputStates specified in the *OUTPUT_STATES* entry, except any that use a specification
-        dictionary of their own containing the same entry.  For example, if a *WEIGHT* entry is included
-        along with the *MECHANISM* and *OUTPUT_STATES* entries, then the specified weight is assigned to the
-        `weight <InputState.weight>` attribute of the InputStates created for each of the OutputStates in the
-        *OUTPUT_STATES* list, except any that are specified in the list using a specification subdictionary that
-        includes its own *WEIGHT* entry;  in that case, the latter is assigned to the `weight <InputState.weight>`
-        attribute created for (only) that OutputState, while the *WEIGHT* entry in the outer dictionary is used for
-        all of the other InputStates.
-COMMENT
-
-    .. _InputState_Tuple_Specification:
+   .. _InputState_Tuple_Specification:
 
     * **Tuple specification** -- this is a convenience format that can be used to compactly specify an InputState
       along with a Projection to it.  It can take several forms:
