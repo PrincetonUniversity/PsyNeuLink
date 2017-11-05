@@ -949,7 +949,6 @@ class TestTransferMechanismSize:
 
     # ------------------------------------------------------------------------------------------------
     # TEST 17
-    # METHOD OF SPECIFICATION NOT YET IMPLEMENTED:
     # MECHANISMS/OUTPUT_STATES entries in params specification dict
 
     def test_transfer_mech_input_states_mech_output_state_in_specification_dict_spec(self):
