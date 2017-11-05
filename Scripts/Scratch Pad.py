@@ -367,6 +367,9 @@ c = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[m.parameter_state
 g = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[m.output_states[pnl.DECISION_VARIABLE],
                                                             m.output_states[pnl.RESPONSE_TIME]]}])
 
+# g = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM:m,
+#                                          pnl.NAME:pnl.DECISION_VARIABLE}])
+
 TEMP = True
 
 # My_Transfer_Mech_A = TransferMechanism(

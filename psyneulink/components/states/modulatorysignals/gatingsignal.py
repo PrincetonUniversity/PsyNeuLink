@@ -229,7 +229,8 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import Linear, LinearCombination, _is_modulation_param
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
-from psyneulink.components.states.outputstate import PRIMARY, SEQUENTIAL
+from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.states.outputstate import OutputState, PRIMARY, SEQUENTIAL
 from psyneulink.components.states.state import State_Base, State
 from psyneulink.globals.keywords import \
     MECHANISM, NAME, GATING_PROJECTION, GATING_SIGNAL, GATE, RECEIVER, SUM, PROJECTION_TYPE, \
@@ -490,31 +491,51 @@ class GatingSignal(ModulatorySignal):
 
         if isinstance(state_specific_params, dict):
 
-            # gating_signal was a GatingSignal specification dictionary,
-            #     with the Mechanism to which the state belongs in the MECHANISM entry,
-            #     and the name of the state in the NAME entry
-            if MECHANISM in state_dict:
-                mech = state_dict[MECHANISM]
+            # gating_signal is a GatingSignal specification dictionary,
+            #     with the MECHANISM entry specifying Mechanism with one or more States to gate,
+            #     and the names of them in the INPUT_STATES and/or OUTPUT_STATES entries.
+            if MECHANISM in state_specific_params:
+
+                mech = state_specific_params[MECHANISM]
                 if not isinstance(mech, Mechanism):
                     raise GatingSignal("Value of the {} entry ({}) in the specification dictionary "
                                        "for {} of {} is not a {}".
                                        format(MECHANISM, mech, GatingSignal.__name__, owner.name, Mechanism.__name__))
-                state_name = state_dict[NAME]
-                try:
-                    state = mech.input_states[state_name]
-                except:
-                    try:
-                        state = mech.output_states[state_name]
-                    except:
-                        raise GatingSignalError("Unrecognized name ({}) for a {} of {} in specification of {} for {}".
-                                                format(state_name, State.__name__, mech.name,
-                                                       GatingSignal.__name__, owner.name))
-                # Delete MECHANISM entry as it is not a parameter of a GatingSignal
-                #     and NAME entry as it will interfere with the name of the GatingSignal
-                del state_dict[MECHANISM]
-                del state_dict[NAME]
 
-                params_dict[PROJECTIONS].append(state)
+                if INPUT_STATES in state_specific_params:
+                    input_states = state_specific_params[INPUT_STATES]
+                    if not isinstance(input_states, list):
+                        input_states = [input_states]
+                    for input_state in input_states:
+                        try:
+                            input_state = mech.input_states[input_state]
+                        except:
+                            raise GatingSignalError("Unrecognized name ({}) for a {} of {} "
+                                                    "in specification of {} for {}".
+                                                    format(input_state, InputState.__name__, mech.name,
+                                                           GatingSignal.__name__, owner.name))
+                        params_dict[PROJECTIONS].append(input_state)
+                    # Delete INPUT_STATES entry as it is not a parameter of a GatingSignal
+                    del state_specific_params[INPUT_STATES]
+
+                if OUTPUT_STATES in state_specific_params:
+                    output_states = state_specific_params[OUTPUT_STATES]
+                    if not isinstance(output_states, list):
+                        output_states = [output_states]
+                    for output_state in output_states:
+                        try:
+                            output_state = mech.output_states[output_state]
+                        except:
+                            raise GatingSignalError("Unrecognized name ({}) for a {} of {} "
+                                                    "in specification of {} for {}".
+                                                    format(output_state, OutputState.__name__, mech.name,
+                                                           GatingSignal.__name__, owner.name))
+                        params_dict[PROJECTIONS].append(output_state)
+                    # Delete OUTPUT_STATES entry as it is not a parameter of a GatingSignal
+                    del state_specific_params[OUTPUT_STATES]
+
+                # Delete MECHANISM entry as it is not a parameter of a GatingSignal
+                del state_specific_params[MECHANISM]
 
         return params_dict
 # MODIFIED 9/30/17 END

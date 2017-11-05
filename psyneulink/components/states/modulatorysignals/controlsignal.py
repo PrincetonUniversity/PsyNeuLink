@@ -1031,16 +1031,34 @@ class ControlSignal(ModulatorySignal):
 
             # control_signal was a Control specification dictionary,
             #     with the Mechanism to which the parameter belongs in the MECHANISM entry,
-            #     and the name of the parameter in the NAME entry
-            # if all(key in state_dict for key in {MECHANISM, NAME}):
-            if MECHANISM in state_dict:
-                mech = state_dict[MECHANISM]
-                param_name = state_dict[NAME]
-                # Delete MECHANISM entry as it is not a parameter of ControlSignal
-                #     (which will balk at it in ControlSignal._validate_params)
-                del state_dict[MECHANISM]
-                parameter_state = _get_parameter_state(owner, CONTROL_SIGNAL, param_name, mech)
-                params_dict[PROJECTIONS].append(parameter_state)
+            #     and the name of the parameter in the PARAMS entry
+            # if all(key in state_dict for key in {MECHANISM, PARAM}):
+            if MECHANISM in state_specific_params:
+
+                mech = state_specific_params[MECHANISM]
+                if not isinstance(mech, Mechanism):
+                    raise ControlSignal("Value of the {} entry ({}) in the specification dictionary "
+                                       "for {} of {} is not a {}".
+                                       format(MECHANISM, mech, ControlSignal.__name__, owner.name, Mechanism.__name__))
+
+                if PARAMETER_STATES in state_specific_params:
+                    parameter_states = state_specific_params[PARAMETER_STATES]
+                    if not isinstance(parameter_states, list):
+                        parameter_states = [parameter_states]
+                    for parameter_state in parameter_states:
+                        try:
+                            parameter_state = mech.parameter_states[parameter_state]
+                        except:
+                            raise ControlSignalError("Unrecognized name ({}) for a {} of {} "
+                                                    "in specification of {} for {}".
+                                                    format(parameter_state, ParameterState.__name__, mech.name,
+                                                           ControlSignal.__name__, owner.name))
+
+                        params_dict[PROJECTIONS].append(parameter_state)
+                    del state_specific_params[PARAMETER_STATES]
+
+                # Delete MECHANISM entry as it is not a parameter of a GatingSignal
+                del state_specific_params[MECHANISM]
 
         elif isinstance(state_specific_params, tuple):
 
