@@ -576,7 +576,7 @@ class OutputState(State_Base):
     stateAttributes = State_Base.stateAttributes | {INDEX, CALCULATE}
 
     connectsWith = [INPUT_STATE]
-    connectsWithAttribute = INPUT_STATES
+    connectsWithAttribute = [INPUT_STATES]
     projectionSocket = RECEIVER
     modulators = [GATING_SIGNAL]
 
@@ -804,10 +804,12 @@ class OutputState(State_Base):
 
         params_dict = {}
 
+        # FIX: 11/4/17: MOVE TO _parse_state_spec
         if isinstance(state_specific_params, dict):
-            if PROJECTIONS in state_dict:
-                params_dict[PROJECTIONS] = state_dict[PROJECTIONS]
-            return state_specific_params
+            # if PROJECTIONS in state_dict:
+            #     params_dict[PROJECTIONS] = state_dict[PROJECTIONS]
+            # return state_specific_params
+            pass
 
         elif isinstance(state_specific_params, ConnectionTuple):
             params_dict[PROJECTIONS] = _parse_connection_specs(self,

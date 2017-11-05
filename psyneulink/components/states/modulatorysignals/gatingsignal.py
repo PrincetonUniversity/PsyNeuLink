@@ -461,8 +461,6 @@ class GatingSignal(ModulatorySignal):
                          prefs=prefs,
                          context=self)
 
-# MODIFIED 9/30/17 NEW:
-# FIX: 10/3/17 - SHOULD BE ABLE TO PARE THIS DOWN
     def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
 
@@ -473,13 +471,11 @@ class GatingSignal(ModulatorySignal):
         Returns params dict with CONNECTIONS entries if any of these was specified.
 
         """
-        from psyneulink.components.mechanisms.mechanism import Mechanism
-        from psyneulink.components.states.parameterstate import ParameterState
-        from psyneulink.components.projections.projection import _parse_connection_specs
         from psyneulink.globals.keywords import PROJECTIONS
 
         params_dict = {}
 
+        # FIX: 11/4/17: MOVE TO _parse_state_spec
         if PROJECTIONS in state_specific_params:
             params_dict[PROJECTIONS] = state_specific_params[PROJECTIONS]
         else:
@@ -490,55 +486,9 @@ class GatingSignal(ModulatorySignal):
                 params_dict[param] = state_specific_params[param]
 
         if isinstance(state_specific_params, dict):
-
-            # gating_signal is a GatingSignal specification dictionary,
-            #     with the MECHANISM entry specifying Mechanism with one or more States to gate,
-            #     and the names of them in the INPUT_STATES and/or OUTPUT_STATES entries.
-            if MECHANISM in state_specific_params:
-
-                mech = state_specific_params[MECHANISM]
-                if not isinstance(mech, Mechanism):
-                    raise GatingSignal("Value of the {} entry ({}) in the specification dictionary "
-                                       "for {} of {} is not a {}".
-                                       format(MECHANISM, mech, GatingSignal.__name__, owner.name, Mechanism.__name__))
-
-                if INPUT_STATES in state_specific_params:
-                    input_states = state_specific_params[INPUT_STATES]
-                    if not isinstance(input_states, list):
-                        input_states = [input_states]
-                    for input_state in input_states:
-                        try:
-                            input_state = mech.input_states[input_state]
-                        except:
-                            raise GatingSignalError("Unrecognized name ({}) for a {} of {} "
-                                                    "in specification of {} for {}".
-                                                    format(input_state, InputState.__name__, mech.name,
-                                                           GatingSignal.__name__, owner.name))
-                        params_dict[PROJECTIONS].append(input_state)
-                    # Delete INPUT_STATES entry as it is not a parameter of a GatingSignal
-                    del state_specific_params[INPUT_STATES]
-
-                if OUTPUT_STATES in state_specific_params:
-                    output_states = state_specific_params[OUTPUT_STATES]
-                    if not isinstance(output_states, list):
-                        output_states = [output_states]
-                    for output_state in output_states:
-                        try:
-                            output_state = mech.output_states[output_state]
-                        except:
-                            raise GatingSignalError("Unrecognized name ({}) for a {} of {} "
-                                                    "in specification of {} for {}".
-                                                    format(output_state, OutputState.__name__, mech.name,
-                                                           GatingSignal.__name__, owner.name))
-                        params_dict[PROJECTIONS].append(output_state)
-                    # Delete OUTPUT_STATES entry as it is not a parameter of a GatingSignal
-                    del state_specific_params[OUTPUT_STATES]
-
-                # Delete MECHANISM entry as it is not a parameter of a GatingSignal
-                del state_specific_params[MECHANISM]
+            pass
 
         return params_dict
-# MODIFIED 9/30/17 END
 
     def _execute(self, function_params, context):
         return float(super()._execute(function_params=function_params, context=context))

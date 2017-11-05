@@ -2225,7 +2225,48 @@ def _parse_state_spec(state_type=None,
                                                              owner=owner,
                                                              state_dict=state_dict,
                                                              state_specific_params=params)
-            # FIX: 11/4/17 - STILL NEEDS WORK:
+            # if not PROJECTIONS in params:
+            #     params[PROJECTIONS] = []
+
+            # if PROJECTIONS in state_dict:
+            #     if not isisinsance(state_dict[PROJECTIONS], list)
+            #         params[PROJECTIONS] = [params[PROJECTIONS]]
+            #     params[PROJECTIONS].appdend(state_dict[PROJECTIONS])
+
+            # MECHANISM entry specifies Mechanism with one or more States to connect with,
+            #    and the names of them in <STATES> entries.
+            if MECHANISM in state_specific_args:
+
+                if not PROJECTIONS in params:
+                    params[PROJECTIONS] = []
+
+                mech = state_specific_args[MECHANISM]
+                if not isinstance(mech, Mechanism):
+                    raise StateError("Value of the {} entry ({}) in the specification dictionary "
+                                     "for {} of {} is not a {}".
+                                     format(MECHANISM, mech, state_type.__name__, owner.name, Mechanism.__name__))
+
+                for STATES in state_type.connectsWithAttribute:
+
+                   if STATES in state_specific_args:
+                        states = state_specific_args[STATES]
+                        if not isinstance(states, list):
+                            states = [states]
+                        for state in states:
+                            try:
+                                state_attr = getattr(mech, STATES)
+                                state = state_attr[state]
+                            except:
+                                raise StateError("Unrecognized name ({}) for a {} of {} in specification of {} for {}".
+                                                 format(state, state, mech.name, state_type.__name__, owner.name))
+                            params[PROJECTIONS].append(state)
+                        # Delete INPUT_STATES entry as it is not a parameter of a GatingSignal
+                        del state_specific_args[STATES]
+
+                # Delete MECHANISM entry as it is not a parameter of a GatingSignal
+                del state_specific_args[MECHANISM]
+
+            # FIX: 11/4/17 - MAY STILL NEED WORK:
             # FIX:   PROJECTIONS FROM UNRECOGNIZED KEY ENTRY MAY BE REDUNDANT OR CONFLICT WITH ONE ALREADY IN PARAMS
             # FIX:   NEEDS TO BE BETTER COORDINATED WITH _parse_state_specific_params
             # FIX:   REGARDING WHAT IS IN state_specific_args VS params (see REF_VAL_NAME BRANCH)
@@ -2244,6 +2285,10 @@ def _parse_state_spec(state_type=None,
                                      format(state_type.__name__, owner.name,
                                             ", ".join([s for s in list(state_specific_args.keys())])))
 
+            for param in state_type.stateAttributes:
+                if param in state_specific_args:
+                    params[param] = state_specific_args[param]
+
             if PROJECTIONS in params and params[PROJECTIONS] is not None:
                 #       (E.G., WEIGHTS AND EXPONENTS FOR InputState AND INDEX FOR OutputState)
                 # Get and parse projection specifications for the State
@@ -2253,6 +2298,7 @@ def _parse_state_spec(state_type=None,
                 projection_params.extend(params[PROJECTIONS])
                 if projection_params:
                     params[PROJECTIONS] = _parse_connection_specs(state_type, owner, projection_params)
+
             # Update state_dict[PARAMS] with params
             if state_dict[PARAMS] is None:
                 state_dict[PARAMS] = {}
