@@ -366,11 +366,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                                       context=context)
 
         if GATING_SIGNALS in target_set and target_set[GATING_SIGNALS]:
-
             if not isinstance(target_set[GATING_SIGNALS], list):
-                raise GatingMechanismError("{} arg of {} must be list".
-                                           format(GATING_SIGNAL, self.name))
-
+                target_set[GATING_SIGNALS] = [target_set[GATING_SIGNALS]]
             for gating_signal in target_set[GATING_SIGNALS]:
                 _parse_state_spec(state_type=GatingSignal, owner=self, state_spec=gating_signal)
 

@@ -1092,7 +1092,6 @@ class ControlSignal(ModulatorySignal):
         return params_dict
 # MODIFIED 9/30/17 END
 
-
     @property
     def allocation_samples(self):
         return self._allocation_samples

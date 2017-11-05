@@ -609,7 +609,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                    ObjectiveMechanism.componentName))
 
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
-            from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
             if not isinstance(target_set[CONTROL_SIGNALS], list):
                 target_set[CONTROL_SIGNALS] = [target_set[CONTROL_SIGNALS]]
             for control_signal in target_set[CONTROL_SIGNALS]:

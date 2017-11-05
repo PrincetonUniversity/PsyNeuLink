@@ -230,9 +230,9 @@ import typecheck as tc
 from psyneulink.components.functions.function import Linear, LinearCombination, _is_modulation_param
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
 from psyneulink.components.states.outputstate import PRIMARY, SEQUENTIAL
-from psyneulink.components.states.state import State_Base
+from psyneulink.components.states.state import State_Base, State
 from psyneulink.globals.keywords import \
-    GATING_PROJECTION, GATING_SIGNAL, GATE, RECEIVER, SUM, PROJECTION_TYPE, \
+    MECHANISM, NAME, GATING_PROJECTION, GATING_SIGNAL, GATE, RECEIVER, SUM, PROJECTION_TYPE, \
     INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -459,6 +459,65 @@ class GatingSignal(ModulatorySignal):
                          name=name,
                          prefs=prefs,
                          context=self)
+
+# MODIFIED 9/30/17 NEW:
+# FIX: 10/3/17 - SHOULD BE ABLE TO PARE THIS DOWN
+    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
+        """Get ControlSignal specified for a parameter or in a 'control_signals' argument
+
+        Tuple specification can be:
+            (parameter_name, Mechanism)
+            [TBI:] (parameter_name, Mechanism, weight, exponent, projection_specs)
+
+        Returns params dict with CONNECTIONS entries if any of these was specified.
+
+        """
+        from psyneulink.components.mechanisms.mechanism import Mechanism
+        from psyneulink.components.states.parameterstate import ParameterState
+        from psyneulink.components.projections.projection import _parse_connection_specs
+        from psyneulink.globals.keywords import PROJECTIONS
+
+        params_dict = {}
+
+        if PROJECTIONS in state_specific_params:
+            params_dict[PROJECTIONS] = state_specific_params[PROJECTIONS]
+        else:
+            params_dict[PROJECTIONS] = []
+
+        for param in self.stateAttributes:
+            if param in state_specific_params:
+                params_dict[param] = state_specific_params[param]
+
+        if isinstance(state_specific_params, dict):
+
+            # gating_signal was a GatingSignal specification dictionary,
+            #     with the Mechanism to which the state belongs in the MECHANISM entry,
+            #     and the name of the state in the NAME entry
+            if MECHANISM in state_dict:
+                mech = state_dict[MECHANISM]
+                if not isinstance(mech, Mechanism):
+                    raise GatingSignal("Value of the {} entry ({}) in the specification dictionary "
+                                       "for {} of {} is not a {}".
+                                       format(MECHANISM, mech, GatingSignal.__name__, owner.name, Mechanism.__name__))
+                state_name = state_dict[NAME]
+                try:
+                    state = mech.input_states[state_name]
+                except:
+                    try:
+                        state = mech.output_states[state_name]
+                    except:
+                        raise GatingSignalError("Unrecognized name ({}) for a {} of {} in specification of {} for {}".
+                                                format(state_name, State.__name__, mech.name,
+                                                       GatingSignal.__name__, owner.name))
+                # Delete MECHANISM entry as it is not a parameter of a GatingSignal
+                #     and NAME entry as it will interfere with the name of the GatingSignal
+                del state_dict[MECHANISM]
+                del state_dict[NAME]
+
+                params_dict[PROJECTIONS].append(state)
+
+        return params_dict
+# MODIFIED 9/30/17 END
 
     def _execute(self, function_params, context):
         return float(super()._execute(function_params=function_params, context=context))
