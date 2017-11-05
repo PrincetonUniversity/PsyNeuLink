@@ -290,7 +290,7 @@ from psyneulink.components.functions.function import CombinationFunction, Expone
     LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
 from psyneulink.components.shellclasses import Function
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE
+from psyneulink.components.states.outputstate import PRIMARY, SEQUENTIAL
 from psyneulink.components.states.parameterstate import _get_parameter_state
 from psyneulink.components.states.state import State_Base
 from psyneulink.globals.defaults import defaultControlAllocation
@@ -325,8 +325,6 @@ __all__ = [
 #     TEST_MODE = 240
 # defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
 DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.3)
-
-STATE_SPECIFIC_PARAMS = {ALLOCATION_SAMPLES, MODULATION}
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
@@ -410,6 +408,7 @@ class ControlSignal(ModulatorySignal):
     """
     ControlSignal(                                       \
         owner,                                           \
+\       index=SEQUENTIAL,                                \
         function=LinearCombination(operation=SUM),       \
         costs_options=ControlSignalCosts.DEFAULTS,       \
         intensity_cost_function=Exponential,             \
@@ -456,6 +455,10 @@ class ControlSignal(ModulatorySignal):
 
     owner : ControlMechanism
         specifies the `ControlMechanism <ControlMechanism>` to which to assign the ControlSignal.
+
+    index : int : default SEQUENTIAL
+        specifies the item of the owner ControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>`
+        used as the ControlSignal's `value <ControlSignal.value>`.
 
     function : Function or method : default Linear
         specifies the function used to determine the `intensity` of the ControlSignal from its `allocation`.
@@ -544,6 +547,10 @@ class ControlSignal(ModulatorySignal):
     last_intensity : float
         the `intensity` of the ControlSignal on the previous execution of its `owner <ControlSignal.owner>`.
 
+    index : int
+        the item of the owner ControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>` used as the
+        ControlSignal's `value <ControlSignal.value>`.
+
     control_signal : float
         result of the ControlSignal's `function <ControlSignal.function>`; same as `intensity`.
 
@@ -614,10 +621,12 @@ class ControlSignal(ModulatorySignal):
     componentType = CONTROL_SIGNAL
     paramsType = OUTPUT_STATE_PARAMS
 
-    ConnectsWith = [PARAMETER_STATE]
-    ConnectsWithAttribute = [PARAMETER_STATES]
-    ProjectionSocket = RECEIVER
-    Modulators = []
+    stateAttributes = ModulatorySignal.stateAttributes | {ALLOCATION_SAMPLES}
+
+    connectsWith = [PARAMETER_STATE]
+    connectsWithAttribute = [PARAMETER_STATES]
+    projectionSocket = RECEIVER
+    modulators = []
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -640,7 +649,7 @@ class ControlSignal(ModulatorySignal):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 index=PRIMARY_OUTPUT_STATE,
+                 index=None,
                  calculate=Linear,
                  function=LinearCombination(operation=SUM),
                  cost_options:tc.any(ControlSignalCosts, list)=ControlSignalCosts.DEFAULTS,
@@ -659,6 +668,14 @@ class ControlSignal(ModulatorySignal):
         # Note index and calculate are not used by ControlSignal, but included here for consistency with OutputState
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
             allocation_samples =  params[ALLOCATION_SAMPLES]
+
+        # Note: calculate is not currently used by GatingSignal;
+        #       it is included here for consistency with OutputState and possible use by subclasses.
+        if index is None and owner is not None:
+            if len(owner.allocation_policy)==1:
+                index = PRIMARY
+            else:
+                index = PRIMARY
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -694,7 +711,7 @@ class ControlSignal(ModulatorySignal):
 
         Checks if:
         - cost functions are all appropriate
-        - allocation_samples is a list with 2 numbers
+        - allocation_samples is a list or 1d np.array
         - all cost functions are references to valid ControlProjection costFunctions (listed in self.costFunctions)
         - IntensityFunction is identity function, in which case ignoreIntensityFunction flag is set (for efficiency)
 
@@ -1001,29 +1018,18 @@ class ControlSignal(ModulatorySignal):
 
         params_dict = {}
 
+        # FIX: 11/4/17: MOVE TO _parse_state_spec
         if PROJECTIONS in state_specific_params:
             params_dict[PROJECTIONS] = state_specific_params[PROJECTIONS]
         else:
             params_dict[PROJECTIONS] = []
 
-        for param in STATE_SPECIFIC_PARAMS:
+        for param in self.stateAttributes:
             if param in state_specific_params:
                 params_dict[param] = state_specific_params[param]
 
         if isinstance(state_specific_params, dict):
-
-            # control_signal was a Control specification dictionary,
-            #     with the Mechanism to which the parameter belongs in the MECHANISM entry,
-            #     and the name of the parameter in the NAME entry
-            # if all(key in state_dict for key in {MECHANISM, NAME}):
-            if MECHANISM in state_dict:
-                mech = state_dict[MECHANISM]
-                param_name = state_dict[NAME]
-                # Delete MECHANISM entry as it is not a parameter of ControlSignal
-                #     (which will balk at it in ControlSignal._validate_params)
-                del state_dict[MECHANISM]
-                parameter_state = _get_parameter_state(owner, CONTROL_SIGNAL, param_name, mech)
-                params_dict[PROJECTIONS].append(parameter_state)
+            pass
 
         elif isinstance(state_specific_params, tuple):
 
@@ -1074,7 +1080,6 @@ class ControlSignal(ModulatorySignal):
 
         return params_dict
 # MODIFIED 9/30/17 END
-
 
     @property
     def allocation_samples(self):

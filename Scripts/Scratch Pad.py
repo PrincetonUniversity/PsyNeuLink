@@ -19,15 +19,6 @@ class ScratchPadError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
-print (pnl.iscompatible([[2,3],[0]], [[0,0],[0]]))
-
-print (pnl.iscompatible([[2,3],[1]], [[0,0],np.array([0])]))
-print (pnl.iscompatible([[1,0],[0]], [[0,0],np.array([0])]))
-print (pnl.iscompatible(np.array([[1.,0.]]), np.array([[1,1]])))
-print (pnl.iscompatible([[1, 0]],[[1.0, 1.0]]))
-
-
-
 # ----------------------------------------------- psyneulink -----------------------------------------------------------
 
 #region USER GUIDE
@@ -364,8 +355,23 @@ print (pnl.iscompatible([[1, 0]],[[1.0, 1.0]]))
 #endregion
 
 #region TEST Modulation @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+print("TEST Modulation")
 
-#
+m = pnl.DDM(name='MY DDM')
+# c = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [m.parameter_states[pnl.DRIFT_RATE],
+#                                                              m.parameter_states[pnl.THRESHOLD]]}])
+c = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[m.parameter_states[pnl.DRIFT_RATE],
+                                                               m.parameter_states[pnl.THRESHOLD]]}])
+# g = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS: [m.output_states[pnl.DECISION_VARIABLE],
+#                                                              m.output_states[pnl.RESPONSE_TIME]]}])
+g = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[m.output_states[pnl.DECISION_VARIABLE],
+                                                            m.output_states[pnl.RESPONSE_TIME]]}])
+
+# g = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM:m,
+#                                          pnl.NAME:pnl.DECISION_VARIABLE}])
+
+TEMP = True
+
 # My_Transfer_Mech_A = TransferMechanism(
 #                            function=Logistic(
 #                                         gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))

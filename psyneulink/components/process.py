@@ -2575,7 +2575,7 @@ class ProcessInputState(OutputState):
         # self.owner.input = self.value
         # MODIFIED 2/17/17 END
         # self.path_afferents = []
-        # self.index = PRIMARY_OUTPUT_STATE
+        # self.index = PRIMARY
         # self.calculate = Linear
 
     # MODIFIED 2/1717 NEW:
