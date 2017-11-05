@@ -2269,7 +2269,7 @@ def _parse_state_spec(state_type=None,
             # FIX:   NEEDS TO BE BETTER COORDINATED WITH _parse_state_specific_params
             # FIX:   REGARDING WHAT IS IN state_specific_args VS params (see REF_VAL_NAME BRANCH)
             # FIX:   ALSO, ??DOES PROJECTIONS ENTRY BELONG IN param OR state_dict?
-            # Check for single unrecognized key in params, used for {<STATE_NAME>:[<projection_specs>] format
+            # Check for single unrecognized key in params, used for {<STATE_NAME>:[<projection_spec>,...]} format
             unrecognized_keys = [key for key in state_specific_args if not key in state_type.stateAttributes]
             if unrecognized_keys:
                 if len(unrecognized_keys)==1:
