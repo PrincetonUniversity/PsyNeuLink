@@ -2225,16 +2225,14 @@ def _parse_state_spec(state_type=None,
                                                              owner=owner,
                                                              state_dict=state_dict,
                                                              state_specific_params=params)
-            # if not PROJECTIONS in params:
-            #     params[PROJECTIONS] = []
 
-            # if PROJECTIONS in state_dict:
-            #     if not isisinsance(state_dict[PROJECTIONS], list)
-            #         params[PROJECTIONS] = [params[PROJECTIONS]]
-            #     params[PROJECTIONS].appdend(state_dict[PROJECTIONS])
+            if PROJECTIONS in state_dict:
+                if not isinstance(state_dict[PROJECTIONS], list):
+                    params[PROJECTIONS] = [params[PROJECTIONS]]
+                params[PROJECTIONS].appdend(state_dict[PROJECTIONS])
 
             # MECHANISM entry specifies Mechanism with one or more States to connect with,
-            #    and the names of them in <STATES> entries.
+            #    and the names of them in <STATES> entries: {MECHANISM: <Mechanism>, <STATES>:[<State.name>, ...]}
             if MECHANISM in state_specific_args:
 
                 if not PROJECTIONS in params:
@@ -2260,10 +2258,10 @@ def _parse_state_spec(state_type=None,
                                 raise StateError("Unrecognized name ({}) for a {} of {} in specification of {} for {}".
                                                  format(state, state, mech.name, state_type.__name__, owner.name))
                             params[PROJECTIONS].append(state)
-                        # Delete INPUT_STATES entry as it is not a parameter of a GatingSignal
+                        # Delete <STATES> entry as it is not a parameter of a State
                         del state_specific_args[STATES]
 
-                # Delete MECHANISM entry as it is not a parameter of a GatingSignal
+                # Delete MECHANISM entry as it is not a parameter of a State
                 del state_specific_args[MECHANISM]
 
             # FIX: 11/4/17 - MAY STILL NEED WORK:
