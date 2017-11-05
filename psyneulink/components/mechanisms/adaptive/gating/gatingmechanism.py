@@ -230,6 +230,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
     size : int, list or 1d np.array of ints
         specifies default_gating_policy as an array of zeros if **default_gating_policy** is not passed as an
         argument;  if **default_gating_policy** is specified, it takes precedence over the specification of **size**.
+        As an example, the following mechanisms are equivalent::
+            T1 = TransferMechanism(size = [3, 2])
+            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies the function used to transform the GatingMechanism's `variable <GatingMechanism.variable>`
