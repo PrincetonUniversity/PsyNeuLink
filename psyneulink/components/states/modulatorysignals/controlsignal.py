@@ -671,11 +671,9 @@ class ControlSignal(ModulatorySignal):
 
         # Note: calculate is not currently used by GatingSignal;
         #       it is included here for consistency with OutputState and possible use by subclasses.
-        if index is None and owner is not None:
-            if len(owner.allocation_policy)==1:
-                index = PRIMARY
-            else:
-                index = PRIMARY
+
+        # If index has not been specified, but the owner has, allocation_policy has been determined, so use that
+        index = index or SEQUENTIAL
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,

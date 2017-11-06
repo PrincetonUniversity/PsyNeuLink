@@ -340,7 +340,7 @@ from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.keywords import \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, INPUT_STATE, INPUT_STATES, RECEIVER, GATING_SIGNAL, \
-    STATE, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, RESULT, INDEX, \
+    STATE, OUTPUT_STATE, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, \
     CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -360,24 +360,10 @@ state_type_keywords = state_type_keywords.update({OUTPUT_STATE})
 #     DEFAULTS = NONE
 
 OUTPUT_STATE_TYPE = 'output_state_type'
+
+# Used to specify how StandardOutputStates are indexed
 PRIMARY = 0
 SEQUENTIAL = 'SEQUENTIAL'
-
-# Standard OutputStates
-# OUTPUT_RESULT = {NAME: RESULT}
-#
-# OUTPUT_MEAN = {NAME:MEAN,
-#                CALCULATE:lambda x: np.mean(x)}
-#
-# OUTPUT_MEDIAN = {NAME:MEDIAN,
-#                    CALCULATE:lambda x: np.median(x)}
-#
-# OUTPUT_STAND_DEVIATION = {NAME:STANDARD_DEVIATION,
-#                           CALCULATE:lambda x: np.std(x)}
-#
-# OUTPUT_VARIANCE = {NAME:VARIANCE,
-#                    CALCULATE:lambda x: np.var(x)}
-
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class OUTPUTS():
@@ -686,13 +672,20 @@ class OutputState(State_Base):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         if INDEX in target_set:
-            try:
-                self.owner.default_value[target_set[INDEX]]
-            except IndexError:
-                raise OutputStateError("Value of \'{}\' argument for {} ({}) is greater than the number of items in "
-                                       "the output_values ({}) for its owner Mechanism ({})".
-                                       format(INDEX, self.name, target_set[INDEX], self.owner.default_value,
-                                              self.owner.name))
+            # If INDEX specification is SEQUENTIAL:
+            #    - can't yet determine relationship to default_value
+            #    - can't yet evaluate calculate function (below)
+            # so just return
+            if target_set[INDEX] is SEQUENTIAL:
+                return
+            else:
+                try:
+                    self.owner.default_value[target_set[INDEX]]
+                except IndexError:
+                    raise OutputStateError("Value of \'{}\' argument for {} ({}) is greater than the number "
+                                           "of items in the output_values ({}) for its owner Mechanism ({})".
+                                           format(INDEX, self.name, target_set[INDEX], self.owner.default_value,
+                                                  self.owner.name))
 
         # IMPLEMENT: VALIDATE THAT CALCULATE FUNCTION ACCEPTS VALUE CONSISTENT WITH
         #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE
@@ -968,39 +961,39 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     if output_states:
         for i, output_state in enumerate(output_states):
 
+            from psyneulink.components.states.state import _parse_state_spec
+            output_state = _parse_state_spec(state_type=OutputState, owner=owner, state_spec=output_state)
+
             # Default is PRIMARY
             index = PRIMARY
             output_state_value = owner_value[index]
-
-            # output_state is:
 
             # OutputState object, so get its index attribute
             if isinstance(output_state, OutputState):
                 index = output_state.index
                 output_state_value = owner_value[index]
 
-            # string, so check if it is the name of a standard_output_state and, if so, get its dict
-            elif isinstance(output_state, str) and hasattr(owner, STANDARD_OUTPUT_STATES):
-                # check if string matches the name entry of a dict in standard_output_states
-                std_output_state = owner.standard_output_states.get_state_dict(output_state)
-                if std_output_state is not None:
-                    # owner.output_states[i] = std_output_state
-                    output_states[i] = std_output_state
-
-            # specification dict, so get its INDEX attribute if specified, and apply calculate function if specified
-            # if isinstance(output_state, dict):
+            # OutputState specification dictionry, so get attributes
             elif isinstance(output_state, dict):
-                try:
-                    index = output_state[INDEX]
-                except KeyError:
-                    pass
-                if CALCULATE in output_state:
-                    output_state_value = output_state[CALCULATE](owner_value[index])
-                else:
-                    output_state_value = owner_value[index]
 
-            # If output_state is none of the above, it should be a string
-            #    (being used as the name of a default OutputState)
+                # If OutputState's name matches the name entry of a dict in standard_output_states,
+                #    use the named standard OuputState
+                if output_state[NAME] and hasattr(owner, STANDARD_OUTPUT_STATES):
+                    std_output_state = owner.standard_output_states.get_state_dict(output_state[NAME])
+                    if std_output_state is not None:
+                        output_states[i] = std_output_state
+
+                if output_state[PARAMS]:
+                    # If OutputState's index is specified, use it
+                    if INDEX in output_state[PARAMS]:
+                        index = output_state[PARAMS][INDEX]
+
+                    # If OutputState's calculate function is specified, use it to determine OutputState's vaue
+                    if CALCULATE in output_state[PARAMS]:
+                        output_state_value = output_state[PARAMS][CALCULATE](owner_value[index])
+                    else:
+                        output_state_value = owner_value[index]
+
             else:
                 if not isinstance(output_state, str):
                     raise OutputStateError("PROGRAM ERROR: unrecognized item ({}) in output_states specification for {}"
