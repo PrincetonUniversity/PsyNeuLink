@@ -1016,18 +1016,9 @@ class ControlSignal(ModulatorySignal):
 
         params_dict = {}
 
-        # FIX: 11/4/17: MOVE TO _parse_state_spec
-        if PROJECTIONS in state_specific_params:
-            params_dict[PROJECTIONS] = state_specific_params[PROJECTIONS]
-        else:
-            params_dict[PROJECTIONS] = []
-
-        for param in self.stateAttributes:
-            if param in state_specific_params:
-                params_dict[param] = state_specific_params[param]
-
         if isinstance(state_specific_params, dict):
-            pass
+            # pass
+            return state_specific_params
 
         elif isinstance(state_specific_params, tuple):
 

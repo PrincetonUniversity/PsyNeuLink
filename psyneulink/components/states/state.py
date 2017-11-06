@@ -2335,6 +2335,7 @@ def _parse_state_spec(state_type=None,
                     key = unrecognized_keys[0]
                     state_dict[NAME] = key
                     params[PROJECTIONS] = state_specific_args[key]
+                    del state_specific_args[key]
                 else:
                     raise StateError("There is more than one entry of the {} specification dictionary for {} ({}) "
                                      "that is not a keyword; there should be only one (used to name the State, "
