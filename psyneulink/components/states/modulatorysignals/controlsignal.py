@@ -997,8 +997,6 @@ class ControlSignal(ModulatorySignal):
                                                                             float(self.cost))
     #endregion
 
-# MODIFIED 9/30/17 NEW:
-# FIX: 10/3/17 - SHOULD BE ABLE TO PARE THIS DOWN
     def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
 
@@ -1036,7 +1034,7 @@ class ControlSignal(ModulatorySignal):
                                          "that is the name of a parameter of its second item ({})".
                                          format(ControlSignal.__name__, owner.name, param_name, mech.name))
             try:
-                parameter_state = mech._parameter_states[param_name]
+                parameter_state = mech.parameter_states[param_name]
             except KeyError:
                 raise ControlSignalError("No {} found for {} param of {} in {} specification tuple for {}".
                                          format(ParameterState.__name__, param_name, mech.name,
@@ -1049,7 +1047,6 @@ class ControlSignal(ModulatorySignal):
 
             # Assign connection specs to PROJECTIONS entry of params dict
             try:
-                # params_dict[CONNECTIONS] = _parse_connection_specs(self.__class__,
                 params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                    owner=owner,
                                                                    connections=parameter_state)
@@ -1067,7 +1064,6 @@ class ControlSignal(ModulatorySignal):
                                         format(CONTROL_SIGNAL, owner.name))
 
         return params_dict
-# MODIFIED 9/30/17 END
 
     @property
     def allocation_samples(self):

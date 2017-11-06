@@ -251,22 +251,6 @@ COMMENT:
     ADD TABLE HERE SHOWING COMBINATIONS OF ALLOWABLE SPECIFICATIONS AND THEIR OUTCOMES
 COMMENT
 
-Examples
-^^^^^^^^
-
-The following creates an InputState ``my_input_state`` with a `MappingProjection` to it from the
-`primary OutputState <OutputState_Primary>` of ``mech_A``::
-
-    my_input_state = InputState(projections=[mech_A])
-
-The following creates a `GatingSignal` with `GatingProjections <GatingProjection>` to ``mech_B`` and ``mech_C``,
-and assigns it to a ``my_gating_mech``::
-
-    my_gating_signal = GatingSignal(projections=[mech_B, mech_C])
-    my_gating_mech = GatingMechanism(gating_signals=[my_gating_signal]
-
-The GatingMechanism created will now gate the `primaryInputStates <Mechanism_InputStates>` of ``mech_B`` and ``mech_C``.
-
 .. _State_Structure:
 
 Structure
@@ -352,6 +336,83 @@ the State calls its `function <State_Base.function>` to determine its `value <St
    The change in the value of a `State <State>` does not occur until the Mechanism to which the State belongs is next
    executed; This conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for an explanation
    of "lazy" updating).
+
+
+Examples
+--------
+
+The following creates an InputState ``my_input_state`` with a `MappingProjection` to it from the
+`primary OutputState <OutputState_Primary>` of ``mech_A`` and assigns it to ``mech_B``::
+
+    mech_A = TransferMechanism()
+    my_input_state = InputState(projections=[mech_A])
+    mech_B = TransferMechanism(input_states=[my_input_state])
+
+
+
+
+The following creates a `GatingSignal` with `GatingProjections <GatingProjection>` to ``mech_B`` and ``mech_C``,
+and assigns it to ``my_gating_mech``::
+
+    my_gating_signal = GatingSignal(projections=[mech_B, mech_C])
+    my_gating_mech = GatingMechanism(gating_signals=[my_gating_signal]
+
+The `GatingMechanism` created will gate the `primary InputStates <InputState_Primary>` of ``mech_B`` and ``mech_C``.
+
+The following creates
+
+    def test_mapping_projection_with_mech_and_state_name_specs(self):
+         R1 = pnl.TransferMechanism(output_states=['OUTPUT_1', 'OUTPUT_2'])
+         R2 = pnl.TransferMechanism(default_variable=[[0],[0]],
+                                    input_states=['INPUT_1', 'INPUT_2'])
+         T = pnl.TransferMechanism(input_states=[{pnl.MECHANISM: R1,
+                                                  pnl.OUTPUT_STATES: ['OUTPUT_1', 'OUTPUT_2']}],
+                                   output_states=[{pnl.MECHANISM:R2,
+                                                   pnl.INPUT_STATES: ['INPUT_1', 'INPUT_2']}])
+
+   def test_transfer_mech_input_states_specification_dict_spec(self):
+        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+        T = TransferMechanism(default_variable=[[0],[0]],
+                                      input_states=[{NAME: 'FROM DECISION',
+                                                     PROJECTIONS: [R1.output_states['FIRST']]},
+                                                    {NAME: 'FROM RESPONSE_TIME',
+                                                     PROJECTIONS: R1.output_states['SECOND']}])
+
+   def test_transfer_mech_input_states_projection_in_specification_dict_spec(self):
+        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+        T = TransferMechanism(input_states=[{NAME: 'My InputState with Two Projections',
+                                             PROJECTIONS:[R1.output_states['FIRST'],
+                                                          R1.output_states['SECOND']]}])
+
+    def test_transfer_mech_input_states_mech_output_state_in_specification_dict_spec(self):
+        R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
+        T = TransferMechanism(input_states=[{MECHANISM: R1,
+                                             OUTPUT_STATES: ['FIRST', 'SECOND']}])
+        assert len(T.input_states)==1
+        for input_state in T.input_states:
+            for projection in input_state.path_afferents:
+                assert projection.sender.owner is R1
+
+
+COMMENT:
+   def test_multiple_modulatory_projections_with_mech_and_state_name_specs(self):
+
+        M = pnl.DDM(name='MY DDM')
+        C = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: M,
+                                                   pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
+        G = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM: M,
+                                                 pnl.OUTPUT_STATES: [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME]}])
+
+COMMENT
+
+        M = pnl.DDM(name='MY DDM')
+        C = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[M.parameter_states[pnl.DRIFT_RATE],
+                                                                       M.parameter_states[pnl.THRESHOLD]]}])
+        G = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[M.output_states[pnl.DECISION_VARIABLE],
+                                                                    M.output_states[pnl.RESPONSE_TIME]]}])
+
+
+
 
 .. _State_Class_Reference:
 
@@ -2180,7 +2241,11 @@ def _parse_state_spec(state_type=None,
         #    so assume it is a reference to the State itself that is being (or has been) instantiated
         if isinstance(state_specification, state_type):
             # Make sure that the specified State belongs to the Mechanism passed in the owner arg
-            if not state_specification.owner is owner:
+            if state_specification.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                owner = state_specification.init_args[OWNER]
+            else:
+                owner = state_specification.owner
+            if owner is not None and not state_specification.owner is owner:
                 raise StateError("The State specified in a call to _instantiate_state ({}) "
                                  "does belong to the {} specified in the \'{}\' argument ({})".
                                  format(state_specification.name, owner.name, Mechanism.__name__, OWNER, owner.name))
