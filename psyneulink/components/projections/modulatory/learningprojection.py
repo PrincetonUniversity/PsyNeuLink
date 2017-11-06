@@ -197,13 +197,13 @@ WT_MATRIX_RECEIVERS_DIM = 1
 
 DefaultTrainingMechanism = ObjectiveMechanism
 
+
 class LearningProjectionError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
     def __str__(self):
         return repr(self.error_value)
-
 
 
 class LearningProjection(ModulatoryProjection_Base):
