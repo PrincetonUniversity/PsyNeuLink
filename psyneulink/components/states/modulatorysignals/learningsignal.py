@@ -172,10 +172,11 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import Linear, LinearCombination, ModulationParam, _is_modulation_param
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE
+from psyneulink.components.states.outputstate import PRIMARY
 from psyneulink.components.states.state import State_Base
-from psyneulink.globals.keywords \
-    import LEARNED_PARAM, LEARNING_SIGNAL, LEARNING_PROJECTION, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, SUM
+from psyneulink.globals.keywords import \
+    LEARNED_PARAM, LEARNING_SIGNAL, LEARNING_PROJECTION, \
+    PROJECTION_TYPE, RECEIVER, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import parameter_spec
@@ -335,6 +336,13 @@ class LearningSignal(ModulatorySignal):
     componentType = LEARNING_SIGNAL
     paramsType = OUTPUT_STATE_PARAMS
 
+    stateAttributes = ModulatorySignal.stateAttributes
+
+    connectsWith = [PARAMETER_STATE]
+    connectsWithAttribute = [PARAMETER_STATES]
+    projectionSocket = RECEIVER
+    modulators = []
+
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
@@ -356,7 +364,7 @@ class LearningSignal(ModulatorySignal):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 index=PRIMARY_OUTPUT_STATE,
+                 index=PRIMARY,
                  calculate=Linear,
                  function=LinearCombination(operation=SUM),
                  learning_rate: tc.optional(parameter_spec) = None,

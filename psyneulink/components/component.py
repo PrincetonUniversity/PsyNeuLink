@@ -752,7 +752,8 @@ class Component(object):
         # self.init_status = InitStatus.INITIALIZING
 
         defaults = self.ClassDefaults.values().copy()
-        defaults.update(param_defaults)
+        if param_defaults is not None:
+            defaults.update(param_defaults)
         del defaults[VARIABLE]
 
         self.instance_defaults = self.InstanceDefaults(variable=default_variable, **defaults)

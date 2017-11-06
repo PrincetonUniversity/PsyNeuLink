@@ -1,3 +1,6 @@
+import numpy as np
+import psyneulink as pnl
+
 # GLOBALS:
 
 # MECHANISMS:
@@ -352,8 +355,23 @@ class ScratchPadError(Exception):
 #endregion
 
 #region TEST Modulation @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+print("TEST Modulation")
 
-#
+m = pnl.DDM(name='MY DDM')
+# c = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [m.parameter_states[pnl.DRIFT_RATE],
+#                                                              m.parameter_states[pnl.THRESHOLD]]}])
+c = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[m.parameter_states[pnl.DRIFT_RATE],
+                                                               m.parameter_states[pnl.THRESHOLD]]}])
+# g = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS: [m.output_states[pnl.DECISION_VARIABLE],
+#                                                              m.output_states[pnl.RESPONSE_TIME]]}])
+g = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[m.output_states[pnl.DECISION_VARIABLE],
+                                                            m.output_states[pnl.RESPONSE_TIME]]}])
+
+# g = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM:m,
+#                                          pnl.NAME:pnl.DECISION_VARIABLE}])
+
+TEMP = True
+
 # My_Transfer_Mech_A = TransferMechanism(
 #                            function=Logistic(
 #                                         gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
@@ -746,83 +764,32 @@ class ScratchPadError(Exception):
 # endregion
 
 #region TEST InputState SPECIFICATION
-print ('TEST InputState SPECIFICATION')
-
-import numpy as np
-from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, RESPONSE_TIME
-from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES, PROJECTIONS, NAME, INPUT_STATES
-
-# # 10/29/17 NOT YET IMPLEMENTED:
-my_mech_1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
-
-# InputState specification tests:
-
-# NOT YET IMPLEMENTED [10/29/17]:
-# MECHANISM/OUTPUT_STATES specification
-# my_mech_2 = TransferMechanism(input_states=[{MECHANISM: my_mech_1,
-#                                              OUTPUT_STATES: [DECISION_VARIABLE, RESPONSE_TIME]}])
-# assert len(my_mech_2.input_states)==2
-# assert all(name in my_mech_2.input_states.names for name in {DECISION_VARIABLE, RESPONSE_TIME})
-# for input_state in my_mech_2.input_states:
-#     for projection in input_state.path_afferents:
-#         assert projection.sender.owner is my_mech_1
-
-
-# # MATCH OF default_variable and specification of multiple InputStates by value and string
-# my_mech_2 = TransferMechanism(default_variable=[[0,0],[0]],
-#                               input_states=[[32, 24], 'HELLO'])
-# assert my_mech_2.input_states[1].name == 'HELLO'
-# # # PROBLEM WITH input FOR RUN:
-# # my_mech_2.execute()
-
-# # OVERRIDE OF input_states (mis)specification by params dict INPUT_STATES entry specification
-# my_mech_2 = TransferMechanism(default_variable=[[0,0],[0]],
-#                               input_states=[[32], 'HELLO'],
-#                               params = {INPUT_STATES:[[32, 24], 'HELLO']}
-#                               )
-# assert my_mech_2.input_states[1].name == 'HELLO'
-# # # PROBLEM WITH input FOR RUN:
-# # my_mech_2.execute()
-
-# # PROBLEM: SHOULD GENERATE TWO INPUT_STATES (
-# #                ONE WITH [[32],[24]] AND OTHER WITH [[0]] AS VARIABLE INSTANCE DEFAULT
-# #                INSTEAD, SEEM TO IGNORE InputState SPECIFICATIONS AND JUST USE DEFAULT_VARIABLE
-# #                NOTE:  WORKS FOR ObjectiveMechanism, BUT NOT TransferMechanism
+# print ('TEST InputState SPECIFICATION')
 #
-# # Specification using input_states without default_variable
-# my_mech_3 = TransferMechanism(input_states=[[32, 24], 'HELLO'])
-# assert len(my_mech_3.input_states)==2
-# assert my_mech_3.input_states[1].name == 'HELLO'
-# assert len(my_mech_3.variable[0])==2
-# assert len(my_mech_3.variable[1])==1
+# import numpy as np
+# from psyneulink.components.states.inputstate import InputState
+# from psyneulink.components.states.outputstate import OutputState
+# from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+# from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+# from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+# from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, RESPONSE_TIME
+# from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES, PROJECTIONS, NAME, INPUT_STATES, VARIABLE
 #
-# # Specification using INPUT_STATES entry in params dict without default_variable
-# my_mech_3 = TransferMechanism(params = {INPUT_STATES:[[32, 24], 'HELLO']})
-# assert len(my_mech_3.input_states)==2
-# assert my_mech_3.input_states[1].name == 'HELLO'
-# assert len(my_mech_3.variable[0])==2
-# assert len(my_mech_3.variable[1])==1
+# R1 = TransferMechanism(input_states=[OutputState])
 
-
-# Projection specification in Tuple
-my_mech_3 = TransferMechanism(size=3)
-my_proj = MappingProjection(sender=my_mech_3, name='TEST_PROJ')
-
-# my_mech_2 = TransferMechanism(size=2,
-#                               input_states=[my_proj])
-
-my_mech_2 = TransferMechanism(size=2,
-                              input_states=[(my_mech_3, None, None, my_proj)])
-assert len(my_mech_2.input_state.path_afferents[0].sender.variable)==3
-assert len(my_mech_2.input_state.variable)==2
-assert len(my_mech_2.variable)==1
-assert len(my_mech_2.variable[0])==2
-my_mech_2.execute()
-
+#
+# # InputState specification tests:
+#
+# # NOT YET IMPLEMENTED [10/29/17]:
+# # MECHANISM/OUTPUT_STATES specification
+# # my_mech_2 = TransferMechanism(input_states=[{MECHANISM: my_mech_1,
+# #                                              OUTPUT_STATES: [DECISION_VARIABLE, RESPONSE_TIME]}])
+# # assert len(my_mech_2.input_states)==2
+# # assert all(name in my_mech_2.input_states.names for name in {DECISION_VARIABLE, RESPONSE_TIME})
+# # for input_state in my_mech_2.input_states:
+# #     for projection in input_state.path_afferents:
+# #         assert projection.sender.owner is my_mech_1
+#
 
 #endregion
 

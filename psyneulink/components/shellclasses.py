@@ -30,7 +30,7 @@ TBI:
 from psyneulink.components.component import Component
 
 __all__ = [
-    'Function', 'Mechanism', 'Process', 'Projection', 'ShellClass', 'ShellClassError', 'State', 'System',
+    'Function', 'Mechanism', 'Process_Base', 'Projection', 'ShellClass', 'ShellClassError', 'State', 'System_Base',
 ]
 
 

@@ -21,7 +21,7 @@ import typecheck as tc
 from psyneulink.components.functions.function import Hebbian, Linear, is_function_type, LCAIntegrator
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE, StandardOutputStates
+from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 from psyneulink.globals.keywords import INITIALIZER, NOISE, RATE, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MEAN, MEDIAN, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -131,6 +131,9 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
     size : int, list or np.ndarray of ints
         specifies variable as array(s) of zeros if **variable** is not passed as an argument;
         if **variable** is specified, it takes precedence over the specification of **size**.
+        As an example, the following mechanisms are equivalent::
+            T1 = TransferMechanism(size = [3, 2])
+            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
@@ -403,7 +406,7 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
-                                                               indices=PRIMARY_OUTPUT_STATE)
+                                                               indices=PRIMARY)
 
         super().__init__(default_variable=default_variable,
                          size=size,

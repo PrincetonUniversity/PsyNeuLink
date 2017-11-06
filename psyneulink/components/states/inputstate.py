@@ -426,10 +426,11 @@ import typecheck as tc
 from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism
-from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
-    MECHANISM, OUTPUT_STATES, MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE
+    MECHANISM, OUTPUT_STATES, MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE, \
+    OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE, LEARNING_SIGNAL, GATING_SIGNAL, SENDER
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
@@ -437,6 +438,7 @@ from psyneulink.globals.utilities import append_type_to_name, iscompatible
 __all__ = [
     'InputState', 'InputStateError', 'state_type_keywords',
 ]
+
 state_type_keywords = state_type_keywords.update({INPUT_STATE})
 
 # InputStatePreferenceSet = ComponentPreferenceSet(log_pref=logPrefTypeDefault,
@@ -579,6 +581,9 @@ class InputState(State_Base):
     size : int, list or np.ndarray of ints
         specifies variable as array(s) of zeros if **variable** is not passed as an argument;
         if **variable** is specified, it takes precedence over the specification of **size**.
+        As an example, the following mechanisms are equivalent::
+            T1 = TransferMechanism(size = [3, 2])
+            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     function : CombinationFunction : default LinearCombination(operation=SUM))
         performs an element-wise (Hadamard) aggregation of the `value <Projection.Projection.value>` of each Projection
@@ -623,6 +628,17 @@ class InputState(State_Base):
 
     componentType = INPUT_STATE
     paramsType = INPUT_STATE_PARAMS
+
+    stateAttributes = State_Base.stateAttributes | {WEIGHT, EXPONENT}
+
+    connectsWith = [OUTPUT_STATE,
+                    PROCESS_INPUT_STATE,
+                    SYSTEM_INPUT_STATE,
+                    LEARNING_SIGNAL,
+                    GATING_SIGNAL]
+    connectsWithAttribute = [OUTPUT_STATES]
+    projectionSocket = SENDER
+    modulators = [GATING_SIGNAL]
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

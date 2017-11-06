@@ -122,7 +122,7 @@ from psyneulink.components.mechanisms.mechanism import MechanismError, Mechanism
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import \
-    OutputState, PRIMARY_OUTPUT_STATE, StandardOutputStates, standard_output_states
+    OutputState, PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.globals.keywords import FUNCTION, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NOISE, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -251,6 +251,9 @@ class TransferMechanism(ProcessingMechanism_Base):
     size : int, list or np.ndarray of ints
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
         if **default_variable** is specified, it takes precedence over the specification of **size**.
+        As an example, the following mechanisms are equivalent::
+            T1 = TransferMechanism(size = [3, 2])
+            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
@@ -447,7 +450,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
-                                                               indices=PRIMARY_OUTPUT_STATE)
+                                                               indices=PRIMARY)
 
         super(TransferMechanism, self).__init__(variable=default_variable,
                                                 size=size,
@@ -491,9 +494,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                     raise Exception(
                         "initial_value is {}, type {}\nself.instance_defaults.variable is {}, type {}".format(
                             initial_value,
-                            type(initial_value),
+                            type(initial_value).__name__,
                             self.instance_defaults.variable,
-                            type(self.instance_defaults.variable),
+                            type(self.instance_defaults.variable).__name__,
                         )
                     )
                     raise TransferError(
