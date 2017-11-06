@@ -100,47 +100,60 @@ Specifying a State
 
 Wherever a State is specified, it can be done using any of the following:
 
-    * an existing **State** object;
+    * existing **State** object;
     ..
-    * the name of a **State subclass** (`InputState`, `ParameterState`, or `OutputState`) - a default State of the
+    * name of a **State subclass** (`InputState`, `ParameterState`, or `OutputState`) - a default State of the
       corresponding type will be created, using a default value for the State that is determined by the context
       in which it is specified.
     ..
-    * a **value**.  This creates a default State using the specified value as its default `value <State_Base.value>`.
+    * **value**.  This creates a default State using the specified value as its default `value <State_Base.value>`.
     ..
-    * a **State specification dictionary**; every State specification can contain the following: *KEY*:<value>
+    * **State specification dictionary**; every State specification can contain the following: *KEY*:<value>
       entries, in addition to those specific to a particular State subtype (see subtype documentation):
-
-      ..
-      * *NAME*:<str>
-          the string is used as the name of the State;
       ..
       * *STATE_TYPE*:<State type>
           specifies type of State to create (necessary if it cannot be determined from the
           the context of the other entries or in which it is being created)
       ..
+      * *NAME*:<str>
+          the string is used as the name of the State;
+      ..
       * *VALUE*:<value>
           the value is used as the default value of the State;
-      ..
-      * *PROJECTIONS*:<List>
-          the list must contain specifications for one or more
-          `Projections <Projection_In_Context_Specification>` to or from the State, and/or
-          `ModulatorySignals <ModulatorySignal>` from which it should receive projections;
-          the type of Projections it can send and/or receive depends the type of State and
-          the context in which it is specified (see `State_Projections` below);
-      ..
-      * *str*:<List>
-          the key is used as the name of the State, and the list must contain specifications for
-          one or more `Projections <Projection_In_Context_Specification>` to or from the State
-          depending on the type of State and the context in which it is specified;
-        ..
 
-COMMENT:
-*** REINSTATE WHEN THESE FUNCTIONALITIES ARE IMPLEMENTED:
+      A State specification dictionary can also be used to specify one or more `Projections <Projection>' to or from
+      the State, including `ModulatoryProjection(s) <ModulatoryProjection>` used to modified the `value
+      <State_Base.value>` of the State.  The type of Projection(s) created depend on the type of State specified and
+      context of the specification (see `examples <XXX>` below).  This can be done using any of the following entries,
+      each of which can contain any of the forms used to `specify a Projection <Projection_In_Context_Specification>`:
+      ..
+      * *PROJECTIONS*:List[<`projection specification <Projection_In_Context_Specification>`>,...]
+          the list must contain a one or more `Projection specifications <Projection_In_Context_Specification>`
+          to or from the State, and/or `ModulatorySignals <ModulatorySignal>` from which it should receive projections;
+      ..
+      * *<str>*:List[<`projection specification <Projection_In_Context_Specification>`>,...]
+          this must be the only entry in the dictionary, and the string cannot be a PsyNeuLink keyword;  it is used as
+          the name of the State, and the list must contain one or more `Projection specifications
+          <Projection_In_Context_Specification>`.
+      ..
+      * *MECHANISM*:Mechanism
+          this can be used to specify a Projection to or from the specified Mechanism.  If the entry appears without
+          any accompanying state specification entries (see below), the Projection is assumed to be a
+          `MappingProjection` to the Mechanism's `primary InputState <InputState_Primary>` or `primary OutputState
+          <OutputState_Primary>`, depending upon the type of Mechanism and context of specification.  It can also be
+          accompanied by one or more State specficiations entries described below, to create several Projections
+          to States of Mechanism by referring to their names.
+      ..
+      * *<STATES_KEYWORD>:List[<str or State.name>,...]
+         this must accompany a *MECHANISM* entry (described above), and is used to specify its State by name.
+         Each entry must use one of the following keywords as its key:
+         *INPUT_STATES*, *OUTPUT_STATES*, *PARAMETER_STATES*, *LEARNING_SIGNAL*, *CONTROL_SIGNAL*, *GATING_SIGNAL*;
+         and must contain a list of one or more names of States of the Mechanism specified in the *MECHANISM* entry.
+         The types of States that can be specified depend on the type of the Mechanism and context of the specification
+         (see `examples <XXX>` below).
 
-      Alternatively, an InputState specification dictionary can be used to specify multiple InputStates.  If it includes
-      one or more keys that are strings not recognized as a keyword, then the keys are treated as the names of the
-      InputStates to be created, and the value of each as its specification.
+    COMMENT:
+    *** REINSTATE WHEN THESE FUNCTIONALITIES ARE IMPLEMENTED:
 
       Finally a dictionary can be used to specify a set of InputStates each of which receives a Projections from
       an OutputState, all of which belong to the same Mechanism;  this is a convenience format, that allows those
@@ -171,11 +184,11 @@ COMMENT:
         includes its own *WEIGHT* entry;  in that case, the latter is assigned to the `weight <InputState.weight>`
         attribute created for (only) that OutputState, while the *WEIGHT* entry in the outer dictionary is used for
         all of the other InputStates.
-COMMENT
+    COMMENT
 
-COMMENT:
-ADD 4-item tuple / ConnectionTuple HERE
-COMMENT
+    COMMENT:
+    ADD 4-item tuple / ConnectionTuple HERE
+    COMMENT
 
     * a **2-item tuple** - the first item must be a value, used as the default value for the State,
       and the second item must be a specification for a `Projection <Projection_In_Context_Specification>`
@@ -196,6 +209,10 @@ not assigned to an owner, it will not be functional (i.e., used during the execu
 
 Projections
 ~~~~~~~~~~~
+
+COMMENT:
+    REFERENCE OR INTEGRATE WITH SECTION ON State specification dictionary ABOVE
+COMMENT
 
 When a State is created, it can be assigned one or more `Projections <Projection>`, using either the **projections**
 argument of its constructor, or in an entry of a dictionary assigned to the **params** argument with the key
