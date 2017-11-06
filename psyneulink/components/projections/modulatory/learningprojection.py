@@ -192,21 +192,6 @@ __all__ = [
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
-def _is_learning_spec(spec):
-    """Evaluate whether spec is a valid learning specification
-
-    Return `True` if spec is LEARNING or a valid projection_spec (see Projection._is_projection_spec.
-    Otherwise, return `False`
-
-    """
-    if spec in {LEARNING, ENABLED}:
-        return True
-    elif isinstance(spec, LearningSignal):
-        return True
-    else:
-        return _is_projection_spec(spec)
-
-
 WT_MATRIX_SENDER_DIM = 0
 WT_MATRIX_RECEIVERS_DIM = 1
 

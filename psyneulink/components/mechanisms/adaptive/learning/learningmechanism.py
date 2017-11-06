@@ -529,12 +529,11 @@ from psyneulink.components.component import InitStatus, parameter_keywords
 from psyneulink.components.functions.function import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
-from psyneulink.components.shellclasses import Mechanism, Projection
+from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.globals.keywords import CONTROL_PROJECTIONS, FUNCTION_PARAMS, IDENTITY_MATRIX, INDEX, INITIALIZING, \
+from psyneulink.globals.keywords import CONTROL_PROJECTIONS, IDENTITY_MATRIX, INDEX, INITIALIZING, \
     INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, \
-    LEARNING_SIGNALS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION, MATRIX, NAME, PARAMS, OUTPUT_STATES, PARAMETER_STATE, \
-    PARAMS, PROJECTION, PROJECTIONS
+    LEARNING_SIGNALS, MATRIX, NAME, PARAMS, OUTPUT_STATES, PROJECTIONS, ENABLED
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, parameter_spec
@@ -553,13 +552,13 @@ parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 def _is_learning_spec(spec):
     """Evaluate whether spec is a valid learning specification
 
-    Return `True` if spec is LEARNING or a valid projection_spec (see Projection._is_projection_spec
-    Otherwise, return :keyword:`False`
+    Return `True` if spec is LEARNING or a valid projection_spec (see Projection._is_projection_spec)
+    Otherwise, return `False`
 
     """
     from psyneulink.components.projections.projection import _is_projection_spec
 
-    if spec is LEARNING:
+    if spec in {LEARNING, ENABLED}:
         return True
     else:
         return _is_projection_spec(spec)
