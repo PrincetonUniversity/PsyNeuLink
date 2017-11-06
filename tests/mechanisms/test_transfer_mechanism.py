@@ -727,6 +727,8 @@ class TestTransferMechanismSize:
 
         T = TransferMechanism(default_variable=[[0, 0], [0]],
                               input_states=[[32, 24], 'HELLO'])
+        assert T.instance_defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert len(T.input_states) == 2
         assert T.input_states[1].name == 'HELLO'
         # # PROBLEM WITH input FOR RUN:
         # my_mech_2.execute()
@@ -752,6 +754,8 @@ class TestTransferMechanismSize:
                               input_states=[[32], 'HELLO'],
                               params={INPUT_STATES: [[32, 24], 'HELLO']}
                               )
+        assert T.instance_defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert len(T.input_states) == 2
         assert T.input_states[1].name == 'HELLO'
         # # PROBLEM WITH input FOR RUN:
         # my_mech_2.execute()
@@ -767,10 +771,9 @@ class TestTransferMechanismSize:
     #     #                INSTEAD, SEEM TO IGNORE InputState SPECIFICATIONS AND JUST USE DEFAULT_VARIABLE
     #     #                NOTE:  WORKS FOR ObjectiveMechanism, BUT NOT TransferMechanism
     #     T = TransferMechanism(input_states=[[32, 24], 'HELLO'])
-    #     assert len(T.input_states)==2
+    #     assert T.instance_defaults.variable.shape == np.array([[0, 0], [0]]).shape
+    #     assert len(T.input_states) == 2
     #     assert T.input_states[1].name == 'HELLO'
-    #     assert len(T.instance_defaults.variable[0])==2
-    #     assert len(T.instance_defaults.variable[1])==1
 
     # # ------------------------------------------------------------------------------------------------
     # # TEST 5
@@ -783,10 +786,9 @@ class TestTransferMechanismSize:
     #     #                INSTEAD, SEEM TO IGNORE InputState SPECIFICATIONS AND JUST USE DEFAULT_VARIABLE
     #     #                NOTE:  WORKS FOR ObjectiveMechanism, BUT NOT TransferMechanism
     #     T = TransferMechanism(params = {INPUT_STATES:[[32, 24], 'HELLO']})
-    #     assert len(T.input_states)==2
+    #     assert T.instance_defaults.variable.shape == np.array([[0, 0], [0]]).shape
+    #     assert len(T.input_states) == 2
     #     assert T.input_states[1].name == 'HELLO'
-    #     assert len(T.instance_defaults.variable[0])==2
-    #     assert len(T.instance_defaults.variable[1])==1
 
     # ------------------------------------------------------------------------------------------------
     # TEST 6
@@ -796,6 +798,8 @@ class TestTransferMechanismSize:
         R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
         T = TransferMechanism(default_variable=[[0]],
                               input_states=[R1])
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0]]))
+        assert len(T.input_states) == 1
         assert T.input_state.path_afferents[0].sender == R1.output_state
         T.execute()
 
@@ -808,6 +812,8 @@ class TestTransferMechanismSize:
         # Mechanism outside of list specification
         T = TransferMechanism(default_variable=[[0]],
                               input_states=R1)
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0]]))
+        assert len(T.input_states) == 1
         assert T.input_state.path_afferents[0].sender == R1.output_state
         T.execute()
 
@@ -820,6 +826,8 @@ class TestTransferMechanismSize:
         T = TransferMechanism(default_variable=[[0], [0]],
                               input_states=[R1.output_states['FIRST'],
                                             R1.output_states['SECOND']])
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0], [0]]))
+        assert len(T.input_states) == 2
         assert T.input_states.names[0] == 'InputState'
         assert T.input_states.names[1] == 'InputState-1'
         for input_state in T.input_states:
@@ -835,6 +843,8 @@ class TestTransferMechanismSize:
         R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
         T = TransferMechanism(default_variable=[0],
                               input_states=R1.output_states['FIRST'])
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0]]))
+        assert len(T.input_states) == 1
         assert T.input_states.names[0] == 'InputState'
         T.input_state.path_afferents[0].sender == R1.output_state
         T.execute()
@@ -850,6 +860,8 @@ class TestTransferMechanismSize:
                                              PROJECTIONS: [R1.output_states['FIRST']]},
                                             {NAME: 'FROM RESPONSE_TIME',
                                              PROJECTIONS: R1.output_states['SECOND']}])
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0], [0]]))
+        assert len(T.input_states) == 2
         assert T.input_states.names[0] == 'FROM DECISION'
         assert T.input_states.names[1] == 'FROM RESPONSE_TIME'
         for input_state in T.input_states:
@@ -868,10 +880,10 @@ class TestTransferMechanismSize:
         # default_variable override of OutputState.value
         T = TransferMechanism(default_variable=[[0, 0]],
                               input_states=[R2])
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        assert len(T.input_states) == 1
         assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
         assert len(T.input_state.instance_defaults.variable) == 2
-        assert len(T.instance_defaults.variable) == 1
-        assert len(T.instance_defaults.variable[0]) == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -881,10 +893,10 @@ class TestTransferMechanismSize:
     def test_transfer_mech_input_states_2_item_tuple_spec(self):
         R2 = TransferMechanism(size=3)
         T = TransferMechanism(size=2, input_states=[(R2, np.zeros((3, 2)))])
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        assert len(T.input_states) == 1
         assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
         assert len(T.input_state.instance_defaults.variable) == 2
-        assert len(T.instance_defaults.variable) == 1
-        assert len(T.instance_defaults.variable[0]) == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -894,10 +906,10 @@ class TestTransferMechanismSize:
     def test_transfer_mech_input_states_connection_tuple_spec(self):
         R2 = TransferMechanism(size=3)
         T = TransferMechanism(size=2, input_states=[(R2, None, None, np.zeros((3, 2)))])
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        assert len(T.input_states) == 1
         assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
         assert len(T.input_state.instance_defaults.variable) == 2
-        assert len(T.instance_defaults.variable) == 1
-        assert len(T.instance_defaults.variable[0]) == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -909,10 +921,10 @@ class TestTransferMechanismSize:
         P = MappingProjection(sender=R2)
         T = TransferMechanism(size=2,
                               input_states=[P])
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        assert len(T.input_states) == 1
         assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
         assert len(T.input_state.instance_defaults.variable) == 2
-        assert len(T.instance_defaults.variable) == 1
-        assert len(T.instance_defaults.variable[0]) == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -924,10 +936,10 @@ class TestTransferMechanismSize:
         P = MappingProjection(sender=R2)
         T = TransferMechanism(size=2,
                               input_states=[(R2, None, None, P)])
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        assert len(T.input_states) == 1
         assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
         assert len(T.input_state.instance_defaults.variable) == 2
-        assert len(T.instance_defaults.variable) == 1
-        assert len(T.instance_defaults.variable[0]) == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -939,6 +951,8 @@ class TestTransferMechanismSize:
         T = TransferMechanism(input_states=[{NAME: 'My InputState with Two Projections',
                                                      PROJECTIONS:[R1.output_states['FIRST'],
                                                                   R1.output_states['SECOND']]}])
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0]]))
+        assert len(T.input_states) == 1
         assert T.input_state.name == 'My InputState with Two Projections'
         for input_state in T.input_states:
             for projection in input_state.path_afferents:
@@ -953,7 +967,8 @@ class TestTransferMechanismSize:
         R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
         T = TransferMechanism(input_states=[{MECHANISM: R1,
                                              OUTPUT_STATES: ['FIRST', 'SECOND']}])
-        assert len(T.input_states)==1
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0]]))
+        assert len(T.input_states) == 1
         for input_state in T.input_states:
             for projection in input_state.path_afferents:
                 assert projection.sender.owner is R1
