@@ -369,9 +369,23 @@ print("TEST Modulation")
 # g = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM:m,
 #                                          pnl.NAME:pnl.DECISION_VARIABLE}])
 
-mech_A = pnl.TransferMechanism()
-my_input_state = pnl.InputState(projections=[mech_A])
-mech_B = pnl.TransferMechanism(input_states=[my_input_state])
+mech_A = pnl.TransferMechanism(input_states=['MY INPUT'])
+print(mech_A.input_states.names)
+print(mech_A.parameter_states.names)
+print(mech_A.output_states.names)
+# my_input_state = pnl.InputState(projections=[mech_A])
+# mech_B = pnl.TransferMechanism(input_states=[my_input_state])
+
+my_mech = pnl.TransferMechanism(default_variable=[0,0],
+                                input_states=[[0,0]])
+print(my_mech.input_states[0].variable)
+print (my_mech.input_states[0].value)
+print (my_mech.variable)
+
+my_mech = pnl.TransferMechanism(default_variable=[[0],[0]],
+                                input_states=['MY FIRST INPUT', 'MY SECOND INPUT'])
+print(my_mech.input_states)
+
 
 TEMP = True
 

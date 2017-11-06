@@ -121,6 +121,8 @@ Wherever a State is specified, it can be done using any of the following:
       * *VALUE*:<value>
           the value is used as the default value of the State;
 
+      .. _State_Specification_Dictionary:
+
       A State specification dictionary can also be used to specify one or more `Projections <Projection>' to or from
       the State, including `ModulatoryProjection(s) <ModulatoryProjection>` used to modified the `value
       <State_Base.value>` of the State.  The type of Projection(s) created depend on the type of State specified and
@@ -337,9 +339,102 @@ the State calls its `function <State_Base.function>` to determine its `value <St
    executed; This conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for an explanation
    of "lazy" updating).
 
+.. _State_Examples:
 
 Examples
 --------
+
+Usually, States are created automatically by the Mechanism to which they belong.  For example, creating a
+TransferMechanism::
+
+    my_mech = TransferMechanism()
+
+automatically creates an InputState, ParameterStates for its parameters, including the `slope <Linear.slope>` and
+`intercept <Linear.intercept>` parameters of its `Linear` `Function <Function>` (its default `function
+<TransferMechanism.function>`), and an OutputState (named *RESULT*)::
+
+    print(my_mech.input_states.names)
+    > ['InputState']
+    print(my_mech.parameter_states.names)
+    > ['intercept', 'slope', 'noise', 'time_constant']
+    print(my_mech.output_states.names)
+    >['RESULT']
+
+When States are specified explicitly, it is usually in an argument of the constructor for the Mechanism to which they
+belong.  For example, the following specifies that ``my_mech`` should have an InputState named 'MY INPUT`::
+
+    my_mech = TransferMechanism(input_states=['MY INPUT'])
+    print(my_mech.input_states.names)
+    > ['MY INPUT']
+
+The InputState was specified by a string (for its name) in the **input_states** argument.  It can also be specified in
+a variety of other ways, as described `above <State_Specification>` and illustrated in the examples below.
+
+    .. _State_Default_Suppression_Note:
+
+    .. note::
+       When one or more States is specified in the argument of a Mechanism's constructor, it replaces any
+       defaults States created by the Mechanism when none are specified.
+
+COMMENT:
+*** AWAITING IMPLEMENTATION OF FACILITY
+For example, the following specifies the InputState by a
+value to use as its `default_variable <InputState.default_variable>` attribute::
+
+    my_mech = TransferMechanism(input_states=[[0,0])
+
+The value is also used to format the InputState's `value <InputState.value>`, as well as the first (and, in this case,
+only) item of the Mechanism's `variable <Mechanism_Base>` (i.e., the one to which the InputState is assigned), as
+show below::
+
+    print(my_mech.input_states[0].variable)
+    > [0 0]
+    print (my_mech.input_states[0].value)
+    > [ 0.  0.]
+    print (my_mech.variable)
+    > [[0 0]]
+
+The **input_states** argument can also be used to specify more than one InputState, as follows::
+
+    my_mech = TransferMechanism(input_states=['MY FIRST INPUT', 'MY SECOND INPUT'])
+    print(my_mech.input_states)
+    > [
+    >    0	MY FIRST INPUT	array([ 0.])
+	>    1	MY SECOND INPUT	array([ 0.])
+    > ]
+
+Note that here, the printout is of the InputState objects rather than just there names.
+COMMENT
+
+OutputStates can be specified in a simlar way, using the **output_states** argument::
+
+    my_mech = TransferMechanism(output_states=['RESULT', 'MEAN'])
+
+Note that, as with InputStates, specification of OutputStates in the **output_states** argument suppresses the creation
+of any default OutPutStates created by the Mechanism if none are specified (see `note <State_Default_Suppression_Note>`
+above).  This is particularly relevant for OutputStates, as most Mechanisms create one or more `standard OutputStates
+<OutputState_Standard>` by default, that have useful properties.  For example, most Mechanisms create a *RESULT*
+OutputState by default, that contains the result of their `function <OutputState.function>`.  This default behavior
+is suppressed by any specifications in its **output_states** argument.  Therefore, to preserve the *RESULTS*
+OutputState, it must be included in the **output_states** argument along with any others that are specified,
+as in the example above.
+
+    .. note::
+        Although InputStates and OutputStates can be specified in a Mechanism's constructor, ParameterStates cannot;
+        those are created automatically when the Mechanism is created, for each of its `user configurable parameters
+        <Component_User_Params>`  and those of its `function <Mechanism_Base.function>`.  However, the `value
+        <ParameterState.value>` can be specified when the Mechanism is created, or its `function
+        <Mechanism_Base.function>` is assigned, and can be accessed and subsequently modified, as described under
+        `ParameterState_Specification>`.
+
+COMMENT:
+- Specification dictionary
+    States can be specified in greater detail using a `State specification dictionary <State_Specification_Dictionary>`
+    - variable
+    - PROJECTIONS
+    - <str>:[projections]
+    - MECHANISM/INPUT_STATES
+- Create InputState and then assign it
 
 The following creates an InputState ``my_input_state`` with a `MappingProjection` to it from the
 `primary OutputState <OutputState_Primary>` of ``mech_A`` and assigns it to ``mech_B``::
@@ -348,8 +443,11 @@ The following creates an InputState ``my_input_state`` with a `MappingProjection
     my_input_state = InputState(projections=[mech_A])
     mech_B = TransferMechanism(input_states=[my_input_state])
 
+More commonly, States are created  rather than explicitly creating an InputState, is its specified in the
+**input_states** argument
+for the constructor of a Mechanism, such as in the following example::
 
-
+XXXXX
 
 The following creates a `GatingSignal` with `GatingProjections <GatingProjection>` to ``mech_B`` and ``mech_C``,
 and assigns it to ``my_gating_mech``::
@@ -393,8 +491,6 @@ The following creates
             for projection in input_state.path_afferents:
                 assert projection.sender.owner is R1
 
-
-COMMENT:
    def test_multiple_modulatory_projections_with_mech_and_state_name_specs(self):
 
         M = pnl.DDM(name='MY DDM')
@@ -403,7 +499,6 @@ COMMENT:
         G = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM: M,
                                                  pnl.OUTPUT_STATES: [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME]}])
 
-COMMENT
 
         M = pnl.DDM(name='MY DDM')
         C = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[M.parameter_states[pnl.DRIFT_RATE],
@@ -411,8 +506,7 @@ COMMENT
         G = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[M.output_states[pnl.DECISION_VARIABLE],
                                                                     M.output_states[pnl.RESPONSE_TIME]]}])
 
-
-
+COMMENT
 
 .. _State_Class_Reference:
 
