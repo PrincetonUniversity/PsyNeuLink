@@ -876,29 +876,42 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
     #     and those are specified as lists or 1D arrays (which would be misinterpreted as > 1 stimulus)
 
     # Check that all of the stimuli in each list are compatible with the corresponding mechanism's variable
+
+    all_single_trial_inputs = False
+
     for mech, stim_list in stimuli.items():
 
-        # First entry in stimulus list is a single item (possibly an item in a simple list or 1D array)
-        if not isinstance(stim_list[0], Iterable):
-            # If mech.instance_defaults.variable is also of length 1
-            if np.size(mech.instance_defaults.variable) == 1:
-                # Wrap each entry in a list
-                for i in range(len(stim_list)):
-                    stimuli[mech][i] = [stim_list[i]]
-            # Length of mech.instance_defaults.variable is > 1, so check if length of list matches it
-            elif len(stim_list) == np.size(mech.instance_defaults.variable):
-                # Assume that the list consists of a single stimulus, so wrap it in list
-                stimuli[mech] = [stim_list]
-            else:
-                raise RunError("Stimuli for {} of {} are not properly formatted ({})".
-                                  # format(append_type_to_name(mech),object.name, stimuli[mech]))
-                                  format(mech.name, object.name, stimuli[mech]))
+        # If a mechanism provided a single (rather than wrapping inputs in an outer list representing
+        # many trials), then all mechanisms in this run must do the same.
+        if iscompatible(np.atleast_2d(stim_list), mech.instance_defaults.variable):
+            all_single_trial_inputs = True
+        elif all_single_trial_inputs:
+            raise RunError("Stimuli for {} of {} are not properly formatted ({}).".
+                           # format(append_type_to_name(mech),object.name, stimuli[mech]))
+                           format(mech.name, object.name, stimuli[mech]))
+
+        # # First entry in stimulus list is a single item (possibly an item in a simple list or 1D array)
+        # if not isinstance(stim_list[0], Iterable):
+        #     # If mech.instance_defaults.variable is also of length 1
+        #     if np.size(mech.instance_defaults.variable) == 1:
+        #         # Wrap each entry in a list
+        #         for i in range(len(stim_list)):
+        #             stimuli[mech][i] = [stim_list[i]]
+        #     # Length of mech.instance_defaults.variable is > 1, so check if length of list matches it
+        #     elif len(stim_list) == np.size(mech.instance_defaults.variable):
+        #         # Assume that the list consists of a single stimulus, so wrap it in list
+        #         stimuli[mech] = [stim_list]
+        #     else:
+        #         raise RunError("Stimuli for {} of {} are not properly formatted ({})".
+        #                           # format(append_type_to_name(mech),object.name, stimuli[mech]))
+        #                           format(mech.name, object.name, stimuli[mech]))
 
         for stim in stimuli[mech]:
             # 10/3/17 CW: This could be smarter: if it's incompatible, we could try other ways of unpacking the
             # stimulus, such as if the user wants to pass in a 2D array as the input each round, but only wants one
             # round, they may pass in stimuli as [[1, 2], [3, 4]] which shouldn't be interpreted as two rounds
             # ([1, 2] and [3, 4]) like we're doing here
+
             if not iscompatible(np.atleast_2d(stim), mech.instance_defaults.variable):
                 err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
                     format(stim, mech.name, mech.instance_defaults.variable)
@@ -914,7 +927,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
     num_input_sets = len(stim_lists[EXECUTION_SET_DIM])
 
     # Check that all lists have the same number of stimuli
-    if not all(len(np.array(stim_list)) == num_input_sets for stim_list in stim_lists):
+    if not all(len(np.array(stim_list)) == num_input_sets for stim_list in stim_lists) and not all_single_trial_inputs:
         raise RunError("The length of all the stimulus lists must be the same")
 
     stim_list = []
