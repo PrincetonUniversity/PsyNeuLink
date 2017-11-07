@@ -443,12 +443,12 @@ the *STATE_TYPE* entry must be included.
 
 A State specification dictionary can also be used to specify projections to or from the State, also in a number of
 different ways.  The more straightforward is to include them in a *PROJECTIONS* entry.  For example, the following
-specifies that the InputState of ``my_mech`` receive Projections from ``source_mech_1`` and ``source_mech_2``, and
-that its OutputState send one to ``destination_mech``::
+specifies that the InputState of ``my_mech`` receive two Projections, one from ``source_mech_1`` and another from
+``source_mech_2``, and that its OutputState send one to ``destination_mech``::
 
-    source_mech_1 = pnl.TransferMechanism()
-    source_mech_2 = pnl.TransferMechanism()
-    destination_mech = pnl.TransferMechanism()
+    source_mech_1 = pnl.TransferMechanism(name='SOURCE_1')
+    source_mech_2 = pnl.TransferMechanism(name='SOURCE_2')
+    destination_mech = pnl.TransferMechanism(name='DEST')
     my_mech = pnl.TransferMechanism(name='MY_MECH',
                                     input_states=[{pnl.NAME: 'MY INPUT',
                                                    pnl.PROJECTIONS:[source_mech_1, source_mech_2]}],
@@ -457,26 +457,22 @@ that its OutputState send one to ``destination_mech``::
     # Print names of Projections to the InputStates of my_mech:
     for projection in my_mech.input_states[0].path_afferents:
         print(projection.name)
-    > MappingProjection from RESULT to MY_MECH[MY INPUT]
-    > MappingProjection from RESULT to MY_MECH[MY INPUT]-1
+    > MappingProjection from SOURCE_1[RESULT] to MY_MECH[MY INPUT]
+    > MappingProjection from SOURCE_2[RESULT] to MY_MECH[MY INPUT]
+    > MappingProjection from MY_MECH[RESULT] to DEST[InputState]
 
-Note that MappingProjections are created, since the Projections specified are between InputStates and
-OutputStates.  However, `ModulatoryProjections` can also be specified in a similar, as shown in later examples.
 A *PROJECTIONS* entry can contain any of the forms used to `specify a Projection <Projection_In_Context_Specification>`.
 Here the Mechanisms are used, which creates Projections from the `primary InputState <InputState_Primary>` of
 ``source_mech``, and to the `primary OutputState <OutputState_Primary>` of ``destination_mech``.
+Note that MappingProjections are created, since the Projections specified are between InputStates and OutputStates.
+`ModulatoryProjections` can also be specified in a similar way::
 
-
-
-More than one Projection can be specified to or from a State
-
-
-
+XXX EXAMPLE
 
 
 COMMENT:
 
-MODULATORY PROJECTIONS
+
 
 - Specification dictionary
     - PROJECTIONS: MappingProjections;  ModulatoryProjections; ModulatorySignals as types of OutputStates

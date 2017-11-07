@@ -85,17 +85,12 @@ class PathwayProjection_Base(Projection_Base):
                          prefs=prefs,
                          context=context)
 
-
-
     def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
 
         if not self.className + '-' in self.name:
             return self.name
 
         if self.init_status is InitStatus.INITIALIZED:
-            # If the name is not a default name for the class, return
-            # if not self.className + '-' in self.name:
-            #     return self.name
             if self.sender.owner:
                 sender_name = "{}[{}]".format(self.sender.owner.name, sender_name)
             if self.receiver.owner:
@@ -118,6 +113,3 @@ class PathwayProjection_Base(Projection_Base):
         else:
             raise PathwayProjectionError("PROGRAM ERROR: {} has unrecognized InitStatus ({})".
                                             format(self, self.init_status))
-
-        #     projection_name = projection_type.__name__ + " from " + sender_name + " to " + self.owner.name
-        #     projection.init_args[NAME] = projection.init_args[NAME] or projection_name

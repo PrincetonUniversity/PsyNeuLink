@@ -386,20 +386,19 @@ my_mech = pnl.TransferMechanism(default_variable=[[0],[0]],
                                 input_states=['MY FIRST INPUT', 'MY SECOND INPUT'])
 print(my_mech.input_states)
 
-source_mech_1 = pnl.TransferMechanism()
-source_mech_2 = pnl.TransferMechanism()
+source_mech_1 = pnl.TransferMechanism(name='SOURCE_1')
+source_mech_2 = pnl.TransferMechanism(name='SOURCE_2')
 destination_mech = pnl.TransferMechanism(name='DEST')
 my_mech = pnl.TransferMechanism(name='MY_MECH',
                                 input_states=[{pnl.NAME: 'MY INPUT',
                                                pnl.PROJECTIONS:[source_mech_1, source_mech_2]}],
                                 output_states=[{pnl.NAME: 'RESULT',
                                                 pnl.PROJECTIONS:[destination_mech]}])
-
-for input_state in my_mech.input_states:
-    for projection in input_state.path_afferents:
-        print(projection.name)
-print(my_mech.output_states[0].efferents)
-
+# Print names of Projections to the InputStates of my_mech:
+for projection in my_mech.input_states[0].path_afferents:
+    print(projection.name)
+for projection in my_mech.output_states[0].efferents:
+    print(projection.name)
 
 TEMP = True
 
