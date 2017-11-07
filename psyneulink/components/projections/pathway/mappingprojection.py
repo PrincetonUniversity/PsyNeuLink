@@ -470,21 +470,14 @@ class MappingProjection(PathwayProjection_Base):
             self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
-        super(MappingProjection, self).__init__(sender=sender,
-                                                receiver=receiver,
-                                                weight=weight,
-                                                exponent=exponent,
-                                                params=params,
-                                                name=name,
-                                                prefs=prefs,
-                                                context=self)
-
-    # def _instantiate_sender(self, context=None):
-            # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
-            # #            - kwMATRIX NEEDS TO BE A 3D np.array, EACH 3D ITEM OF WHICH IS A 2D WEIGHT MATRIX
-            # #            - MAKE SURE len(self.sender.value) == len(self.receiver.input_states.items())
-            # # for i in range (len(self.sender.value)):
-            # #            - CHECK EACH MATRIX AND ASSIGN??
+        super().__init__(sender=sender,
+                         receiver=receiver,
+                         weight=weight,
+                         exponent=exponent,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=self)
 
     def _instantiate_parameter_states(self, context=None):
 
