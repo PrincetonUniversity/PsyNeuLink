@@ -122,20 +122,6 @@ class TestInputAndInitialValueSpecs:
             processes=[p1, p2]
         )
 
-        # 1d list --> One input state, One trial
-        inputs = {a: [1.0, 1.0],
-                  b: [2.0, 2.0, 2.0]}
-
-        s.run(inputs)
-
-        # -----------------------------------------------------
-
-        # 1d array --> One input state, One trial
-        inputs = {a: np.array([1.0, 1.0]),
-                  b: np.array([2.0, 2.0, 2.0])}
-
-        s.run(inputs)
-
         # -----------------------------------------------------
 
         # 2d list, one element --> One input state, One trial
@@ -277,7 +263,7 @@ class TestGraphAndInput:
             initial_values={a: [1, 1]},
         )
 
-        inputs = {a: [2, 2]}
+        inputs = {a: [[2, 2]]}
         s.run(inputs)
 
         assert [a] == s.origin_mechanisms.mechanisms
