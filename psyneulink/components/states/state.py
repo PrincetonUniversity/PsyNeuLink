@@ -401,14 +401,10 @@ The **input_states** argument can also be used to create more than one InputStat
 
     my_mech = pnl.TransferMechanism(input_states=['MY FIRST INPUT', 'MY SECOND INPUT'])
     print(my_mech.input_states)
-    > [
-    >    0	MY FIRST INPUT	array([ 0.])
-    >    1	MY SECOND INPUT	array([ 0.])
-    > ]
+    > [(InputState MY FIRST INPUT), (InputState MY SECOND INPUT)]
 
-Here, the print statement used the `input_states <Mechanism_Base.input_states>` attribute, since there is now more
-than one InputState;  the printout lists the InputState objects, showing the index, name and `value
-<State_Base.value>` of each.  OutputStates can be specified in a similar way, using the **output_states** argument.
+Here, the print statement uses the `input_states <Mechanism_Base.input_states>` attribute, since there is now more
+than one InputState.  OutputStates can be specified in a similar way, using the **output_states** argument.
 
     .. note::
         Although InputStates and OutputStates can be specified in a Mechanism's constructor, ParameterStates cannot;
