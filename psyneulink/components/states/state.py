@@ -347,7 +347,7 @@ Examples
 Usually, States are created automatically by the Mechanism to which they belong.  For example, creating a
 TransferMechanism::
 
-    my_mech = TransferMechanism()
+    my_mech = pnl.TransferMechanism()
 
 automatically creates an InputState, ParameterStates for its parameters, including the `slope <Linear.slope>` and
 `intercept <Linear.intercept>` parameters of its `Linear` `Function <Function>` (its default `function
@@ -363,7 +363,7 @@ automatically creates an InputState, ParameterStates for its parameters, includi
 When States are specified explicitly, it is usually in an argument of the constructor for the Mechanism to which they
 belong.  For example, the following specifies that ``my_mech`` should have an InputState named 'MY INPUT`::
 
-    my_mech = TransferMechanism(input_states=['MY INPUT'])
+    my_mech = pnl.TransferMechanism(input_states=['MY INPUT'])
     print(my_mech.input_states.names)
     > ['MY INPUT']
 
@@ -376,12 +376,10 @@ a variety of other ways, as described `above <State_Specification>` and illustra
        When one or more States is specified in the argument of a Mechanism's constructor, it replaces any
        defaults States created by the Mechanism when none are specified.
 
-COMMENT:
-*** AWAITING IMPLEMENTATION OF FACILITY
 For example, the following specifies the InputState by a
 value to use as its `default_variable <InputState.default_variable>` attribute::
 
-    my_mech = TransferMechanism(input_states=[[0,0])
+    my_mech = pnl.TransferMechanism(input_states=[[0,0])
 
 The value is also used to format the InputState's `value <InputState.value>`, as well as the first (and, in this case,
 only) item of the Mechanism's `variable <Mechanism_Base>` (i.e., the one to which the InputState is assigned), as
@@ -396,28 +394,15 @@ show below::
 
 The **input_states** argument can also be used to specify more than one InputState, as follows::
 
-    my_mech = TransferMechanism(input_states=['MY FIRST INPUT', 'MY SECOND INPUT'])
+    my_mech = pnl.TransferMechanism(input_states=['MY FIRST INPUT', 'MY SECOND INPUT'])
     print(my_mech.input_states)
     > [
     >    0	MY FIRST INPUT	array([ 0.])
 	>    1	MY SECOND INPUT	array([ 0.])
     > ]
 
-Note that here, the printout is of the InputState objects rather than just there names.
-COMMENT
-
-OutputStates can be specified in a simlar way, using the **output_states** argument::
-
-    my_mech = TransferMechanism(output_states=['RESULT', 'MEAN'])
-
-Note that, as with InputStates, specification of OutputStates in the **output_states** argument suppresses the creation
-of any default OutPutStates created by the Mechanism if none are specified (see `note <State_Default_Suppression_Note>`
-above).  This is particularly relevant for OutputStates, as most Mechanisms create one or more `standard OutputStates
-<OutputState_Standard>` by default, that have useful properties.  For example, most Mechanisms create a *RESULT*
-OutputState by default, that contains the result of their `function <OutputState.function>`.  This default behavior
-is suppressed by any specifications in its **output_states** argument.  Therefore, to preserve the *RESULTS*
-OutputState, it must be included in the **output_states** argument along with any others that are specified,
-as in the example above.
+Note that here, the printout is of the InputState objects, listing the indicex, name and `value <State_Base.value>` of
+each.  OutputStates can be specified in a similar way, using the **output_states** argument.
 
     .. note::
         Although InputStates and OutputStates can be specified in a Mechanism's constructor, ParameterStates cannot;
@@ -427,13 +412,78 @@ as in the example above.
         <Mechanism_Base.function>` is assigned, and can be accessed and subsequently modified, as described under
         `ParameterState_Specification>`.
 
+The following example specifies two OutputStates for ``my_mech``, using its `Standard OutputStates
+<OutputState_Standard>`::
+
+    my_mech = pnl.TransferMechanism(output_states=['RESULT', 'MEAN'])
+
+
+As with InputStates, specification of OutputStates in the **output_states** argument suppresses the creation of any
+default OutPutStates that would have been created if no OutputStates were specified (see `note
+<State_Default_Suppression_Note>` above).  This is particularly relevant for OutputStates, as most Mechanisms create
+one or more `Standard OutputStates <OutputState_Standard>` by default, that have useful properties.  For example,
+most Mechanisms create a *RESULT* OutputState by default, that contains the result of their `function
+<OutputState.function>`.  This default behavior is suppressed by any specifications in its **output_states**
+argument.  Therefore, to preserve the *RESULTS* OutputState, it must be included in the **output_states** argument
+along with any others that are specified, as in the example above.  If the name of specified OutputState matches the
+name of a Standard OutputState <OutputState_Standard>` for the type of Mechanism, then that is used (as is the case
+for both of the OutputStates specified for the `TransferMechanism` in the example above); otherwise, a new OutputState
+is created.
+
+States can be specified in greater detail using a `State specification dictionary <State_Specification_Dictionary>`.
+In the example below, this is used to specify the variable and name of an InputState:
+
+    my_mech = pnl.TransferMechanism(input_states=[{STATE_TYPE: InputState,
+                                                   NAME: 'MY INPUT',
+                                                   VARIABLE: [0,0]})
+
+The *STATE_TYPE* entry is included here for completeness, but in this case it is not necessary since the State's type
+is clearly determined by the context of the specification (an **input_states** argument);  where it is not clear, then
+the *STATE_TYPE* entry must be included.
+
+A State specification dictionary can also be used to specify projections to or from the State, also in a number of
+different ways.  The more straightforward is to include them in a *PROJECTIONS* entry.  For example, the following
+specifies that the InputState of ``my_mech`` receive Projections from ``source_mech_1`` and ``source_mech_2``, and
+that its OutputState send one to ``destination_mech``::
+
+    source_mech_1 = pnl.TransferMechanism()
+    source_mech_2 = pnl.TransferMechanism()
+    destination_mech = pnl.TransferMechanism()
+    my_mech = pnl.TransferMechanism(name='MY_MECH',
+                                    input_states=[{pnl.NAME: 'MY INPUT',
+                                                   pnl.PROJECTIONS:[source_mech_1, source_mech_2]}],
+                                    output_states=[{pnl.NAME: 'RESULT',
+                                                    pnl.PROJECTIONS:[destination_mech]}])
+    # Print names of Projections to the InputStates of my_mech:
+    for projection in my_mech.input_states[0].path_afferents:
+        print(projection.name)
+    > MappingProjection from RESULT to MY_MECH[MY INPUT]
+    > MappingProjection from RESULT to MY_MECH[MY INPUT]-1
+
+Note that MappingProjections are created, since the Projections specified are between InputStates and
+OutputStates.  However, `ModulatoryProjections` can also be specified in a similar, as shown in later examples.
+A *PROJECTIONS* entry can contain any of the forms used to `specify a Projection <Projection_In_Context_Specification>`.
+Here the Mechanisms are used, which creates Projections from the `primary InputState <InputState_Primary>` of
+``source_mech``, and to the `primary OutputState <OutputState_Primary>` of ``destination_mech``.
+
+
+
+More than one Projection can be specified to or from a State
+
+
+
+
+
 COMMENT:
+
+MODULATORY PROJECTIONS
+
 - Specification dictionary
-    States can be specified in greater detail using a `State specification dictionary <State_Specification_Dictionary>`
-    - variable
-    - PROJECTIONS
+    - PROJECTIONS: MappingProjections;  ModulatoryProjections; ModulatorySignals as types of OutputStates
     - <str>:[projections]
     - MECHANISM/INPUT_STATES
+
+
 - Create InputState and then assign it
 
 The following creates an InputState ``my_input_state`` with a `MappingProjection` to it from the
@@ -443,11 +493,7 @@ The following creates an InputState ``my_input_state`` with a `MappingProjection
     my_input_state = InputState(projections=[mech_A])
     mech_B = TransferMechanism(input_states=[my_input_state])
 
-More commonly, States are created  rather than explicitly creating an InputState, is its specified in the
-**input_states** argument
-for the constructor of a Mechanism, such as in the following example::
-
-XXXXX
+----------------------
 
 The following creates a `GatingSignal` with `GatingProjections <GatingProjection>` to ``mech_B`` and ``mech_C``,
 and assigns it to ``my_gating_mech``::

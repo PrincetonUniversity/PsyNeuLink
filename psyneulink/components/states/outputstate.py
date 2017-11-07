@@ -193,15 +193,15 @@ COMMENT:
    ADD VERSION IN WHICH INDEX IS SPECIFICED USING DDM_standard_output_states
 COMMENT
 
-In this example, ``my_mech`` is configured with three OutputStates.  The first two are standard OutputStates that
-represent the decision variable of the DDM and the probability of it crossing of the upper (vs. lower) threshold.  the
-third is a custom OutputState, that computes the entropy of the probability of crossing the upper threshold.  It uses
-the `Entropy` Function for its `calculate <OutputState.calculate>` attribute, and *INDEX* is assigned ``2`` to
-reference the third item of the DDM's `value <DDM.value>` attribute (items are indexed starting with 0), which contains
-the probability of crossing the upper threshold.  The three OutputStates will be assigned to the `output_states
-<Mechanism_Base.output_states>` attribute of ``my_mech``, and their values will be assigned as items in its
-`output_values <Mechanism_Base.output_values>` attribute, in the order in which they are listed in the **output_states**
-argument of the constructor for ``my_mech``.
+In this example, ``my_mech`` is configured with three OutputStates.  The first two are `Standard OutputStates
+<OutputState_Standard>` that represent the decision variable of the DDM and the probability of it crossing of the
+upper (vs. lower) threshold.  the third is a custom OutputState, that computes the entropy of the probability of
+crossing the upper threshold.  It uses the `Entropy` Function for its `calculate <OutputState.calculate>` attribute,
+and *INDEX* is assigned ``2`` to reference the third item of the DDM's `value <DDM.value>` attribute (items are
+indexed starting with 0), which contains the probability of crossing the upper threshold.  The three OutputStates
+will be assigned to the `output_states <Mechanism_Base.output_states>` attribute of ``my_mech``, and their values
+will be assigned as items in its `output_values <Mechanism_Base.output_values>` attribute, in the order in which they
+are listed in the **output_states** argument of the constructor for ``my_mech``.
 
 Custom OutputStates can also be created on their own, and separately assigned or added to a Mechanism.  For example,
 the ``DECISION ENTROPY`` OutputState could be created as follows::

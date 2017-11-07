@@ -142,7 +142,7 @@ Examples
 .. _Mechanism_Example_1:
 
 The following example creates an instance of a TransferMechanism that names the default InputState ``MY_INPUT``,
-and assigns three `standard OutputStates <OutputState_Standard>`::
+and assigns three `Standard OutputStates <OutputState_Standard>`::
 
      my_mech = TransferMechanism(input_states=['MY_INPUT'],
                                  output_states=[RESULT, MEAN, VARIANCE])
