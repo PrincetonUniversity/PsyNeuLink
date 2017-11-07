@@ -341,7 +341,7 @@ from psyneulink.components.states.state import State_Base, _instantiate_state_li
 from psyneulink.globals.keywords import \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, INPUT_STATE, INPUT_STATES, RECEIVER, GATING_SIGNAL, \
     STATE, OUTPUT_STATE, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, \
-    CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE
+    CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE, REFERENCE_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import UtilitiesError, iscompatible, type_match
@@ -969,14 +969,20 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                 index = output_state.index
                 output_state_value = owner_value[index]
 
-            # OutputState specification dictionry, so get attributes
+            # OutputState specification dictionary, so get attributes
             elif isinstance(output_state, dict):
 
                 # If OutputState's name matches the name entry of a dict in standard_output_states,
-                #    use the named standard OuputState
+                #    use the named Standard OutputState
                 if output_state[NAME] and hasattr(owner, STANDARD_OUTPUT_STATES):
                     std_output_state = owner.standard_output_states.get_state_dict(output_state[NAME])
                     if std_output_state is not None:
+                        # If any params were specified for the OutputState, add them to std_output_state
+                        if PARAMS in output_state:
+                            if PARAMS in std_output_state:
+                                std_output_state[PARAMS].update(output_state[PARAMS])
+                            else:
+                                std_output_state[PARAMS] = output_state[PARAMS]
                         output_states[i] = std_output_state
 
                 if output_state[PARAMS]:

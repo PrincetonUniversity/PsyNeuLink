@@ -1311,7 +1311,9 @@ class State_Base(State):
                 else:
                     raise StateError("SENDER of {} to {} of {} is neither a State or State class".
                                      format(projection_type.__name__, self.name, self.owner.name))
-                projection._assign_default_projection_name(state=self, sender_name=sender_name, receiver_name=self.name)
+                projection._assign_default_projection_name(state=self,
+                                                           sender_name=sender_name,
+                                                           receiver_name=self.name)
 
                 # If sender has been instantiated, try to complete initialization
                 # If not, assume it will be handled later (by Mechanism or Composition)
@@ -1352,6 +1354,11 @@ class State_Base(State):
                         and not iscompatible(function_param_value, mod_proj_spec_value)):
                         raise StateError("Output of function for {} ({}) is not compatible with value of {} ({}).".
                                              format(projection.name, projection.value, self.name, self.value))
+
+                # projection._assign_default_projection_name(state=self,
+                #                                            sender_name=projection.sender.name,
+                #                                            receiver_name=self.name)
+
 
             # ASSIGN TO STATE
 
@@ -1507,11 +1514,9 @@ class State_Base(State):
                 else:
                     projection.receiver = projection.receiver or receiver
                     proj_recvr = projection.receiver
-                # MODIFIED 10/3/17 OLD:
-                # if default_class_name:
-                #     # projection_object.name = projection_object.name.replace(default_class_name, self.name)
-                #     projection_object.name = self.name + '_' + projection_object.name
-                # MODIFIED 10/3/17 END
+                projection._assign_default_projection_name(state=self,
+                                                           sender_name=self.name,
+                                                           receiver_name=proj_recvr.name)
 
             # Projection specification dictionary or None:
             elif isinstance(projection_spec, (dict, None)):
@@ -1571,7 +1576,11 @@ class State_Base(State):
                     else:
                         receiver_name = receiver.__name__
                     projection_name = projection_type.__name__ + " for " + receiver_name
-                projection.init_args[NAME] = projection.init_args[NAME] or projection_name
+                # projection.init_args[NAME] = projection.init_args[NAME] or projection_name
+                projection._assign_default_projection_name(state=self,
+                                                           sender_name=self.name,
+                                                           receiver_name=receiver_name)
+
 
                 # If receiver has been instantiated, try to complete initialization
                 # If not, assume it will be handled later (by Mechanism or Composition)
@@ -1630,6 +1639,11 @@ class State_Base(State):
                         and not iscompatible(function_param_value, mod_proj_spec_value)):
                         raise StateError("Output of {} ({}) is not compatible with the value of {} ({}).".
                                          format(projection.name,mod_proj_spec_value,receiver.name,function_param_value))
+
+                projection._assign_default_projection_name(state=self,
+                                                           sender_name=self.name,
+                                                           receiver_name=projection.receiver.name)
+
 
             # ASSIGN TO STATE
 
@@ -2492,7 +2506,7 @@ def _parse_state_spec(state_type=None,
 
             if PROJECTIONS in state_dict:
                 if not isinstance(state_dict[PROJECTIONS], list):
-                    params[PROJECTIONS] = [params[PROJECTIONS]]
+                    state_dict[PROJECTIONS] = [state_dict[PROJECTIONS]]
                 params[PROJECTIONS].appdend(state_dict[PROJECTIONS])
 
             # MECHANISM entry specifies Mechanism with one or more States to connect with,
@@ -2557,10 +2571,7 @@ def _parse_state_spec(state_type=None,
                 # Get and parse projection specifications for the State
                 if not isinstance(params[PROJECTIONS], list):
                     params[PROJECTIONS] = [params[PROJECTIONS]]
-                projection_params = []
-                projection_params.extend(params[PROJECTIONS])
-                if projection_params:
-                    params[PROJECTIONS] = _parse_connection_specs(state_type, owner, projection_params)
+                params[PROJECTIONS] = _parse_connection_specs(state_type, owner, params[PROJECTIONS])
 
             # Update state_dict[PARAMS] with params
             if state_dict[PARAMS] is None:
