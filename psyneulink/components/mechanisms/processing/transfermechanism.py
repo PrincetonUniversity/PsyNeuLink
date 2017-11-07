@@ -714,7 +714,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 current_input = variable[0] + noise
             else:
 
-                current_input = self.variable[0]
+                current_input = variable[0]
 
         # self.previous_input = current_input
 

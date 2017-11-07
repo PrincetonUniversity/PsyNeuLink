@@ -2621,7 +2621,6 @@ class System(System_Base):
                 # Zero input to first mechanism after first run (in case it is repeated in the pathway)
                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
-                # self.variable = convert_to_np_array(self.input, 2) * 0
                 pass
             i += 1
 
