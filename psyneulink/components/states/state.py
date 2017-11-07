@@ -1070,7 +1070,7 @@ class State_Base(State):
 
                 # Validate value:
                 #    - check that output of projection's function (projection_spec.value) is compatible with
-                #        self.variable;  if it is not, raise exception:
+                #        self.instance_defaults.variable;  if it is not, raise exception:
                 #        the buck stops here; can't modify projection's function to accommodate the State,
                 #        or there would be an unmanageable regress of reassigning projections,
                 #        requiring reassignment or modification of sender OutputStates, etc.
