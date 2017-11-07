@@ -308,8 +308,7 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, standard_output_states
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import CONTROL, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, STATE_TYPE,\
-    OBJECTIVE_MECHANISM, SENDER, TIME_SCALE, VARIABLE, WEIGHTS, kwPreferenceSetName, DEFAULT_MATRIX, DEFAULT_VARIABLE
+from psyneulink.globals.keywords import CONTROL, DEFAULT_MATRIX, DEFAULT_VARIABLE, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, OBJECTIVE_MECHANISM, SENDER, STATE_TYPE, TIME_SCALE, VARIABLE, WEIGHTS, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -520,7 +519,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     # ClassDefaults.variable = None;  Must be specified using either **input_states** or **monitored_output_states**
     class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        variable = None
+        variable = [0]
 
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -673,24 +672,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if not input_states:
             # If no input_states are specified, create a default
             input_states = [{STATE_TYPE: InputState, VARIABLE: [0]}]
-
-        # For each spec in input_state:
-        #    - parse into InputState specification dictionary
-        #    - get specified item for variable
-        input_state_variables = []
-        for input_state in input_states:
-            input_state_dict = _parse_state_spec(owner=self, state_type=InputState, state_spec=input_state)
-            input_state_variables.append(input_state_dict[VARIABLE])
-
-        # If variable argument of ObjectiveMechanism constructor was specified,
-        #    use that as reference_value for InputStates (i.e, give it precedence over InputState specifications);
-        #    this is so that a different shape can be specified for an InputState of the ObjectiveMechanism
-        #    than that of the OutputState from which it receives a projection
-        #    (e.g., ComparatorMechanism for RL:  OutputState that projects to SAMPLE InputState can be a vector,
-        #     but the ObjectiveMechanism's InputState must be a scalar).
-        # If variable was *NOT* specified, then it is OK to get it from the InputState specifications
-        if self._variable_not_specified:
-            self.instance_defaults.variable = self.instance_defaults.variable or input_state_variables
 
         # Instantiate InputStates corresponding to OutputStates specified in monitored_output_states
         # instantiated_input_states = super()._instantiate_input_states(input_states=self.input_states, context=context)
