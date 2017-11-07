@@ -159,8 +159,8 @@ Core Informational Attributes
   The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class `UserDict
   <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
   value of an entry can be accessed in the standard manner (e.g., ``my_component.user_params[`PARAMETER NAME`]``);
-  however, to access a full list of entries it's data attribute must be used (e.g., ``my_component.user_params.data``).
-  Also, because it is read-only, it cannot be used to make assignments.  Rather, changes to the value of a parameter
+  as can its full list of entries (e.g., ``my_component.user_params``).  However, because it is read-only,
+  it cannot be used to make assignments.  Rather, changes to the value of a parameter
   must be made by assigning a value to the attribute for that parameter directly (e.g., ``my_component.my_parameter``),
   or using the Component's `assign_params <Component.assign_params>` method.
 
@@ -186,15 +186,15 @@ COMMENT
   value is the value of that parameter.  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
   class `UserList <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
   value of an entry can be accessed in the standard manner (e.g., ``my_component.function_params[`PARAMETER NAME`]``);
-  however, to access a full list of its entries its data attribute must be used (e.g.,
-  ``my_component.function_params.data``).  Also, because it is read-only, it cannot be used to make assignments.
-  Rather, changes to the value of a function's parameters must be made by assigning a value to the corresponding
-  attribute of the Component's `function_object <Component.function_object>` attribute (e.g.,
-  ``my_component.function_object.my_parameter``), or in a FUNCTION_PARAMS dict using its `assign_params` method.  The
-  parameters for a function can be specified when the Component is created in one of the following ways:
+  as can its  full list of its entries (e.g., ``my_component.function_params``).  However, because it is read-only,
+  it cannot be used to make assignments. Rather, changes to the value of a function's parameters must be made by
+  assigning a value to the corresponding attribute of the Component's `function_object <Component.function_object>`
+  attribute (e.g., ``my_component.function_object.my_parameter``), or in a FUNCTION_PARAMS dict using its
+  `assign_params` method.  The parameters for a function can be specified when the Component is created in one of
+  the following ways:
 
       * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>`
-        argument, as in the following example::
+        argument, as in the folGlowing example::
 
             my_component = SomeComponent(function=SomeFunction(some_param=1, some_param=2)
 

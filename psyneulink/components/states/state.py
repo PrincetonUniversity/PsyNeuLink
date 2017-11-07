@@ -376,8 +376,8 @@ a variety of other ways, as described `above <State_Specification>` and illustra
        When one or more States is specified in the argument of a Mechanism's constructor, it replaces any
        defaults States created by the Mechanism when none are specified.
 
-For example, the following specifies the InputState by a
-value to use as its `default_variable <InputState.default_variable>` attribute::
+For example, the following specifies the InputState by a value to use as its `default_variable
+<InputState.default_variable>` attribute::
 
     my_mech = pnl.TransferMechanism(input_states=[[0,0])
 
@@ -387,22 +387,28 @@ show below::
 
     print(my_mech.input_states[0].variable)
     > [0 0]
-    print (my_mech.input_states[0].value)
+    print (my_mech.input_state.value)
     > [ 0.  0.]
     print (my_mech.variable)
     > [[0 0]]
 
-The **input_states** argument can also be used to specify more than one InputState, as follows::
+Note that in the first print state, the InputState was referenced as the first one in the `input_states
+<Mechanism_Base.input_states>` attribute of ``my_mech``;  the second print state references it directly,
+as the `primary InputState <Input_State.primary>` of ``my_mech``, using its `input_state <Mechanism_Base.input_state>`
+attribute (note the singular).
+
+The **input_states** argument can also be used to create more than one InputState::
 
     my_mech = pnl.TransferMechanism(input_states=['MY FIRST INPUT', 'MY SECOND INPUT'])
     print(my_mech.input_states)
     > [
     >    0	MY FIRST INPUT	array([ 0.])
-	>    1	MY SECOND INPUT	array([ 0.])
+    >    1	MY SECOND INPUT	array([ 0.])
     > ]
 
-Note that here, the printout is of the InputState objects, listing the indicex, name and `value <State_Base.value>` of
-each.  OutputStates can be specified in a similar way, using the **output_states** argument.
+Here, the print statement used the `input_states <Mechanism_Base.input_states>` attribute, since there is now more
+than one InputState;  the printout lists the InputState objects, showing the index, name and `value
+<State_Base.value>` of each.  OutputStates can be specified in a similar way, using the **output_states** argument.
 
     .. note::
         Although InputStates and OutputStates can be specified in a Mechanism's constructor, ParameterStates cannot;
@@ -417,7 +423,6 @@ The following example specifies two OutputStates for ``my_mech``, using its `Sta
 
     my_mech = pnl.TransferMechanism(output_states=['RESULT', 'MEAN'])
 
-
 As with InputStates, specification of OutputStates in the **output_states** argument suppresses the creation of any
 default OutPutStates that would have been created if no OutputStates were specified (see `note
 <State_Default_Suppression_Note>` above).  This is particularly relevant for OutputStates, as most Mechanisms create
@@ -431,7 +436,7 @@ for both of the OutputStates specified for the `TransferMechanism` in the exampl
 is created.
 
 States can be specified in greater detail using a `State specification dictionary <State_Specification_Dictionary>`.
-In the example below, this is used to specify the variable and name of an InputState:
+In the example below, this is used to specify the variable and name of an InputState::
 
     my_mech = pnl.TransferMechanism(input_states=[{STATE_TYPE: InputState,
                                                    NAME: 'MY INPUT',
@@ -454,28 +459,30 @@ specifies that the InputState of ``my_mech`` receive two Projections, one from `
                                                    pnl.PROJECTIONS:[source_mech_1, source_mech_2]}],
                                     output_states=[{pnl.NAME: 'RESULT',
                                                     pnl.PROJECTIONS:[destination_mech]}])
-    # Print names of Projections to the InputStates of my_mech:
-    for projection in my_mech.input_states[0].path_afferents:
+
+    # Print names of the Projections:
+
+    for projection in my_mech.input_state.path_afferents:
         print(projection.name)
     > MappingProjection from SOURCE_1[RESULT] to MY_MECH[MY INPUT]
     > MappingProjection from SOURCE_2[RESULT] to MY_MECH[MY INPUT]
+
+    for projection in my_mech.output_state.efferents:
+        print(projection.name)
     > MappingProjection from MY_MECH[RESULT] to DEST[InputState]
 
 A *PROJECTIONS* entry can contain any of the forms used to `specify a Projection <Projection_In_Context_Specification>`.
-Here the Mechanisms are used, which creates Projections from the `primary InputState <InputState_Primary>` of
-``source_mech``, and to the `primary OutputState <OutputState_Primary>` of ``destination_mech``.
-Note that MappingProjections are created, since the Projections specified are between InputStates and OutputStates.
+Here, Mechanisms are used, which creates Projections from the `primary InputState <InputState_Primary>` of
+``source_mech``, and to the `primary OutputState <OutputState_Primary>` of ``destination_mech``.  Note that
+MappingProjections are created, since the Projections specified are between InputStates and OutputStates.
 `ModulatoryProjections` can also be specified in a similar way::
 
-XXX EXAMPLE
-
+    *** EXAMPLE: MODULATORY PROJECTION SPECIFICATION
 
 COMMENT:
 
-
-
 - Specification dictionary
-    - PROJECTIONS: MappingProjections;  ModulatoryProjections; ModulatorySignals as types of OutputStates
+    - PROJECTIONS: ModulatoryProjections; ModulatorySignals as types of OutputStates
     - <str>:[projections]
     - MECHANISM/INPUT_STATES
 

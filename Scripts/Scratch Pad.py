@@ -354,8 +354,9 @@ class ScratchPadError(Exception):
 #
 #endregion
 
-#region TEST Modulation @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-print("TEST Modulation")
+
+#region TEST State Specification Examples @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# print("TEST State Specification Examples")
 
 # m = pnl.DDM(name='MY DDM')
 # c = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [m.parameter_states[pnl.DRIFT_RATE],
@@ -370,6 +371,7 @@ print("TEST Modulation")
 #                                          pnl.NAME:pnl.DECISION_VARIABLE}])
 
 mech_A = pnl.TransferMechanism(input_states=['MY INPUT'])
+print(mech_A.input_states)
 print(mech_A.input_states.names)
 print(mech_A.parameter_states.names)
 print(mech_A.output_states.names)
@@ -394,13 +396,13 @@ my_mech = pnl.TransferMechanism(name='MY_MECH',
                                                pnl.PROJECTIONS:[source_mech_1, source_mech_2]}],
                                 output_states=[{pnl.NAME: 'RESULT',
                                                 pnl.PROJECTIONS:[destination_mech]}])
-# Print names of Projections to the InputStates of my_mech:
+# Print names of Projections to the first (and, in this case, only) InputState of my_mech:
 for projection in my_mech.input_states[0].path_afferents:
     print(projection.name)
+# Print names of Projections from the first (and, in this case, only) OutputState of my_mech:
 for projection in my_mech.output_states[0].efferents:
     print(projection.name)
 
-TEMP = True
 
 # My_Transfer_Mech_A = TransferMechanism(
 #                            function=Logistic(
