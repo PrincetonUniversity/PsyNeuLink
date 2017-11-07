@@ -61,7 +61,7 @@ used as the `variable <TransferMechanism.variable>` for its `function <TransferM
 list or np.ndarray of numeric values.  The result of the `function <TransferMechanism.function>` is assigned as the
 only item of the TransferMechanism's `value <TransferMechanism.value>` and as the `value <OutputState.value>` of its
 `primary OutputState <OutputState_Primary>` (see `below <Transfer_OutputState>`).  Additional OutputStates can be
-assigned using the TransferMechanism's `standard OutputStates <TransferMechanism_Standard_OutputStates>`
+assigned using the TransferMechanism's `Standard OutputStates <TransferMechanism_Standard_OutputStates>`
 (see `OutputState_Standard`) or by creating `custom OutputStates <OutputState_Customization>`.
 
 .. _Transfer_Execution:
@@ -714,7 +714,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 current_input = variable[0] + noise
             else:
 
-                current_input = self.variable[0]
+                current_input = variable[0]
 
         # self.previous_input = current_input
 

@@ -461,35 +461,6 @@ class GatingSignal(ModulatorySignal):
                          prefs=prefs,
                          context=self)
 
-    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
-        """Get ControlSignal specified for a parameter or in a 'control_signals' argument
-
-        Tuple specification can be:
-            (parameter_name, Mechanism)
-            [TBI:] (parameter_name, Mechanism, weight, exponent, projection_specs)
-
-        Returns params dict with CONNECTIONS entries if any of these was specified.
-
-        """
-        from psyneulink.globals.keywords import PROJECTIONS
-
-        params_dict = {}
-
-        # FIX: 11/4/17: MOVE TO _parse_state_spec
-        if PROJECTIONS in state_specific_params:
-            params_dict[PROJECTIONS] = state_specific_params[PROJECTIONS]
-        else:
-            params_dict[PROJECTIONS] = []
-
-        for param in self.stateAttributes:
-            if param in state_specific_params:
-                params_dict[param] = state_specific_params[param]
-
-        if isinstance(state_specific_params, dict):
-            pass
-
-        return params_dict
-
     def _execute(self, function_params, context):
         return float(super()._execute(function_params=function_params, context=context))
 

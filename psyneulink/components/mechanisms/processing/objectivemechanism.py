@@ -668,7 +668,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             input_states = None
 
         # PARSE input_states (=monitored_output_states) specifications into InputState specification dictionaries
-        # and ASSIGN self.variable
+        # and ASSIGN self.instance_defaults.variable
 
         if not input_states:
             # If no input_states are specified, create a default
@@ -689,7 +689,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         #    (e.g., ComparatorMechanism for RL:  OutputState that projects to SAMPLE InputState can be a vector,
         #     but the ObjectiveMechanism's InputState must be a scalar).
         # If variable was *NOT* specified, then it is OK to get it from the InputState specifications
-        if self.variable is None:
+        if self._variable_not_specified:
             self.instance_defaults.variable = self.instance_defaults.variable or input_state_variables
 
         # Instantiate InputStates corresponding to OutputStates specified in monitored_output_states

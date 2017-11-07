@@ -303,10 +303,13 @@ import typecheck as tc
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.components.states.outputstate import SEQUENTIAL, INDEX
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.shellclasses import System_Base
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, OBJECTIVE_MECHANISM, PRODUCT, PROJECTIONS, SYSTEM, VARIABLE, WEIGHT
+from psyneulink.globals.keywords import \
+    AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, \
+    NAME, OBJECTIVE_MECHANISM, PRODUCT, PROJECTIONS, SYSTEM, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -740,8 +743,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
             self._output_states = []
 
-            for i, control_signal in enumerate(self.control_signals):
-                self._instantiate_control_signal(control_signal, index=i, context=context)
+            # for i, control_signal in enumerate(self.control_signals):
+            #     self._instantiate_control_signal(control_signal, index=i, context=context)
+            for control_signal in self.control_signals:
+                self._instantiate_control_signal(control_signal, context=context)
 
 
         super()._instantiate_output_states(context=context)
@@ -760,7 +765,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                         ALLOCATION_POLICY, len(self.allocation_policy)))
 
 
-    def _instantiate_control_signal(self, control_signal, index=0, context=None):
+    # def _instantiate_control_signal(self, control_signal, index=0, context=None):
+    def _instantiate_control_signal(self, control_signal, context=None):
 
         # EXTEND allocation_policy TO ACCOMMODATE NEW ControlSignal -------------------------------------------------
         #        also used to determine constraint on ControlSignal value
@@ -785,7 +791,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                             modulation=self.modulation,
                                             state_spec=control_signal)
 
-        control_signal.index = index
+        if control_signal.index is SEQUENTIAL:
+            control_signal.index = len(self.allocation_policy)-1
+        elif not isinstance(control_signal.index, int):
+            raise ControlMechanismError("PROGRAM ERROR: {} attribute of {} for {} is not {} or an int".
+                                        format(INDEX, ControlSignal.__name__, SEQUENTIAL, self.name))
+
         # Validate index
         try:
             self.allocation_policy[control_signal.index]

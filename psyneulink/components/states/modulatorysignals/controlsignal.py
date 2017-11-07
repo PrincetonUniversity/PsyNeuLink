@@ -671,11 +671,9 @@ class ControlSignal(ModulatorySignal):
 
         # Note: calculate is not currently used by GatingSignal;
         #       it is included here for consistency with OutputState and possible use by subclasses.
-        if index is None and owner is not None:
-            if len(owner.allocation_policy)==1:
-                index = PRIMARY
-            else:
-                index = PRIMARY
+
+        # If index has not been specified, but the owner has, allocation_policy has been determined, so use that
+        index = index or SEQUENTIAL
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -999,8 +997,6 @@ class ControlSignal(ModulatorySignal):
                                                                             float(self.cost))
     #endregion
 
-# MODIFIED 9/30/17 NEW:
-# FIX: 10/3/17 - SHOULD BE ABLE TO PARE THIS DOWN
     def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
 
@@ -1018,18 +1014,8 @@ class ControlSignal(ModulatorySignal):
 
         params_dict = {}
 
-        # FIX: 11/4/17: MOVE TO _parse_state_spec
-        if PROJECTIONS in state_specific_params:
-            params_dict[PROJECTIONS] = state_specific_params[PROJECTIONS]
-        else:
-            params_dict[PROJECTIONS] = []
-
-        for param in self.stateAttributes:
-            if param in state_specific_params:
-                params_dict[param] = state_specific_params[param]
-
         if isinstance(state_specific_params, dict):
-            pass
+            return state_specific_params
 
         elif isinstance(state_specific_params, tuple):
 
@@ -1048,7 +1034,7 @@ class ControlSignal(ModulatorySignal):
                                          "that is the name of a parameter of its second item ({})".
                                          format(ControlSignal.__name__, owner.name, param_name, mech.name))
             try:
-                parameter_state = mech._parameter_states[param_name]
+                parameter_state = mech.parameter_states[param_name]
             except KeyError:
                 raise ControlSignalError("No {} found for {} param of {} in {} specification tuple for {}".
                                          format(ParameterState.__name__, param_name, mech.name,
@@ -1061,7 +1047,6 @@ class ControlSignal(ModulatorySignal):
 
             # Assign connection specs to PROJECTIONS entry of params dict
             try:
-                # params_dict[CONNECTIONS] = _parse_connection_specs(self.__class__,
                 params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                    owner=owner,
                                                                    connections=parameter_state)
@@ -1079,7 +1064,6 @@ class ControlSignal(ModulatorySignal):
                                         format(CONTROL_SIGNAL, owner.name))
 
         return params_dict
-# MODIFIED 9/30/17 END
 
     @property
     def allocation_samples(self):

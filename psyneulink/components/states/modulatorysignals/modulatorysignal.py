@@ -390,11 +390,6 @@ class ModulatorySignal(OutputState):
                          prefs=prefs,
                          context=context)
 
-        # MODIFIED 10/3/17 OLD:
-        # # If owner is specified but modulation has not been specified, assign to owner's value
-        # if owner and self._modulation is None:
-        #     self._modulation = self.modulation or owner.modulation
-        # MODIFIED 10/3/17 END
         if self.init_status is InitStatus.INITIALIZED:
             self._assign_default_name()
 
@@ -414,37 +409,11 @@ class ModulatorySignal(OutputState):
         Call _instantiate_projection_from_state to assign ModulatoryProjections to .efferents
 
         """
-        from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-        from psyneulink.components.projections.projection import ConnectionTuple
-
-        # # MODIFIED 10/24/17 OLD:
-        # modulatory_projection_specs = [proj for proj in projections
-        #                           if isinstance(proj, (ModulatoryProjection_Base, Mechanism, State, ConnectionTuple))]
-        #
-        #
-        # # FIX: 10/24/17 - FOR THESE, CHECK THAT THEY ARE ACCEPTABLE TARGETS FOR THE MODULATORY PROJECTION
-        # # FIX:            (E.G., MappingProjection FOR LearningProjection;)
-        # # FIX:             ASSUMING THIS IS NOT DONE INSIDE OF _instantiate_rpojection
-        # # FIX:             OR MAYBE DON'T BOTHER WTIH THIS AT ALL, AND LET IT BE HANDLED IN _instantiate_rpojection
-        # excluded_specs = [spec for spec in projections if not spec in modulatory_projection_specs]
-        # if excluded_specs:
-        #     raise StateError("The following are not allowed as a specification for a {} from a {}: {}".
-        #                      format(ModulatoryProjection_Base.componentCategory,
-        #                             self.__class__.__name__,
-        #                             excluded_specs))
-        #
-        # # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        # for receiver_spec in modulatory_projection_specs:
-        #     projection = self._instantiate_projection_from_state(projection_spec=type(self),
-        #                                                          receiver=receiver_spec,
-        #                                                          context=context)
-        # MODIFIED 10/24/17 NEW:
-        # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+       # # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         for receiver_spec in projections:
             projection = self._instantiate_projection_from_state(projection_spec=type(self),
                                                                  receiver=receiver_spec,
                                                                  context=context)
-        # MODIFIED 10/24/17 END
             projection._assign_default_projection_name(state=self)
 
     def _assign_default_name(self):
@@ -488,8 +457,6 @@ class ModulatorySignal(OutputState):
         return self.name
 
 
-# MODIFIED 9/30/17 NEW:
-# FIX: THIS IS GENERIC FOR MODULATORY SIGNALS, BUT SHOULD BE IMPLEMENTED FOR EACH SUBCLASS
 def _parse_state_specific_params(self, owner, state_spec_dict, state_specific_params):
         """Get connections specified in a ParameterState specification tuple
 
@@ -510,7 +477,7 @@ def _parse_state_specific_params(self, owner, state_spec_dict, state_specific_pa
 
             tuple_spec = state_specific_params
 
-            # Note:  first item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
+            # Note: first item is assumed to be specification for the InputState itself, handled in _parse_state_spec()
 
             # Get connection (afferent Projection(s)) specification from tuple
             PROJECTIONS_INDEX = len(tuple_spec)-1
@@ -521,7 +488,6 @@ def _parse_state_specific_params(self, owner, state_spec_dict, state_specific_pa
 
             if projections_spec:
                 try:
-                    # params_dict[CONNECTIONS] = _parse_connection_specs(self.__class__,
                     params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                        owner=owner,
                                                                        connections={projections_spec})
@@ -537,4 +503,3 @@ def _parse_state_specific_params(self, owner, state_spec_dict, state_specific_pa
             raise ModulatorySignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
                                         format(self.__class__.__name__, state_specific_params))
         return params_dict
-# MODIFIED 9/30/17 END
