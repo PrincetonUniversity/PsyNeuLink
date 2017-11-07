@@ -689,8 +689,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             except AttributeError:
                 self.instance_defaults.variable = np.append(self.instance_defaults.variable, input_state_dict[VARIABLE])
 
-        print("length of self.instance_defaults.variable = {}".format(len(self.instance_defaults.variable)))
-
 
         # Instantiate InputStates corresponding to OutputStates specified in specified monitored_output_states
         instantiated_input_states = super()._instantiate_input_states(input_states=input_state_dicts, context=context)

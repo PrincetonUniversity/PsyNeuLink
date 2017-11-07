@@ -3098,7 +3098,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         param_set = target_set
         sender = self.instance_defaults.variable
         # Note: this assumes variable is a 1D np.array, as enforced by _validate_variable
-        sender_len = sender.size
+        sender_len = len(sender)
+        print("self.instance_defaults.variable = {}".format(sender))
+        print("self.name = {}".format(self.name))
 
         # FIX: RELABEL sender -> input AND receiver -> output
         # FIX: THIS NEEDS TO BE CLEANED UP:
@@ -3278,6 +3280,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                 "since its receiver has not been specified".
                                 format(specification, self.name, self.owner.name))
             # receiver = sender
+        print("self.receiver.name = {}".format(self.receiver))
         receiver_len = receiver.shape[0]
 
         matrix = get_matrix(specification, rows=sender_len, cols=receiver_len, context=context)

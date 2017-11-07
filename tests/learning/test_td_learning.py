@@ -5,79 +5,58 @@ import numpy as np
 from PsyNeuLink import CentralClock, LearningProjection, SoftMax, \
     TransferMechanism, process, system
 from PsyNeuLink.Components.Functions.Function import TDLearning
-from PsyNeuLink.Globals.Keywords import PROB, SAMPLE, TARGET
+from PsyNeuLink.Globals.Keywords import PROB, SAMPLE
 
 
 def test_td_learning():
     sample = TransferMechanism(
-            default_variable=[[0]],
+            default_variable=np.zeros(60),
             name=SAMPLE
     )
 
-    target = TransferMechanism(
-            default_variable=[[0]],
-            name=TARGET
-    )
-
     action_selection = TransferMechanism(
-            default_variable=[[0]],
+            default_variable=np.zeros(60),
             function=SoftMax(
                     output=PROB,
                     gain=1.0,
             ),
-            size=3,
             name='Action Selection'
     )
 
-    samples = [[0]] * 60
-    # samples = [[0]] * 5
-    samples[41] = [1]
-    # samples[2] = [1]
-    samples = np.array(samples, ndmin=2)
+    # samples = [[0]] * 60
+    samples = np.zeros((1, 1, 60))
+    # samples[41] = [1]
+    samples[0][0][41] = 1
 
-    targets = [[0]] * 60
-    # targets = [[0]] * 5
-    targets[53] = [1]
+    # targets = [[0]] * 60
+    targets = np.zeros((1, 1, 60))
+    # targets[53] = [1]
+    targets[0][0][53] = 1
     # targets[4] = [1]
 
     p = process(
-            default_variable=[[0]],
-            size=1,
+            default_variable=np.zeros(60),
+            size=60,
             pathway=[sample, action_selection],
             learning=LearningProjection(
                     learning_function=TDLearning(learning_rate=0.3),
             ),
             target=targets
     )
-
-    action_selection_values = np.zeros((50, 60))
-
     print(action_selection.value)
 
     timestep = 0
     trial = 0
 
     def print_header():
-        nonlocal trial
-        if CentralClock.trial == 0:
-            print("\n\n== == == == TRIAL {} == == == ==".format(trial + 1))
-        print("\n\n**** TIMESTEP: {}".format(CentralClock.trial))
+        print("\n\n**** EPISODE: {}".format(CentralClock.trial))
 
     def show_weights():
         nonlocal timestep
         nonlocal trial
         # if timestep < 120:
-        delta_vals[trial][timestep] = s.mechanisms[2].value
-        if timestep < 60:
-            action_selection_values[trial][timestep] = \
-            action_selection.value[0][0]
-            timestep += 1
-            if CentralClock.trial == 59:
-            # if CentralClock.trial == 4:
-                print("restarting timesteps...")
-                timestep = 0
-                trial += 1
-
+        delta_vals[trial] = s.mechanisms[2].value
+        trial += 1
 
         print('Reward prediction weights: \n',
               action_selection.input_state.path_afferents[0].matrix)
@@ -96,29 +75,24 @@ def test_td_learning():
 
     print(s.mechanisms)
 
-    s.mechanisms[2].max_time_steps = 60
-
-    delta_vals = np.zeros((50, 60))
-    s.show()
+    delta_vals = np.zeros((60, 60))
 
     # for i in range(50):
-    for i in range(5):
-        results = s.run(
-                num_trials=60,
-                # num_trials=5,
-                inputs=input_list,
-                targets=target_list,
-                learning=True,
-                call_before_trial=print_header,
-                call_after_trial=show_weights
-        )
-        s.mechanisms[2].reset()
+    results = s.run(
+            num_trials=60,
+            # num_trials=5,
+            inputs=input_list,
+            targets=target_list,
+            learning=True,
+            call_before_trial=print_header,
+            call_after_trial=show_weights
+    )
 
     plt.plot(delta_vals[0], "-o", label="Trial 1")
-    plt.plot(delta_vals[1], "-1", label="Trial 2")
-    plt.plot(delta_vals[2], "-2", label="Trial 3")
-    plt.plot(delta_vals[3], "-8", label="Trial 4")
-    plt.plot(delta_vals[4], "-s", label="Trial 5")
+    plt.plot(delta_vals[4], "-1", label="Trial 5")
+    plt.plot(delta_vals[9], "-2", label="Trial 10")
+    plt.plot(delta_vals[29], "-8", label="Trial 30")
+    plt.plot(delta_vals[59], "-s", label="Trial 60")
     # plt.plot(delta_vals[29][34:], "-p", label="Trial 30")
     # plt.plot(delta_vals[39], "-*", label="Trial 40")
     # plt.plot(delta_vals[49], "-D", label="Trial 50")
