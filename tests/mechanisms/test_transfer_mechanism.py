@@ -381,6 +381,7 @@ class TestTransferMechanismTimeConstant:
         val = T.execute([1, 2, -3, 0]).tolist()
         assert val == [[10.98, 11.78, 7.779999999999999, 10.18]]  # testing noise changes to an integrator
 
+
     def test_transfer_mech_time_constant_0_8_list(self):
         with pytest.raises(TransferError) as error_text:
             T = TransferMechanism(

@@ -830,8 +830,10 @@ class ContentAddressableList(UserList):
                                      .format(self.name, self.component_type.__name__))
         UserList.__init__(self, list, **kwargs)
 
-    def __repr__(self):
-        return '[\n\t{0}\n]'.format('\n\t'.join(['{0}\t{1}\t{2}'.format(i, self[i].name, repr(self[i].value)) for i in range(len(self))]))
+    # def __repr__(self):
+    #     return '[\n\t{0}\n]'.format('\n\t'.join(['{0}\t{1}\t{2}'.format(i, self[i].name,
+    #                                                                     repr(self[i].value))
+    #                                              for i in range(len(self))]))
 
     def __getitem__(self, key):
         if key is None:

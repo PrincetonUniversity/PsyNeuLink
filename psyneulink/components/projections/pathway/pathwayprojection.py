@@ -108,7 +108,6 @@ class PathwayProjection_Base(Projection_Base):
             projection_name = self.className + " from " + sender_name + " to " + receiver_name
             self.init_args[NAME] = self.init_args[NAME] or projection_name
             self.name = self.init_args[NAME]
-            TEMP = True
 
         else:
             raise PathwayProjectionError("PROGRAM ERROR: {} has unrecognized InitStatus ({})".

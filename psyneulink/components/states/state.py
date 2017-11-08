@@ -353,19 +353,19 @@ automatically creates an InputState, ParameterStates for its parameters, includi
 `intercept <Linear.intercept>` parameters of its `Linear` `Function <Function>` (its default `function
 <TransferMechanism.function>`), and an OutputState (named *RESULT*)::
 
-    print(my_mech.input_states.names)
-    > ['InputState']
-    print(my_mech.parameter_states.names)
-    > ['intercept', 'slope', 'noise', 'time_constant']
-    print(my_mech.output_states.names)
-    >['RESULT']
+    print(my_mech.input_states)
+    > [(InputState INPUT_STATE-0)]
+    print(my_mech.parameter_states)
+    > [(ParameterState intercept), (ParameterState slope), (ParameterState noise), (ParameterState time_constant)]
+    print(my_mech.output_states)
+    > [(OutputState RESULT)]
 
 When States are specified explicitly, it is usually in an argument of the constructor for the Mechanism to which they
 belong.  For example, the following specifies that ``my_mech`` should have an InputState named 'MY INPUT`::
 
     my_mech = pnl.TransferMechanism(input_states=['MY INPUT'])
-    print(my_mech.input_states.names)
-    > ['MY INPUT']
+    print(my_mech.input_states)
+    > [(InputState 'MY INPUT')]
 
 The InputState was specified by a string (for its name) in the **input_states** argument.  It can also be specified in
 a variety of other ways, as described `above <State_Specification>` and illustrated in the examples below.
@@ -376,8 +376,8 @@ a variety of other ways, as described `above <State_Specification>` and illustra
        When one or more States is specified in the argument of a Mechanism's constructor, it replaces any
        defaults States created by the Mechanism when none are specified.
 
-For example, the following specifies the InputState by a
-value to use as its `default_variable <InputState.default_variable>` attribute::
+For example, the following specifies the InputState by a value to use as its `default_variable
+<InputState.default_variable>` attribute::
 
     my_mech = pnl.TransferMechanism(input_states=[[0,0])
 
@@ -387,22 +387,24 @@ show below::
 
     print(my_mech.input_states[0].variable)
     > [0 0]
-    print (my_mech.input_states[0].value)
+    print (my_mech.input_state.value)
     > [ 0.  0.]
     print (my_mech.variable)
     > [[0 0]]
 
-The **input_states** argument can also be used to specify more than one InputState, as follows::
+Note that in the first print state, the InputState was referenced as the first one in the `input_states
+<Mechanism_Base.input_states>` attribute of ``my_mech``;  the second print state references it directly,
+as the `primary InputState <Input_State.primary>` of ``my_mech``, using its `input_state <Mechanism_Base.input_state>`
+attribute (note the singular).
+
+The **input_states** argument can also be used to create more than one InputState::
 
     my_mech = pnl.TransferMechanism(input_states=['MY FIRST INPUT', 'MY SECOND INPUT'])
     print(my_mech.input_states)
-    > [
-    >    0	MY FIRST INPUT	array([ 0.])
-	>    1	MY SECOND INPUT	array([ 0.])
-    > ]
+    > [(InputState MY FIRST INPUT), (InputState MY SECOND INPUT)]
 
-Note that here, the printout is of the InputState objects, listing the indicex, name and `value <State_Base.value>` of
-each.  OutputStates can be specified in a similar way, using the **output_states** argument.
+Here, the print statement uses the `input_states <Mechanism_Base.input_states>` attribute, since there is now more
+than one InputState.  OutputStates can be specified in a similar way, using the **output_states** argument.
 
     .. note::
         Although InputStates and OutputStates can be specified in a Mechanism's constructor, ParameterStates cannot;
@@ -417,7 +419,6 @@ The following example specifies two OutputStates for ``my_mech``, using its `Sta
 
     my_mech = pnl.TransferMechanism(output_states=['RESULT', 'MEAN'])
 
-
 As with InputStates, specification of OutputStates in the **output_states** argument suppresses the creation of any
 default OutPutStates that would have been created if no OutputStates were specified (see `note
 <State_Default_Suppression_Note>` above).  This is particularly relevant for OutputStates, as most Mechanisms create
@@ -431,7 +432,7 @@ for both of the OutputStates specified for the `TransferMechanism` in the exampl
 is created.
 
 States can be specified in greater detail using a `State specification dictionary <State_Specification_Dictionary>`.
-In the example below, this is used to specify the variable and name of an InputState:
+In the example below, this is used to specify the variable and name of an InputState::
 
     my_mech = pnl.TransferMechanism(input_states=[{STATE_TYPE: InputState,
                                                    NAME: 'MY INPUT',
@@ -454,28 +455,30 @@ specifies that the InputState of ``my_mech`` receive two Projections, one from `
                                                    pnl.PROJECTIONS:[source_mech_1, source_mech_2]}],
                                     output_states=[{pnl.NAME: 'RESULT',
                                                     pnl.PROJECTIONS:[destination_mech]}])
-    # Print names of Projections to the InputStates of my_mech:
-    for projection in my_mech.input_states[0].path_afferents:
+
+    # Print names of the Projections:
+
+    for projection in my_mech.input_state.path_afferents:
         print(projection.name)
     > MappingProjection from SOURCE_1[RESULT] to MY_MECH[MY INPUT]
     > MappingProjection from SOURCE_2[RESULT] to MY_MECH[MY INPUT]
+
+    for projection in my_mech.output_state.efferents:
+        print(projection.name)
     > MappingProjection from MY_MECH[RESULT] to DEST[InputState]
 
 A *PROJECTIONS* entry can contain any of the forms used to `specify a Projection <Projection_In_Context_Specification>`.
-Here the Mechanisms are used, which creates Projections from the `primary InputState <InputState_Primary>` of
-``source_mech``, and to the `primary OutputState <OutputState_Primary>` of ``destination_mech``.
-Note that MappingProjections are created, since the Projections specified are between InputStates and OutputStates.
+Here, Mechanisms are used, which creates Projections from the `primary InputState <InputState_Primary>` of
+``source_mech``, and to the `primary OutputState <OutputState_Primary>` of ``destination_mech``.  Note that
+MappingProjections are created, since the Projections specified are between InputStates and OutputStates.
 `ModulatoryProjections` can also be specified in a similar way::
 
-XXX EXAMPLE
-
+    *** EXAMPLE: MODULATORY PROJECTION SPECIFICATION
 
 COMMENT:
 
-
-
 - Specification dictionary
-    - PROJECTIONS: MappingProjections;  ModulatoryProjections; ModulatorySignals as types of OutputStates
+    - PROJECTIONS: ModulatoryProjections; ModulatorySignals as types of OutputStates
     - <str>:[projections]
     - MECHANISM/INPUT_STATES
 
@@ -1328,7 +1331,7 @@ class State_Base(State):
 
                 # Validate value:
                 #    - check that output of projection's function (projection_spec.value) is compatible with
-                #        self.instance_defaults.variable;  if it is not, raise exception:
+                #        self.variable;  if it is not, raise exception:
                 #        the buck stops here; can't modify projection's function to accommodate the State,
                 #        or there would be an unmanageable regress of reassigning projections,
                 #        requiring reassignment or modification of sender OutputStates, etc.
@@ -1946,7 +1949,7 @@ def _instantiate_state_list(owner,
         - a list:
             instantiate each item (if necessary) and place in a ContentAddressableList
     In each case, generate a ContentAddressableList with one or more entries, assigning:
-        # the key for each entry the name of the OutputState if provided,
+        # the key for each entry the name of the State if provided,
         #     otherwise, use MECHANISM<state_type>States-n (incrementing n for each additional entry)
         # the State value for each entry to the corresponding item of the Mechanism's state_type State's value
         # the dict to both self.<state_type>States and paramsCurrent[MECHANISM<state_type>States]
@@ -2017,22 +2020,30 @@ def _instantiate_state_list(owner,
 
     for index, state_spec in enumerate(state_list):
 
+        # # Get name of state, and use as index to assign to states ContentAddressableList
+        # default_name = state_type._assign_default_name(state_type)
+        # name = default_name or None
+
         state = _instantiate_state(state_type=state_type,
                                    owner=owner,
                                    reference_value=reference_value[index],
                                    reference_value_name=reference_value_name,
                                    state_spec=state_spec,
+                                   # name=name,
                                    context=context)
 
-        # Get name of state, and use as index to assign to states ContentAddressableList
-        default_name = state._assign_default_name()
-        if default_name:
-             state_name = default_name
-        elif state.init_status is InitStatus.DEFERRED_INITIALIZATION:
-            state_name = state.init_args[NAME]
-        else:
-            state_name = state.name
-        states[state_name] = state
+        # # Get name of state, and use as index to assign to states ContentAddressableList
+        # default_name = state._assign_default_name()
+        # if default_name:
+        #      state_name = default_name
+        # elif state.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        #     state_name = state.init_args[NAME]
+        # else:
+        #     state_name = state.name
+        #
+        # states[state_name] = state
+
+        states[state.name] = state
 
     return states
 
@@ -2101,9 +2112,8 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                                           context=context,
                                           **state_spec)
 
-
-    if isinstance(parsed_state_spec, dict) and parsed_state_spec[NAME] is None:
-        parsed_state_spec[NAME] = state_type.__name__
+    # if isinstance(parsed_state_spec, dict) and parsed_state_spec[NAME] is None:
+    #     parsed_state_spec[NAME] = state_type.__name__
 
     # STATE SPECIFICATION IS A State OBJECT ***************************************
     # Validate and return

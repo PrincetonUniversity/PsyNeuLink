@@ -666,6 +666,10 @@ class InputState(State_Base):
                                          prefs=prefs,
                                          context=self)
 
+        if self.name is self.componentName or self.componentName + '-' in self.name:
+            self._assign_default_name()
+
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate weights and exponents
 
@@ -769,12 +773,13 @@ class InputState(State_Base):
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
 
-    # def _assign_default_name(self):
-    #     """Assign index of '-1' to first default  InputState
-    #     Subsequent ones are indexed sequentially by Registry starting with '-2'
-    #     """
-    #     if self.name == self.componentName:
-    #         self.name = self.name+'-1'
+    def _assign_default_name(self):
+        # """Assign index of '-1' to first default  InputState
+        # Subsequent ones are indexed sequentially by Registry starting with '-2'
+        # """
+        # if self.name == self.componentName:
+        #     self.name = self.name+'-1'
+        self.name = self.name.replace(self.componentName, 'INPUT_STATE')
 
 # MODIFIED 9/30/17 NEW:
     @tc.typecheck
