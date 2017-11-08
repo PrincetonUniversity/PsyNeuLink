@@ -314,8 +314,8 @@ preference (see <code class="xref any docutils literal"><span class="pre">Prefer
 <li><strong>user_params</strong> - this contains a dictionary of all of the configurable parameters for a given Component.
 The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class <a class="reference external" href="https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict">UserDict</a>). The
 value of an entry can be accessed in the standard manner (e.g., <code class="docutils literal"><span class="pre">my_component.user_params[`PARAMETER</span> <span class="pre">NAME`]</span></code>);
-however, to access a full list of entries it’s data attribute must be used (e.g., <code class="docutils literal"><span class="pre">my_component.user_params.data</span></code>).
-Also, because it is read-only, it cannot be used to make assignments.  Rather, changes to the value of a parameter
+as can its full list of entries (e.g., <code class="docutils literal"><span class="pre">my_component.user_params</span></code>).  However, because it is read-only,
+it cannot be used to make assignments.  Rather, changes to the value of a parameter
 must be made by assigning a value to the attribute for that parameter directly (e.g., <code class="docutils literal"><span class="pre">my_component.my_parameter</span></code>),
 or using the Component’s <a class="reference internal" href="#psyneulink.components.component.Component.assign_params" title="psyneulink.components.component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.</li>
 </ul>
@@ -330,12 +330,12 @@ for the Component’s <a class="reference internal" href="#psyneulink.components
 value is the value of that parameter.  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
 class <a class="reference external" href="https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict">UserList</a>). The
 value of an entry can be accessed in the standard manner (e.g., <code class="docutils literal"><span class="pre">my_component.function_params[`PARAMETER</span> <span class="pre">NAME`]</span></code>);
-however, to access a full list of its entries its data attribute must be used (e.g.,
-<code class="docutils literal"><span class="pre">my_component.function_params.data</span></code>).  Also, because it is read-only, it cannot be used to make assignments.
-Rather, changes to the value of a function’s parameters must be made by assigning a value to the corresponding
-attribute of the Component’s <a class="reference internal" href="#psyneulink.components.component.Component.function_object" title="psyneulink.components.component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute (e.g.,
-<code class="docutils literal"><span class="pre">my_component.function_object.my_parameter</span></code>), or in a FUNCTION_PARAMS dict using its <a class="reference internal" href="#psyneulink.components.component.Component.assign_params" title="psyneulink.components.component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.  The
-parameters for a function can be specified when the Component is created in one of the following ways:</p>
+as can its  full list of its entries (e.g., <code class="docutils literal"><span class="pre">my_component.function_params</span></code>).  However, because it is read-only,
+it cannot be used to make assignments. Rather, changes to the value of a function’s parameters must be made by
+assigning a value to the corresponding attribute of the Component’s <a class="reference internal" href="#psyneulink.components.component.Component.function_object" title="psyneulink.components.component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a>
+attribute (e.g., <code class="docutils literal"><span class="pre">my_component.function_object.my_parameter</span></code>), or in a FUNCTION_PARAMS dict using its
+<a class="reference internal" href="#psyneulink.components.component.Component.assign_params" title="psyneulink.components.component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.  The parameters for a function can be specified when the Component is created in one of
+the following ways:</p>
 <blockquote>
 <div><ul>
 <li><p class="first">in the <strong>constructor</strong> for a Function – if that is used to specify the <a class="reference internal" href="#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>

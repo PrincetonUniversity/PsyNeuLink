@@ -484,7 +484,7 @@ or to disable modulation, using one of the values of <a class="reference interna
 ParameterStates belonging to a Mechanism are updated before the Mechanism’s function is called.  OutputStates are
 updated after the Mechanism’s function is called.  When a State is updated, it executes any Projections that project
 to it (listed in its <a class="reference internal" href="#psyneulink.components.states.state.State_Base.all_afferents" title="psyneulink.components.states.state.State_Base.all_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">all_afferents</span></code></a> attribute.  It uses the values it receives from any
-<code class="xref any docutils literal"><span class="pre">PathWayProjections</span></code> (listed in its <a class="reference internal" href="#psyneulink.components.states.state.State_Base.path_afferents" title="psyneulink.components.states.state.State_Base.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute) as the variable for its
+<code class="xref any docutils literal"><span class="pre">PathWayProjections</span></code> (listed in its <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.path_afferents" title="psyneulink.components.states.inputstate.InputState.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute) as the variable for its
 <a class="reference internal" href="#psyneulink.components.states.state.State_Base.function" title="psyneulink.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. It then executes all of the ModulatoryProjections it receives.  Different
 ModulatorySignals may call for different forms of modulation (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>).  Accordingly,
 it separately sums the values specified by any ModulatorySignals for the <em>MULTIPLICATIVE_PARAM</em> of its
@@ -506,19 +506,19 @@ TransferMechanism:</p>
 </div>
 <p>automatically creates an InputState, ParameterStates for its parameters, including the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Linear.slope" title="psyneulink.components.functions.function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a> and
 <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Linear.intercept" title="psyneulink.components.functions.function.Linear.intercept"><code class="xref any py py-attr docutils literal"><span class="pre">intercept</span></code></a> parameters of its <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Linear" title="psyneulink.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> (its default <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>), and an OutputState (named <em>RESULT</em>):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">input_states</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
-<span class="o">&gt;</span> <span class="p">[</span><span class="s1">&#39;InputState&#39;</span><span class="p">]</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_states</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
-<span class="o">&gt;</span> <span class="p">[</span><span class="s1">&#39;intercept&#39;</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">,</span> <span class="s1">&#39;time_constant&#39;</span><span class="p">]</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">output_states</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
-<span class="o">&gt;</span><span class="p">[</span><span class="s1">&#39;RESULT&#39;</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">input_states</span><span class="p">)</span>
+<span class="o">&gt;</span> <span class="p">[(</span><span class="n">InputState</span> <span class="n">INPUT_STATE</span><span class="o">-</span><span class="mi">0</span><span class="p">)]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_states</span><span class="p">)</span>
+<span class="o">&gt;</span> <span class="p">[(</span><span class="n">ParameterState</span> <span class="n">intercept</span><span class="p">),</span> <span class="p">(</span><span class="n">ParameterState</span> <span class="n">slope</span><span class="p">),</span> <span class="p">(</span><span class="n">ParameterState</span> <span class="n">noise</span><span class="p">),</span> <span class="p">(</span><span class="n">ParameterState</span> <span class="n">time_constant</span><span class="p">)]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">output_states</span><span class="p">)</span>
+<span class="o">&gt;</span> <span class="p">[(</span><span class="n">OutputState</span> <span class="n">RESULT</span><span class="p">)]</span>
 </pre></div>
 </div>
 <p>When States are specified explicitly, it is usually in an argument of the constructor for the Mechanism to which they
 belong.  For example, the following specifies that <code class="docutils literal"><span class="pre">my_mech</span></code> should have an InputState named ‘MY INPUT`:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_states</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;MY INPUT&#39;</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">input_states</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
-<span class="o">&gt;</span> <span class="p">[</span><span class="s1">&#39;MY INPUT&#39;</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">input_states</span><span class="p">)</span>
+<span class="o">&gt;</span> <span class="p">[(</span><span class="n">InputState</span> <span class="s1">&#39;MY INPUT&#39;</span><span class="p">)]</span>
 </pre></div>
 </div>
 <p>The InputState was specified by a string (for its name) in the <strong>input_states</strong> argument.  It can also be specified in
@@ -530,8 +530,7 @@ a variety of other ways, as described <a class="reference internal" href="#state
 defaults States created by the Mechanism when none are specified.</p>
 </div>
 </div></blockquote>
-<p>For example, the following specifies the InputState by a
-value to use as its <code class="xref any docutils literal"><span class="pre">default_variable</span></code> attribute:</p>
+<p>For example, the following specifies the InputState by a value to use as its <code class="xref any docutils literal"><span class="pre">default_variable</span></code> attribute:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_states</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -540,23 +539,23 @@ only) item of the Mechanism’s <a class="reference internal" href="Mechanism.ht
 show below:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">input_states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">variable</span><span class="p">)</span>
 <span class="o">&gt;</span> <span class="p">[</span><span class="mi">0</span> <span class="mi">0</span><span class="p">]</span>
-<span class="nb">print</span> <span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">input_states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="nb">print</span> <span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">input_state</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 <span class="o">&gt;</span> <span class="p">[</span> <span class="mf">0.</span>  <span class="mf">0.</span><span class="p">]</span>
 <span class="nb">print</span> <span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">variable</span><span class="p">)</span>
 <span class="o">&gt;</span> <span class="p">[[</span><span class="mi">0</span> <span class="mi">0</span><span class="p">]]</span>
 </pre></div>
 </div>
-<p>The <strong>input_states</strong> argument can also be used to specify more than one InputState, as follows:</p>
+<p>Note that in the first print state, the InputState was referenced as the first one in the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute of <code class="docutils literal"><span class="pre">my_mech</span></code>;  the second print state references it directly,
+as the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">InputState</span></code> of <code class="docutils literal"><span class="pre">my_mech</span></code>, using its <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_state" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_state"><code class="xref any py py-attr docutils literal"><span class="pre">input_state</span></code></a>
+attribute (note the singular).</p>
+<p>The <strong>input_states</strong> argument can also be used to create more than one InputState:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_states</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;MY FIRST INPUT&#39;</span><span class="p">,</span> <span class="s1">&#39;MY SECOND INPUT&#39;</span><span class="p">])</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">input_states</span><span class="p">)</span>
-<span class="o">&gt;</span> <span class="p">[</span>
-<span class="o">&gt;</span>    <span class="mi">0</span>      <span class="n">MY</span> <span class="n">FIRST</span> <span class="n">INPUT</span>  <span class="n">array</span><span class="p">([</span> <span class="mf">0.</span><span class="p">])</span>
-    <span class="o">&gt;</span>    <span class="mi">1</span>  <span class="n">MY</span> <span class="n">SECOND</span> <span class="n">INPUT</span> <span class="n">array</span><span class="p">([</span> <span class="mf">0.</span><span class="p">])</span>
-<span class="o">&gt;</span> <span class="p">]</span>
+<span class="o">&gt;</span> <span class="p">[(</span><span class="n">InputState</span> <span class="n">MY</span> <span class="n">FIRST</span> <span class="n">INPUT</span><span class="p">),</span> <span class="p">(</span><span class="n">InputState</span> <span class="n">MY</span> <span class="n">SECOND</span> <span class="n">INPUT</span><span class="p">)]</span>
 </pre></div>
 </div>
-<p>Note that here, the printout is of the InputState objects, listing the indicex, name and <a class="reference internal" href="#psyneulink.components.states.state.State_Base.value" title="psyneulink.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
-each.  OutputStates can be specified in a similar way, using the <strong>output_states</strong> argument.</p>
+<p>Here, the print statement uses the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute, since there is now more
+than one InputState.  OutputStates can be specified in a similar way, using the <strong>output_states</strong> argument.</p>
 <blockquote>
 <div><div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -580,13 +579,11 @@ for both of the OutputStates specified for the <a class="reference internal" hre
 is created.</p>
 <p>States can be specified in greater detail using a <a class="reference internal" href="#state-specification-dictionary"><span class="std std-ref">State specification dictionary</span></a>.
 In the example below, this is used to specify the variable and name of an InputState:</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>my_mech = pnl.TransferMechanism(input_states=[{STATE_TYPE: InputState,</dt>
-<dd>NAME: ‘MY INPUT’,
-VARIABLE: [0,0]})</dd>
-</dl>
-</div></blockquote>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_states</span><span class="o">=</span><span class="p">[{</span><span class="n">STATE_TYPE</span><span class="p">:</span> <span class="n">InputState</span><span class="p">,</span>
+                                               <span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;MY INPUT&#39;</span><span class="p">,</span>
+                                               <span class="n">VARIABLE</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]})</span>
+</pre></div>
+</div>
 <p>The <em>STATE_TYPE</em> entry is included here for completeness, but in this case it is not necessary since the State’s type
 is clearly determined by the context of the specification (an <strong>input_states</strong> argument);  where it is not clear, then
 the <em>STATE_TYPE</em> entry must be included.</p>
@@ -602,20 +599,27 @@ specifies that the InputState of <code class="docutils literal"><span class="pre
                                                <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:[</span><span class="n">source_mech_1</span><span class="p">,</span> <span class="n">source_mech_2</span><span class="p">]}],</span>
                                 <span class="n">output_states</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;RESULT&#39;</span><span class="p">,</span>
                                                 <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:[</span><span class="n">destination_mech</span><span class="p">]}])</span>
-<span class="c1"># Print names of Projections to the InputStates of my_mech:</span>
-<span class="k">for</span> <span class="n">projection</span> <span class="ow">in</span> <span class="n">my_mech</span><span class="o">.</span><span class="n">input_states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">path_afferents</span><span class="p">:</span>
+
+<span class="c1"># Print names of the Projections:</span>
+
+<span class="k">for</span> <span class="n">projection</span> <span class="ow">in</span> <span class="n">my_mech</span><span class="o">.</span><span class="n">input_state</span><span class="o">.</span><span class="n">path_afferents</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">projection</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 <span class="o">&gt;</span> <span class="n">MappingProjection</span> <span class="kn">from</span> <span class="nn">SOURCE_1</span><span class="p">[</span><span class="n">RESULT</span><span class="p">]</span> <span class="n">to</span> <span class="n">MY_MECH</span><span class="p">[</span><span class="n">MY</span> <span class="n">INPUT</span><span class="p">]</span>
 <span class="o">&gt;</span> <span class="n">MappingProjection</span> <span class="kn">from</span> <span class="nn">SOURCE_2</span><span class="p">[</span><span class="n">RESULT</span><span class="p">]</span> <span class="n">to</span> <span class="n">MY_MECH</span><span class="p">[</span><span class="n">MY</span> <span class="n">INPUT</span><span class="p">]</span>
+
+<span class="k">for</span> <span class="n">projection</span> <span class="ow">in</span> <span class="n">my_mech</span><span class="o">.</span><span class="n">output_state</span><span class="o">.</span><span class="n">efferents</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">projection</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 <span class="o">&gt;</span> <span class="n">MappingProjection</span> <span class="kn">from</span> <span class="nn">MY_MECH</span><span class="p">[</span><span class="n">RESULT</span><span class="p">]</span> <span class="n">to</span> <span class="n">DEST</span><span class="p">[</span><span class="n">InputState</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>A <em>PROJECTIONS</em> entry can contain any of the forms used to <a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">specify a Projection</span></a>.
-Here the Mechanisms are used, which creates Projections from the <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> of
-<code class="docutils literal"><span class="pre">source_mech</span></code>, and to the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> of <code class="docutils literal"><span class="pre">destination_mech</span></code>.
-Note that MappingProjections are created, since the Projections specified are between InputStates and OutputStates.
+Here, Mechanisms are used, which creates Projections from the <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> of
+<code class="docutils literal"><span class="pre">source_mech</span></code>, and to the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> of <code class="docutils literal"><span class="pre">destination_mech</span></code>.  Note that
+MappingProjections are created, since the Projections specified are between InputStates and OutputStates.
 <a class="reference internal" href="ModulatoryProjections.html"><span class="doc">Modulatory Projections</span></a> can also be specified in a similar way:</p>
-<p>XXX EXAMPLE</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">***</span> <span class="n">EXAMPLE</span><span class="p">:</span> <span class="n">MODULATORY</span> <span class="n">PROJECTION</span> <span class="n">SPECIFICATION</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="class-reference">
 <span id="state-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
