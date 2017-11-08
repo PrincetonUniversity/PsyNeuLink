@@ -159,8 +159,8 @@ Core Informational Attributes
   The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class `UserDict
   <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
   value of an entry can be accessed in the standard manner (e.g., ``my_component.user_params[`PARAMETER NAME`]``);
-  however, to access a full list of entries it's data attribute must be used (e.g., ``my_component.user_params.data``).
-  Also, because it is read-only, it cannot be used to make assignments.  Rather, changes to the value of a parameter
+  as can its full list of entries (e.g., ``my_component.user_params``).  However, because it is read-only,
+  it cannot be used to make assignments.  Rather, changes to the value of a parameter
   must be made by assigning a value to the attribute for that parameter directly (e.g., ``my_component.my_parameter``),
   or using the Component's `assign_params <Component.assign_params>` method.
 
@@ -186,12 +186,12 @@ COMMENT
   value is the value of that parameter.  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
   class `UserList <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
   value of an entry can be accessed in the standard manner (e.g., ``my_component.function_params[`PARAMETER NAME`]``);
-  however, to access a full list of its entries its data attribute must be used (e.g.,
-  ``my_component.function_params.data``).  Also, because it is read-only, it cannot be used to make assignments.
-  Rather, changes to the value of a function's parameters must be made by assigning a value to the corresponding
-  attribute of the Component's `function_object <Component.function_object>` attribute (e.g.,
-  ``my_component.function_object.my_parameter``), or in a FUNCTION_PARAMS dict using its `assign_params` method.  The
-  parameters for a function can be specified when the Component is created in one of the following ways:
+  as can its  full list of its entries (e.g., ``my_component.function_params``).  However, because it is read-only,
+  it cannot be used to make assignments. Rather, changes to the value of a function's parameters must be made by
+  assigning a value to the corresponding attribute of the Component's `function_object <Component.function_object>`
+  attribute (e.g., ``my_component.function_object.my_parameter``), or in a FUNCTION_PARAMS dict using its
+  `assign_params` method.  The parameters for a function can be specified when the Component is created in one of
+  the following ways:
 
       * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>`
         argument, as in the following example::
@@ -350,8 +350,7 @@ from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, C
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
-from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_to_np_array, \
-    is_same_function_spec, iscompatible, kwCompatibilityLength, is_matrix
+from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
@@ -678,7 +677,7 @@ class Component(object):
 
     class ClassDefaults(Defaults):
         exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
-        pass
+        variable = np.array([0])
 
     class InstanceDefaults(Defaults):
         def __init__(self, **kwargs):
@@ -754,9 +753,11 @@ class Component(object):
         defaults = self.ClassDefaults.values().copy()
         if param_defaults is not None:
             defaults.update(param_defaults)
-        del defaults[VARIABLE]
 
-        self.instance_defaults = self.InstanceDefaults(variable=default_variable, **defaults)
+        if default_variable is not None:
+            defaults[VARIABLE] = default_variable
+
+        self.instance_defaults = self.InstanceDefaults(**defaults)
 
         # These ensure that subclass values are preserved, while allowing them to be referred to below
         self.paramInstanceDefaults = {}
@@ -929,7 +930,7 @@ class Component(object):
             #region Convert variable (if given) to a 2D array, and size (if given) to a 1D integer array
             try:
                 if variable is not None:
-                    variable = self._update_variable(np.atleast_2d(variable))
+                    variable = np.atleast_2d(variable)
                     # 6/30/17 (CW): Previously, using variable or default_variable to create
                     # input states of differing lengths (e.g. default_variable = [[1, 2], [1, 2, 3]])
                     # caused a bug. The if statement below fixes this bug. This solution is ugly, though.
@@ -942,7 +943,7 @@ class Component(object):
                                 allLists = False
                                 break
                         if allLists:
-                            variable = self._update_variable(variable[0])
+                            variable = variable[0]
             except:
                 raise ComponentError("Failed to convert variable (of type {}) to a 2D array.".format(type(variable)))
 
@@ -968,10 +969,10 @@ class Component(object):
             # value of variable (though it's an unlikely use case), which is an array of zeros at the moment
             if variable is None and size is not None:
                 try:
-                    variable = self._update_variable([])
+                    variable = []
                     for s in size:
                         variable.append(np.zeros(s))
-                    variable = self._update_variable(np.array(variable))
+                    variable = np.array(variable)
                 except:
                     raise ComponentError("variable (possibly default_variable) was not specified, but PsyNeuLink "
                                          "was unable to infer variable from the size argument, {}. size should be"

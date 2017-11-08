@@ -342,7 +342,7 @@ from psyneulink.globals.keywords import \
     kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import ContentAddressableList, iscompatible, type_match, is_matrix
+from psyneulink.globals.utilities import ContentAddressableList, is_matrix, iscompatible, type_match
 
 __all__ = [
     'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError',
@@ -1046,7 +1046,14 @@ def _parse_projection_spec(projection_spec,
         # Assign default type
         proj_spec_dict[PROJECTION_TYPE] = state_type.paramClassDefaults[PROJECTION_TYPE]
 
-        if owner.prefs.verbosePref:
+        # prefs is not always created when this is called, so check
+        try:
+            owner.prefs
+            has_prefs = True
+        except AttributeError:
+            has_prefs = False
+
+        if has_prefs and owner.prefs.verbosePref:
             warnings.warn("Unrecognized specification ({}) for a Projection for {} of {}; "
                           "default {} has been assigned".
                           format(projection_spec,

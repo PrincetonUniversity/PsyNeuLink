@@ -186,7 +186,7 @@ from numpy import abs, exp, tanh
 
 from psyneulink.components.component import ComponentError, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
-from psyneulink.globals.keywords import GILZENRAT_INTEGRATOR_FUNCTION, ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ANGLE, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ANGLE, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, GILZENRAT_INTEGRATOR_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -386,13 +386,27 @@ def get_param_value_for_keyword(owner, keyword):
         return owner.paramsCurrent[FUNCTION].keyword(owner, keyword)
     except FunctionError as e:
         # assert(False)
-        if owner.prefs.verbosePref:
+        # prefs is not always created when this is called, so check
+        try:
+            owner.prefs
+            has_prefs = True
+        except AttributeError:
+            has_prefs = False
+
+        if has_prefs and owner.prefs.verbosePref:
             print("{} of {}".format(e, owner.name))
         # return None
         else:
             raise FunctionError(e)
     except AttributeError:
-        if owner.prefs.verbosePref:
+        # prefs is not always created when this is called, so check
+        try:
+            owner.prefs
+            has_prefs = True
+        except AttributeError:
+            has_prefs = False
+
+        if has_prefs and owner.prefs.verbosePref:
             print("Keyword ({}) not recognized for {}".format(keyword, owner.name))
         return None
 
@@ -4187,7 +4201,7 @@ class LCAIntegrator(
 
         # Compute function based on integration_type param
         # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
-        value = previous_value + (rate*previous_value + new_value)*self.time_step_size + noise
+        value = previous_value + (rate*previous_value + new_value)*self.time_step_size + noise*(self.time_step_size**0.5)
 
         adjusted_value = value + offset
         # If this NOT an initialization run, update the old value
@@ -5535,6 +5549,7 @@ class FHNIntegrator(
                  time_constant_w=12.5,
                  mode=1.0,
                  uncorrelated_activity=0.0,
+                 integration_method="RK4",
                  params: tc.optional(dict)=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -5561,6 +5576,7 @@ class FHNIntegrator(
                                                   threshold=threshold,
                                                   mode=mode,
                                                   uncorrelated_activity=uncorrelated_activity,
+                                                  integration_method=integration_method,
                                                   time_constant_w=time_constant_w,
                                                   params=params)
 
@@ -5576,7 +5592,28 @@ class FHNIntegrator(
 
         self.auto_dependent = True
 
+    def _validate_params(self, request_set, target_set=None, context=None):
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+        if self.integration_method not in {"RK4", "EULER"}:
+            raise FunctionError("Invalid integration method ({}) selected for {}".
+                                format(self.integration_method, self.name))
 
+    def _euler_FHN(self, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size):
+
+        slope_v_approx = slope_v(previous_time,
+                                   previous_value_v,
+                                   previous_value_w)
+
+        slope_w_approx = slope_w(previous_time,
+                                   previous_value_w,
+                                   previous_value_v)
+
+        new_v = previous_value_v + time_step_size*slope_v_approx
+        new_w = previous_value_w + time_step_size*slope_w_approx
+
+        return new_v, new_w
 
     def _runge_kutta_4_FHN(self, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size):
 
@@ -5691,23 +5728,23 @@ class FHNIntegrator(
             # val = (v - 0.5*w)
 
             return val
-
-        # new_v = self._runge_kutta_4(previous_time=self.previous_t,
-        #                             previous_value=self.previous_v,
-        #                             slope=dv_dt,
-        #                             time_step_size=self.time_step_size)*self.scale + self.offset
-        #
-        # new_w = self._runge_kutta_4(previous_time=self.previous_t,
-        #                             previous_value=self.previous_w,
-        #                             slope=dw_dt,
-        #                             time_step_size=self.time_step_size)*self.scale + self.offset
-
-        approximate_values = self._runge_kutta_4_FHN(self.previous_v,
-                                                     self.previous_w,
-                                                     self.previous_t,
-                                                     dv_dt,
-                                                     dw_dt,
-                                                     self.time_step_size)
+        if self.integration_method == "RK4":
+            approximate_values = self._runge_kutta_4_FHN(self.previous_v,
+                                                         self.previous_w,
+                                                         self.previous_t,
+                                                         dv_dt,
+                                                         dw_dt,
+                                                         self.time_step_size)
+        elif self.integration_method == "EULER":
+            approximate_values = self._euler_FHN(self.previous_v,
+                                                         self.previous_w,
+                                                         self.previous_t,
+                                                         dv_dt,
+                                                         dw_dt,
+                                                         self.time_step_size)
+        else:
+            raise FunctionError("Invalid integration method ({}) selected for {}".
+                                format(self.integration_method, self.name))
 
         if not context or INITIALIZING not in context:
             self.previous_v = approximate_values[0]
