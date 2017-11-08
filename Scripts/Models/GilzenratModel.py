@@ -19,7 +19,7 @@ from psyneulink.globals.keywords import PROJECTION_TYPE, RECEIVER, SENDER, MATRI
 
 # --------------------------------- Global Variables ----------------------------------------
 
-high_C = False
+high_C = True
 if high_C:
     C = 0.95    # Mode ("coherence")
     initial_h_of_v = 0.07
@@ -86,7 +86,7 @@ response = GilzenratTransferMechanism(size=1,
 
 # Implement response layer with input_state for ObjectiveMechanism that has a single value
 # and a MappingProjection to it that zeros the contribution of the decision unit in the decision layer
-LC = LCControlMechanism(
+LC = LCControlMechanism(integration_method="EULER",
                         time_step_size_FHN=time_step_size,  # integrating step size
                         mode_FHN=C,                         # coherence: set to either .95 or .55
                         uncorrelated_activity_FHN=d,        # Baseline level of intrinsic, uncorrelated LC activity
@@ -118,7 +118,6 @@ LC = LCControlMechanism(
 
 for signal in LC._control_signals:
     signal._intensity = k*initial_w + G
-    print("SI = ", signal._intensity)
 # ELICITS WARNING:
 decision_process = Process(pathway=[input_layer,
                                     input_weights,
