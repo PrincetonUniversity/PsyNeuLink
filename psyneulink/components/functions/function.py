@@ -4201,7 +4201,7 @@ class LCAIntegrator(
 
         # Compute function based on integration_type param
         # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
-        value = previous_value + (rate*previous_value + new_value)*self.time_step_size + noise
+        value = previous_value + (rate*previous_value + new_value)*self.time_step_size + noise*(self.time_step_size**0.5)
 
         adjusted_value = value + offset
         # If this NOT an initialization run, update the old value
@@ -5549,6 +5549,7 @@ class FHNIntegrator(
                  time_constant_w=12.5,
                  mode=1.0,
                  uncorrelated_activity=0.0,
+                 integration_method="RK4",
                  params: tc.optional(dict)=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -5575,6 +5576,7 @@ class FHNIntegrator(
                                                   threshold=threshold,
                                                   mode=mode,
                                                   uncorrelated_activity=uncorrelated_activity,
+                                                  integration_method=integration_method,
                                                   time_constant_w=time_constant_w,
                                                   params=params)
 
@@ -5590,7 +5592,28 @@ class FHNIntegrator(
 
         self.auto_dependent = True
 
+    def _validate_params(self, request_set, target_set=None, context=None):
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+        if self.integration_method not in {"RK4", "EULER"}:
+            raise FunctionError("Invalid integration method ({}) selected for {}".
+                                format(self.integration_method, self.name))
 
+    def _euler_FHN(self, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size):
+
+        slope_v_approx = slope_v(previous_time,
+                                   previous_value_v,
+                                   previous_value_w)
+
+        slope_w_approx = slope_w(previous_time,
+                                   previous_value_w,
+                                   previous_value_v)
+
+        new_v = previous_value_v + time_step_size*slope_v_approx
+        new_w = previous_value_w + time_step_size*slope_w_approx
+
+        return new_v, new_w
 
     def _runge_kutta_4_FHN(self, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size):
 
@@ -5705,23 +5728,23 @@ class FHNIntegrator(
             # val = (v - 0.5*w)
 
             return val
-
-        # new_v = self._runge_kutta_4(previous_time=self.previous_t,
-        #                             previous_value=self.previous_v,
-        #                             slope=dv_dt,
-        #                             time_step_size=self.time_step_size)*self.scale + self.offset
-        #
-        # new_w = self._runge_kutta_4(previous_time=self.previous_t,
-        #                             previous_value=self.previous_w,
-        #                             slope=dw_dt,
-        #                             time_step_size=self.time_step_size)*self.scale + self.offset
-
-        approximate_values = self._runge_kutta_4_FHN(self.previous_v,
-                                                     self.previous_w,
-                                                     self.previous_t,
-                                                     dv_dt,
-                                                     dw_dt,
-                                                     self.time_step_size)
+        if self.integration_method == "RK4":
+            approximate_values = self._runge_kutta_4_FHN(self.previous_v,
+                                                         self.previous_w,
+                                                         self.previous_t,
+                                                         dv_dt,
+                                                         dw_dt,
+                                                         self.time_step_size)
+        elif self.integration_method == "EULER":
+            approximate_values = self._euler_FHN(self.previous_v,
+                                                         self.previous_w,
+                                                         self.previous_t,
+                                                         dv_dt,
+                                                         dw_dt,
+                                                         self.time_step_size)
+        else:
+            raise FunctionError("Invalid integration method ({}) selected for {}".
+                                format(self.integration_method, self.name))
 
         if not context or INITIALIZING not in context:
             self.previous_v = approximate_values[0]
