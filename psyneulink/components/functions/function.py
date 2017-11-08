@@ -4201,7 +4201,7 @@ class LCAIntegrator(
 
         # Compute function based on integration_type param
         # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
-        value = previous_value + (rate*previous_value + new_value)*self.time_step_size + noise
+        value = previous_value + (rate*previous_value + new_value)*self.time_step_size + noise*(self.time_step_size**0.5)
 
         adjusted_value = value + offset
         # If this NOT an initialization run, update the old value
