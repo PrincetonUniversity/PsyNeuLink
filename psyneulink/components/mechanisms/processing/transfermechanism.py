@@ -118,11 +118,10 @@ import typecheck as tc
 
 from psyneulink.components.component import Component, function_type, method_type
 from psyneulink.components.functions.function import AdaptiveIntegrator, Linear
-from psyneulink.components.mechanisms.mechanism import MechanismError, Mechanism
+from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.states.outputstate import \
-    OutputState, PRIMARY, StandardOutputStates, standard_output_states
+from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.globals.keywords import FUNCTION, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NOISE, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -431,9 +430,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         if output_states is None:
             output_states = [RESULT]
 
-        if default_variable is None and size is None:
-            default_variable = [[0]]
-
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
                                                   input_states=input_states,
@@ -452,12 +448,15 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
 
-        super(TransferMechanism, self).__init__(variable=default_variable,
-                                                size=size,
-                                                params=params,
-                                                name=name,
-                                                prefs=prefs,
-                                                context=self)
+        super(TransferMechanism, self).__init__(
+            variable=default_variable,
+            size=size,
+            params=params,
+            name=name,
+            prefs=prefs,
+            context=self,
+            input_states=input_states,
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate FUNCTION and Mechanism params
