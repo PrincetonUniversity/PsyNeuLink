@@ -157,39 +157,39 @@ def register_category(entry,
     if isinstance(entry, base_class):
 
         try:
-            component_instance_name = entry.componentName
+            component_type_name = entry.componentName
         except AttributeError:
             try:
-                component_instance_name = entry.componentType
+                component_type_name = entry.componentType
             except AttributeError:
-                component_instance_name = entry.__class__.__name__
+                component_type_name = entry.__class__.__name__
 
         # Component type is registered (i.e., there is an entry for component_type_name)
-        if component_instance_name in registry:
+        if component_type_name in registry:
             register_instance(entry=entry,
                               name=name,
                               base_class=base_class,
                               registry=registry,
-                              sub_dict=component_instance_name)
+                              sub_dict=component_type_name)
 
         # If component type is not already registered in registry, then:
         else:
             # Set instance's name to first instance:
             # If name was not provided, assign component_type_name-1 as default;
             if not name:
-                entry.name = component_instance_name + "-1"
+                entry.name = component_type_name + "-1"
             else:
                 entry.name = name
 
             # Create instance dict:
             instanceDict = {entry.name: entry}
             if name is None:
-                renamed_instance_counts = {component_instance_name: 1}
+                renamed_instance_counts = {component_type_name: 1}
             else:
-                renamed_instance_counts = {component_instance_name: 0}
+                renamed_instance_counts = {component_type_name: 0}
 
             # Register component type with instance count of 1:
-            registry[component_instance_name] = RegistryEntry(type(entry), instanceDict, 1, renamed_instance_counts, False)
+            registry[component_type_name] = RegistryEntry(type(entry), instanceDict, 1, renamed_instance_counts, False)
 
 
     # If entry is a reference to the component type (rather than an instance of it)
@@ -210,13 +210,14 @@ def register_category(entry,
 
 
 def register_instance(entry, name, base_class, registry, sub_dict):
+
     renamed_instance_counts = registry[sub_dict].renamed_instance_counts
 
-    # If entry (instance) does not have a name, set entry's name to sub_dict-n where n is the next available
-    # numeric suffix based on the number of unnamed/renamed sub_dict objects that have already been assigned names
+    # If entry (instance) name is None, set entry's name to sub_dict-n where n is the next available numeric suffix
+    # starting at 0)based on the number of unnamed/renamed sub_dict objects that have already been assigned names
     if not name:
-        renamed_instance_counts[sub_dict] += 1
         entry.name = '{0}-{1}'.format(sub_dict, renamed_instance_counts[sub_dict])
+        renamed_instance_counts[sub_dict] += 1
     else:
         entry.name = name
 

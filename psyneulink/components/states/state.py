@@ -354,7 +354,7 @@ automatically creates an InputState, ParameterStates for its parameters, includi
 <TransferMechanism.function>`), and an OutputState (named *RESULT*)::
 
     print(my_mech.input_states)
-    > [(InputState InputState)]
+    > [(InputState INPUT_STATE-0)]
     print(my_mech.parameter_states)
     > [(ParameterState intercept), (ParameterState slope), (ParameterState noise), (ParameterState time_constant)]
     print(my_mech.output_states)
@@ -1949,7 +1949,7 @@ def _instantiate_state_list(owner,
         - a list:
             instantiate each item (if necessary) and place in a ContentAddressableList
     In each case, generate a ContentAddressableList with one or more entries, assigning:
-        # the key for each entry the name of the OutputState if provided,
+        # the key for each entry the name of the State if provided,
         #     otherwise, use MECHANISM<state_type>States-n (incrementing n for each additional entry)
         # the State value for each entry to the corresponding item of the Mechanism's state_type State's value
         # the dict to both self.<state_type>States and paramsCurrent[MECHANISM<state_type>States]
@@ -2112,9 +2112,8 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                                           context=context,
                                           **state_spec)
 
-
-    if isinstance(parsed_state_spec, dict) and parsed_state_spec[NAME] is None:
-        parsed_state_spec[NAME] = state_type.__name__
+    # if isinstance(parsed_state_spec, dict) and parsed_state_spec[NAME] is None:
+    #     parsed_state_spec[NAME] = state_type.__name__
 
     # STATE SPECIFICATION IS A State OBJECT ***************************************
     # Validate and return
