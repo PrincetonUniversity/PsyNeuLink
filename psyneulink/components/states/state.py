@@ -353,19 +353,19 @@ automatically creates an InputState, ParameterStates for its parameters, includi
 `intercept <Linear.intercept>` parameters of its `Linear` `Function <Function>` (its default `function
 <TransferMechanism.function>`), and an OutputState (named *RESULT*)::
 
-    print(my_mech.input_states.names)
-    > ['InputState']
-    print(my_mech.parameter_states.names)
-    > ['intercept', 'slope', 'noise', 'time_constant']
-    print(my_mech.output_states.names)
-    >['RESULT']
+    print(my_mech.input_states)
+    > [(InputState InputState)]
+    print(my_mech.parameter_states)
+    > [(ParameterState intercept), (ParameterState slope), (ParameterState noise), (ParameterState time_constant)]
+    print(my_mech.output_states)
+    > [(OutputState RESULT)]
 
 When States are specified explicitly, it is usually in an argument of the constructor for the Mechanism to which they
 belong.  For example, the following specifies that ``my_mech`` should have an InputState named 'MY INPUT`::
 
     my_mech = pnl.TransferMechanism(input_states=['MY INPUT'])
-    print(my_mech.input_states.names)
-    > ['MY INPUT']
+    print(my_mech.input_states)
+    > [(InputState 'MY INPUT')]
 
 The InputState was specified by a string (for its name) in the **input_states** argument.  It can also be specified in
 a variety of other ways, as described `above <State_Specification>` and illustrated in the examples below.
@@ -2020,22 +2020,30 @@ def _instantiate_state_list(owner,
 
     for index, state_spec in enumerate(state_list):
 
+        # # Get name of state, and use as index to assign to states ContentAddressableList
+        # default_name = state_type._assign_default_name(state_type)
+        # name = default_name or None
+
         state = _instantiate_state(state_type=state_type,
                                    owner=owner,
                                    reference_value=reference_value[index],
                                    reference_value_name=reference_value_name,
                                    state_spec=state_spec,
+                                   # name=name,
                                    context=context)
 
-        # Get name of state, and use as index to assign to states ContentAddressableList
-        default_name = state._assign_default_name()
-        if default_name:
-             state_name = default_name
-        elif state.init_status is InitStatus.DEFERRED_INITIALIZATION:
-            state_name = state.init_args[NAME]
-        else:
-            state_name = state.name
-        states[state_name] = state
+        # # Get name of state, and use as index to assign to states ContentAddressableList
+        # default_name = state._assign_default_name()
+        # if default_name:
+        #      state_name = default_name
+        # elif state.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        #     state_name = state.init_args[NAME]
+        # else:
+        #     state_name = state.name
+        #
+        # states[state_name] = state
+
+        states[state.name] = state
 
     return states
 

@@ -370,38 +370,46 @@ class ScratchPadError(Exception):
 # g = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM:m,
 #                                          pnl.NAME:pnl.DECISION_VARIABLE}])
 
-mech_A = pnl.TransferMechanism(input_states=['MY INPUT'])
-print(mech_A.input_states)
-print(mech_A.input_states.names)
-print(mech_A.parameter_states.names)
-print(mech_A.output_states.names)
-# my_input_state = pnl.InputState(projections=[mech_A])
-# mech_B = pnl.TransferMechanism(input_states=[my_input_state])
+my_mech = pnl.TransferMechanism(default_variable=[[0],[0]])
 
-my_mech = pnl.TransferMechanism(default_variable=[0,0],
-                                input_states=[[0,0]])
-print(my_mech.input_states[0].variable)
-print (my_mech.input_states[0].value)
-print (my_mech.variable)
-
-my_mech = pnl.TransferMechanism(default_variable=[[0],[0]],
-                                input_states=['MY FIRST INPUT', 'MY SECOND INPUT'])
 print(my_mech.input_states)
 
-source_mech_1 = pnl.TransferMechanism(name='SOURCE_1')
-source_mech_2 = pnl.TransferMechanism(name='SOURCE_2')
-destination_mech = pnl.TransferMechanism(name='DEST')
-my_mech = pnl.TransferMechanism(name='MY_MECH',
-                                input_states=[{pnl.NAME: 'MY INPUT',
-                                               pnl.PROJECTIONS:[source_mech_1, source_mech_2]}],
-                                output_states=[{pnl.NAME: 'RESULT',
-                                                pnl.PROJECTIONS:[destination_mech]}])
-# Print names of Projections to the first (and, in this case, only) InputState of my_mech:
-for projection in my_mech.input_states[0].path_afferents:
-    print(projection.name)
-# Print names of Projections from the first (and, in this case, only) OutputState of my_mech:
-for projection in my_mech.output_states[0].efferents:
-    print(projection.name)
+print(my_mech.parameter_states)
+print(my_mech.output_states)
+
+
+# mech_A = pnl.TransferMechanism(input_states=['MY INPUT'])
+# print(mech_A.input_states)
+# print(mech_A.input_states.names)
+# print(mech_A.parameter_states.names)
+# print(mech_A.output_states.names)
+# # my_input_state = pnl.InputState(projections=[mech_A])
+# # mech_B = pnl.TransferMechanism(input_states=[my_input_state])
+#
+# my_mech = pnl.TransferMechanism(default_variable=[0,0],
+#                                 input_states=[[0,0]])
+# print(my_mech.input_states[0].variable)
+# print (my_mech.input_states[0].value)
+# print (my_mech.variable)
+#
+# my_mech = pnl.TransferMechanism(default_variable=[[0],[0]],
+#                                 input_states=['MY FIRST INPUT', 'MY SECOND INPUT'])
+# print(my_mech.input_states)
+#
+# source_mech_1 = pnl.TransferMechanism(name='SOURCE_1')
+# source_mech_2 = pnl.TransferMechanism(name='SOURCE_2')
+# destination_mech = pnl.TransferMechanism(name='DEST')
+# my_mech = pnl.TransferMechanism(name='MY_MECH',
+#                                 input_states=[{pnl.NAME: 'MY INPUT',
+#                                                pnl.PROJECTIONS:[source_mech_1, source_mech_2]}],
+#                                 output_states=[{pnl.NAME: 'RESULT',
+#                                                 pnl.PROJECTIONS:[destination_mech]}])
+# # Print names of Projections to the first (and, in this case, only) InputState of my_mech:
+# for projection in my_mech.input_states[0].path_afferents:
+#     print(projection.name)
+# # Print names of Projections from the first (and, in this case, only) OutputState of my_mech:
+# for projection in my_mech.output_states[0].efferents:
+#     print(projection.name)
 
 
 # My_Transfer_Mech_A = TransferMechanism(

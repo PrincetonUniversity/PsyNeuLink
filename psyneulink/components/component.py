@@ -194,7 +194,7 @@ COMMENT
   the following ways:
 
       * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>`
-        argument, as in the folGlowing example::
+        argument, as in the following example::
 
             my_component = SomeComponent(function=SomeFunction(some_param=1, some_param=2)
 

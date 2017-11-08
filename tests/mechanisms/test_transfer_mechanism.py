@@ -822,8 +822,8 @@ class TestTransferMechanismSize:
         T = TransferMechanism(default_variable=[[0],[0]],
                                       input_states=[R1.output_states['FIRST'],
                                                     R1.output_states['SECOND']])
-        assert T.input_states.names[0] == 'InputState'
-        assert T.input_states.names[1] == 'InputState-1'
+        assert T.input_states.names[0] == 'INPUT_STATE'
+        assert T.input_states.names[1] == 'INPUT_STATE-1'
         for input_state in T.input_states:
             for projection in input_state.path_afferents:
                 assert projection.sender.owner is R1
@@ -837,7 +837,7 @@ class TestTransferMechanismSize:
         R1 = TransferMechanism(output_states=['FIRST', 'SECOND'])
         T = TransferMechanism(default_variable=[0],
                                       input_states=R1.output_states['FIRST'])
-        assert T.input_states.names[0] == 'InputState'
+        assert T.input_states.names[0] == 'INPUT_STATE'
         T.input_state.path_afferents[0].sender == R1.output_state
         T.execute()
 
