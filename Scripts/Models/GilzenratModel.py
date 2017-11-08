@@ -19,17 +19,21 @@ from psyneulink.globals.keywords import PROJECTION_TYPE, RECEIVER, SENDER, MATRI
 
 # --------------------------------- Global Variables ----------------------------------------
 
-# Mode ("coherence")
-C = 0.95
+high_C = False
+if high_C:
+    C = 0.95    # Mode ("coherence")
+    initial_h_of_v = 0.07
+    initial_w=0.14
+else:
+    C = 0.55
+    initial_h_of_v = 0.2
+    initial_w = 0.2
+
 # Uncorrelated Activity
 d = 0.5
 
-# Initial values
-initial_h_of_v = 0.07
-# initial_h_of_v = 0.07
+# get v from h of v
 initial_v = (initial_h_of_v - (1-C)*d)/C
-# initial_w = 0.14
-initial_w=0.14
 
 # g(t) = G + k*w(t)
 
@@ -40,11 +44,11 @@ G = 0.5
 
 # numerical integration
 time_step_size = 0.02
-# number_of_trials = int(20/time_step_size)
-number_of_trials = 1
+number_of_trials = int(20/time_step_size)
+# number_of_trials = 1
 
 # noise
-standard_deviation = 0.22*(time_step_size**0.5)
+standard_deviation = 0.22
 
 # --------------------------------------------------------------------------------------------
 
@@ -58,8 +62,8 @@ input_weights = np.array([[1, .33],[.33, 1]])
 
 # Implement self-excitatory (auto) and mutually inhibitory (hetero) connections within the decision layer
 decision_layer = GilzenratTransferMechanism(size=2,
-                                            initial_value=np.array([[1,0]]),
-                                            matrix=np.matrix([[1,0],[0,-1]]),
+                                            initial_value=np.array([[0.0, 0.0]]),
+                                            matrix=np.matrix([[1,-1],[-1,1]]),
                                             #auto=1.0,
                                             #hetero=-1.0,
                                             time_step_size=time_step_size,
@@ -74,8 +78,8 @@ output_weights = np.array([[1.84], [0]])
 #To do Markus: specify recurrent self-connrection weight for response unit to 2.00
 response = GilzenratTransferMechanism(size=1,
                                       initial_value=np.array([[2.0]]),
-                                      matrix=np.matrix([[0.5]]),
-                                      function=Logistic(bias=2),
+                                      matrix=np.matrix([[2.0]]),
+                                      function=Logistic(bias=2.0),
                                       time_step_size=time_step_size,
                                       noise=NormalDist(mean=0.0,standard_dev=standard_deviation).function,
                                       name='RESPONSE')
@@ -103,7 +107,7 @@ LC = LCControlMechanism(
                         threshold_FHN=0.5,        #Parameter describing shape of the FitzHugh–Nagumo cubic nullcline for the fast excitation variable v
         objective_mechanism=ObjectiveMechanism(
                                     function=Linear,
-                                    # monitored_output_states=[(decision_layer, None, None, np.array([[0.3],[0.0]]))],
+                                    monitored_output_states=[(decision_layer, None, None, np.array([[0.335],[0.0]]))],
                                     # monitored_output_states=[{PROJECTION_TYPE: MappingProjection,
                                     #                           SENDER: decision_layer,
                                     #                           MATRIX: np.array([[0.3],[0.0]])}],
@@ -114,7 +118,7 @@ LC = LCControlMechanism(
 
 for signal in LC._control_signals:
     signal._intensity = k*initial_w + G
-
+    print("SI = ", signal._intensity)
 # ELICITS WARNING:
 decision_process = Process(pathway=[input_layer,
                                     input_weights,
@@ -123,14 +127,17 @@ decision_process = Process(pathway=[input_layer,
                                     response],
                            name='DECISION PROCESS')
 
+#
+# lc_process = Process(pathway=[decision_layer,
+#                               # CAUSES ERROR:
+#                               # np.array([[1,0],[0,0]]),
+#                               LC],
+#                            name='LC PROCESS')
 
-lc_process = Process(pathway=[decision_layer,
-                              # CAUSES ERROR:
-                              # np.array([[1,0],[0,0]]),
-                              LC],
-                           name='LC PROCESS')
-
-task = System(processes=[decision_process, lc_process])
+task = System(processes=[decision_process,
+                         # lc_process
+                         ]
+              )
 
 # stimulus
 stim_list_dict = {input_layer: np.repeat(np.array([[0,0],[1,0]]),10/time_step_size,axis=0)}
