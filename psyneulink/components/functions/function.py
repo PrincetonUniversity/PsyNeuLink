@@ -5591,6 +5591,20 @@ class FHNIntegrator(
         self.auto_dependent = True
 
 
+    def _euler_FHN(self, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size):
+
+        slope_v_approx = slope_v(previous_time,
+                                   previous_value_v,
+                                   previous_value_w)
+
+        slope_w_approx = slope_w(previous_time,
+                                   previous_value_w,
+                                   previous_value_v)
+
+        new_v = previous_value_v + time_step_size*slope_v_approx
+        new_w = previous_value_w + time_step_size*slope_w_approx
+
+        return new_v, new_w
 
     def _runge_kutta_4_FHN(self, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size):
 
@@ -5716,7 +5730,14 @@ class FHNIntegrator(
         #                             slope=dw_dt,
         #                             time_step_size=self.time_step_size)*self.scale + self.offset
 
-        approximate_values = self._runge_kutta_4_FHN(self.previous_v,
+        # approximate_values = self._runge_kutta_4_FHN(self.previous_v,
+        #                                              self.previous_w,
+        #                                              self.previous_t,
+        #                                              dv_dt,
+        #                                              dw_dt,
+        #                                              self.time_step_size)
+
+        approximate_values_euler = self._euler_FHN(self.previous_v,
                                                      self.previous_w,
                                                      self.previous_t,
                                                      dv_dt,
@@ -5724,8 +5745,10 @@ class FHNIntegrator(
                                                      self.time_step_size)
 
         if not context or INITIALIZING not in context:
-            self.previous_v = approximate_values[0]
-            self.previous_w = approximate_values[1]
+            # self.previous_v = approximate_values[0]
+            # self.previous_w = approximate_values[1]
+            self.previous_v = approximate_values_euler[0]
+            self.previous_w = approximate_values_euler[1]
             self.previous_t += self.time_step_size[0]
 
         return self.previous_v, self.previous_w, self.previous_t
