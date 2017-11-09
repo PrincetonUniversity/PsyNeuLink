@@ -424,11 +424,23 @@ class ScratchPadError(Exception):
 
 #-------------
 # m = pnl.TransferMechanism()
-# i = pnl.InputState(owner=m, reference_value=[0, 0, 0])
+# i = pnl.InputState(owner=m, variable=[0, 0, 0], reference_value=[0,0,0])
 
 # m = pnl.TransferMechanism(default_variable=[0, 0, 0])
 # i = pnl.InputState(owner=m, reference_value=[0, 0, 0])
 
+# WORKS:
+# m = pnl.TransferMechanism()
+# i = pnl.InputState(variable=[0,0])
+# m.add_states([i])
+# m.execute()
+# assert True
+
+m = pnl.TransferMechanism(default_variable=[0, 0, 0])
+i = pnl.InputState(owner=m, variable=[0, 0, 0])
+# m.add_states([i])
+# m.execute()
+assert True
 
 # --------------------------------------------------------------------------------------------------
 

@@ -571,7 +571,7 @@ from psyneulink.components.component import Component, ComponentError, InitStatu
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.keywords import \
-    CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
+    CONTEXT, COMMAND_LINE, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
     GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, \
     LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
     MAPPING_PROJECTION_PARAMS, MECHANISM, \
@@ -964,6 +964,13 @@ class State_Base(State):
             # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
             #                       if params = NotImplemented or there is no param[PROJECTIONS]
             pass
+
+        # if owner:
+        #     assert True
+        #     state_list = getattr(owner, owner.state_list_attr[self.__class__])
+        #     if state_list and not self in state_list:
+        #         owner.add_states(self)
+
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a State
@@ -2155,9 +2162,13 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
         # FIX: THIS SHOULD ONLY APPLY TO InputState AND ParameterState; WHAT ABOUT OutputState?
         # State's assigned value is incompatible with its reference_value (presumably its owner Mechanism's variable)
-        if not iscompatible(state.value, reference_value):
-            raise StateError("{}'s value attribute ({}) is incompatible with the variable ({}) of its owner ({})".
-                             format(state.name, state.value, state.reference_value, owner.name))
+        # MODIFIED 11/9/17 OLD:
+        # if not iscompatible(state.value, reference_value):
+        # MODIFIED 11/9/17 NEW:
+        if not iscompatible(state.value, state.reference_value):
+        # MODIFIED 11/9/17 END
+            raise StateError("{}'s value attribute ({}) is incompatible with the {} ({}) of its owner ({})".
+                             format(state.name, state.value, REFERENCE_VALUE, state.reference_value, owner.name))
 
         # State has already been assigned to an owner
         if state.owner is not None and not state.owner is owner:
@@ -2402,13 +2413,17 @@ def _parse_state_spec(state_type=None,
         if isinstance(state_specification, state_type):
             # Make sure that the specified State belongs to the Mechanism passed in the owner arg
             if state_specification.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                owner = state_specification.init_args[OWNER]
+                state_owner = state_specification.init_args[OWNER]
             else:
-                owner = state_specification.owner
-            if owner is not None and not state_specification.owner is owner:
+                state_owner = state_specification.owner
+            if owner is not None and not state_owner is owner:
                 raise StateError("The State specified in a call to _instantiate_state ({}) "
-                                 "does belong to the {} specified in the \'{}\' argument ({})".
-                                 format(state_specification.name, owner.name, Mechanism.__name__, OWNER, owner.name))
+                                 "does not belong to the {} specified in the \'{}\' argument ({})".
+                                 format(state_specification.name,
+                                        owner.name,
+                                        Mechanism.__name__,
+                                        OWNER,
+                                        state_owner.name))
             return state_specification
 
         else:
