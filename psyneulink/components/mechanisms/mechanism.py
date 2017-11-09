@@ -707,12 +707,18 @@ from inspect import isclass
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, ExecutionStatus, function_type, method_type
+from psyneulink.components.component import Component, InitStatus, ExecutionStatus, function_type, method_type
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.state import _parse_state_spec
 from psyneulink.globals.defaults import timeScaleSystemDefault
-from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
+from psyneulink.globals.keywords import \
+    CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, \
+    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, \
+    INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
+    NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, \
+    SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VARIABLE, VALUE, REFERENCE_VALUE, \
+    kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
@@ -1280,10 +1286,19 @@ class Mechanism_Base(Mechanism):
                     except KeyError:
                         pass
                 elif isinstance(parsed_spec, (Projection, Mechanism, State)):
-                    try:
-                        variable = parsed_spec.value
-                    except AttributeError:
-                        variable = parsed_spec.instance_defaults.variable
+                    if parsed_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                        args = parsed_spec.init_args
+                        if REFERENCE_VALUE in args:
+                            variable = args[REFERENCE_VALUE]
+                        elif VALUE in args:
+                            variable = args[VALUE]
+                        elif VARIABLE in args:
+                            variable = args[VARIABLE]
+                    else:
+                        try:
+                            variable = parsed_spec.value
+                        except AttributeError:
+                            variable = parsed_spec.instance_defaults.variable
                 else:
                     variable = parsed_spec.instance_defaults.variable
 
