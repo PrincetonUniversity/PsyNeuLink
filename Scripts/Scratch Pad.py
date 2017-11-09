@@ -411,6 +411,26 @@ print(my_mech.output_states)
 # for projection in my_mech.output_states[0].efferents:
 #     print(projection.name)
 
+# FROM KEVIN: -------------------------------------
+
+# WORKING:
+I = pnl.InputState(reference_value=[0,0,0])
+pnl.TransferMechanism(input_states=[I])
+
+#-------------
+# m = pnl.TransferMechanism()
+# i = pnl.InputState(owner=m, reference_value=[0, 0, 0])
+
+# m = pnl.TransferMechanism(default_variable=[0, 0, 0])
+# i = pnl.InputState(owner=m, reference_value=[0, 0, 0])
+
+# p = pnl.MappingProjection()
+# T = pnl.TransferMechanism(input_states=[{pnl.VARIABLE: [0, 0, 0], pnl.PROJECTIONS:[p]}])
+
+# p = pnl.MappingProjection()
+# T = pnl.TransferMechanism(default_variable=[0, 0], input_states=[p])
+
+# --------------------------------------------------------------------------------------------------
 
 # My_Transfer_Mech_A = TransferMechanism(
 #                            function=Logistic(
