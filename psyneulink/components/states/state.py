@@ -2413,13 +2413,17 @@ def _parse_state_spec(state_type=None,
         if isinstance(state_specification, state_type):
             # Make sure that the specified State belongs to the Mechanism passed in the owner arg
             if state_specification.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                owner = state_specification.init_args[OWNER]
+                state_owner = state_specification.init_args[OWNER]
             else:
-                owner = state_specification.owner
-            if owner is not None and not state_specification.owner is owner:
+                state_owner = state_specification.owner
+            if owner is not None and not state_owner is owner:
                 raise StateError("The State specified in a call to _instantiate_state ({}) "
-                                 "does belong to the {} specified in the \'{}\' argument ({})".
-                                 format(state_specification.name, owner.name, Mechanism.__name__, OWNER, owner.name))
+                                 "does not belong to the {} specified in the \'{}\' argument ({})".
+                                 format(state_specification.name,
+                                        owner.name,
+                                        Mechanism.__name__,
+                                        OWNER,
+                                        state_owner.name))
             return state_specification
 
         else:
