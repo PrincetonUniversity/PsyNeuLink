@@ -145,7 +145,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
         variable = defaultControlAllocation
 
     def __init__(self,
-                 variable,
+                 default_variable,
                  size,
                  modulation,
                  params,
@@ -163,7 +163,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
                                                   modulation=modulation)
 
 
-        super().__init__(variable=variable,
+        super().__init__(default_variable=default_variable,
                          size=size,
                          params=params,
                          name=name,

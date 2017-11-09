@@ -292,7 +292,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 variable:tc.any(list, np.ndarray),
+                 default_variable:tc.any(list, np.ndarray),
                  size=None,
                  function:is_function_type=Hebbian,
                  learning_signals:tc.optional(list) = None,
@@ -319,7 +319,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         # self._learning_rate = learning_rate
 
-        super().__init__(variable=variable,
+        super().__init__(default_variable=default_variable,
                          size=size,
                          function=function,
                          modulation=modulation,

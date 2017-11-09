@@ -1154,7 +1154,7 @@ class Mechanism_Base(Mechanism):
 
     @tc.typecheck
     def __init__(self,
-                 variable=None,
+                 default_variable=None,
                  size=None,
                  input_states=None,
                  output_states=None,
@@ -1245,7 +1245,7 @@ class Mechanism_Base(Mechanism):
                           registry=self._stateRegistry,
                           context=context)
 
-        variable = self._handle_default_variable(variable, size, input_states, params)
+        default_variable = self._handle_default_variable(default_variable, size, input_states, params)
         if isinstance(output_states, tuple):
             output_states = list(output_states)
 
@@ -1255,7 +1255,7 @@ class Mechanism_Base(Mechanism):
         else:
             context = context + SEPARATOR_BAR + INITIALIZING + self.name
 
-        super(Mechanism_Base, self).__init__(default_variable=variable,
+        super(Mechanism_Base, self).__init__(default_variable=default_variable,
                                              size=size,
                                              param_defaults=params,
                                              prefs=prefs,

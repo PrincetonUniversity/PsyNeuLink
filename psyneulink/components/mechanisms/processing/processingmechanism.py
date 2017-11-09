@@ -89,13 +89,14 @@ belongs is run. A ProcessingMechanism always executes before any `AdaptiveMechan
 
 """
 
+import typecheck as tc
+
+from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.globals.defaults import defaultControlAllocation
-import typecheck as tc
-from psyneulink.globals.keywords import PROCESSING_MECHANISM, OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, kwPreferenceSetName
+from psyneulink.globals.keywords import OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, PROCESSING_MECHANISM, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.components.functions.function import Linear
 
 __all__ = [
     'ProcessingMechanismError',
@@ -137,7 +138,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
         variable = defaultControlAllocation
 
     def __init__(self,
-                 variable=None,
+                 default_variable=None,
                  size=None,
                  input_states=None,
                  output_states=None,
@@ -157,7 +158,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
 
         self.system = None
 
-        super().__init__(variable=variable,
+        super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
                          output_states=output_states,
@@ -281,7 +282,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
         params = self._assign_args_to_param_dicts(function=function,
                                                   params=params)
 
-        super(ProcessingMechanism, self).__init__(variable=default_variable,
+        super(ProcessingMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
                                                   input_states=input_states,
                                                   params=params,

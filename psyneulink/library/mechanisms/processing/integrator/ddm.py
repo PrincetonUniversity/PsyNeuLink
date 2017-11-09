@@ -664,7 +664,7 @@ class DDM(ProcessingMechanism_Base):
         # # Conflict with above
         # self.size = size
 
-        super(DDM, self).__init__(variable=default_variable,
+        super(DDM, self).__init__(default_variable=default_variable,
                                   output_states=output_states,
                                   params=params,
                                   name=name,

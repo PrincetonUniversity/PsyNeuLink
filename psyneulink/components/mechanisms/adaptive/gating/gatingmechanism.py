@@ -389,7 +389,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                                   function=function,
                                                   params=params)
 
-        super().__init__(variable=default_gating_policy,
+        super().__init__(default_variable=default_gating_policy,
                          size=size,
                          modulation=modulation,
                          params=params,

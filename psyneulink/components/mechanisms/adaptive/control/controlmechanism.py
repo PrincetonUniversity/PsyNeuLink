@@ -569,7 +569,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                   modulation=modulation,
                                                   params=params)
 
-        super(ControlMechanism, self).__init__(variable=default_variable,
+        super(ControlMechanism, self).__init__(default_variable=default_variable,
                                                     size=size,
                                                     modulation=modulation,
                                                     params=params,

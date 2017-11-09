@@ -583,7 +583,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
 
-        super().__init__(variable=default_variable,
+        super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
                          output_states=output_states,

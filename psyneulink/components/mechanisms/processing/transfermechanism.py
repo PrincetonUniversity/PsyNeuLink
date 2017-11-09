@@ -695,7 +695,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                indices=PRIMARY)
 
         super(TransferMechanism, self).__init__(
-            variable=default_variable,
+            default_variable=default_variable,
             size=size,
             params=params,
             name=name,

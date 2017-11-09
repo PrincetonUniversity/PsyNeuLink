@@ -1020,7 +1020,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                         matrix,
                                         context=None):
 
-        learning_mechanism = AutoAssociativeLearningMechanism(variable=[activity_vector.value],
+        learning_mechanism = AutoAssociativeLearningMechanism(default_variable=[activity_vector.value],
                                                               # learning_signals=[self.recurrent_projection],
                                                               function=learning_function,
                                                               learning_rate=learning_rate,
