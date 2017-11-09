@@ -710,14 +710,16 @@ import typecheck as tc
 from psyneulink.components.component import Component, InitStatus, ExecutionStatus, function_type, method_type
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.states.parameterstate import ParameterState
+from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import _parse_state_spec
 from psyneulink.globals.defaults import timeScaleSystemDefault
 from psyneulink.globals.keywords import \
     CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, \
     INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, \
     INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
-    NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, \
-    SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VARIABLE, VALUE, REFERENCE_VALUE, \
+    NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PROCESS_INIT, \
+    SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VARIABLE, VALUE, REFERENCE_VALUE, \
     kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -1012,6 +1014,10 @@ class Mechanism_Base(Mechanism):
     variableEncodingDim = 2
     valueEncodingDim = 2
 
+    state_list_attr = {InputState:INPUT_STATES,
+                       ParameterState:PARAMETER_STATES,
+                       OutputState:OUTPUT_STATES}
+
     # Category specific defaults:
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -1071,7 +1077,8 @@ class Mechanism_Base(Mechanism):
 
         def spec_incompatible_with_default_error(spec_variable, default_variable):
             return MechanismError(
-                'default variable determined from the specified input_states spec ({0}) is not compatible with the specified default variable ({1})'.format(
+                'default variable determined from the specified input_states spec ({0}) '
+                'is not compatible with the specified default variable ({1})'.format(
                     spec_variable, default_variable
                 )
             )
@@ -1288,11 +1295,11 @@ class Mechanism_Base(Mechanism):
                 elif isinstance(parsed_spec, (Projection, Mechanism, State)):
                     if parsed_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
                         args = parsed_spec.init_args
-                        if REFERENCE_VALUE in args:
+                        if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
                             variable = args[REFERENCE_VALUE]
-                        elif VALUE in args:
+                        elif VALUE in args and args[VALUE] is not None:
                             variable = args[VALUE]
-                        elif VARIABLE in args:
+                        elif VARIABLE in args and args[VARIABLE] is not None:
                             variable = args[VARIABLE]
                     else:
                         try:
@@ -2195,11 +2202,11 @@ class Mechanism_Base(Mechanism):
         Mechanism to which it is being added, the user is given the option of reassigning the State to the `owner
         <State_Base.owner>`, making a copy of the State and assigning that to the `owner <State_Base.owner>`, or
         aborting.  If the name of a specified State is the same as an existing one with the same name, an index is
-        appended to its name, and incremented for each State subsequently added with the same name
-        (see :ref:`naming conventions <LINK>`).
+        appended to its name, and incremented for each State subsequently added with the same name (see :ref:`naming
+        conventions <LINK>`).  If a specified State already belongs to the Mechanism, the request is ignored.
 
         .. note::
-            Adding States to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,
+            Adding InputStates to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,
             which may produce an incompatibility with its `function <Mechanism_Base.function>` (see
             `Mechanism InputStates` for a more detailed explanation).
 
@@ -2211,6 +2218,11 @@ class Mechanism_Base(Mechanism):
             State specification(s) can be an InputState or OutputState object, class reference, class keyword, or
             `State specification dictionary <State_Specification>` (the latter must have a *STATE_TYPE* entry
             specifying the class or keyword for InputState or OutputState).
+
+        Returns
+        -------
+
+        Dictionary with entries containing InputStates and/or OutputStates added
 
         """
         from psyneulink.components.states.state import _parse_state_type
@@ -2237,7 +2249,21 @@ class Mechanism_Base(Mechanism):
 
         # _instantiate_state_list(self, input_states, InputState)
         if input_states:
-            instantiated_input_states = _instantiate_input_states(self, input_states, context=context)
+            # FIX: 11/9/17
+            added_variable, added_input_state = self._parse_arg_input_states(input_states)
+            if added_input_state:
+                old_variable = self.instance_defaults.variable.tolist()
+                old_variable.extend(added_variable)
+                self.instance_defaults.variable = np.array(old_variable)
+                # FIX: 11/8/17 - INCLUDE OR NOT:
+                self.function_object.instance_defaults.variable = self.instance_defaults.variable
+                self.function_object.variableClassDefault = self.instance_defaults.variable
+                self.value = self.function()
+                # FIX END
+                instantiated_input_states = _instantiate_input_states(self, input_states,
+                                                                      added_variable,
+                                                                      context=context)
+                # instantiated_input_states = self._instantiate_input_states(input_states, context=context)
         if output_states:
             instantiated_output_states = _instantiate_output_states(self, output_states, context=context)
 

@@ -719,7 +719,7 @@ class InputState(State_Base):
         :return:
         """
 
-        super(InputState, self)._instantiate_function(context=context)
+        super()._instantiate_function(context=context)
 
         # Insure that function is Function.LinearCombination
         if not isinstance(self.function.__self__, (LinearCombination, Linear)):
@@ -729,14 +729,14 @@ class InputState(State_Base):
                                              self.owner.name,
                                              self.function.__self__.componentName, ))
 
-        # Insure that self.value is compatible with (relevant item of) self.reference_value
+        # Insure that self.value is compatible with self.reference_value
         if not iscompatible(self.value, self.reference_value):
-            raise InputStateError("Value ({}) of {} {} for {} is not compatible with "
-                                           "the variable ({}) of its function".
+            raise InputStateError("Value ({}) of {} {} for {} is not compatible with specified {} ({})".
                                            format(self.value,
                                                   self.componentName,
                                                   self.name,
                                                   self.owner.name,
+                                                  REFERENCE_VALUE,
                                                   self.reference_value))
                                                   # self.owner.variable))
 
@@ -909,7 +909,7 @@ class InputState(State_Base):
 
 
 # def _instantiate_input_states(owner, input_states=None, context=None):
-def _instantiate_input_states(owner, input_states=None, context=None):
+def _instantiate_input_states(owner, input_states=None, reference_value=None, context=None):
     """Call State._instantiate_state_list() to instantiate ContentAddressableList of InputState(s)
 
     Create ContentAddressableList of InputState(s) specified in paramsCurrent[INPUT_STATES]
@@ -944,7 +944,7 @@ def _instantiate_input_states(owner, input_states=None, context=None):
                                          state_list=input_states,
                                          state_type=InputState,
                                          state_param_identifier=INPUT_STATE,
-                                         reference_value=owner.instance_defaults.variable,
+                                         reference_value=reference_value or owner.instance_defaults.variable,
                                          reference_value_name=VARIABLE,
                                          context=context)
 
