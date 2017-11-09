@@ -392,7 +392,7 @@ from psyneulink.components.states.state import StateError, State_Base, _instanti
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
     MECHANISM, OUTPUT_STATES, MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE, \
-    OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE, LEARNING_SIGNAL, GATING_SIGNAL, SENDER
+    OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE, LEARNING_SIGNAL, GATING_SIGNAL, SENDER, COMMAND_LINE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
@@ -635,6 +635,11 @@ class InputState(State_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
+        if context is None:
+            context = COMMAND_LINE
+        else:
+            context = self
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   weight=weight,
@@ -645,7 +650,7 @@ class InputState(State_Base):
         if owner is None or reference_value is None:
             # Store args for deferred initialization
             self.init_args = locals().copy()
-            self.init_args['context'] = self
+            self.init_args['context'] = context
             self.init_args['name'] = name
             self.init_args['projections'] = projections
 
@@ -664,7 +669,7 @@ class InputState(State_Base):
                                          params=params,
                                          name=name,
                                          prefs=prefs,
-                                         context=self)
+                                         context=context)
 
         if self.name is self.componentName or self.componentName + '-' in self.name:
             self._assign_default_name()

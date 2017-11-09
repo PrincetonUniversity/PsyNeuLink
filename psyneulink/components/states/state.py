@@ -911,7 +911,7 @@ class State_Base(State):
                 pass
 
         # Enforce that only called from subclass
-        if not isinstance(context, State_Base):
+        if not isinstance(context, State_Base) and not context is COMMAND_LINE:
             raise StateError("Direct call to abstract class State() is not allowed; "
                                       "use state() or one of the following subclasses: {0}".
                                       format(", ".join("{!s}".format(key) for (key) in StateRegistry.keys())))
@@ -921,7 +921,6 @@ class State_Base(State):
             raise StateError("{}, as a subclass of {}, must implement an _execute() method".
                              format(self.__class__.__name__, STATE))
 
-        # MODIFIED 7/12/17 OLD:
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(projections=projections,
                                                   params=params)
@@ -965,11 +964,11 @@ class State_Base(State):
             #                       if params = NotImplemented or there is no param[PROJECTIONS]
             pass
 
-        # if owner:
-        #     assert True
-        #     state_list = getattr(owner, owner.state_list_attr[self.__class__])
-        #     if state_list and not self in state_list:
-        #         owner.add_states(self)
+        if context is COMMAND_LINE:
+            assert True
+            state_list = getattr(owner, owner.state_list_attr[self.__class__])
+            if state_list and not self in state_list:
+                owner.add_states(self)
 
 
     def _handle_size(self, size, variable):

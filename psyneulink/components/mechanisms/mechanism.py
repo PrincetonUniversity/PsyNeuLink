@@ -2022,7 +2022,7 @@ class Mechanism_Base(Mechanism):
                         input[i],
                         len(input_state.instance_defaults.variable),
                         input_state.name,
-                        append_type_to_name(self),
+                        self.name
                     )
                 )
 
@@ -2255,11 +2255,11 @@ class Mechanism_Base(Mechanism):
                 old_variable = self.instance_defaults.variable.tolist()
                 old_variable.extend(added_variable)
                 self.instance_defaults.variable = np.array(old_variable)
-                # FIX: 11/8/17 - INCLUDE OR NOT:
-                self.function_object.instance_defaults.variable = self.instance_defaults.variable
-                self.function_object.variableClassDefault = self.instance_defaults.variable
-                self.value = self.function()
-                # FIX END
+                # # FIX: 11/8/17 - INCLUDE OR NOT:
+                # self.function_object.instance_defaults.variable = self.instance_defaults.variable
+                # self.function_object.variableClassDefault = self.instance_defaults.variable
+                # self.value = self.function()
+                # # FIX END
                 instantiated_input_states = _instantiate_input_states(self, input_states,
                                                                       added_variable,
                                                                       context=context)
