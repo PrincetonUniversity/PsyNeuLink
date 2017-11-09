@@ -693,7 +693,7 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
     # Stimuli in Mechanism format
     if isinstance(stimuli, dict):
         stim_list = _construct_from_stimulus_dict(object, stimuli, is_target=is_target)
-
+        # returns stim list = [   [    [ [ [0] ] ],   [ [ [2, 2] ] ]    ]   ]
     elif is_target and isinstance(stimuli, function_type):
         return stimuli
 
@@ -715,85 +715,85 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
 # (2) Cannot create a system pytest to cover this code -- i.e. system w/ 1 transfer mechanism throws error for:
 # inputs = 1.0, inputs = [1.0], inputs = [[1.0]] ... inputs = [[[[[[1.0]]]]]]
 # --> seems safe to move entirely to mechanism format of input specification without breaking any old scripts
-def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
-    object_type = _get_object_type(object)
-
-    # Check for header
-    headers = None
-    if isinstance(stimuli[0],Iterable) and any(isinstance(header, Mechanism) for header in stimuli[0]):
-        headers = stimuli[0]
-        del stimuli[0]
-        for mech in object.origin_mechanisms:
-            if not mech in headers:
-                raise RunError("Header is missing for ORIGIN Mechanism {} in stimulus list".
-                                  format(mech.name, object.name))
-        for mech in headers:
-            if not mech in object.origin_mechanisms.mechanisms:
-                raise RunError("{} in header for stimulus list is not an ORIGIN Mechanism in {}".
-                                  format(mech.name, object.name))
-
-    inputs_array = np.array(stimuli)
-    if inputs_array.dtype in {np.dtype('int'), np.dtype('float')}:
-        max_dim = 2
-    elif inputs_array.dtype is np.dtype('O'):
-        max_dim = 1
-    else:
-        raise RunError("Unknown data type for inputs in {}".format(object.name))
-    while inputs_array.ndim > max_dim:
-        # inputs_array = np.hstack(inputs_array)
-        inputs_array = np.concatenate(inputs_array)
-    inputs = inputs_array.tolist()
-
-    context = context or RUN + ' constructing stimuli for ' + object.name
-    num_input_sets = _validate_inputs(object=object,
-                                      inputs=inputs,
-                                      num_phases=1,
-                                      is_target=is_target,
-                                      context=context)
-
-    # If inputs are for a mechanism or process, no need to deal with phase so just return
-    if object_type in {MECHANISM, PROCESS} or is_target:
-        return inputs
-
-    mechs = list(object.origin_mechanisms)
-    num_mechs = len(object.origin_mechanisms)
-    inputs_flattened = np.hstack(inputs)
-    # inputs_flattened = np.concatenate(inputs)
-    input_elem = 0    # Used for indexing w/o headers
-    execution_offset = 0  # Used for indexing w/ headers
-    stim_list = []
-
-    # NOTE: never happens as guessed
-    # if object.numPhases > 1:
-    #     print('NUM PHASES: {0}'.format(object.numPhases))
-    #     import code
-    #     code.interact(local=locals())
-
-    for execution in range(num_input_sets):
-        execution_len = 0  # Used for indexing w/ headers
-        stimuli_in_execution = []
-        for phase in range(object.numPhases):
-            stimuli_in_phase = []
-            for mech_num in range(num_mechs):
-                mech = list(object.origin_mechanisms.mechs)[mech_num]
-                mech_len = np.size(mechs[mech_num].instance_defaults.variable)
-                # Assign stimulus of appropriate size for mech and fill with 0's
-                stimulus = np.zeros(mech_len)
-                # Assign input elements to stimulus if phase is correct one for mech
-                for stim_elem in range(mech_len):
-                    if headers:
-                        input_index = headers.index(mech) + execution_offset
-                    else:
-                        input_index = input_elem
-                    stimulus[stim_elem] = inputs_flattened[input_index]
-                    input_elem += 1
-                    execution_len += 1
-                # Otherwise, assign vector of 0's with proper length
-                stimuli_in_phase.append(stimulus)
-            stimuli_in_execution.append(stimuli_in_phase)
-        stim_list.append(stimuli_in_execution)
-        execution_offset += execution_len
-    return stim_list
+# def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
+#     object_type = _get_object_type(object)
+#
+#     # Check for header
+#     headers = None
+#     if isinstance(stimuli[0],Iterable) and any(isinstance(header, Mechanism) for header in stimuli[0]):
+#         headers = stimuli[0]
+#         del stimuli[0]
+#         for mech in object.origin_mechanisms:
+#             if not mech in headers:
+#                 raise RunError("Header is missing for ORIGIN Mechanism {} in stimulus list".
+#                                   format(mech.name, object.name))
+#         for mech in headers:
+#             if not mech in object.origin_mechanisms.mechanisms:
+#                 raise RunError("{} in header for stimulus list is not an ORIGIN Mechanism in {}".
+#                                   format(mech.name, object.name))
+#
+#     inputs_array = np.array(stimuli)
+#     if inputs_array.dtype in {np.dtype('int'), np.dtype('float')}:
+#         max_dim = 2
+#     elif inputs_array.dtype is np.dtype('O'):
+#         max_dim = 1
+#     else:
+#         raise RunError("Unknown data type for inputs in {}".format(object.name))
+#     while inputs_array.ndim > max_dim:
+#         # inputs_array = np.hstack(inputs_array)
+#         inputs_array = np.concatenate(inputs_array)
+#     inputs = inputs_array.tolist()
+#
+#     context = context or RUN + ' constructing stimuli for ' + object.name
+#     num_input_sets = _validate_inputs(object=object,
+#                                       inputs=inputs,
+#                                       num_phases=1,
+#                                       is_target=is_target,
+#                                       context=context)
+#
+#     # If inputs are for a mechanism or process, no need to deal with phase so just return
+#     if object_type in {MECHANISM, PROCESS} or is_target:
+#         return inputs
+#
+#     mechs = list(object.origin_mechanisms)
+#     num_mechs = len(object.origin_mechanisms)
+#     inputs_flattened = np.hstack(inputs)
+#     # inputs_flattened = np.concatenate(inputs)
+#     input_elem = 0    # Used for indexing w/o headers
+#     execution_offset = 0  # Used for indexing w/ headers
+#     stim_list = []
+#
+#     # NOTE: never happens as guessed
+#     # if object.numPhases > 1:
+#     #     print('NUM PHASES: {0}'.format(object.numPhases))
+#     #     import code
+#     #     code.interact(local=locals())
+#
+#     for execution in range(num_input_sets):
+#         execution_len = 0  # Used for indexing w/ headers
+#         stimuli_in_execution = []
+#         for phase in range(object.numPhases):
+#             stimuli_in_phase = []
+#             for mech_num in range(num_mechs):
+#                 mech = list(object.origin_mechanisms.mechs)[mech_num]
+#                 mech_len = np.size(mechs[mech_num].instance_defaults.variable)
+#                 # Assign stimulus of appropriate size for mech and fill with 0's
+#                 stimulus = np.zeros(mech_len)
+#                 # Assign input elements to stimulus if phase is correct one for mech
+#                 for stim_elem in range(mech_len):
+#                     if headers:
+#                         input_index = headers.index(mech) + execution_offset
+#                     else:
+#                         input_index = input_elem
+#                     stimulus[stim_elem] = inputs_flattened[input_index]
+#                     input_elem += 1
+#                     execution_len += 1
+#                 # Otherwise, assign vector of 0's with proper length
+#                 stimuli_in_phase.append(stimulus)
+#             stimuli_in_execution.append(stimuli_in_phase)
+#         stim_list.append(stimuli_in_execution)
+#         execution_offset += execution_len
+#     return stim_list
 
 def _construct_from_stimulus_dict(object, stimuli, is_target):
 
@@ -881,10 +881,11 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
 
     for mech, stim_list in stimuli.items():
 
-        # If a mechanism provided a single (rather than wrapping inputs in an outer list representing
+        # If a mechanism provided a single input (rather than wrapping inputs in an outer list representing
         # many trials), then all mechanisms in this run must do the same.
         if iscompatible(np.atleast_2d(stim_list), mech.instance_defaults.variable):
             all_single_trial_inputs = True
+
         elif all_single_trial_inputs:
             raise RunError("Stimuli for {} of {} are not properly formatted ({}).".
                            # format(append_type_to_name(mech),object.name, stimuli[mech]))
@@ -906,12 +907,14 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         #                           # format(append_type_to_name(mech),object.name, stimuli[mech]))
         #                           format(mech.name, object.name, stimuli[mech]))
 
+        # Otherwise, assume that all mechanisms have provided one input per trial
         for stim in stimuli[mech]:
             # 10/3/17 CW: This could be smarter: if it's incompatible, we could try other ways of unpacking the
             # stimulus, such as if the user wants to pass in a 2D array as the input each round, but only wants one
             # round, they may pass in stimuli as [[1, 2], [3, 4]] which shouldn't be interpreted as two rounds
             # ([1, 2] and [3, 4]) like we're doing here
 
+            # loop over each input to verify that it matches variable
             if not iscompatible(np.atleast_2d(stim), mech.instance_defaults.variable):
                 err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
                     format(stim, mech.name, mech.instance_defaults.variable)
@@ -924,68 +927,65 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                 # raise RunError(err_msg)
 
     stim_lists = list(stimuli.values())
-    num_input_sets = len(stim_lists[EXECUTION_SET_DIM])
+    if all_single_trial_inputs:
+        stim_list = []
+        stims_in_execution = []
+        for mech in stimuli:
+            stims_in_execution.append([stimuli[mech]])
+        stim_list.append(stims_in_execution)
+    else:
+        num_input_sets = len(stim_lists[EXECUTION_SET_DIM])
+        # Check that all lists have the same number of stimuli
+        if not all(len(np.array(stim_list)) == num_input_sets for stim_list in stim_lists):
+            raise RunError("The length of all the stimulus lists must be the same")
 
-    # Check that all lists have the same number of stimuli
-    if not all(len(np.array(stim_list)) == num_input_sets for stim_list in stim_lists) and not all_single_trial_inputs:
-        raise RunError("The length of all the stimulus lists must be the same")
+        stim_list = []
 
-    stim_list = []
-
-    # If stimuli are for a process or are targets, construct stimulus list from dict without worrying about phases
-    if object_type in {MECHANISM, PROCESS} or is_target:
         for i in range(num_input_sets):
             stims_in_execution = []
+
             for mech in stimuli:
+
                 stims_in_execution.append(stimuli[mech][i])
             stim_list.append(stims_in_execution)
 
-    # NOTE: never happens as guessed
-    # if object.numPhases > 1:
-    #     print('NUM PHASES: {0}'.format(object.numPhases))
-    #     import code
-    #     code.interact(local=locals())
-
     # Otherwise, for inputs to a system, construct stimulus from dict with phases
-    elif object_type is SYSTEM:
-        for execution in range(num_input_sets):
-            stimuli_in_execution = []
-            for phase in range(object.numPhases):
-                stimuli_in_phase = []
-                # Only assign inputs to origin_mechanisms
-                #    and assign them in the order they appear in origin_mechanisms and fill out each phase
-                for mech in object.origin_mechanisms.mechs:
-                    # Assign input elements to stimulus if phase is correct one for mech
+    # elif object_type is SYSTEM:
+    #     for execution in range(num_input_sets):
+    #         stimuli_in_execution = []
+    #         for phase in range(object.numPhases):
+    #             stimuli_in_phase = []
+    #             # Only assign inputs to origin_mechanisms
+    #             #    and assign them in the order they appear in origin_mechanisms and fill out each phase
+    #             for mech in object.origin_mechanisms.mechs:
+    #                 # Assign input elements to stimulus if phase is correct one for mech
+    #
+    #                 # Get stimulus for mech for current execution, and enforce 2d to accomodate input_states per mech
+    #                 stimulus = np.atleast_2d(stimuli[mech][execution])
+    #                 if not isinstance(stimulus, Iterable):
+    #                     stimulus = np.atleast_2d([stimulus])
+    #
+    #                 stimuli_in_phase.append(stimulus)
+    #
+    #             stimuli_in_execution.append(stimuli_in_phase)
+    #         stim_list.append(stimuli_in_execution)
 
-                    # Get stimulus for mech for current execution, and enforce 2d to accomodate input_states per mech
-                    stimulus = np.atleast_2d(stimuli[mech][execution])
-                    if not isinstance(stimulus, Iterable):
-                        stimulus = np.atleast_2d([stimulus])
 
-                    stimuli_in_phase.append(stimulus)
-
-                stimuli_in_execution.append(stimuli_in_phase)
-            stim_list.append(stimuli_in_execution)
-
-    else:
-        raise RunError("PROGRAM ERROR: illegal type for run ({}); should have been caught by _get_object_type ".
-                       format(object_type))
-
-    try:
-        stim_list = np.array(stim_list)
-    except ValueError:
-        # for i in range(len(stim_list[0][0])):
-        #     stim_list[0][0][i][0]
-        #     stim_list[0][0][i] = np.array(stim_list[0][0][i])
-        # for exec in range(len(stim_list)):
-        #     for phase in range(len(stim_list[exec])):
-        #         for mech in range(len(stim_list[exec][phase])):
-        #             stim_list[exec][phase][mech] = [stim_list[exec][phase][mech].tolist()]
-        for exec in range(len(stim_list)):
-            for phase in range(len(stim_list[exec])):
-                for mech in range(len(stim_list[exec][phase])):
-                    stim_list[exec][phase][mech] = stim_list[exec][phase][mech].tolist()
-        stim_list = np.array(stim_list)
+    # try:
+    #     stim_list = np.array(stim_list)
+    # except ValueError:
+    #     # for i in range(len(stim_list[0][0])):
+    #     #     stim_list[0][0][i][0]
+    #     #     stim_list[0][0][i] = np.array(stim_list[0][0][i])
+    #     # for exec in range(len(stim_list)):
+    #     #     for phase in range(len(stim_list[exec])):
+    #     #         for mech in range(len(stim_list[exec][phase])):
+    #     #             stim_list[exec][phase][mech] = [stim_list[exec][phase][mech].tolist()]
+    #     for exec in range(len(stim_list)):
+    #         for phase in range(len(stim_list[exec])):
+    #             for mech in range(len(stim_list[exec][phase])):
+    #                 stim_list[exec][phase][mech] = stim_list[exec][phase][mech].tolist()
+    #     stim_list = np.array(stim_list)
 
     return np.array(stim_list)
 
