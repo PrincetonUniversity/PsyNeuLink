@@ -2475,8 +2475,7 @@ class System(System_Base):
                 input[i] = self.origin_mechanisms[i].instance_defaults.variable
 
         else:
-            num_inputs = np.size(input,0)
-
+            num_inputs = len(input)
             # Check if input items are of different lengths (indicated by dtype == np.dtype('O'))
             if num_inputs != num_origin_mechs:
                 num_inputs = np.size(input)
@@ -2489,15 +2488,20 @@ class System(System_Base):
                                       format(num_inputs, self.name,  num_origin_mechs ))
 
             # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
-            for i, origin_mech in zip(range(num_origin_mechs), self.origin_mechanisms):
+            for origin_mech in self.origin_mechanisms:
                 # For each inputState of the ORIGIN mechanism
+
                 for j in range(len(origin_mech.input_states)):
                    # Get the input from each projection to that inputState (from the corresponding SystemInputState)
                     system_input_state = next((projection.sender
                                                for projection in origin_mech.input_states[j].path_afferents
                                                if isinstance(projection.sender, SystemInputState)), None)
                     if system_input_state:
-                        system_input_state.value = input[i][j]
+                        if isinstance(input, dict):
+                            system_input_state.value = input[origin_mech][j]
+
+                        else:
+                            system_input_state.value = input[j]
                     else:
                         logger.warning("Failed to find expected SystemInputState "
                                        "for {} at input state number ({}), ({})".
