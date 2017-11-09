@@ -2416,7 +2416,7 @@ def _parse_state_spec(state_type=None,
                 state_owner = state_specification.init_args[OWNER]
             else:
                 state_owner = state_specification.owner
-            if owner is not None and not state_owner is owner:
+            if owner is not None and state_owner is not None and not state_owner is owner:
                 raise StateError("The State specified in a call to _instantiate_state ({}) "
                                  "does not belong to the {} specified in the \'{}\' argument ({})".
                                  format(state_specification.name,
