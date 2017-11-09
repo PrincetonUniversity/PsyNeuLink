@@ -370,13 +370,12 @@ class ScratchPadError(Exception):
 # g = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM:m,
 #                                          pnl.NAME:pnl.DECISION_VARIABLE}])
 
-my_mech = pnl.TransferMechanism(default_variable=[[0],[0]])
-
-print(my_mech.input_states)
-
-print(my_mech.parameter_states)
-print(my_mech.output_states)
-
+# my_mech = pnl.TransferMechanism(default_variable=[[0],[0]])
+#
+# print(my_mech.input_states)
+#
+# print(my_mech.parameter_states)
+# print(my_mech.output_states)
 
 # mech_A = pnl.TransferMechanism(input_states=['MY INPUT'])
 # print(mech_A.input_states)
@@ -414,8 +413,8 @@ print(my_mech.output_states)
 # FROM KEVIN: -------------------------------------
 
 # WORKING:
-I = pnl.InputState(reference_value=[0,0,0])
-pnl.TransferMechanism(input_states=[I])
+# I = pnl.InputState(reference_value=[0,0,0])
+# pnl.TransferMechanism(input_states=[I])
 
 #-------------
 # m = pnl.TransferMechanism()

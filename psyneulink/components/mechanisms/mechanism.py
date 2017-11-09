@@ -1299,7 +1299,7 @@ class Mechanism_Base(Mechanism):
                             variable = parsed_spec.value
                         except AttributeError:
                             variable = parsed_spec.instance_defaults.variable
-                    else:
+                else:
                     variable = parsed_spec.instance_defaults.variable
 
                 if variable is None:
