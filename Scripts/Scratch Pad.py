@@ -416,6 +416,12 @@ class ScratchPadError(Exception):
 # I = pnl.InputState(reference_value=[0,0,0])
 # pnl.TransferMechanism(input_states=[I])
 
+# p = pnl.MappingProjection()
+# T = pnl.TransferMechanism(input_states=[{pnl.VARIABLE: [0, 0, 0], pnl.PROJECTIONS:[p]}])
+#
+# p = pnl.MappingProjection()
+# T = pnl.TransferMechanism(default_variable=[0, 0], input_states=[p])
+
 #-------------
 # m = pnl.TransferMechanism()
 # i = pnl.InputState(owner=m, reference_value=[0, 0, 0])
@@ -423,11 +429,6 @@ class ScratchPadError(Exception):
 # m = pnl.TransferMechanism(default_variable=[0, 0, 0])
 # i = pnl.InputState(owner=m, reference_value=[0, 0, 0])
 
-# p = pnl.MappingProjection()
-# T = pnl.TransferMechanism(input_states=[{pnl.VARIABLE: [0, 0, 0], pnl.PROJECTIONS:[p]}])
-
-# p = pnl.MappingProjection()
-# T = pnl.TransferMechanism(default_variable=[0, 0], input_states=[p])
 
 # --------------------------------------------------------------------------------------------------
 
