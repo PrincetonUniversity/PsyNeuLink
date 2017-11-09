@@ -142,7 +142,7 @@ Examples
 .. _Mechanism_Example_1:
 
 The following example creates an instance of a TransferMechanism that names the default InputState ``MY_INPUT``,
-and assigns three `standard OutputStates <OutputState_Standard>`::
+and assigns three `Standard OutputStates <OutputState_Standard>`::
 
      my_mech = TransferMechanism(input_states=['MY_INPUT'],
                                  output_states=[RESULT, MEAN, VARIANCE])
@@ -699,16 +699,20 @@ Class Reference
 
 import inspect
 import logging
-from collections import OrderedDict
+import numbers
+
+from collections import Iterable, OrderedDict
 from inspect import isclass
 
 import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, ExecutionStatus, function_type, method_type
-from psyneulink.components.shellclasses import Function, Mechanism, Projection
+from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
+from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.states.state import _parse_state_spec
 from psyneulink.globals.defaults import timeScaleSystemDefault
-from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, kwMechanismComponentCategory, kwMechanismExecuteFunction
+from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
@@ -1045,6 +1049,7 @@ class Mechanism_Base(Mechanism):
         * registers Mechanism with MechanismRegistry
 
         """
+        from psyneulink.components.states.inputstate import InputState
 
         # Forbid direct call to base class constructor
         # this context stuff is confusing: when do I use super().__init__(context=self)
@@ -1052,6 +1057,67 @@ class Mechanism_Base(Mechanism):
         if context is None or (not isinstance(context, type(self)) and not VALIDATE in context):
             raise MechanismError("Direct call to abstract class Mechanism() is not allowed; "
                                  "use a subclass")
+
+        # TODO:
+        # this is a hack to accept input_states as a way to instantiate default_variable for this release
+        # should be cleaned ASAP in default_variable overhaul
+        default_variable_from_input_states = None
+
+        def spec_incompatible_with_default_error(spec_variable, default_variable):
+            return MechanismError(
+                'default variable determined from the specified input_states spec ({0}) is not compatible with the specified default variable ({1})'.format(
+                    spec_variable, default_variable
+                )
+            )
+
+        # handle specifying through params dictionary
+        try:
+            default_variable_from_input_states, input_states_variable_was_specified = self._parse_arg_input_states(params[INPUT_STATES])
+        except (TypeError, KeyError):
+            pass
+
+        if default_variable_from_input_states is None:
+            # fallback to standard arg specification
+            default_variable_from_input_states, input_states_variable_was_specified = self._parse_arg_input_states(input_states)
+
+        if default_variable_from_input_states is not None:
+            if variable is None:
+                if size is None:
+                    variable = default_variable_from_input_states
+                else:
+                    if input_states_variable_was_specified:
+                        size_variable = self._handle_size(size, None)
+                        if iscompatible(size_variable, default_variable_from_input_states):
+                            variable = default_variable_from_input_states
+                        else:
+                            raise MechanismError(
+                                'default variable determined from the specified input_states spec ({0}) '
+                                'is not compatible with the default variable determined from size parameter ({1})'.format(
+                                    default_variable_from_input_states,
+                                    size_variable,
+                                )
+                            )
+                    else:
+                        # do not pass input_states variable as default_variable, fall back to size specification
+                        pass
+            else:
+                compatible = iscompatible(self._parse_arg_variable(variable), default_variable_from_input_states)
+                if size is None:
+                    if input_states_variable_was_specified:
+                        if compatible:
+                            variable = default_variable_from_input_states
+                        else:
+                            raise spec_incompatible_with_default_error(default_variable_from_input_states, variable)
+                    else:
+                        pass
+                else:
+                    if input_states_variable_was_specified:
+                        if compatible:
+                            variable = default_variable_from_input_states
+                        else:
+                            raise spec_incompatible_with_default_error(default_variable_from_input_states, variable)
+                    else:
+                        pass
 
         # IMPLEMENT **kwargs (PER State)
 
@@ -1161,6 +1227,74 @@ class Mechanism_Base(Mechanism):
         self.processes = {}
         self.systems = {}
 
+    def _parse_arg_variable(self, variable):
+        '''
+        Takes user-inputted argument **variable** and returns an instance_defaults.variable-like
+        object that it represents
+
+        Currently supports types:
+            numbers.Number
+            list
+            numpy.ndarray
+
+        Returns
+        -------
+            an at-least-two-dimensional form of **variable**
+        '''
+        if isinstance(variable, numbers.Number):
+            variable = [[variable]]
+        elif isinstance(variable, list):
+            if all([not isinstance(x, Iterable) for x in variable]):
+                variable = [variable]
+        elif isinstance(variable, np.ndarray):
+            variable = np.atleast_2d(variable)
+
+        return variable
+
+    def _parse_arg_input_states(self, input_states):
+        '''
+        Takes user-inputted argument **input_states** and returns an instance_defaults.variable-like
+        object that it represents
+
+        Returns
+        -------
+            A, B where
+            A is an instance_defaults.variable-like object
+            B is True if **input_states** contained an explicit variable specification, False otherwise
+        '''
+        if input_states is None:
+            return None, False
+
+        default_variable_from_input_states = []
+        variable_was_specified = False
+
+        if not isinstance(input_states, Iterable):
+            input_states = [input_states]
+        else:
+            for s in input_states:
+                parsed_spec = _parse_state_spec(owner=self, state_type=InputState, state_spec=s)
+
+                if isinstance(parsed_spec, dict):
+                    try:
+                        variable = parsed_spec[VARIABLE]
+                    except KeyError:
+                        pass
+                elif isinstance(parsed_spec, (Projection, Mechanism, State)):
+                    try:
+                        variable = parsed_spec.value
+                    except AttributeError:
+                        variable = parsed_spec.instance_defaults.variable
+                else:
+                    variable = parsed_spec.instance_defaults.variable
+
+                if variable is None:
+                    variable = InputState.ClassDefaults.variable
+                else:
+                    variable_was_specified = True
+
+                default_variable_from_input_states.append(variable)
+
+        return default_variable_from_input_states, variable_was_specified
 
     def _validate_variable(self, variable, context=None):
         """Convert ClassDefaults.variable and variable to 2D np.array: one 1D value for each InputState

@@ -91,18 +91,18 @@ specification of a `pathway <Process.pathway>` for a `Process`, where the value 
 `LearningProjection <MappingProjection_Tuple_Specification>`).  Any of the following can be used to specify a
 Projection in context:
 
-  * **Constructor**.  Used the same way in context as it is ordinarily.
+  * **Constructor** -- used the same way in context as it is ordinarily.
   ..
-  * **Projection reference**.  This must be a reference to a Projection that has already been created.
+  * **Projection reference** -- must be a reference to a Projection that has already been created.
   ..
-  * **Keyword**.  This creates a default instance of the specified type, and can be any of the following:
+  * **Keyword** -- creates a default instance of the specified type, which can be any of the following:
 
       * *MAPPING_PROJECTION* -- if the `sender <MappingProjection.sender>` and/or its `receiver
         <MappingProjection.receiver>` cannot be inferred from the context in which this specification occurs, then its
         `initialization is deferred <MappingProjection_Deferred_Initialization>` until both of those have been
         determined (e.g., it is used in the specification of a `pathway <Process.pathway>` for a `Process`). For
         MappingProjections, a `matrix specification <Mapping_Matrix_Specification>` can also be used to specify the
-        projection.
+        projection (see **value** below).
       |
       * *LEARNING_PROJECTION*  (or *LEARNING*) -- this can only be used in the specification of a `MappingProjection`
         (see `tuple <Mapping_Matrix_Specification>` format).  If the `receiver <MappingProjection.receiver>` of the
@@ -112,7 +112,7 @@ Projection in context:
         <LearningMechanism_Creation>`, along with a LearningSignal that is assigned as the LearningProjection's `sender
         <LearningProjection.sender>`. See `LearningMechanism_Learning_Configurations` for additional details.
       |
-      * *CONTROL_PROJECTION* (or *CONTROL*)-- this can be used when specifying a parameter using the `tuple format
+      * *CONTROL_PROJECTION* (or *CONTROL*) -- this can be used when specifying a parameter using the `tuple format
         <ParameterState_Tuple_Specification>`, to create a default `ControlProjection` to the `ParameterState` for that
         parameter.  If the `Component <Component>` to which the parameter belongs is part of a `System`, then a
         `ControlSignal` is added to the System's `controller <System.controller>` and assigned as the
@@ -122,17 +122,31 @@ Projection in context:
         as its the ControlProjection's `sender <ControlProjection.sender>`.  See `ControlMechanism_Control_Signals` for
         additional details.
       |
-      * *GATING_PROJECTION* (or *GATING*)-- this can be used when specifying an `InputState <InputState_Projections>`
+      * *GATING_PROJECTION* (or *GATING*) -- this can be used when specifying an `InputState <InputState_Projections>`
         or an `OutputState <OutputState_Projections>`, to create a default `GatingProjection` to the `State <State>`.
         If the GatingProjection's `sender <GatingProjection.sender>` cannot be inferred from the context in which this
         specification occurs, then its `initialization is deferred <GatingProjection_Deferred_Initialization>` until
         it can be determined (e.g., a `GatingMechanism` or `GatingSignal` is created to which it is assigned).
   ..
-  * **Projection type**.  This creates a default instance of the specified Projection subclass.  The assignment or
+  * **Projection type** -- creates a default instance of the specified Projection subclass.  The assignment or
     creation of the Projection's `sender <Projection.sender>` is handled in the same manner as described above for the
     keyword specifications.
   ..
-  * **Specification dictionary**.  This can contain an entry specifying the type of Projection, and/or entries
+  * **value** -- creates a Projection of a type determined by the context of the specification, and using the
+    specified value as the `value <Projection.value>` of the Projection, which must be compatible with the `variable
+    <State_Base.variable>` attribute of its `receiver <Projection.receiver>`.  If the Projection is a
+    `MappingProjection`, the value is interpreted as a `matrix specification <Mapping_Matrix_Specification>` and
+    assigned as the `matrix <MappingProjection.matrix>` parameter of the Projection;  it must be compatible with the
+    `value <State_Base.value>` attribute of its `sender <MappingProjection.sender>` and `variable <State_Base.variable>`
+    attribute of its `receiver <MappingProjection.receiver>`.
+  ..
+  * **Mechanism** -- creates a `MappingProjection` to either the `primary InputState <InputState_Primary>` or
+    `primary OutputState <OutputState_Primary>`, depending on the type of Mechanism and context of the specification.
+  ..
+  * **State** -- creates a `Projection` to or from the specified `State`, depending on the type of State and the
+    context of the specification.
+  ..
+  * **Specification dictionary** -- can contain an entry specifying the type of Projection, and/or entries
     specifying the value of parameters used to instantiate it. These should take the following form:
 
       * *PROJECTION_TYPE*: *<name of a Projection type>* --
@@ -160,6 +174,9 @@ Projection in context:
         either when calling the `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>`
         method for a Mechanism directly, or where it is specified in the `pathway` of a Process.
       COMMENT
+  COMMENT:
+      TUPLE SPECIFICATIONS HERE (??2-item?? and ConnectionTuple)
+  COMMENT
 
 .. _Projection_Automatic_Creation:
 
@@ -325,7 +342,7 @@ from psyneulink.globals.keywords import \
     kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import ContentAddressableList, iscompatible, type_match, is_matrix
+from psyneulink.globals.utilities import ContentAddressableList, is_matrix, iscompatible, type_match
 
 __all__ = [
     'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError',
@@ -1029,7 +1046,14 @@ def _parse_projection_spec(projection_spec,
         # Assign default type
         proj_spec_dict[PROJECTION_TYPE] = state_type.paramClassDefaults[PROJECTION_TYPE]
 
-        if owner.prefs.verbosePref:
+        # prefs is not always created when this is called, so check
+        try:
+            owner.prefs
+            has_prefs = True
+        except AttributeError:
+            has_prefs = False
+
+        if has_prefs and owner.prefs.verbosePref:
             warnings.warn("Unrecognized specification ({}) for a Projection for {} of {}; "
                           "default {} has been assigned".
                           format(projection_spec,

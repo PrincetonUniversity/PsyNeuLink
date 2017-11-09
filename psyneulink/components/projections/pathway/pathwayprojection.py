@@ -45,7 +45,7 @@ Execution
 """
 
 from psyneulink.components.projections.projection import Projection_Base
-from psyneulink.globals.keywords import PATHWAY_PROJECTION, NAME, RECEIVER
+from psyneulink.globals.keywords import PATHWAY_PROJECTION, NAME, SENDER, RECEIVER
 from psyneulink.components.component import InitStatus
 
 __all__ = []
@@ -85,29 +85,30 @@ class PathwayProjection_Base(Projection_Base):
                          prefs=prefs,
                          context=context)
 
-
-
     def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
 
+        if not self.className + '-' in self.name:
+            return self.name
+
         if self.init_status is InitStatus.INITIALIZED:
-            # If the name is not a default name for the class, return
-            if not self.className + '-' in self.name:
-                return self.name
-            self.name = self.className + " from " + \
-                              self.sender.owner.name + " to " + \
-                              self.receiver.owner.name
+            if self.sender.owner:
+                sender_name = "{}[{}]".format(self.sender.owner.name, sender_name)
+            if self.receiver.owner:
+                receiver_name = "{}[{}]".format(self.receiver.owner.name, receiver_name)
+            self.name = self.className + " from " + sender_name + " to " + receiver_name
 
         elif self.init_status is InitStatus.DEFERRED_INITIALIZATION:
             if self.init_args[RECEIVER]:
+                sender = self.init_args[SENDER]
+                if sender.owner:
+                    sender_name = "{}[{}]".format(sender.owner.name, sender_name)
                 receiver = self.init_args[RECEIVER]
                 if receiver.owner:
                     receiver_name = "{}[{}]".format(receiver.owner.name, receiver_name)
             projection_name = self.className + " from " + sender_name + " to " + receiver_name
             self.init_args[NAME] = self.init_args[NAME] or projection_name
+            self.name = self.init_args[NAME]
 
         else:
             raise PathwayProjectionError("PROGRAM ERROR: {} has unrecognized InitStatus ({})".
                                             format(self, self.init_status))
-
-        #     projection_name = projection_type.__name__ + " from " + sender_name + " to " + self.owner.name
-        #     projection.init_args[NAME] = projection.init_args[NAME] or projection_name
