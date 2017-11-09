@@ -245,6 +245,26 @@ class TestInputAndInitialValueSpecs:
 
         # -----------------------------------------------------
 
+    def test_specify_inputs_without_trials(self):
+        a = TransferMechanism(name='a',
+                              default_variable=[[0.0], [0.0]])
+        b = TransferMechanism(name='b',
+                              default_variable=[0.0, 0.0, 0.0])
+        c = TransferMechanism(name='c')
+
+        p1 = Process(pathway=[a, c],
+                     name='p1')
+        p2 = Process(pathway=[b, c],
+                     name='p2')
+
+        s = System(
+            processes=[p1, p2]
+        )
+
+        # -----------------------------------------------------
+        inputs = {a: [[1.0], [1.0]],
+                  b: [2.0, 2.0, 2.0]}
+        s.run(inputs)
 
 class TestGraphAndInput:
 
