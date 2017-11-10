@@ -175,7 +175,7 @@ from psyneulink.components.states.modulatorysignals.modulatorysignal import Modu
 from psyneulink.components.states.outputstate import PRIMARY
 from psyneulink.components.states.state import State_Base
 from psyneulink.globals.keywords import \
-    LEARNED_PARAM, LEARNING_SIGNAL, LEARNING_PROJECTION, \
+    COMMAND_LINE, LEARNED_PARAM, LEARNING_SIGNAL, LEARNING_PROJECTION, \
     PROJECTION_TYPE, RECEIVER, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -375,6 +375,11 @@ class LearningSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  context=None):
 
+        if context is None:
+            context = COMMAND_LINE
+        else:
+            context = self
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   learning_rate=learning_rate,
@@ -397,7 +402,7 @@ class LearningSignal(ModulatorySignal):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=context)
 
     def _get_primary_state(self, projection):
         return projection.parameter_state
@@ -406,12 +411,12 @@ class LearningSignal(ModulatorySignal):
     def learning_signal(self):
         return self.value
 
-    def _assign_default_name(self):
+    def _assign_default_name(self, context=None):
         # Preserve LEARNING_SIGNAL as name of the first LearningSignal
         #    as documented, and as it is used by System._instantiate_learning_graph
         if self.name is self.componentName:
             return self.name
         # Otherwise, allow ModulatorySignal to construct default name as usual
         else:
-            super()._assign_default_name()
+            super()._assign_default_name(context=context)
 

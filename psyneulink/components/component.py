@@ -1047,7 +1047,7 @@ class Component(object):
             #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
             #   and will be restored in _instantiate_function
             try:
-                del self.init_args['function']
+                del self.init_args[FUNCTION]
             except KeyError:
                 pass
 
@@ -1064,7 +1064,7 @@ class Component(object):
 
             # If name is None, mark as deferred so that name can be customized
             #    using info that has become available at time of deferred init
-            self.init_args['name'] = (self.init_args['name'] or
+            self.init_args[NAME] = (self.init_args[NAME] or
                                       ('deferred_init_' + self.className) or
                                       DEFERRED_DEFAULT_NAME)
 

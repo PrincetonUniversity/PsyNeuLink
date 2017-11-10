@@ -707,12 +707,20 @@ from inspect import isclass
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, ExecutionStatus, function_type, method_type
+from psyneulink.components.component import Component, InitStatus, ExecutionStatus, function_type, method_type
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.states.state import _parse_state_spec
+from psyneulink.components.states.parameterstate import ParameterState
+from psyneulink.components.states.outputstate import OutputState
+from psyneulink.components.states.state import _parse_state_spec, ADD_STATES
 from psyneulink.globals.defaults import timeScaleSystemDefault
-from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
+from psyneulink.globals.keywords import \
+    CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, \
+    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, \
+    INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
+    NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PROCESS_INIT, \
+    SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VARIABLE, VALUE, REFERENCE_VALUE, \
+    kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
@@ -1006,6 +1014,10 @@ class Mechanism_Base(Mechanism):
     variableEncodingDim = 2
     valueEncodingDim = 2
 
+    state_list_attr = {InputState:INPUT_STATES,
+                       ParameterState:PARAMETER_STATES,
+                       OutputState:OUTPUT_STATES}
+
     # Category specific defaults:
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -1065,7 +1077,8 @@ class Mechanism_Base(Mechanism):
 
         def spec_incompatible_with_default_error(spec_variable, default_variable):
             return MechanismError(
-                'default variable determined from the specified input_states spec ({0}) is not compatible with the specified default variable ({1})'.format(
+                'default variable determined from the specified input_states spec ({0}) '
+                'is not compatible with the specified default variable ({1})'.format(
                     spec_variable, default_variable
                 )
             )
@@ -1280,10 +1293,19 @@ class Mechanism_Base(Mechanism):
                     except KeyError:
                         pass
                 elif isinstance(parsed_spec, (Projection, Mechanism, State)):
-                    try:
-                        variable = parsed_spec.value
-                    except AttributeError:
-                        variable = parsed_spec.instance_defaults.variable
+                    if parsed_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                        args = parsed_spec.init_args
+                        if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
+                            variable = args[REFERENCE_VALUE]
+                        elif VALUE in args and args[VALUE] is not None:
+                            variable = args[VALUE]
+                        elif VARIABLE in args and args[VARIABLE] is not None:
+                            variable = args[VARIABLE]
+                    else:
+                        try:
+                            variable = parsed_spec.value
+                        except AttributeError:
+                            variable = parsed_spec.instance_defaults.variable
                 else:
                     variable = parsed_spec.instance_defaults.variable
 
@@ -1978,13 +2000,14 @@ class Mechanism_Base(Mechanism):
             # Check if inputs are of different lengths (indicated by dtype == np.dtype('O'))
             num_inputs = np.size(input)
             if isinstance(input, np.ndarray) and input.dtype is np.dtype('O') and num_inputs == num_input_states:
-                pass
+                # Reduce input back down to sequence of arrays (to remove extra dim added by atleast_2d above)
+                input = np.squeeze(input)
             else:
                 num_inputs = np.size(input, 0)  # revert num_inputs to its previous value, when printing the error
                 raise SystemError("Number of inputs ({0}) to {1} does not match "
                                   "its number of input_states ({2})".
                                   format(num_inputs, self.name,  num_input_states ))
-        for i in range(num_input_states):
+        for i, input_state in enumerate(self.input_states):
             # input_state = list(self.input_states.values())[i]
             input_state = self.input_states[i]
             # input_item = np.ndarray(input[i])
@@ -2000,7 +2023,7 @@ class Mechanism_Base(Mechanism):
                         input[i],
                         len(input_state.instance_defaults.variable),
                         input_state.name,
-                        append_type_to_name(self),
+                        self.name
                     )
                 )
 
@@ -2168,7 +2191,7 @@ class Mechanism_Base(Mechanism):
         plt.show()
 
     @tc.typecheck
-    def add_states(self, states, context=COMMAND_LINE):
+    def add_states(self, states, context=ADD_STATES):
         """
         add_states(states)
 
@@ -2180,11 +2203,11 @@ class Mechanism_Base(Mechanism):
         Mechanism to which it is being added, the user is given the option of reassigning the State to the `owner
         <State_Base.owner>`, making a copy of the State and assigning that to the `owner <State_Base.owner>`, or
         aborting.  If the name of a specified State is the same as an existing one with the same name, an index is
-        appended to its name, and incremented for each State subsequently added with the same name
-        (see :ref:`naming conventions <LINK>`).
+        appended to its name, and incremented for each State subsequently added with the same name (see :ref:`naming
+        conventions <LINK>`).  If a specified State already belongs to the Mechanism, the request is ignored.
 
         .. note::
-            Adding States to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,
+            Adding InputStates to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,
             which may produce an incompatibility with its `function <Mechanism_Base.function>` (see
             `Mechanism InputStates` for a more detailed explanation).
 
@@ -2196,6 +2219,11 @@ class Mechanism_Base(Mechanism):
             State specification(s) can be an InputState or OutputState object, class reference, class keyword, or
             `State specification dictionary <State_Specification>` (the latter must have a *STATE_TYPE* entry
             specifying the class or keyword for InputState or OutputState).
+
+        Returns
+        -------
+
+        Dictionary with entries containing InputStates and/or OutputStates added
 
         """
         from psyneulink.components.states.state import _parse_state_type
@@ -2212,6 +2240,7 @@ class Mechanism_Base(Mechanism):
         instantiated_output_states = None
 
         for state in states:
+            # FIX: 11/9/17: REFACTOR USING _parse_state_spec
             state_type = _parse_state_type(self, state)
             if (isinstance(state_type, InputState) or
                     (inspect.isclass(state_type) and issubclass(state_type, InputState))):
@@ -2222,7 +2251,20 @@ class Mechanism_Base(Mechanism):
 
         # _instantiate_state_list(self, input_states, InputState)
         if input_states:
-            instantiated_input_states = _instantiate_input_states(self, input_states, context=context)
+            # FIX: 11/9/17
+            added_variable, added_input_state = self._parse_arg_input_states(input_states)
+            if added_input_state:
+                old_variable = self.instance_defaults.variable.tolist()
+                old_variable.extend(added_variable)
+                self.instance_defaults.variable = np.array(old_variable)
+                self._update_variable(self.instance_defaults.variable)
+                instantiated_input_states = _instantiate_input_states(self,
+                                                                      input_states,
+                                                                      added_variable,
+                                                                      context=context)
+                for state in instantiated_input_states:
+                    if state.name is state.componentName or state.componentName + '-' in state.name:
+                        state._assign_default_name(context=context)
         if output_states:
             instantiated_output_states = _instantiate_output_states(self, output_states, context=context)
 

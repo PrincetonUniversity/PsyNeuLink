@@ -370,13 +370,12 @@ class ScratchPadError(Exception):
 # g = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM:m,
 #                                          pnl.NAME:pnl.DECISION_VARIABLE}])
 
-my_mech = pnl.TransferMechanism(default_variable=[[0],[0]])
-
-print(my_mech.input_states)
-
-print(my_mech.parameter_states)
-print(my_mech.output_states)
-
+# my_mech = pnl.TransferMechanism(default_variable=[[0],[0]])
+#
+# print(my_mech.input_states)
+#
+# print(my_mech.parameter_states)
+# print(my_mech.output_states)
 
 # mech_A = pnl.TransferMechanism(input_states=['MY INPUT'])
 # print(mech_A.input_states)
@@ -411,6 +410,43 @@ print(my_mech.output_states)
 # for projection in my_mech.output_states[0].efferents:
 #     print(projection.name)
 
+# FROM KEVIN: -------------------------------------
+
+
+I = pnl.InputState(reference_value=[0,0,0])
+pnl.TransferMechanism(input_states=[I])
+
+p = pnl.MappingProjection()
+T = pnl.TransferMechanism(input_states=[{pnl.VARIABLE: [0, 0, 0], pnl.PROJECTIONS:[p]}])
+
+p = pnl.MappingProjection()
+T = pnl.TransferMechanism(default_variable=[0, 0], input_states=[p])
+
+
+
+m = pnl.TransferMechanism()
+i = pnl.InputState(variable=[0,0])
+m.add_states([i])
+m.execute()
+assert len(m.input_states) == 2
+assert len(m.variable)==2
+assert len(m.variable[0])==1
+assert len(m.variable[1])==2
+assert m.input_states[0].name == 'INPUT_STATE-0'
+assert m.input_states[1].name == 'INPUT_STATE-1'
+
+m = pnl.TransferMechanism()
+i = pnl.InputState(owner=m, variable=[0, 0, 0])
+m.execute()
+assert len(m.input_states) == 2
+assert m.input_states[0].name == 'INPUT_STATE-0'
+assert m.input_states[1].name == 'INPUT_STATE-1'
+assert len(m.variable)==2
+assert len(m.variable[0])==1
+assert len(m.variable[1])==3
+
+
+# --------------------------------------------------------------------------------------------------
 
 # My_Transfer_Mech_A = TransferMechanism(
 #                            function=Logistic(
