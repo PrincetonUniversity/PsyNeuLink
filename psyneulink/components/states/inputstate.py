@@ -779,12 +779,15 @@ class InputState(State_Base):
         return mechanism.input_state
 
     def _assign_default_name(self):
-        # """Assign index of '-1' to first default  InputState
-        # Subsequent ones are indexed sequentially by Registry starting with '-2'
+        # """Assign 'INPUT_STATE-n' to any InputStates with default name ('InputState'),
+        #    where n is the next index of InputStates with the default name
         # """
-        # if self.name == self.componentName:
-        #     self.name = self.name+'-1'
-        self.name = self.name.replace(self.componentName, 'INPUT_STATE')
+        # self.name = self.name.replace(self.componentName, 'INPUT_STATE')
+        try:
+            i=len([input_state for input_state in self.owner.input_states if 'INPUT_STATE-' in input_state.name])
+        except TypeError:
+            i=0
+        self.name = 'INPUT_STATE-'+str(i)
 
 # MODIFIED 9/30/17 NEW:
     @tc.typecheck
