@@ -2855,11 +2855,12 @@ class System(System_Base):
                   format(self.name, system_string, clock.time_step))
             processes = list(process.name for process in self.processes)
             print("- processes: {}".format(processes))
-            if np.size(self.input, 0) == 1:
+            print("self.input = ", self.input)
+            if np.size(self.input) == 1:
                 input_string = ''
             else:
                 input_string = 's'
-            print("- input{}: {}".format(input_string, self.input.tolist()))
+            print("- input{}: {}".format(input_string, self.input))
 
         else:
             print("\n\'{}\'{} executing ********** (time_step {}) ".
