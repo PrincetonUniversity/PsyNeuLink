@@ -309,38 +309,12 @@ from psyneulink.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
 __all__ = [
-    'EXECUTION_SET_DIM', 'HETEROGENOUS', 'HOMOGENOUS', 'MECHANISM_DIM', 'PHASE_DIM', 'RunError', 'STATE_DIM', 'run'
+    'EXECUTION_SET_DIM', 'MECHANISM_DIM', 'RunError', 'STATE_DIM', 'run'
 ]
 
-HOMOGENOUS = 1
-HETEROGENOUS = 0
-
 EXECUTION_SET_DIM = 0
-PHASE_DIM = 1
 MECHANISM_DIM = 2
 STATE_DIM = 3  # Note: only meaningful if mechanisms are homnogenous (i.e., all have the same number of states -- see chart below):
-
-# Axis 0         |---------------------------------------------------exec set----------------------------------------------------|
-# Axis 1           |-----------------------phase-----------------------|   |-----------------------phase-----------------------|
-# Axis 2             |--------mech---------|   |--------mech---------|       |--------mech---------|   |--------mech---------|
-# Axis 3               |-state--|-state--|       |-state--|-state--|           |-state--|-state--|       |-state--|-state--|
-#
-# HOMOGENOUS: (ndim = 5)
-# a = np.array([ [ [ [ [ 0, 0 ] , [ 1, 1 ] ] , [ [ 2, 2 ] , [ 3, 3 ] ] ] , [ [ [ 4, 4 ] , [ 5, 5 ] ] , [ [ 6, 6 ] , [ 7, 7 ] ] ] ] ,
-#                [ [ [ [ 8, 8 ] , [ 9, 9 ] ] , [ [10, 10] , [11, 11] ] ] , [ [ [12, 12] , [13, 13] ] , [ [14, 14] , [15, 15] ] ] ] ])
-#
-# HETEROGENOUS:
-# State sizes (ndim = 4)
-# b = np.array([ [ [ [ [    0 ] , [ 1, 1 ] ] , [ [    2 ] , [ 3, 3 ] ] ] , [ [ [    4 ] , [ 5, 5 ] ] , [ [    6 ] , [ 7, 7 ] ] ] ] ,
-#                [ [ [ [    8 ] , [ 9, 9 ] ] , [ [    10] , [    11] ] ] , [ [ [    12] , [    13] ] , [ [    14] , [    15] ] ] ] ])
-#
-# States per mechanism  (ndim = 3)
-# c = np.array([ [ [ [ [ 0, 0 ]            ] , [ [ 2, 2 ] , [ 3, 3 ] ] ] , [ [            [ 5, 5 ] ] , [ [ 6, 6 ] , [ 7, 7 ] ] ] ] ,
-#                [ [ [ [ 8, 8 ]            ] , [ [10, 10] , [11, 11] ] ] , [ [            [13, 13] ] , [ [14, 14] , [15, 15] ] ] ] ])
-#
-# Both (ndim = 3)
-# d = np.array([ [ [ [ [    0 ]            ] , [ [ 2, 2 ] , [    3 ] ] ] , [ [ [    4 ]            ] , [ [ 6, 6 ] , [    7 ] ] ] ] ,
-#                [ [ [ [    8 ]            ] , [ [10, 10] , [    11] ] ] , [ [ [    12]            ] , [ [14, 14] , [    15] ] ] ] ])
 
 class RunError(Exception):
      def __init__(object, error_value):
@@ -459,18 +433,21 @@ def run(object,
         or of the OutputStates of the `TERMINAL` Mechanisms for the Process or System run.
     """
 
-    inputs = _adjust_stimulus_dict(object, inputs)
+    inputs, num_inputs_sets = _adjust_stimulus_dict(object, inputs)
+    num_trials = num_trials or num_inputs_sets  # num_trials may be provided by user, otherwise = # of input sets
 
     if targets:
-        targets = _construct_stimulus_sets(object, targets, is_target=True)
+        if isinstance(targets, dict):
+            targets = _adjust_target_dict(object, targets)
+        elif not isinstance(targets, function_type):
+            raise RunError("Targets for {} must be a dictionary or function.".format(object.name))
+        _validate_targets(object, targets, num_inputs_sets, context=context)
 
     object_type = _get_object_type(object)
 
     object.targets = targets
 
     time_scale = time_scale or TimeScale.TRIAL
-    num_inputs_sets = len(list(inputs.values())[0])
-    num_trials = num_trials or num_inputs_sets
 
     # SET LEARNING (if relevant)
     # FIX: THIS NEEDS TO BE DONE FOR EACH PROCESS IF THIS CALL TO run() IS FOR SYSTEM
@@ -501,16 +478,6 @@ def run(object,
     # Class-specific validation:
     context = context or RUN + "validating " + object.name
 
-    if targets is not None:
-        _validate_targets(object, targets, num_inputs_sets, context=context)
-
-    if object.verbosePref:
-        shape = inputs.shape
-        print('Inputs for run of {}: \n'
-              '- executions: {}\n'
-              '- phases per execution: {}\n'
-              '- mechanisms per execution: {}\n'.
-              format(object.name, shape[EXECUTION_SET_DIM], shape[PHASE_DIM], shape[MECHANISM_DIM]))
 
     # INITIALIZATION
     if reset_clock:
@@ -540,9 +507,9 @@ def run(object,
                 call_before_time_step()
 
             input_num = execution%num_inputs_sets
+
             for mech in inputs:
                 execution_inputs[mech] = inputs[mech][input_num]
-
             if object_type == SYSTEM:
                 object.inputs = execution_inputs
 
@@ -598,90 +565,62 @@ def run(object,
         object._learning_enabled = learning_state_buffer
 
     return object.results
+
 @tc.typecheck
-def _construct_stimulus_sets(object, stimuli, is_target=False):
-    """Return an nparray of stimuli suitable for use as inputs arg for System.run()
-    If inputs is a dict, for each entry:
-        - the number of entries must equal the number of `ORIGIN` Mechanisms in the System
-        - key must be the name of an origin Mechanism in the System
-        - value must be:
-            (1) a list of input values for the Mechanism, one for each execution
-        OR
-            (2) a dictionary in which the keys are input states of the Mechanism and the values are input values for the
-            input states, one for each execution
-        - the length of all value lists must be the same
 
+def _input_matches_variable(input, var):
+    if np.shape(input) == np.shape(var):
+        return True
+    # If heterogeneous:
+    elif np.shape(var) == 1 and isinstance(np.shape[0], (list, np.ndarray)):
+        for i in range(len(input)):
+            if len(input[i]) != len(var[i]):
+                return False
+            return True
+    return False
 
-    DIMENSIONS:
-    inputs = {MechanismA: [[[1.0]], [[2.0]], [[3.0]]],
-              MechanismB: {InputStateB1: [[1.0, 1.0], [2.0, 2.0], [3.0,3.0]],
-                           InputStateB2: [[1.0], [2.0], [3.0]]
-                          }
-              }
+def _adjust_stimulus_dict(obj, stimuli):
 
-       axis 0: num_input_sets
-       axis 1: object._phaseSpecMax
-       axis 2: len(object.origin_mechanisms)
-       axis 3: len(mech.input_states)
-       axis 4: items of input_states
+    # STEP 1: validate that there is a one-to-one mapping of input entries to origin mechanisms
 
-    Notes:
-    * Construct as lists and then convert to np.array, since size of inputs can be different for different mechs
-        so can't initialize a simple (regular) np.array;  this means that stim_list dtype may also be 'O'
-    * Code below is not pretty, but needs to test for cases in which inputs have different sizes
+    # Check that all of the mechanisms listed in the inputs dict are ORIGIN mechanisms in the object
+    for mech in stimuli.keys():
+        if not mech in obj.origin_mechanisms.mechanisms:
+            raise RunError("{} in inputs dict for {} is not one of its ORIGIN mechanisms".
+                           format(mech.name, obj.name))
+    # Check that all of the ORIGIN mechanisms in the obj are represented by entries in the inputs dict
+    for mech in obj.origin_mechanisms:
+        if not mech in stimuli:
+            raise RunError("Entry for ORIGIN Mechanism {} is missing from the inputs dict for {}".
+                           format(mech.name, obj.name))
 
-    """
+    # STEP 2: Loop over all dictionary entries to validate their content and adjust any convenience notations:
 
-    object_type = _get_object_type(object)
-
-    # TBI: Handle a limited version of sequence format to ensure backward compatibility
-    # Stimuli in Mechanism format
-    if isinstance(stimuli, dict):
-        stimuli = _construct_from_stimulus_dict(object, stimuli, is_target=is_target)
-        # returns stim list = [   [    [ [ [0] ] ],   [ [ [2, 2] ] ]    ]   ]
-    elif is_target and isinstance(stimuli, function_type):
-        return stimuli
-
-    else:
-        if is_target:
-            stim_type = 'targets'
-        else:
-            stim_type = 'inputs'
-        raise RunError("{} arg for {}._construct_stimulus_sets() must be a dict".
-                          format(stim_type, object.name))
-
-    return stimuli
-
-
-
-def _adjust_stimulus_dict(obj, stimuli, is_target=False):
-
-    # validate that there is a one-to-one mapping of input entries to origin mechanisms in the process or system.
-    if not is_target:
-        # Check that all of the mechanisms listed in the inputs dict are ORIGIN mechanisms in the object
-        for mech in stimuli.keys():
-            if not mech in obj.origin_mechanisms.mechanisms:
-                raise RunError("{} in inputs dict for {} is not one of its ORIGIN mechanisms".
-                               format(mech.name, obj.name))
-        # Check that all of the ORIGIN mechanisms in the obj are represented by entries in the inputs dict
-        for mech in obj.origin_mechanisms:
-            if not mech in stimuli:
-                raise RunError("Entry for ORIGIN Mechanism {} is missing from the inputs dict for {}".
-                               format(mech.name, obj.name))
-
-    # Validate:
-    # (1) stimulus lists represent inputs on each trial
-    # (2) each input value is matches the mechanism variable
-    # Adjust any user facing convenience notations to now match the above specs
+    # (1) Replace any user provided convenience notations with values that match the following specs:
+    # a - all dictionary values are lists containing and input value on each trial (even if only one trial)
+    # b - each input value is a 2d array that matches variable
+    # example: { Mech1: [Fully_specified_input_for_mech1_on_trial_1, Fully_specified_input_for_mech1_on_trial_2 … ],
+    #            Mech2: [Fully_specified_input_for_mech2_on_trial_1, Fully_specified_input_for_mech2_on_trial_2 … ]}
+    # (2) Verify that all mechanism values provide the same number of inputs (check length of each dictionary value)
 
     adjusted_stimuli = {}
+    num_input_sets = -1
+
     for mech, stim_list in stimuli.items():
+
         # If a mechanism provided a single input, wrap it in one more list in order to represent trials
-        if iscompatible(np.atleast_2d(stim_list), mech.instance_defaults.variable):
+        if _input_matches_variable(np.atleast_2d(stim_list), mech.instance_defaults.variable):
             # np.atleast_2d will catch any single-input states specified without an outer list
             # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
             adjusted_stimuli[mech] = [np.atleast_2d(stim_list)]
 
+            # verify that all mechanisms have provided the same number of inputs
+            if num_input_sets == -1:
+                num_input_sets = 1
+            elif num_input_sets != 1:
+                raise RunError("Input specification for {} is not valid. The number of inputs (1) provided for {}"
+                               "conflicts with at least one other mechanism's input specification.".format(obj.name,
+                                                                                                           mech.name))
         else:
             adjusted_stimuli[mech] = []
             for stim in stimuli[mech]:
@@ -700,174 +639,102 @@ def _adjust_stimulus_dict(obj, stimuli, is_target=False):
                 # np.atleast_2d will catch any single-input states specified without an outer list
                 # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
                 adjusted_stimuli[mech].append(np.atleast_2d(stim))
-    return adjusted_stimuli
 
-def _construct_from_stimulus_dict(object, stimuli, is_target):
+            # verify that all mechanisms have provided the same number of inputs
+            if num_input_sets == -1:
+                num_input_sets = len(stimuli[mech])
+            elif num_input_sets != len(stimuli[mech]):
+                raise RunError("Input specification for {} is not valid. The number of inputs ({}) provided for {}"
+                               "conflicts with at least one other mechanism's input specification."
+                               .format(obj.name, (stimuli[mech]), mech.name))
 
+    return adjusted_stimuli, num_input_sets
+
+def _adjust_target_dict(object, stimuli):
     object_type = _get_object_type(object)
 
-    # Stimuli are inputs:
-    #    validate that there is a one-to-one mapping of input entries to origin mechanisms in the process or system.
-    if not is_target:
-        # Check that all of the mechanisms listed in the inputs dict are ORIGIN mechanisms in the object
-        for mech in stimuli.keys():
-            if not mech in object.origin_mechanisms.mechanisms:
-                raise RunError("{} in inputs dict for {} is not one of its ORIGIN mechanisms".
-                               format(mech.name, object.name))
-        # Check that all of the ORIGIN mechanisms in the object are represented by entries in the inputs dict
-        for mech in object.origin_mechanisms:
-            if not mech in stimuli:
-                raise RunError("Entry for ORIGIN Mechanism {} is missing from the inputs dict for {}".
-                               format(mech.name, object.name))
+    # FIX: RE-WRITE USING NEXT AND StopIteration EXCEPTION ON FAIL TO FIND (THIS GIVES SPECIFICS)
+    # FIX: TRY USING compare METHOD OF DICT OR LIST?
+    # Check that every target in the process or system receives a projection from a mechanism named in the dict
+    for target in object.target_mechanisms:
+        # If any projection to a target does not have a sender in the stimulus dict, raise an exception
+        if not any(mech is projection.sender.owner for
+                   projection in target.input_states[SAMPLE].path_afferents
+                   for mech in stimuli.keys()):
+                raise RunError("Entry for {} is missing from specification of targets for run of {}".
+                               format(target.input_states[SAMPLE].
+                                      afferents[0].sender.owner.name,
+                                      object.name))
 
-    # Note: no need to order entries for inputs (as with targets, below) as that only matters for systems,
-    #       and is handled where stimuli for a system are assigned to phases below
+    # FIX: COULD JUST IGNORE THOSE, OR WARN ABOUT THEM IF VERBOSE?
 
-    # Stimuli are targets:
-    #    - validate that there is a one-to-one mapping of target entries to target mechanisms in the process or system;
-    #    - insure that order of target stimuli in dict parallels order of target mechanisms in target_mechanisms list
-    else:
-        # FIX: RE-WRITE USING NEXT AND StopIteration EXCEPTION ON FAIL TO FIND (THIS GIVES SPECIFICS)
-        # FIX: TRY USING compare METHOD OF DICT OR LIST?
-        # Check that every target in the process or system receives a projection from a mechanism named in the dict
-        for target in object.target_mechanisms:
-            # If any projection to a target does not have a sender in the stimulus dict, raise an exception
-            if not any(mech is projection.sender.owner for
-                       projection in target.input_states[SAMPLE].path_afferents
-                       for mech in stimuli.keys()):
-                    raise RunError("Entry for {} is missing from specification of targets for run of {}".
-                                   format(target.input_states[SAMPLE].
-                                          afferents[0].sender.owner.name,
-                                          object.name))
+    # Check that each target referenced in the dict (key)
+    #     is the name of a mechanism that projects to a target (comparator) in the system
+    terminal_to_target_mapping = {}
+    for mech in stimuli.keys():
+        # If any mechanism in the stimulus dict does not have a projection to the target, raise an exception
+        if not any(target is projection.receiver.owner for
+                   projection in mech.output_state.efferents
+                   for target in object.target_mechanisms):
+            raise RunError("{} is not a target Mechanism in {}".format(mech.name, object.name))
+        # Get target mech (comparator) for each entry in stimuli dict:
+        terminal_to_target_mapping[mech] = mech.output_state.efferents[0]
 
-        # FIX: COULD JUST IGNORE THOSE, OR WARN ABOUT THEM IF VERBOSE?
-
-        # Check that each target referenced in the dict (key)
-        #     is the name of a mechanism that projects to a target (comparator) in the system
-        terminal_to_target_mapping = {}
-        for mech in stimuli.keys():
-            # If any mechanism in the stimulus dict does not have a projection to the target, raise an exception
-            if not any(target is projection.receiver.owner for
-                       projection in mech.output_state.efferents
-                       for target in object.target_mechanisms):
-                raise RunError("{} is not a target Mechanism in {}".format(mech.name, object.name))
-            # Get target mech (comparator) for each entry in stimuli dict:
-            terminal_to_target_mapping[mech] = mech.output_state.efferents[0]
-
-        # Insure that target lists in dict are accessed in the same order as the
-        #   targets in the system's target_mechanisms list, by reassigning targets to an OrderedDict:
-        from collections import OrderedDict
-        ordered_targets = OrderedDict()
-        for target in object.target_mechanisms:
-            # Get the process to which the TARGET mechanism belongs:
-            try:
-                process = next(projection.sender.owner for
-                               projection in target.input_states[TARGET].path_afferents if
-                               isinstance(projection.sender, ProcessInputState))
-            except StopIteration:
-                raise RunError("PROGRAM ERROR: No process found for TARGET Mechanism ({}) "
-                               "supposed to be in target_mechanisms for {}".
-                               format(target.name, object.name))
-            # Get stimuli specified for TERMINAL mechanism of process associated with TARGET mechanism
-            terminal_mech = process.terminal_mechanisms[0]
-            try:
-                ordered_targets[terminal_mech] = stimuli[terminal_mech]
-            except KeyError:
-                raise RunError("{} (of {} process) not found target specification for run of {}".
-                               format(terminal_mech, object.name))
-        stimuli = ordered_targets
+    # Insure that target lists in dict are accessed in the same order as the
+    #   targets in the system's target_mechanisms list, by reassigning targets to an OrderedDict:
+    from collections import OrderedDict
+    ordered_targets = OrderedDict()
+    for target in object.target_mechanisms:
+        # Get the process to which the TARGET mechanism belongs:
+        try:
+            process = next(projection.sender.owner for
+                           projection in target.input_states[TARGET].path_afferents if
+                           isinstance(projection.sender, ProcessInputState))
+        except StopIteration:
+            raise RunError("PROGRAM ERROR: No process found for TARGET Mechanism ({}) "
+                           "supposed to be in target_mechanisms for {}".
+                           format(target.name, object.name))
+        # Get stimuli specified for TERMINAL mechanism of process associated with TARGET mechanism
+        terminal_mech = process.terminal_mechanisms[0]
+        try:
+            ordered_targets[terminal_mech] = stimuli[terminal_mech]
+        except KeyError:
+            raise RunError("{} (of {} process) not found target specification for run of {}".
+                           format(terminal_mech, object.name))
+    stimuli = ordered_targets
 
     # Convert all items to 2D arrays:
     # - to match standard format of mech.instance_defaults.variable
     # - to deal with case in which the lists have only one stimulus, one more more has length > 1,
     #     and those are specified as lists or 1D arrays (which would be misinterpreted as > 1 stimulus)
 
-    # Check that all of the stimuli in each list are compatible with the corresponding mechanism's variable
-
-    for mech, stim_list in stimuli.items():
-
-        # If a mechanism provided a single input, wrap it in one more list in order to represent trials
-        if iscompatible(np.atleast_2d(stim_list), mech.instance_defaults.variable):
-            # np.atleast_2d will catch any single-input states specified without an outer list
-            # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-            stimuli[mech] = [np.atleast_2d(stim_list)]
-
-        else:
-            for stim in stimuli[mech]:
-                # np.atleast_2d will catch any single-input states specified without an outer list
-                # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-                stim = np.atleast_2d(stim)
-                # loop over each input to verify that it matches variable
-                if not iscompatible(stim, mech.instance_defaults.variable):
-                    err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
-                        format(stim, mech.name, mech.instance_defaults.variable)
-                    # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
-                    # for "functionality" but rather a hack for user clarity
-                    if "KWTA" in str(type(mech)):
-                        err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
-                                            " to represent the outside stimulus for the inhibition input state, and " \
-                                            "for systems, put your inputs"
-
     stim_lists = list(stimuli.values())
+    num_input_sets = len(stim_lists[EXECUTION_SET_DIM])
 
-    # set the number of trials provided for the zeroth mechanism as the standard
-    num_trials = len(stim_lists[0])
-
-    # Check that ALL mechanisms provided inputs for the same number of trials
-    if not all(len(np.array(stim_list)) == num_trials for stim_list in stim_lists):
+    # Check that all lists have the same number of stimuli
+    if not all(len(np.array(stim_list)) == num_input_sets for stim_list in stim_lists):
         raise RunError("The length of all the stimulus lists must be the same")
 
     stim_list = []
 
-    for i in range(num_trials):
+    for i in range(num_input_sets):
         stims_in_execution = []
-
         for mech in stimuli:
-
             stims_in_execution.append(stimuli[mech][i])
         stim_list.append(stims_in_execution)
 
+    try:
+        stim_list = np.array(stim_list)
+    except ValueError:
+        for exec in range(len(stim_list)):
+            for phase in range(len(stim_list[exec])):
+                for mech in range(len(stim_list[exec][phase])):
+                    stim_list[exec][phase][mech] = stim_list[exec][phase][mech].tolist()
+        stim_list = np.array(stim_list)
+
     return np.array(stim_list)
 
-# def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, context=None):
-#     """Validate inputs for _construct_inputs() and object.run()
-#
-#     If inputs is an np.ndarray:
-#         inputs must be 3D (if inputs to each process are different lengths) or 4D (if they are homogenous):
-#             axis 0 (outer-most): inputs for each execution of the run (len == number of executions to be run)
-#                 (note: this is validated in super().run()
-#             axis 1: inputs for each time step of a trial (len == _phaseSpecMax of System (no. of time_steps per trial)
-#             axis 2: inputs to the System, one for each Process (len == number of Processes in System)
-#
-#     returns number of input_sets (one per execution)
-#     """
-#
-#     if is_target:
-#         mechs = list(object.target_mechanisms)
-#     else:
-#         mechs = list(object.origin_mechanisms)
-#     num_mechs = len(mechs)
-#     inputs_array = np.array(inputs)
-#     num_trials = len(inputs_array[0])
-#     print("inputs array = ", inputs_array)
-#     for execution_set_num in range(num_execution_sets):
-#         execution_set = inputs_array[execution_set_num]
-#         for mech_num in range(num_mechs):
-#             input_for_mech = execution_set[mech_num]
-#             if len(input_for_mech) != len(mechs[mech_num].input_values):
-#                 raise RunError("Number of states ({}) in input for {} should be {}".
-#                                format(len(input_for_mech),
-#                                       mechs[mech_num].name,
-#                                       len(mechs[mech_num].input_values)))
-#             for state_num in range(len(input_for_mech)):
-#                 input_for_state = mechs[mech_num].input_values[state_num]
-#                 if len(input_for_state) != len(mechs[mech_num].input_values[state_num]):
-#                     raise RunError("Length of state {} ({}) in input for {} should be {}".
-#                                    format(list(mechs[mech_num].input_states)[state_num],
-#                                           len(input_for_state),
-#                                           mechs[mech_num].name,
-#                                           len(mechs[mech_num].input_values[state_num])))
-#     return num_execution_sets
+
 
 def _validate_targets(object, targets, num_input_sets, context=None):
     """
@@ -950,7 +817,6 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             # If inputs to processes of system are heterogenous, inputs.ndim should be 2:
             # If inputs to processes of system are homogeneous, inputs.ndim should be 3:
             expected_dim = 2 + process_structure
-
             if targets.ndim != expected_dim:
                 raise RunError("targets arg in call to {}.run() must be a {}D np.array or comparable list".
                                   format(object.name, expected_dim))
