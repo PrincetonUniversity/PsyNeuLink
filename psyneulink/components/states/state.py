@@ -928,6 +928,10 @@ class State_Base(State):
 
         self.owner = owner
 
+        if name == 'deferred_init_State':
+            # self.name = None
+            name = self.__class__.__name__
+
         # Register State with StateRegistry of owner (Mechanism to which the State is being assigned)
         register_category(entry=self,
                           base_class=State_Base,
