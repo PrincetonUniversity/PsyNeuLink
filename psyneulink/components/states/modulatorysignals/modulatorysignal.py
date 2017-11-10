@@ -391,7 +391,7 @@ class ModulatorySignal(OutputState):
                          context=context)
 
         if self.init_status is InitStatus.INITIALIZED:
-            self._assign_default_name()
+            self._assign_default_name(context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
         # If owner is specified but modulation has not been specified, assign to owner's value
@@ -416,7 +416,7 @@ class ModulatorySignal(OutputState):
                                                                  context=context)
             projection._assign_default_projection_name(state=self)
 
-    def _assign_default_name(self):
+    def _assign_default_name(self, context=None):
 
         # If the name is not a default name for the class,
         #    or the ModulatorySignal has no projections (which are used to name it)

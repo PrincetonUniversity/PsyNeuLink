@@ -388,7 +388,8 @@ import typecheck as tc
 from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism
-from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.components.states.state import \
+    StateError, State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
     MECHANISM, OUTPUT_STATES, MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE, \
@@ -672,7 +673,7 @@ class InputState(State_Base):
                                          context=context)
 
         if self.name is self.componentName or self.componentName + '-' in self.name:
-            self._assign_default_name()
+            self._assign_default_name(context=context)
 
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -778,16 +779,29 @@ class InputState(State_Base):
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
 
-    def _assign_default_name(self):
-        # """Assign 'INPUT_STATE-n' to any InputStates with default name ('InputState'),
+    def _assign_default_name(self, context=None):
+        # """Assign 'INPUT_STATE-n' to any InputStates with default name (i.e., name of State: 'InputState'),
         #    where n is the next index of InputStates with the default name
+        # Returns name assigned to State
         # """
-        # self.name = self.name.replace(self.componentName, 'INPUT_STATE')
-        try:
-            i=len([input_state for input_state in self.owner.input_states if 'INPUT_STATE-' in input_state.name])
-        except TypeError:
-            i=0
-        self.name = 'INPUT_STATE-'+str(i)
+
+        # Call for State being instantiated in the context of constructing its owner
+        if isinstance(context,State_Base):
+            self.name = self.name.replace(self.componentName, 'INPUT_STATE')
+
+        # Call in the context of adding a state to an existing owner
+        elif ADD_STATES in context:
+            try:
+                i=len([input_state for input_state in self.owner.input_states if 'INPUT_STATE-' in input_state.name])
+                self.name = 'INPUT_STATE-'+str(i)
+            except TypeError:
+                i=0
+                self.name = 'INPUT_STATE-'+str(i)
+
+        else:
+            raise InputStateError("PROGRAM ERROR: unrecognize context ({}) for assigning {} to {}".
+                                  format(context, NAME, InputState.__name__))
+        return self.name
 
 # MODIFIED 9/30/17 NEW:
     @tc.typecheck

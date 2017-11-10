@@ -912,7 +912,8 @@ class State_Base(State):
                 pass
 
         # Enforce that only called from subclass
-        if not isinstance(context, State_Base) and not context in {ADD_STATES, COMMAND_LINE}:
+        if (not isinstance(context, State_Base) and
+                not any(key in context for key in {INITIALIZING, ADD_STATES, COMMAND_LINE})):
             raise StateError("Direct call to abstract class State() is not allowed; "
                                       "use state() or one of the following subclasses: {0}".
                                       format(", ".join("{!s}".format(key) for (key) in StateRegistry.keys())))
@@ -1918,7 +1919,7 @@ class State_Base(State):
     def all_afferents(self):
         return self.path_afferents + self.mod_afferents
 
-    def _assign_default_name(self):
+    def _assign_default_name(self, context=None):
         return False
 
 def _instantiate_state_list(owner,
@@ -2144,10 +2145,12 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                 state.init_args[OWNER] = owner
             if not VARIABLE in state.init_args or state.init_args[VARIABLE] is None:
                 state.init_args[VARIABLE] = owner.instance_defaults.variable[0]
-            if (not hasattr(state, REFERENCE_VALUE) and
-                    not REFERENCE_VALUE in state.init_args or state.init_args[REFERENCE_VALUE] is None):
-                # state.reference_value = owner.instance_defaults.variable[0]
-                state.reference_value = state.init_args[VARIABLE]
+            if not hasattr(state, REFERENCE_VALUE):
+                if REFERENCE_VALUE in state.init_args and state.init_args[REFERENCE_VALUE] is not None:
+                    state.reference_value = state.init_args[REFERENCE_VALUE]
+                else:
+                    # state.reference_value = owner.instance_defaults.variable[0]
+                    state.reference_value = state.init_args[VARIABLE]
             state.init_args[CONTEXT]=context
             state._deferred_init()
 
