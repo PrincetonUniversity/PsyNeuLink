@@ -5,13 +5,12 @@
 
 :tocdepth: 5
 
-.. |logo| image:: _static/PsyNeuLink_logo.svg
-    :width: 50%
+.. |logo| image:: _static/PsyNeuLink_logo_no_text.svg
+    :width: 20%
 
-|logo|
 
-Welcome to PsyNeuLink
-=====================
+Welcome to PsyNeuLink      |logo|
+=================================
 
 * `Purpose`
 * `What PsyNeuLink is NOT <What_PsyNeuLink_is_NOT>`
@@ -27,7 +26,7 @@ Welcome to PsyNeuLink
 Purpose
 -------
 
-PsyNeuLink is a "block modeling system" for cognitive neuroscience.  Block modeling systems allow components to be
+PsyNeuLink is a "block modeling environment" for cognitive neuroscience.  Block modeling systems allow components to be
 constructed that implement various, possibly disparate functions, and then link them together into a system to
 examine how they interact.  In PsyNeuLink, components are used to implement the function of brain subsystems and/or
 psychological processes, the interaction of which can then be simulated at the system level.
