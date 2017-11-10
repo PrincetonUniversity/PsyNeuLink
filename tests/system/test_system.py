@@ -104,57 +104,7 @@ def test_danglingControlledMech():
 
     # no assert, should only complete without error
 
-class TestInputAndInitialValueSpecs:
-    def test_all_mechanisms_one_input_state_one_trial(self):
-        a = TransferMechanism(name='a',
-                              default_variable=[0.0, 0.0])
-        b = TransferMechanism(name='b',
-                              default_variable=[0.0, 0.0, 0.0])
-        c = TransferMechanism(name='c')
-
-
-        p1 = Process(pathway=[a, c],
-                     name='p1')
-        p2 = Process(pathway=[b, c],
-                     name='p2')
-
-        s = System(
-            processes=[p1, p2]
-        )
-
-        # -----------------------------------------------------
-
-        # 2d list, one element --> One input state, One trial
-        inputs = {a: [[1.0, 1.0]],
-                  b: [[2.0, 2.0, 2.0]]}
-
-        s.run(inputs)
-
-        # -----------------------------------------------------
-
-        # 2d array --> One input state, One trial
-        inputs = {a: np.array([[1.0, 1.0]]),
-                  b: np.array([[2.0, 2.0, 2.0]])}
-
-        s.run(inputs)
-
-        # -----------------------------------------------------
-
-        # 3d list, one element --> One input state, One trial
-        inputs = {a: [[[1.0, 1.0]]],
-                  b: [[[2.0, 2.0, 2.0]]]}
-
-        s.run(inputs)
-
-        # -----------------------------------------------------
-
-        # 3d array --> One input state, One trial
-        inputs = {a: np.array([[[1.0, 1.0]]]),
-                  b: np.array([[[2.0, 2.0, 2.0]]])}
-
-        s.run(inputs)
-
-        # -----------------------------------------------------
+class TestInputSpecsWithoutNumTrials:
 
     def test_documentation_example(self):
         a = TransferMechanism(name='a',
@@ -190,13 +140,10 @@ class TestInputAndInitialValueSpecs:
         # simple_inputs = {b: [[[2.0, 2.0], [3.0, 3.0]], [[2.0, 2.0], [3.0, 3.0]]]}
         # simple_system.run(simple_inputs)
 
-    def test_all_mechanisms_multiple_input_states_one_trial(self):
-        a = TransferMechanism(name='a',
-                              default_variable=[[0.0], [0.0]])
-        b = TransferMechanism(name='b',
-                              default_variable=[0.0, 0.0, 0.0])
+    def test_specify_single_inputs_as_floats(self):
+        a = TransferMechanism(name='a')
+        b = TransferMechanism(name='b')
         c = TransferMechanism(name='c')
-
 
         p1 = Process(pathway=[a, c],
                      name='p1')
@@ -208,44 +155,30 @@ class TestInputAndInitialValueSpecs:
         )
 
         # -----------------------------------------------------
-        inputs = {a: [ [[1.0], [1.0]] ],
-                  b: [ [[2.0, 2.0, 2.0]] ]}
-
+        inputs = {a: 1.0,
+                  b: 2.0}
         s.run(inputs)
 
-        # -----------------------------------------------------
-        # inputs = {a: [[1.0], [1.0]],
-        #           b: [[2.0, 2.0, 2.0]]}
-        #
-        # s.run(inputs)
+    def test_specify_many_trials_as_floats(self):
+        a = TransferMechanism(name='a')
+        b = TransferMechanism(name='b')
+        c = TransferMechanism(name='c')
+
+        p1 = Process(pathway=[a, c],
+                     name='p1')
+        p2 = Process(pathway=[b, c],
+                     name='p2')
+
+        s = System(
+            processes=[p1, p2]
+        )
 
         # -----------------------------------------------------
-        #
-        # # 2d array --> One input state, One trial
-        # inputs = {a: np.array([[1.0], [1.0]]),
-        #           b: np.array([[2.0, 2.0, 2.0]])}
-        #
-        # s.run(inputs)
-        #
-        # # -----------------------------------------------------
-        #
-        # # 3d list, one element --> One input state, One trial
-        # inputs = {a: [[[1.0], [1.0]]],
-        #           b: [[[2.0, 2.0, 2.0]]]}
-        #
-        # s.run(inputs)
-        #
-        # # -----------------------------------------------------
-        #
-        # # 3d array --> One input state, One trial
-        # inputs = {a: np.array([[[1.0], [1.0]]]),
-        #           b: np.array([[[2.0, 2.0, 2.0]]])}
-        #
-        # s.run(inputs)
+        inputs = {a: [1.0, 1.0, 1.0],
+                  b: [2.0, 2.0, 2.0]}
+        s.run(inputs)
 
-        # -----------------------------------------------------
-
-    def test_specify_inputs_without_trials(self):
+    def test_specify_single_inputs_without_trials(self):
         a = TransferMechanism(name='a',
                               default_variable=[[0.0], [0.0]])
         b = TransferMechanism(name='b',
@@ -265,6 +198,228 @@ class TestInputAndInitialValueSpecs:
         inputs = {a: [[1.0], [1.0]],
                   b: [2.0, 2.0, 2.0]}
         s.run(inputs)
+
+    def test_specify_single_inputs_with_trials(self):
+        a = TransferMechanism(name='a',
+                              default_variable=[[0.0], [0.0]])
+        b = TransferMechanism(name='b',
+                              default_variable=[0.0, 0.0, 0.0])
+        c = TransferMechanism(name='c')
+
+        p1 = Process(pathway=[a, c],
+                     name='p1')
+        p2 = Process(pathway=[b, c],
+                     name='p2')
+
+        s = System(
+            processes=[p1, p2]
+        )
+
+        # -----------------------------------------------------
+        inputs = {a: [[[1.0], [1.0]]],
+                  b: [[2.0, 2.0, 2.0]]}
+        s.run(inputs)
+
+    def test_specify_inputs_without_states(self):
+        a = TransferMechanism(name='a',
+                              default_variable=[[0.0], [0.0]])
+        b = TransferMechanism(name='b',
+                              default_variable=[0.0, 0.0, 0.0])
+        c = TransferMechanism(name='c')
+
+        p1 = Process(pathway=[a, c],
+                     name='p1')
+        p2 = Process(pathway=[b, c],
+                     name='p2')
+
+        s = System(
+            processes=[p1, p2]
+        )
+
+        # -----------------------------------------------------
+        inputs = {a: [[[1.0], [1.0]], [[2.0], [2.0]], [[3.0], [3.0]]],
+                  b: [[2.0, 2.0, 2.0], [3.0, 3.0, 3.0], [4.0, 4.0, 4.0]]}
+        s.run(inputs)
+
+    def test_specify_inputs_with_states(self):
+        a = TransferMechanism(name='a',
+                              default_variable=[[0.0], [0.0]])
+        b = TransferMechanism(name='b',
+                              default_variable=[0.0, 0.0, 0.0])
+        c = TransferMechanism(name='c')
+
+        p1 = Process(pathway=[a, c],
+                     name='p1')
+        p2 = Process(pathway=[b, c],
+                     name='p2')
+
+        s = System(
+            processes=[p1, p2]
+        )
+
+        # -----------------------------------------------------
+        inputs = {a: [[[1.0], [1.0]], [[2.0], [2.0]], [[3.0], [3.0]]],
+                  b: [[[2.0, 2.0, 2.0]], [[3.0, 3.0, 3.0]], [[4.0, 4.0, 4.0]]]}
+        s.run(inputs)
+
+
+class TestInputSpecsWithNumTrials:
+    def test_documentation_example_numtrials(self):
+        a = TransferMechanism(name='a',
+                              default_variable=[0.0, 0.0])
+        b = TransferMechanism(name='b',
+                              # default_variable=[[0.0, 0.0], [0.0, 0.0, 0.0]]
+                              default_variable=[[0.0, 0.0], [0.0, 0.0, 0.0]]
+                              )
+        # ignore Mechanism c for now
+
+        p1 = Process(pathway=[a],
+                     name='p1')
+        p2 = Process(pathway=[b],
+                     name='p2')
+
+        s = System(
+            processes=[p1, p2]
+        )
+
+        inputs = {a: [[1.0, 1.0], [1.0, 1.0]],
+                  #  b: [[[2.0, 2.0], [3.0, 3.0, 3.0]], [[2.0, 2.0], [3.0, 3.0, 3.0]]]
+                  b: [[[2.0, 2.0], [3.0, 3.0]], [[2.0, 2.0], [3.0, 3.0]]]
+                  }
+
+        s.run(inputs, num_trials=5)
+
+
+        # -----------------------------------------------------
+
+        # # simplified documentation example -- ignore mechanism a
+        # simple_system = System(processes=[p2])
+        #
+        # simple_inputs = {b: [[[2.0, 2.0], [3.0, 3.0]], [[2.0, 2.0], [3.0, 3.0]]]}
+        # simple_system.run(simple_inputs)
+
+    def test_specify_single_inputs_as_floats_numtrials(self):
+        a = TransferMechanism(name='a')
+        b = TransferMechanism(name='b')
+        c = TransferMechanism(name='c')
+
+        p1 = Process(pathway=[a, c],
+                     name='p1')
+        p2 = Process(pathway=[b, c],
+                     name='p2')
+
+        s = System(
+            processes=[p1, p2]
+        )
+
+        # -----------------------------------------------------
+        inputs = {a: 1.0,
+                  b: 2.0}
+        s.run(inputs, num_trials=5)
+
+    def test_specify_many_trials_as_floats_numtrials(self):
+        a = TransferMechanism(name='a')
+        b = TransferMechanism(name='b')
+        c = TransferMechanism(name='c')
+
+        p1 = Process(pathway=[a, c],
+                     name='p1')
+        p2 = Process(pathway=[b, c],
+                     name='p2')
+
+        s = System(
+            processes=[p1, p2]
+        )
+
+        # -----------------------------------------------------
+        inputs = {a: [1.0, 1.0, 1.0],
+                  b: [2.0, 2.0, 2.0]}
+        s.run(inputs, num_trials=5)
+
+    def test_specify_single_inputs_without_trials_numtrials(self):
+        a = TransferMechanism(name='a',
+                              default_variable=[[0.0], [0.0]])
+        b = TransferMechanism(name='b',
+                              default_variable=[0.0, 0.0, 0.0])
+        c = TransferMechanism(name='c')
+
+        p1 = Process(pathway=[a, c],
+                     name='p1')
+        p2 = Process(pathway=[b, c],
+                     name='p2')
+
+        s = System(
+            processes=[p1, p2]
+        )
+
+        # -----------------------------------------------------
+        inputs = {a: [[1.0], [1.0]],
+                  b: [2.0, 2.0, 2.0]}
+        s.run(inputs, num_trials=5)
+
+    def test_specify_single_inputs_with_trials_numtrials(self):
+        a = TransferMechanism(name='a',
+                              default_variable=[[0.0], [0.0]])
+        b = TransferMechanism(name='b',
+                              default_variable=[0.0, 0.0, 0.0])
+        c = TransferMechanism(name='c')
+
+        p1 = Process(pathway=[a, c],
+                     name='p1')
+        p2 = Process(pathway=[b, c],
+                     name='p2')
+
+        s = System(
+            processes=[p1, p2]
+        )
+
+        # -----------------------------------------------------
+        inputs = {a: [[[1.0], [1.0]]],
+                  b: [[2.0, 2.0, 2.0]]}
+        s.run(inputs, num_trials=5)
+
+    def test_specify_inputs_without_states_numtrials(self):
+        a = TransferMechanism(name='a',
+                              default_variable=[[0.0], [0.0]])
+        b = TransferMechanism(name='b',
+                              default_variable=[0.0, 0.0, 0.0])
+        c = TransferMechanism(name='c')
+
+        p1 = Process(pathway=[a, c],
+                     name='p1')
+        p2 = Process(pathway=[b, c],
+                     name='p2')
+
+        s = System(
+            processes=[p1, p2]
+        )
+
+        # -----------------------------------------------------
+        inputs = {a: [[[1.0], [1.0]], [[2.0], [2.0]], [[3.0], [3.0]]],
+                  b: [[2.0, 2.0, 2.0], [3.0, 3.0, 3.0], [4.0, 4.0, 4.0]]}
+        s.run(inputs, num_trials=5)
+
+    def test_specify_inputs_with_states_numtrials(self):
+        a = TransferMechanism(name='a',
+                              default_variable=[[0.0], [0.0]])
+        b = TransferMechanism(name='b',
+                              default_variable=[0.0, 0.0, 0.0])
+        c = TransferMechanism(name='c')
+
+        p1 = Process(pathway=[a, c],
+                     name='p1')
+        p2 = Process(pathway=[b, c],
+                     name='p2')
+
+        s = System(
+            processes=[p1, p2]
+        )
+
+        # -----------------------------------------------------
+        inputs = {a: [[[1.0], [1.0]], [[2.0], [2.0]], [[3.0], [3.0]]],
+                  b: [[[2.0, 2.0, 2.0]], [[3.0, 3.0, 3.0]], [[4.0, 4.0, 4.0]]]}
+        s.run(inputs, num_trials=5)
+
 
 class TestGraphAndInput:
 
