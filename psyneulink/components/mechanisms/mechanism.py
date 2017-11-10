@@ -205,7 +205,7 @@ also be assigned as follows::
                                      params={FUNCTION_PARAMS: {GAIN:1.0,
                                                                BIAS=-4.0})
 
-Again, while not as simple as specifying these as arguments in the function's construtor, this format is more flexible.
+Again, while not as simple as specifying these as arguments in the function's constructor, this format is more flexible.
 Any values specified in the parameter dictionary will **override** any specified within the constructor for the function
 itself (see `DDM <DDM_Creation>` for an example).
 
@@ -416,7 +416,6 @@ items to which they are assigned assigned in he Mechanism's `variable  <Mechanis
 its `input_states <Mechanism_Base.input_states>` and input_values <Mechanism_Base.input_values>` attribute.  Note
 that a Mechanism's `input_value <Mechanism_Base.input_value>` attribute has the same information as the
 Mechanism's `variable <Mechanism_Base.variable>`, but in the form of a list rather than an ndarray.
-
 
 .. _Mechanism_InputState_Specification:
 
