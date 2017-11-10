@@ -609,6 +609,7 @@ state_type_keywords = {STATE_TYPE}
 
 STANDARD_STATE_ARGS = {STATE_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 STATE_SPEC = 'state_spec'
+ADD_STATES = 'ADD_STATES'
 
 def _is_state_class(spec):
     if inspect.isclass(spec) and issubclass(spec, State):
@@ -911,7 +912,7 @@ class State_Base(State):
                 pass
 
         # Enforce that only called from subclass
-        if not isinstance(context, State_Base) and not context is COMMAND_LINE:
+        if not isinstance(context, State_Base) and not context in {ADD_STATES, COMMAND_LINE}:
             raise StateError("Direct call to abstract class State() is not allowed; "
                                       "use state() or one of the following subclasses: {0}".
                                       format(", ".join("{!s}".format(key) for (key) in StateRegistry.keys())))
@@ -965,7 +966,6 @@ class State_Base(State):
             pass
 
         if context is COMMAND_LINE:
-            assert True
             state_list = getattr(owner, owner.state_list_attr[self.__class__])
             if state_list and not self in state_list:
                 owner.add_states(self)
@@ -2138,9 +2138,13 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         if state.init_status is InitStatus.DEFERRED_INITIALIZATION:
             if not state.init_args[OWNER]:
                 state.init_args[OWNER] = owner
+            if not VARIABLE in state.init_args or state.init_args[VARIABLE] is None:
                 state.init_args[VARIABLE] = owner.instance_defaults.variable[0]
-            if not hasattr(state, REFERENCE_VALUE):
-                state.reference_value = owner.instance_defaults.variable[0]
+            if (not hasattr(state, REFERENCE_VALUE) and
+                    not REFERENCE_VALUE in state.init_args or state.init_args[REFERENCE_VALUE] is None):
+                # state.reference_value = owner.instance_defaults.variable[0]
+                state.reference_value = state.init_args[VARIABLE]
+            state.init_args[CONTEXT]=context
             state._deferred_init()
 
         if variable:
@@ -2161,11 +2165,8 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
         # FIX: THIS SHOULD ONLY APPLY TO InputState AND ParameterState; WHAT ABOUT OutputState?
         # State's assigned value is incompatible with its reference_value (presumably its owner Mechanism's variable)
-        # MODIFIED 11/9/17 OLD:
-        # if not iscompatible(state.value, reference_value):
-        # MODIFIED 11/9/17 NEW:
-        if not iscompatible(state.value, state.reference_value):
-        # MODIFIED 11/9/17 END
+        reference_value = reference_value if reference_value is not None else state.reference_value
+        if not iscompatible(state.value, reference_value):
             raise StateError("{}'s value attribute ({}) is incompatible with the {} ({}) of its owner ({})".
                              format(state.name, state.value, REFERENCE_VALUE, state.reference_value, owner.name))
 

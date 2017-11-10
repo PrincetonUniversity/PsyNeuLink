@@ -647,7 +647,7 @@ class InputState(State_Base):
                                                   params=params)
 
         # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
-        if owner is None or reference_value is None:
+        if owner is None or (variable is None and reference_value is None):
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = context
@@ -735,7 +735,7 @@ class InputState(State_Base):
                                              self.function.__self__.componentName, ))
 
         # Insure that self.value is compatible with self.reference_value
-        if not iscompatible(self.value, self.reference_value):
+        if self.reference_value is not None and not iscompatible(self.value, self.reference_value):
             raise InputStateError("Value ({}) of {} {} for {} is not compatible with specified {} ({})".
                                            format(self.value,
                                                   self.componentName,
@@ -949,12 +949,13 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
                                          state_list=input_states,
                                          state_type=InputState,
                                          state_param_identifier=INPUT_STATE,
-                                         reference_value=reference_value or owner.instance_defaults.variable,
+                                         reference_value=reference_value if reference_value is not None
+                                                                         else owner.instance_defaults.variable,
                                          reference_value_name=VARIABLE,
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)
-    if context and 'COMMAND_LINE' in context:
+    if context and 'ADD_STATES' in context:
         owner.input_states.extend(state_list)
     else:
         owner._input_states = state_list
