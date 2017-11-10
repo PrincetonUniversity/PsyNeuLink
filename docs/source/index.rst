@@ -5,6 +5,11 @@
 
 :tocdepth: 5
 
+.. |logo| image:: _static/PsyNeuLink_logo.svg
+    :width: 50%
+
+|logo|
+
 Welcome to PsyNeuLink
 =====================
 
