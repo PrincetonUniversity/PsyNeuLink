@@ -39,8 +39,9 @@ the `pathway <Process.pathway>`.
 An InputState must be owned by a `Mechanism <Mechanism>`.  When InputState is specified in the constructor for a
 Mechanism (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as its owner. If
 the InputState is created directly, its `owner <InputState.owner>` can specified in the **owner**  argument of its
-constructor; otherwise, its initialization will be `deferred <State_Deferred_Initialization>` until it is assigned
-to an owner using the owner's `add_states` method.
+constructor, in which case it will be assigned to that Mechanism. Otherwise, its initialization will be
+`deferred <State_Deferred_Initialization>` until it is assigned to an owner using the owner's `add_states
+<Mechanism_Base.add_states>` method.
 
 .. _InputState_Primary:
 
@@ -72,12 +73,12 @@ parameter dictionary, any specified in the **input_states** argument are ignored
     the parameter dictionary in the **params** argument).  The number of InputStates specified must also be equal
     to the number of items in the Mechanism's <variable <Mechanism_Base.variable>` attribute.
 
-InputStates can also be **added** to a Mechanism, using the Mechanism's `add_states` method.  However, this has
-consequences for the Mechanism's `variable <Mechanism_Base.variable>` and possibly its relationship to the Mechanism's
-`function <Mechanism_Base.function>` (see `Mechanism_InputStates`). If the name of an InputState added to a Mechanism
-is the same as one that already exists, its name will be suffixed with a numerical index (incremented for each
-InputState with that name), and the InputState will be added to the list (that is, it will *not* replace ones that
-were already created).
+InputStates can also be **added** to a Mechanism, using the Mechanism's `add_states <Mechanism_Base.add_states>` method.
+However, this has consequences for the Mechanism's `variable <Mechanism_Base.variable>` and possibly its relationship to
+the Mechanism's `function <Mechanism_Base.function>` (see `Mechanism_InputStates`). If the name of an InputState added
+to a Mechanism is the same as one that already exists, its name will be suffixed with a numerical index (incremented
+for each InputState with that name), and the InputState will be added to the list (that is, it will *not* replace
+ones that already exist).
 
 .. _InputState_Variable_and_Value:
 

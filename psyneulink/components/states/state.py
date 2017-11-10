@@ -87,11 +87,14 @@ or by specifying the State in the constructor for its owner.  For example, unles
 any Component is created, it automatically creates a `ParameterState` for each of its `configurable parameters
 <Component_Configurable_Attributes>` and those of its `function <Component_Function>`. States are also created in
 response to explicit specifications.  For example, InputStates and OutputStates can be specified in the constructor
-for a Mechanism (see `Mechanism_State_Specification`) or in its `add_states` method; and a ParameterState is
-specified in effect when the value of a parameter for any Component or its `function <Component.function>` is
-specified in its constructor.  InputStates and OutputStates (but not ParameterStates) can also be created directly
-using their constructors;  however, Parameter States cannot be created in this way; they are always and only created
-when the Component to which a parameter belongs is created.
+for a Mechanism (see `Mechanism_State_Specification`); and ParameterStates are specified in effect when the value of a
+parameter for any Component or its `function <Component.function>` is specified in the constructor for that Component
+or function.  InputStates and OutputStates (but *not* ParameterStates) can also be created directly using their
+constructors, and then assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method;
+however, this should be done with caution as the State must be compatible with relevant attributes of its owner and its
+`function <Mechanism_Base.function>` (for example, see `note <Mechanism_Add_InputStates_Note>` regarding InputStates).
+Parameter States **cannot** on their own; they are always and only created when the Component to which a parameter
+belongs is created.
 
 .. _State_Specification:
 
@@ -198,14 +201,14 @@ Wherever a State is specified, it can be done using any of the following:
 
 .. _State_Deferred_Initialization:
 
-`InputStates <InputState>`, `OutputStates <OutputState>` and `ModulatorySignals <ModulatorySignal>` can also be
-created on their own, by using the relevant constructors;  however, `ParameterStates <ParameterState>` cannot be
-created on their own. If a State is created on its own, and its `owner <State_Owner>` is not specified, then its
-initialization will be `deferred <Component_Deferred_Initialization>`.  Its initialization is completed automatically
-when it is assigned to an owner `Mechanism <Mechanism_Base>` using the owner's `add_states` method.  If the State is
-not assigned to an owner, it will not be functional (i.e., used during the execution of `Mechanisms
-<Mechanism_Base_Execution>` and/or `Compositions <Composition_Execution>`, irrespective of whether it has any
-`Projections <Projection>` assigned to it.
+`InputStates <InputState>`, `OutputStates <OutputState>` and `ModulatorySignals <ModulatorySignal>` can also be created
+on their own, by using the relevant constructors;  however, `ParameterStates <ParameterState>` cannot be created on
+their own. If a State is created on its own, and its `owner <State_Owner>` Mechanism is specified, it is assigned to
+that Mechanism; if its owner not specified, then its initialization is `deferred <Component_Deferred_Initialization>`.
+Its initialization is completed automatically when it is assigned to an owner `Mechanism <Mechanism_Base>` using the
+owner's `add_states <Mechanism_Base.add_states>` method.  If the State is not assigned to an owner, it will not be
+functional (i.e., used during the execution of `Mechanisms <Mechanism_Base_Execution>` and/or `Compositions
+<Composition_Execution>`, irrespective of whether it has any `Projections <Projection>` assigned to it.
 
 .. _State_Projections:
 
@@ -268,9 +271,11 @@ owner must be a `Mechanism <Mechanism>`.  For `ParameterStates <ParameterState>`
 `PathwayProjection <PathwayProjection>`. For `ModulatorySignals <ModulatorySignal>`, it must be an `AdaptiveMechanism
 <AdaptiveMechanism>`. When a State is created as part of another Component, its `owner <State_Base.owner>` is
 assigned automatically to that Component.  It is also assigned automatically when the State is assigned to a
-`Mechanism <Mechanism>` using that Mechanism's `add_states` method.  Otherwise, it must be specified explicitly in
-the **owner** argument of the constructor for the State.  If it is not, the State's initialization will be `deferred
-<State_Deferred_Initialization>` until it has been assigned to an owner.
+`Mechanism <Mechanism>` using that Mechanism's `add_states <Mechanism_Base.add_states>` method.  Otherwise, it must be
+specified explicitly in the **owner** argument of the constructor for the State (in which case it is immediately
+assigned to the specified Mechanism).  If the **owner** argument is not specified, the State's initialization is
+`deferred <State_Deferred_Initialization>` until it has been assigned to an owner using the owner's `add_states
+<Mechanism_Base.add_states>` method.
 
 Variable, Function and Value
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
