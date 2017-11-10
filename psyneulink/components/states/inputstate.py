@@ -388,11 +388,12 @@ import typecheck as tc
 from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism
-from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.components.states.state import \
+    StateError, State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
     MECHANISM, OUTPUT_STATES, MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE, \
-    OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE, LEARNING_SIGNAL, GATING_SIGNAL, SENDER
+    OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE, LEARNING_SIGNAL, GATING_SIGNAL, SENDER, COMMAND_LINE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
@@ -635,6 +636,11 @@ class InputState(State_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
+        if context is None:
+            context = COMMAND_LINE
+        else:
+            context = self
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   weight=weight,
@@ -642,10 +648,10 @@ class InputState(State_Base):
                                                   params=params)
 
         # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
-        if owner is None or reference_value is None:
+        if owner is None or (variable is None and reference_value is None):
             # Store args for deferred initialization
             self.init_args = locals().copy()
-            self.init_args['context'] = self
+            self.init_args['context'] = context
             self.init_args['name'] = name
             self.init_args['projections'] = projections
 
@@ -664,10 +670,10 @@ class InputState(State_Base):
                                          params=params,
                                          name=name,
                                          prefs=prefs,
-                                         context=self)
+                                         context=context)
 
         if self.name is self.componentName or self.componentName + '-' in self.name:
-            self._assign_default_name()
+            self._assign_default_name(context=context)
 
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -730,7 +736,7 @@ class InputState(State_Base):
                                              self.function.__self__.componentName, ))
 
         # Insure that self.value is compatible with self.reference_value
-        if not iscompatible(self.value, self.reference_value):
+        if self.reference_value is not None and not iscompatible(self.value, self.reference_value):
             raise InputStateError("Value ({}) of {} {} for {} is not compatible with specified {} ({})".
                                            format(self.value,
                                                   self.componentName,
@@ -773,13 +779,29 @@ class InputState(State_Base):
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
 
-    def _assign_default_name(self):
-        # """Assign index of '-1' to first default  InputState
-        # Subsequent ones are indexed sequentially by Registry starting with '-2'
+    def _assign_default_name(self, context=None):
+        # """Assign 'INPUT_STATE-n' to any InputStates with default name (i.e., name of State: 'InputState'),
+        #    where n is the next index of InputStates with the default name
+        # Returns name assigned to State
         # """
-        # if self.name == self.componentName:
-        #     self.name = self.name+'-1'
-        self.name = self.name.replace(self.componentName, 'INPUT_STATE')
+
+        # Call for State being instantiated in the context of constructing its owner
+        if isinstance(context,State_Base):
+            self.name = self.name.replace(self.componentName, 'INPUT_STATE')
+
+        # Call in the context of adding a state to an existing owner
+        elif ADD_STATES in context:
+            try:
+                i=len([input_state for input_state in self.owner.input_states if 'INPUT_STATE-' in input_state.name])
+                self.name = 'INPUT_STATE-'+str(i)
+            except TypeError:
+                i=0
+                self.name = 'INPUT_STATE-'+str(i)
+
+        else:
+            raise InputStateError("PROGRAM ERROR: unrecognize context ({}) for assigning {} to {}".
+                                  format(context, NAME, InputState.__name__))
+        return self.name
 
 # MODIFIED 9/30/17 NEW:
     @tc.typecheck
@@ -944,12 +966,13 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
                                          state_list=input_states,
                                          state_type=InputState,
                                          state_param_identifier=INPUT_STATE,
-                                         reference_value=reference_value or owner.instance_defaults.variable,
+                                         reference_value=reference_value if reference_value is not None
+                                                                         else owner.instance_defaults.variable,
                                          reference_value_name=VARIABLE,
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)
-    if context and 'COMMAND_LINE' in context:
+    if context and 'ADD_STATES' in context:
         owner.input_states.extend(state_list)
     else:
         owner._input_states = state_list

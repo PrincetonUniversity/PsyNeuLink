@@ -712,7 +712,7 @@ from psyneulink.components.shellclasses import Function, Mechanism, Projection, 
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.components.states.state import _parse_state_spec
+from psyneulink.components.states.state import _parse_state_spec, ADD_STATES
 from psyneulink.globals.defaults import timeScaleSystemDefault
 from psyneulink.globals.keywords import \
     CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, \
@@ -2000,13 +2000,14 @@ class Mechanism_Base(Mechanism):
             # Check if inputs are of different lengths (indicated by dtype == np.dtype('O'))
             num_inputs = np.size(input)
             if isinstance(input, np.ndarray) and input.dtype is np.dtype('O') and num_inputs == num_input_states:
-                pass
+                # Reduce input back down to sequence of arrays (to remove extra dim added by atleast_2d above)
+                input = np.squeeze(input)
             else:
                 num_inputs = np.size(input, 0)  # revert num_inputs to its previous value, when printing the error
                 raise SystemError("Number of inputs ({0}) to {1} does not match "
                                   "its number of input_states ({2})".
                                   format(num_inputs, self.name,  num_input_states ))
-        for i in range(num_input_states):
+        for i, input_state in enumerate(self.input_states):
             # input_state = list(self.input_states.values())[i]
             input_state = self.input_states[i]
             # input_item = np.ndarray(input[i])
@@ -2022,7 +2023,7 @@ class Mechanism_Base(Mechanism):
                         input[i],
                         len(input_state.instance_defaults.variable),
                         input_state.name,
-                        append_type_to_name(self),
+                        self.name
                     )
                 )
 
@@ -2190,7 +2191,7 @@ class Mechanism_Base(Mechanism):
         plt.show()
 
     @tc.typecheck
-    def add_states(self, states, context=COMMAND_LINE):
+    def add_states(self, states, context=ADD_STATES):
         """
         add_states(states)
 
@@ -2239,6 +2240,7 @@ class Mechanism_Base(Mechanism):
         instantiated_output_states = None
 
         for state in states:
+            # FIX: 11/9/17: REFACTOR USING _parse_state_spec
             state_type = _parse_state_type(self, state)
             if (isinstance(state_type, InputState) or
                     (inspect.isclass(state_type) and issubclass(state_type, InputState))):
@@ -2255,15 +2257,14 @@ class Mechanism_Base(Mechanism):
                 old_variable = self.instance_defaults.variable.tolist()
                 old_variable.extend(added_variable)
                 self.instance_defaults.variable = np.array(old_variable)
-                # FIX: 11/8/17 - INCLUDE OR NOT:
-                self.function_object.instance_defaults.variable = self.instance_defaults.variable
-                self.function_object.variableClassDefault = self.instance_defaults.variable
-                self.value = self.function()
-                # FIX END
-                instantiated_input_states = _instantiate_input_states(self, input_states,
+                self._update_variable(self.instance_defaults.variable)
+                instantiated_input_states = _instantiate_input_states(self,
+                                                                      input_states,
                                                                       added_variable,
                                                                       context=context)
-                # instantiated_input_states = self._instantiate_input_states(input_states, context=context)
+                for state in instantiated_input_states:
+                    if state.name is state.componentName or state.componentName + '-' in state.name:
+                        state._assign_default_name(context=context)
         if output_states:
             instantiated_output_states = _instantiate_output_states(self, output_states, context=context)
 

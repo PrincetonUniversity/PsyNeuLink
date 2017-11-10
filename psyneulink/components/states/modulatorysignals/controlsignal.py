@@ -296,7 +296,7 @@ from psyneulink.components.states.state import State_Base
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import \
     ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, \
-    FUNCTION, FUNCTION_PARAMS, INTERCEPT, MECHANISM, MODULATION, NAME, OFF, ON, \
+    FUNCTION, FUNCTION_PARAMS, INTERCEPT, COMMAND_LINE, OFF, ON, \
     PARAMETER_STATE, PARAMETER_STATES, OUTPUT_STATE_PARAMS, \
     PROJECTION_TYPE, RECEIVER, SEPARATOR_BAR, SLOPE, SUM, kwAssign
 from psyneulink.globals.log import LogEntry, LogLevel
@@ -665,6 +665,11 @@ class ControlSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  context=None):
 
+        if context is None:
+            context = COMMAND_LINE
+        else:
+            context = self
+
         # Note index and calculate are not used by ControlSignal, but included here for consistency with OutputState
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
             allocation_samples =  params[ALLOCATION_SAMPLES]
@@ -702,7 +707,7 @@ class ControlSignal(ModulatorySignal):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate allocation_samples and control_signal cost functions

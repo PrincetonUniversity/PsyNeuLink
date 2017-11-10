@@ -712,7 +712,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             if (np.array(noise) != 0).any():
                 current_input = variable[0] + noise
             else:
-
                 current_input = variable[0]
 
         # self.previous_input = current_input
@@ -720,11 +719,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Apply TransferMechanism function
         output_vector = self.function(variable=current_input, params=runtime_params)
 
-        # # MODIFIED  OLD:
-        # if list(range):
-        # MODIFIED  NEW:
         if range is not None:
-        # MODIFIED  END
             minCapIndices = np.where(output_vector < range[0])
             maxCapIndices = np.where(output_vector > range[1])
             output_vector[minCapIndices] = np.min(range)
