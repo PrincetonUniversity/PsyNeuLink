@@ -25,43 +25,42 @@ Welcome to PsyNeuLink      |logo|
 
 Purpose
 -------
+PsyNeuLink is an open-source, software environment written in Python, and designed for the needs of
+neuroscientists, psychologists, computational psychiatrists and others interested learning about and building
+models of the relationship between brain function, mental processes and behavior.
 
-PsyNeuLink is a "block modeling environment" for cognitive neuroscience.  Block modeling systems allow components to be
-constructed that implement various, possibly disparate functions, and then link them together into a system to
-examine how they interact.  In PsyNeuLink, components are used to implement the function of brain subsystems and/or
-psychological processes, the interaction of which can then be simulated at the system level.
+PsyNeuLink can be used as a "block modeling environment", in which to construct, simulate, document, and exchange
+computational models of neural mechanisms and/or psychological processes at the subsystem and system levels.
+A block modeling environment allows components to be constructed that implement various, possibly disparate
+functions, and then link them together into a system to examine how they interact.  In PsyNeuLink, components are
+used to implement the function of brain subsystems and/or psychological processes, the interaction of which can then
+be simulated at the system level.
 
-PsyNeuLink is open source, and meant to be extended. Its goal is to provide an environment for implementing models
-of mind/brain function that are modular, customizable, extensible, disseminable, easily reproducible and clearly
-documented.  It does this in a manner that:
+The purpose of PsyNeuLink is to make it as easy as possible to create new and/or import existing models, and
+integrate them to simluate system-level interactions.  It provides a suite of core components for
+implementing models of various forms of processing, learning, and control, and its Library includes examples that
+combine these components to implement published models.  As an open source project, its suite of components is meant
+to be enhanced and extended, and its library is meant to provide an expanding repository of models, written in a
+concise, executable, and easy to interpret form, that can be shared, and compared by the scientific
+community.
 
- - is *computationally general* -- that is, that can implement any desired mechanism or process;
- ..
- - adheres as closely as possible to the insights and design principles that have been learned in computer science
-   (e.g., function-based, object-oriented programming);
- ..
- - expresses (as few as possible) *commitments* that reflect general principles of how the mind/brain is organized
-   and operates, without committing to any particular detailed model or theory;
- ..
- - expresses these commitments in a form that is powerful, easy to use, and familiar to cognitive neuroscientists;
- ..
- - allows models to be simply and flexibly implemented, using a minimum of coding, and that provides seamless
-   integration of, and interaction among disparate components that can vary in their:
-     - granularity of representation and function
-     - time-scale of operation
- ..
- - provides a standard and accessible environment for model comparison, sharing, and documentation;
- ..
- - has an interface (API) that allows it to be used with other powerful tools for implementing individual components,
-   such as:
 
-   * MatLab (general purpose mathematical tools);
+PsyNeuLink is:
+
+ - *open source*, freeing users of the costs or restrictions associated with proprietary software.
+ ..
+ - *computationally general* -- it can be used to implement, seamlessly integrate, and simulate interactions among
+   disparate components that vary in their granularity of representation and function (from individual neurons or
+   neural populations to functional subsystems and abstract cognitive functions) and at any time scale of execution.
+ ..
+ - *integrative* -- it provides a standard and accessible environment for model comparison, sharing, and documentation;
+ ..
+ - *extensible* -- it has an interface (API) that allows it to be used with other powerful tools for implementing
+   individual components, such as:
+   * Neuron (biophysically realistic models of neuronal function)
    * TensorFlow (ODE's, deep learning);
    * Emergent (broad class of neurally-plausible connectionist models);
    * ACT-R (symbolic, production system models).
-
-The goal is to encourage users to think about information processing in a "mind/brain-like" way, while imposing as few
-constraints as possible on what it is possible to implement or ask the model to do.
 
 .. note::
    PsyNeuLink is alpha software, that is still being actively developed.  Although it is useable, and most of the
@@ -73,11 +72,11 @@ constraints as possible on what it is possible to implement or ask the model to 
 What PsyNeuLink is **NOT**
 --------------------------
 
-PsyNeuLink is well suited to the creation of simple to moderately complex models, and to the integration of
+PsyNeuLink is well suited to the creation of simple to moderately complex models, and for the integration of
 disparate existing models into a single, integrated system in which interactions among them can be examined.
-While it is fully general, and can be used to implement virtually any kind of model, it is less well suited to other
-kinds of efforts, that involve massively large computations and/or specialized functions and data types that it
-currently does not support, such as:
+While it is fully general, and can be used to implement virtually any type of model, in its current form it is
+less well suited to certain kinds of efforts, that involve massively large computations and/or specialized functions
+and data types that it currently does not support, such as:
 
  - extensive model fitting
  - large scale simulations
@@ -91,26 +90,27 @@ Other packages that are better suited to such applications are:
 `Genesis <http://www.genesis-sim.org>`_,
 `Neuron <https://www.neuron.yale.edu/neuron/>`_,
 and `Nengo <http://www.nengo.ca>`_  (for biophysically-realistic models of neuronal function).
+
 These packages are good for elaborate and detailed models of a particular form.
 In contrast, the focus in designing and implementing PsyNeuLink has been to make it as flexible and easy to use as
 possible, with the ability to integrate components constructed in other packages (including some of the ones listed
 above) into a single functioning system.  These are characteristics that are often (at least in the initial
-stages of development) in tension with efficiency (think:  interpreted vs. compiled).  One of the goals for future
-development is to make PsyNeuLink more computationally efficient.  At present, however, it is best suited to
-developing simpler models, or taking complex or highly detailed models that have been developed --
-or subjected to extensive parameter fitting -- in other frameworks, and re-expressing them in a form that is amenable
-to integration, documentation, and dissemination.
+stages of development) in tension with efficiency (think:  interpreted vs. compiled).  Two priorities for continued
+development are the accleration of PsyNeuLink using just-in-time compilation methods, parallelization and adaptation
+to FPGA hardware; and the implementation of a graphic interface for the construction of models and realtime display
+of their execution.
 
 .. _Overview:
 
-Overview
---------
+Environment Overview
+--------------------
 
-PsyNeuLink is written in Python, and conforms to the syntax and coding standards for the language.
-`BasicsAndSampler` provides an orientation to PsyNeuLinks Components, some examples of what PsyNeuLink models
-look like, and some of its capabilities. `QuickReference` provides an overview of how PsyNeuLink is organized and
-some of its basic principles of operation.  The `Tutorial <Tutorial>` provides an interactive guide to the
-construction of models using PsyNeuLink.
+PsyNeuLink is written in Python, and conforms to the syntax, coding standards and modular organization shared by
+most Python packages.  `BasicsAndSampler` provides an orientation to PsyNeuLinks Components, some examples of what
+PsyNeuLink models look like, and some of its capabilities. `QuickReference` provides an overview of how PsyNeuLink is
+organized and some of its basic principles of operation.  The `Tutorial <Tutorial>` provides an interactive guide to the
+construction of models using PsyNeuLink.  `Core` contains the fundamental constructs out of which PsyNeuLink models
+are built, and `Library` contains extensions, including speciality components and implemented models.
 
 .. _Installation:
 
