@@ -207,6 +207,7 @@ class MatrixKeywords:
     def _names(self):
         return list(self.__dict__)
 
+
 MATRIX = "matrix"
 IDENTITY_MATRIX = "IdentityMatrix"
 HOLLOW_MATRIX = "HollowMatrix"
@@ -222,6 +223,70 @@ MATRIX_KEYWORD_VALUES = MATRIX_KEYWORDS._values()
 MATRIX_KEYWORD_NAMES = MATRIX_KEYWORDS._names()
 # MATRIX_KEYWORD_VALUES = list(MATRIX_KEYWORDS.__dict__.values())
 # MATRIX_KEYWORD_NAMES = list(MATRIX_KEYWORDS.__dict__)
+
+
+class DistanceMetrics:
+    """
+    Attributes
+    ----------
+
+    DIFFERENCE
+        Description
+
+    EUCLIDEAN
+        Description
+
+    ANGLE
+        Description
+
+    CROSS_ENTROPY
+        <Description>
+
+    CORRELATION
+        <Description>
+
+    PEARSON
+        <Description>
+
+    """
+    def __init__(self):
+        self.DIFFERENCE = DIFFERENCE
+        self.EUCLIDEAN = EUCLIDEAN
+        self.ANGLE = ANGLE
+        self.CROSS_ENTROPY = CROSS_ENTROPY
+        self.CORRELATION = CORRELATION
+        self.PEARSON = PEARSON
+
+    def _values(self):
+        return list(self.__dict__.values())
+
+    def _set(self):
+        return set(self.__dict__.values())
+
+    def _names(self):
+        return list(self.__dict__)
+
+    def _is_metric(metric):
+        if metric in DISTANCE_METRICS_SET:
+            return True
+        else:
+            return False
+
+
+DIFFERENCE = 'difference'
+EUCLIDEAN = 'euclidean'
+ANGLE = 'angle'
+CORRELATION = 'correlation'
+PEARSON = 'Pearson'
+CROSS_ENTROPY = 'cross-entropy'
+
+DISTANCE_METRICS = DistanceMetrics()
+DISTANCE_METRICS_SET = DISTANCE_METRICS._set()
+DISTANCE_METRICS_VALUES = DISTANCE_METRICS._values()
+DISTANCE_METRICS_NAMES = DISTANCE_METRICS._names()
+
+ENERGY = 'energy'
+ENTROPY = 'entropy'
 
 
 # **********************************************************************************************************************
@@ -465,16 +530,6 @@ WALD_DIST_FUNCTION = "Wald Distribution Function"
 STABILITY_FUNCTION = 'Stability Function'
 DISTANCE_FUNCTION = 'Distance Function'
 
-ENERGY = 'energy'
-ENTROPY = 'entropy'
-
-DIFFERENCE = 'difference'
-EUCLIDEAN = 'euclidean'
-ANGLE = 'angle'
-CORRELATION = 'correlation'
-PEARSON = 'Pearson'
-CROSS_ENTROPY = 'cross-entropy'
-DISTANCE_METRICS = {DIFFERENCE, EUCLIDEAN, ANGLE, CORRELATION, PEARSON, CROSS_ENTROPY}
 
 #endregion
 
