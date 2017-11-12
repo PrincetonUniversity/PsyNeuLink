@@ -87,7 +87,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import parameter_keywords
-from psyneulink.components.functions.function import get_matrix
+from psyneulink.components.functions.function import _get_matrix
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.projection import projection_keywords
 from psyneulink.components.shellclasses import Mechanism
@@ -478,12 +478,12 @@ class AutoAssociativeProjection(MappingProjection):
 # a helper function that takes a specification of `hetero` and returns a hollow matrix with the right values
 def get_hetero_matrix(raw_hetero, size):
     if isinstance(raw_hetero, numbers.Number):
-        return get_matrix(HOLLOW_MATRIX, size, size) * raw_hetero
+        return _get_matrix(HOLLOW_MATRIX, size, size) * raw_hetero
     elif ((isinstance(raw_hetero, np.ndarray) and raw_hetero.ndim == 1) or
               (isinstance(raw_hetero, list) and np.array(raw_hetero).ndim == 1)):
         if len(raw_hetero) != 1:
             return None
-        return get_matrix(HOLLOW_MATRIX, size, size) * raw_hetero[0]
+        return _get_matrix(HOLLOW_MATRIX, size, size) * raw_hetero[0]
     elif (isinstance(raw_hetero, np.matrix) or
               (isinstance(raw_hetero, np.ndarray) and raw_hetero.ndim == 2) or
               (isinstance(raw_hetero, list) and np.array(raw_hetero).ndim == 2)):
