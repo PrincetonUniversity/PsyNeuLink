@@ -252,7 +252,7 @@ class DistanceMetrics:
         <Description>
     COMMENT
 
-    CROSS_ENTROPY
+    ENTROPY (and CROSS_ENTROPY)
         :math:`d = \\sum\limits^{len}a_1log(a_2)`
 
     ENERGY:
@@ -263,9 +263,11 @@ class DistanceMetrics:
         self.DIFFERENCE = DIFFERENCE
         self.EUCLIDEAN = EUCLIDEAN
         self.ANGLE = ANGLE
-        self.CROSS_ENTROPY = CROSS_ENTROPY
         self.CORRELATION = CORRELATION
         self.PEARSON = PEARSON
+        self.ENTROPY = CROSS_ENTROPY
+        self.CROSS_ENTROPY = CROSS_ENTROPY
+        self.ENERGY = ENERGY
 
     def _values(self):
         return list(self.__dict__.values())
@@ -288,7 +290,9 @@ EUCLIDEAN = 'euclidean'
 ANGLE = 'angle'
 CORRELATION = 'correlation'
 PEARSON = 'Pearson'
+ENTROPY = 'cross-entropy'
 CROSS_ENTROPY = 'cross-entropy'
+ENERGY = 'energy'
 
 DISTANCE_METRICS = DistanceMetrics()
 DISTANCE_METRICS_SET = DISTANCE_METRICS._set()

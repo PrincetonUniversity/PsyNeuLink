@@ -7515,11 +7515,12 @@ class Stability(ObjectiveFunction):
 
     The value of `variable <Stability.variable>` is passed through the `matrix <Stability.matrix>`,
     transformed using the `transfer_fct <Stability.transfer_fct>` (if specified), and then compared with its initial
-    value using one the `metric <Stability.metric>` specified from among the set of `DistanceMetrics`.  If `normalize
-    <Stability.normalize>` is specified, the result is normalized by the length of (number of elements in) `variable
+    value using the `distance metric <DistanceMetric>` specified by `metric <Stability.metric>`.  If `normalize
+    <Stability.normalize>` is `True`, the result is normalized by the length of (number of elements in) `variable
     <Stability.variable>`.
 
 COMMENT:
+*** 11/11/17 - DELETE THIS ONE Stability IS STABLE:
     Stability s is calculated according as specified by `metric <Distance.metric>`, using the formulae below,
     where :math:`i` and :math:`j` are each elements of `variable <Stability.variable>`, *len* is its length,
     :math:`\\bar{v}` is its mean, :math:`\\sigma_v` is its standard deviation, and :math:`w_{ij}` is the entry of the
@@ -7557,8 +7558,8 @@ COMMENT
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
 
-    metric : ENERGY, ENTROPY or keyword in DistanceMetrics : Default ENERGY
-        specifies a `metric <DistanceMetrics>` used to compute stability.
+    metric : keyword in DistanceMetrics : Default ENERGY
+        specifies a `metric <DistanceMetrics>` from `DistanceMetrics` used to compute stability.
 
     transfer_fct : function or method : Default None
         specifies the function used to transform output of weight `matrix <Stability.matrix>`.
@@ -7589,10 +7590,10 @@ COMMENT
         than HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from the
         stability calculation.
 
-    metric : ENERGY, ENTROPY or keyword in DistanceMetrics
-        metric used to compute stability.  If *ENTROPY* or a `DistanceMetrics` keyword is used, the `Distance` Function
-        is used to compute the stability of `variable <Stability.variable>` with respect to its value after
-        transformation by `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>`.
+    metric : keyword in DistanceMetrics
+        metric used to compute stability; must be a `DistanceMetrics` keyword. The `Distance` Function is used to
+        compute the stability of `variable <Stability.variable>` with respect to its value after its transformation
+        by `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>`.
 
     transfer_fct : function or method
         function used to transform output of weight `matrix <Stability.matrix>` prior to computing stability.
@@ -7734,11 +7735,17 @@ COMMENT
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX,size, size)
 
+        # # MODIFIED 11/12/17 OLD:
+        # if self.metric is ENTROPY:
+        #     self._metric_fct = Distance(metric=CROSS_ENTROPY)
+        # elif self.metric in DISTANCE_METRICS:
+        #     self._metric_fct = Distance(metric=self.metric)
+        # MODIFIED 11/12/17 NEW:
         if self.metric is ENTROPY:
-            self._metric_fct = Distance(metric=CROSS_ENTROPY)
-
+            self._metric_fct = Distance(metric=CROSS_ENTROPY, normalize=self.normalize)
         elif self.metric in DISTANCE_METRICS:
-            self._metric_fct = Distance(metric=self.metric)
+            self._metric_fct = Distance(metric=self.metric, normalize=self.normalize)
+        # MODIFIED 11/12/17 END
 
 
     def function(self,
@@ -7774,16 +7781,20 @@ COMMENT
         else:
             transformed = np.dot(matrix * self._hollow_matrix, variable)
 
-        if self.metric is ENERGY:
-            result = -np.sum(current * transformed)/2
-        else:
-            result = self._metric_fct.function(variable=[current,transformed], context=context)
-
-        if self.normalize:
-            if self.metric is ENERGY:
-                result /= len(variable)**2
-            else:
-                result /= len(variable)
+        # # MODIFIED 11/12/15 OLD:
+        # if self.metric is ENERGY:
+        #     result = -np.sum(current * transformed)/2
+        # else:
+        #     result = self._metric_fct.function(variable=[current,transformed], context=context)
+        #
+        # if self.normalize:
+        #     if self.metric is ENERGY:
+        #         result /= len(variable)**2
+        #     else:
+        #         result /= len(variable)
+        # MODIFIED 11/12/15 NEW:
+        result = self._metric_fct.function(variable=[current,transformed], context=context)
+        # MODIFIED 11/12/15 END
 
         return result
 
@@ -7802,10 +7813,10 @@ class Distance(ObjectiveFunction):
 
     .. _Distance:
 
-    Return the distance between the vectors in the two items of `variable <Distance.variable>` using one of the
-    `DistanceMetrics` metric specified in the `metric <Stability.metric>` attribute of the Function.  If `normalize
-    <Distance.normalize>` is specified, the result is normalized by the length of (number of elements in) `variable
-    <Stability.variable>` (:math:`d = \\frac{d}{len}`).
+    Return the distance between the vectors in the two items of `variable <Distance.variable>` using the `distance
+    metric <DistanceMetrics>` specified in the `metric <Stability.metric>` attribute.  If `normalize
+    <Distance.normalize>` is `True`, the result is normalized by the length of (number of elements in) `variable
+    <Stability.variable>`.
 
     Arguments
     ---------
@@ -7814,7 +7825,7 @@ class Distance(ObjectiveFunction):
         the arrays between which the distance is calculated.
 
     metric : keyword in DistancesMetrics : Default EUCLIDEAN
-        specifies a `metric <DistanceMetrics>` used to compute the distance between the two items in `variable
+        specifies a `distance metric <DistanceMetrics>` used to compute the distance between the two items in `variable
         <Distance.variable>`.
 
     normalize : bool : Default False
@@ -7908,8 +7919,9 @@ class Distance(ObjectiveFunction):
                  context=None):
         """Calculate the distance between the two vectors in `variable <Stability.variable>`.
 
-        Use the distance metric specified in `metric <Distance.metric>` to calculate the distance.  If `normalize
-        <Distance.normalize>` is `True`, the result is divided by the length of `variable <Distance.variable>`.
+        Use the `distance metric <DistanceMetrics>` specified in `metric <Distance.metric>` to calculate the distance.
+        If `normalize <Distance.normalize>` is `True`, the result is divided by the length of `variable
+        <Distance.variable>`.
 
         Returns
         -------
@@ -7952,10 +7964,19 @@ class Distance(ObjectiveFunction):
                 v2 = np.where(v2==0, EPSILON, v2)
             result = -np.sum(v1*np.log(v2))
 
+        # Energy
+        elif self.metric is ENERGY:
+            result = -np.sum(v1*v2)/2
+
         if self.normalize:
-            # if np.sum(denom):
-            # result /= np.sum(x,y)
-            result /= len(variable[0])
+            # # MODIFIED 11/12/17 OLD:
+            # result /= len(variable[0])
+            # MODIFIED 11/12/17 NEW:
+            if self.metric is ENERGY:
+                result /= len(v1)**2
+            else:
+                result /= len(v1)
+            # MODIFIED 11/12/17 END
 
         return result
 
