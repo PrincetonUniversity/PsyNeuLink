@@ -186,8 +186,24 @@ from numpy import abs, exp, tanh
 
 from psyneulink.components.component import ComponentError, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
-from psyneulink.globals.keywords import VARIABLE, ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, \
-    ANGLE, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, GILZENRAT_INTEGRATOR_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+from psyneulink.globals.keywords import \
+    VARIABLE, ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, \
+    ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, \
+    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, \
+    DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DistanceMetrics,\
+    DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, \
+    EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, \
+    FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, \
+    HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, \
+    INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, \
+    LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, \
+    MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, \
+    OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, \
+    PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, \
+    RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, \
+    SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, \
+    USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, \
+    kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -7495,20 +7511,20 @@ class Stability(ObjectiveFunction):
 
     .. _Stability:
 
-    Return the stability of `variable <Stability.variable>` based on a weight matrix from each of its elements to every
-    other element.  The value of `variable <Stability.variable>` is passed through the `matrix <Stability.matrix>`,
-    transformed using the `transfer_fct <Stability.transfer_fct>` (if specified), and then compared with its initial
-    value using the specified `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is specified,
-    the result is normalized by the length of (number of elements in) `variable <Stability.variable>`.
+    Return the stability of `variable <Stability.variable>` based on a state transformation matrix.
 
+    The value of `variable <Stability.variable>` is passed through the `matrix <Stability.matrix>`,
+    transformed using the `transfer_fct <Stability.transfer_fct>` (if specified), and then compared with its initial
+    value using the `distance metric <DistanceMetric>` specified by `metric <Stability.metric>`.  If `normalize
+    <Stability.normalize>` is `True`, the result is normalized by the length of (number of elements in) `variable
+    <Stability.variable>`.
+
+COMMENT:
+*** 11/11/17 - DELETE THIS ONE Stability IS STABLE:
     Stability s is calculated according as specified by `metric <Distance.metric>`, using the formulae below,
     where :math:`i` and :math:`j` are each elements of `variable <Stability.variable>`, *len* is its length,
     :math:`\\bar{v}` is its mean, :math:`\\sigma_v` is its standard deviation, and :math:`w_{ij}` is the entry of the
     weight matrix for the connection between entries :math:`i` and :math:`j` in `variable <Stability.variable>`.
-
-    *ENERGY*:
-
-        :math:`s = -\\sum\limits^{len}(i*j*w_{ij})`
 
     *ENTROPY*:
 
@@ -7524,11 +7540,12 @@ class Stability(ObjectiveFunction):
 
     *CORRELATION*:
 
-       :math:`d = \\frac{\\sum\limits^{len}(i-\\bar{i})(j-\\bar{j})}{(len-1)\\sigma_{i}\\sigma_{j}}`
+       :math:`s = \\frac{\\sum\limits^{len}(i-\\bar{i})(j-\\bar{j})}{(len-1)\\sigma_{i}\\sigma_{j}}`
 
     **normalize**:
 
-       :math:`s = \\frac{d}{len}`
+       :math:`s = \\frac{s}{len}`
+COMMENT
 
 
     Arguments
@@ -7541,8 +7558,8 @@ class Stability(ObjectiveFunction):
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
 
-    metric : ENERGY, ENTROPY or keyword in DISTANCE_METRICS : Default ENERGY
-        specifies the metric used to compute stability.
+    metric : keyword in DistanceMetrics : Default ENERGY
+        specifies a `metric <DistanceMetrics>` from `DistanceMetrics` used to compute stability.
 
     transfer_fct : function or method : Default None
         specifies the function used to transform output of weight `matrix <Stability.matrix>`.
@@ -7573,10 +7590,10 @@ class Stability(ObjectiveFunction):
         than HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from the
         stability calculation.
 
-    metric : ENERGY, ENTROPY or keyword in DISTANCE_METRICS
-        metric used to compute stability.  If ENTROPY or DISTANCE_METRICS keyword is used, the `Distance` Function
-        is used to compute the stability of `variable <Stability.variable>` with respect to its value after
-        transformation by `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>`.
+    metric : keyword in DistanceMetrics
+        metric used to compute stability; must be a `DistanceMetrics` keyword. The `Distance` Function is used to
+        compute the stability of `variable <Stability.variable>` with respect to its value after its transformation
+        by `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>`.
 
     transfer_fct : function or method
         function used to transform output of weight `matrix <Stability.matrix>` prior to computing stability.
@@ -7718,11 +7735,17 @@ class Stability(ObjectiveFunction):
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX,size, size)
 
+        # # MODIFIED 11/12/17 OLD:
+        # if self.metric is ENTROPY:
+        #     self._metric_fct = Distance(metric=CROSS_ENTROPY)
+        # elif self.metric in DISTANCE_METRICS:
+        #     self._metric_fct = Distance(metric=self.metric)
+        # MODIFIED 11/12/17 NEW:
         if self.metric is ENTROPY:
-            self._metric_fct = Distance(metric=CROSS_ENTROPY)
-
+            self._metric_fct = Distance(metric=CROSS_ENTROPY, normalize=self.normalize)
         elif self.metric in DISTANCE_METRICS:
-            self._metric_fct = Distance(metric=self.metric)
+            self._metric_fct = Distance(metric=self.metric, normalize=self.normalize)
+        # MODIFIED 11/12/17 END
 
 
     def function(self,
@@ -7758,13 +7781,20 @@ class Stability(ObjectiveFunction):
         else:
             transformed = np.dot(matrix * self._hollow_matrix, variable)
 
-        if self.metric is ENERGY:
-            result = -np.sum(current * transformed)
-        else:
-            result = self._metric_fct.function(variable=[current,transformed], context=context)
-
-        if self.normalize:
-            result /= len(variable)
+        # # MODIFIED 11/12/15 OLD:
+        # if self.metric is ENERGY:
+        #     result = -np.sum(current * transformed)/2
+        # else:
+        #     result = self._metric_fct.function(variable=[current,transformed], context=context)
+        #
+        # if self.normalize:
+        #     if self.metric is ENERGY:
+        #         result /= len(variable)**2
+        #     else:
+        #         result /= len(variable)
+        # MODIFIED 11/12/15 NEW:
+        result = self._metric_fct.function(variable=[current,transformed], context=context)
+        # MODIFIED 11/12/15 END
 
         return result
 
@@ -7772,53 +7802,21 @@ class Stability(ObjectiveFunction):
 
 class Distance(ObjectiveFunction):
     """
-    Distance(                                  \
+    Distance(                                    \
        default_variable=ClassDefaults.variable,  \
-       metric=EUCLIDEAN                        \
-       normalize=False,                        \
-       params=None,                            \
-       owner=None,                             \
-       prefs=None                              \
+       metric=EUCLIDEAN                          \
+       normalize=False,                          \
+       params=None,                              \
+       owner=None,                               \
+       prefs=None                                \
        )
 
     .. _Distance:
 
-    Return the distance between the vectors in the two items of `variable <Distance.variable>` using a `DISTANCE_METRIC
-    <DISTANCE_METRICS>` specified in `metric <Stability.metric>`.  If `normalize <Distance.normalize>` is
-    specified, the result is normalized by the length of (number of elements in) `variable <Stability.variable>`.
-
-    Distance d is calculated according to a `DISTANCE_METRICS` specified in the `metric <Distance.metric>`
-    attribute of the Function, where :math:`v_1` and :math:`v_2` are the two items of `variable
-    <Distance.variable>`, *len* is the length of the items (len(`variable <Distance.variable>`)),
-    :math:`\\bar{v}` is the mean of an item, and :math:`\\sigma_v` is its standard deviation:
-
-    *DIFFERENCE*:
-
-       :math:`d = \\sum\limits^{len}(v_1-v_2)`
-
-    *EUCLIDEAN*:
-
-       :math:`d = \\sum\limits^{len}\\sqrt{(v_1-v_2)^2}`
-
-    *CROSS_ENTROPY*:
-
-       :math:`d = \\sum\limits^{len}(v_1*log(v_2))`
-
-    *CORRELATION*:
-
-       :math:`d = \\frac{\\sum\limits^{len}(v_1-\\bar{v}_1)(v_2-\\bar{v}_2)}{(len-1)\\sigma_{v_1}\\sigma_{v_2}}`
-
-    COMMENT:
-    PEARSON
-
-       :math:`d = \\frac{\\sum\limits^{len}(v_1-\\bar{v}_1)(v_2-\\bar{v}_2)}\
-       {(len-1)\\sigma_{v_1}\\sigma_{v_2}}`
-    COMMENT
-
-    **normalize**:
-
-       :math:`d = \\frac{d}{len}`
-
+    Return the distance between the vectors in the two items of `variable <Distance.variable>` using the `distance
+    metric <DistanceMetrics>` specified in the `metric <Stability.metric>` attribute.  If `normalize
+    <Distance.normalize>` is `True`, the result is normalized by the length of (number of elements in) `variable
+    <Stability.variable>`.
 
     Arguments
     ---------
@@ -7826,8 +7824,9 @@ class Distance(ObjectiveFunction):
     variable : 2d np.array with two items : Default ClassDefaults.variable
         the arrays between which the distance is calculated.
 
-    metric : keyword in DISTANCE_METRICS : Default EUCLIDEAN
-        specifies the metric used to compute the distance between the two items in `variable <Distance.variable>`.
+    metric : keyword in DistancesMetrics : Default EUCLIDEAN
+        specifies a `distance metric <DistanceMetrics>` used to compute the distance between the two items in `variable
+        <Distance.variable>`.
 
     normalize : bool : Default False
         specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
@@ -7851,11 +7850,12 @@ class Distance(ObjectiveFunction):
     variable : 2d np.array with two items
         contains the arrays between which the distance is calculated.
 
-    metric : keyword in DISTANCE_METRICS
-        specifies the metric used to compute the distance between the two items in `variable <Distance.variable>`.
+    metric : keyword in DistanceMetrics
+        determines the `metric <DistanceMetrics>` used to compute the distance between the two items in `variable
+        <Distance.variable>`.
 
     normalize : bool
-        specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
+        determines whether the distance is normalized by the length of `variable <Distance.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -7880,7 +7880,7 @@ class Distance(ObjectiveFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=ClassDefaults.variable,
-                 metric:tc.enum(PEARSON, EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY, CORRELATION, ANGLE)=DIFFERENCE,
+                 metric:DistanceMetrics._is_metric=DIFFERENCE,
                  normalize:bool=False,
                  params=None,
                  owner=None,
@@ -7919,8 +7919,9 @@ class Distance(ObjectiveFunction):
                  context=None):
         """Calculate the distance between the two vectors in `variable <Stability.variable>`.
 
-        Uses one of the `DISTANCE_METRICS` specified in `metric <Distance.metric>`.  If `normalize
-        <Distance.normalize>` is `True`, the result is divided by the length of `variable <Distance.variable>`.
+        Use the `distance metric <DistanceMetrics>` specified in `metric <Distance.metric>` to calculate the distance.
+        If `normalize <Distance.normalize>` is `True`, the result is divided by the length of `variable
+        <Distance.variable>`.
 
         Returns
         -------
@@ -7942,16 +7943,8 @@ class Distance(ObjectiveFunction):
         elif self.metric is EUCLIDEAN:
             result = np.linalg.norm(v2-v1)
 
-        # Cross-entropy of v1 and v2
-        elif self.metric is CROSS_ENTROPY:
-            # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
-            if context is not None and INITIALIZING in context:
-                v1 = np.where(v1==0, EPSILON, v1)
-                v2 = np.where(v2==0, EPSILON, v2)
-            result = -np.sum(v1*np.log(v2))
-
         # FIX: NEED SCIPY HERE
-        # # Angle (cosyne) of v1 and v2
+        # # Angle (cosine) of v1 and v2
         # elif self.metric is ANGLE:
         #     result = scipy.spatial.distance.cosine(v1,v2)
 
@@ -7963,11 +7956,27 @@ class Distance(ObjectiveFunction):
         elif self.metric is PEARSON:
             result = np.corrcoef(v1, v2)
 
+        # Cross-entropy of v1 and v2
+        elif self.metric is CROSS_ENTROPY:
+            # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
+            if context is not None and INITIALIZING in context:
+                v1 = np.where(v1==0, EPSILON, v1)
+                v2 = np.where(v2==0, EPSILON, v2)
+            result = -np.sum(v1*np.log(v2))
+
+        # Energy
+        elif self.metric is ENERGY:
+            result = -np.sum(v1*v2)/2
 
         if self.normalize:
-            # if np.sum(denom):
-            # result /= np.sum(x,y)
-            result /= len(variable[0])
+            # # MODIFIED 11/12/17 OLD:
+            # result /= len(variable[0])
+            # MODIFIED 11/12/17 NEW:
+            if self.metric is ENERGY:
+                result /= len(v1)**2
+            else:
+                result /= len(v1)
+            # MODIFIED 11/12/17 END
 
         return result
 
