@@ -224,27 +224,39 @@ MATRIX_KEYWORD_NAMES = MATRIX_KEYWORDS._names()
 
 
 class DistanceMetrics:
-    """
+    """Distance between two arrays
+
+    Each keyword specifies a calcuation for the distance between two arrays, :math:`a_1` and :math:`v_2`, of equal
+    length (i.e., same number of elements), in which *len* is their length, :math:`\\bar{v_a}` is the mean of an array,
+    :math:`\\sigma_{v_a}` its standard deviation, and :math:`w_{a_1a_2}` a coupling coefficient for a pair of elements,
+    one from each array (e.g., "weight matrix"):
+
     Attributes
     ----------
 
     DIFFERENCE
-        Description
+        :math:`d = \\sum\limits^{len}(a_1-a_2)`
 
     EUCLIDEAN
-        Description
+        :math:`d = \\sum\limits^{len}\\sqrt{(a_1-a_2)^2}`
 
+    COMMENT:
     ANGLE
-        Description
-
-    CROSS_ENTROPY
-        <Description>
+    COMMENT
 
     CORRELATION
-        <Description>
+        :math:`d = \\frac{\\sum\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{a_2}}`
 
+    COMMENT:
     PEARSON
         <Description>
+    COMMENT
+
+    CROSS_ENTROPY
+        :math:`d = \\sum\limits^{len}a_1log(a_2)`
+
+    ENERGY:
+        :math:`d = -\\frac{1}{2}\\sum\limits_{i,j}a_{1_i}a_{2_j}w_{ij}`
 
     """
     def __init__(self):
