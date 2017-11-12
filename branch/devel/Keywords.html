@@ -289,6 +289,46 @@ distributed between 0 and 1.</p>
 
 </dd></dl>
 
+<dl class="class">
+<dt id="psyneulink.globals.keywords.DistanceMetrics">
+<em class="property">class </em><code class="descclassname">psyneulink.globals.keywords.</code><code class="descname">DistanceMetrics</code><a class="headerlink" href="#psyneulink.globals.keywords.DistanceMetrics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Distance between two arrays</p>
+<p>Each keyword specifies a calcuation for the distance between two arrays, <span class="math">\(a_1\)</span> and <span class="math">\(v_2\)</span>, of equal
+length (i.e., same number of elements), in which <em>len</em> is their length, <span class="math">\(\bar{v_a}\)</span> is the mean of an array,
+<span class="math">\(\sigma_{v_a}\)</span> its standard deviation, and <span class="math">\(w_{a_1a_2}\)</span> a coupling coefficient for a pair of elements,
+one from each array (e.g., “weight matrix”):</p>
+<dl class="attribute">
+<dt id="psyneulink.globals.keywords.DistanceMetrics.DIFFERENCE">
+<code class="descname">DIFFERENCE</code><a class="headerlink" href="#psyneulink.globals.keywords.DistanceMetrics.DIFFERENCE" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math">\(d = \sum\limits^{len}(a_1-a_2)\)</span></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.keywords.DistanceMetrics.EUCLIDEAN">
+<code class="descname">EUCLIDEAN</code><a class="headerlink" href="#psyneulink.globals.keywords.DistanceMetrics.EUCLIDEAN" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math">\(d = \sum\limits^{len}\sqrt{(a_1-a_2)^2}\)</span></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.keywords.DistanceMetrics.CORRELATION">
+<code class="descname">CORRELATION</code><a class="headerlink" href="#psyneulink.globals.keywords.DistanceMetrics.CORRELATION" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math">\(d = \frac{\sum\limits^{len}(a_1-\bar{a}_1)(a_2-\bar{a}_2)}{(len-1)\sigma_{a_1}\sigma_{a_2}}\)</span></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.keywords.DistanceMetrics.ENTROPY">
+<code class="descname">ENTROPY</code><span class="sig-paren">(</span><em>and CROSS_ENTROPY</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.keywords.DistanceMetrics.ENTROPY" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math">\(d = \sum\limits^{len}a_1log(a_2)\)</span></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.keywords.DistanceMetrics.ENERGY">
+<code class="descname">ENERGY</code><a class="headerlink" href="#psyneulink.globals.keywords.DistanceMetrics.ENERGY" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math">\(d = -\frac{1}{2}\sum\limits_{i,j}a_{1_i}a_{2_j}w_{ij}\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 
