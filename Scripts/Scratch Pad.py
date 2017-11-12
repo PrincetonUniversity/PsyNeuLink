@@ -412,22 +412,50 @@ class ScratchPadError(Exception):
 
 # FROM KEVIN: -------------------------------------
 
-# WORKING:
-# I = pnl.InputState(reference_value=[0,0,0])
-# pnl.TransferMechanism(input_states=[I])
+I = pnl.InputState(reference_value=[0,0,0])
+pnl.TransferMechanism(input_states=[I])
 
-#-------------
-# m = pnl.TransferMechanism()
-# i = pnl.InputState(owner=m, reference_value=[0, 0, 0])
+p = pnl.MappingProjection()
+T = pnl.TransferMechanism(input_states=[{pnl.VARIABLE: [0, 0, 0], pnl.PROJECTIONS:[p]}])
 
-# m = pnl.TransferMechanism(default_variable=[0, 0, 0])
-# i = pnl.InputState(owner=m, reference_value=[0, 0, 0])
+p = pnl.MappingProjection()
+T = pnl.TransferMechanism(default_variable=[0, 0], input_states=[p])
 
-# p = pnl.MappingProjection()
-# T = pnl.TransferMechanism(input_states=[{pnl.VARIABLE: [0, 0, 0], pnl.PROJECTIONS:[p]}])
 
-# p = pnl.MappingProjection()
-# T = pnl.TransferMechanism(default_variable=[0, 0], input_states=[p])
+m = pnl.TransferMechanism()
+i = pnl.InputState(variable=[0,0])
+m.add_states([i])
+m.execute()
+assert len(m.input_states) == 2
+assert len(m.variable)==2
+assert len(m.variable[0])==1
+assert len(m.variable[1])==2
+assert m.input_states[0].name == 'INPUT_STATE-0'
+assert m.input_states[1].name == 'INPUT_STATE-1'
+
+m = pnl.TransferMechanism()
+i = pnl.InputState(owner=m, variable=[0, 0, 0])
+m.execute()
+assert len(m.input_states) == 2
+assert m.input_states[0].name == 'INPUT_STATE-0'
+assert m.input_states[1].name == 'INPUT_STATE-1'
+assert len(m.variable)==2
+assert len(m.variable[0])==1
+assert len(m.variable[1])==3
+
+my_mech_A = pnl.TransferMechanism(default_variable=[[0],[0,0]])
+print(my_mech_A.input_states)
+print(my_mech_A.input_states[0].value)
+print(my_mech_A.input_states[1].value)
+
+
+my_mech_B = pnl.TransferMechanism(default_variable=[[0],[0],[0]])
+print(my_mech_B.input_states)
+
+my_mech_C = pnl.TransferMechanism(input_states=[[0,0], 'Hello'])
+print(my_mech_C.input_states)
+print(my_mech_C.variable)
+
 
 # --------------------------------------------------------------------------------------------------
 

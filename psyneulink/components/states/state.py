@@ -87,11 +87,14 @@ or by specifying the State in the constructor for its owner.  For example, unles
 any Component is created, it automatically creates a `ParameterState` for each of its `configurable parameters
 <Component_Configurable_Attributes>` and those of its `function <Component_Function>`. States are also created in
 response to explicit specifications.  For example, InputStates and OutputStates can be specified in the constructor
-for a Mechanism (see `Mechanism_State_Specification`) or in its `add_states` method; and a ParameterState is
-specified in effect when the value of a parameter for any Component or its `function <Component.function>` is
-specified in its constructor.  InputStates and OutputStates (but not ParameterStates) can also be created directly
-using their constructors;  however, Parameter States cannot be created in this way; they are always and only created
-when the Component to which a parameter belongs is created.
+for a Mechanism (see `Mechanism_State_Specification`); and ParameterStates are specified in effect when the value of a
+parameter for any Component or its `function <Component.function>` is specified in the constructor for that Component
+or function.  InputStates and OutputStates (but *not* ParameterStates) can also be created directly using their
+constructors, and then assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method;
+however, this should be done with caution as the State must be compatible with relevant attributes of its owner and its
+`function <Mechanism_Base.function>` (for example, see `note <Mechanism_Add_InputStates_Note>` regarding InputStates).
+Parameter States **cannot** on their own; they are always and only created when the Component to which a parameter
+belongs is created.
 
 .. _State_Specification:
 
@@ -198,14 +201,14 @@ Wherever a State is specified, it can be done using any of the following:
 
 .. _State_Deferred_Initialization:
 
-`InputStates <InputState>`, `OutputStates <OutputState>` and `ModulatorySignals <ModulatorySignal>` can also be
-created on their own, by using the relevant constructors;  however, `ParameterStates <ParameterState>` cannot be
-created on their own. If a State is created on its own, and its `owner <State_Owner>` is not specified, then its
-initialization will be `deferred <Component_Deferred_Initialization>`.  Its initialization is completed automatically
-when it is assigned to an owner `Mechanism <Mechanism_Base>` using the owner's `add_states` method.  If the State is
-not assigned to an owner, it will not be functional (i.e., used during the execution of `Mechanisms
-<Mechanism_Base_Execution>` and/or `Compositions <Composition_Execution>`, irrespective of whether it has any
-`Projections <Projection>` assigned to it.
+`InputStates <InputState>`, `OutputStates <OutputState>` and `ModulatorySignals <ModulatorySignal>` can also be created
+on their own, by using the relevant constructors;  however, `ParameterStates <ParameterState>` cannot be created on
+their own. If a State is created on its own, and its `owner <State_Owner>` Mechanism is specified, it is assigned to
+that Mechanism; if its owner not specified, then its initialization is `deferred <Component_Deferred_Initialization>`.
+Its initialization is completed automatically when it is assigned to an owner `Mechanism <Mechanism_Base>` using the
+owner's `add_states <Mechanism_Base.add_states>` method.  If the State is not assigned to an owner, it will not be
+functional (i.e., used during the execution of `Mechanisms <Mechanism_Base_Execution>` and/or `Compositions
+<Composition_Execution>`, irrespective of whether it has any `Projections <Projection>` assigned to it.
 
 .. _State_Projections:
 
@@ -268,9 +271,11 @@ owner must be a `Mechanism <Mechanism>`.  For `ParameterStates <ParameterState>`
 `PathwayProjection <PathwayProjection>`. For `ModulatorySignals <ModulatorySignal>`, it must be an `AdaptiveMechanism
 <AdaptiveMechanism>`. When a State is created as part of another Component, its `owner <State_Base.owner>` is
 assigned automatically to that Component.  It is also assigned automatically when the State is assigned to a
-`Mechanism <Mechanism>` using that Mechanism's `add_states` method.  Otherwise, it must be specified explicitly in
-the **owner** argument of the constructor for the State.  If it is not, the State's initialization will be `deferred
-<State_Deferred_Initialization>` until it has been assigned to an owner.
+`Mechanism <Mechanism>` using that Mechanism's `add_states <Mechanism_Base.add_states>` method.  Otherwise, it must be
+specified explicitly in the **owner** argument of the constructor for the State (in which case it is immediately
+assigned to the specified Mechanism).  If the **owner** argument is not specified, the State's initialization is
+`deferred <State_Deferred_Initialization>` until it has been assigned to an owner using the owner's `add_states
+<Mechanism_Base.add_states>` method.
 
 Variable, Function and Value
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -571,7 +576,7 @@ from psyneulink.components.component import Component, ComponentError, InitStatu
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.keywords import \
-    CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
+    CONTEXT, COMMAND_LINE, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
     GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, \
     LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
     MAPPING_PROJECTION_PARAMS, MECHANISM, \
@@ -609,6 +614,7 @@ state_type_keywords = {STATE_TYPE}
 
 STANDARD_STATE_ARGS = {STATE_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 STATE_SPEC = 'state_spec'
+ADD_STATES = 'ADD_STATES'
 
 def _is_state_class(spec):
     if inspect.isclass(spec) and issubclass(spec, State):
@@ -911,7 +917,8 @@ class State_Base(State):
                 pass
 
         # Enforce that only called from subclass
-        if not isinstance(context, State_Base):
+        if (not isinstance(context, State_Base) and
+                not any(key in context for key in {INITIALIZING, ADD_STATES, COMMAND_LINE})):
             raise StateError("Direct call to abstract class State() is not allowed; "
                                       "use state() or one of the following subclasses: {0}".
                                       format(", ".join("{!s}".format(key) for (key) in StateRegistry.keys())))
@@ -921,12 +928,15 @@ class State_Base(State):
             raise StateError("{}, as a subclass of {}, must implement an _execute() method".
                              format(self.__class__.__name__, STATE))
 
-        # MODIFIED 7/12/17 OLD:
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(projections=projections,
                                                   params=params)
 
         self.owner = owner
+
+        if name == 'deferred_init_State':
+            # self.name = None
+            name = self.__class__.__name__
 
         # Register State with StateRegistry of owner (Mechanism to which the State is being assigned)
         register_category(entry=self,
@@ -964,6 +974,12 @@ class State_Base(State):
             # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
             #                       if params = NotImplemented or there is no param[PROJECTIONS]
             pass
+
+        if context is COMMAND_LINE:
+            state_list = getattr(owner, owner.state_list_attr[self.__class__])
+            if state_list and not self in state_list:
+                owner.add_states(self)
+
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a State
@@ -1908,7 +1924,7 @@ class State_Base(State):
     def all_afferents(self):
         return self.path_afferents + self.mod_afferents
 
-    def _assign_default_name(self):
+    def _assign_default_name(self, context=None):
         return False
 
 def _instantiate_state_list(owner,
@@ -2132,9 +2148,15 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         if state.init_status is InitStatus.DEFERRED_INITIALIZATION:
             if not state.init_args[OWNER]:
                 state.init_args[OWNER] = owner
+            if not VARIABLE in state.init_args or state.init_args[VARIABLE] is None:
                 state.init_args[VARIABLE] = owner.instance_defaults.variable[0]
             if not hasattr(state, REFERENCE_VALUE):
-                state.reference_value = owner.instance_defaults.variable[0]
+                if REFERENCE_VALUE in state.init_args and state.init_args[REFERENCE_VALUE] is not None:
+                    state.reference_value = state.init_args[REFERENCE_VALUE]
+                else:
+                    # state.reference_value = owner.instance_defaults.variable[0]
+                    state.reference_value = state.init_args[VARIABLE]
+            state.init_args[CONTEXT]=context
             state._deferred_init()
 
         if variable:
@@ -2155,9 +2177,10 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
         # FIX: THIS SHOULD ONLY APPLY TO InputState AND ParameterState; WHAT ABOUT OutputState?
         # State's assigned value is incompatible with its reference_value (presumably its owner Mechanism's variable)
+        reference_value = reference_value if reference_value is not None else state.reference_value
         if not iscompatible(state.value, reference_value):
-            raise StateError("{}'s value attribute ({}) is incompatible with the variable ({}) of its owner ({})".
-                             format(state.name, state.value, state.reference_value, owner.name))
+            raise StateError("{}'s value attribute ({}) is incompatible with the {} ({}) of its owner ({})".
+                             format(state.name, state.value, REFERENCE_VALUE, state.reference_value, owner.name))
 
         # State has already been assigned to an owner
         if state.owner is not None and not state.owner is owner:
@@ -2402,13 +2425,17 @@ def _parse_state_spec(state_type=None,
         if isinstance(state_specification, state_type):
             # Make sure that the specified State belongs to the Mechanism passed in the owner arg
             if state_specification.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                owner = state_specification.init_args[OWNER]
+                state_owner = state_specification.init_args[OWNER]
             else:
-                owner = state_specification.owner
-            if owner is not None and not state_specification.owner is owner:
+                state_owner = state_specification.owner
+            if owner is not None and state_owner is not None and not state_owner is owner:
                 raise StateError("The State specified in a call to _instantiate_state ({}) "
-                                 "does belong to the {} specified in the \'{}\' argument ({})".
-                                 format(state_specification.name, owner.name, Mechanism.__name__, OWNER, owner.name))
+                                 "does not belong to the {} specified in the \'{}\' argument ({})".
+                                 format(state_specification.name,
+                                        owner.name,
+                                        Mechanism.__name__,
+                                        OWNER,
+                                        state_owner.name))
             return state_specification
 
         else:

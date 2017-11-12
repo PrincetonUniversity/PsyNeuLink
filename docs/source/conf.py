@@ -35,8 +35,13 @@ sys.path.insert(0, os.path.abspath('../../psyneulink/globals/'))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinx.ext.mathjax',
+    # 'sphinx.ext.imgmath'
 ]
+
+pngmath_latex_preamble=r'\usepackage[active]{preview}' # + other custom stuff for inline math, such as non-default math fonts etc.
+pngmath_use_preview=True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -42,9 +42,13 @@ Other configurations can also easily be specified using a Mechanism's **output_s
 
 An OutputState must be owned by a `Mechanism <Mechanism>`.  When OutputState is specified in the constructor for a
 `Mechanism <Mechanism>` (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as
-its owner. If the OutputState is created directly, its `owner <OutputState.owner>` can specified in the **owner**
-argument of its constructor; otherwise, its initialization will be `deferred <State_Deferred_Initialization>` until
-it is assigned to an owner using the owner's `add_states` method.
+its owner. If the OutputState is created directly, its `owner <OutputState.owner>` Mechanism can specified in the
+**owner** argument of its constructor, in which case it is assigned to the specified Mechanism.  Note that its
+`variable <OutputState.variable>` must be compatible (in number and type of elements) with the item of its owner's
+`value <Mechanism_Base.value>` specified by the OutputState's `index <OutputState.index>` attrbute. If an
+OutputState's owner is not specified when it is constructed, its initialization will be `deferred
+<State_Deferred_Initialization>` until it is assigned to an owner using the owner's `add_states
+<Mechanism_Base.add_states>` method.
 
 .. _OutputState_Primary:
 
@@ -77,13 +81,13 @@ OutputStates are specified in the parameter dictionary, any specified in the **o
     contains the result of the Mechanism's `function <Mechanism_Base.function>` -- is to be retained, it too must be
     specified along with any additional OutputStates desired.
 
-OutputStates can also be added* to a Mechanism, using the Mechanism's `add_states` method.  Unlike specification
-in the constructor, this **does not** replace any OutpuStates already assigned to the Mechanism. Doing so appends
-them to the list of OutputStates in the Mechanism's `output_states <Mechanism_Base.output_states>` attribute,
-and their values are appended to its `output_values <Mechanism_Base.output_values>` attribute.  If the name of an
-OutputState added to a Mechanism is the same as one that already exists, its name will be suffixed with a numerical
-index (incremented for each OutputState with that name), and the OutputState will be added to the list (that is,
-it will *not* replace ones that were already created).
+OutputStates can also be added* to a Mechanism, using the Mechanism's `add_states <Mechanism_Base.add_methods>` method.
+Unlike specification in the constructor, this **does not** replace any OutpuStates already assigned to the Mechanism.
+Doing so appends them to the list of OutputStates in the Mechanism's `output_states <Mechanism_Base.output_states>`
+attribute, and their values are appended to its `output_values <Mechanism_Base.output_values>` attribute.  If the name
+of an OutputState added to a Mechanism is the same as one that already exists, its name will be suffixed with a
+numerical index (incremented for each OutputState with that name), and the OutputState will be added to the list (that
+is, it will *not* replace ones that were already created).
 
 Specifying an OutputState can be done in any of the ways listed below.  To create multiple OutputStates, their
 specifications can be included in a list, or in a dictionary in which the key for each entry is a string specifying
@@ -340,7 +344,7 @@ from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.keywords import \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, INPUT_STATE, INPUT_STATES, RECEIVER, GATING_SIGNAL, \
-    STATE, OUTPUT_STATE, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, \
+    COMMAND_LINE, STATE, OUTPUT_STATE, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, \
     CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE, REFERENCE_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -598,6 +602,11 @@ class OutputState(State_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
+        if context is None:
+            context = COMMAND_LINE
+        else:
+            context = self
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(index=index,
                                                   calculate=calculate,
@@ -608,7 +617,7 @@ class OutputState(State_Base):
         if owner is None or reference_value is None:
             # Store args for deferred initialization
             self.init_args = locals().copy()
-            self.init_args['context'] = self
+            self.init_args['context'] = context
             self.init_args['name'] = name
             self.init_args['projections'] = projections
 
@@ -631,7 +640,7 @@ class OutputState(State_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=context)
 
     def _validate_variable(self, variable, context=None):
         """Insure variable is compatible with output component of owner.function relevant to this State

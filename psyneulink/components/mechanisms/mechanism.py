@@ -130,11 +130,11 @@ specified explicitly in the **input_states** and **output_states** arguments of 
 below).  They can also be specified in a `parameter specification dictionary <ParameterState_Specification>` assigned
 to the Mechanism's **params** argument, using entries with the keys *INPUT_STATES* and *OUTPUT_STATES*, respectively
 (see `second example <Mechanism_Example_2>` below).  While specifying the **input_states** and **output_states**
-arguments directly is simpler and more convenient, the dictionary format allows parameter sets to be created
-elsewhere and/or re-used.  The value of each entry can be any of the allowable forms for `specifying a state
-<State_Creation>`. InputStates and OutputStates can also be added to an existing Mechanism using its `add_states`
-method, although this is generally not needed and can have consequences that must be considered (e.g., see `note
-<Mechanism_Add_InputStates_Note>`), and therefore is not recommended.
+arguments directly is simpler and more convenient, the dictionary format allows parameter sets to be created elsewhere
+and/or re-used.  The value of each entry can be any of the allowable forms for `specifying a state <State_Creation>`.
+InputStates and OutputStates can also be added to an existing Mechanism using its `add_states
+<Mechanism_Base.add_states>` method, although this is generally not needed and can have consequences that must be
+considered (e.g., see `note <Mechanism_Add_InputStates_Note>`), and therefore is not recommended.
 
 Examples
 ^^^^^^^^
@@ -205,7 +205,7 @@ also be assigned as follows::
                                      params={FUNCTION_PARAMS: {GAIN:1.0,
                                                                BIAS=-4.0})
 
-Again, while not as simple as specifying these as arguments in the function's construtor, this format is more flexible.
+Again, while not as simple as specifying these as arguments in the function's constructor, this format is more flexible.
 Any values specified in the parameter dictionary will **override** any specified within the constructor for the function
 itself (see `DDM <DDM_Creation>` for an example).
 
@@ -330,8 +330,8 @@ States
 Every Mechanism has one or more of each of three types of States:  `InputState(s) <InputState>`,
 `ParameterState(s) <ParameterState>`, `and OutputState(s) <OutputState>`.  Generally, these are created automatically
 when the Mechanism is created.  InputStates and OutputStates (but not ParameterStates) can also be specified explicitly
-for a Mechanism, or added to an existing Mechanism using its `add_states` method, as described
-`above <Mechanism_State_Specification>`).
+for a Mechanism, or added to an existing Mechanism using its `add_states <Mechanism_Base.add_states>` method, as
+described `above <Mechanism_State_Specification>`).
 
 .. _Mechanism_Figure:
 
@@ -373,23 +373,49 @@ The `value <InputState.value>` of each InputState for a Mechanism is assigned to
 `variable <Mechanism_Base.variable>` attribute (a 2d np.array), as well as to a corresponding item of its `input_values
 <Mechanism_Base.input_values>` attribute (a list).  The `variable <Mechanism_Base.variable>` provides the input to the
 Mechanism's `function <Mechanism_Base.function>`, while its `input_values <Mechanism_Base.input_values>` provides a
-more convenient way of accessing the value of its individual items.  Because there is a one-to-one correspondence
-between a Mechanism's InputStates and the items of its `variable <Mechanism_Base.variable>`, their lengths must be
-equal;  that is, the number of items in the Mechanism's `variable <Mechanism_Base.variable>` attribute (its size
-along axis 0) must equal the number of InputStates in its `input_states <Mechanism_Base.input_states>` attribute.
-Therefore, if any InputStates are `specified in the constructor <Mechanism_InputState_Specification>`, the number of
-them must match the number of items in `variable <Mechanism_Base.variable>`.  However, if InputStates are added using
-the Mechanism's `add_states` method, then its `variable <Mechanism_Base.variable>` is extended to accommodate the
-number of InputStates added (note that this must be coordinated with the Mechanism's `function
-<Mechanism_Base.function>`, which takes the Mechanism's `variable <Mechanism_Base.variable>` as its input.
+convenient way of accessing the value of its individual items.  Because there is a one-to-one correspondence between
+a Mechanism's InputStates and the items of its `variable <Mechanism_Base.variable>`, their size along their outermost
+dimension (axis 0) must be equal; that is, the number of items in the Mechanism's `variable <Mechanism_Base.variable>`
+attribute must equal the number of InputStates in its `input_states <Mechanism_Base.input_states>` attribute. A
+Mechanism's constructor does its best to insure this:  if its **default_variable** and/or its **size** argument is
+specified, it constructs a number of InputStates (and each with a `value <InputState.value>`) corresponding to the
+items specified for the Mechanism's `variable <Mechanism_Base.variable>`, as in the examples below::
+
+    my_mech_A = pnl.TransferMechanism(default_variable=[[0],[0,0]])
+    print(my_mech_A.input_states)
+    > [(InputState INPUT_STATE-0), (InputState INPUT_STATE-1)]
+    print(my_mech_A.input_states[0].value)
+    > [ 0.]
+    print(my_mech_A.input_states[1].value)
+    > [ 0.  0.]
+
+    my_mech_B = pnl.TransferMechanism(default_variable=[[0],[0],[0]])
+    print(my_mech_B.input_states)
+    > [(InputState INPUT_STATE-0), (InputState INPUT_STATE-1), (InputState INPUT_STATE-2)]
+
+Conversely, if the **input_states** argument is used to specify InputStates for the Mechanism, they are used to format
+the Mechanism's variable::
+
+    my_mech_C = pnl.TransferMechanism(input_states=[[0,0], 'Hello'])
+    print(my_mech_C.input_states)
+    > [(InputState INPUT_STATE-0), (InputState Hello)]
+    print(my_mech_C.variable)
+    > [array([0, 0]) array([0])]
+
+If both the **default_variable** (or **size**) and **input_states** arguments are specified, then the number and format
+of their respective items must be the same (see `State <State_Examples>` for additional examples of specifying States).
+
+If InputStates are added using the Mechanism's `add_states <Mechanism_Base.add_states>` method, then its
+`variable <Mechanism_Base.variable>` is extended to accommodate the number of InputStates added (note that this must
+be coordinated with the Mechanism's `function <Mechanism_Base.function>`, which takes the Mechanism's `variable
+<Mechanism_Base.variable>` as its input (see `note <Mechanism_Add_InputStates_Note>`).
 
 The order in which `InputStates are specified <Mechanism_InputState_Specification>` in the Mechanism's constructor,
 and/or `added <Mechanism_Add_InputStates>` using its `Mechanism_Base.add_states` method,  determines the order of the
 items to which they are assigned assigned in he Mechanism's `variable  <Mechanism_Base.variable>`, and are listed in
 its `input_states <Mechanism_Base.input_states>` and input_values <Mechanism_Base.input_values>` attribute.  Note
 that a Mechanism's `input_value <Mechanism_Base.input_value>` attribute has the same information as the
-Mechanism's `variable <Mechanism_Base.variable>`, but in a list rather than an ndarray.
-
+Mechanism's `variable <Mechanism_Base.variable>`, but in the form of a list rather than an ndarray.
 
 .. _Mechanism_InputState_Specification:
 
@@ -449,22 +475,23 @@ COMMENT
 
 **Adding InputStates**
 
-InputStates can be added to a Mechanism using its `add_states` method;  this extends its `variable
-<Mechanism_Base.variable>` by a number of items equal to the number of InputStates added, and each new item is assigned
-a value compatible with the `value <InputState.value>` of the corresponding InputState added.  The InputStates are
-appended to the end of the list in the Mechanism's `input_states <Mechanism_Base.input_states>` attribute.
+InputStates can be added to a Mechanism using its `add_states <Mechanism_Base.add_states>` method;  this extends its
+`variable <Mechanism_Base.variable>` by a number of items equal to the number of InputStates added, and each new item
+is assigned a format compatible with the `value <InputState.value>` of the corresponding InputState added.  The
+InputStates are appended to the end of the list in the Mechanism's `input_states <Mechanism_Base.input_states>`
+attribute.
 
 .. _Mechanism_Add_InputStates_Note:
 
 .. note::
-    Adding InputStates to a Mechanism using its `add_states` method may introduce an incompatibility with the
-    Mechanism's `function <Mechanism_Base.function>`, which takes the Mechanism's `variable <Mechanism_Base.variable>`
-    as its input; such an incompatibility will generate an error.  It is the user's responsibility to ensure that the
-    explicit assignment of InputStates to a Mechanism is coordinated with the assignment of its
-    `function <Mechanism_Base.function>`, so that the total number of InputStates (listed in the Mechanism's
-    `input_states <Mechanism_Base.input_states>` attribute matches the number of items expected for the input to the
-    function specified in the Mechanism's `function <Mechanism_Base.function>` attribute  (i.e., its size along axis 0).
-
+    Adding InputStates to a Mechanism using its `add_states <Mechanism_Base.add_states>` method may introduce an
+    incompatibility with the Mechanism's `function <Mechanism_Base.function>`, which takes the Mechanism's `variable
+    <Mechanism_Base.variable>` as its input; such an incompatibility will generate an error.  It is the user's
+    responsibility to ensure that the assignment of InputStates to a Mechanism using the `add_states
+    <Mechanism_Base.add_states>` is coordinated with the specification of its `function <Mechanism_Base.function>`,
+    so that the total number of InputStates (listed in the Mechanism's `input_states <Mechanism_Base.input_states>`
+    attribute matches the number of items expected for the input to the function specified in the Mechanism's
+    `function <Mechanism_Base.function>` attribute  (i.e., its size along axis 0).
 
 .. _Mechanism_InputState_Projections:
 
@@ -710,14 +737,16 @@ import typecheck as tc
 from psyneulink.components.component import Component, InitStatus, ExecutionStatus, function_type, method_type
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.states.state import _parse_state_spec
+from psyneulink.components.states.parameterstate import ParameterState
+from psyneulink.components.states.outputstate import OutputState
+from psyneulink.components.states.state import _parse_state_spec, ADD_STATES
 from psyneulink.globals.defaults import timeScaleSystemDefault
 from psyneulink.globals.keywords import \
     CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, \
     INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, \
     INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
-    NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, \
-    SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VARIABLE, VALUE, REFERENCE_VALUE, \
+    NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PROCESS_INIT, \
+    SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VARIABLE, VALUE, REFERENCE_VALUE, \
     kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -1012,6 +1041,10 @@ class Mechanism_Base(Mechanism):
     variableEncodingDim = 2
     valueEncodingDim = 2
 
+    state_list_attr = {InputState:INPUT_STATES,
+                       ParameterState:PARAMETER_STATES,
+                       OutputState:OUTPUT_STATES}
+
     # Category specific defaults:
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -1071,7 +1104,8 @@ class Mechanism_Base(Mechanism):
 
         def spec_incompatible_with_default_error(spec_variable, default_variable):
             return MechanismError(
-                'default variable determined from the specified input_states spec ({0}) is not compatible with the specified default variable ({1})'.format(
+                'default variable determined from the specified input_states spec ({0}) '
+                'is not compatible with the specified default variable ({1})'.format(
                     spec_variable, default_variable
                 )
             )
@@ -1288,11 +1322,11 @@ class Mechanism_Base(Mechanism):
                 elif isinstance(parsed_spec, (Projection, Mechanism, State)):
                     if parsed_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
                         args = parsed_spec.init_args
-                        if REFERENCE_VALUE in args:
+                        if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
                             variable = args[REFERENCE_VALUE]
-                        elif VALUE in args:
+                        elif VALUE in args and args[VALUE] is not None:
                             variable = args[VALUE]
-                        elif VARIABLE in args:
+                        elif VARIABLE in args and args[VARIABLE] is not None:
                             variable = args[VARIABLE]
                     else:
                         try:
@@ -1993,13 +2027,14 @@ class Mechanism_Base(Mechanism):
             # Check if inputs are of different lengths (indicated by dtype == np.dtype('O'))
             num_inputs = np.size(input)
             if isinstance(input, np.ndarray) and input.dtype is np.dtype('O') and num_inputs == num_input_states:
-                pass
+                # Reduce input back down to sequence of arrays (to remove extra dim added by atleast_2d above)
+                input = np.squeeze(input)
             else:
                 num_inputs = np.size(input, 0)  # revert num_inputs to its previous value, when printing the error
                 raise SystemError("Number of inputs ({0}) to {1} does not match "
                                   "its number of input_states ({2})".
                                   format(num_inputs, self.name,  num_input_states ))
-        for i in range(num_input_states):
+        for i, input_state in enumerate(self.input_states):
             # input_state = list(self.input_states.values())[i]
             input_state = self.input_states[i]
             # input_item = np.ndarray(input[i])
@@ -2015,7 +2050,7 @@ class Mechanism_Base(Mechanism):
                         input[i],
                         len(input_state.instance_defaults.variable),
                         input_state.name,
-                        append_type_to_name(self),
+                        self.name
                     )
                 )
 
@@ -2183,7 +2218,7 @@ class Mechanism_Base(Mechanism):
         plt.show()
 
     @tc.typecheck
-    def add_states(self, states, context=COMMAND_LINE):
+    def add_states(self, states, context=ADD_STATES):
         """
         add_states(states)
 
@@ -2195,11 +2230,11 @@ class Mechanism_Base(Mechanism):
         Mechanism to which it is being added, the user is given the option of reassigning the State to the `owner
         <State_Base.owner>`, making a copy of the State and assigning that to the `owner <State_Base.owner>`, or
         aborting.  If the name of a specified State is the same as an existing one with the same name, an index is
-        appended to its name, and incremented for each State subsequently added with the same name
-        (see :ref:`naming conventions <LINK>`).
+        appended to its name, and incremented for each State subsequently added with the same name (see :ref:`naming
+        conventions <LINK>`).  If a specified State already belongs to the Mechanism, the request is ignored.
 
         .. note::
-            Adding States to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,
+            Adding InputStates to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,
             which may produce an incompatibility with its `function <Mechanism_Base.function>` (see
             `Mechanism InputStates` for a more detailed explanation).
 
@@ -2211,6 +2246,11 @@ class Mechanism_Base(Mechanism):
             State specification(s) can be an InputState or OutputState object, class reference, class keyword, or
             `State specification dictionary <State_Specification>` (the latter must have a *STATE_TYPE* entry
             specifying the class or keyword for InputState or OutputState).
+
+        Returns
+        -------
+
+        Dictionary with entries containing InputStates and/or OutputStates added
 
         """
         from psyneulink.components.states.state import _parse_state_type
@@ -2227,6 +2267,7 @@ class Mechanism_Base(Mechanism):
         instantiated_output_states = None
 
         for state in states:
+            # FIX: 11/9/17: REFACTOR USING _parse_state_spec
             state_type = _parse_state_type(self, state)
             if (isinstance(state_type, InputState) or
                     (inspect.isclass(state_type) and issubclass(state_type, InputState))):
@@ -2237,7 +2278,20 @@ class Mechanism_Base(Mechanism):
 
         # _instantiate_state_list(self, input_states, InputState)
         if input_states:
-            instantiated_input_states = _instantiate_input_states(self, input_states, context=context)
+            # FIX: 11/9/17
+            added_variable, added_input_state = self._parse_arg_input_states(input_states)
+            if added_input_state:
+                old_variable = self.instance_defaults.variable.tolist()
+                old_variable.extend(added_variable)
+                self.instance_defaults.variable = np.array(old_variable)
+                self._update_variable(self.instance_defaults.variable)
+                instantiated_input_states = _instantiate_input_states(self,
+                                                                      input_states,
+                                                                      added_variable,
+                                                                      context=context)
+                for state in instantiated_input_states:
+                    if state.name is state.componentName or state.componentName + '-' in state.name:
+                        state._assign_default_name(context=context)
         if output_states:
             instantiated_output_states = _instantiate_output_states(self, output_states, context=context)
 

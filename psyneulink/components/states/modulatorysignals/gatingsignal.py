@@ -233,7 +233,7 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, SEQUENTIAL
 from psyneulink.components.states.state import State_Base, State
 from psyneulink.globals.keywords import \
-    MECHANISM, NAME, GATING_PROJECTION, GATING_SIGNAL, GATE, RECEIVER, SUM, PROJECTION_TYPE, \
+    COMMAND_LINE, GATING_PROJECTION, GATING_SIGNAL, GATE, RECEIVER, SUM, PROJECTION_TYPE, \
     INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -430,6 +430,11 @@ class GatingSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  context=None):
 
+        if context is None:
+            context = COMMAND_LINE
+        else:
+            context = self
+
         # Note: calculate is not currently used by GatingSignal;
         #       it is included here for consistency with OutputState and possible use by subclasses.
         if index is None and owner is not None:
@@ -459,7 +464,7 @@ class GatingSignal(ModulatorySignal):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=context)
 
     def _execute(self, function_params, context):
         return float(super()._execute(function_params=function_params, context=context))

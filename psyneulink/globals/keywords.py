@@ -207,6 +207,7 @@ class MatrixKeywords:
     def _names(self):
         return list(self.__dict__)
 
+
 MATRIX = "matrix"
 IDENTITY_MATRIX = "IdentityMatrix"
 HOLLOW_MATRIX = "HollowMatrix"
@@ -220,8 +221,86 @@ MATRIX_KEYWORDS = MatrixKeywords()
 MATRIX_KEYWORD_SET = MATRIX_KEYWORDS._set()
 MATRIX_KEYWORD_VALUES = MATRIX_KEYWORDS._values()
 MATRIX_KEYWORD_NAMES = MATRIX_KEYWORDS._names()
-# MATRIX_KEYWORD_VALUES = list(MATRIX_KEYWORDS.__dict__.values())
-# MATRIX_KEYWORD_NAMES = list(MATRIX_KEYWORDS.__dict__)
+
+
+class DistanceMetrics:
+    """Distance between two arrays
+
+    Each keyword specifies a calcuation for the distance between two arrays, :math:`a_1` and :math:`v_2`, of equal
+    length (i.e., same number of elements), in which *len* is their length, :math:`\\bar{v_a}` is the mean of an array,
+    :math:`\\sigma_{v_a}` its standard deviation, and :math:`w_{a_1a_2}` a coupling coefficient for a pair of elements,
+    one from each array (e.g., "weight matrix"):
+
+    Attributes
+    ----------
+
+    DIFFERENCE
+        :math:`d = \\sum\limits^{len}(a_1-a_2)`
+
+    EUCLIDEAN
+        :math:`d = \\sum\limits^{len}\\sqrt{(a_1-a_2)^2}`
+
+    COMMENT:
+    ANGLE
+    COMMENT
+
+    CORRELATION
+        :math:`d = \\frac{\\sum\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{a_2}}`
+
+    COMMENT:
+    PEARSON
+        <Description>
+    COMMENT
+
+    ENTROPY (and CROSS_ENTROPY)
+        :math:`d = \\sum\limits^{len}a_1log(a_2)`
+
+    ENERGY:
+        :math:`d = -\\frac{1}{2}\\sum\limits_{i,j}a_{1_i}a_{2_j}w_{ij}`
+
+    """
+    def __init__(self):
+        self.DIFFERENCE = DIFFERENCE
+        self.EUCLIDEAN = EUCLIDEAN
+        self.ANGLE = ANGLE
+        self.CORRELATION = CORRELATION
+        self.PEARSON = PEARSON
+        self.ENTROPY = CROSS_ENTROPY
+        self.CROSS_ENTROPY = CROSS_ENTROPY
+        self.ENERGY = ENERGY
+
+    def _values(self):
+        return list(self.__dict__.values())
+
+    def _set(self):
+        return set(self.__dict__.values())
+
+    def _names(self):
+        return list(self.__dict__)
+
+    def _is_metric(metric):
+        if metric in DISTANCE_METRICS_SET:
+            return True
+        else:
+            return False
+
+
+DIFFERENCE = 'difference'
+EUCLIDEAN = 'euclidean'
+ANGLE = 'angle'
+CORRELATION = 'correlation'
+PEARSON = 'Pearson'
+ENTROPY = 'cross-entropy'
+CROSS_ENTROPY = 'cross-entropy'
+ENERGY = 'energy'
+
+DISTANCE_METRICS = DistanceMetrics()
+DISTANCE_METRICS_SET = DISTANCE_METRICS._set()
+DISTANCE_METRICS_VALUES = DISTANCE_METRICS._values()
+DISTANCE_METRICS_NAMES = DISTANCE_METRICS._names()
+
+ENERGY = 'energy'
+ENTROPY = 'entropy'
 
 
 # **********************************************************************************************************************
@@ -465,16 +544,6 @@ WALD_DIST_FUNCTION = "Wald Distribution Function"
 STABILITY_FUNCTION = 'Stability Function'
 DISTANCE_FUNCTION = 'Distance Function'
 
-ENERGY = 'energy'
-ENTROPY = 'entropy'
-
-DIFFERENCE = 'difference'
-EUCLIDEAN = 'euclidean'
-ANGLE = 'angle'
-CORRELATION = 'correlation'
-PEARSON = 'Pearson'
-CROSS_ENTROPY = 'cross-entropy'
-DISTANCE_METRICS = {DIFFERENCE, EUCLIDEAN, ANGLE, CORRELATION, PEARSON, CROSS_ENTROPY}
 
 #endregion
 
