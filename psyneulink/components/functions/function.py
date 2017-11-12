@@ -624,11 +624,7 @@ class Function_Base(Function):
 
     @property
     def functionOutputType(self):
-        # # MODIFIED 6/11/17 OLD:
-        # if self.paramsCurrent[FUNCTION_OUTPUT_TYPE_CONVERSION]:
-        # MODIFIED 6/11/17 NEW:
         if hasattr(self, FUNCTION_OUTPUT_TYPE_CONVERSION):
-        # MODIFIED 6/11/17 END
             return self._functionOutputType
         return None
 
@@ -639,12 +635,8 @@ class Function_Base(Function):
         #    ??or if FunctionOutputTypeConversion is False?? <- FIX: WHY?? [IS THAT A SIDE EFFECT OR PREVIOUSLY USING
         #                                                       FIX: self.paramsCurrent[FUNCTION_OUTPUT_TYPE_CONVERSION]
         #                                                       FIX: TO DECIDE IF ATTRIBUTE EXISTS?
-        # # MODIFIED 6/11/17 OLD:
-        # if not value and not self.paramsCurrent[FUNCTION_OUTPUT_TYPE_CONVERSION]:
-        # MODIFIED 6/11/17 NEW:
         if value is None and (not hasattr(self, FUNCTION_OUTPUT_TYPE_CONVERSION)
                               or not self.FunctionOutputTypeConversion):
-        # MODIFIED 6/11/17 END
             self._functionOutputType = value
             return
 
@@ -2528,7 +2520,8 @@ class Exponential(TransferFunction):  # ----------------------------------------
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: `scale <Exponential.scale>` * e**(`rate <Exponential.rate>` * `variable <Linear.variable>`).
+        Return: `scale <Exponential.scale>`
+        :math:`*` e**(`rate <Exponential.rate>` :math:`*` `variable <Linear.variable>`).
 
         Arguments
         ---------
@@ -2681,7 +2674,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: 1 / (1 + e**( (`gain <Logistic.gain>` * `variable <Logistic.variable>`) + `bias <Logistic.bias>`))
+        Return: 1 / (1 + e**( (`gain <Logistic.gain>` :math:`*` `variable <Logistic.variable>`) + `bias <Logistic.bias>`))
 
         Arguments
         ---------
@@ -3172,9 +3165,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 print("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
                       format(sender_len))
             self.receiver = param_set[RECEIVER] = sender
-        # # MODIFIED 3/26/17 NEW:
-        # self.receiver = param_set[kwReceiver] = sender
-        # MODIFIED 3/26/17 END
 
         receiver_len = len(self.receiver)
 
@@ -5203,7 +5193,7 @@ class FHNIntegrator(
         a_w=1.0,                        \
         b_w=-0.8,                       \
         c_w=0.7,                        \
-        mode=1.0,      \
+        mode=1.0,                       \
         uncorrelated_activity=0.0       \
         time_constant_w = 12.5,         \
         params=None,                    \
@@ -5220,22 +5210,27 @@ class FHNIntegrator(
 
     The most general form of the FHNIntegrator function, with all of its arguments, is:
 
-        time_constant_v * dv/dt = a_v * v^3 + (1 + threshold) * b_v * v^2 + (- threshold) * c_v * v^2 + d_v + e_v *
-        w + f_v * I_ext
+        *time_constant_v* :math:`* \\frac{dv}{dt}` =
 
-        time_constant_w * dw/dt = mode * a_w * v + b_w * w + c_w + (1 - self.mode) * self.uncorrelated_activity
+            *a_v* :math:`* v^3` + *((1+threshold)* :math:`*` *b_v* :math:`* v^2)` *- threshold* :math:`*` *c_v* \
+            :math:`* v^2`) *+ d_v + (e_v* :math:`*` *w) + (f_v* :math:`* I_{ext})`
+
+        *time_constant_w* :math:`* \\frac{dw}{dt}` =
+
+          *mode* :math:`*` *a_w* :math:`*` *(v + b_w)* :math:`*` *(w + c_w + (1 - self.mode))* :math:`*`
+          *self.uncorrelated_activity*
 
     The three formulations that the FHNIntegrator was designed to allow are:
 
     **Fitzhugh-Nagumo Model**
 
-            dv/dt = v - (v^3)/3 -w + I_ext
+            :math:`\\frac{dv}{dt} = v - \\frac{v^3}{3} - w + I_{ext}`
 
-            T*dw/dt = v + a - b*w
+            :math:`T*\\frac{dw}{dt} = v + a - b*w`
 
-        where dw/dt often has the following parameters:
+        where :math:`\\frac{dw}{dt}` often has the following parameters:
 
-            dw/dt = 0.08(v + 0.7 - 0.8*w)
+            :math:`\\frac{dw}{dt} = 0.08(v + 0.7 - 0.8*w)`
 
         The FHNIntegrator's default parameter values map the above equations and parameters onto the PsyNeuLink
         implementation.
@@ -5243,39 +5238,41 @@ class FHNIntegrator(
 
     **Modified FHN Model**
 
-            dv/dt = v*(a-v)(v-1) -w + I_ext
+            :math:`\\frac{dv}{dt} = v*(a-v)(v-1) - w + I_{ext}`
 
-            dw/dt = b*v - c*w
+            :math:`\\frac{dw}{dt} = b*v - c*w`
 
-        In order to reproduce the modified FHN equation for dv/dt, the following FHNIntegrator parameters must be set:
+        In order to reproduce the modified FHN equation for :math:`\\frac{dv}{dt},
+        the following FHNIntegrator parameters must be set:
 
-            b_v = c_v = f_v = time_constant_v = 1.0
+            *b_v = c_v = f_v = time_constant_v = 1.0*
 
-            a_v = e_v = -1.0
+            *a_v = e_v = -1.0*
 
-            d_v = 0.0;
+            *d_v = 0.0;*
 
-        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dv/dt then correspond to the modified FHN equation for dv/dt as follows:
+        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for
+        dv/dt then correspond to the modified FHN equation for :math:`\\frac{dv}{dt} as follows:
 
             (modified FHN representation --> PsyNeuLink representation)
 
-            a --> `threshold <FHNIntegrator.threshold>`
+            *a* --> `threshold <FHNIntegrator.threshold>`
 
-            I_ext --> `variable <FHNIntegrator.variable>`
+            :math:`I_{ext}` --> `variable <FHNIntegrator.variable>`
 
         In order to reproduce the modified FHN equation for dw/dt, the following FHNIntegrator parameters must be set:
 
-            mode = time_constant_w = 1.0
+            *mode = time_constant_w = 1.0*
 
-            c_w = uncorrelated_activity = 0.0;
+            *c_w = uncorrelated_activity = 0.0;*
 
         When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dw/dt then correspond to the modified FHN equation for dw/dt as follows:
 
             (modified FHN representation --> PsyNeuLink representation)
 
-            b --> `a_w <FHNIntegrator.a_w>`
+            *b* --> `a_w <FHNIntegrator.a_w>`
 
-            c --> NEGATIVE `b_w <FHNIntegrator.b_w>`
+            *c --> NEGATIVE* `b_w <FHNIntegrator.b_w>`
 
         `Mahbub Khan (2013) <http://pcwww.liv.ac.uk/~bnvasiev/Past%20students/Mahbub_549.pdf>`_ provides a nice summary
         of why this formulation is useful.
@@ -5284,48 +5281,48 @@ class FHNIntegrator(
     `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ **Implementation
     of the Modified FHN Model**
 
-            tau_v * dv/dt = v*(a-v)(v-1) - w + b*f(X_1)
+            *tau_v* :math:`* \\frac{dv}{dt} = v*(a-v)(v-1) - w + b *` *f(X_1)*
 
-            tau_w * dw/dt = c*v + (1-c)*d - w
+            *tau_w* :math:`* \\frac{dw}{dt} = c*v + (1-c)*d - w`
 
         In order to reproduce the Gilzenrat equation for dv/dt, the following FHNIntegrator parameters must be set:
 
-            b_v = c_v = 1.0
+            *b_v = c_v = 1.0*
 
-            a_v = e_v = -1.0
+            *a_v = e_v = -1.0*
 
-            d_v = 0.0;
+            *d_v = 0.0;*
 
         When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dv/dt then correspond to the Gilzenrat equation for dv/dt as follows:
 
             (Gilzenrat representation --> PsyNeuLink representation)
 
-            a --> `threshold <FHNIntegrator.threshold>`
+            *a* --> `threshold <FHNIntegrator.threshold>`
 
-            b --> `f_v <FHNIntegrator.f_v>`
+            *b* --> `f_v <FHNIntegrator.f_v>`
 
-            f(X_1) --> `variable <FHNIntegrator.variable>`
+            *f(X_1)* --> `variable <FHNIntegrator.variable>`
 
-            tau_v --> `time_constant_v <FHNIntegrator.time_constant_v>`
+            *tau_v* --> `time_constant_v <FHNIntegrator.time_constant_v>`
 
 
         In order to reproduce the Gilzenrat equation for dw/dt, the following FHNIntegrator parameters must be set:
 
-            a_w = 1.0
+            *a_w = 1.0*
 
-            b_w = -1.0
+            *b_w = -1.0*
 
-            c_w = 0.0;
+            *c_w = 0.0;*
 
         When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dw/dt then correspond to the Gilzenrat equation for dw/dt as follows:
 
             (Gilzenrat representation --> PsyNeuLink representation)
 
-            c --> `mode <FHNIntegrator.mode>`
+            *c* --> `mode <FHNIntegrator.mode>`
 
-            d --> `uncorrelated_activity <FHNIntegrator.uncorrelated_activity>`
+            *d* --> `uncorrelated_activity <FHNIntegrator.uncorrelated_activity>`
 
-            tau_w --> `time_constant_w <FHNIntegrator.time_constant_w>`
+            *tau_w* --> `time_constant_w <FHNIntegrator.time_constant_w>`
 
 
     Arguments
@@ -5696,10 +5693,15 @@ class FHNIntegrator(
 
         The model is defined by the following system of differential equations:
 
-            time_constant_v * dv/dt = a_v * v^3 + (1 + threshold) * b_v * v^2 + (- threshold) * c_v * v^2 + d_v + e_v *
-            w + f_v * I_ext
+            *time_constant_v* :math:`* \\frac{dv}{dt} =`
 
-            time_constant_w * dw/dt = mode * a_w * v + b_w * w + c_w + (1 - self.mode) * self.uncorrelated_activity
+                *a_v* :math:`* v^3 + (1 + threshold) *` *b_v* :math:`* v^2 + (- threshold) *` *c_v*
+                :math:`* v^2 +` *d_v* :math:`+` *e_v* :math:`* w +` *f_v* :math:`* I_{ext}`
+
+            *time_constant_w* :math:`* dw/dt =`
+
+                :math:`mode *` *a_w* :math:`* v +` *b_w* :math:`* w +` *c_w*
+                :math:`+ (1 - self.mode) *` *self.uncorrelated_activity*
 
 
         Arguments
@@ -6105,13 +6107,17 @@ class AGTUtilityIntegrator(
 
     Computes an exponentially weighted moving average on the variable using two sets of parameters:
 
-    short_term_utility = (1 - `short_term_rate <AGTUtilityIntegrator.short_term_rate>`) * `previous_short_term_utility
-    <AGTUtilityIntegrator.previous_short_term_utility>` + `short_term_rate <AGTUtilityIntegrator.short_term_rate>` *
-    `variable <AGTUtilityIntegrator.variable>`
+    short_term_utility =
 
-    long_term_utility = (1 - `long_term_rate <AGTUtilityIntegrator.long_term_rate>`) * `previous_long_term_utility
-    <AGTUtilityIntegrator.previous_long_term_utility>` + `long_term_rate <AGTUtilityIntegrator.long_term_rate>` *
-    `variable <AGTUtilityIntegrator.variable>`
+       (1 - `short_term_rate <AGTUtilityIntegrator.short_term_rate>`) :math:`*` `previous_short_term_utility
+       <AGTUtilityIntegrator.previous_short_term_utility>` + `short_term_rate <AGTUtilityIntegrator.short_term_rate>`
+       :math:`*` `variable <AGTUtilityIntegrator.variable>`
+
+    long_term_utility =
+
+       (1 - `long_term_rate <AGTUtilityIntegrator.long_term_rate>`) :math:`*` `previous_long_term_utility
+       <AGTUtilityIntegrator.previous_long_term_utility>` + `long_term_rate <AGTUtilityIntegrator.long_term_rate>`
+       :math:`*` `variable <AGTUtilityIntegrator.variable>`
 
     then takes the logistic of each utility value, using the corresponding (short term and long term) gain and bias.
 
@@ -6689,39 +6695,40 @@ class BogaczEtAl(
         """
         derivative(output, input)
 
-        Calculate the derivative of 1/(reward rate) with respect to the threshold (**output** arg)
-        and drift_rate (**input** arg).  Reward rate (RR) is assumed to be:
+        Calculate the derivative of :math:`\\frac{1}{reward rate}` with respect to the threshold (**output** arg)
+        and drift_rate (**input** arg).  Reward rate (:math:`RR`) is assumed to be:
 
-            RR = (delay\\ :sub:`ITI` + Z/A + ED);
+            :math:`RR = delay_{ITI} + \\frac{Z}{A} + ED`;
 
-        the derivative of 1/RR with respect to the `threshold <BogaczEtAl.threshold>` is:
+        the derivative of :math:`\\frac{1}{RR}` with respect to the `threshold <BogaczEtAl.threshold>` is:
 
-            1/A - E/A - (2A/c\\ :sup:`2`\\ )ED;
+            :math:`\\frac{1}{A} - \\frac{E}{A} - 2\\frac{A}{c^2}ED`;
 
         and the derivative of 1/RR with respect to the `drift_rate <BogaczEtAl.drift_rate>` is:
 
-            -Z/A\\ :sup:`2` + (Z/A\\ :sup:`2`\\ )E - (2Z/c\\ :sup:`2`\\ )ED
+            :math:`-\\frac{Z}{A^2} + \\frac{Z}{A^2}E - \\frac{2Z}{c^2}ED`
 
         where:
 
-            A = `drift_rate <BogaczEtAl.drift_rate>`,
+            *A* = `drift_rate <BogaczEtAl.drift_rate>`,
 
-            Z = `threshold <BogaczEtAl.threshold>`,
+            *Z* = `threshold <BogaczEtAl.threshold>`,
 
-            c = `noise <BogaczEtAl.noise>`,
+            *c* = `noise <BogaczEtAl.noise>`,
 
-            E = exp(-2ZA/\\ c\\ :sup:`2`\\ ), and
+            *E* = :math:`e^{-2\\frac{ZA}{c^2}}`,
 
-            D = delay\\ :sub:`ITI` + delay\\ :sub:`penalty` - Z/A
+            *D* = :math:`delay_{ITI} + delay_{penalty} - \\frac{Z}{A}`,
 
-            delay\\ :sub:`ITI` is the intertrial interval and delay\\ :sub:`penalty` is a penalty delay.
+            :math:`delay_{ITI}` is the intertrial interval and :math:`delay_{penalty}` is a penalty delay.
 
 
         Returns
         -------
 
         derivatives :  List[float, float)
-            of 1/RR with respect to `threshold <BogaczEtAl.threshold>` and `drift_rate <BogaczEtAl.drift_rate>`.
+            of :math:`\\frac{1}{RR}` with respect to `threshold <BogaczEtAl.threshold>` and `drift_rate
+            <BogaczEtAl.drift_rate>`.
 
         """
         Z = output or self.threshold
@@ -6951,9 +6958,9 @@ class DistributionFunction(Function_Base):
 
 class NormalDist(DistributionFunction):
     """
-    NormalDist(                      \
-             mean=0.0,             \
-             standard_dev=1.0,             \
+    NormalDist(                     \
+             mean=0.0,              \
+             standard_dev=1.0,      \
              params=None,           \
              owner=None,            \
              prefs=None             \
@@ -7056,8 +7063,8 @@ class NormalDist(DistributionFunction):
 
 class ExponentialDist(DistributionFunction):
     """
-    ExponentialDist(                      \
-             beta=1.0,             \
+    ExponentialDist(                \
+             beta=1.0,              \
              params=None,           \
              owner=None,            \
              prefs=None             \
@@ -7488,17 +7495,47 @@ class Stability(ObjectiveFunction):
 
     .. _Stability:
 
-    Return the stability of a vector based an a weight matrix from each element to every other element in the vector.
-    The value of `variable <Stability.variable>` is passed through the `matrix <Stability.matrix>`, transformed
-    using the `transfer_fct <Stability.transfer_fct>` (if specified), and then compared with its initial value
-    using the specified `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is specified, the result
-    is normalized by the number of elements in the `variable <Stability.variable>`.
+    Return the stability of `variable <Stability.variable>` based on a weight matrix from each of its elements to every
+    other element.  The value of `variable <Stability.variable>` is passed through the `matrix <Stability.matrix>`,
+    transformed using the `transfer_fct <Stability.transfer_fct>` (if specified), and then compared with its initial
+    value using the specified `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is specified,
+    the result is normalized by the length of (number of elements in) `variable <Stability.variable>`.
+
+    Stability s is calculated according as specified by `metric <Distance.metric>`, using the formulae below,
+    where :math:`i` and :math:`j` are each elements of `variable <Stability.variable>`, *len* is its length,
+    :math:`\\bar{v}` is its mean, :math:`\\sigma_v` is its standard deviation, and :math:`w_{ij}` is the entry of the
+    weight matrix for the connection between entries :math:`i` and :math:`j` in `variable <Stability.variable>`.
+
+    *ENERGY*:
+
+        :math:`s = -\\sum\limits^{len}(i*j*w_{ij})`
+
+    *ENTROPY*:
+
+       :math:`s = -\\sum\limits^{len}(i*log(j))`
+
+    *DIFFERENCE*:
+
+       :math:`s = \\sum\limits^{len}(i-j)`
+
+    *EUCLIDEAN*:
+
+       :math:`s = \\sum\limits^{len}\\sqrt{(i-j)^2}`
+
+    *CORRELATION*:
+
+       :math:`d = \\frac{\\sum\limits^{len}(i-\\bar{i})(j-\\bar{j})}{(len-1)\\sigma_{i}\\sigma_{j}}`
+
+    **normalize**:
+
+       :math:`s = \\frac{d}{len}`
+
 
     Arguments
     ---------
 
     variable : list of numbers or 1d np.array : Default ClassDefaults.variable
-        the array for which stabilty is calculated.
+        the array for which stability is calculated.
 
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
@@ -7661,7 +7698,7 @@ class Stability(ObjectiveFunction):
     def _instantiate_attributes_before_function(self, context=None):
         """Instantiate matrix
 
-        Specified matrix specified is convolved with HOLLOW_MATRIX
+        Specified matrix is convolved with HOLLOW_MATRIX
             to eliminate the diagonal (self-connections) from the calculation.
         The `Distance` Function is used for all calculations except ENERGY (which is not really a distance metric).
         If ENTROPY is specified as the metric, convert to CROSS_ENTROPY for use with the Distance Function.
@@ -7746,7 +7783,42 @@ class Distance(ObjectiveFunction):
 
     .. _Distance:
 
-    Return the distance between two vectors based on a specified metric.
+    Return the distance between the vectors in the two items of `variable <Distance.variable>` using a `DISTANCE_METRIC
+    <DISTANCE_METRICS>` specified in `metric <Stability.metric>`.  If `normalize <Distance.normalize>` is
+    specified, the result is normalized by the length of (number of elements in) `variable <Stability.variable>`.
+
+    Distance d is calculated according to a `DISTANCE_METRICS` specified in the `metric <Distance.metric>`
+    attribute of the Function, where :math:`v_1` and :math:`v_2` are the two items of `variable
+    <Distance.variable>`, *len* is the length of the items (len(`variable <Distance.variable>`)),
+    :math:`\\bar{v}` is the mean of an item, and :math:`\\sigma_v` is its standard deviation:
+
+    *DIFFERENCE*:
+
+       :math:`d = \\sum\limits^{len}(v_1-v_2)`
+
+    *EUCLIDEAN*:
+
+       :math:`d = \\sum\limits^{len}\\sqrt{(v_1-v_2)^2}`
+
+    *CROSS_ENTROPY*:
+
+       :math:`d = \\sum\limits^{len}(v_1*log(v_2))`
+
+    *CORRELATION*:
+
+       :math:`d = \\frac{\\sum\limits^{len}(v_1-\\bar{v}_1)(v_2-\\bar{v}_2)}{(len-1)\\sigma_{v_1}\\sigma_{v_2}}`
+
+    COMMENT:
+    PEARSON
+
+       :math:`d = \\frac{\\sum\limits^{len}(v_1-\\bar{v}_1)(v_2-\\bar{v}_2)}\
+       {(len-1)\\sigma_{v_1}\\sigma_{v_2}}`
+    COMMENT
+
+    **normalize**:
+
+       :math:`d = \\frac{d}{len}`
+
 
     Arguments
     ---------
@@ -7845,7 +7917,10 @@ class Distance(ObjectiveFunction):
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  context=None):
-        """Calculate the distance between the two arrays in `variable <Stability.variable>`.
+        """Calculate the distance between the two vectors in `variable <Stability.variable>`.
+
+        Uses one of the `DISTANCE_METRICS` specified in `metric <Distance.metric>`.  If `normalize
+        <Distance.normalize>` is `True`, the result is divided by the length of `variable <Distance.variable>`.
 
         Returns
         -------
@@ -8458,7 +8533,7 @@ WT_MATRIX_RECEIVERS_DIM = 1
 class BackPropagation(LearningFunction):
     """
     BackPropagation(                                     \
-        default_variable=ClassDefaults.variable,           \
+        default_variable=ClassDefaults.variable,         \
         activation_derivative_fct=Logistic().derivative, \
         error_derivative_fct=Logistic().derivative,      \
         error_matrix=None,                               \

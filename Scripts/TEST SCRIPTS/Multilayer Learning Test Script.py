@@ -168,7 +168,7 @@ elif COMPOSITION is SYSTEM:
     composition = x
 
     # x.show_graph(show_learning=ALL)
-    # x.show_graph()
+    x.show_graph()
     results = x.run(
         num_trials=10,
         # inputs=stim_list,
