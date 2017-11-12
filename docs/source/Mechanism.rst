@@ -4,10 +4,10 @@ Mechanisms
 .. toctree::
    :maxdepth: 1
 
-   ProcessingMechanisms <ProcessingMechanism>
-   AdaptiveMechanisms <AdaptiveMechanism>
+   Processing Mechanisms <ProcessingMechanism>
+   Adaptive Mechanisms <AdaptiveMechanism>
 
-.. automodule:: Mechanism
+.. automodule:: psyneulink.components.mechanisms.mechanism
    :members:
    :exclude-members: MechanismTuple, MechanismList, MonitoredOutputStatesOption, random
 

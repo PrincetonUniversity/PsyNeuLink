@@ -1,5 +1,5 @@
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Globals.Keywords import *
+from psyneulink.components.process import Process
+from psyneulink.globals.keywords import *
 
 DDM_prefs = ComponentPreferenceSet(
                 prefs = {
@@ -44,7 +44,7 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(True,Pr
 
 process_prefs.show()
 
-z = process(default_variable=[[30], [10]],
+z = Process(default_variable=[[30], [10]],
             params={PATHWAY:[myMechanism,
                                    (IDENTITY_MATRIX),
                                    myMechanism_2,

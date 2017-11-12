@@ -1,10 +1,9 @@
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms import EVCControlMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import *
+from psyneulink.components.process import Process
+from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.components.system import System
+from psyneulink.library.mechanisms.adaptive import EVCControlMechanism
 
 # Stimulus Mechanisms
 Color_Input = TransferMechanism(name='Color Input', function=Linear(slope = 0.2995))
@@ -29,23 +28,23 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0),
 Reward = TransferMechanism(name='Reward')
 
 # Processes:
-ColorNamingProcess = process(
+ColorNamingProcess = Process(
     default_variable=[0],
     pathway=[Color_Input, Color_Hidden, Output, Decision],
     name = 'Color Naming Process')
 
-WordReadingProcess = process(
+WordReadingProcess = Process(
     default_variable=[0],
     pathway=[Word_Input, Word_Hidden, Output, Decision],
     name = 'Word Reading Process')
 
-RewardProcess = process(
+RewardProcess = Process(
     default_variable=[0],
     pathway=[(Reward, 1)],
     name = 'RewardProcess')
 
 # System:
-mySystem = system(processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
+mySystem = System(processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
                   controller=EVCControlMechanism,
                   enable_controller=True,
                   monitor_for_control=[Reward, (DDM_PROBABILITY_UPPER_THRESHOLD, 1, -1)],

@@ -1,10 +1,10 @@
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
+from psyneulink.components.mechanisms.processing.Deprecated.LinearMechanism import *
 
-from PsyNeuLink.Components.Functions.Function import Exponential, Linear
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.System import System_Base
-from PsyNeuLink.Globals.Keywords import *
+from psyneulink.components.functions.function import Exponential, Linear
+from psyneulink.components.process import Process
+from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.components.system import System
+from psyneulink.globals.keywords import *
 
 if MPI_IMPLEMENTATION:
     import time
@@ -52,21 +52,21 @@ Decision = DDM(
 
 
 #region Processes
-TaskExecutionProcess = process(default_variable=[0],
+TaskExecutionProcess = Process(default_variable=[0],
                                pathway=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
                                prefs = process_prefs,
                                name = 'TaskExecutionProcess')
 
-RewardProcess = process(default_variable=[0],
+RewardProcess = Process(default_variable=[0],
                         pathway=[(Reward, 1)],
                         prefs = process_prefs,
                         name = 'RewardProcess')
 #endregion
 
 #region System
-mySystem = System_Base(processes=[TaskExecutionProcess, RewardProcess],
-                       monitor_for_control=[Reward, ERROR_RATE, (RESPONSE_TIME, -1, 1)],
-                       name='Test System')
+mySystem = System(processes=[TaskExecutionProcess, RewardProcess],
+                  monitor_for_control=[Reward, ERROR_RATE, (RESPONSE_TIME, -1, 1)],
+                  name='Test System')
 #endregion
 
 #region Show

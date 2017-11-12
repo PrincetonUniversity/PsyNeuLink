@@ -1,26 +1,30 @@
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import *
-from PsyNeuLink.Library.Subsystems.EVC.EVCControlMechanism import EVCControlMechanism
+from psyneulink.components.functions.function import BogaczEtAl, Linear
+from psyneulink.components.mechanisms.processing.transfermechanism import *
+from psyneulink.components.process import Process
+from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.components.system import MonitoredOutputStatesOption, System
+from psyneulink.globals.keywords import *
+from psyneulink.globals.environment import CentralClock
+from psyneulink.globals.preferences.componentpreferenceset import *
+from psyneulink.library.mechanisms.processing.integrator.ddm import *
+from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
 
-random.seed(0)
-np.random.seed(0)
+import numpy as np
+# import random
+
+# random.seed(0)
+# np.random.seed(0)
 
 # Preferences:
-DDM_prefs = ComponentPreferenceSet(
-                prefs = {
-                    kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
-                    kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
-
-process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
-                                      verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
+# DDM_prefs = ComponentPreferenceSet(
+#                 prefs = {
+#                     kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
+#                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
+#
+# process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
+#                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
 
 # Mechanisms:
@@ -36,10 +40,10 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                                                                           ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)},
                                                                       )),
 
-                                   threshold=(1.0, ControlProjection(function=Linear,
-                                                                     control_signal_params={
-                                                                         ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
-                                                                     )),
+                                   # threshold=(1.0, ControlProjection(function=Linear,
+                                   #                                   control_signal_params={
+                                   #                                       ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
+                                   #                                   )),
 
                                    # threshold=(1.0, ControlProjection(function=Linear,
                                    #                                   control_signal_params={
@@ -47,8 +51,8 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                                    #                                       MODULATION:ModulationParam.ADDITIVE}
                                    #                                   )),
 
-                                   # threshold=(1.0, ControlSignal(function=Linear,
-                                   #                               allocation_samples=np.arange(0.1, 1.01, 0.3))),
+                                   threshold=(1.0, ControlSignal(function=Linear,
+                                                                 allocation_samples=np.arange(0.1, 1.01, 0.3))),
 
                                    # threshold={VALUE: 1.0,
                                    #            CONTROL_PROJECTION: ControlProjection(function=Linear,
@@ -65,7 +69,7 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                               RESPONSE_TIME,
                               PROBABILITY_UPPER_THRESHOLD],
                # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.ALL_OUTPUT_STATES]},
-               prefs = DDM_prefs,
+               # prefs = DDM_prefs,
                name='Decision')
 
 # TEST = Decision._parameter_states[DRIFT_RATE].execute()
@@ -78,20 +82,20 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
 # TEST
 
 # Processes:
-TaskExecutionProcess = process(
+TaskExecutionProcess = Process(
     default_variable=[0],
     pathway=[Input, IDENTITY_MATRIX, Decision],
-    prefs = process_prefs,
+    # prefs = process_prefs,
     name = 'TaskExecutionProcess')
 
-RewardProcess = process(
+RewardProcess = Process(
     default_variable=[0],
     pathway=[Reward],
-    prefs = process_prefs,
+    # prefs = process_prefs,
     name = 'RewardProcess')
 
 # System:
-mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
+mySystem = System(processes=[TaskExecutionProcess, RewardProcess],
 
                   # WORKS:
                   controller=EVCControlMechanism,
@@ -146,7 +150,7 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
 # Show characteristics of system:
 mySystem.show()
 mySystem.controller.show()
-mySystem.show_graph(show_control=True)
+# mySystem.show_graph(show_control=True)
 # mySystem.show_graph()
 
 # Specify stimuli for run:
@@ -183,10 +187,10 @@ def show_results():
     print ('\t\t\tDrift rate control signal (from EVC): {} / parameter value: {}'.
            # format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
            format(
-            mySystem.controller.output_states['drift_rate_ControlSignal'].value,
+            mySystem.controller.output_states['Decision drift_rate ControlSignal'].value,
             re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision._parameter_states[DRIFT_RATE].value))))))
     print ('\t\t\tThreshold control signal (from EVC): {} / parameter value: {}'.
-           format(mySystem.controller.output_states['threshold_ControlSignal'].value,
+           format(mySystem.controller.output_states['Decision threshold ControlSignal'].value,
                   re.sub('[\[,\],\n]','',str(float(Decision._parameter_states[THRESHOLD].value)))
                   # Decision._parameter_states[THRESHOLD].mod_afferents[0].value
                   ))

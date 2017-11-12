@@ -1,6 +1,6 @@
 Control Mechanism
 =================
 
-.. automodule:: ControlMechanism
+.. automodule:: psyneulink.components.mechanisms.adaptive.control.controlmechanism
    :members:
    :exclude-members: Linear, random

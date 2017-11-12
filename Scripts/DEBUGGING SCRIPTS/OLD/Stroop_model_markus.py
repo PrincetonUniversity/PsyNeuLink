@@ -1,8 +1,7 @@
-# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import *
+from psyneulink.components.functions.function import Logistic
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.system import *
 
 # specification of task environment
 NFeatures = 1
@@ -64,14 +63,14 @@ Task_Hidden_Weights = MappingProjection(name='Task-Hidden Weights',
 process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
-StimulusResponseProcess = process(
+StimulusResponseProcess = Process(
     pathway=[Stimulus_Layer, Stimulus_Hidden_Weights, Hidden_Layer, Hidden_Output_Weights, Output_Layer],
     prefs = process_prefs,
     learning=LEARNING,
     target = [1, 0],
     name = 'Stimulus Response Process')
 
-TaskHiddenProcess = process(
+TaskHiddenProcess = Process(
     pathway=[Task_Layer, Task_Hidden_Weights, Hidden_Layer],
     prefs = process_prefs,
     learning=LEARNING,
@@ -90,7 +89,7 @@ stim_list_dict = {Stimulus_Layer:[1, 0, 1, 0],
 
 target_list_dict = {Output_Layer:[1, 0]}
 
-stroop_mode = system(processes=[StimulusResponseProcess, TaskHiddenProcess],
+stroop_mode = System(processes=[StimulusResponseProcess, TaskHiddenProcess],
                   name='stroop_model',
                   targets= [1, 0],
                   prefs=system_prefs)

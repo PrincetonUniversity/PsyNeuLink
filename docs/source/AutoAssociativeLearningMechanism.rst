@@ -1,6 +1,6 @@
 AutoAssociativeMechanism
 ========================
 
-.. automodule:: Library.Mechanisms.AdaptiveMechanisms.LearningMechanisms.AutoAssociativeLearningMechanism
+ .. automodule:: library.mechanisms.adaptive.learning.autoassociativelearningmechanism
    :members:
    :exclude-members: random, execute

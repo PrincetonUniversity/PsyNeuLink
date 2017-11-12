@@ -2,7 +2,7 @@ Mechanisms
 ==========
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
 
    ProcessingMechanisms
    AdaptiveMechanisms

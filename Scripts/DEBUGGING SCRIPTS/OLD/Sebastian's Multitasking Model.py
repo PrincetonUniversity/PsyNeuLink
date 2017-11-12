@@ -1,8 +1,7 @@
-# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import *
+from psyneulink.components.functions.function import Logistic
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.system import *
 
 # specification of task environment
 NFeatures = 2
@@ -70,27 +69,27 @@ Task_Output_Weights = MappingProjection(name='Task-Output Weights',
 process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
-StimulusResponseProcess = process(
+StimulusResponseProcess = Process(
     pathway=[Stimulus_Layer, Stimulus_Hidden_Weights, Hidden_Layer, Hidden_Output_Weights, Output_Layer],
     prefs = process_prefs,
     learning=LEARNING,
     target = [1, 0, 0, 0,],
     name = 'Stimulus Response Process')
 
-TaskHiddenProcess = process(
+TaskHiddenProcess = Process(
     pathway=[Task_Layer, Task_Hidden_Weights, Hidden_Layer],
     prefs = process_prefs,
     learning=LEARNING,
     name = 'Task Hidden Process')
 
-# TaskHiddenProcess = process(
+# TaskHiddenProcess = Process(
 #     pathway=[Task_Layer, Task_Hidden_Weights, Hidden_Layer, Hidden_Output_Weights, Output_Layer],
 #     prefs = process_prefs,
 #     learning=LEARNING,
 #     target = [1, 0, 0, 0,],
 #     name = 'Task Hidden Process')
 
-TaskOutputProcess = process(
+TaskOutputProcess = Process(
     pathway=[Task_Layer, Task_Output_Weights, Output_Layer],
     prefs = process_prefs,
     learning=LEARNING,
@@ -108,7 +107,7 @@ stim_list_dict = {Stimulus_Layer:[1, 0, 1, 0, 1, 0, 1, 0],
 
 target_list_dict = {Output_Layer:[1, 0, 0, 0,]}
 
-multitaskingModel = system(processes=[StimulusResponseProcess, TaskHiddenProcess, TaskOutputProcess],
+multitaskingModel = System(processes=[StimulusResponseProcess, TaskHiddenProcess, TaskOutputProcess],
                            name='Multitasking Model',
                            prefs=system_prefs)
 
