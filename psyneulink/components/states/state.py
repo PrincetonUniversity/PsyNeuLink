@@ -573,14 +573,14 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, function_type
-from psyneulink.components.functions.function import \
-    LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
+from psyneulink.components.functions.function import LinearCombination, ModulationParam, \
+    _get_matrix, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.keywords import \
     CONTEXT, COMMAND_LINE, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
     GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, \
     LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
-    MAPPING_PROJECTION_PARAMS, MECHANISM, MATRIX,\
+    MAPPING_PROJECTION_PARAMS, MECHANISM, MATRIX, AUTO_ASSIGN_MATRIX,\
     MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OWNER, PARAMS, PATHWAY_PROJECTIONS, \
     PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, \
     SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, \
@@ -2471,22 +2471,24 @@ def _parse_state_spec(state_type=None,
 
         # Projection has been instantiated
         if isinstance(projection_spec, Projection):
-            # If deferred_init, need to get sender and matrix to determine value
-            if projection_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                sender = projection_spec.init_args[SENDER]
-                matrix = projection_spec.init_args[PARAMS][FUNCTION_PARAMS][MATRIX]
-                if sender is not None and matrix is not None:
-                    # FIX: GET STATE OF SENDER IF IT IS A MECHANISM
-                    # FIX: LOOK AT _parse_connection_specs TO SEE HOW DIMENSION IS FIGURED
-                    sender = _get_state_for_socket(owner=owner, state_spec=sender, state_types=state_dict[STATE_TYPE])
-                    projection_value = np.zeros(matrix.shape[sender.value.ndim :])
-            else:
+            if projection_spec.init_status is InitStatus.INITIALIZED:
                 projection_value = projection_spec.value
+            # If deferred_init, need to get sender and matrix to determine value
+            else:
+                try:
+                    sender = projection_spec.init_args[SENDER]
+                    matrix = projection_spec.init_args[PARAMS][FUNCTION_PARAMS][MATRIX]
+                except KeyError:
+                    pass
         # Projection specification dict:
         else:
             # Need to get sender and matrix to determine value
             sender = projection_spec[SENDER]
             matrix = projection_spec[MATRIX]
+
+        if sender is not None and matrix is not None and matrix is not AUTO_ASSIGN_MATRIX:
+            sender = _get_state_for_socket(owner=owner,state_spec=sender,state_types=state_dict[STATE_TYPE])
+            projection_value = np.zeros(matrix.shape[sender.value.ndim :])
 
         reference_value = state_dict[REFERENCE_VALUE]
         # If State's reference_value is not specified, but Projection's value is, use projection_spec's value
