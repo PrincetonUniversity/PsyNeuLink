@@ -251,7 +251,8 @@ from psyneulink.components.functions.function import AccumulatorIntegrator, Line
 from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, SYSTEM_INPUT_STATE
+from psyneulink.globals.keywords import VALUE, AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, \
+    FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, SYSTEM_INPUT_STATE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock
@@ -543,15 +544,22 @@ class MappingProjection(PathwayProjection_Base):
             else:
                 projection_string = 'projection'
 
+            if all(string in self.name for string in {'from', 'to'}):
+                states_string = ''
+            else:
+                states_string = "from \'{}\' OuputState of \'{}\' to \'{}\'".format(self.sender.name,
+                                                                                    self.sender.owner.name,
+                                                                                    self.receiver.owner.name)
             if not isinstance(self._matrix_spec, str):
-                raise ProjectionError("Width ({}) of \'{}{}\' from \'{}\' OuputState of \'{}\' to \'{}\'"
-                                      " does not match the length of its \'{}\' InputState ({})".
+                # if all(string in self.name for string in {'from', 'to'}):
+
+                raise ProjectionError("Width ({}) of the {} of \'{}{}\'{} "
+                                      "does not match the length of its \'{}\' InputState ({})".
                                       format(mapping_output_len,
+                                             VALUE,
                                              self.name,
                                              projection_string,
-                                             self.sender.name,
-                                             self.sender.owner.name,
-                                             self.receiver.owner.name,
+                                             states_string,
                                              self.receiver.name,
                                              receiver_len))
 

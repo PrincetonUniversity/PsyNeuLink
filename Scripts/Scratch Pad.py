@@ -410,8 +410,6 @@ class ScratchPadError(Exception):
 # for projection in my_mech.output_states[0].efferents:
 #     print(projection.name)
 
-# FROM KEVIN: -------------------------------------
-
 I = pnl.InputState(reference_value=[0,0,0])
 pnl.TransferMechanism(input_states=[I])
 
@@ -456,6 +454,11 @@ my_mech_C = pnl.TransferMechanism(input_states=[[0,0], 'Hello'])
 print(my_mech_C.input_states)
 print(my_mech_C.variable)
 
+# FROM KEVIN:
+
+m = pnl.TransferMechanism(size=2)
+p = pnl.MappingProjection(sender=m, matrix=[[0, 0, 0], [0, 0, 0]])
+T = pnl.TransferMechanism(name='TEST INPUT VALUE', input_states=[p])
 
 # --------------------------------------------------------------------------------------------------
 

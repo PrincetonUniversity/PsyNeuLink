@@ -573,13 +573,14 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, function_type
-from psyneulink.components.functions.function import LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
+from psyneulink.components.functions.function import \
+    LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.keywords import \
     CONTEXT, COMMAND_LINE, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
     GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, \
     LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
-    MAPPING_PROJECTION_PARAMS, MECHANISM, \
+    MAPPING_PROJECTION_PARAMS, MECHANISM, MATRIX,\
     MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OWNER, PARAMS, PATHWAY_PROJECTIONS, \
     PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, \
     SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, \
@@ -2342,7 +2343,7 @@ def _parse_state_spec(state_type=None,
     Return either State object or State specification dictionary
     """
     from psyneulink.components.projections.projection \
-        import _is_projection_spec, _parse_connection_specs, ConnectionTuple
+        import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ConnectionTuple
 
     # Get all of the standard arguments passed from _instantiate_state (i.e., those other than state_spec) into a dict
     standard_args = get_args(inspect.currentframe())
@@ -2458,7 +2459,47 @@ def _parse_state_spec(state_type=None,
 
     # Projection specification (class, object, or matrix value (matrix keyword processed below):
     elif _is_projection_spec(state_specification, include_matrix_spec=False):
-        # Move to PROJECTIONS entry of params specification dict
+
+        # FIX: 11/12/17 - HANDLE SITUATION IN WHICH projection_spec IS A MATRIX (AND SENDER IS SOMEHOW KNOWN)
+
+        # Parse to determine whether Projection's value is specified
+        projection_spec = _parse_projection_spec(state_specification, owner=owner, state_type=state_dict[STATE_TYPE])
+
+        projection_value=None
+        sender=None
+        matrix=None
+
+        # Projection has been instantiated
+        if isinstance(projection_spec, Projection):
+            # If deferred_init, need to get sender and matrix to determine value
+            if projection_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                sender = projection_spec.init_args[SENDER]
+                matrix = projection_spec.init_args[PARAMS][FUNCTION_PARAMS][MATRIX]
+                if sender is not None and matrix is not None:
+                    # FIX: GET STATE OF SENDER IF IT IS A MECHANISM
+                    # FIX: LOOK AT _parse_connection_specs TO SEE HOW DIMENSION IS FIGURED
+                    sender = _get_state_for_socket(owner=owner, state_spec=sender, state_types=state_dict[STATE_TYPE])
+                    projection_value = np.zeros(matrix.shape[sender.value.ndim :])
+            else:
+                projection_value = projection_spec.value
+        # Projection specification dict:
+        else:
+            # Need to get sender and matrix to determine value
+            sender = projection_spec[SENDER]
+            matrix = projection_spec[MATRIX]
+
+        reference_value = state_dict[REFERENCE_VALUE]
+        # If State's reference_value is not specified, but Projection's value is, use projection_spec's value
+        if reference_value is None and projection_value is not None:
+            state_dict[REFERENCE_VALUE] = projection_value
+        # If State's reference_value has been specified, check for compatibility with projection_spec's value
+        elif (reference_value is not None and projection_value is not None
+            and not iscompatible(reference_value, projection_value)):
+            raise StateError("{} of {} ({}) is not compatible with {} of {} ({}) for {}".
+                             format(VALUE, Projection.__name__, projection_value, REFERENCE_VALUE,
+                                    state_dict[STATE_TYPE].__name__, reference_value, owner.name))
+
+        # Move projection_spec to PROJECTIONS entry of params specification dict (for instantiation of Projection)
         if state_dict[PARAMS] is None:
             state_dict[PARAMS] = {}
         state_dict[PARAMS].update({PROJECTIONS:[state_specification]})
