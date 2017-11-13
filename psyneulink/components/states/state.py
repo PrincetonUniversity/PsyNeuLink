@@ -453,6 +453,8 @@ The *STATE_TYPE* entry is included here for completeness, but in this case it is
 is clearly determined by the context of the specification (an **input_states** argument);  where it is not clear, then
 the *STATE_TYPE* entry must be included.
 
+.. State_Projections_Examples:
+
 *Projections*.   A State specification dictionary can also be used to specify projections to or from the State, also in
 a number of different ways.  The most straightforward is to include them in a *PROJECTIONS* entry.  For example, the
 following specifies that the InputState of ``my_mech`` receive two Projections,  one from ``source_mech_1`` and another
@@ -494,8 +496,17 @@ the following example, a `ControlMechanism` is created that sends `ControlProjec
 `drift_rate <BogaczEtAl.drift_rate>` and `threshold <BogaczEtAl.threshold>` ParameterStates of a `DDM` Mechanism::
 
     my_mech = pnl.DDM(name='MY DDM')
-    my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE],
+    my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.NAME: 'MY DDM DRIFT RATE AND THREHOLD CONTROL SIGNAL',
+                                                         pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE],
                                                                            my_mech.parameter_states[pnl.THRESHOLD]]}])
+    # Print out ControlSignals and their ControlProjections
+    for control_signal in my_ctl_mech.control_signals:
+        print(control_signal.name)
+        for control_projection in control_signal.efferents:
+            print("\t{}: {}".format(control_projection.receiver.owner.name, control_projection.receiver))
+    > MY DDM DRIFT RATE AND THREHOLD CONTROL SIGNAL
+    >     MY DDM: (ParameterState drift_rate)
+    >     MY DDM: (ParameterState threshold)
 
 Note that a ControlMechanism uses a **control_signals** argument in place of an **output_states** argument (since it
 uses `ControlSignal <ControlSignals>` for its `OutputStates <OutputState>`.  In the example above,
@@ -503,11 +514,37 @@ both ControlProjections are assigned to a single ControlSignal.  However, they c
 specifying them in separate itesm of the **control_signals** argument::
 
     my_mech = pnl.DDM(name='MY DDM')
-    my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE]},
-                                                        {pnl.PROJECTIONS: [my_mech.parameter_states[pnl.THRESHOLD]}])
+    my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.NAME: 'DRIFT RATE CONTROL SIGNAL',
+                                                         pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE]]},
+                                                        {pnl.NAME: 'THRESHOLD RATE CONTROL SIGNAL',
+                                                         pnl.PROJECTIONS: [my_mech.parameter_states[pnl.THRESHOLD]]}])
+    # Print out ControlSignals and their ControlProjections...
+    > DRIFT RATE CONTROL SIGNAL
+    >     MY DDM: (ParameterState drift_rate)
+    > THRESHOLD RATE CONTROL SIGNAL
+    >     MY DDM: (ParameterState threshold)
+
+Specifying Projections in a State specification dictionary affords flexiblity -- for example, naming the State
+and/or specifying other attributes.  However, if this is not necessary, the Projections can be used to specify the
+State directly.  For example, the following, which is much simpler, produces the same result as the previous example
+(sans the custom name; though as the printout below shows, the default names are usually pretty clear):
+
+    my_ctl_mech = pnl.ControlMechanism(control_signals=[my_mech.parameter_states[pnl.DRIFT_RATE],
+                                                        my_mech.parameter_states[pnl.THRESHOLD]])
+
+    # Print out ControlSignals and their ControlProjections...
+    > MY DDM drift_rate ControlSignal
+    >    MY DDM: (ParameterState drift_rate)
+    > MY DDM threshold ControlSignal
+    >    MY DDM: (ParameterState threshold)
 
 
 COMMENT:
+
+.. _State_MECHANISM_STATES_Examples:
+
+*MECHANISM and STATES entries*.  XXX EXAMPLES HERE
+
 creates a `GatingSignal` with
 `GatingProjections <GatingProjection>` to ``mech_B`` and ``mech_C``, and assigns it to ``my_gating_mech``::
 

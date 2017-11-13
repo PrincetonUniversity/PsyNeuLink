@@ -482,9 +482,39 @@ my_gating_mech = pnl.GatingMechanism()
 my_mech = pnl.TransferMechanism(name='MY_MECH',
                                 input_states=[{pnl.NAME: 'MY INPUT',
                                                pnl.PROJECTIONS:[my_gating_mech]}])
+
+
+
+
 my_mech = pnl.DDM(name='MY DDM')
-my_control_mech = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE],
-                                                                           my_mech.parameter_states[pnl.THRESHOLD]]}])
+my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.NAME: 'MY DDM DRIFT RATE AND THREHOLD CONTROL SIGNAL',
+                                                     pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE],
+                                                                       my_mech.parameter_states[pnl.THRESHOLD]]}])
+# Print out ControlSignals and their ControlProjections
+for control_signal in my_ctl_mech.control_signals:
+    print(control_signal.name)
+    for control_projection in control_signal.efferents:
+        print("\t{}: {}".format(control_projection.receiver.owner.name, control_projection.receiver))
+
+my_mech = pnl.DDM(name='MY DDM')
+my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.NAME: 'DRIFT RATE CONTROL SIGNAL',
+                                                     pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE]]},
+                                                    {pnl.NAME: 'THRESHOLD RATE CONTROL SIGNAL',
+                                                     pnl.PROJECTIONS: [my_mech.parameter_states[pnl.THRESHOLD]]}])
+# Print out ControlSignals and their ControlProjections
+for control_signal in my_ctl_mech.control_signals:
+    print(control_signal.name)
+    for control_projection in control_signal.efferents:
+        print("\t{}: {}".format(control_projection.receiver.owner.name, control_projection.receiver))
+
+my_ctl_mech = pnl.ControlMechanism(control_signals=[my_mech.parameter_states[pnl.DRIFT_RATE],
+                                                    my_mech.parameter_states[pnl.THRESHOLD]])
+
+for control_signal in my_ctl_mech.control_signals:
+    print(control_signal.name)
+    for control_projection in control_signal.efferents:
+        print("\t{}: {}".format(control_projection.receiver.owner.name, control_projection.receiver))
+
 
 # my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE]]},
 #                                                     {pnl.PROJECTIONS: [my_mech.parameter_states[pnl.THRESHOLD]]}])
@@ -492,8 +522,8 @@ my_control_mech = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [my_me
 # my_ctl_mech = pnl.ControlMechanism(control_signals=[my_mech.parameter_states[pnl.DRIFT_RATE],
 #                                                     my_mech.parameter_states[pnl.THRESHOLD]])
 
-my_ctl_mech = pnl.ControlMechanism(projections=[my_mech.parameter_states[pnl.DRIFT_RATE],
-                                                my_mech.parameter_states[pnl.THRESHOLD]])
+# my_ctl_mech = pnl.ControlMechanism(projections=[my_mech.parameter_states[pnl.DRIFT_RATE],
+#                                                 my_mech.parameter_states[pnl.THRESHOLD]])
 
 
 # my_mech = pnl.DDM(name='MY DDM')
