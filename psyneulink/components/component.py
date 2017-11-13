@@ -796,6 +796,8 @@ class Component(object):
         # Used by run to store return value of execute
         self.results = []
 
+        default_variable, param_defaults = self._preprocess_variable(default_variable, size, param_defaults)
+
 
         # ENFORCE REQUIRED CLASS DEFAULTS
 
@@ -883,6 +885,12 @@ class Component(object):
         self._instantiate_attributes_after_function(context=context)
 
         self.init_status = InitStatus.INITIALIZED
+
+    def _preprocess_variable(self, variable, size, params):
+       # TODO:
+        # this is part of the hack in Mechanism to accept input_states as a way to instantiate default_variable for
+       # this release should be cleaned ASAP in default_variable overhaul
+        return variable, params
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
