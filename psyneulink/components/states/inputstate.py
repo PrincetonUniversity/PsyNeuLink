@@ -397,7 +397,7 @@ from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_S
     OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE, LEARNING_SIGNAL, GATING_SIGNAL, SENDER, COMMAND_LINE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import append_type_to_name, iscompatible
+from psyneulink.globals.utilities import append_type_to_name, iscompatible, is_numeric
 
 __all__ = [
     'InputState', 'InputStateError', 'state_type_keywords',
@@ -843,6 +843,18 @@ class InputState(State_Base):
             state_spec = tuple_spec[0]
 
             if len(tuple_spec) == 2:
+                # FIX: 11/12/17 - ??GENERALIZE FOR ALL STATES AND MOVE TO _parse_state_spec
+                if is_numeric(state_spec):
+                    reference_value = state_dict[REFERENCE_VALUE]
+                    # Assign value so sender_dim is skipped below
+                    # (actual assignment is made in _parse_state_spec)
+                    if reference_value is None:
+                        state_dict[REFERENCE_VALUE]=state_spec
+                    elif  not iscompatible(state_spec, reference_value):
+                        raise StateError("Value in first item of 2-item tuple specification for {} of {} ({}) "
+                                         "is not compatible with its {} ({})".
+                                         format(InputState.__name__, owner.name, state_spec,
+                                                REFERENCE_VALUE, reference_value))
                 if state_spec != self:
                     # If state_spec is not the current state (self), treat as part of the projection specification
                     projections_spec = tuple_spec
@@ -864,7 +876,7 @@ class InputState(State_Base):
                             # FIX: 10/3/17 - PUTTING THIS HERE IS A HACK...
                             # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ConnectionTuple SPEC
                             # FIX:           USING _get_state_for_socket
-                            from psyneulink.components.projections.projection import _parse_projection_spec
+                            # from psyneulink.components.projections.projection import _parse_projection_spec
                             sender_dim = projection_spec.state.value.ndim
                             projection = projection_spec.projection
                             if isinstance(projection, dict):

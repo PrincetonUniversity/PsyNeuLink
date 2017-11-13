@@ -176,6 +176,7 @@ Projection in context:
       COMMENT
   COMMENT:
       TUPLE SPECIFICATIONS HERE (??2-item?? and ConnectionTuple)
+      * **Specification dictionary** -- (Connect_with_state, weight, exponent, matrix spec)
   COMMENT
 
 .. _Projection_Automatic_Creation:
@@ -342,7 +343,7 @@ from psyneulink.globals.keywords import \
     kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import ContentAddressableList, is_matrix, iscompatible, type_match
+from psyneulink.globals.utilities import ContentAddressableList, iscompatible, is_numeric, is_matrix, type_match
 
 __all__ = [
     'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError',
@@ -1353,6 +1354,12 @@ def _parse_connection_specs(connectee_state_type,
         #    - first item is assumed to always be a specification for the State being connected with
             if len(connection) == 2:
                 state_spec, projection_spec = connection
+                if is_numeric(state_spec):
+                    state_spec = projection_spec
+                else:
+                    raise ProjectionError("First item of 2-item tuple specification for {} of {} ({}) must be a value".
+                                          format(connectee_state_type.__name__, owner.name, state_spec))
+
                 weight = DEFAULT_WEIGHT
                 exponent = DEFAULT_EXPONENT
             elif len(connection) == 4:
@@ -1381,9 +1388,7 @@ def _parse_connection_specs(connectee_state_type,
                 else:
                     state_type = state_spec.__class__
 
-                # Test that state_type is the list for state's connects_with
-                # FIX: 10/3/17 - CHANGE THIS TO "ANY" TEST
-                # FIX: 11/4/17 - NEED TO ADD MODULATORS TO connects_with HERE
+                # Test that state_type is in the list for state's connects_with
                 if not any(issubclass(connects_with_state, state_type)
                            for connects_with_state in connects_with + modulators):
                     spec = projection_spec or state_type.__name__

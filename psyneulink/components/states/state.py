@@ -101,28 +101,27 @@ belongs is created.
 Specifying a State
 ~~~~~~~~~~~~~~~~~~
 
-Wherever a State is specified, it can be done using any of the following:
+A State can be specified using any of the following:
 
     * existing **State** object;
     ..
-    * name of a **State subclass** (`InputState`, `ParameterState`, or `OutputState`) - a default State of the
-      corresponding type will be created, using a default value for the State that is determined by the context
-      in which it is specified.
+    * name of a **State subclass** (`InputState`, `ParameterState`, or `OutputState`) -- creates a default State of the
+      specified type, using a default value for the State that is determined by the context in which it is specified.
     ..
-    * **value**.  This creates a default State using the specified value as its default `value <State_Base.value>`.
+    * **value** -- creates a default State using the specified value as its default `value <State_Base.value>`.
     ..
-    * **State specification dictionary**; every State specification can contain the following: *KEY*:<value>
-      entries, in addition to those specific to a particular State subtype (see subtype documentation):
+    * **State specification dictionary** -- can use the following: *KEY*:<value> entries, in addition to those
+      specific to the State's type (see documentation for each type):
       ..
       * *STATE_TYPE*:<State type>
           specifies type of State to create (necessary if it cannot be determined from the
-          the context of the other entries or in which it is being created)
+          the context of the other entries or in which it is being created).
       ..
       * *NAME*:<str>
-          the string is used as the name of the State;
+          the string is used as the name of the State.
       ..
       * *VALUE*:<value>
-          the value is used as the default value of the State;
+          the value is used as the default value of the State.
 
       .. _State_Specification_Dictionary:
 
@@ -134,7 +133,7 @@ Wherever a State is specified, it can be done using any of the following:
       ..
       * *PROJECTIONS*:List[<`projection specification <Projection_In_Context_Specification>`>,...]
           the list must contain a one or more `Projection specifications <Projection_In_Context_Specification>`
-          to or from the State, and/or `ModulatorySignals <ModulatorySignal>` from which it should receive projections;
+          to or from the State, and/or `ModulatorySignals <ModulatorySignal>` from which it should receive projections.
       ..
       * *<str>*:List[<`projection specification <Projection_In_Context_Specification>`>,...]
           this must be the only entry in the dictionary, and the string cannot be a PsyNeuLink keyword;  it is used as
@@ -144,56 +143,26 @@ Wherever a State is specified, it can be done using any of the following:
       * *MECHANISM*:Mechanism
           this can be used to specify a Projection to or from the specified Mechanism.  If the entry appears without
           any accompanying state specification entries (see below), the Projection is assumed to be a
-          `MappingProjection` to the Mechanism's `primary InputState <InputState_Primary>` or `primary OutputState
-          <OutputState_Primary>`, depending upon the type of Mechanism and context of specification.  It can also be
-          accompanied by one or more State specficiations entries described below, to create several Projections
-          to States of Mechanism by referring to their names.
+          `MappingProjection` to the Mechanism's `primary InputState <InputState_Primary>` or from its `primary
+          OutputState <OutputState_Primary>`, depending upon the type of Mechanism and context of specification.  It
+          can also be accompanied by one or more State specification entries described below, to create one or more
+          Projections to/from those States.
       ..
       * *<STATES_KEYWORD>:List[<str or State.name>,...]
-         this must accompany a *MECHANISM* entry (described above), and is used to specify its State by name.
-         Each entry must use one of the following keywords as its key:
-         *INPUT_STATES*, *OUTPUT_STATES*, *PARAMETER_STATES*, *LEARNING_SIGNAL*, *CONTROL_SIGNAL*, *GATING_SIGNAL*;
-         and must contain a list of one or more names of States of the Mechanism specified in the *MECHANISM* entry.
-         The types of States that can be specified depend on the type of the Mechanism and context of the specification
-         (see `examples <XXX>` below).
+         this must accompany a *MECHANISM* entry (described above), and is used to specify its State(s) by name.
+         Each entry must use one of the following keywords as its key, and there can be no more than one of each:
+         *INPUT_STATES*, *OUTPUT_STATES*, *PARAMETER_STATES*, *LEARNING_SIGNAL*, *CONTROL_SIGNAL*, *GATING_SIGNAL*.
+         Each entry must contain a list States of the specified type, all of which belong to the Mechanism specified in
+         the *MECHANISM* entry;  each item in the list must be the name of one the Mechanism's States, or a
+         `ConnectionTuple <State_ConnectionTuple>` the first item of which is the name of a State. The types of
+         States that can be specified in this manner depends on the type of the Mechanism and context of the
+         specification (see `examples <XXX>` below).
 
-    COMMENT:
-    *** REINSTATE WHEN THESE FUNCTIONALITIES ARE IMPLEMENTED:
+    .. _State_ConnectionTuple:
 
-      Finally a dictionary can be used to specify a set of InputStates each of which receives a Projections from
-      an OutputState, all of which belong to the same Mechanism;  this is a convenience format, that allows those
-      OutputStates to be specified by their names.  This is done using the following pair of entries:
-
-        * *MECHANISM*:<`Mechanism <Mechanism>`>
-            this entry is used to specify the Mechanism to which the OutputStates belong. If it is appears in the
-            dictionary, then all of the items specified in the OUTPUT_STATES entry (see below) are assumed to be
-            from this Mechanism.  If the dictionary contains this entry but no *OUTPUT_STATES* entry, then the
-            Mechanism's `primary OutputState <OutputState_Primary>` is used.
-        ..
-        * *OUTPUT_STATES*:<List[<str or any of the other forms of specifications for an OutputState>, ...]>
-            this must be used with a *MECHANISM* entry, to list one or more of its OutputStates by their names;
-            if a string appears in the list that is not the name of an OutputState of the Mechanism in the *MECHANISM*
-            entry, it is treated as a string specification (i.e., for the creation of an InputState with that name,
-            but that is not assigned any Projection).  The list can also contain, in the place of an OutputState's
-            name, an InputState specification subdictionary;  this can be used to specify attributes of the InputState
-            (e.g., its weight and/or exponent), in addition to the OutputState and/or MappingProjection from it to the
-            InputState (specified in the *PROJECTIONS* entry of the subdictionary).
-
-        If an InputState specification dictionary containing a *MECHANISM* and *OUTPUT_STATES* entry also contains
-        other entries (e.g., *WEIGHTS* or *EXPONENTS* entries), their values are applied to all of the InputStates
-        created for the OutputStates specified in the *OUTPUT_STATES* entry, except any that use a specification
-        dictionary of their own containing the same entry.  For example, if a *WEIGHT* entry is included
-        along with the *MECHANISM* and *OUTPUT_STATES* entries, then the specified weight is assigned to the
-        `weight <InputState.weight>` attribute of the InputStates created for each of the OutputStates in the
-        *OUTPUT_STATES* list, except any that are specified in the list using a specification subdictionary that
-        includes its own *WEIGHT* entry;  in that case, the latter is assigned to the `weight <InputState.weight>`
-        attribute created for (only) that OutputState, while the *WEIGHT* entry in the outer dictionary is used for
-        all of the other InputStates.
-    COMMENT
-
-    COMMENT:
-    ADD 4-item tuple / ConnectionTuple HERE
-    COMMENT
+    * **ConnectionTuple** -- a 4-item tuple that can be used to specify a `Projection <Projection>' to or from
+      another State, along with the weight, exponent, and/or matrix to use for that Projection (see
+      `ConnectionTuple <Projection_ConnectionTuple>` for additional details.
 
     * a **2-item tuple** - the first item must be a value, used as the default value for the State,
       and the second item must be a specification for a `Projection <Projection_In_Context_Specification>`
@@ -580,7 +549,7 @@ from psyneulink.globals.keywords import \
     CONTEXT, COMMAND_LINE, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
     GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, \
     LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
-    MAPPING_PROJECTION_PARAMS, MECHANISM, MATRIX, AUTO_ASSIGN_MATRIX,\
+    MAPPING_PROJECTION_PARAMS, MECHANISM, MATRIX, AUTO_ASSIGN_MATRIX, WEIGHT, EXPONENT,\
     MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OWNER, PARAMS, PATHWAY_PROJECTIONS, \
     PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, \
     SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, \
@@ -589,7 +558,8 @@ from psyneulink.globals.log import LogEntry, LogLevel
 from psyneulink.globals.preferences.componentpreferenceset import kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, convert_to_np_array, get_args, get_class_attributes, is_value_spec, iscompatible, merge_param_dicts, type_match
+from psyneulink.globals.utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, convert_to_np_array, \
+    get_args, get_class_attributes, is_value_spec, iscompatible, merge_param_dicts, type_match, is_numeric
 from psyneulink.scheduling.timescale import CurrentTime, TimeScale
 
 __all__ = [
@@ -1265,6 +1235,8 @@ class State_Base(State):
             # Projection specification dictionary:
             elif isinstance(projection_spec, dict):
                 # Instantiate Projection
+                projection_spec[WEIGHT]=weight
+                projection_spec[EXPONENT]=exponent
                 projection_type = projection_spec.pop(PROJECTION_TYPE, None) or default_projection_type
                 projection = projection_type(**projection_spec)
 
@@ -2020,7 +1992,7 @@ def _instantiate_state_list(owner,
         else:
             comparison_string = 'fewer'
         raise StateError("There are {} {}s specified ({}) than the number of items ({}) "
-                             "in the {} of the function for {}".
+                             "in the {} of the function for \'{}\'".
                              format(comparison_string,
                                     state_param_identifier,
                                     num_states,
@@ -2531,7 +2503,7 @@ def _parse_state_spec(state_type=None,
 
     # value, so use as variable of State
     elif is_value_spec(state_specification):
-        state_dict[REFERENCE_VALUE] = state_specification
+        state_dict[REFERENCE_VALUE] = np.atleast_1d(state_specification)
 
     # State specification tuple
     #    Assume first item is the state specification, and use as state_spec in a recursive call to parse_state_spec.
@@ -2540,6 +2512,7 @@ def _parse_state_spec(state_type=None,
 
         # FIX: 10/3/17 - CONSOLIDATE W/ CALL TO _parse_state_specific_params FOR State specification dict BELOW
         # FIX:           NEEDS TO MOVE REFERENCE_VALUE ENTRY FROM STATE_PARAMS INTO STATE_DICT
+
         # Get state-specific params from tuple
         state_params = state_type._parse_state_specific_params(state_type,
                                                                owner=owner,
@@ -2568,7 +2541,7 @@ def _parse_state_spec(state_type=None,
 
         # Standard state specification dict
         # Warn if VARIABLE was not in dict
-        if not VARIABLE in state_dict and owner.prefs.verbosePref:
+        if VARIABLE not in state_dict and owner.prefs.verbosePref:
             print("{} missing from specification dict for {} of {};  default ({}) will be used".
                   format(VARIABLE, state_type, owner.name, state_dict))
         if params is not None:
@@ -2579,14 +2552,14 @@ def _parse_state_spec(state_type=None,
                                                              owner=owner,
                                                              state_dict=state_dict,
                                                              state_specific_params=params)
-
+            # Move PROJECTIONS entry to params
             if PROJECTIONS in state_dict:
                 if not isinstance(state_dict[PROJECTIONS], list):
                     state_dict[PROJECTIONS] = [state_dict[PROJECTIONS]]
-                params[PROJECTIONS].appdend(state_dict[PROJECTIONS])
+                params[PROJECTIONS].append(state_dict[PROJECTIONS])
 
-            # MECHANISM entry specifies Mechanism with one or more States to connect with,
-            #    and the names of them in <STATES> entries: {MECHANISM: <Mechanism>, <STATES>:[<State.name>, ...]}
+            # MECHANISM entry specifies Mechanism; <STATES> entry has names of its States
+            #           MECHANISM: <Mechanism>, <STATES>:[<State.name>, ...]}
             if MECHANISM in state_specific_args:
 
                 if not PROJECTIONS in params:
@@ -2598,19 +2571,25 @@ def _parse_state_spec(state_type=None,
                                      "for {} of {} is not a {}".
                                      format(MECHANISM, mech, state_type.__name__, owner.name, Mechanism.__name__))
 
+                # For States with which the one being specified can connect:
                 for STATES in state_type.connectsWithAttribute:
 
                    if STATES in state_specific_args:
-                        states = state_specific_args[STATES]
-                        if not isinstance(states, list):
-                            states = [states]
-                        for state in states:
+                        state_specs = state_specific_args[STATES]
+                        state_specs = state_specs if isinstance(state_specs, list) else [state_specs]
+                        for state_spec in state_specs:
+                            # If State is a tuple, get its first item as state
+                            state = state_spec[0] if isinstance(state_spec, tuple) else state_spec
                             try:
                                 state_attr = getattr(mech, STATES)
                                 state = state_attr[state]
                             except:
-                                raise StateError("Unrecognized name ({}) for a {} of {} in specification of {} for {}".
-                                                 format(state, state, mech.name, state_type.__name__, owner.name))
+                                name = owner.name if not 'unnamed' in owner.name else 'a ' + owner.__class__.__name__
+                                raise StateError("Unrecognized name ({}) for {} of {} in specification of {} for {}".
+                                                 format(state, STATES, mech.name, state_type.__name__, name))
+                            # If state_spec was a tuple, put state back in as its first item and use as projection spec
+                            if isinstance(state_spec, tuple):
+                                state = (state,) + state_spec[1:]
                             params[PROJECTIONS].append(state)
                         # Delete <STATES> entry as it is not a parameter of a State
                         del state_specific_args[STATES]
@@ -2789,14 +2768,11 @@ def _get_state_for_socket(owner,
                                      connect_with_states=state_type,
                                      projection_spec=state_spec,
                                      projection_socket=projection_socket)
-        # MODIFIED 10/3/17 NEW:
         if isinstance(state_spec, Projection):
             state = state_spec.socket_assignments[projection_socket]
             if state is None:
                 state = state_type
         else:
-        # MODIFIED 10/3/17 END
-        #     state = state_type
             return state_spec
 
     else:

@@ -454,11 +454,31 @@ my_mech_C = pnl.TransferMechanism(input_states=[[0,0], 'Hello'])
 print(my_mech_C.input_states)
 print(my_mech_C.variable)
 
-# FROM KEVIN:
-
 m = pnl.TransferMechanism(size=2)
 p = pnl.MappingProjection(sender=m, matrix=[[0, 0, 0], [0, 0, 0]])
+q = pnl.MappingProjection()
 T = pnl.TransferMechanism(name='TEST INPUT VALUE', input_states=[p])
+
+R1 = pnl.TransferMechanism(output_states=['OUTPUT_1', 'OUTPUT_2'])
+R2 = pnl.TransferMechanism(default_variable=[[0],[0]],
+                        input_states=['INPUT_1', 'INPUT_2'])
+T = pnl.TransferMechanism(name='HOOBLY DOOBLY MECH',
+                          input_states=[{pnl.MECHANISM: R1,
+                                         pnl.OUTPUT_STATES: ['OUTPUT_1', ('OUTPUT_2', 3, 2, None)],
+                                         pnl.WEIGHT: 24},
+                                        'HOOBLY_DOOBLY',
+                                        (3, q)],
+                          output_states=[{pnl.MECHANISM:R2,
+                                          pnl.INPUT_STATES: ['INPUT_1', 'INPUT_2']}])
+
+# T = pnl.TransferMechanism(params={pnl.INPUT_STATES:[{pnl.MECHANISM: R1,
+#                                                      pnl.OUTPUT_STATES: ['OUTPUT_1', ('OUTPUT_2', 3, 2, None)],
+#                                                      pnl.WEIGHT: 24},
+#                                                     'HOOBLY_DOOBLY'],
+#                                   pnl.OUTPUT_STATES:[{pnl.MECHANISM:R2,
+#                                                       pnl.INPUT_STATES: ['INPUT_1', 'INPUT_2']}],
+
+assert True
 
 # --------------------------------------------------------------------------------------------------
 
