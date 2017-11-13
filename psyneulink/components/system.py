@@ -556,8 +556,7 @@ class System(System_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + ClassDefaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {PROCESSES: [Mechanism_Base.default_mechanism],
-                                CONTROLLER: None
-                                TIME_SCALE: TimeScale.TRIAL}
+                                CONTROLLER: None}
        Class methods
        -------------
         - _validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
@@ -745,9 +744,6 @@ class System(System_Base):
         values used to initialize Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`).
         Length must equal the number of `INITIALIZE_CYCLE` Mechanisms listed in the System's
         `recurrent_init_mechanisms <System.recurrent_init_mechanisms>` attribute.
-
-    timeScale : TimeScale  : default TimeScale.TRIAL
-        determines the default `TimeScale` value used by Mechanisms in the System.
 
     results : List[OutputState.value]
         list of return values (OutputState.value) from the sequence of executions.
@@ -2418,9 +2414,6 @@ class System(System_Base):
         input : list or ndarray
             a list or array of input value arrays, one for each `ORIGIN` Mechanism in the System.
 
-            .. [TBI: time_scale : TimeScale : default TimeScale.TRIAL
-               specifies a default TimeScale for the System]
-
             .. context : str
 
         Returns
@@ -2798,9 +2791,6 @@ class System(System_Base):
 
         call_after_time_step : Function : default= `None`
             called after each time_step of each trial is executed.
-
-        time_scale : TimeScale :  default TimeScale.TRIAL
-            specifies whether Mechanisms are executed for a single time step or a trial.
 
         Returns
         -------

@@ -58,19 +58,6 @@ with `Condition` specifications for individual Components to execute different C
    The **time_scale** argument of :keyword:`run`, described below, is currently not fully implemented,
    but will be in a subsequent version.
 
-.. _Run_Time_Scale::
-
-The :keyword:`run` function also has a **time_scale** argument, that can be used to globally specify the time_scale
-parameter for those Components that make use of it.  Any value of `TimeScale` can be specified; how it is interpreted
-is determined by the Component. For example, some Mechanisms that perform integration (such as the `DDM`) offer the
-option of using an analytic solution (that computes the integral in a single `TIME_STEP`), or a numerical method
-(that carries out one step of integration per `TIME_STEP`).  If `TimeScale.TIME_STEP` is assigned as the value of the
-**time_scale** argument in a call to :keyword:`run`, those Mechanisms will use their numerical integration method,
-whereas if `TimeScale.TRIAL` is assigned they will use their analytic solution.  Similarly, for `TimeScale.TIME_STEP`,
-`TransferMechanisms <TransferMechanism>` integrate their input prior to applying the transfer function (sometimes
-referred to as "time averaging" or "cascade mode"), whereas for `TimeScale.TRIAL` they apply it to their current input
-(i.e., execute their transfer an "instantaneously").
-
 .. _Run_Inputs:
 
 Inputs
@@ -420,10 +407,6 @@ def run(object,
 
     call_after_time_step : Function : default= `None`
         called after each `TIME_STEP` is executed.
-
-    time_scale : TimeScale :  default TimeScale.TRIAL
-        specifies time scale for Components that implement different forms of execution for different values of
-        `TimeScale`.
 
    Returns
    -------
