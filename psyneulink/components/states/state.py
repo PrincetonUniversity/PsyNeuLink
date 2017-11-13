@@ -259,13 +259,16 @@ Afferent and Efferent Projections
 Every State has attributes that lists the `Projections <Projection>` it sends and/or receives.  These depend on the
 type of State, listed below (and shown in the `table <State_Projections_Table>`):
 
-============================================ ====================================
-Attribute                                    Projection Type and State(s)
-============================================ ====================================
-`path_afferents <State_Base.path_afferents>` `MappingPojection` to `InputState`
-`mod_afferents <State_Base.mod_afferents>`   `ModulatoryProjection` to any State
-`efferents <State_Base.efferents>`           `MappingProjection` to `OutputState`
-============================================ ====================================
+.. table::  State Projection Attributes
+   :align: left
+
+   ============================================ ============================================================
+   *Attribute*                                  *Projection Type and State(s)*
+   ============================================ ============================================================
+   `path_afferents <State_Base.path_afferents>` `MappingProjections <MappingProjection>` to `InputState`
+   `mod_afferents <State_Base.mod_afferents>`   `ModulatoryProjections <ModulatoryProjection>` to any State
+   `efferents <State_Base.efferents>`           `MappingProjections <MappingProjection>` from `OutputState`
+   ============================================ ============================================================
 
 
 Variable, Function and Value
@@ -450,11 +453,10 @@ The *STATE_TYPE* entry is included here for completeness, but in this case it is
 is clearly determined by the context of the specification (an **input_states** argument);  where it is not clear, then
 the *STATE_TYPE* entry must be included.
 
-*Projections*.   A State specification dictionary can also be used to specify projections to or from the State,
-also in a number of different ways (all of which can also be used in the **projections** argument of a State's
-constructor).  The most straightforward is to include them in a *PROJECTIONS* entry.  For example, the following
-specifies that the InputState of ``my_mech`` receive two Projections,  one from ``source_mech_1`` and another from
-``source_mech_2``, and that its OutputState send one to ``destination_mech``::
+*Projections*.   A State specification dictionary can also be used to specify projections to or from the State, also in
+a number of different ways.  The most straightforward is to include them in a *PROJECTIONS* entry.  For example, the
+following specifies that the InputState of ``my_mech`` receive two Projections,  one from ``source_mech_1`` and another
+from ``source_mech_2``, and that its OutputState send one to ``destination_mech``::
 
     source_mech_1 = pnl.TransferMechanism(name='SOURCE_1')
     source_mech_2 = pnl.TransferMechanism(name='SOURCE_2')
@@ -466,12 +468,10 @@ specifies that the InputState of ``my_mech`` receive two Projections,  one from 
                                                     pnl.PROJECTIONS:[destination_mech]}])
 
     # Print names of the Projections:
-
     for projection in my_mech.input_state.path_afferents:
         print(projection.name)
     > MappingProjection from SOURCE_1[RESULT] to MY_MECH[MY INPUT]
     > MappingProjection from SOURCE_2[RESULT] to MY_MECH[MY INPUT]
-
     for projection in my_mech.output_state.efferents:
         print(projection.name)
     > MappingProjection from MY_MECH[RESULT] to DEST[InputState]
@@ -480,9 +480,60 @@ A *PROJECTIONS* entry can contain any of the forms used to `specify a Projection
 Here, Mechanisms are used, which creates Projections from the `primary InputState <InputState_Primary>` of
 ``source_mech``, and to the `primary OutputState <OutputState_Primary>` of ``destination_mech``.  Note that
 MappingProjections are created, since the Projections specified are between InputStates and OutputStates.
-`ModulatoryProjections` can also be specified in a similar way::
+`ModulatoryProjections` can also be specified in a similar way.  The following creates a `GatingMechanism`, and
+specifies that the InputState of ``my_mech`` should receive a `GatingProjection` from it::
+
+    my_gating_mech = pnl.GatingMechanism()
+    my_mech = pnl.TransferMechanism(name='MY_MECH',
+                                    input_states=[{pnl.NAME: 'MY INPUT',
+                                                   pnl.PROJECTIONS:[my_gating_mech]}])
 
 
+Conversely, ModulatoryProjections can also be specified from a Mechanism to one or more States that it modulates.  In
+the following example, a `ControlMechanism` is created that sends `ControlProjections <ControlProjection>` to the
+`drift_rate <BogaczEtAl.drift_rate>` and `threshold <BogaczEtAl.threshold>` ParameterStates of a `DDM` Mechanism::
+
+    my_mech = pnl.DDM(name='MY DDM')
+    my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE],
+                                                                           my_mech.parameter_states[pnl.THRESHOLD]]}])
+
+Note that a ControlMechanism uses a **control_signals** argument in place of an **output_states** argument (since it
+uses `ControlSignal <ControlSignals>` for its `OutputStates <OutputState>`.  In the example above,
+both ControlProjections are assigned to a single ControlSignal.  However, they could each be assigned to their own by
+specifying them in separate itesm of the **control_signals** argument::
+
+    my_mech = pnl.DDM(name='MY DDM')
+    my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE]},
+                                                        {pnl.PROJECTIONS: [my_mech.parameter_states[pnl.THRESHOLD]}])
+
+
+COMMENT:
+creates a `GatingSignal` with
+`GatingProjections <GatingProjection>` to ``mech_B`` and ``mech_C``, and assigns it to ``my_gating_mech``::
+
+    my_gating_signal = pnl.GatingSignal(projections=[mech_B, mech_C])
+    my_gating_mech = GatingMechanism(gating_signals=[my_gating_signal]
+
+The `GatingMechanism` created will gate the `primary InputStates <InputState_Primary>` of ``mech_B`` and ``mech_C``.
+
+The following creates
+
+   def test_multiple_modulatory_projections_with_mech_and_state_name_specs(self):
+
+        M = pnl.DDM(name='MY DDM')
+        C = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: M,
+                                                   pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
+        G = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM: M,
+                                                 pnl.OUTPUT_STATES: [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME]}])
+
+
+        M = pnl.DDM(name='MY DDM')
+        C = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[M.parameter_states[pnl.DRIFT_RATE],
+                                                                       M.parameter_states[pnl.THRESHOLD]]}])
+        G = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[M.output_states[pnl.DECISION_VARIABLE],
+                                                                    M.output_states[pnl.RESPONSE_TIME]]}])
+
+COMMENT
 
 COMMENT:
 
@@ -539,31 +590,6 @@ The following creates an InputState ``my_input_state`` with a `MappingProjection
 
     *** EXAMPLE: MODULATORY PROJECTION SPECIFICATION
 
-
-The following creates a `GatingSignal` with `GatingProjections <GatingProjection>` to ``mech_B`` and ``mech_C``,
-and assigns it to ``my_gating_mech``::
-
-    my_gating_signal = GatingSignal(projections=[mech_B, mech_C])
-    my_gating_mech = GatingMechanism(gating_signals=[my_gating_signal]
-
-The `GatingMechanism` created will gate the `primary InputStates <InputState_Primary>` of ``mech_B`` and ``mech_C``.
-
-The following creates
-
-   def test_multiple_modulatory_projections_with_mech_and_state_name_specs(self):
-
-        M = pnl.DDM(name='MY DDM')
-        C = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: M,
-                                                   pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
-        G = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM: M,
-                                                 pnl.OUTPUT_STATES: [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME]}])
-
-
-        M = pnl.DDM(name='MY DDM')
-        C = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[M.parameter_states[pnl.DRIFT_RATE],
-                                                                       M.parameter_states[pnl.THRESHOLD]]}])
-        G = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[M.output_states[pnl.DECISION_VARIABLE],
-                                                                    M.output_states[pnl.RESPONSE_TIME]]}])
 
 COMMENT
 
@@ -795,15 +821,17 @@ class State_Base(State):
         list of all Projections received by the State (i.e., for which it is a `receiver <Projection.receiver>`.
 
     path_afferents : Optional[List[Projection]]
-        list all `PathwayProjections <PathwayProjection>` received by the State.
-        (note:  only `InputStates <InputState>` have path_afferents;  the list is empty for other types of States).
+        list all `PathwayProjections <PathwayProjection>` received by the State;
+        note:  only `InputStates <InputState>` have path_afferents;  the list is empty for other types of States.
 
     mod_afferents : Optional[List[GatingProjection]]
         list of all `ModulatoryProjections <ModulatoryProjection>` received by the State.
 
     efferents : Optional[List[Projection]]
-        list of outgoing Projections from the State (i.e., for which is a `sender <Projection.sender>`
-        (note:  only `OutputStates <OutputState>` have efferents;  the list is empty for other types of States).
+        list of outgoing Projections from the State (i.e., for which is a `sender <Projection.sender>`;
+        note:  only `OutputStates <OutputState>`, and members of its `ModulatoryProjection <ModulatoryProjection>`
+        subclass (`LearningProjection, ControlProjection and GatingProjection) have efferents;  the list is empty for
+        InputStates and ParameterStates.
 
     function : TransferFunction : default determined by type
         used to determine the State's own value from the value of the Projection(s) it receives;  the parameters that
