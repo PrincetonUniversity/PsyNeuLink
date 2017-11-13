@@ -499,7 +499,7 @@ the following example, a `ControlMechanism` is created that sends `ControlProjec
     my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.NAME: 'MY DDM DRIFT RATE AND THREHOLD CONTROL SIGNAL',
                                                          pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE],
                                                                            my_mech.parameter_states[pnl.THRESHOLD]]}])
-    # Print out ControlSignals and their ControlProjections
+    # Print ControlSignals and their ControlProjections
     for control_signal in my_ctl_mech.control_signals:
         print(control_signal.name)
         for control_projection in control_signal.efferents:
@@ -518,21 +518,20 @@ specifying them in separate itesm of the **control_signals** argument::
                                                          pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE]]},
                                                         {pnl.NAME: 'THRESHOLD RATE CONTROL SIGNAL',
                                                          pnl.PROJECTIONS: [my_mech.parameter_states[pnl.THRESHOLD]]}])
-    # Print out ControlSignals and their ControlProjections...
+    # Print ControlSignals and their ControlProjections...
     > DRIFT RATE CONTROL SIGNAL
     >     MY DDM: (ParameterState drift_rate)
     > THRESHOLD RATE CONTROL SIGNAL
     >     MY DDM: (ParameterState threshold)
 
 Specifying Projections in a State specification dictionary affords flexiblity -- for example, naming the State
-and/or specifying other attributes.  However, if this is not necessary, the Projections can be used to specify the
-State directly.  For example, the following, which is much simpler, produces the same result as the previous example
-(sans the custom name; though as the printout below shows, the default names are usually pretty clear):
+and/or specifying other attributes.  However, if this is not necessary, the Projections can be used to specify
+States directly.  For example, the following, which is much simpler, produces the same result as the previous
+example (sans the custom name; though as the printout below shows, the default names are usually pretty clear)::
 
     my_ctl_mech = pnl.ControlMechanism(control_signals=[my_mech.parameter_states[pnl.DRIFT_RATE],
                                                         my_mech.parameter_states[pnl.THRESHOLD]])
-
-    # Print out ControlSignals and their ControlProjections...
+    # Print ControlSignals and their ControlProjections...
     > MY DDM drift_rate ControlSignal
     >    MY DDM: (ParameterState drift_rate)
     > MY DDM threshold ControlSignal
