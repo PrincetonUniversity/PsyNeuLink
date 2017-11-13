@@ -308,8 +308,6 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_VARIABLE = 0.0
-
 DECISION_VARIABLE='DECISION_VARIABLE'
 RESPONSE_TIME = 'RESPONSE_TIME'
 PROBABILITY_UPPER_THRESHOLD = 'PROBABILITY_UPPER_THRESHOLD'
@@ -610,7 +608,7 @@ class DDM(ProcessingMechanism_Base):
 
     class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
         # Assigned in __init__ to match default staring_point
-        variable = None
+        variable = np.array([0])
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -657,9 +655,11 @@ class DDM(ProcessingMechanism_Base):
             try:
                 default_variable = params[FUNCTION_PARAMS][STARTING_POINT]
                 if not is_numeric(default_variable):
-                    default_variable = DEFAULT_VARIABLE
-            except:
-                default_variable = DEFAULT_VARIABLE
+                    # set normally by default
+                    default_variable = None
+            except KeyError:
+                # set normally by default
+                pass
 
         # # Conflict with above
         # self.size = size
