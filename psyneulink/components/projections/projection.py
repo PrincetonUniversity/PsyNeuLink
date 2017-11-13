@@ -237,7 +237,7 @@ summarized in the following table, and described in greater detail in the subsec
 |            Sender, receiver and attribute assignments for different types of Projections                        |
 +----------------------+---------------------------------------+--------------------------------------------------+
 |     Projection       |   sender                              |  receiver                                        |
-|                      |   (attribute)                         |  (attribute)                                     |
+|                      |   *(attribute)*                       |  *(attribute)*                                   |
 +======================+=======================================+==================================================+
 | `MappingProjection`  | `OutputState`                         | `InputState`                                     |
 |                      | (`efferents <OutputState.efferents>`) | (`path_afferents <InputState.path_afferents>`)   |
@@ -315,7 +315,7 @@ attributes determine both how the Projection's `value <Projection.value>` is com
 .. note::
    The `weight <Projection.weight>` and `exponent <Projection.exponent>` attributes of a Projection are not the same
    as a State's `weight <State_Base.weight>` and `exponent <State_Base.exponent>` attributes.  Also, they are not
-   normalized; thus, their aggregate effects contribute to the magnitude of the `variable <State.variable>` to which
+   normalized: their aggregate effects contribute to the magnitude of the `variable <State.variable>` to which
    they project.
 
 
