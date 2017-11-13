@@ -299,7 +299,7 @@ from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.globals.utilities import is_numeric
+from psyneulink.globals.utilities import is_numeric, object_has_single_value
 
 __all__ = [
     'DDM', 'DDM_OUTPUT', 'DDM_standard_output_states', 'DDMError', 'DECISION_VARIABLE', 'PROBABILITY_LOWER_THRESHOLD',
@@ -744,14 +744,11 @@ class DDM(ProcessingMechanism_Base):
         Remove when MULTIPROCESS DDM is implemented.
         """
         # this test may become obsolete when size is moved to Component.py
-        if len(variable) > 1:
+        if not object_has_single_value(variable) and not object_has_single_value(np.array(variable)):
             raise DDMError("Length of input to DDM ({}) is greater than 1, implying there are multiple "
                            "input states, which is currently not supported in DDM, but may be supported"
                            " in the future under a multi-process DDM. Please use a single numeric "
                            "item as the default_variable, or use size = 1.".format(variable))
-        # MODIFIED 6/28/17 (CW): changed len(variable) > 1 to len(variable[0]) > 1
-        if not isinstance(variable, numbers.Number) and len(variable[0]) > 1:
-            raise DDMError("Input to DDM ({}) must have only a single numeric item".format(variable))
         return super()._validate_variable(variable=variable, context=context)
 
     # MODIFIED 11/21/16 END
