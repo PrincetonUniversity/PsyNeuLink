@@ -54,10 +54,6 @@ executing the Components it specifies in each `TIME_STEP`, until every Component
 another `termination condition <Scheduler_Termination_Conditions>` is met.  The `Scheduler` can be used in combination
 with `Condition` specifications for individual Components to execute different Components at different time scales.
 
-.. note::
-   The **time_scale** argument of :keyword:`run`, described below, is currently not fully implemented,
-   but will be in a subsequent version.
-
 .. _Run_Inputs:
 
 Inputs
@@ -67,140 +63,52 @@ The :keyword:`run` function presents the inputs for each `TRIAL` to the input_st
 the `scope of execution <Run_Scope_of_Execution>`. These are specified in the **inputs** argument of a Component's
 :keyword:`execute` or :keyword:`run` method.
 
-Inputs are specified in a Python dictionary where the keys are `ORIGIN` Mechanisms, and the values are lists of
-inputs values, each of which must be compatible with the corresponding `ORIGIN` Mechanism's `variable
-<Mechanism.variable>`. A fully specified input to a mechanism consists of a list in which the i-th element is a 2d array
-(of the same shape as the mechanism's variable) representing the input to the mechanism on trial i.
+Inputs are specified in a Python dictionary where the keys are `ORIGIN` Mechanisms, and the values are lists in which
+the i-th element represents the input value to the mechanism on trial i. Each input value must be compatible with the
+shape of the mechanism's variable. This means that the inputs to an origin mechanism are usually specified by a
+list of 2d lists/arrays, though some short cuts are allowed (see examples below for details on short cuts).
 
-Remember that a mechanism's variable is always the concatenation of its input states. In other words, a fully specified
-mechanism variable is a 2d array in which the i-th element is the variable of a the mechanism's i-th input state.
-Because of this relationship between a mechanism's variable and its input states, it is equally valid to think of the
-input specification for a given origin mechanism as a nested list of values for each input state on each trial.
+.. note::
+    Keep in mind that a mechanism's variable is the concatenation of its input states. In other words, a fully specified
+    mechanism variable is a 2d list/array in which the i-th element is the variable of the mechanism's i-th input state.
+    Because of this relationship between a mechanism's variable and its input states, it is equally valid to think about
+    the input specification for a given origin mechanism as a nested list of values for each input state on each trial.
 
-For convenience, several condensed versions of this specification are also accepted in situations where:
+If num_trials is not in use, the number of input values provided determines the number of trials in the run.
+For example, if five inputs are provided for each origin mechanism, and num_trials is not specified, the system will
+execute five times.
+
+If num_trials is in use, the input values will be iterated over until num_trials is reached. For example, if five inputs
+are provided for each origin mechanism, and num_trials = 7, the system will execute seven times. The first two
+items in the list of inputs will be used on the 6th and 7th trials, respectively.
+
+In all cases, number of input values specified **must** be the same for all origin mechanisms in the system.
+
+For convenience, several condensed versions of the input specification described above are also accepted in situations
+where:
     * an origin mechanism has only one input state
 
-    * only one trial's worth of inputs is specified
+    * only one trial of inputs is specified
 
-    * an input or pattern of inputs should repeat over a specified number of trials
-
-or any combination of the above. The examples below look at several cases in which there are multiple correct ways to
-specify the inputs to a System.
+The examples below look at several cases in which there are multiple correct ways to specify the inputs to a System.
 
 
+.. _Input_Specification_Examples:
 
-.. note::
-   The descriptions below are for completeness, and are intended as a technical reference;  or most uses of
-   of :keyword:`run` methods, it is only necessary to understand the relatively simple Mechanism formate
-   described `below <Run_Inputs_Mechanism_Format>`.
+Input Specification Examples
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. _Run_Nesting_Factors:
-
-* **Number of TRIALS**.  If the **inputs** argument contains the input for more than one `TRIAL`, then the outermost
-  level of the list, or axis 0 of the ndarray, is used for the `TRIAL` \\s, each item of which contains the
-  set inputs for a given `TRIAL`.  Otherwise, it is used for the next relevant factor in the list below.  If the
-  number of inputs specified is less than the number of `TRIAL` \\s, then the input list is cycled until the full
-  number of `TRIAL` \\s is completed.
+* **Case 1: Origin mechanism has only one input state**::
+    Problem description here
 ..
-* **Number of Mechanisms.** If :keyword:`run` is used for a System, and it has more than one `ORIGIN` Mechanism, then
-  the next level of nesting of a list, or next higher axis of an ndarray, is used for the `ORIGIN` Mechanisms, with
-  each item containing the inputs for a given `ORIGIN` Mechanism within a `TRIAL`.  This factor is not relevant
-  when :keyword:`run` is used for a single Mechanism, a Process (which only ever has one `ORIGIN` Mechanism),
-  or a System that has only one `ORIGIN` Mechanism.  It is also not relevant for the
-  `Mechanism format <Run_Inputs_Mechanism_Format>`, since that separates the inputs for each Mechanism into individual
-  entries of a dictionary.
+
+* **Case 2: System should run for only one trial**::
+    Problem description here
 ..
-* **Number of InputStates.** In general, Mechanisms have only a single (`primary <Mechanism_InputStates>`) InputState;
-  however, some types of Mechanisms can have more than one.  If any `ORIGIN` Mechanism in a Pocess or System has more
-  than one InputState, then the next level of nesting of a list, or next higher axis of an ndarray, is used for the
-  set of InputStates for each Mechanism.
+
+* **Case 3: System should repeat a short pattern of inputs for many trials**::
+    Problem description here
 ..
-* **Number of elements for the value of an InputState.** The input for an InputState can be a single element (e.g.,
-  a scalar) or have multiple elements (e.g., a vector).  By convention, even if the input to an InputState is a single
-  element, it should nevertheless always be specified as a list or a 1d np.array (it is internally converted to the
-  latter).  PsyNeuLink can usually parse single-element inputs specified as a stand-alone value (e.g., as a number
-  not in a list or ndarray).  Nevertheless, it is best to embed such inputs in a single-element list or a 1d array,
-  both for clarity and to insure consistent treatment of nested lists and ndarrays.  If this convention is followed,
-  then the number of elements for a given input should not affect nesting of lists or dimensionality (number of axes)
-  of ndarrays of an **inputs** argument.
-
-With these factors in mind, the **inputs** argument can be specified in the simplest form possible (least
-number of nestings for a list, or lowest dimension of an ndarray).  It can be specified using one of two formats:
-
-.. _Run_Inputs_Sequence_Format:
-
-Sequence Format
-^^^^^^^^^^^^^^^
-
-.. note::
-   This format is included for backward compatability, but may not be supported in the future.  It is **strongly**
-   recommended that the `Mechanism format <Run_Inputs_Mechanism_Format>` be used instead.  That said, please feel
-   free to convey any strong preference for this format to the development team, so that an informed decision can
-   be made about future inclusion of this format.
-
-*(List[values] or ndarray)* -- this uses a nested list or ndarray to fully specify the input for
-each `TRIAL` in a sequence.  It is more complex than the `Mechanism format <Run_Inputs_Mechanism_Format>`,
-and for Systems requires that the inputs for each Mechanism be specified in the same order in which those Mechanisms
-appear in the System's `origin_mechanisms <System.origin_mechanisms>` attribute.  This is generally the
-same order in which they are declared, and can be displayed using the System's `show <System.show>`
-method). Although this format is more complex, it may be better suited to automated input generation, since it does
-not require that Mechanisms be referenced explicitly (though it is allowed). The following provides a description of
-the Sequence format for all of the combinations of factors describe `above <Run_Inputs_Mechanism_Format>`.
-The `figure <Run_Sequence_Format_Fig>` below shows examples.
-
-    *Lists:* if there is more than one `TRIAL`, then the outermost level of the list is used for the sequence of
-    `TRIALS`.  If there is only one `ORIGIN` Mechanism and it has only one InputState (the most common
-    case), then a single sublist is used for the input of each `TRIAL`.  If the `ORIGIN` Mechanism has more
-    than one InputState, then the entry for each `TRIAL` is a sublist of the InputStates, each entry of which is a
-    sublist containing the input for that InputState.  If there is more than one Mechanism, but none have more than
-    one InputState, then a sublist is used for each Mechanism in each `TRIAL`, within which a sublist is used for the
-    input for that Mechanism.  If there is more than one Mechanism, and any have more than one InputState,
-    then a sublist is used for each Mechanism for each `TRIAL`, within which a sublist is used for each
-    InputState of the corresponding Mechanism, and inside that a sublist is used for the input for each InputState.
-
-    *ndarray:*  axis 0 is used for the first factor (`TRIAL`, Mechanism, InputState or input) for which there is only
-    one item, axis 1 is used for the next factor for which there is only one item, and so forth.  For example, if there
-    is more than one `TRIAL`, only one `ORIGIN` Mechanism, and that has only one InputState (the most common case),
-    then axis 0 is used for `TRIAL`, and axis 1 for inputs per `TRIAL`.  At the other extreme, if there are multiple
-    `TRIALS`, more than one `ORIGIN` Mechanism, and more than one InputState for one or more of the `ORIGIN` Mechanisms,
-    then axis 0 is used for `TRIAL` `s, axis 1 for Mechanisms within `TRIAL`, axis 2 for InputStates of each Mechanism,
-    and axis 3 for the input to each InputState of a Mechanism.  Note that if *any* Mechanism being run (directly, or as
-    one of the `ORIGIN` Mechanisms of a Process or System) has more than one InputState, then an axis must be
-    committed to InputStates, and the input to every InputState of every Mechanism must be specified in that axis
-    (i.e., even for those Mechanisms that have a single InputState).
-
-    .. _Run_Sequence_Format_Fig:
-
-    .. figure:: _static/Sequence_format_input_specs_fig.*
-       :alt: Example input specifications in Sequence format
-       :scale: 75 %
-       :align: center
-
-       Example input specifications in Sequence format
-
-.. _Run_Inputs_Mechanism_Format:
-
-Mechanism Format
-^^^^^^^^^^^^^^^^
-
-*(Dict[Mechanism, List[values] or ndarray])* -- this provides a simpler format for specifying :keyword:`inputs` than
-the Sequence format, and does not require that the inputs for each Mechanism be specified in a particular order.
-However, it requires that each Mechanism that receives inputs be referenced explicitly (instead of by order),
-which may be less suitable for automated forms of input generation.  It uses a dictionary, each entry of which is the
-sequence of inputs for an `ORIGIN` Mechanism;  there must be one such entry for each of the `ORIGIN` Mechanisms of the
-Process or System being run.  The key for each entry is the `ORIGIN` Mechanism, and the value contains either a list
-or ndarray specifying the sequence of inputs for that Mechanism, one for each `TRIAL` to be run.  If a list is used,
-and the Mechanism has more than one InputState, then a sublist is used in each item of the list to specify the inputs
-for each of the Mechanism's InputStates for that `TRIAL`.  If an ndarray is used, axis 0 is used for the sequence of
-`TRIAL` \\s. If the Mechanism has a single InputState, then axis 1 is used for the input for each `TRIAL.  If the
-Mechanism has multiple InputStates, then axis 1 is used for the InputStates, and axis 2 is used for the input to each
-InputState for each `TRIAL`.
-
-    .. figure:: _static/Mechanism_format_input_specs_fig.*
-       :alt: Mechanism format input specification
-       :align: center
-
-       Mechanism format input specification
 
 .. _Run_Initial_Values:
 
