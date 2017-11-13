@@ -1213,11 +1213,11 @@ class Mechanism_Base(Mechanism):
         # should be cleaned ASAP in default_variable overhaul
         default_variable_from_input_states = None
 
-        def spec_incompatible_with_default_error(spec_variable, default_variable):
+        def spec_incompatible_with_default_error(spec_variable, local_default_variable):
             return MechanismError(
                 'default variable determined from the specified input_states spec ({0}) '
                 'is not compatible with the specified default variable ({1})'.format(
-                    spec_variable, default_variable
+                    spec_variable, local_default_variable
                 )
             )
 
@@ -1234,7 +1234,7 @@ class Mechanism_Base(Mechanism):
                 self._parse_arg_input_states(self.input_states)
 
         if default_variable_from_input_states is not None:
-            if variable is None:
+            if default_variable is None:
                 if size is None:
                     variable = default_variable_from_input_states
                 else:
