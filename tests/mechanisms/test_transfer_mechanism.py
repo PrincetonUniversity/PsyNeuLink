@@ -131,7 +131,8 @@ class TestTransferMechanismNoise:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[1.8675579901499675, -0.977277879876411, 0.9500884175255894, -0.1513572082976979]]
+
+        assert np.allclose(val, [0.7610377251469934, 0.12167501649282841, 0.44386323274542566, 0.33367432737426683])
 
     def test_transfer_mech_array_var_normal_array_noise2(self):
 
@@ -157,7 +158,8 @@ class TestTransferMechanismNoise:
                 integrator_mode=True
             )
             T.execute()
-        assert 'noise parameter' in str(error_text.value)
+        assert 'Noise parameter' in str(error_text.value) and "does not match default variable" in str(
+                error_text.value)
 
     def test_transfer_mech_mismatched_shape_noise_2(self):
         with pytest.raises(MechanismError) as error_text:
@@ -171,7 +173,7 @@ class TestTransferMechanismNoise:
                 integrator_mode=True
             )
             T.execute()
-        assert 'noise parameter' in str(error_text.value)
+        assert 'Noise parameter' in str(error_text.value) and "does not match default variable" in str(error_text.value)
 
 
 class TestDistributionFunctions:
@@ -710,3 +712,28 @@ class TestTransferMechanismSize:
         )
         assert len(T.instance_defaults.variable) == 1 and len(T.instance_defaults.variable[0]) == 2
         assert len(T.size) == 1 and T.size[0] == 2 and len(T.params['size']) == 1 and T.params['size'][0] == 2
+
+class TestTransferMechanismMultipleInputStates:
+
+    def test_transfer_mech_2d_variable(self):
+        T = TransferMechanism(
+            name='T',
+            function=Linear(slope=2.0, intercept=1.0),
+            default_variable=[[0.0, 0.0], [0.0, 0.0]]
+        )
+        val = T.execute([[1.0, 2.0], [3.0, 4.0]])
+        expected = [[3.0, 5.0], [7.0, 9.0]]
+
+        assert np.allclose(val, expected)
+
+    def test_transfer_mech_2d_variable_noise(self):
+        T = TransferMechanism(
+            name='T',
+            function=Linear(slope=2.0, intercept=1.0),
+            noise=NormalDist().function,
+            default_variable=[[0.0, 0.0], [0.0, 0.0]]
+        )
+        val = T.execute([[1.0, 2.0], [3.0, 4.0]])
+        expected = [[3.0, 5.0], [7.0, 9.0]]
+        print(val)
+        # assert np.allclose(val, expected)

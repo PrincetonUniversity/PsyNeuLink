@@ -538,37 +538,22 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _validate_noise(self, noise, var):
         # Noise is a list or array
         if isinstance(noise, (np.ndarray, list)):
+            if len(noise) == 1:
+                pass
             # Variable is a list/array
-            if isinstance(var, (np.ndarray, list)):
-                if len(noise) != np.array(var).size:
-                    # Formatting noise for proper display in error message
-                    try:
-                        formatted_noise = list(map(lambda x: x.__qualname__, noise))
-                    except AttributeError:
-                        formatted_noise = noise
-                    raise MechanismError(
-                        "The length ({}) of the array specified for the noise parameter ({}) of {} "
-                        "must match the length ({}) of the default input ({}). If noise is specified as"
-                        " an array or list, it must be of the same size as the input."
-                        .format(len(noise), formatted_noise, self.name, np.array(var).size,
-                                var))
-                else:
-                    for noise_item in noise:
-                        if not isinstance(noise_item, (float, int)) and not callable(noise_item):
-                            raise MechanismError(
-                                "The elements of a noise list or array must be floats or functions.")
-
-
-            # Variable is not a list/array
+            elif not iscompatible(np.atleast_2d(noise), var) and len(noise) > 1:
+                raise MechanismError(
+                    "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} must be specified"
+                    " as a float, a function, or an array of the appropriate shape ({})."
+                    .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(var))))
             else:
-                raise MechanismError("The noise parameter ({}) for {} may only be a list or array if the "
-                                    "default input value is also a list or array.".format(noise, self.name))
+                for noise_item in noise:
+                    if not isinstance(noise_item, (float, int)) and not callable(noise_item):
+                        raise MechanismError(
+                            "The elements of a noise list or array must be floats or functions. {} is not a valid noise"
+                            " element for {}".format(noise_item, self.name))
 
-            # # Elements of list/array have different types
-            # if not all(isinstance(x, type(noise[0])) for x in noise):
-            #     raise MechanismError("All elements of noise list/array ({}) for {} must be of the same type. "
-            #                         .format(noise, self.name))
-
+        # Otherwise, must be a float, int or function
         elif not isinstance(noise, (float, int)) and not callable(noise):
             raise MechanismError(
                 "Noise parameter ({}) for {} must be a float, function, or array/list of these."

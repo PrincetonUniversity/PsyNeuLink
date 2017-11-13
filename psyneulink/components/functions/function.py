@@ -3708,42 +3708,28 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     def _validate_noise(self, noise, var):
         # Noise is a list or array
-        if isinstance(noise, (np.ndarray, list)) and len(noise) != 1:
+        if isinstance(noise, (np.ndarray, list)):
+            if len(noise) == 1:
+                pass
             # Variable is a list/array
-            if isinstance(var, (np.ndarray, list)):
-                if len(noise) != np.array(var).size:
-                    # Formatting noise for proper display in error message
-                    try:
-                        formatted_noise = list(map(lambda x: x.__qualname__, noise))
-                    except AttributeError:
-                        formatted_noise = noise
-                    raise FunctionError(
-                        "The length ({}) of the array specified for the noise parameter ({}) of {} "
-                        "must match the length ({}) of the default input ({}). If noise is specified as"
-                        " an array or list, it must be of the same size as the input."
-                        .format(len(noise), formatted_noise, self.name, np.array(var).size,
-                                var))
-                else:
-                    for noise_item in noise:
-                        if not isinstance(noise_item, (float, int)) and not callable(noise_item):
-                            raise FunctionError(
-                                "The elements of a noise list or array must be floats or functions.")
-
-
-            # Variable is not a list/array
+            elif not iscompatible(np.atleast_2d(noise), var) and len(noise) > 1:
+                raise FunctionError(
+                    "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} must be specified "
+                    "as a float, a function, or an array of the appropriate shape ({})."
+                    .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(var))))
             else:
-                raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
-                                    "default input value is also a list or array.".format(noise, self.name))
+                for noise_item in noise:
+                    if not isinstance(noise_item, (float, int)) and not callable(noise_item):
+                        raise FunctionError(
+                            "The elements of a noise list or array must be floats or functions. {} is not a valid noise "
+                            "element for {}".format(noise_item, self.name))
 
-            # # Elements of list/array have different types
-            # if not all(isinstance(x, type(noise[0])) for x in noise):
-            #     raise FunctionError("All elements of noise list/array ({}) for {} must be of the same type. "
-            #                         .format(noise, self.name))
-
-        elif not isinstance(noise, (float, int, np.ndarray)) and not callable(noise):
+        # Otherwise, must be a float, int or function
+        elif not isinstance(noise, (float, int)) and not callable(noise):
             raise FunctionError(
                 "Noise parameter ({}) for {} must be a float, function, or array/list of these."
                     .format(noise, self.name))
+
 
     def _try_execute_param(self, param, var):
 
@@ -3755,7 +3741,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                 for j in range(len(param[i])):
                     if callable(param[i][j]):
                         param[i][j] = param[i][j]()
-
         # param is one function
         elif callable(param):
             # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
@@ -4707,7 +4692,6 @@ class AdaptiveIntegrator(
         previous_value = self.previous_value
 
         previous_value = np.atleast_2d(previous_value)
-        new_value = variable
         # value = (1 - rate) * previous_value + rate * new_value + noise
         value = (1-rate)*previous_value + rate*variable + noise
         adjusted_value = value + offset
@@ -4716,7 +4700,6 @@ class AdaptiveIntegrator(
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
             self.previous_value = adjusted_value
-
         return adjusted_value
 
 class DriftDiffusionIntegrator(
