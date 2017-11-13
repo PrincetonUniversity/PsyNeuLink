@@ -265,26 +265,30 @@ class TestInputSpecsWithoutNumTrials:
 
 class TestInputSpecsWithNumTrials:
     def test_documentation_example_numtrials(self):
-        a = TransferMechanism(name='a',
-                              default_variable=[0.0, 0.0])
-        b = TransferMechanism(name='b',
-                              # default_variable=[[0.0, 0.0], [0.0, 0.0, 0.0]]
-                              default_variable=[[0.0, 0.0], [0.0, 0.0, 0.0]]
-                              )
-        # ignore Mechanism c for now
 
-        p1 = Process(pathway=[a],
+        # Mechanism A has one input state of length 2
+        a = TransferMechanism(name='a',
+                              default_variable=[[0.0, 0.0]])
+
+        # Mechanism B has two input states, each of length 3
+        b = TransferMechanism(name='b',
+                              default_variable=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
+                              )
+
+        c = TransferMechanism(name='c')
+
+        p1 = Process(pathway=[a, c],
                      name='p1')
-        p2 = Process(pathway=[b],
+        p2 = Process(pathway=[b, c],
                      name='p2')
 
         s = System(
             processes=[p1, p2]
         )
 
-        inputs = {a: [[1.0, 1.0], [1.0, 1.0]],
-                  #  b: [[[2.0, 2.0], [3.0, 3.0, 3.0]], [[2.0, 2.0], [3.0, 3.0, 3.0]]]
-                  b: [[[2.0, 2.0], [3.0, 3.0]], [[2.0, 2.0], [3.0, 3.0]]]
+        # FULLY Specified inputs
+        inputs = {a: [[[1.0, 1.0]], [[1.0, 1.0]]],
+                  b: [[[2.0, 2.0, 2.0], [3.0, 3.0, 3.0]], [[2.0, 2.0, 2.0], [3.0, 3.0, 3.0]]]
                   }
 
         s.run(inputs, num_trials=5)
