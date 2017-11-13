@@ -18,6 +18,8 @@ provided by them.  The value of a State can be modulated by a `ModulatoryProject
 three primary types of States (InputStates, ParameterStates and OutputStates) as well as one subtype (ModulatorySignal,
 used to send ModulatoryProjections), as summarized in the table below:
 
+.. _State_Types_Table:
+
 .. table:: **State Types and Associated Projection Types**
    :align: left
 
@@ -179,11 +181,13 @@ Projections
 
 When a State is created, it can be assigned one or more `Projections <Projection>`, using either the **projections**
 argument of its constructor, or in the *PROJECTIONS* entry of a `State specification dictionary
-<State_Specification_Dictionary>` (or of a dictionary assigned to the **params** argument of the State's constructor).
+<State_Specification_Dictionary>` (or a dictionary assigned to the **params** argument of the State's constructor).
 The following types of Projections can be specified for each type of State:
 
+    .. _State_Projections_Table:
+
     .. table:: **Specifiable Projections for State Types**
-        :align: center
+        :align: left
 
         +------------------+-------------------------------+-------------------------------------+
         | *State Type*     || *PROJECTIONS* specification  || *Assigned to Attribute*            |
@@ -204,28 +208,6 @@ The following types of Projections can be specified for each type of State:
         |`ModulatorySignal`|| `ModulatoryProjection(s)     || `efferents                         |
         |                  |   <ModulatoryProjection>`     |   <ModulatorySignal.efferents>`     |
         +------------------+-------------------------------+-------------------------------------+
-
-COMMENT:
-    * `InputState`
-        • `PathwayProjection(s) <PathwayProjection>`
-          - assigned to its `pathway_afferents <Input.pathway_afferents>` attribute.
-        • `GatingProjection(s) <GatingProjection>`
-          - assigned to its `mod_afferents <InputState.mod_afferents>` attribute.
-
-    * `ParameterState`
-        • `ControlProjection(s) <ControlProjection>` - assigned to its `mod_afferents <ParameterState.mod_afferents>`
-          attribute.
-
-    * `OutputState`
-        • `PathwayProjection(s) <PathwayProjection>`
-          - assigned to its `efferents <Output.efferents>` attribute.
-        • `GatingProjection(s) <GatingProjection>`
-          - assigned to its `mod_afferents <OutputState.mod_afferents>` attribute.
-
-    * `ModulatorySignal <ModulatorySignal>`
-        • `ModulatoryProjection(s) <ModulatoryProjection>`
-          - assigned to its `efferents <ModulatorySignal.efferents>` attribute.
-COMMENT
 
 Projections must be specified in a list.  Each entry must be either a specification for a `projection
 <Projection_In_Context_Specification>`, or for a `sender <Projection.sender>` or `receiver <Projection.receiver>`, in
@@ -270,6 +252,21 @@ specified explicitly in the **owner** argument of the constructor for the State 
 assigned to the specified Mechanism).  If the **owner** argument is not specified, the State's initialization is
 `deferred <State_Deferred_Initialization>` until it has been assigned to an owner using the owner's `add_states
 <Mechanism_Base.add_states>` method.
+
+Afferent and Efferent Projections
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Every State has attributes that lists the `Projections <Projection>` it sends and/or receives.  These depend on the
+type of State, listed below (and shown in the `table <State_Projections_Table>`):
+
+============================================ ====================================
+Attribute                                    Projection Type and State(s)
+============================================ ====================================
+`path_afferents <State_Base.path_afferents>` `MappingPojection` to `InputState`
+`mod_afferents <State_Base.mod_afferents>`   `ModulatoryProjection` to any State
+`efferents <State_Base.efferents>`           `MappingProjection` to `OutputState`
+============================================ ====================================
+
 
 Variable, Function and Value
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -341,7 +338,9 @@ the State calls its `function <State_Base.function>` to determine its `value <St
 .. _State_Examples:
 
 Examples
---------
+========
+
+.. _State_Constructor_Examples:
 
 Usually, States are created automatically by the Mechanism to which they belong.  For example, creating a
 TransferMechanism::
@@ -359,8 +358,9 @@ automatically creates an InputState, ParameterStates for its parameters, includi
     print(my_mech.output_states)
     > [(OutputState RESULT)]
 
-When States are specified explicitly, it is usually in an argument of the constructor for the Mechanism to which they
-belong.  For example, the following specifies that ``my_mech`` should have an InputState named 'MY INPUT`::
+**input_states** *argument of Mechanism constructor.*   When States are specified explicitly, it is usually in an
+argument of the constructor for the Mechanism to which they belong.  For example, the following specifies that
+``my_mech`` should have an InputState named 'MY INPUT`::
 
     my_mech = pnl.TransferMechanism(input_states=['MY INPUT'])
     print(my_mech.input_states)
@@ -374,6 +374,8 @@ a variety of other ways, as described `above <State_Specification>` and illustra
     .. note::
        When one or more States is specified in the argument of a Mechanism's constructor, it replaces any
        defaults States created by the Mechanism when none are specified.
+
+.. _State_Value_Spec_Example:
 
 For example, the following specifies the InputState by a value to use as its `default_variable
 <InputState.default_variable>` attribute::
@@ -396,7 +398,9 @@ Note that in the first print state, the InputState was referenced as the first o
 as the `primary InputState <Input_State.primary>` of ``my_mech``, using its `input_state <Mechanism_Base.input_state>`
 attribute (note the singular).
 
-The **input_states** argument can also be used to create more than one InputState::
+.. _State_Multiple_InputSates_Example:
+
+*Multiple InputStates.* The **input_states** argument can also be used to create more than one InputState::
 
     my_mech = pnl.TransferMechanism(input_states=['MY FIRST INPUT', 'MY SECOND INPUT'])
     print(my_mech.input_states)
@@ -413,7 +417,9 @@ than one InputState.  OutputStates can be specified in a similar way, using the 
         <Mechanism_Base.function>` is assigned, and can be accessed and subsequently modified, as described under
         `ParameterState_Specification>`.
 
-The following example specifies two OutputStates for ``my_mech``, using its `Standard OutputStates
+.. _State_Standard_OutputSates_Example:
+
+*OutputStates.*  The following example specifies two OutputStates for ``my_mech``, using its `Standard OutputStates
 <OutputState_Standard>`::
 
     my_mech = pnl.TransferMechanism(output_states=['RESULT', 'MEAN'])
@@ -430,8 +436,11 @@ name of a Standard OutputState <OutputState_Standard>` for the type of Mechanism
 for both of the OutputStates specified for the `TransferMechanism` in the example above); otherwise, a new OutputState
 is created.
 
-States can be specified in greater detail using a `State specification dictionary <State_Specification_Dictionary>`.
-In the example below, this is used to specify the variable and name of an InputState::
+.. _State_Specification_Dictionary_Example:
+
+*State specification dictionary.* States can be specified in greater detail using a `State specification dictionary
+<State_Specification_Dictionary>`. In the example below, this is used to specify the variable and name of an
+InputState::
 
     my_mech = pnl.TransferMechanism(input_states=[{STATE_TYPE: InputState,
                                                    NAME: 'MY INPUT',
@@ -441,9 +450,10 @@ The *STATE_TYPE* entry is included here for completeness, but in this case it is
 is clearly determined by the context of the specification (an **input_states** argument);  where it is not clear, then
 the *STATE_TYPE* entry must be included.
 
-A State specification dictionary can also be used to specify projections to or from the State, also in a number of
-different ways.  The more straightforward is to include them in a *PROJECTIONS* entry.  For example, the following
-specifies that the InputState of ``my_mech`` receive two Projections, one from ``source_mech_1`` and another from
+*Projections*.   A State specification dictionary can also be used to specify projections to or from the State,
+also in a number of different ways (all of which can also be used in the **projections** argument of a State's
+constructor).  The most straightforward is to include them in a *PROJECTIONS* entry.  For example, the following
+specifies that the InputState of ``my_mech`` receive two Projections,  one from ``source_mech_1`` and another from
 ``source_mech_2``, and that its OutputState send one to ``destination_mech``::
 
     source_mech_1 = pnl.TransferMechanism(name='SOURCE_1')
@@ -472,7 +482,7 @@ Here, Mechanisms are used, which creates Projections from the `primary InputStat
 MappingProjections are created, since the Projections specified are between InputStates and OutputStates.
 `ModulatoryProjections` can also be specified in a similar way::
 
-    *** EXAMPLE: MODULATORY PROJECTION SPECIFICATION
+
 
 COMMENT:
 
@@ -491,17 +501,6 @@ The following creates an InputState ``my_input_state`` with a `MappingProjection
     my_input_state = InputState(projections=[mech_A])
     mech_B = TransferMechanism(input_states=[my_input_state])
 
-----------------------
-
-The following creates a `GatingSignal` with `GatingProjections <GatingProjection>` to ``mech_B`` and ``mech_C``,
-and assigns it to ``my_gating_mech``::
-
-    my_gating_signal = GatingSignal(projections=[mech_B, mech_C])
-    my_gating_mech = GatingMechanism(gating_signals=[my_gating_signal]
-
-The `GatingMechanism` created will gate the `primary InputStates <InputState_Primary>` of ``mech_B`` and ``mech_C``.
-
-The following creates
 
     def test_mapping_projection_with_mech_and_state_name_specs(self):
          R1 = pnl.TransferMechanism(output_states=['OUTPUT_1', 'OUTPUT_2'])
@@ -534,6 +533,22 @@ The following creates
         for input_state in T.input_states:
             for projection in input_state.path_afferents:
                 assert projection.sender.owner is R1
+
+
+----------------------
+
+    *** EXAMPLE: MODULATORY PROJECTION SPECIFICATION
+
+
+The following creates a `GatingSignal` with `GatingProjections <GatingProjection>` to ``mech_B`` and ``mech_C``,
+and assigns it to ``my_gating_mech``::
+
+    my_gating_signal = GatingSignal(projections=[mech_B, mech_C])
+    my_gating_mech = GatingMechanism(gating_signals=[my_gating_signal]
+
+The `GatingMechanism` created will gate the `primary InputStates <InputState_Primary>` of ``mech_B`` and ``mech_C``.
+
+The following creates
 
    def test_multiple_modulatory_projections_with_mech_and_state_name_specs(self):
 
