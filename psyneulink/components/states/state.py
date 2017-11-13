@@ -160,20 +160,21 @@ A State can be specified using any of the following:
 
     .. _State_ConnectionTuple:
 
-    * **ConnectionTuple** -- a 4-item tuple that can be used to specify a `Projection <Projection>' to or from
-      another State, along with the weight, exponent, and/or matrix to use for that Projection (see
-      `ConnectionTuple <Projection_ConnectionTuple>` for additional details.
-
+    * **ConnectionTuple** -- a 4-item tuple that specifies a `Projection <Projection>` to or from another State
+      (its first item), along with the weight, exponent, and/or Projection to use (its subsequent items; see
+      `ConnectionTuple <Projection_ConnectionTuple>` for additional details).
+    ..
     * a **2-item tuple** - the first item must be a value, used as the default value for the State,
       and the second item must be a specification for a `Projection <Projection_In_Context_Specification>`
       to or from the State, depending on the type of State and the context in which it is specified;
 
 .. _State_Deferred_Initialization:
 
-`InputStates <InputState>`, `OutputStates <OutputState>` and `ModulatorySignals <ModulatorySignal>` can also be created
-on their own, by using the relevant constructors;  however, `ParameterStates <ParameterState>` cannot be created on
-their own. If a State is created on its own, and its `owner <State_Owner>` Mechanism is specified, it is assigned to
-that Mechanism; if its owner not specified, then its initialization is `deferred <Component_Deferred_Initialization>`.
+Deferred Initialization
+~~~~~~~~~~~~~~~~~~~~~~~
+
+If a State is created on its own, and its `owner <State_Owner>` Mechanism is specified, it is assigned to that
+Mechanism; if its owner not specified, then its initialization is `deferred <Component_Deferred_Initialization>`.
 Its initialization is completed automatically when it is assigned to an owner `Mechanism <Mechanism_Base>` using the
 owner's `add_states <Mechanism_Base.add_states>` method.  If the State is not assigned to an owner, it will not be
 functional (i.e., used during the execution of `Mechanisms <Mechanism_Base_Execution>` and/or `Compositions

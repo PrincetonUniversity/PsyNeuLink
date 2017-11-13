@@ -93,7 +93,11 @@ Projection in context:
 
   * **Constructor** -- used the same way in context as it is ordinarily.
   ..
-  * **Projection reference** -- must be a reference to a Projection that has already been created.
+  * **Projection object** -- must be a reference to a Projection that has already been created.
+  ..
+  * **Projection subclass** -- creates a default instance of the specified Projection type.  The assignment or
+    creation of the Projection's `sender <Projection.sender>` is handled in the same manner as described below for
+    keyword specifications.
   ..
   * **Keyword** -- creates a default instance of the specified type, which can be any of the following:
 
@@ -128,10 +132,6 @@ Projection in context:
         specification occurs, then its `initialization is deferred <GatingProjection_Deferred_Initialization>` until
         it can be determined (e.g., a `GatingMechanism` or `GatingSignal` is created to which it is assigned).
   ..
-  * **Projection type** -- creates a default instance of the specified Projection subclass.  The assignment or
-    creation of the Projection's `sender <Projection.sender>` is handled in the same manner as described above for the
-    keyword specifications.
-  ..
   * **value** -- creates a Projection of a type determined by the context of the specification, and using the
     specified value as the `value <Projection.value>` of the Projection, which must be compatible with the `variable
     <State_Base.variable>` attribute of its `receiver <Projection.receiver>`.  If the Projection is a
@@ -145,7 +145,9 @@ Projection in context:
   ..
   * **State** -- creates a `Projection` to or from the specified `State`, depending on the type of State and the
     context of the specification.
-  ..
+
+  .. _Projection_Specification_Dictionary:
+
   * **Specification dictionary** -- can contain an entry specifying the type of Projection, and/or entries
     specifying the value of parameters used to instantiate it. These should take the following form:
 
@@ -174,10 +176,27 @@ Projection in context:
         either when calling the `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>`
         method for a Mechanism directly, or where it is specified in the `pathway` of a Process.
       COMMENT
-  COMMENT:
-      TUPLE SPECIFICATIONS HERE (??2-item?? and ConnectionTuple)
-      * **Specification dictionary** -- (Connect_with_state, weight, exponent, matrix spec)
-  COMMENT
+
+  .. _Projection_ConnectionTuple:
+
+  * **ConnectionTuple** -- a 4-item tuple used in the context of a `State specification <State_Specification>` to
+    create a Projection between it and another `State <State>`. It must have at least the first three of the following
+    items in order, and contain the fourth optional item:
+    (<`State specification <State_Specification>`>, <weight value>, <exponent value>, <projection specification>).
+    The first item specifies the State to connect with (**not** the one being connected; that is known from context).
+    The next two items specify a `weight <Projection.weight>` and `exponent <Projection.exponent>` for the Projection
+    (note:  these are **not** for the State). The fourth item is optional, and can be any of the forms of
+    Projection specification described above or for any Projection subclass; it and can be used to provide additional
+    specifications for the Projection, such as its `matrix <MappingProjection.matrix>` if it is a `MappingProjection`.
+    Any (but not all) of the items can be `None`.  If the State specification is `None`, then there must be a
+    Projection specification (used to infer the State to be connected with).  If the Projection specification is
+    `None` or absent, the State specification cannot be `None` (as it is then used to infer the type of Projection).
+    If weight and/or exponent is `None`, it is ignored.  If both the State and Projection are specified, they must
+    be compatible; for example, if a ConnectionTuple is used in the context of an `InputState specification
+    <InputState_Specification>` to specify a MappingProjection to it from an `OutputState` that is specified
+    in the first item of the tuple, and a Projection specification is included in the fourth, its sender (and/or the
+    sending dimensions of its `matrix <MappingProjection.matrix>` parameter) must be compatible with the specified
+    OutputState.
 
 .. _Projection_Automatic_Creation:
 
@@ -291,15 +310,16 @@ A `receiver <Projection.receiver>` can be specified as:
 Weight and Exponent
 ~~~~~~~~~~~~~~~~~~~
 
-Every Projecton has a `weight <Projection.weight>` and `exponent <Projection.exponent>` attribute. These are applied
+Every Projection has a `weight <Projection.weight>` and `exponent <Projection.exponent>` attribute. These are applied
 to its `value <Projection.value>` before combining it with other Projections that project to the same `State`.  If
 both are specified, the `exponent <Projection.exponent>` is applied before the `weight <Projection.weight>`.  These
 attributes determine both how the Projection's `value <Projection.value>` is combined with others to determine the
 `variable <State.variable>` of the State to which they project.
 
 .. note::
-   The `weight <Projection.weight>` and `exponent <Projection.exponent>` attributes of a Projection are not
-   normalized, and their aggregate effects contribute to the magnitude of the `variable <State.variable>` to which
+   The `weight <Projection.weight>` and `exponent <Projection.exponent>` attributes of a Projection are not the same
+   as a State's `weight <State_Base.weight>` and `exponent <State_Base.exponent>` attributes.  Also, they are not
+   normalized; thus, their aggregate effects contribute to the magnitude of the `variable <State.variable>` to which
    they project.
 
 
