@@ -233,24 +233,25 @@ summarized in the following table, and described in greater detail in the subsec
 
 .. _Projection_Table:
 
-+-----------------------------------------------------------------------------------------------------------------+
-|            Sender, receiver and attribute assignments for different types of Projections                        |
-+----------------------+---------------------------------------+--------------------------------------------------+
-|     Projection       |   sender                              |  receiver                                        |
-|                      |   *(attribute)*                       |  *(attribute)*                                   |
-+======================+=======================================+==================================================+
-| `MappingProjection`  | `OutputState`                         | `InputState`                                     |
-|                      | (`efferents <OutputState.efferents>`) | (`path_afferents <InputState.path_afferents>`)   |
-+----------------------+---------------------------------------+--------------------------------------------------+
-| `LearningProjection` | `LearningSignal`                      | `ParameterState`                                 |
-|                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <ParameterState.mod_afferents>`) |
-+----------------------+---------------------------------------+--------------------------------------------------+
-| `ControlProjection`  | `ControlSignal`                       | `ParameterState`                                 |
-|                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <ParameterState.mod_afferents>`) |
-+----------------------+---------------------------------------+--------------------------------------------------+
-| `GatingProjection`   | `GatingSignal`                        | `InputState` or `OutputState`                    |
-|                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <State_Base.mod_afferents>`)     |
-+----------------------+---------------------------------------+--------------------------------------------------+
+.. table:: **Sender, Receiver and Attribute Assignments for Projection Types**
+    :align: center
+
+    +----------------------+---------------------------------------+--------------------------------------------------+
+    |     Projection       |   sender                              |  receiver                                        |
+    |                      |   *(attribute)*                       |  *(attribute)*                                   |
+    +======================+=======================================+==================================================+
+    | `MappingProjection`  | `OutputState`                         | `InputState`                                     |
+    |                      | (`efferents <OutputState.efferents>`) | (`path_afferents <InputState.path_afferents>`)   |
+    +----------------------+---------------------------------------+--------------------------------------------------+
+    | `LearningProjection` | `LearningSignal`                      | `ParameterState`                                 |
+    |                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <ParameterState.mod_afferents>`) |
+    +----------------------+---------------------------------------+--------------------------------------------------+
+    | `ControlProjection`  | `ControlSignal`                       | `ParameterState`                                 |
+    |                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <ParameterState.mod_afferents>`) |
+    +----------------------+---------------------------------------+--------------------------------------------------+
+    | `GatingProjection`   | `GatingSignal`                        | `InputState` or `OutputState`                    |
+    |                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <State_Base.mod_afferents>`)     |
+    +----------------------+---------------------------------------+--------------------------------------------------+
 
 .. _Projection_Sender:
 

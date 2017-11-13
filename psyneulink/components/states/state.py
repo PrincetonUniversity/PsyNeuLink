@@ -14,35 +14,37 @@ Overview
 --------
 
 A State provides an interface to one or more `Projections <Projection>`, and receives the `value(s) <Projection>`
-provide by them.  The value of a State can be modulated by a `ModulatoryProjection <ModulatoryProjection>`. There are
-three primary types of States, all of which are used by `Mechanisms <Mechanism>`, one of which is used by
-`MappingProjections <MappingProjection>`, and that are subject to modulation by `ModulatorySignals <ModulatorySignal>`,
-as summarized in the table below:
+provided by them.  The value of a State can be modulated by a `ModulatoryProjection <ModulatoryProjection>`. There are
+three primary types of States (InputStates, ParameterStates and OutputStates) as well as one subtype (ModulatorySignal,
+used to send ModulatoryProjections), as summarized in the table below:
 
-+-------------------+--------------------+------------------------+--------------------+-------------------------------+
-| *State Type*      | *Owner*            |      *Description*     |    *Modulated by*  |       *Specification*         |
-+===================+====================+========================+====================+===============================+
-| `InputState`      |  `Mechanism        |receives input from     | `GatingSignal`     |`InputState` constructor;      |
-|                   |  <Mechanism>`      |`MappingProjection`     |                    |`Mechanism <Mechanism>`        |
-|                   |                    |                        |                    |constructor or its             |
-|                   |                    |                        |                    |`add_states` method            |
-+-------------------+--------------------+------------------------+--------------------+-------------------------------+
-|`ParameterState`   |  `Mechanism        |represents parameter    |`LearningSignal`    |Implicitly whenever a          |
-|                   |  <Mechanism>` or   |value for a `Component  |and/or              |parameter value is             |
-|                   |  `Projection       |<Component>`            |`ControlSignal`     |`specified                     |
-|                   |  <Projection>`     |or its `function        |                    |<ParameterState_Specification>`|
-|                   |                    |<Component.function>`   |                    |                               |
-+-------------------+--------------------+------------------------+--------------------+-------------------------------+
-| `OutputState`     |  `Mechanism        |provides output to      | `GatingSignal`     |`OutputState` constructor;     |
-|                   |  <Mechanism>`      |`MappingProjection`     |                    |`Mechanism <Mechanism>`        |
-|                   |                    |                        |                    |constructor or its             |
-|                   |                    |                        |                    |`add_states` method            |
-+-------------------+--------------------+------------------------+--------------------+-------------------------------+
-|`ModulatorySignal  |`AdaptiveMechanism  |provides value for      |                    |`AdaptiveMechanism             |
-|<ModulatorySignal>`|<AdaptiveMechanism>`|`ModulatoryProjection   |                    |<AdaptiveMechanism>`           |
-|                   |                    |<ModulatoryProjection>` |                    |constructor; tuple in State    |
-|                   |                    |                        |                    |or parameter specification     |
-+-------------------+--------------------+------------------------+--------------------+-------------------------------+
+.. table:: **State Types and Associated Projection Types**
+   :align: left
+
+   +-------------------+--------------------+------------------------+-----------------+-------------------------------+
+   | *State Type*      | *Owner*            |      *Description*     | *Modulated by*  |       *Specification*         |
+   +===================+====================+========================+=================+===============================+
+   | `InputState`      |  `Mechanism        |receives input from     | `GatingSignal`  |`InputState` constructor;      |
+   |                   |  <Mechanism>`      |`MappingProjection`     |                 |`Mechanism <Mechanism>`        |
+   |                   |                    |                        |                 |constructor or its             |
+   |                   |                    |                        |                 |`add_states` method            |
+   +-------------------+--------------------+------------------------+-----------------+-------------------------------+
+   |`ParameterState`   |  `Mechanism        |represents parameter    | `LearningSignal`|Implicitly whenever a          |
+   |                   |  <Mechanism>` or   |value for a `Component  | and/or          |parameter value is             |
+   |                   |  `Projection       |<Component>`            | `ControlSignal` |`specified                     |
+   |                   |  <Projection>`     |or its `function        |                 |<ParameterState_Specification>`|
+   |                   |                    |<Component.function>`   |                 |                               |
+   +-------------------+--------------------+------------------------+-----------------+-------------------------------+
+   | `OutputState`     |  `Mechanism        |provides output to      | `GatingSignal`  |`OutputState` constructor;     |
+   |                   |  <Mechanism>`      |`MappingProjection`     |                 |`Mechanism <Mechanism>`        |
+   |                   |                    |                        |                 |constructor or its             |
+   |                   |                    |                        |                 |`add_states` method            |
+   +-------------------+--------------------+------------------------+-----------------+-------------------------------+
+   |`ModulatorySignal  |`AdaptiveMechanism  |provides value for      |                 |`AdaptiveMechanism             |
+   |<ModulatorySignal>`|<AdaptiveMechanism>`|`ModulatoryProjection   |                 |<AdaptiveMechanism>`           |
+   |                   |                    |<ModulatoryProjection>` |                 |constructor; tuple in State    |
+   |                   |                    |                        |                 |or parameter specification     |
+   +-------------------+--------------------+------------------------+-----------------+-------------------------------+
 
 COMMENT:
 
@@ -180,25 +182,28 @@ argument of its constructor, or in the *PROJECTIONS* entry of a `State specifica
 <State_Specification_Dictionary>` (or of a dictionary assigned to the **params** argument of the State's constructor).
 The following types of Projections can be specified for each type of State:
 
-    +------------------+-------------------------------+-------------------------------------+
-    | *State Type*     || *PROJECTIONS* specification  || *Assigned to Attribute*            |
-    +==================+===============================+=====================================+
-    |`InputState`      || `PathwayProjection(s)        || `pathway_afferents                 |
-    |                  |   <PathwayProjection>`        |   <InputState.pathway_afferents>`   |
-    |                  || `GatingProjection(s)         || `mod_afferents                     |
-    |                  |   <GatingProjection>`         |   <InputState.mod_afferents>`       |
-    +------------------+-------------------------------+-------------------------------------+
-    |`ParameterState`  || `ControlProjection(s)        || `mod_afferents                     |
-    |                  |   <ControlProjection>`        |   <ParameterState.mod_afferents>`   |
-    +------------------+-------------------------------+-------------------------------------+
-    |`OutputState`     || `PathwayProjection(s)        || `efferents                         |
-    |                  |   <PathwayProjection>`        |   <OutputState.efferents>`          |
-    |                  || `GatingProjection(s)         || `mod_afferents                     |
-    |                  |   <GatingProjection>`         |   <OutputState.mod_afferents>`      |
-    +------------------+-------------------------------+-------------------------------------+
-    |`ModulatorySignal`|| `ModulatoryProjection(s)     || `efferents                         |
-    |                  |   <ModulatoryProjection>`     |   <ModulatorySignal.efferents>`     |
-    +------------------+-------------------------------+-------------------------------------+
+    .. table:: **Specifiable Projections for State Types**
+        :align: center
+
+        +------------------+-------------------------------+-------------------------------------+
+        | *State Type*     || *PROJECTIONS* specification  || *Assigned to Attribute*            |
+        +==================+===============================+=====================================+
+        |`InputState`      || `PathwayProjection(s)        || `pathway_afferents                 |
+        |                  |   <PathwayProjection>`        |   <InputState.pathway_afferents>`   |
+        |                  || `GatingProjection(s)         || `mod_afferents                     |
+        |                  |   <GatingProjection>`         |   <InputState.mod_afferents>`       |
+        +------------------+-------------------------------+-------------------------------------+
+        |`ParameterState`  || `ControlProjection(s)        || `mod_afferents                     |
+        |                  |   <ControlProjection>`        |   <ParameterState.mod_afferents>`   |
+        +------------------+-------------------------------+-------------------------------------+
+        |`OutputState`     || `PathwayProjection(s)        || `efferents                         |
+        |                  |   <PathwayProjection>`        |   <OutputState.efferents>`          |
+        |                  || `GatingProjection(s)         || `mod_afferents                     |
+        |                  |   <GatingProjection>`         |   <OutputState.mod_afferents>`      |
+        +------------------+-------------------------------+-------------------------------------+
+        |`ModulatorySignal`|| `ModulatoryProjection(s)     || `efferents                         |
+        |                  |   <ModulatoryProjection>`     |   <ModulatorySignal.efferents>`     |
+        +------------------+-------------------------------+-------------------------------------+
 
 COMMENT:
     * `InputState`
