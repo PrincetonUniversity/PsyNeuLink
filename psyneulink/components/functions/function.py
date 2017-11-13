@@ -3749,26 +3749,24 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
         # param is a list; if any element is callable, execute it
         if isinstance(param, (np.ndarray, list)):
+            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
+            param = np.atleast_2d(param)
             for i in range(len(param)):
-                if callable(param[i]):
-                    param[i] = param[i]()
+                for j in range(len(param[i])):
+                    if callable(param[i][j]):
+                        param[i][j] = param[i][j]()
+
         # param is one function
         elif callable(param):
-            # if the variable is a list/array, execute the param function separately for each element
-            if isinstance(var, (np.ndarray, list)):
-                if isinstance(var[0], (np.ndarray, list)):
-                    new_param = []
-                    for i in var[0]:
-                        new_param.append(param())
-                    param = new_param
-                else:
-                    new_param = []
-                    for i in var:
-                        new_param.append(param())
-                    param = new_param
-            # if the variable is not a list/array, execute the param function
-            else:
-                param = param()
+            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
+            new_param = []
+            for row in np.atleast_2d(var):
+                new_row = []
+                for item in row:
+                    new_row.append(param())
+                new_param.append(new_row)
+            param = new_param
+
         return param
 
     def _euler(self, previous_value, previous_time, slope, time_step_size):

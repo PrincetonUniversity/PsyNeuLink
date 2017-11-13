@@ -510,7 +510,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Validate NOISE:
         if NOISE in target_set:
             self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
-
         # Validate TIME_CONSTANT:
         if TIME_CONSTANT in target_set:
             time_constant = target_set[TIME_CONSTANT]
@@ -579,26 +578,24 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # param is a list; if any element is callable, execute it
         if isinstance(param, (np.ndarray, list)):
+            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
+            param = np.atleast_2d(param)
             for i in range(len(param)):
-                if callable(param[i]):
-                    param[i] = param[i]()
+                for j in range(len(param[i])):
+                    if callable(param[i][j]):
+                        param[i][j] = param[i][j]()
+
         # param is one function
         elif callable(param):
-            # if the variable is a list/array, execute the param function separately for each element
-            if isinstance(var, (np.ndarray, list)):
-                if isinstance(var[0], (np.ndarray, list)):
-                    new_param = []
-                    for i in var[0]:
-                        new_param.append(param())
-                    param = new_param
-                else:
-                    new_param = []
-                    for i in var:
-                        new_param.append(param())
-                    param = new_param
-            # if the variable is not a list/array, execute the param function
-            else:
-                param = param()
+            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
+            new_param = []
+            for row in np.atleast_2d(var):
+                new_row = []
+                for item in row:
+                    new_row.append(param())
+                new_param.append(new_row)
+            param = new_param
+
         return param
 
     def _instantiate_parameter_states(self, context=None):
@@ -666,7 +663,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Use self.instance_defaults.variable to initialize state of input
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
-        time_scale = self.time_scale
         integrator_mode = self.integrator_mode
 
         #region ASSIGN PARAMETER VALUES
@@ -710,9 +706,9 @@ class TransferMechanism(ProcessingMechanism_Base):
             # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
             # when the input is given as a string.
             if (np.array(noise) != 0).any():
-                current_input = variable[0] + noise
+                current_input = variable + noise
             else:
-                current_input = variable[0]
+                current_input = variable
 
         # self.previous_input = current_input
 
