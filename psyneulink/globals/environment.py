@@ -65,17 +65,29 @@ Inputs
 
 The :keyword:`run` function presents the inputs for each `TRIAL` to the input_states of the relevant Mechanisms in
 the `scope of execution <Run_Scope_of_Execution>`. These are specified in the **inputs** argument of a Component's
-:keyword:`execute` or :keyword:`run` method. For a Mechanism, they comprise the `variable <InputState.variable>` for
-each of the Mechanism's `InputStates <InputState>`.  For a Process or System, they comprise the
-`variable <InputState.variable>` for the InputState(s) of the `ORIGIN` Mechanism(s).  Inputs can be specified in one
-of two ways: `Sequence format <Run_Inputs_Sequence_Format>` and `Mechanism format <Run_Dict_format>`.
-Sequence format is more complex, but does not require the specification of Mechanisms by name, and thus may better
-suited for automated means of generating inputs.  Mechanism format requires that inputs be assigned to Mechanisms by
-name, but is easier to use (as the order in which the inputs are specified does not matter, so long as they are paired
-with their Mechanisms).  Both formats require that inputs be specified as nested lists or ndarrays, that define the
-number of trials, mechanisms, InputStates and elements for each input.  These factors determine the levels of nesting
-required for a list, or the dimensionality (number of axes) for an ndarray.  They are described below, followed by a
-description of the two formats.
+:keyword:`execute` or :keyword:`run` method.
+
+Inputs are specified in a Python dictionary where the keys are `ORIGIN` Mechanisms, and the values are lists of
+inputs values, each of which must be compatible with the corresponding `ORIGIN` Mechanism's `variable
+<Mechanism.variable>`. A fully specified input to a mechanism consists of a list in which the i-th element is a 2d array
+(of the same shape as the mechanism's variable) representing the input to the mechanism on trial i.
+
+Remember that a mechanism's variable is always the concatenation of its input states. In other words, a fully specified
+mechanism variable is a 2d array in which the i-th element is the variable of a the mechanism's i-th input state.
+Because of this relationship between a mechanism's variable and its input states, it is equally valid to think of the
+input specification for a given origin mechanism as a nested list of values for each input state on each trial.
+
+For convenience, several condensed versions of this specification are also accepted in situations where:
+    * an origin mechanism has only one input state
+
+    * only one trial's worth of inputs is specified
+
+    * an input or pattern of inputs should repeat over a specified number of trials
+
+or any combination of the above. The examples below look at several cases in which there are multiple correct ways to
+specify the inputs to a System.
+
+
 
 .. note::
    The descriptions below are for completeness, and are intended as a technical reference;  or most uses of
