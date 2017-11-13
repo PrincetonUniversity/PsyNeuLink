@@ -30,7 +30,8 @@ as summarized in the table below:
 |`ParameterState`   |  `Mechanism        |represents parameter    |`LearningSignal`    |Implicitly whenever a          |
 |                   |  <Mechanism>` or   |value for a `Component  |and/or              |parameter value is             |
 |                   |  `Projection       |<Component>`            |`ControlSignal`     |`specified                     |
-|                   |  <Projection>`     |or its function         |                    |<ParameterState_Specification>`|
+|                   |  <Projection>`     |or its `function        |                    |<ParameterState_Specification>`|
+|                   |                    |<Component.function>`   |                    |                               |
 +-------------------+--------------------+------------------------+--------------------+-------------------------------+
 | `OutputState`     |  `Mechanism        |provides output to      | `GatingSignal`     |`OutputState` constructor;     |
 |                   |  <Mechanism>`      |`MappingProjection`     |                    |`Mechanism <Mechanism>`        |
@@ -112,7 +113,7 @@ A State can be specified using any of the following:
     ..
     * **State specification dictionary** -- can use the following: *KEY*:<value> entries, in addition to those
       specific to the State's type (see documentation for each type):
-      ..
+
       * *STATE_TYPE*:<State type>
           specifies type of State to create (necessary if it cannot be determined from the
           the context of the other entries or in which it is being created).
@@ -130,10 +131,11 @@ A State can be specified using any of the following:
       <State_Base.value>` of the State.  The type of Projection(s) created depend on the type of State specified and
       context of the specification (see `examples <XXX>` below).  This can be done using any of the following entries,
       each of which can contain any of the forms used to `specify a Projection <Projection_In_Context_Specification>`:
-      ..
+
       * *PROJECTIONS*:List[<`projection specification <Projection_In_Context_Specification>`>,...]
           the list must contain a one or more `Projection specifications <Projection_In_Context_Specification>`
-          to or from the State, and/or `ModulatorySignals <ModulatorySignal>` from which it should receive projections.
+          to or from the State, and/or `ModulatorySignals <ModulatorySignal>` from which it should receive projections
+          (see `State_Projections` below).
       ..
       * *<str>*:List[<`projection specification <Projection_In_Context_Specification>`>,...]
           this must be the only entry in the dictionary, and the string cannot be a PsyNeuLink keyword;  it is used as
@@ -168,31 +170,37 @@ A State can be specified using any of the following:
       and the second item must be a specification for a `Projection <Projection_In_Context_Specification>`
       to or from the State, depending on the type of State and the context in which it is specified;
 
-.. _State_Deferred_Initialization:
-
-Deferred Initialization
-~~~~~~~~~~~~~~~~~~~~~~~
-
-If a State is created on its own, and its `owner <State_Owner>` Mechanism is specified, it is assigned to that
-Mechanism; if its owner not specified, then its initialization is `deferred <Component_Deferred_Initialization>`.
-Its initialization is completed automatically when it is assigned to an owner `Mechanism <Mechanism_Base>` using the
-owner's `add_states <Mechanism_Base.add_states>` method.  If the State is not assigned to an owner, it will not be
-functional (i.e., used during the execution of `Mechanisms <Mechanism_Base_Execution>` and/or `Compositions
-<Composition_Execution>`, irrespective of whether it has any `Projections <Projection>` assigned to it.
-
 .. _State_Projections:
 
 Projections
 ~~~~~~~~~~~
 
-COMMENT:
-    REFERENCE OR INTEGRATE WITH SECTION ON State specification dictionary ABOVE
-COMMENT
-
 When a State is created, it can be assigned one or more `Projections <Projection>`, using either the **projections**
-argument of its constructor, or in an entry of a dictionary assigned to the **params** argument with the key
-*PROJECTIONS*. The following of types of Projections can be specified for each type of State:
+argument of its constructor, or in the *PROJECTIONS* entry of a `State specification dictionary
+<State_Specification_Dictionary>` (or of a dictionary assigned to the **params** argument of the State's constructor).
+The following types of Projections can be specified for each type of State:
 
+    +------------------+-------------------------------+-------------------------------------+
+    | *State Type*     || *PROJECTIONS* specification  || *Assigned to Attribute*            |
+    +==================+===============================+=====================================+
+    |`InputState`      || `PathwayProjection(s)        || `pathway_afferents                 |
+    |                  |   <PathwayProjection>`        |   <InputState.pathway_afferents>`   |
+    |                  || `GatingProjection(s)         || `mod_afferents                     |
+    |                  |   <GatingProjection>`         |   <InputState.mod_afferents>`       |
+    +------------------+-------------------------------+-------------------------------------+
+    |`ParameterState`  || `ControlProjection(s)        || `mod_afferents                     |
+    |                  |   <ControlProjection>`        |   <ParameterState.mod_afferents>`   |
+    +------------------+-------------------------------+-------------------------------------+
+    |`OutputState`     || `PathwayProjection(s)        || `efferents                         |
+    |                  |   <PathwayProjection>`        |   <OutputState.efferents>`          |
+    |                  || `GatingProjection(s)         || `mod_afferents                     |
+    |                  |   <GatingProjection>`         |   <OutputState.mod_afferents>`      |
+    +------------------+-------------------------------+-------------------------------------+
+    |`ModulatorySignal`|| `ModulatoryProjection(s)     || `efferents                         |
+    |                  |   <ModulatoryProjection>`     |   <ModulatorySignal.efferents>`     |
+    +------------------+-------------------------------+-------------------------------------+
+
+COMMENT:
     * `InputState`
         • `PathwayProjection(s) <PathwayProjection>`
           - assigned to its `pathway_afferents <Input.pathway_afferents>` attribute.
@@ -212,6 +220,7 @@ argument of its constructor, or in an entry of a dictionary assigned to the **pa
     * `ModulatorySignal <ModulatorySignal>`
         • `ModulatoryProjection(s) <ModulatoryProjection>`
           - assigned to its `efferents <ModulatorySignal.efferents>` attribute.
+COMMENT
 
 Projections must be specified in a list.  Each entry must be either a specification for a `projection
 <Projection_In_Context_Specification>`, or for a `sender <Projection.sender>` or `receiver <Projection.receiver>`, in
@@ -222,9 +231,20 @@ of Projection created is inferred from the State and the type of sender or recei
 examples below.  Note that the State must be `assigned to an owner <State_Creation>` in order to be functional,
 irrespective of whether any `Projections <Projection>` have been assigned to it.
 
-COMMENT:
-    ADD TABLE HERE SHOWING COMBINATIONS OF ALLOWABLE SPECIFICATIONS AND THEIR OUTCOMES
-COMMENT
+
+
+.. _State_Deferred_Initialization:
+
+Deferred Initialization
+~~~~~~~~~~~~~~~~~~~~~~~
+
+If a State is created on its own, and its `owner <State_Owner>` Mechanism is specified, it is assigned to that
+Mechanism; if its owner not specified, then its initialization is `deferred <Component_Deferred_Initialization>`.
+Its initialization is completed automatically when it is assigned to an owner `Mechanism <Mechanism_Base>` using the
+owner's `add_states <Mechanism_Base.add_states>` method.  If the State is not assigned to an owner, it will not be
+functional (i.e., used during the execution of `Mechanisms <Mechanism_Base_Execution>` and/or `Compositions
+<Composition_Execution>`, irrespective of whether it has any `Projections <Projection>` assigned to it.
+
 
 .. _State_Structure:
 
