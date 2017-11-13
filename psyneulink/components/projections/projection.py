@@ -192,11 +192,7 @@ Projection in context:
     Projection specification (used to infer the State to be connected with).  If the Projection specification is
     `None` or absent, the State specification cannot be `None` (as it is then used to infer the type of Projection).
     If weight and/or exponent is `None`, it is ignored.  If both the State and Projection are specified, they must
-    be compatible; for example, if a ConnectionTuple is used in the context of an `InputState specification
-    <InputState_Specification>` to specify a MappingProjection to it from an `OutputState` that is specified
-    in the first item of the tuple, and a Projection specification is included in the fourth, its sender (and/or the
-    sending dimensions of its `matrix <MappingProjection.matrix>` parameter) must be compatible with the specified
-    OutputState.
+    be compatible  (see `examples <XXX>` below).
 
 .. _Projection_Automatic_Creation:
 
@@ -344,6 +340,21 @@ When a Projection executes, it gets the value of its `sender <Projection.sender>
 provides the result as to its `receiver <Projection.receiver>`.  The `function <Projection.function>` of a Projection
 converts the value received from its `sender <Projection.sender>` to a form suitable as input for its `receiver
 <Projection.receiver>`.
+
+
+COMMENT:
+*** ADD EXAMPLES
+
+GET FROM Scratch Pad
+
+for example, if a ConnectionTuple is used in the context of an
+    `InputState specification
+    <InputState_Specification>` to specify a MappingProjection to it from an `OutputState` that is specified
+    in the first item of the tuple, and a Projection specification is included in the fourth, its sender (and/or the
+    sending dimensions of its `matrix <MappingProjection.matrix>` parameter) must be compatible with the specified
+    OutputState (see `examples <XXX>` below)
+
+COMMENT
 
 .. _Projection_Class_Reference:
 

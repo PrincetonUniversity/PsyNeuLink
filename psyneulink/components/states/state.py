@@ -232,7 +232,6 @@ examples below.  Note that the State must be `assigned to an owner <State_Creati
 irrespective of whether any `Projections <Projection>` have been assigned to it.
 
 
-
 .. _State_Deferred_Initialization:
 
 Deferred Initialization
