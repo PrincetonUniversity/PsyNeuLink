@@ -87,11 +87,14 @@ or by specifying the State in the constructor for its owner.  For example, unles
 any Component is created, it automatically creates a `ParameterState` for each of its `configurable parameters
 <Component_Configurable_Attributes>` and those of its `function <Component_Function>`. States are also created in
 response to explicit specifications.  For example, InputStates and OutputStates can be specified in the constructor
-for a Mechanism (see `Mechanism_State_Specification`) or in its `add_states` method; and a ParameterState is
-specified in effect when the value of a parameter for any Component or its `function <Component.function>` is
-specified in its constructor.  InputStates and OutputStates (but not ParameterStates) can also be created directly
-using their constructors;  however, Parameter States cannot be created in this way; they are always and only created
-when the Component to which a parameter belongs is created.
+for a Mechanism (see `Mechanism_State_Specification`); and ParameterStates are specified in effect when the value of a
+parameter for any Component or its `function <Component.function>` is specified in the constructor for that Component
+or function.  InputStates and OutputStates (but *not* ParameterStates) can also be created directly using their
+constructors, and then assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method;
+however, this should be done with caution as the State must be compatible with relevant attributes of its owner and its
+`function <Mechanism_Base.function>` (for example, see `note <Mechanism_Add_InputStates_Note>` regarding InputStates).
+Parameter States **cannot** on their own; they are always and only created when the Component to which a parameter
+belongs is created.
 
 .. _State_Specification:
 
@@ -198,14 +201,14 @@ Wherever a State is specified, it can be done using any of the following:
 
 .. _State_Deferred_Initialization:
 
-`InputStates <InputState>`, `OutputStates <OutputState>` and `ModulatorySignals <ModulatorySignal>` can also be
-created on their own, by using the relevant constructors;  however, `ParameterStates <ParameterState>` cannot be
-created on their own. If a State is created on its own, and its `owner <State_Owner>` is not specified, then its
-initialization will be `deferred <Component_Deferred_Initialization>`.  Its initialization is completed automatically
-when it is assigned to an owner `Mechanism <Mechanism_Base>` using the owner's `add_states` method.  If the State is
-not assigned to an owner, it will not be functional (i.e., used during the execution of `Mechanisms
-<Mechanism_Base_Execution>` and/or `Compositions <Composition_Execution>`, irrespective of whether it has any
-`Projections <Projection>` assigned to it.
+`InputStates <InputState>`, `OutputStates <OutputState>` and `ModulatorySignals <ModulatorySignal>` can also be created
+on their own, by using the relevant constructors;  however, `ParameterStates <ParameterState>` cannot be created on
+their own. If a State is created on its own, and its `owner <State_Owner>` Mechanism is specified, it is assigned to
+that Mechanism; if its owner not specified, then its initialization is `deferred <Component_Deferred_Initialization>`.
+Its initialization is completed automatically when it is assigned to an owner `Mechanism <Mechanism_Base>` using the
+owner's `add_states <Mechanism_Base.add_states>` method.  If the State is not assigned to an owner, it will not be
+functional (i.e., used during the execution of `Mechanisms <Mechanism_Base_Execution>` and/or `Compositions
+<Composition_Execution>`, irrespective of whether it has any `Projections <Projection>` assigned to it.
 
 .. _State_Projections:
 
@@ -268,9 +271,11 @@ owner must be a `Mechanism <Mechanism>`.  For `ParameterStates <ParameterState>`
 `PathwayProjection <PathwayProjection>`. For `ModulatorySignals <ModulatorySignal>`, it must be an `AdaptiveMechanism
 <AdaptiveMechanism>`. When a State is created as part of another Component, its `owner <State_Base.owner>` is
 assigned automatically to that Component.  It is also assigned automatically when the State is assigned to a
-`Mechanism <Mechanism>` using that Mechanism's `add_states` method.  Otherwise, it must be specified explicitly in
-the **owner** argument of the constructor for the State.  If it is not, the State's initialization will be `deferred
-<State_Deferred_Initialization>` until it has been assigned to an owner.
+`Mechanism <Mechanism>` using that Mechanism's `add_states <Mechanism_Base.add_states>` method.  Otherwise, it must be
+specified explicitly in the **owner** argument of the constructor for the State (in which case it is immediately
+assigned to the specified Mechanism).  If the **owner** argument is not specified, the State's initialization is
+`deferred <State_Deferred_Initialization>` until it has been assigned to an owner using the owner's `add_states
+<Mechanism_Base.add_states>` method.
 
 Variable, Function and Value
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -568,13 +573,14 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, function_type
-from psyneulink.components.functions.function import LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
+from psyneulink.components.functions.function import LinearCombination, ModulationParam, \
+    _get_matrix, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.keywords import \
     CONTEXT, COMMAND_LINE, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
     GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, \
     LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
-    MAPPING_PROJECTION_PARAMS, MECHANISM, \
+    MAPPING_PROJECTION_PARAMS, MECHANISM, MATRIX, AUTO_ASSIGN_MATRIX,\
     MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OWNER, PARAMS, PATHWAY_PROJECTIONS, \
     PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, \
     SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, \
@@ -2337,7 +2343,7 @@ def _parse_state_spec(state_type=None,
     Return either State object or State specification dictionary
     """
     from psyneulink.components.projections.projection \
-        import _is_projection_spec, _parse_connection_specs, ConnectionTuple
+        import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ConnectionTuple
 
     # Get all of the standard arguments passed from _instantiate_state (i.e., those other than state_spec) into a dict
     standard_args = get_args(inspect.currentframe())
@@ -2453,7 +2459,49 @@ def _parse_state_spec(state_type=None,
 
     # Projection specification (class, object, or matrix value (matrix keyword processed below):
     elif _is_projection_spec(state_specification, include_matrix_spec=False):
-        # Move to PROJECTIONS entry of params specification dict
+
+        # FIX: 11/12/17 - HANDLE SITUATION IN WHICH projection_spec IS A MATRIX (AND SENDER IS SOMEHOW KNOWN)
+
+        # Parse to determine whether Projection's value is specified
+        projection_spec = _parse_projection_spec(state_specification, owner=owner, state_type=state_dict[STATE_TYPE])
+
+        projection_value=None
+        sender=None
+        matrix=None
+
+        # Projection has been instantiated
+        if isinstance(projection_spec, Projection):
+            if projection_spec.init_status is InitStatus.INITIALIZED:
+                projection_value = projection_spec.value
+            # If deferred_init, need to get sender and matrix to determine value
+            else:
+                try:
+                    sender = projection_spec.init_args[SENDER]
+                    matrix = projection_spec.init_args[PARAMS][FUNCTION_PARAMS][MATRIX]
+                except KeyError:
+                    pass
+        # Projection specification dict:
+        else:
+            # Need to get sender and matrix to determine value
+            sender = projection_spec[SENDER]
+            matrix = projection_spec[MATRIX]
+
+        if sender is not None and matrix is not None and matrix is not AUTO_ASSIGN_MATRIX:
+            sender = _get_state_for_socket(owner=owner,state_spec=sender,state_types=state_dict[STATE_TYPE])
+            projection_value = np.zeros(matrix.shape[sender.value.ndim :])
+
+        reference_value = state_dict[REFERENCE_VALUE]
+        # If State's reference_value is not specified, but Projection's value is, use projection_spec's value
+        if reference_value is None and projection_value is not None:
+            state_dict[REFERENCE_VALUE] = projection_value
+        # If State's reference_value has been specified, check for compatibility with projection_spec's value
+        elif (reference_value is not None and projection_value is not None
+            and not iscompatible(reference_value, projection_value)):
+            raise StateError("{} of {} ({}) is not compatible with {} of {} ({}) for {}".
+                             format(VALUE, Projection.__name__, projection_value, REFERENCE_VALUE,
+                                    state_dict[STATE_TYPE].__name__, reference_value, owner.name))
+
+        # Move projection_spec to PROJECTIONS entry of params specification dict (for instantiation of Projection)
         if state_dict[PARAMS] is None:
             state_dict[PARAMS] = {}
         state_dict[PARAMS].update({PROJECTIONS:[state_specification]})

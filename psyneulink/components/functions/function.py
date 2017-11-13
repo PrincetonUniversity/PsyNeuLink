@@ -186,8 +186,24 @@ from numpy import abs, exp, tanh
 
 from psyneulink.components.component import ComponentError, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
-from psyneulink.globals.keywords import VARIABLE, ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, \
-    ANGLE, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, GILZENRAT_INTEGRATOR_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+from psyneulink.globals.keywords import \
+    VARIABLE, ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, \
+    ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, \
+    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, \
+    DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DistanceMetrics,\
+    DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, \
+    EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, \
+    FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, \
+    HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, \
+    INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, \
+    LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, \
+    MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, \
+    OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, \
+    PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, \
+    RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, \
+    SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, \
+    USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, \
+    kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -200,7 +216,7 @@ __all__ = [
     'ConstantIntegrator', 'DISABLE', 'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
     'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON', 'ERROR_MATRIX', 'Exponential', 'ExponentialDist',
     'FHNIntegrator', 'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
-    'GammaDist', 'get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword', 'Hebbian', 'Integrator',
+    'GammaDist', '_get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword', 'Hebbian', 'Integrator',
     'IntegratorFunction', 'is_Function', 'is_function_type', 'kwBogaczEtAl', 'kwNavarrosAndFuss', 'LCAIntegrator',
     'LEARNING_ACTIVATION_FUNCTION', 'LEARNING_ACTIVATION_INPUT', 'LEARNING_ACTIVATION_OUTPUT', 'LEARNING_ERROR_OUTPUT',
     'LearningFunction', 'Linear', 'LinearCombination', 'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next',
@@ -624,11 +640,7 @@ class Function_Base(Function):
 
     @property
     def functionOutputType(self):
-        # # MODIFIED 6/11/17 OLD:
-        # if self.paramsCurrent[FUNCTION_OUTPUT_TYPE_CONVERSION]:
-        # MODIFIED 6/11/17 NEW:
         if hasattr(self, FUNCTION_OUTPUT_TYPE_CONVERSION):
-        # MODIFIED 6/11/17 END
             return self._functionOutputType
         return None
 
@@ -639,12 +651,8 @@ class Function_Base(Function):
         #    ??or if FunctionOutputTypeConversion is False?? <- FIX: WHY?? [IS THAT A SIDE EFFECT OR PREVIOUSLY USING
         #                                                       FIX: self.paramsCurrent[FUNCTION_OUTPUT_TYPE_CONVERSION]
         #                                                       FIX: TO DECIDE IF ATTRIBUTE EXISTS?
-        # # MODIFIED 6/11/17 OLD:
-        # if not value and not self.paramsCurrent[FUNCTION_OUTPUT_TYPE_CONVERSION]:
-        # MODIFIED 6/11/17 NEW:
         if value is None and (not hasattr(self, FUNCTION_OUTPUT_TYPE_CONVERSION)
                               or not self.FunctionOutputTypeConversion):
-        # MODIFIED 6/11/17 END
             self._functionOutputType = value
             return
 
@@ -2528,7 +2536,8 @@ class Exponential(TransferFunction):  # ----------------------------------------
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: `scale <Exponential.scale>` * e**(`rate <Exponential.rate>` * `variable <Linear.variable>`).
+        Return: `scale <Exponential.scale>`
+        :math:`*` e**(`rate <Exponential.rate>` :math:`*` `variable <Linear.variable>`).
 
         Arguments
         ---------
@@ -2681,7 +2690,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: 1 / (1 + e**( (`gain <Logistic.gain>` * `variable <Logistic.variable>`) + `bias <Logistic.bias>`))
+        Return: 1 / (1 + e**( (`gain <Logistic.gain>` :math:`*` `variable <Logistic.variable>`) + `bias <Logistic.bias>`))
 
         Arguments
         ---------
@@ -3172,9 +3181,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 print("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
                       format(sender_len))
             self.receiver = param_set[RECEIVER] = sender
-        # # MODIFIED 3/26/17 NEW:
-        # self.receiver = param_set[kwReceiver] = sender
-        # MODIFIED 3/26/17 END
 
         receiver_len = len(self.receiver)
 
@@ -3303,7 +3309,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
          Specification (validated in _validate_params):
             + single number (used to fill self.matrix)
-            + matrix keyword (see get_matrix)
+            + matrix keyword (see _get_matrix)
             + 2D list or np.ndarray of numbers
 
         :return matrix: (2D list)
@@ -3324,7 +3330,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             # receiver = sender
         receiver_len = receiver.shape[0]
 
-        matrix = get_matrix(specification, rows=sender_len, cols=receiver_len, context=context)
+        matrix = _get_matrix(specification, rows=sender_len, cols=receiver_len, context=context)
 
         # This should never happen (should have been picked up in validate_param or above)
         if matrix is None:
@@ -3377,7 +3383,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         if isinstance(self, MappingProjection):
             rows = len(self.sender.value)
             cols = len(self.receiver.instance_defaults.variable)
-        matrix = get_matrix(keyword, rows, cols)
+        matrix = _get_matrix(keyword, rows, cols)
 
         if matrix is None:
             raise FunctionError("Unrecognized keyword ({}) specified for the {} function of {}".
@@ -3401,7 +3407,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 #     return False
 
 
-def get_matrix(specification, rows=1, cols=1, context=None):
+def _get_matrix(specification, rows=1, cols=1, context=None):
     """Returns matrix conforming to specification with dimensions = rows x cols or None
 
      Specification can be a matrix keyword, filler value or np.ndarray
@@ -5203,7 +5209,7 @@ class FHNIntegrator(
         a_w=1.0,                        \
         b_w=-0.8,                       \
         c_w=0.7,                        \
-        mode=1.0,      \
+        mode=1.0,                       \
         uncorrelated_activity=0.0       \
         time_constant_w = 12.5,         \
         params=None,                    \
@@ -5220,22 +5226,27 @@ class FHNIntegrator(
 
     The most general form of the FHNIntegrator function, with all of its arguments, is:
 
-        time_constant_v * dv/dt = a_v * v^3 + (1 + threshold) * b_v * v^2 + (- threshold) * c_v * v^2 + d_v + e_v *
-        w + f_v * I_ext
+        *time_constant_v* :math:`* \\frac{dv}{dt}` =
 
-        time_constant_w * dw/dt = mode * a_w * v + b_w * w + c_w + (1 - self.mode) * self.uncorrelated_activity
+            *a_v* :math:`* v^3` + *((1+threshold)* :math:`*` *b_v* :math:`* v^2)` *- threshold* :math:`*` *c_v* \
+            :math:`* v^2`) *+ d_v + (e_v* :math:`*` *w) + (f_v* :math:`* I_{ext})`
+
+        *time_constant_w* :math:`* \\frac{dw}{dt}` =
+
+          *mode* :math:`*` *a_w* :math:`*` *(v + b_w)* :math:`*` *(w + c_w + (1 - self.mode))* :math:`*`
+          *self.uncorrelated_activity*
 
     The three formulations that the FHNIntegrator was designed to allow are:
 
     **Fitzhugh-Nagumo Model**
 
-            dv/dt = v - (v^3)/3 -w + I_ext
+            :math:`\\frac{dv}{dt} = v - \\frac{v^3}{3} - w + I_{ext}`
 
-            T*dw/dt = v + a - b*w
+            :math:`T*\\frac{dw}{dt} = v + a - b*w`
 
-        where dw/dt often has the following parameters:
+        where :math:`\\frac{dw}{dt}` often has the following parameters:
 
-            dw/dt = 0.08(v + 0.7 - 0.8*w)
+            :math:`\\frac{dw}{dt} = 0.08(v + 0.7 - 0.8*w)`
 
         The FHNIntegrator's default parameter values map the above equations and parameters onto the PsyNeuLink
         implementation.
@@ -5243,39 +5254,41 @@ class FHNIntegrator(
 
     **Modified FHN Model**
 
-            dv/dt = v*(a-v)(v-1) -w + I_ext
+            :math:`\\frac{dv}{dt} = v*(a-v)(v-1) - w + I_{ext}`
 
-            dw/dt = b*v - c*w
+            :math:`\\frac{dw}{dt} = b*v - c*w`
 
-        In order to reproduce the modified FHN equation for dv/dt, the following FHNIntegrator parameters must be set:
+        In order to reproduce the modified FHN equation for :math:`\\frac{dv}{dt},
+        the following FHNIntegrator parameters must be set:
 
-            b_v = c_v = f_v = time_constant_v = 1.0
+            *b_v = c_v = f_v = time_constant_v = 1.0*
 
-            a_v = e_v = -1.0
+            *a_v = e_v = -1.0*
 
-            d_v = 0.0;
+            *d_v = 0.0;*
 
-        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dv/dt then correspond to the modified FHN equation for dv/dt as follows:
+        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for
+        dv/dt then correspond to the modified FHN equation for :math:`\\frac{dv}{dt} as follows:
 
             (modified FHN representation --> PsyNeuLink representation)
 
-            a --> `threshold <FHNIntegrator.threshold>`
+            *a* --> `threshold <FHNIntegrator.threshold>`
 
-            I_ext --> `variable <FHNIntegrator.variable>`
+            :math:`I_{ext}` --> `variable <FHNIntegrator.variable>`
 
         In order to reproduce the modified FHN equation for dw/dt, the following FHNIntegrator parameters must be set:
 
-            mode = time_constant_w = 1.0
+            *mode = time_constant_w = 1.0*
 
-            c_w = uncorrelated_activity = 0.0;
+            *c_w = uncorrelated_activity = 0.0;*
 
         When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dw/dt then correspond to the modified FHN equation for dw/dt as follows:
 
             (modified FHN representation --> PsyNeuLink representation)
 
-            b --> `a_w <FHNIntegrator.a_w>`
+            *b* --> `a_w <FHNIntegrator.a_w>`
 
-            c --> NEGATIVE `b_w <FHNIntegrator.b_w>`
+            *c --> NEGATIVE* `b_w <FHNIntegrator.b_w>`
 
         `Mahbub Khan (2013) <http://pcwww.liv.ac.uk/~bnvasiev/Past%20students/Mahbub_549.pdf>`_ provides a nice summary
         of why this formulation is useful.
@@ -5284,48 +5297,48 @@ class FHNIntegrator(
     `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ **Implementation
     of the Modified FHN Model**
 
-            tau_v * dv/dt = v*(a-v)(v-1) - w + b*f(X_1)
+            *tau_v* :math:`* \\frac{dv}{dt} = v*(a-v)(v-1) - w + b *` *f(X_1)*
 
-            tau_w * dw/dt = c*v + (1-c)*d - w
+            *tau_w* :math:`* \\frac{dw}{dt} = c*v + (1-c)*d - w`
 
         In order to reproduce the Gilzenrat equation for dv/dt, the following FHNIntegrator parameters must be set:
 
-            b_v = c_v = 1.0
+            *b_v = c_v = 1.0*
 
-            a_v = e_v = -1.0
+            *a_v = e_v = -1.0*
 
-            d_v = 0.0;
+            *d_v = 0.0;*
 
         When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dv/dt then correspond to the Gilzenrat equation for dv/dt as follows:
 
             (Gilzenrat representation --> PsyNeuLink representation)
 
-            a --> `threshold <FHNIntegrator.threshold>`
+            *a* --> `threshold <FHNIntegrator.threshold>`
 
-            b --> `f_v <FHNIntegrator.f_v>`
+            *b* --> `f_v <FHNIntegrator.f_v>`
 
-            f(X_1) --> `variable <FHNIntegrator.variable>`
+            *f(X_1)* --> `variable <FHNIntegrator.variable>`
 
-            tau_v --> `time_constant_v <FHNIntegrator.time_constant_v>`
+            *tau_v* --> `time_constant_v <FHNIntegrator.time_constant_v>`
 
 
         In order to reproduce the Gilzenrat equation for dw/dt, the following FHNIntegrator parameters must be set:
 
-            a_w = 1.0
+            *a_w = 1.0*
 
-            b_w = -1.0
+            *b_w = -1.0*
 
-            c_w = 0.0;
+            *c_w = 0.0;*
 
         When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dw/dt then correspond to the Gilzenrat equation for dw/dt as follows:
 
             (Gilzenrat representation --> PsyNeuLink representation)
 
-            c --> `mode <FHNIntegrator.mode>`
+            *c* --> `mode <FHNIntegrator.mode>`
 
-            d --> `uncorrelated_activity <FHNIntegrator.uncorrelated_activity>`
+            *d* --> `uncorrelated_activity <FHNIntegrator.uncorrelated_activity>`
 
-            tau_w --> `time_constant_w <FHNIntegrator.time_constant_w>`
+            *tau_w* --> `time_constant_w <FHNIntegrator.time_constant_w>`
 
 
     Arguments
@@ -5696,10 +5709,15 @@ class FHNIntegrator(
 
         The model is defined by the following system of differential equations:
 
-            time_constant_v * dv/dt = a_v * v^3 + (1 + threshold) * b_v * v^2 + (- threshold) * c_v * v^2 + d_v + e_v *
-            w + f_v * I_ext
+            *time_constant_v* :math:`* \\frac{dv}{dt} =`
 
-            time_constant_w * dw/dt = mode * a_w * v + b_w * w + c_w + (1 - self.mode) * self.uncorrelated_activity
+                *a_v* :math:`* v^3 + (1 + threshold) *` *b_v* :math:`* v^2 + (- threshold) *` *c_v*
+                :math:`* v^2 +` *d_v* :math:`+` *e_v* :math:`* w +` *f_v* :math:`* I_{ext}`
+
+            *time_constant_w* :math:`* dw/dt =`
+
+                :math:`mode *` *a_w* :math:`* v +` *b_w* :math:`* w +` *c_w*
+                :math:`+ (1 - self.mode) *` *self.uncorrelated_activity*
 
 
         Arguments
@@ -6105,13 +6123,17 @@ class AGTUtilityIntegrator(
 
     Computes an exponentially weighted moving average on the variable using two sets of parameters:
 
-    short_term_utility = (1 - `short_term_rate <AGTUtilityIntegrator.short_term_rate>`) * `previous_short_term_utility
-    <AGTUtilityIntegrator.previous_short_term_utility>` + `short_term_rate <AGTUtilityIntegrator.short_term_rate>` *
-    `variable <AGTUtilityIntegrator.variable>`
+    short_term_utility =
 
-    long_term_utility = (1 - `long_term_rate <AGTUtilityIntegrator.long_term_rate>`) * `previous_long_term_utility
-    <AGTUtilityIntegrator.previous_long_term_utility>` + `long_term_rate <AGTUtilityIntegrator.long_term_rate>` *
-    `variable <AGTUtilityIntegrator.variable>`
+       (1 - `short_term_rate <AGTUtilityIntegrator.short_term_rate>`) :math:`*` `previous_short_term_utility
+       <AGTUtilityIntegrator.previous_short_term_utility>` + `short_term_rate <AGTUtilityIntegrator.short_term_rate>`
+       :math:`*` `variable <AGTUtilityIntegrator.variable>`
+
+    long_term_utility =
+
+       (1 - `long_term_rate <AGTUtilityIntegrator.long_term_rate>`) :math:`*` `previous_long_term_utility
+       <AGTUtilityIntegrator.previous_long_term_utility>` + `long_term_rate <AGTUtilityIntegrator.long_term_rate>`
+       :math:`*` `variable <AGTUtilityIntegrator.variable>`
 
     then takes the logistic of each utility value, using the corresponding (short term and long term) gain and bias.
 
@@ -6689,39 +6711,40 @@ class BogaczEtAl(
         """
         derivative(output, input)
 
-        Calculate the derivative of 1/(reward rate) with respect to the threshold (**output** arg)
-        and drift_rate (**input** arg).  Reward rate (RR) is assumed to be:
+        Calculate the derivative of :math:`\\frac{1}{reward rate}` with respect to the threshold (**output** arg)
+        and drift_rate (**input** arg).  Reward rate (:math:`RR`) is assumed to be:
 
-            RR = (delay\\ :sub:`ITI` + Z/A + ED);
+            :math:`RR = delay_{ITI} + \\frac{Z}{A} + ED`;
 
-        the derivative of 1/RR with respect to the `threshold <BogaczEtAl.threshold>` is:
+        the derivative of :math:`\\frac{1}{RR}` with respect to the `threshold <BogaczEtAl.threshold>` is:
 
-            1/A - E/A - (2A/c\\ :sup:`2`\\ )ED;
+            :math:`\\frac{1}{A} - \\frac{E}{A} - 2\\frac{A}{c^2}ED`;
 
         and the derivative of 1/RR with respect to the `drift_rate <BogaczEtAl.drift_rate>` is:
 
-            -Z/A\\ :sup:`2` + (Z/A\\ :sup:`2`\\ )E - (2Z/c\\ :sup:`2`\\ )ED
+            :math:`-\\frac{Z}{A^2} + \\frac{Z}{A^2}E - \\frac{2Z}{c^2}ED`
 
         where:
 
-            A = `drift_rate <BogaczEtAl.drift_rate>`,
+            *A* = `drift_rate <BogaczEtAl.drift_rate>`,
 
-            Z = `threshold <BogaczEtAl.threshold>`,
+            *Z* = `threshold <BogaczEtAl.threshold>`,
 
-            c = `noise <BogaczEtAl.noise>`,
+            *c* = `noise <BogaczEtAl.noise>`,
 
-            E = exp(-2ZA/\\ c\\ :sup:`2`\\ ), and
+            *E* = :math:`e^{-2\\frac{ZA}{c^2}}`,
 
-            D = delay\\ :sub:`ITI` + delay\\ :sub:`penalty` - Z/A
+            *D* = :math:`delay_{ITI} + delay_{penalty} - \\frac{Z}{A}`,
 
-            delay\\ :sub:`ITI` is the intertrial interval and delay\\ :sub:`penalty` is a penalty delay.
+            :math:`delay_{ITI}` is the intertrial interval and :math:`delay_{penalty}` is a penalty delay.
 
 
         Returns
         -------
 
         derivatives :  List[float, float)
-            of 1/RR with respect to `threshold <BogaczEtAl.threshold>` and `drift_rate <BogaczEtAl.drift_rate>`.
+            of :math:`\\frac{1}{RR}` with respect to `threshold <BogaczEtAl.threshold>` and `drift_rate
+            <BogaczEtAl.drift_rate>`.
 
         """
         Z = output or self.threshold
@@ -6951,9 +6974,9 @@ class DistributionFunction(Function_Base):
 
 class NormalDist(DistributionFunction):
     """
-    NormalDist(                      \
-             mean=0.0,             \
-             standard_dev=1.0,             \
+    NormalDist(                     \
+             mean=0.0,              \
+             standard_dev=1.0,      \
              params=None,           \
              owner=None,            \
              prefs=None             \
@@ -7056,8 +7079,8 @@ class NormalDist(DistributionFunction):
 
 class ExponentialDist(DistributionFunction):
     """
-    ExponentialDist(                      \
-             beta=1.0,             \
+    ExponentialDist(                \
+             beta=1.0,              \
              params=None,           \
              owner=None,            \
              prefs=None             \
@@ -7488,24 +7511,55 @@ class Stability(ObjectiveFunction):
 
     .. _Stability:
 
-    Return the stability of a vector based an a weight matrix from each element to every other element in the vector.
-    The value of `variable <Stability.variable>` is passed through the `matrix <Stability.matrix>`, transformed
-    using the `transfer_fct <Stability.transfer_fct>` (if specified), and then compared with its initial value
-    using the specified `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is specified, the result
-    is normalized by the number of elements in the `variable <Stability.variable>`.
+    Return the stability of `variable <Stability.variable>` based on a state transformation matrix.
+
+    The value of `variable <Stability.variable>` is passed through the `matrix <Stability.matrix>`,
+    transformed using the `transfer_fct <Stability.transfer_fct>` (if specified), and then compared with its initial
+    value using the `distance metric <DistanceMetric>` specified by `metric <Stability.metric>`.  If `normalize
+    <Stability.normalize>` is `True`, the result is normalized by the length of (number of elements in) `variable
+    <Stability.variable>`.
+
+COMMENT:
+*** 11/11/17 - DELETE THIS ONE Stability IS STABLE:
+    Stability s is calculated according as specified by `metric <Distance.metric>`, using the formulae below,
+    where :math:`i` and :math:`j` are each elements of `variable <Stability.variable>`, *len* is its length,
+    :math:`\\bar{v}` is its mean, :math:`\\sigma_v` is its standard deviation, and :math:`w_{ij}` is the entry of the
+    weight matrix for the connection between entries :math:`i` and :math:`j` in `variable <Stability.variable>`.
+
+    *ENTROPY*:
+
+       :math:`s = -\\sum\limits^{len}(i*log(j))`
+
+    *DIFFERENCE*:
+
+       :math:`s = \\sum\limits^{len}(i-j)`
+
+    *EUCLIDEAN*:
+
+       :math:`s = \\sum\limits^{len}\\sqrt{(i-j)^2}`
+
+    *CORRELATION*:
+
+       :math:`s = \\frac{\\sum\limits^{len}(i-\\bar{i})(j-\\bar{j})}{(len-1)\\sigma_{i}\\sigma_{j}}`
+
+    **normalize**:
+
+       :math:`s = \\frac{s}{len}`
+COMMENT
+
 
     Arguments
     ---------
 
     variable : list of numbers or 1d np.array : Default ClassDefaults.variable
-        the array for which stabilty is calculated.
+        the array for which stability is calculated.
 
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
 
-    metric : ENERGY, ENTROPY or keyword in DISTANCE_METRICS : Default ENERGY
-        specifies the metric used to compute stability.
+    metric : keyword in DistanceMetrics : Default ENERGY
+        specifies a `metric <DistanceMetrics>` from `DistanceMetrics` used to compute stability.
 
     transfer_fct : function or method : Default None
         specifies the function used to transform output of weight `matrix <Stability.matrix>`.
@@ -7536,10 +7590,10 @@ class Stability(ObjectiveFunction):
         than HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from the
         stability calculation.
 
-    metric : ENERGY, ENTROPY or keyword in DISTANCE_METRICS
-        metric used to compute stability.  If ENTROPY or DISTANCE_METRICS keyword is used, the `Distance` Function
-        is used to compute the stability of `variable <Stability.variable>` with respect to its value after
-        transformation by `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>`.
+    metric : keyword in DistanceMetrics
+        metric used to compute stability; must be a `DistanceMetrics` keyword. The `Distance` Function is used to
+        compute the stability of `variable <Stability.variable>` with respect to its value after its transformation
+        by `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>`.
 
     transfer_fct : function or method
         function used to transform output of weight `matrix <Stability.matrix>` prior to computing stability.
@@ -7661,7 +7715,7 @@ class Stability(ObjectiveFunction):
     def _instantiate_attributes_before_function(self, context=None):
         """Instantiate matrix
 
-        Specified matrix specified is convolved with HOLLOW_MATRIX
+        Specified matrix is convolved with HOLLOW_MATRIX
             to eliminate the diagonal (self-connections) from the calculation.
         The `Distance` Function is used for all calculations except ENERGY (which is not really a distance metric).
         If ENTROPY is specified as the metric, convert to CROSS_ENTROPY for use with the Distance Function.
@@ -7677,15 +7731,21 @@ class Stability(ObjectiveFunction):
         elif isinstance(self.matrix,ParameterState):
             pass
         else:
-            self._matrix = get_matrix(self.matrix, size, size)
+            self._matrix = _get_matrix(self.matrix, size, size)
 
-        self._hollow_matrix = get_matrix(HOLLOW_MATRIX,size, size)
+        self._hollow_matrix = _get_matrix(HOLLOW_MATRIX,size, size)
 
+        # # MODIFIED 11/12/17 OLD:
+        # if self.metric is ENTROPY:
+        #     self._metric_fct = Distance(metric=CROSS_ENTROPY)
+        # elif self.metric in DISTANCE_METRICS:
+        #     self._metric_fct = Distance(metric=self.metric)
+        # MODIFIED 11/12/17 NEW:
         if self.metric is ENTROPY:
-            self._metric_fct = Distance(metric=CROSS_ENTROPY)
-
+            self._metric_fct = Distance(metric=CROSS_ENTROPY, normalize=self.normalize)
         elif self.metric in DISTANCE_METRICS:
-            self._metric_fct = Distance(metric=self.metric)
+            self._metric_fct = Distance(metric=self.metric, normalize=self.normalize)
+        # MODIFIED 11/12/17 END
 
 
     def function(self,
@@ -7721,13 +7781,20 @@ class Stability(ObjectiveFunction):
         else:
             transformed = np.dot(matrix * self._hollow_matrix, variable)
 
-        if self.metric is ENERGY:
-            result = -np.sum(current * transformed)
-        else:
-            result = self._metric_fct.function(variable=[current,transformed], context=context)
-
-        if self.normalize:
-            result /= len(variable)
+        # # MODIFIED 11/12/15 OLD:
+        # if self.metric is ENERGY:
+        #     result = -np.sum(current * transformed)/2
+        # else:
+        #     result = self._metric_fct.function(variable=[current,transformed], context=context)
+        #
+        # if self.normalize:
+        #     if self.metric is ENERGY:
+        #         result /= len(variable)**2
+        #     else:
+        #         result /= len(variable)
+        # MODIFIED 11/12/15 NEW:
+        result = self._metric_fct.function(variable=[current,transformed], context=context)
+        # MODIFIED 11/12/15 END
 
         return result
 
@@ -7735,18 +7802,21 @@ class Stability(ObjectiveFunction):
 
 class Distance(ObjectiveFunction):
     """
-    Distance(                                  \
+    Distance(                                    \
        default_variable=ClassDefaults.variable,  \
-       metric=EUCLIDEAN                        \
-       normalize=False,                        \
-       params=None,                            \
-       owner=None,                             \
-       prefs=None                              \
+       metric=EUCLIDEAN                          \
+       normalize=False,                          \
+       params=None,                              \
+       owner=None,                               \
+       prefs=None                                \
        )
 
     .. _Distance:
 
-    Return the distance between two vectors based on a specified metric.
+    Return the distance between the vectors in the two items of `variable <Distance.variable>` using the `distance
+    metric <DistanceMetrics>` specified in the `metric <Stability.metric>` attribute.  If `normalize
+    <Distance.normalize>` is `True`, the result is normalized by the length of (number of elements in) `variable
+    <Stability.variable>`.
 
     Arguments
     ---------
@@ -7754,8 +7824,9 @@ class Distance(ObjectiveFunction):
     variable : 2d np.array with two items : Default ClassDefaults.variable
         the arrays between which the distance is calculated.
 
-    metric : keyword in DISTANCE_METRICS : Default EUCLIDEAN
-        specifies the metric used to compute the distance between the two items in `variable <Distance.variable>`.
+    metric : keyword in DistancesMetrics : Default EUCLIDEAN
+        specifies a `distance metric <DistanceMetrics>` used to compute the distance between the two items in `variable
+        <Distance.variable>`.
 
     normalize : bool : Default False
         specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
@@ -7779,11 +7850,12 @@ class Distance(ObjectiveFunction):
     variable : 2d np.array with two items
         contains the arrays between which the distance is calculated.
 
-    metric : keyword in DISTANCE_METRICS
-        specifies the metric used to compute the distance between the two items in `variable <Distance.variable>`.
+    metric : keyword in DistanceMetrics
+        determines the `metric <DistanceMetrics>` used to compute the distance between the two items in `variable
+        <Distance.variable>`.
 
     normalize : bool
-        specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
+        determines whether the distance is normalized by the length of `variable <Distance.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -7808,7 +7880,7 @@ class Distance(ObjectiveFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=ClassDefaults.variable,
-                 metric:tc.enum(PEARSON, EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY, CORRELATION, ANGLE)=DIFFERENCE,
+                 metric:DistanceMetrics._is_metric=DIFFERENCE,
                  normalize:bool=False,
                  params=None,
                  owner=None,
@@ -7845,7 +7917,11 @@ class Distance(ObjectiveFunction):
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  context=None):
-        """Calculate the distance between the two arrays in `variable <Stability.variable>`.
+        """Calculate the distance between the two vectors in `variable <Stability.variable>`.
+
+        Use the `distance metric <DistanceMetrics>` specified in `metric <Distance.metric>` to calculate the distance.
+        If `normalize <Distance.normalize>` is `True`, the result is divided by the length of `variable
+        <Distance.variable>`.
 
         Returns
         -------
@@ -7867,16 +7943,8 @@ class Distance(ObjectiveFunction):
         elif self.metric is EUCLIDEAN:
             result = np.linalg.norm(v2-v1)
 
-        # Cross-entropy of v1 and v2
-        elif self.metric is CROSS_ENTROPY:
-            # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
-            if context is not None and INITIALIZING in context:
-                v1 = np.where(v1==0, EPSILON, v1)
-                v2 = np.where(v2==0, EPSILON, v2)
-            result = -np.sum(v1*np.log(v2))
-
         # FIX: NEED SCIPY HERE
-        # # Angle (cosyne) of v1 and v2
+        # # Angle (cosine) of v1 and v2
         # elif self.metric is ANGLE:
         #     result = scipy.spatial.distance.cosine(v1,v2)
 
@@ -7888,11 +7956,27 @@ class Distance(ObjectiveFunction):
         elif self.metric is PEARSON:
             result = np.corrcoef(v1, v2)
 
+        # Cross-entropy of v1 and v2
+        elif self.metric is CROSS_ENTROPY:
+            # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
+            if context is not None and INITIALIZING in context:
+                v1 = np.where(v1==0, EPSILON, v1)
+                v2 = np.where(v2==0, EPSILON, v2)
+            result = -np.sum(v1*np.log(v2))
+
+        # Energy
+        elif self.metric is ENERGY:
+            result = -np.sum(v1*v2)/2
 
         if self.normalize:
-            # if np.sum(denom):
-            # result /= np.sum(x,y)
-            result /= len(variable[0])
+            # # MODIFIED 11/12/17 OLD:
+            # result /= len(variable[0])
+            # MODIFIED 11/12/17 NEW:
+            if self.metric is ENERGY:
+                result /= len(v1)**2
+            else:
+                result /= len(v1)
+            # MODIFIED 11/12/17 END
 
         return result
 
@@ -8458,7 +8542,7 @@ WT_MATRIX_RECEIVERS_DIM = 1
 class BackPropagation(LearningFunction):
     """
     BackPropagation(                                     \
-        default_variable=ClassDefaults.variable,           \
+        default_variable=ClassDefaults.variable,         \
         activation_derivative_fct=Logistic().derivative, \
         error_derivative_fct=Logistic().derivative,      \
         error_matrix=None,                               \

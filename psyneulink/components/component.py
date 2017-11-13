@@ -2597,7 +2597,10 @@ class Component(object):
 
     @property
     def name(self):
-        return self._name
+        try:
+            return self._name
+        except AttributeError:
+            return 'unnamed {0}'.format(self.__class__)
 
     @name.setter
     def name(self, value):
