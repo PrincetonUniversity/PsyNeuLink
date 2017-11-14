@@ -1076,7 +1076,7 @@ class Mechanism_Base(Mechanism):
                  name=None,
                  prefs=None,
                  context=None):
-        """Assign name, category-level preferences, register Mechanism, and enforce category methods
+        """Assign name, category-level preferences, and variable; register Mechanism; and enforce category methods
 
         This is an abstract class, and can only be called from a subclass;
            it must be called by the subclass with a context value
@@ -1096,69 +1096,6 @@ class Mechanism_Base(Mechanism):
         if context is None or (not isinstance(context, type(self)) and not VALIDATE in context):
             raise MechanismError("Direct call to abstract class Mechanism() is not allowed; "
                                  "use a subclass")
-
-        # TODO:
-        # this is a hack to accept input_states as a way to instantiate default_variable for this release
-        # should be cleaned ASAP in default_variable overhaul
-        default_variable_from_input_states = None
-
-        def spec_incompatible_with_default_error(spec_variable, default_variable):
-            return MechanismError(
-                'default variable determined from the specified input_states spec ({0}) '
-                'is not compatible with the specified default variable ({1})'.format(
-                    spec_variable, default_variable
-                )
-            )
-
-        # handle specifying through params dictionary
-        try:
-            default_variable_from_input_states, input_states_variable_was_specified = \
-                self._parse_arg_input_states(params[INPUT_STATES])
-        except (TypeError, KeyError):
-            pass
-
-        if default_variable_from_input_states is None:
-            # fallback to standard arg specification
-            default_variable_from_input_states, input_states_variable_was_specified = \
-                self._parse_arg_input_states(input_states)
-
-        if default_variable_from_input_states is not None:
-            if variable is None:
-                if size is None:
-                    variable = default_variable_from_input_states
-                else:
-                    if input_states_variable_was_specified:
-                        size_variable = self._handle_size(size, None)
-                        if iscompatible(size_variable, default_variable_from_input_states):
-                            variable = default_variable_from_input_states
-                        else:
-                            raise MechanismError(
-                                'default variable determined from the specified input_states spec ({0}) '
-                                'is not compatible with the default variable determined from size parameter ({1})'.
-                                    format(default_variable_from_input_states, size_variable,
-                                )
-                            )
-                    else:
-                        # do not pass input_states variable as default_variable, fall back to size specification
-                        pass
-            else:
-                compatible = iscompatible(self._parse_arg_variable(variable), default_variable_from_input_states)
-                if size is None:
-                    if input_states_variable_was_specified:
-                        if compatible:
-                            variable = default_variable_from_input_states
-                        else:
-                            raise spec_incompatible_with_default_error(default_variable_from_input_states, variable)
-                    else:
-                        pass
-                else:
-                    if input_states_variable_was_specified:
-                        if compatible:
-                            variable = default_variable_from_input_states
-                        else:
-                            raise spec_incompatible_with_default_error(default_variable_from_input_states, variable)
-                    else:
-                        pass
 
         # IMPLEMENT **kwargs (PER State)
 
@@ -1268,6 +1205,77 @@ class Mechanism_Base(Mechanism):
         self.processes = {}
         self.systems = {}
 
+
+    def _preprocess_variable(self, default_variable, size, params):
+
+        # TODO:
+        # this is a hack to accept input_states as a way to instantiate default_variable for this release
+        # should be cleaned ASAP in default_variable overhaul
+        default_variable_from_input_states = None
+
+        def spec_incompatible_with_default_error(spec_variable, local_default_variable):
+            return MechanismError(
+                'default variable determined from the specified input_states spec ({0}) '
+                'is not compatible with the specified default variable ({1})'.format(
+                    spec_variable, local_default_variable
+                )
+            )
+
+        # handle specifying through params dictionary
+        try:
+            default_variable_from_input_states, input_states_variable_was_specified = \
+                self._parse_arg_input_states(params[INPUT_STATES])
+        except (TypeError, KeyError):
+            pass
+
+        if default_variable_from_input_states is None:
+            # fallback to standard arg specification
+            default_variable_from_input_states, input_states_variable_was_specified = \
+                self._parse_arg_input_states(self.input_states)
+
+        if default_variable_from_input_states is not None:
+            if default_variable is None:
+                if size is None:
+                    default_variable = default_variable_from_input_states
+                else:
+                    if input_states_variable_was_specified:
+                        size_variable = self._handle_size(size, None)
+                        if iscompatible(size_variable, default_variable_from_input_states):
+                            variable = default_variable_from_input_states
+                        else:
+                            raise MechanismError(
+                                'default variable determined from the specified input_states spec ({0}) '
+                                'is not compatible with the default variable determined from size parameter ({1})'.
+                                    format(default_variable_from_input_states, size_variable,
+                                )
+                            )
+                    else:
+                        # do not pass input_states variable as default_variable, fall back to size specification
+                        pass
+            else:
+                compatible = iscompatible(self._parse_arg_variable(default_variable),
+                                          default_variable_from_input_states)
+                if size is None:
+                    if input_states_variable_was_specified:
+                        if compatible:
+                            variable = default_variable_from_input_states
+                        else:
+                            raise spec_incompatible_with_default_error(default_variable_from_input_states,
+                                                                       default_variable)
+                    else:
+                        pass
+                else:
+                    if input_states_variable_was_specified:
+                        if compatible:
+                            variable = default_variable_from_input_states
+                        else:
+                            raise spec_incompatible_with_default_error(default_variable_from_input_states,
+                                                                       default_variable)
+                    else:
+                        pass
+
+        return default_variable, params
+
     def _parse_arg_variable(self, variable):
         '''
         Takes user-inputted argument **variable** and returns an instance_defaults.variable-like
@@ -1311,38 +1319,38 @@ class Mechanism_Base(Mechanism):
 
         if not isinstance(input_states, Iterable):
             input_states = [input_states]
-        else:
-            for s in input_states:
-                parsed_spec = _parse_state_spec(owner=self, state_type=InputState, state_spec=s)
 
-                if isinstance(parsed_spec, dict):
+        for s in input_states:
+            parsed_spec = _parse_state_spec(owner=self, state_type=InputState, state_spec=s)
+
+            if isinstance(parsed_spec, dict):
+                try:
+                    variable = parsed_spec[VARIABLE]
+                except KeyError:
+                    pass
+            elif isinstance(parsed_spec, (Projection, Mechanism, State)):
+                if parsed_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                    args = parsed_spec.init_args
+                    if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
+                        variable = args[REFERENCE_VALUE]
+                    elif VALUE in args and args[VALUE] is not None:
+                        variable = args[VALUE]
+                    elif VARIABLE in args and args[VARIABLE] is not None:
+                        variable = args[VARIABLE]
+                else:
                     try:
-                        variable = parsed_spec[VARIABLE]
-                    except KeyError:
-                        pass
-                elif isinstance(parsed_spec, (Projection, Mechanism, State)):
-                    if parsed_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                        args = parsed_spec.init_args
-                        if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
-                            variable = args[REFERENCE_VALUE]
-                        elif VALUE in args and args[VALUE] is not None:
-                            variable = args[VALUE]
-                        elif VARIABLE in args and args[VARIABLE] is not None:
-                            variable = args[VARIABLE]
-                    else:
-                        try:
-                            variable = parsed_spec.value
-                        except AttributeError:
-                            variable = parsed_spec.instance_defaults.variable
-                else:
-                    variable = parsed_spec.instance_defaults.variable
+                        variable = parsed_spec.value
+                    except AttributeError:
+                        variable = parsed_spec.instance_defaults.variable
+            else:
+                variable = parsed_spec.instance_defaults.variable
 
-                if variable is None:
-                    variable = InputState.ClassDefaults.variable
-                else:
-                    variable_was_specified = True
+            if variable is None:
+                variable = InputState.ClassDefaults.variable
+            else:
+                variable_was_specified = True
 
-                default_variable_from_input_states.append(variable)
+            default_variable_from_input_states.append(variable)
 
         return default_variable_from_input_states, variable_was_specified
 
