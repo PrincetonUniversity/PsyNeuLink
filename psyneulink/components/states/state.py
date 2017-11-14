@@ -361,7 +361,9 @@ automatically creates an InputState, ParameterStates for its parameters, includi
     print(my_mech.output_states)
     > [(OutputState RESULT)]
 
-**input_states** *argument of Mechanism constructor.*   When States are specified explicitly, it is usually in an
+*Using the* **input_states** *argument of Mechanism constructor.*
+
+When States are specified explicitly, it is usually in an
 argument of the constructor for the Mechanism to which they belong.  For example, the following specifies that
 ``my_mech`` should have an InputState named 'MY INPUT`::
 
@@ -403,7 +405,9 @@ attribute (note the singular).
 
 .. _State_Multiple_InputSates_Example:
 
-*Multiple InputStates.* The **input_states** argument can also be used to create more than one InputState::
+*Multiple InputStates*
+
+The **input_states** argument can also be used to create more than one InputState::
 
     my_mech = pnl.TransferMechanism(input_states=['MY FIRST INPUT', 'MY SECOND INPUT'])
     print(my_mech.input_states)
@@ -422,7 +426,9 @@ than one InputState.  OutputStates can be specified in a similar way, using the 
 
 .. _State_Standard_OutputSates_Example:
 
-*OutputStates.*  The following example specifies two OutputStates for ``my_mech``, using its `Standard OutputStates
+*OutputStates*
+
+The following example specifies two OutputStates for ``my_mech``, using its `Standard OutputStates
 <OutputState_Standard>`::
 
     my_mech = pnl.TransferMechanism(output_states=['RESULT', 'MEAN'])
@@ -441,7 +447,9 @@ is created.
 
 .. _State_Specification_Dictionary_Example:
 
-*State specification dictionary.* States can be specified in greater detail using a `State specification dictionary
+*State specification dictionary*
+
+States can be specified in greater detail using a `State specification dictionary
 <State_Specification_Dictionary>`. In the example below, this is used to specify the variable and name of an
 InputState::
 
@@ -455,7 +463,9 @@ the *STATE_TYPE* entry must be included.
 
 .. State_Projections_Examples:
 
-*Projections*.   A State specification dictionary can also be used to specify projections to or from the State, also in
+*Projections*
+
+A State specification dictionary can also be used to specify projections to or from the State, also in
 a number of different ways.  The most straightforward is to include them in a *PROJECTIONS* entry.  For example, the
 following specifies that the InputState of ``my_mech`` receive two Projections,  one from ``source_mech_1`` and another
 from ``source_mech_2``, and that its OutputState send one to ``destination_mech``::
@@ -537,49 +547,16 @@ example (sans the custom name; though as the printout below shows, the default n
     > MY DDM threshold ControlSignal
     >    MY DDM: (ParameterState threshold)
 
-
-COMMENT:
-
 .. _State_MECHANISM_STATES_Examples:
 
-*MECHANISM and STATES entries*.  XXX EXAMPLES HERE
-
-creates a `GatingSignal` with
-`GatingProjections <GatingProjection>` to ``mech_B`` and ``mech_C``, and assigns it to ``my_gating_mech``::
-
-    my_gating_signal = pnl.GatingSignal(projections=[mech_B, mech_C])
-    my_gating_mech = GatingMechanism(gating_signals=[my_gating_signal]
-
-The `GatingMechanism` created will gate the `primary InputStates <InputState_Primary>` of ``mech_B`` and ``mech_C``.
-
-The following creates
-
-   def test_multiple_modulatory_projections_with_mech_and_state_name_specs(self):
-
-        M = pnl.DDM(name='MY DDM')
-        C = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: M,
-                                                   pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
-        G = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM: M,
-                                                 pnl.OUTPUT_STATES: [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME]}])
-
-
-        M = pnl.DDM(name='MY DDM')
-        C = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[M.parameter_states[pnl.DRIFT_RATE],
-                                                                       M.parameter_states[pnl.THRESHOLD]]}])
-        G = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[M.output_states[pnl.DECISION_VARIABLE],
-                                                                    M.output_states[pnl.RESPONSE_TIME]]}])
-
-COMMENT
-
-COMMENT:
+*MECHANISM and STATES entries*
 
 - Specification dictionary
     - PROJECTIONS: ModulatoryProjections; ModulatorySignals as types of OutputStates
     - <str>:[projections]
     - MECHANISM/INPUT_STATES
 
-
-- Create InputState and then assign it
+*Create and Then Assign a State*
 
 The following creates an InputState ``my_input_state`` with a `MappingProjection` to it from the
 `primary OutputState <OutputState_Primary>` of ``mech_A`` and assigns it to ``mech_B``::
@@ -622,10 +599,34 @@ The following creates an InputState ``my_input_state`` with a `MappingProjection
                 assert projection.sender.owner is R1
 
 
-----------------------
 
-    *** EXAMPLE: MODULATORY PROJECTION SPECIFICATION
 
+COMMENT:
+
+creates a `GatingSignal` with
+`GatingProjections <GatingProjection>` to ``mech_B`` and ``mech_C``, and assigns it to ``my_gating_mech``::
+
+    my_gating_signal = pnl.GatingSignal(projections=[mech_B, mech_C])
+    my_gating_mech = GatingMechanism(gating_signals=[my_gating_signal]
+
+The `GatingMechanism` created will gate the `primary InputStates <InputState_Primary>` of ``mech_B`` and ``mech_C``.
+
+The following creates
+
+   def test_multiple_modulatory_projections_with_mech_and_state_name_specs(self):
+
+        M = pnl.DDM(name='MY DDM')
+        C = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: M,
+                                                   pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
+        G = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM: M,
+                                                 pnl.OUTPUT_STATES: [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME]}])
+
+
+        M = pnl.DDM(name='MY DDM')
+        C = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[M.parameter_states[pnl.DRIFT_RATE],
+                                                                       M.parameter_states[pnl.THRESHOLD]]}])
+        G = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[M.output_states[pnl.DECISION_VARIABLE],
+                                                                    M.output_states[pnl.RESPONSE_TIME]]}])
 
 COMMENT
 
