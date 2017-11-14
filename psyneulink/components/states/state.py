@@ -140,15 +140,19 @@ A State can be specified using any of the following:
           the list must contain a one or more `Projection specifications <Projection_In_Context_Specification>`
           to or from the State, and/or `ModulatorySignals <ModulatorySignal>` from which it should receive projections
           (see `State_Projections` below).
-      ..
+
+      .. _State_State_Name_Entry:
+
       * *<str>*:List[<`projection specification <Projection_In_Context_Specification>`>,...]
-          this must be the only entry in the dictionary, and the string cannot be a PsyNeuLink keyword;  it is used as
-          the name of the State, and the list must contain one or more `Projection specifications
-          <Projection_In_Context_Specification>`.
-      ..
+          this must be the only entry in the dictionary, and the string cannot be a PsyNeuLink
+          keyword;  it is used as the name of the State, and the list must contain one or more `Projection
+          specifications <Projection_In_Context_Specification>`.
+
+      .. _State_MECHANISM_STATES_Entries:
+
       * *MECHANISM*:Mechanism
-          this can be used to specify a Projection to or from the specified Mechanism.  If the entry appears without
-          any accompanying state specification entries (see below), the Projection is assumed to be a
+          this can be used to specify one or more Projections to or from the specified Mechanism.  If the entry appears
+          without any accompanying State specification entries (see below), the Projection is assumed to be a
           `MappingProjection` to the Mechanism's `primary InputState <InputState_Primary>` or from its `primary
           OutputState <OutputState_Primary>`, depending upon the type of Mechanism and context of specification.  It
           can also be accompanied by one or more State specification entries described below, to create one or more
@@ -361,7 +365,9 @@ automatically creates an InputState, ParameterStates for its parameters, includi
     print(my_mech.output_states)
     > [(OutputState RESULT)]
 
-**input_states** *argument of Mechanism constructor.*   When States are specified explicitly, it is usually in an
+*Using the* **input_states** *argument of Mechanism constructor.*
+
+When States are specified explicitly, it is usually in an
 argument of the constructor for the Mechanism to which they belong.  For example, the following specifies that
 ``my_mech`` should have an InputState named 'MY INPUT`::
 
@@ -403,7 +409,9 @@ attribute (note the singular).
 
 .. _State_Multiple_InputSates_Example:
 
-*Multiple InputStates.* The **input_states** argument can also be used to create more than one InputState::
+*Multiple InputStates*
+
+The **input_states** argument can also be used to create more than one InputState::
 
     my_mech = pnl.TransferMechanism(input_states=['MY FIRST INPUT', 'MY SECOND INPUT'])
     print(my_mech.input_states)
@@ -422,7 +430,9 @@ than one InputState.  OutputStates can be specified in a similar way, using the 
 
 .. _State_Standard_OutputSates_Example:
 
-*OutputStates.*  The following example specifies two OutputStates for ``my_mech``, using its `Standard OutputStates
+*OutputStates*
+
+The following example specifies two OutputStates for ``my_mech``, using its `Standard OutputStates
 <OutputState_Standard>`::
 
     my_mech = pnl.TransferMechanism(output_states=['RESULT', 'MEAN'])
@@ -441,7 +451,9 @@ is created.
 
 .. _State_Specification_Dictionary_Example:
 
-*State specification dictionary.* States can be specified in greater detail using a `State specification dictionary
+*State specification dictionary*
+
+States can be specified in greater detail using a `State specification dictionary
 <State_Specification_Dictionary>`. In the example below, this is used to specify the variable and name of an
 InputState::
 
@@ -449,13 +461,16 @@ InputState::
                                                    NAME: 'MY INPUT',
                                                    VARIABLE: [0,0]})
 
-The *STATE_TYPE* entry is included here for completeness, but in this case it is not necessary since the State's type
-is clearly determined by the context of the specification (an **input_states** argument);  where it is not clear, then
-the *STATE_TYPE* entry must be included.
+The *STATE_TYPE* entry is included here for completeness, but is not actually needed when the State specification
+dicationary is used in **input_states** or **output_states** argument of a Mechanism, since the State's type
+is clearly determined by the context of the specification;  however, where that is not clear, then the *STATE_TYPE*
+entry must be included.
 
-.. State_Projections_Examples:
+.. _State_Projections_Examples:
 
-*Projections*.   A State specification dictionary can also be used to specify projections to or from the State, also in
+*Projections*
+
+A State specification dictionary can also be used to specify projections to or from the State, also in
 a number of different ways.  The most straightforward is to include them in a *PROJECTIONS* entry.  For example, the
 following specifies that the InputState of ``my_mech`` receive two Projections,  one from ``source_mech_1`` and another
 from ``source_mech_2``, and that its OutputState send one to ``destination_mech``::
@@ -478,6 +493,7 @@ from ``source_mech_2``, and that its OutputState send one to ``destination_mech`
         print(projection.name)
     > MappingProjection from MY_MECH[RESULT] to DEST[InputState]
 
+
 A *PROJECTIONS* entry can contain any of the forms used to `specify a Projection <Projection_In_Context_Specification>`.
 Here, Mechanisms are used, which creates Projections from the `primary InputState <InputState_Primary>` of
 ``source_mech``, and to the `primary OutputState <OutputState_Primary>` of ``destination_mech``.  Note that
@@ -490,6 +506,8 @@ specifies that the InputState of ``my_mech`` should receive a `GatingProjection`
                                     input_states=[{pnl.NAME: 'MY INPUT',
                                                    pnl.PROJECTIONS:[my_gating_mech]}])
 
+
+.. _State_Control_Projections_Examples:
 
 Conversely, ModulatoryProjections can also be specified from a Mechanism to one or more States that it modulates.  In
 the following example, a `ControlMechanism` is created that sends `ControlProjections <ControlProjection>` to the
@@ -524,7 +542,7 @@ specifying them in separate itesm of the **control_signals** argument::
     > THRESHOLD RATE CONTROL SIGNAL
     >     MY DDM: (ParameterState threshold)
 
-Specifying Projections in a State specification dictionary affords flexiblity -- for example, naming the State
+Specifying Projections in a State specification dictionary affords flexibility -- for example, naming the State
 and/or specifying other attributes.  However, if this is not necessary, the Projections can be used to specify
 States directly.  For example, the following, which is much simpler, produces the same result as the previous
 example (sans the custom name; though as the printout below shows, the default names are usually pretty clear)::
@@ -537,57 +555,67 @@ example (sans the custom name; though as the printout below shows, the default n
     > MY DDM threshold ControlSignal
     >    MY DDM: (ParameterState threshold)
 
+.. _State_State_Name_Entry_Example:
 
-COMMENT:
+*Convenience formats*
 
-.. _State_MECHANISM_STATES_Examples:
+There are two convenience formats for specifying States and their Projections in a State specification
+dictionary.  The `first <State_State_Name_Entry>` is to use the name of the State as the key for its entry,
+and then a list of , as in the following example::
 
-*MECHANISM and STATES entries*.  XXX EXAMPLES HERE
+    source_mech_1 = pnl.TransferMechanism()
+    source_mech_2 = pnl.TransferMechanism()
+    destination_mech = pnl.TransferMechanism()
+    my_mech_C = pnl.TransferMechanism(input_states=[{'MY INPUT':[source_mech_1, source_mech_2]}],
+                                      output_states=[{'RESULT':[destination_mech]}])
 
-creates a `GatingSignal` with
-`GatingProjections <GatingProjection>` to ``mech_B`` and ``mech_C``, and assigns it to ``my_gating_mech``::
+This produces the same result as the first example under `State specification dictionary <State_Projections_Examples>`
+above, but it is simpler and easier to read.
 
-    my_gating_signal = pnl.GatingSignal(projections=[mech_B, mech_C])
-    my_gating_mech = GatingMechanism(gating_signals=[my_gating_signal]
+The second convenience format is used to specify one or more Projections to/from the States of a single Mechanism
+by their name.  It uses the keyword *MECHANISM* to specify the Mechanism, coupled with a State-specific entry to
+specify Projections to its States.  This can be useful when a Mechanism must send Projections to several States
+of another Mechanism, such as a ControlMechanism that sends ControlProjections to several parameters of a
+given Mechanism, as in the following example::
 
-The `GatingMechanism` created will gate the `primary InputStates <InputState_Primary>` of ``mech_B`` and ``mech_C``.
+    my_mech = pnl.DDM(name='MY DDM')
+    my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: my_mech,
+                                                         pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
 
-The following creates
-
-   def test_multiple_modulatory_projections_with_mech_and_state_name_specs(self):
-
-        M = pnl.DDM(name='MY DDM')
-        C = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: M,
-                                                   pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
-        G = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM: M,
-                                                 pnl.OUTPUT_STATES: [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME]}])
-
-
-        M = pnl.DDM(name='MY DDM')
-        C = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[M.parameter_states[pnl.DRIFT_RATE],
-                                                                       M.parameter_states[pnl.THRESHOLD]]}])
-        G = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[M.output_states[pnl.DECISION_VARIABLE],
-                                                                    M.output_states[pnl.RESPONSE_TIME]]}])
-
-COMMENT
-
-COMMENT:
-
-- Specification dictionary
-    - PROJECTIONS: ModulatoryProjections; ModulatorySignals as types of OutputStates
-    - <str>:[projections]
-    - MECHANISM/INPUT_STATES
+This produces the same result as the `earlier example <State_Control_Projections_Examples>` of ControlProjections,
+once again in a simpler and easier to read form.  However, it be used only to specify Projections for a State to or
+from the States of a single Mechanism;  Projections involving other Mechanisms must be assigned to other States.
 
 
-- Create InputState and then assign it
+*Create and Then Assign a State*
 
+Finally, a State can be created directly using its constructor, and then assigned to a Mechanism.
 The following creates an InputState ``my_input_state`` with a `MappingProjection` to it from the
 `primary OutputState <OutputState_Primary>` of ``mech_A`` and assigns it to ``mech_B``::
 
-    mech_A = TransferMechanism()
-    my_input_state = InputState(projections=[mech_A])
-    mech_B = TransferMechanism(input_states=[my_input_state])
+    mech_A = pnl.TransferMechanism()
+    my_input_state = pnl.InputState(projections=[mech_A])
+    mech_B = pnl.TransferMechanism(input_states=[my_input_state])
 
+The InputState ``my_input_state`` could also have been assigned to ``mech_B`` in one of two other ways:
+by explicity adding it using ``mech_B``\\'s `add_states <Mechanism_Base.add_states>` method::
+
+    mech_A = pnl.TransferMechanism()
+    my_input_state = pnl.InputState(projections=[mech_A])
+    mech_B = pnl.TransferMechanism()
+    mech_B.add_states([my_input_state])
+
+or by constructing it after ``mech_B`` and assigning ``mech_B`` as its owner::
+
+    mech_A = pnl.TransferMechanism()
+    mech_B = pnl.TransferMechanism()
+    my_input_state = pnl.InputState(owner=mech_B,
+                                    projections=[mech_A])
+
+COMMENT:
+
+** DOCUMENT .projections ATTRIBUTE UNDER Projections ABOVE
+-----------------------------------------
 
     def test_mapping_projection_with_mech_and_state_name_specs(self):
          R1 = pnl.TransferMechanism(output_states=['OUTPUT_1', 'OUTPUT_2'])
@@ -621,11 +649,30 @@ The following creates an InputState ``my_input_state`` with a `MappingProjection
             for projection in input_state.path_afferents:
                 assert projection.sender.owner is R1
 
+creates a `GatingSignal` with
+`GatingProjections <GatingProjection>` to ``mech_B`` and ``mech_C``, and assigns it to ``my_gating_mech``::
 
-----------------------
+    my_gating_signal = pnl.GatingSignal(projections=[mech_B, mech_C])
+    my_gating_mech = GatingMechanism(gating_signals=[my_gating_signal]
 
-    *** EXAMPLE: MODULATORY PROJECTION SPECIFICATION
+The `GatingMechanism` created will gate the `primary InputStates <InputState_Primary>` of ``mech_B`` and ``mech_C``.
 
+The following creates
+
+   def test_multiple_modulatory_projections_with_mech_and_state_name_specs(self):
+
+        M = pnl.DDM(name='MY DDM')
+        C = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: M,
+                                                   pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
+        G = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM: M,
+                                                 pnl.OUTPUT_STATES: [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME]}])
+
+
+        M = pnl.DDM(name='MY DDM')
+        C = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[M.parameter_states[pnl.DRIFT_RATE],
+                                                                       M.parameter_states[pnl.THRESHOLD]]}])
+        G = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[M.output_states[pnl.DECISION_VARIABLE],
+                                                                    M.output_states[pnl.RESPONSE_TIME]]}])
 
 COMMENT
 
@@ -1299,19 +1346,6 @@ class State_Base(State):
         projection_list = projections
         if not isinstance(projection_list, list):
             projection_list = [projection_list]
-
-
-        # # FIX: 10/3/17 - FOR DEBUGGING:
-        # projection_list[0] = OutputState
-        # projection_list[0] = projection_list[0].sender.owner
-        # projection_list[0] = 'LEARNING'
-        # projection_list[0] = LearningSignal
-        # projection_list[0] = LearningProjection
-        # # FIX: RE-RERUN THE FOLLOWING LINE AT SOME POINT TO CLEAN UP ERROR MESSAGE IT GENERATES
-        # projection_list[0] = projection_list[0].receiver
-        # projection_list[0] = 3
-        # # FIX: ------------------------
-
 
         # Parse each Projection specification in projection_list using self as connectee_state:
         # - calls _parse_projection_spec for each projection_spec in list
@@ -2506,7 +2540,7 @@ def _parse_state_spec(state_type=None,
             else:
                 state_owner = state_specification.owner
             if owner is not None and state_owner is not None and not state_owner is owner:
-                raise StateError("Attempt to assign a {} to {} ({}) that belongs to another {} ({})".
+                raise StateError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
                                  format(State.__name__, owner.name, state_specification.name,
                                         Mechanism.__name__,state_owner.name))
             return state_specification

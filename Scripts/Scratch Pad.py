@@ -419,7 +419,7 @@ T = pnl.TransferMechanism(input_states=[{pnl.VARIABLE: [0, 0, 0], pnl.PROJECTION
 p = pnl.MappingProjection()
 T = pnl.TransferMechanism(default_variable=[0, 0], input_states=[p])
 
-
+# FIX: ADD AS TEST:
 m = pnl.TransferMechanism()
 i = pnl.InputState(variable=[0,0])
 m.add_states([i])
@@ -484,8 +484,6 @@ my_mech = pnl.TransferMechanism(name='MY_MECH',
                                                pnl.PROJECTIONS:[my_gating_mech]}])
 
 
-
-
 my_mech = pnl.DDM(name='MY DDM')
 my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.NAME: 'MY DDM DRIFT RATE AND THREHOLD CONTROL SIGNAL',
                                                      pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE],
@@ -529,6 +527,56 @@ for control_signal in my_ctl_mech.control_signals:
 # my_mech = pnl.DDM(name='MY DDM')
 # my_control_mech = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: my_mech,
 #                                                          pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
+# m = pnl.TransferMechanism(default_variable=[0, 0, 0])
+# i = pnl.InputState(owner=m, variable=[0, 0, 0])
+# T = pnl.TransferMechanism(input_states=[i])
+
+# my_mech_A = pnl.TransferMechanism()
+# my_mech_B = pnl.TransferMechanism()
+# FIX: THROWING ERRORS - CAN'T HANDLE DICT IN PLACE OF LIST
+# my_mech_C = pnl.TransferMechanism(input_states={'MY STATE':[my_mech_A]})
+# FIX: PROPERLY THROWING ERRORS (SETS INSTEAD OF LISTS) -- MAKE ERROR MESSAGE CLEARER
+# my_mech_C = pnl.TransferMechanism(input_states=[{'MY STATE':{my_mech_A, my_mech_B}}])
+# my_mech_C = pnl.TransferMechanism(input_states=[{'MY STATE':[my_mech_A, my_mech_B]}])
+# my_mech_C = pnl.TransferMechanism(input_states=[{'MY STATE A':{my_mech_A},
+#                                                  'MY STATE B':{my_mech_B}}])
+
+
+source_mech_1 = pnl.TransferMechanism()
+source_mech_2 = pnl.TransferMechanism()
+destination_mech = pnl.TransferMechanism()
+my_mech_C = pnl.TransferMechanism(input_states=[{'MY INPUT':[source_mech_1, source_mech_2]}],
+                                  output_states=[{'RESULT':[destination_mech]}])
+
+# FIX: CORRECTLY GENERATES ERROR - ADD AS TEST
+# source_mech_1 = pnl.TransferMechanism()
+# source_mech_2 = pnl.TransferMechanism()
+# destination_mech = pnl.TransferMechanism()
+# my_mech_C = pnl.TransferMechanism(input_states=[{'MY INPUT 1':[source_mech_1],
+#                                                  'MY INPUT 2':[source_mech_2]}])
+# Error message:
+# 'There is more than one entry of the InputState specification dictionary for TransferMechanism-17 (MY INPUT 2, MY INPUT 1) that is not a keyword; there should be only one (used to name the State, with a list of Projection specifications'
+
+# my_mech = pnl.DDM(name='MY DDM')
+# my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: my_mech,
+#                                                      pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
+
+# # FIX: ADD THIS AS TEST
+# mech_A = pnl.TransferMechanism()
+# my_input_state = pnl.InputState(projections=[mech_A])
+# mech_B = pnl.TransferMechanism(input_states=[my_input_state])
+
+# # FIX: ADD THIS AS TEST INCLUDING ASSERTION OF PROJECTION
+# mech_A = pnl.TransferMechanism()
+# my_input_state = pnl.InputState(projections=[mech_A])
+# mech_B = pnl.TransferMechanism()
+# mech_B.add_states([my_input_state])
+
+# # FIX: ADD THIS AS TEST INCLUDING ASSERTION OF PROJECTION
+mech_A = pnl.TransferMechanism()
+mech_B = pnl.TransferMechanism()
+my_input_state = pnl.InputState(owner=mech_B,
+                                projections=[mech_A])
 
 m = pnl.TransferMechanism(default_variable=[0, 0, 0])
 i = pnl.InputState(owner=m, variable=[0, 0, 0])

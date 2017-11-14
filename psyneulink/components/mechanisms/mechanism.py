@@ -1345,10 +1345,13 @@ class Mechanism_Base(Mechanism):
             else:
                 variable = parsed_spec.instance_defaults.variable
 
-            if variable is None:
-                variable = InputState.ClassDefaults.variable
-            else:
-                variable_was_specified = True
+            try:
+                if variable is None:
+                    variable = InputState.ClassDefaults.variable
+                else:
+                    variable_was_specified = True
+            except UnboundLocalError:
+                   variable = InputState.ClassDefaults.variable
 
             default_variable_from_input_states.append(variable)
 
@@ -2294,12 +2297,12 @@ class Mechanism_Base(Mechanism):
                 old_variable.extend(added_variable)
                 self.instance_defaults.variable = np.array(old_variable)
                 self._update_variable(self.instance_defaults.variable)
-                instantiated_input_states = _instantiate_input_states(self,
-                                                                      input_states,
-                                                                      added_variable,
-                                                                      context=context)
-                for state in instantiated_input_states:
-                    if state.name is state.componentName or state.componentName + '-' in state.name:
+            instantiated_input_states = _instantiate_input_states(self,
+                                                                  input_states,
+                                                                  added_variable,
+                                                                  context=context)
+            for state in instantiated_input_states:
+                if state.name is state.componentName or state.componentName + '-' in state.name:
                         state._assign_default_name(context=context)
         if output_states:
             instantiated_output_states = _instantiate_output_states(self, output_states, context=context)
