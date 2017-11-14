@@ -66,49 +66,201 @@ the `scope of execution <Run_Scope_of_Execution>`. These are specified in the **
 Inputs are specified in a Python dictionary where the keys are `ORIGIN` Mechanisms, and the values are lists in which
 the i-th element represents the input value to the mechanism on trial i. Each input value must be compatible with the
 shape of the mechanism's variable. This means that the inputs to an origin mechanism are usually specified by a
-list of 2d lists/arrays, though some short cuts are allowed (see examples below for details on short cuts).
+list of 2d lists/arrays, though `some shorthand notations are allowed <Input_Specification_Examples>`.
+
+::
+
+        import psyneulink as pnl
+
+        a = pnl.TransferMechanism(name='a',
+                                  default_variable=[[0.0, 0.0]])
+        b = pnl.TransferMechanism(name='b',
+                                  default_variable=[[0.0], [0.0]])
+        c = pnl.TransferMechanism(name='c')
+
+        p1 = pnl.Process(pathway=[a, c],
+                         name='p1')
+        p2 = pnl.Process(pathway=[b, c],
+                         name='p2')
+
+        s = pnl.System(processes=[p1, p2])
+
+        input_dictionary = {a: [[[1.0, 1.0]], [[1.0, 1.0]]],
+                            b: [[[2.0], [3.0]], [[2.0], [3.0]]]}
+
+        s.run(inputs=input_dictionary)
+
+.. _Run_Inputs_Fig:
+
+.. figure:: _static/input_spec_variables.svg
+   :alt: Example input specifications with variable
+
 
 .. note::
     Keep in mind that a mechanism's variable is the concatenation of its input states. In other words, a fully specified
     mechanism variable is a 2d list/array in which the i-th element is the variable of the mechanism's i-th input state.
-    Because of this relationship between a mechanism's variable and its input states, it is equally valid to think about
-    the input specification for a given origin mechanism as a nested list of values for each input state on each trial.
+    Because of this `relationship between a mechanism's variable and its input states <Mechanism_Figure>`, it is also
+    valid to think about the input specification for a given origin mechanism as a nested list of values for each input
+    state on each trial.
 
-If num_trials is not in use, the number of input values provided determines the number of trials in the run.
-For example, if five inputs are provided for each origin mechanism, and num_trials is not specified, the system will
-execute five times.
+    .. _Run_Inputs_Fig_States:
 
-If num_trials is in use, the input values will be iterated over until num_trials is reached. For example, if five inputs
-are provided for each origin mechanism, and num_trials = 7, the system will execute seven times. The first two
+    .. figure:: _static/input_spec_states.svg
+       :alt: Example input specifications with input states
+
+The number of inputs specified **must** be the same for all origin mechanisms in the system. In other words, all of the
+values in the input dictionary must have the same length.
+
+If num_trials is not in use, the number of inputs provided determines the number of trials in the run. For example, if
+five inputs are provided for each origin mechanism, and num_trials is not specified, the system will execute five times.
+
++----------------------+-------+------+------+------+------+
+| Trial #              |1      |2     |3     |4     |5     |
++----------------------+-------+------+------+------+------+
+| Input to Mechanism a |1.0    |2.0   |3.0   |4.0   |5.0   |
++----------------------+-------+------+------+------+------+
+
+::
+
+        import psyneulink as pnl
+
+        a = pnl.TransferMechanism(name='a')
+        b = pnl.TransferMechanism(name='b')
+
+        p1 = pnl.Process(pathway=[a, b])
+
+        s = pnl.System(processes=[p1])
+
+        input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+
+        s.run(inputs=input_dictionary)
+
+If num_trials is in use, `run` will iterate over the inputs until num_trials is reached. For example, if five inputs
+are provided for each `ORIGIN` mechanism, and num_trials = 7, the system will execute seven times. The first two
 items in the list of inputs will be used on the 6th and 7th trials, respectively.
 
-In all cases, number of input values specified **must** be the same for all origin mechanisms in the system.
++----------------------+-------+------+------+------+------+------+------+
+| Trial #              |1      |2     |3     |4     |5     |6     |7     |
++----------------------+-------+------+------+------+------+------+------+
+| Input to Mechanism a |1.0    |2.0   |3.0   |4.0   |5.0   |1.0   |2.0   |
++----------------------+-------+------+------+------+------+------+------+
 
-For convenience, several condensed versions of the input specification described above are also accepted in situations
-where:
-    * an origin mechanism has only one input state
+::
 
-    * only one trial of inputs is specified
+        import psyneulink as pnl
 
-The examples below look at several cases in which there are multiple correct ways to specify the inputs to a System.
+        a = pnl.TransferMechanism(name='a')
+        b = pnl.TransferMechanism(name='b')
 
+        p1 = pnl.Process(pathway=[a, b])
+
+        s = pnl.System(processes=[p1])
+
+        input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+
+        s.run(inputs=input_dictionary,
+              num_trials=7)
 
 .. _Input_Specification_Examples:
 
-Input Specification Examples
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+For convenience, condensed versions of the input specification described above are also accepted in the following
+situations:
 
-* **Case 1: Origin mechanism has only one input state**::
-    Problem description here
+* **Case 1: Origin mechanism has only one input state**
++--------------------------+-------+------+------+------+------+
+| Trial #                  |1      |2     |3     |4     |5     |
++--------------------------+-------+------+------+------+------+
+| Input to **Mechanism a** |1.0    |2.0   |3.0   |4.0   |5.0   |
++--------------------------+-------+------+------+------+------+
+
+Complete input specification:
+
+::
+
+        import psyneulink as pnl
+
+        a = pnl.TransferMechanism(name='a')
+        b = pnl.TransferMechanism(name='b')
+
+        p1 = pnl.Process(pathway=[a, b])
+
+        s = pnl.System(processes=[p1])
+
+        input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+
+        s.run(inputs=input_dictionary)
 ..
 
-* **Case 2: System should run for only one trial**::
-    Problem description here
+Shorthand - drop the outer list on each input because **Mechanism a** only has one input state:
+
+::
+
+        input_dictionary = {a: [[1.0], [2.0], [3.0], [4.0], [5.0]]}
+
+        s.run(inputs=input_dictionary)
 ..
 
-* **Case 3: System should repeat a short pattern of inputs for many trials**::
-    Problem description here
+Shorthand - drop the remaining list on each input because **Mechanism a**'s variable is length 1:
+
+::
+
+        input_dictionary = {a: [1.0, 2.0, 3.0, 4.0, 5.0]}
+
+        s.run(inputs=input_dictionary)
 ..
+
+* **Case 2: Only one input is provided for the mechanism**
+
++--------------------------+--------------+
+| Trial #                  |1             |
++--------------------------+--------------+
+| Input to **Mechanism a** |[1.0, 2.0]    |
++--------------------------+--------------+
+
+Complete input specification:
+
+::
+
+        import psyneulink as pnl
+
+        a = pnl.TransferMechanism(name='a',
+                                  default_variable=[0.0,0.0])
+        b = pnl.TransferMechanism(name='b')
+
+        p1 = pnl.Process(pathway=[a, b])
+
+        s = pnl.System(processes=[p1])
+
+        input_dictionary = {a: [[[1.0], [2.0]]]}
+
+        s.run(inputs=input_dictionary)
+..
+
+Shorthand - drop the outer list on **Mechanism a** because there is only one trial:
+
+::
+
+        input_dictionary = {a: [[1.0], [2.0]]}
+
+        s.run(inputs=input_dictionary)
+..
+
+Shorthand - drop the outer list on **Mechanism a** because the same input should be used on all trials:
+
++--------------------------+--------------+--------------+--------------+--------------+--------------+
+| Trial #                  |1             |2             |3             |4             |5             |
++--------------------------+--------------+--------------+--------------+--------------+--------------+
+| Input to **Mechanism a** |[1.0, 2.0]    |[1.0, 2.0]    |[1.0, 2.0]    |[1.0, 2.0]    |[1.0, 2.0]    |
++--------------------------+--------------+--------------+--------------+--------------+--------------+
+
+::
+
+        input_dictionary = {a: [[1.0], [2.0]]}
+
+        s.run(inputs=input_dictionary,
+              num_trials=5)
+..
+
 
 .. _Run_Initial_Values:
 
