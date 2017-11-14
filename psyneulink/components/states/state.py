@@ -257,8 +257,8 @@ assigned to the specified Mechanism).  If the **owner** argument is not specifie
 `deferred <State_Deferred_Initialization>` until it has been assigned to an owner using the owner's `add_states
 <Mechanism_Base.add_states>` method.
 
-Afferent and Efferent Projections
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Projections
+~~~~~~~~~~~
 
 Every State has attributes that lists the `Projections <Projection>` it sends and/or receives.  These depend on the
 type of State, listed below (and shown in the `table <State_Projections_Table>`):
@@ -273,6 +273,9 @@ type of State, listed below (and shown in the `table <State_Projections_Table>`)
    `mod_afferents <State_Base.mod_afferents>`   `ModulatoryProjections <ModulatoryProjection>` to any State
    `efferents <State_Base.efferents>`           `MappingProjections <MappingProjection>` from `OutputState`
    ============================================ ============================================================
+
+In addition to these attributes, all of the Projections sent and received by a State are listed in its `projections
+<State_Base.projections>` attribute.
 
 
 Variable, Function and Value
@@ -910,6 +913,9 @@ class State_Base(State):
     mod_afferents : Optional[List[GatingProjection]]
         list of all `ModulatoryProjections <ModulatoryProjection>` received by the State.
 
+    projections : List[Projection]
+        list of all of the `Projections <Projection>` sent or received by the State.
+
     efferents : Optional[List[Projection]]
         list of outgoing Projections from the State (i.e., for which is a `sender <Projection.sender>`;
         note:  only `OutputStates <OutputState>`, and members of its `ModulatoryProjection <ModulatoryProjection>`
@@ -1096,6 +1102,8 @@ class State_Base(State):
             # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
             #                       if params = NotImplemented or there is no param[PROJECTIONS]
             pass
+
+        self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
         if context is COMMAND_LINE:
             state_list = getattr(owner, owner.state_list_attr[self.__class__])
@@ -2755,8 +2763,6 @@ def _parse_state_spec(state_type=None,
             if PROJECTIONS in params and params[PROJECTIONS] is not None:
                 #       (E.G., WEIGHTS AND EXPONENTS FOR InputState AND INDEX FOR OutputState)
                 # Get and parse projection specifications for the State
-                if not isinstance(params[PROJECTIONS], list):
-                    params[PROJECTIONS] = [params[PROJECTIONS]]
                 params[PROJECTIONS] = _parse_connection_specs(state_type, owner, params[PROJECTIONS])
 
             # Update state_dict[PARAMS] with params

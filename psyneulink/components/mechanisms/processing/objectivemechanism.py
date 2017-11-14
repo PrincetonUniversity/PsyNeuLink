@@ -812,7 +812,7 @@ def _instantiate_monitoring_projections(owner,
                 if not receiver.path_afferents[0].init_status is InitStatus.DEFERRED_INITIALIZATION:
                     raise ObjectiveMechanismError("PROGRAM ERROR: {} of {} already has an afferent projection "
                                                   "implemented and initialized ({})".
-                                                  format(receiver.name, owner.name, receiver.afferents[0].name))
+                                                  format(receiver.name, owner.name, receiver.path_afferents[0].name))
                 # FIX: 10/3/17 - IS IT OK TO IGNORE projection_spec IF IT IS None?  SHOULD IT HAVE BEEN SPECIFIED??
                 # FIX:           IN DEVEL, projection_spec HAS BEEN PROPERLY ASSIGNED
                 if (projection_spec and

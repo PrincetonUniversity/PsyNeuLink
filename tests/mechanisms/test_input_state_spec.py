@@ -3,6 +3,7 @@ import pytest
 
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.projections.projection import ProjectionError
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.state import StateError
 from psyneulink.components.states.inputstate import InputState
@@ -416,7 +417,7 @@ class TestInputStateSpec:
     # ------------------------------------------------------------------------------------------------
     # TEST 27
 
-    def test_inputstate_object(self):
+    def test_add_input_state_belonging_to_another_mech_error(self):
         with pytest.raises(StateError) as error_text:
             m = TransferMechanism(default_variable=[0, 0, 0])
             i = InputState(owner=m, variable=[0, 0, 0])
@@ -561,12 +562,34 @@ class TestInputStateSpec:
     # ------------------------------------------------------------------------------------------------
     # TEST 29
 
-    def test_add_input_state_with_projection_by_assigning_owner(self):
+    def test_add_input_state_with_projection_by_assigning_owner_error(self):
         with pytest.raises(StateError) as error_text:
             S1 = TransferMechanism()
             S2 = TransferMechanism()
             TransferMechanism(name='T',
                               input_states=[{'MY INPUT 1':[S1],
                                              'MY INPUT 2':[S2]}])
-        assert 'There is more than one entry of the InputState specification dictionary for T' in str(error_text.value)
 
+    # ------------------------------------------------------------------------------------------------
+    # TEST 30
+
+    def test_use_set_to_specify_projections_for_input_state_error(self):
+        with pytest.raises(ProjectionError) as error_text:
+            T1 = TransferMechanism()
+            T2 = TransferMechanism()
+            TransferMechanism(input_states=[{'MY STATE':{T1, T2}}])
+        assert ('Connection specification for InputState of' in str(error_text.value)
+                and 'is a set' in str(error_text.value)
+                and 'it should be a list' in str(error_text.value))
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 31
+
+    def test_multiple_states_specified_using_STATE_NAME_format_error(self):
+        with pytest.raises(StateError) as error_text:
+            # Don't bother to specify anything as the value for each entry in the dict, since doesn't get there
+            TransferMechanism(input_states=[{'MY STATE A':{},
+                                             'MY STATE B':{}}])
+        assert ('There is more than one entry of the InputState specification dictionary' in str(error_text.value)
+                and'that is not a keyword; there should be only one (used to name the State, with a list of '
+                   'Projection specifications' in str(error_text.value))

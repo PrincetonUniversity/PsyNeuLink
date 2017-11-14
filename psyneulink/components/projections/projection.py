@@ -229,7 +229,9 @@ Structure
 In addition to its `function <Projection.function>`, a Projection has two primary attributes: a `sender
 <Projection.sender>` and `receiver <Projection.receiver>`.  The types of `State(s) <State>` that can be
 assigned to these, and the attributes of those States to which Projections of each type are assigned, are
-summarized in the following table, and described in greater detail in the subsections below.
+summarized in the following table, and described in greater detail in the subsections below.  In addition to the
+State attributes to which different types of Projections are assigned (shown in the table), all of the Projections
+of a State are listed in its `projections <State_Base.projections>` attribute.
 
 .. _Projection_Table:
 
@@ -1239,9 +1241,20 @@ def _parse_connection_specs(connectee_state_type,
     DEFAULT_PROJECTION = None
 
     # Convert to list for subsequent processing
-    if not isinstance(connections, list):
+    if isinstance(connections, set):
+        # if owner.verbosePref:
+        #     warnings.warn("Connection specification for {} of {} was a set ({});"
+        #                   "it was converted to a list, but the order of {} assignments is not "
+        #                   "predictable".format(connectee_state_type, owner.name,
+        #                                        connections, Projection.__name__))
+        # connections = list(connections)
+        raise ProjectionError("Connection specification for {} of {} is a set ({}); it should be a list.".
+                              format(connectee_state_type.__name__, owner.name, connections, Projection.__name__))
+
+    elif not isinstance(connections, list):
         connections = [connections]
     connect_with_states = []
+
 
     for connection in connections:
 
@@ -1454,7 +1467,7 @@ def _parse_connection_specs(connectee_state_type,
             connect_with_states.extend([ConnectionTuple(state, weight, exponent, projection_spec)])
 
         else:
-            raise ProjectionError("Invalid or insufficient specification of connection for {}: \'{}\'".
+            raise ProjectionError("Unrecognized, invalid or insufficient specification of connection for {}: \'{}\'".
                                   format(owner.name, connection))
 
     if not all(isinstance(connection_tuple, ConnectionTuple) for connection_tuple in connect_with_states):
