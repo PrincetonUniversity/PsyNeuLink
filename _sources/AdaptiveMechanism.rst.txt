@@ -8,10 +8,10 @@ Adaptive Mechanisms
 .. toctree::
    :maxdepth: 1
 
-   LearningMechanism
-   ControlMechanism
-   GatingMechanism
+   Learning Mechanisms <LearningMechanism>
+   Control Mechanisms <ControlMechanism>
+   Gating Mechanisms <GatingMechanism>
 
-.. automodule:: AdaptiveMechanism
+.. automodule:: psyneulink.components.mechanisms.adaptive.adaptivemechanism
    :members:
    :exclude-members: Linear, random

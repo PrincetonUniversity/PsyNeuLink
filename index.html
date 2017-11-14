@@ -90,7 +90,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Welcome to PsyNeuLink</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Welcome to PsyNeuLink      </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
@@ -139,7 +139,7 @@
     
       <li><a href="#">Docs</a> &raquo;</li>
         
-      <li>Welcome to PsyNeuLink</li>
+      <li>Welcome to PsyNeuLink      </li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -158,12 +158,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="welcome-to-psyneulink">
-<h1>Welcome to PsyNeuLink<a class="headerlink" href="#welcome-to-psyneulink" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="welcome-to-psyneulink-logo">
+<h1>Welcome to PsyNeuLink      <a class="reference internal" href="_images/PsyNeuLink_logo_no_text.svg"><img alt="logo" src="_images/PsyNeuLink_logo_no_text.svg" width="20%" /></a><a class="headerlink" href="#welcome-to-psyneulink-logo" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><a class="reference internal" href="#purpose"><span class="std std-ref">Purpose</span></a></li>
 <li><a class="reference internal" href="#what-psyneulink-is-not"><span class="std std-ref">What PsyNeuLink is NOT</span></a></li>
-<li><a class="reference internal" href="#overview"><span class="std std-ref">Overview</span></a></li>
+<li><a class="reference internal" href="#overview"><span class="std std-ref">Environment Overview</span></a></li>
 <li><a class="reference internal" href="#installation"><span class="std std-ref">Installation</span></a></li>
 <li><a class="reference internal" href="#tutorial"><span class="std std-ref">Tutorial</span></a></li>
 <li><a class="reference internal" href="#contributors"><span class="std std-ref">Contributors</span></a></li>
@@ -171,63 +171,58 @@
 </ul>
 <div class="section" id="purpose">
 <span id="id1"></span><h2>Purpose<a class="headerlink" href="#purpose" title="Permalink to this headline">¶</a></h2>
-<p>PsyNeuLink is a “block modeling system” for cognitive neuroscience.  Block modeling systems allow components to be
-constructed that implement various, possibly disparate functions, and then link them together into a system to
-examine how they interact.  In PsyNeuLink, components are used to implement the function of brain subsystems and/or
-psychological processes, the interaction of which can then be simulated at the system level.</p>
-<p>PsyNeuLink is open source, and meant to be extended. Its goal is to provide an environment for implementing models
-of mind/brain function that are modular, customizable, extensible, disseminable, easily reproducible and clearly
-documented.  It does this in a manner that:</p>
+<p>PsyNeuLink is an open-source, software environment written in Python, and designed for the needs of
+neuroscientists, psychologists, computational psychiatrists and others interested learning about and building
+models of the relationship between brain function, mental processes and behavior.</p>
+<p>PsyNeuLink can be used as a “block modeling environment”, in which to construct, simulate, document, and exchange
+computational models of neural mechanisms and/or psychological processes at the subsystem and system levels.
+A block modeling environment allows components to be constructed that implement various, possibly disparate
+functions, and then link them together into a system to examine how they interact.  In PsyNeuLink, components are
+used to implement the function of brain subsystems and/or psychological processes, the interaction of which can then
+be simulated at the system level.</p>
+<p>The purpose of PsyNeuLink is to make it as easy as possible to create new and/or import existing models, and
+integrate them to simluate system-level interactions.  It provides a suite of core components for
+implementing models of various forms of processing, learning, and control, and its Library includes examples that
+combine these components to implement published models.  As an open source project, its suite of components is meant
+to be enhanced and extended, and its library is meant to provide an expanding repository of models, written in a
+concise, executable, and easy to interpret form, that can be shared, and compared by the scientific
+community.</p>
+<p>PsyNeuLink is:</p>
 <blockquote>
 <div><ul class="simple">
-<li>is <em>computationally general</em> –&nbsp;that is, that can implement any desired mechanism or process;</li>
+<li><em>open source</em>, freeing users of the costs or restrictions associated with proprietary software.</li>
 </ul>
 <ul class="simple">
-<li>adheres as closely as possible to the insights and design principles that have been learned in computer science
-(e.g., function-based, object-oriented programming);</li>
+<li><em>computationally general</em> –&nbsp;it can be used to implement, seamlessly integrate, and simulate interactions among
+disparate components that vary in their granularity of representation and function (from individual neurons or
+neural populations to functional subsystems and abstract cognitive functions) and at any time scale of execution.</li>
 </ul>
 <ul class="simple">
-<li>expresses (as few as possible) <em>commitments</em> that reflect general principles of how the mind/brain is organized
-and operates, without committing to any particular detailed model or theory;</li>
+<li><em>integrative</em> – it provides a standard and accessible environment for model comparison, sharing, and documentation;</li>
 </ul>
 <ul class="simple">
-<li>expresses these commitments in a form that is powerful, easy to use, and familiar to cognitive neuroscientists;</li>
-</ul>
-<ul>
-<li><p class="first">allows models to be simply and flexibly implemented, using a minimum of coding, and that provides seamless
-integration of, and interaction among disparate components that can vary in their:</p>
-<blockquote>
-<div><ul class="simple">
-<li>granularity of representation and function</li>
-<li>time-scale of operation</li>
+<li><em>extensible</em> – it has an interface (API) that allows it to be used with other powerful tools for implementing
+individual components, such as:
+* Neuron (biophysically realistic models of neuronal function)
+* TensorFlow (ODE’s, deep learning);
+* Emergent (broad class of neurally-plausible connectionist models);
+* ACT-R (symbolic, production system models).</li>
 </ul>
 </div></blockquote>
-</li>
-</ul>
-<ul class="simple">
-<li>provides a standard and accessible environment for model comparison, sharing, and documentation;</li>
-</ul>
-<ul class="simple">
-<li>has an interface (API) that allows it to be used with other powerful tools for implementing individual components,
-such as:<ul>
-<li>MatLab (general purpose mathematical tools);</li>
-<li>TensorFlow (ODE’s, deep learning);</li>
-<li>Emergent (broad class of neurally-plausible connectionist models);</li>
-<li>ACT-R (symbolic, production system models).</li>
-</ul>
-</li>
-</ul>
-</div></blockquote>
-<p>The goal is to encourage users to think about information processing in a “mind/brain-like” way, while imposing as few
-constraints as possible on what it is possible to implement or ask the model to do.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">PsyNeuLink is alpha software, that is still being actively developed.  Although it is useable, and most of the
+documented functionality is available, some features may not yet be fully implemented and/or subject to
+modification.  Please report any bugs and/or suggestions for development to <a class="reference external" href="mailto:psyneulinkhelp&#37;&#52;&#48;princeton&#46;edu">psyneulinkhelp<span>&#64;</span>princeton<span>&#46;</span>edu</a>.</p>
+</div>
 </div>
 <div class="section" id="what-psyneulink-is-not">
 <span id="id2"></span><h2>What PsyNeuLink is <strong>NOT</strong><a class="headerlink" href="#what-psyneulink-is-not" title="Permalink to this headline">¶</a></h2>
-<p>PsyNeuLink is well suited to the creation of simple to moderately complex models, and to the integration of
+<p>PsyNeuLink is well suited to the creation of simple to moderately complex models, and for the integration of
 disparate existing models into a single, integrated system in which interactions among them can be examined.
-While it is fully general, and can be used to implement virtually any kind of model, it is less well suited to other
-kinds of efforts, that involve massively large computations and/or specialized functions and data types that it
-currently does not support, such as:</p>
+While it is fully general, and can be used to implement virtually any type of model, in its current form it is
+less well suited to certain kinds of efforts, that involve massively large computations and/or specialized functions
+and data types that it currently does not support, such as:</p>
 <blockquote>
 <div><ul class="simple">
 <li>extensive model fitting</li>
@@ -242,64 +237,72 @@ currently does not support, such as:</p>
 <a class="reference external" href="http://act-r.psy.cmu.edu">ACT-R</a> (for production system models);
 <a class="reference external" href="http://www.genesis-sim.org">Genesis</a>,
 <a class="reference external" href="https://www.neuron.yale.edu/neuron/">Neuron</a>,
-and <a class="reference external" href="http://www.nengo.ca">Nengo</a>  (for biophysically-realistic models of neuronal function).
-These packages are good for elaborate and detailed models of a particular form.
+and <a class="reference external" href="http://www.nengo.ca">Nengo</a>  (for biophysically-realistic models of neuronal function).</p>
+<p>These packages are good for elaborate and detailed models of a particular form.
 In contrast, the focus in designing and implementing PsyNeuLink has been to make it as flexible and easy to use as
 possible, with the ability to integrate components constructed in other packages (including some of the ones listed
 above) into a single functioning system.  These are characteristics that are often (at least in the initial
-stages of development) in tension with efficiency (think:  interpreted vs. compiled).  One of the goals for future
-development is to make PsyNeuLink more computationally efficient.  At present, however, it is best suited to
-developing simpler models, or taking complex or highly detailed models that have been developed –
-or subjected to extensive parameter fitting – in other frameworks, and re-expressing them in a form that is amenable
-to integration, documentation, and dissemination.</p>
+stages of development) in tension with efficiency (think:  interpreted vs. compiled).  Two priorities for continued
+development are the accleration of PsyNeuLink using just-in-time compilation methods, parallelization and adaptation
+to FPGA hardware; and the implementation of a graphic interface for the construction of models and realtime display
+of their execution.</p>
 </div>
-<div class="section" id="overview">
-<span id="id3"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>PsyNeuLink is written in Python, and conforms to the syntax and coding standards for the language.
-<a class="reference internal" href="BasicsAndSampler.html"><span class="doc">Basics and Sampler</span></a> provides an orientation to PsyNeuLinks Components, some examples of what PsyNeuLink models
-look like, and some of its capabilities. <a class="reference internal" href="QuickReference.html"><span class="doc">Quick Reference</span></a> provides an overview of how PsyNeuLink is organized and
-some of its basic principles of operation.  The <a class="reference internal" href="#tutorial"><span class="std std-ref">Tutorial</span></a> provides an interactive guide to the
-construction of models using PsyNeuLink.</p>
+<div class="section" id="environment-overview">
+<span id="overview"></span><h2>Environment Overview<a class="headerlink" href="#environment-overview" title="Permalink to this headline">¶</a></h2>
+<p>PsyNeuLink is written in Python, and conforms to the syntax, coding standards and modular organization shared by
+most Python packages.  <a class="reference internal" href="BasicsAndSampler.html"><span class="doc">Basics and Sampler</span></a> provides an orientation to PsyNeuLinks Components, some examples of what
+PsyNeuLink models look like, and some of its capabilities. <a class="reference internal" href="QuickReference.html"><span class="doc">Quick Reference</span></a> provides an overview of how PsyNeuLink is
+organized and some of its basic principles of operation.  The <a class="reference internal" href="#tutorial"><span class="std std-ref">Tutorial</span></a> provides an interactive guide to the
+construction of models using PsyNeuLink.  <a class="reference internal" href="Core.html"><span class="doc">Core</span></a> contains the fundamental constructs out of which PsyNeuLink models
+are built, and <a class="reference internal" href="Library.html"><span class="doc">Library</span></a> contains extensions, including speciality components and implemented models.</p>
 </div>
 <div class="section" id="installation">
-<span id="id4"></span><h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">PsyNeuLink is beta software, that is still being actively developed.  Although it is useable, and most of the
-documented functionality is available, some features may not yet be fully implemented and/or subject to
-modification.  Please report any bugs and/or suggestions for development to <a class="reference external" href="mailto:psyneulinkhelp&#37;&#52;&#48;princeton&#46;edu">psyneulinkhelp<span>&#64;</span>princeton<span>&#46;</span>edu</a>.</p>
+<span id="id3"></span><h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>PsyNeuLink is compatible with python versions &gt;= 3.5, and is available through <a class="reference external" href="https://pypi.python.org/pypi/PsyNeuLink">PyPI</a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">psyneulink</span>
+</pre></div>
 </div>
-<p>Because core elements of PsyNeuLink are still under development, it is not yet available through pypi/pip.
-Instead, you can clone the github repo (<a class="reference external" href="https://github.com/PrincetonUniversity/PsyNeuLink">https://github.com/PrincetonUniversity/PsyNeuLink</a>). Clone the master branch.
-Download the package with the green “Clone or download” button on the right side of the page and “Download ZIP.”</p>
-<p>Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal. Note: The
-repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get access.</p>
-<p>PsyNeuLink is compatible with any version of python 3, but the tutorial (see below) requires a 3.5 installation with
-the latest versions of IPython, jupyter, and matplotlib installed.</p>
-<p>To install the package, navigate to the cloned directory in a terminal,
-switch to your preferred python3 environment, then run the command __”pip install .”__
-(make sure to include the period and to use the appropriate pip/pip3 command for python 3.5).
-All prerequisite packages will be automatically added to your environment.</p>
+<p>All prerequisite packages will be automatically added to your environment.</p>
+<p>If you downloaded the source code, navigate to the cloned directory in a terminal,
+switch to your preferred python3 environment, then run</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">.</span>
+</pre></div>
+</div>
+<p>Lists of required packages for PsyNeuLink, developing PsyNeuLink, and running the PsyNeuLink tutorial are also
+stored in pip-style <code class="xref any docutils literal"><span class="pre">requirements.txt</span></code>, <code class="xref any docutils literal"><span class="pre">dev_requirements.txt</span></code>, and <code class="xref any docutils literal"><span class="pre">tutorial_requirements.txt</span></code> in the source code.</p>
 <p>If you have trouble installing the package, or run into other problems, please contact <a class="reference external" href="mailto:psyneulinkhelp&#37;&#52;&#48;princeton&#46;edu">psyneulinkhelp<span>&#64;</span>princeton<span>&#46;</span>edu</a>.</p>
 </div>
 <div class="section" id="tutorial">
-<span id="id5"></span><h2>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h2>
-<p>The downloaded package includes a tutorial, that provides examples of how to create basic Components
+<span id="id4"></span><h2>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference download internal" href="_downloads/PsyNeuLink Tutorial.ipynb" download=""><code class="xref download docutils literal"><span class="pre">Download</span> <span class="pre">PsyNeuLink</span> <span class="pre">Tutorial.ipynb</span></code></a></p>
+<p>PsyNeuLink includes a tutorial, available <a class="reference download internal" href="_downloads/PsyNeuLink Tutorial.ipynb" download=""><code class="xref download docutils literal"><span class="pre">here</span></code></a>, that provides examples of how to create basic Components
 in PsyNeuLink, and combine them into Processes and a System.  The examples include construction of a simple
 decision making process using a Drift Diffusion Model, a neural network model of the Stroop effect, and a
 backpropagation network for learning the XOR problem.</p>
-<p>The tutorial can be run using the terminal command <code class="docutils literal"><span class="pre">jupyter</span> <span class="pre">notebook</span></code> within the root directory of the PsyNeuLink
-package. Once the jupyter notebook opens, within the list of files click on “PsyNeuLink Tutorial .ipynb”.  This will
-open the tutorial, that will provide any additional information needed to get started.</p>
+<p>The tutorial currently requires python 3.5, and additional packages; to install the required tutorial packages, you may use PyPI:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">psyneulink</span><span class="p">[</span><span class="n">tutorial</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>or if you downloaded the source:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">.</span><span class="p">[</span><span class="n">tutorial</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>To access the tutorial, make sure you fulfill the requirements
+mentioned above, download the <a class="reference download internal" href="_downloads/PsyNeuLink Tutorial.ipynb" download=""><code class="xref download docutils literal"><span class="pre">tutorial</span> <span class="pre">notebook</span></code></a>, then run the terminal command</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">jupyter</span> <span class="n">notebook</span>
+</pre></div>
+</div>
+<p>Once the notebook opens in your browser, navigate to the location where you saved the tutorial notebook, and
+click on “PsyNeuLink Tutorial.ipynb”.</p>
 </div>
 <div class="section" id="contributors">
-<span id="id6"></span><h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
+<span id="id5"></span><h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><strong>Allie Burton</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Jonathan D. Cohen</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Peter Johnson</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Kristen Manning</strong>, Princeton Neuroscience Institute, Princeton University</li>
-<li><strong>Kevin Mantel</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>K. Mantel</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Ted Willke</strong>, Intel Labs, Intel Corporation</li>
 <li><strong>Changyan Wang</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Nate Wilson</strong>, Princeton Neuroscience Institute, Princeton University</li>
@@ -321,32 +324,32 @@ open the tutorial, that will provide any additional information needed to get st
 <h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Welcome to PsyNeuLink</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Welcome to PsyNeuLink      </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="Component.html">Components</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="ProcessingMechanism.html">ProcessingMechanisms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="TransferMechanism.html">TransferMechanism</a></li>
 <li class="toctree-l5"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
 <li class="toctree-l5"><a class="reference internal" href="ObjectiveMechanism.html">ObjectiveMechanism</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="AdaptiveMechanism.html">AdaptiveMechanisms</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="LearningMechanism.html">Learning Mechanism</a></li>
-<li class="toctree-l5"><a class="reference internal" href="ControlMechanism.html">Control Mechanism</a></li>
-<li class="toctree-l5"><a class="reference internal" href="GatingMechanism.html">Gating Mechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanisms</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="LearningMechanism.html">Learning Mechanisms</a></li>
+<li class="toctree-l5"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
+<li class="toctree-l5"><a class="reference internal" href="GatingMechanism.html">Gating Mechanisms</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="PathwayProjection.html">PathwayProjections</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="PathwayProjection.html">Pathway Projections</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="MappingProjection.html">MappingProjection</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjections</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ModulatoryProjection.html">Modulatory Projections</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="LearningProjection.html">LearningProjection</a></li>
 <li class="toctree-l5"><a class="reference internal" href="ControlProjection.html">ControlProjection</a></li>
 <li class="toctree-l5"><a class="reference internal" href="GatingProjection.html">GatingProjection</a></li>
@@ -386,7 +389,63 @@ open the tutorial, that will provide any additional information needed to get st
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Subsystems.html">Subsystems</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Components.html">Components</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Mechanisms.html">Mechanisms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ProcessingMechanisms.html">Processing Mechanisms</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="TransferMechanisms.html">Transfer Mechanisms</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="RecurrentTransferMechanism.html">RecurrentTransferMechanism</a></li>
+<li class="toctree-l6"><a class="reference internal" href="LCA.html">LCA</a></li>
+<li class="toctree-l6"><a class="reference internal" href="KWTA.html">KWTA</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="IntegratorMechanisms.html">IntegratorMechanisms</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="DDM.html">DDM</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="ObjectiveMechanisms.html">Objective Mechanisms</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="ComparatorMechanism.html">ComparatorMechanism</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="AdaptiveMechanisms.html">Adaptive Mechanisms</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="LearningMechanisms.html">Learning Mechanisms</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="AutoAssociativeLearningMechanism.html">AutoAssociativeMechanism</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="ControlMechanisms.html">ControlMechanisms</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="GatingMechanisms.html">GatingMechanisms</a><ul class="simple">
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="Projections.html">Projections</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="PathwayProjections.html">Pathway Projections</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="MappingProjection.html">MappingProjection</a></li>
+<li class="toctree-l5"><a class="reference internal" href="AutoAssociativeProjection.html">AutoAssociativeProjection</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="ModulatoryProjections.html">Modulatory Projections</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="LearningProjections.html">Learning Projections</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="ControlProjections.html">Control Projections</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="GatingProjections.html">GatingProjections</a><ul class="simple">
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Compositions.html">Compositions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="AGT.html">AGT</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="AGTControlMechanism.html">AGTControlMechanism</a></li>
 <li class="toctree-l4"><a class="reference internal" href="LCControlMechanism.html">LCControlMechanism</a></li>
@@ -401,66 +460,14 @@ open the tutorial, that will provide any additional information needed to get st
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanisms.html">Mechanisms</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanisms.html">Processing Mechanisms</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="TransferMechanisms.html">TransferMechanisms</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="RecurrentTransferMechanism.html">RecurrentTransferMechanism</a></li>
-<li class="toctree-l5"><a class="reference internal" href="LCA.html">LCA</a></li>
-<li class="toctree-l5"><a class="reference internal" href="KWTA.html">KWTA</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="IntegratorMechanisms.html">IntegratorMechanisms</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="DDM.html">DDM</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="ObjectiveMechanisms.html">ObjectiveMechanisms</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="ComparatorMechanism.html">ComparatorMechanism</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanisms.html">AdaptiveMechanisms</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="LearningMechanisms.html">LearningMechanisms</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="AutoAssociativeLearningMechanism.html">AutoAssociativeMechanism</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="ControlMechanisms.html">ControlMechanisms</a><ul class="simple">
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="GatingMechanisms.html">GatingMechanisms</a><ul class="simple">
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="Projections.html">Projections</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="PathwayProjections.html">PathwayProjections</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="MappingProjection.html">MappingProjection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="AutoAssociativeProjection.html">AutoAssociativeProjection</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjections.html">ModulatoryProjections</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="LearningProjections.html">LearningProjections</a><ul class="simple">
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="ControlProjections.html">ControlProjections</a><ul class="simple">
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="GatingProjections.html">GatingProjections</a><ul class="simple">
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="Models.html">Models</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
 <div class="section" id="indices-and-tables">
-<span id="id7"></span><h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<span id="id6"></span><h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
 <li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
@@ -521,6 +528,7 @@ open the tutorial, that will provide any additional information needed to get st
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

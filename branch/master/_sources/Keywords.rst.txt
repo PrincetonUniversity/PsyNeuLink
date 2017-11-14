@@ -1,6 +1,6 @@
 Keywords
 ========
 
-.. automodule:: Keywords
-   :members: MechanismRoles, MatrixKeywords
+.. automodule:: psyneulink.globals.keywords
+   :members: MechanismRoles, MatrixKeywords, DistanceMetrics
    :exclude-members: random, LinearCombination

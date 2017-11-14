@@ -6,7 +6,7 @@ Components that implement the `Adaptive Gain Theory
 coeruleus/norepinephrine system <http://www.scholarpedia.org/article/Locus_coeruleus>`_.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    AGTControlMechanism
    LCControlMechanism
