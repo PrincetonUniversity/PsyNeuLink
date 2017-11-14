@@ -568,5 +568,5 @@ class TestInputStateSpec:
             TransferMechanism(name='T',
                               input_states=[{'MY INPUT 1':[S1],
                                              'MY INPUT 2':[S2]}])
-        assert 'There is more than one entry of the InputState specification dictionary for T (MY INPUT 1, MY INPUT 2) that is not a keyword; there should be only one (used to name the State, with a list of Projection specifications' in str(error_text.value)
+        assert 'There is more than one entry of the InputState specification dictionary for T' in str(error_text.value)
 
