@@ -593,3 +593,13 @@ class TestInputStateSpec:
         assert ('There is more than one entry of the InputState specification dictionary' in str(error_text.value)
                 and'that is not a keyword; there should be only one (used to name the State, with a list of '
                    'Projection specifications' in str(error_text.value))
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 32
+
+    def test_default_name_and_projections_listing_for_input_state_in_constructor(self):
+        T1 = TransferMechanism()
+        my_input_state = InputState(projections=[T1])
+        T2 = TransferMechanism(input_states=[my_input_state])
+        assert T2.input_states[0].name == 'INPUT_STATE-0'
+        assert T2.input_states[0].projections[0].sender.name == 'RESULT'

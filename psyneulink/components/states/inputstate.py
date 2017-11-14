@@ -392,7 +392,8 @@ from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.states.state import \
     StateError, State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
+from psyneulink.globals.keywords import \
+    NAME, DEFERRED_INITIALIZATION, EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
     MECHANISM, OUTPUT_STATES, MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE, \
     OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE, LEARNING_SIGNAL, GATING_SIGNAL, SENDER, COMMAND_LINE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -791,7 +792,7 @@ class InputState(State_Base):
             self.name = self.name.replace(self.componentName, 'INPUT_STATE')
 
         # Call in the context of adding a state to an existing owner
-        elif ADD_STATES in context:
+        elif any(key in context for key in {ADD_STATES, DEFERRED_INITIALIZATION}):
             try:
                 i=len([input_state for input_state in self.owner.input_states if 'INPUT_STATE-' in input_state.name])
                 self.name = 'INPUT_STATE-'+str(i)
@@ -800,7 +801,7 @@ class InputState(State_Base):
                 self.name = 'INPUT_STATE-'+str(i)
 
         else:
-            raise InputStateError("PROGRAM ERROR: unrecognize context ({}) for assigning {} to {}".
+            raise InputStateError("PROGRAM ERROR: unrecognized context (\'{}\') for assigning default {} to {}".
                                   format(context, NAME, InputState.__name__))
         return self.name
 
