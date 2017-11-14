@@ -1388,10 +1388,6 @@ def _parse_connection_specs(connectee_state_type,
                 state_spec, projection_spec = connection
                 if is_numeric(state_spec):
                     state_spec = projection_spec
-                else:
-                    raise ProjectionError("First item of 2-item tuple specification for {} of {} ({}) must be a value".
-                                          format(connectee_state_type.__name__, owner.name, state_spec))
-
                 weight = DEFAULT_WEIGHT
                 exponent = DEFAULT_EXPONENT
             elif len(connection) == 4:
