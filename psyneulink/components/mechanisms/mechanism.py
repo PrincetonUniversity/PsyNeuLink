@@ -251,6 +251,7 @@ auxiliary functions, those must be specified in arguments for them in the Mechan
 must be specified in constructors for those functions unless documented otherwise.
 COMMENT
 
+
 COMMENT:
     FOR DEVELOPERS:
     + FUNCTION : function or method :  method used to transform Mechanism input to its output;
