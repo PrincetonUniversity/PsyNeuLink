@@ -104,41 +104,95 @@ def test_danglingControlledMech():
 
     # no assert, should only complete without error
 
+class TestInputSpecsDocumentationExamples:
+
+    def test_example_1(self):
+
+        import psyneulink as pnl
+
+        a = pnl.TransferMechanism(name='a',
+                                  default_variable=[[0.0, 0.0]])
+        b = pnl.TransferMechanism(name='b',
+                                  default_variable=[[0.0], [0.0]])
+        c = pnl.TransferMechanism(name='c')
+
+        p1 = pnl.Process(pathway=[a, c],
+                         name='p1')
+        p2 = pnl.Process(pathway=[b, c],
+                         name='p2')
+
+        s = pnl.System(processes=[p1, p2])
+
+        input_dictionary = {a: [[[1.0, 1.0]], [[1.0, 1.0]]],
+                            b: [[[2.0], [3.0]], [[2.0], [3.0]]]}
+
+        check_inputs_dictionary = {a: [],
+                                   b: []}
+        def store_inputs():
+            check_inputs_dictionary[a].append(a.input_values)
+            check_inputs_dictionary[b].append(b.input_values)
+
+        s.run(inputs=input_dictionary, call_after_trial=store_inputs)
+
+        print(check_inputs_dictionary)
+    def test_example_2(self):
+        import psyneulink as pnl
+
+        a = pnl.TransferMechanism(name='a')
+        b = pnl.TransferMechanism(name='b')
+
+        p1 = pnl.Process(pathway=[a, b])
+
+        s = pnl.System(processes=[p1])
+
+        input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+
+        s.run(inputs=input_dictionary,
+              num_trials=7)
+
+    def test_example_3(self):
+        import psyneulink as pnl
+
+        a = pnl.TransferMechanism(name='a')
+        b = pnl.TransferMechanism(name='b')
+
+        p1 = pnl.Process(pathway=[a, b])
+
+        s = pnl.System(processes=[p1])
+
+        input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+
+        s.run(inputs=input_dictionary)
+
+    def test_example_4(self):
+        import psyneulink as pnl
+
+        a = pnl.TransferMechanism(name='a')
+        b = pnl.TransferMechanism(name='b')
+
+        p1 = pnl.Process(pathway=[a, b])
+
+        s = pnl.System(processes=[p1])
+
+        input_dictionary = {a: [[1.0], [2.0], [3.0], [4.0], [5.0]]}
+
+        s.run(inputs=input_dictionary)
+
+    def test_example_5(self):
+        import psyneulink as pnl
+
+        a = pnl.TransferMechanism(name='a')
+        b = pnl.TransferMechanism(name='b')
+
+        p1 = pnl.Process(pathway=[a, b])
+
+        s = pnl.System(processes=[p1])
+
+        input_dictionary = {a: [1.0, 2.0, 3.0, 4.0, 5.0]}
+
+        s.run(inputs=input_dictionary)
+
 class TestInputSpecsWithoutNumTrials:
-
-    def test_documentation_example(self):
-        a = TransferMechanism(name='a',
-                              default_variable=[0.0, 0.0])
-        b = TransferMechanism(name='b',
-                              # default_variable=[[0.0, 0.0], [0.0, 0.0, 0.0]]
-                              default_variable=[[0.0, 0.0], [0.0, 0.0]]
-                              )
-        # ignore Mechanism c for now
-
-        p1 = Process(pathway=[a],
-                     name='p1')
-        p2 = Process(pathway=[b],
-                     name='p2')
-
-        s = System(
-            processes=[p1, p2]
-        )
-
-        inputs = {a: [[1.0, 1.0], [1.0, 1.0]],
-                  #  b: [[[2.0, 2.0], [3.0, 3.0, 3.0]], [[2.0, 2.0], [3.0, 3.0, 3.0]]]
-                  b: [[[2.0, 2.0], [3.0, 3.0]], [[2.0, 2.0], [3.0, 3.0]]]
-                  }
-
-        s.run(inputs)
-
-
-        # -----------------------------------------------------
-
-        # # simplified documentation example -- ignore mechanism a
-        # simple_system = System(processes=[p2])
-        #
-        # simple_inputs = {b: [[[2.0, 2.0], [3.0, 3.0]], [[2.0, 2.0], [3.0, 3.0]]]}
-        # simple_system.run(simple_inputs)
 
     def test_specify_single_inputs_as_floats(self):
         a = TransferMechanism(name='a')
