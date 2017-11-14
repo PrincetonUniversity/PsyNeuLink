@@ -2506,7 +2506,7 @@ def _parse_state_spec(state_type=None,
             else:
                 state_owner = state_specification.owner
             if owner is not None and state_owner is not None and not state_owner is owner:
-                raise StateError("Attempt to assign a {} to {} ({}) that belongs to another {} ({})".
+                raise StateError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
                                  format(State.__name__, owner.name, state_specification.name,
                                         Mechanism.__name__,state_owner.name))
             return state_specification
