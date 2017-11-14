@@ -530,10 +530,6 @@ for control_signal in my_ctl_mech.control_signals:
 # my_control_mech = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: my_mech,
 #                                                          pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
 
-m = pnl.TransferMechanism(default_variable=[0, 0, 0])
-i = pnl.InputState(owner=m, variable=[0, 0, 0])
-T = pnl.TransferMechanism(input_states=[i])
-
 assert True
 
 # --------------------------------------------------------------------------------------------------
