@@ -1319,38 +1319,38 @@ class Mechanism_Base(Mechanism):
 
         if not isinstance(input_states, Iterable):
             input_states = [input_states]
-        else:
-            for s in input_states:
-                parsed_spec = _parse_state_spec(owner=self, state_type=InputState, state_spec=s)
 
-                if isinstance(parsed_spec, dict):
+        for s in input_states:
+            parsed_spec = _parse_state_spec(owner=self, state_type=InputState, state_spec=s)
+
+            if isinstance(parsed_spec, dict):
+                try:
+                    variable = parsed_spec[VARIABLE]
+                except KeyError:
+                    pass
+            elif isinstance(parsed_spec, (Projection, Mechanism, State)):
+                if parsed_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                    args = parsed_spec.init_args
+                    if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
+                        variable = args[REFERENCE_VALUE]
+                    elif VALUE in args and args[VALUE] is not None:
+                        variable = args[VALUE]
+                    elif VARIABLE in args and args[VARIABLE] is not None:
+                        variable = args[VARIABLE]
+                else:
                     try:
-                        variable = parsed_spec[VARIABLE]
-                    except KeyError:
-                        pass
-                elif isinstance(parsed_spec, (Projection, Mechanism, State)):
-                    if parsed_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                        args = parsed_spec.init_args
-                        if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
-                            variable = args[REFERENCE_VALUE]
-                        elif VALUE in args and args[VALUE] is not None:
-                            variable = args[VALUE]
-                        elif VARIABLE in args and args[VARIABLE] is not None:
-                            variable = args[VARIABLE]
-                    else:
-                        try:
-                            variable = parsed_spec.value
-                        except AttributeError:
-                            variable = parsed_spec.instance_defaults.variable
-                else:
-                    variable = parsed_spec.instance_defaults.variable
+                        variable = parsed_spec.value
+                    except AttributeError:
+                        variable = parsed_spec.instance_defaults.variable
+            else:
+                variable = parsed_spec.instance_defaults.variable
 
-                if variable is None:
-                    variable = InputState.ClassDefaults.variable
-                else:
-                    variable_was_specified = True
+            if variable is None:
+                variable = InputState.ClassDefaults.variable
+            else:
+                variable_was_specified = True
 
-                default_variable_from_input_states.append(variable)
+            default_variable_from_input_states.append(variable)
 
         return default_variable_from_input_states, variable_was_specified
 

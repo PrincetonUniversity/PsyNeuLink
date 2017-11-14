@@ -2506,13 +2506,9 @@ def _parse_state_spec(state_type=None,
             else:
                 state_owner = state_specification.owner
             if owner is not None and state_owner is not None and not state_owner is owner:
-                raise StateError("The State specified in a call to _instantiate_state ({}) "
-                                 "does not belong to the {} specified in the \'{}\' argument ({})".
-                                 format(state_specification.name,
-                                        owner.name,
-                                        Mechanism.__name__,
-                                        OWNER,
-                                        state_owner.name))
+                raise StateError("Attempt to assign a {} to {} ({}) that belongs to another {} ({})".
+                                 format(State.__name__, owner.name, state_specification.name,
+                                        Mechanism.__name__,state_owner.name))
             return state_specification
 
         else:
@@ -2526,10 +2522,7 @@ def _parse_state_spec(state_type=None,
     elif (inspect.isclass(state_specification) and issubclass(state_specification, State)):
         # Specified type of State is same as connectee's type (state_type),
         #    so assume it is a reference to the State itself to be instantiated
-        if state_specification is state_type:
-            # Assign its variable to be the default for the class (since there is nothing else to go on)
-            state_dict[VARIABLE] = state_specification.ClassDefaults.variable
-        else:
+        if state_specification is not state_type:
             raise StateError("Specification of {} for {} (\'{}\') is insufficient to instantiate the {}".
                 format(state_type_name, owner.name, state_specification.__name__, State.__name__))
 
