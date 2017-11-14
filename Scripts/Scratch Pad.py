@@ -578,6 +578,10 @@ mech_B = pnl.TransferMechanism()
 my_input_state = pnl.InputState(owner=mech_B,
                                 projections=[mech_A])
 
+m = pnl.TransferMechanism(default_variable=[0, 0, 0])
+i = pnl.InputState(owner=m, variable=[0, 0, 0])
+T = pnl.TransferMechanism(input_states=[i])
+
 assert True
 
 # --------------------------------------------------------------------------------------------------
