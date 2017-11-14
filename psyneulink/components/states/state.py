@@ -2526,10 +2526,7 @@ def _parse_state_spec(state_type=None,
     elif (inspect.isclass(state_specification) and issubclass(state_specification, State)):
         # Specified type of State is same as connectee's type (state_type),
         #    so assume it is a reference to the State itself to be instantiated
-        if state_specification is state_type:
-            # Assign its variable to be the default for the class (since there is nothing else to go on)
-            state_dict[VARIABLE] = state_specification.ClassDefaults.variable
-        else:
+        if state_specification is not state_type:
             raise StateError("Specification of {} for {} (\'{}\') is insufficient to instantiate the {}".
                 format(state_type_name, owner.name, state_specification.__name__, State.__name__))
 
