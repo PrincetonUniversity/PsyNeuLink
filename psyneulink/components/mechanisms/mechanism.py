@@ -1076,7 +1076,7 @@ class Mechanism_Base(Mechanism):
                  name=None,
                  prefs=None,
                  context=None):
-        """Assign name, category-level preferences, register Mechanism, and enforce category methods
+        """Assign name, category-level preferences, and variable; register Mechanism; and enforce category methods
 
         This is an abstract class, and can only be called from a subclass;
            it must be called by the subclass with a context value
