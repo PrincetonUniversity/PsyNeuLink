@@ -411,7 +411,7 @@ print("TEST State Specification Examples")
 #     print(projection.name)
 
 I = pnl.InputState(reference_value=[0,0,0])
-pnl.TransferMechanism(input_states=[I])
+pnl.TransferMechanism(name='TEMP', input_states=[I])
 
 p = pnl.MappingProjection()
 T = pnl.TransferMechanism(input_states=[{pnl.VARIABLE: [0, 0, 0], pnl.PROJECTIONS:[p]}])

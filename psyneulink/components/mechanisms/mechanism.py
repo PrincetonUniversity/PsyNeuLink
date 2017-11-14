@@ -1236,7 +1236,7 @@ class Mechanism_Base(Mechanism):
         if default_variable_from_input_states is not None:
             if default_variable is None:
                 if size is None:
-                    variable = default_variable_from_input_states
+                    default_variable = default_variable_from_input_states
                 else:
                     if input_states_variable_was_specified:
                         size_variable = self._handle_size(size, None)
