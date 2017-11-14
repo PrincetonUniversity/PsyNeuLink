@@ -8,7 +8,7 @@ from psyneulink.library.mechanisms.processing.integrator.ddm import *
 # random.seed(0)
 # np.random.seed(0)
 
-random_matrix = get_matrix(RANDOM_CONNECTIVITY_MATRIX, 2, 5)
+random_matrix = _get_matrix(RANDOM_CONNECTIVITY_MATRIX, 2, 5)
 
 myInputLayer = TransferMechanism(name='Input Layer',
                         function=Linear(),

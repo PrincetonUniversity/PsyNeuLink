@@ -356,7 +356,7 @@ class ScratchPadError(Exception):
 
 
 #region TEST State Specification Examples @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# print("TEST State Specification Examples")
+print("TEST State Specification Examples")
 
 # m = pnl.DDM(name='MY DDM')
 # c = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [m.parameter_states[pnl.DRIFT_RATE],
@@ -410,8 +410,6 @@ class ScratchPadError(Exception):
 # for projection in my_mech.output_states[0].efferents:
 #     print(projection.name)
 
-# FROM KEVIN: -------------------------------------
-
 I = pnl.InputState(reference_value=[0,0,0])
 pnl.TransferMechanism(input_states=[I])
 
@@ -456,6 +454,87 @@ my_mech_C = pnl.TransferMechanism(input_states=[[0,0], 'Hello'])
 print(my_mech_C.input_states)
 print(my_mech_C.variable)
 
+m = pnl.TransferMechanism(size=2)
+p = pnl.MappingProjection(sender=m, matrix=[[0, 0, 0], [0, 0, 0]])
+q = pnl.MappingProjection()
+T = pnl.TransferMechanism(name='TEST INPUT VALUE', input_states=[p])
+
+R1 = pnl.TransferMechanism(output_states=['OUTPUT_1', 'OUTPUT_2'])
+R2 = pnl.TransferMechanism(default_variable=[[0],[0]],
+                        input_states=['INPUT_1', 'INPUT_2'])
+T = pnl.TransferMechanism(name='HOOBLY DOOBLY MECH',
+                          input_states=[{pnl.MECHANISM: R1,
+                                         pnl.OUTPUT_STATES: ['OUTPUT_1', ('OUTPUT_2', 3, 2, None)],
+                                         pnl.WEIGHT: 24},
+                                        'HOOBLY_DOOBLY',
+                                        (3, q)],
+                          output_states=[{pnl.MECHANISM:R2,
+                                          pnl.INPUT_STATES: ['INPUT_1', 'INPUT_2']}])
+
+# T = pnl.TransferMechanism(params={pnl.INPUT_STATES:[{pnl.MECHANISM: R1,
+#                                                      pnl.OUTPUT_STATES: ['OUTPUT_1', ('OUTPUT_2', 3, 2, None)],
+#                                                      pnl.WEIGHT: 24},
+#                                                     'HOOBLY_DOOBLY'],
+#                                   pnl.OUTPUT_STATES:[{pnl.MECHANISM:R2,
+#                                                       pnl.INPUT_STATES: ['INPUT_1', 'INPUT_2']}],
+
+my_gating_mech = pnl.GatingMechanism()
+my_mech = pnl.TransferMechanism(name='MY_MECH',
+                                input_states=[{pnl.NAME: 'MY INPUT',
+                                               pnl.PROJECTIONS:[my_gating_mech]}])
+
+
+
+
+my_mech = pnl.DDM(name='MY DDM')
+my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.NAME: 'MY DDM DRIFT RATE AND THREHOLD CONTROL SIGNAL',
+                                                     pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE],
+                                                                       my_mech.parameter_states[pnl.THRESHOLD]]}])
+# Print out ControlSignals and their ControlProjections
+for control_signal in my_ctl_mech.control_signals:
+    print(control_signal.name)
+    for control_projection in control_signal.efferents:
+        print("\t{}: {}".format(control_projection.receiver.owner.name, control_projection.receiver))
+
+my_mech = pnl.DDM(name='MY DDM')
+my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.NAME: 'DRIFT RATE CONTROL SIGNAL',
+                                                     pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE]]},
+                                                    {pnl.NAME: 'THRESHOLD RATE CONTROL SIGNAL',
+                                                     pnl.PROJECTIONS: [my_mech.parameter_states[pnl.THRESHOLD]]}])
+# Print out ControlSignals and their ControlProjections
+for control_signal in my_ctl_mech.control_signals:
+    print(control_signal.name)
+    for control_projection in control_signal.efferents:
+        print("\t{}: {}".format(control_projection.receiver.owner.name, control_projection.receiver))
+
+my_ctl_mech = pnl.ControlMechanism(control_signals=[my_mech.parameter_states[pnl.DRIFT_RATE],
+                                                    my_mech.parameter_states[pnl.THRESHOLD]])
+
+for control_signal in my_ctl_mech.control_signals:
+    print(control_signal.name)
+    for control_projection in control_signal.efferents:
+        print("\t{}: {}".format(control_projection.receiver.owner.name, control_projection.receiver))
+
+
+# my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE]]},
+#                                                     {pnl.PROJECTIONS: [my_mech.parameter_states[pnl.THRESHOLD]]}])
+
+# my_ctl_mech = pnl.ControlMechanism(control_signals=[my_mech.parameter_states[pnl.DRIFT_RATE],
+#                                                     my_mech.parameter_states[pnl.THRESHOLD]])
+
+# my_ctl_mech = pnl.ControlMechanism(projections=[my_mech.parameter_states[pnl.DRIFT_RATE],
+#                                                 my_mech.parameter_states[pnl.THRESHOLD]])
+
+
+# my_mech = pnl.DDM(name='MY DDM')
+# my_control_mech = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: my_mech,
+#                                                          pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
+
+m = pnl.TransferMechanism(default_variable=[0, 0, 0])
+i = pnl.InputState(owner=m, variable=[0, 0, 0])
+T = pnl.TransferMechanism(input_states=[i])
+
+assert True
 
 # --------------------------------------------------------------------------------------------------
 

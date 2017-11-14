@@ -802,7 +802,7 @@ class KWTA(RecurrentTransferMechanism):
     #
     #     if isinstance(matrix, str):
     #         size = len(mech.instance_defaults.variable[0])
-    #         matrix = get_matrix(matrix, size, size)
+    #         matrix = _get_matrix(matrix, size, size)
     #
     #     return AutoAssociativeProjection(sender=mech,
     #                                      receiver=mech.input_states[mech.indexOfInhibitionInputState],
