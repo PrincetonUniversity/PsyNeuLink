@@ -1347,19 +1347,6 @@ class State_Base(State):
         if not isinstance(projection_list, list):
             projection_list = [projection_list]
 
-
-        # # FIX: 10/3/17 - FOR DEBUGGING:
-        # projection_list[0] = OutputState
-        # projection_list[0] = projection_list[0].sender.owner
-        # projection_list[0] = 'LEARNING'
-        # projection_list[0] = LearningSignal
-        # projection_list[0] = LearningProjection
-        # # FIX: RE-RERUN THE FOLLOWING LINE AT SOME POINT TO CLEAN UP ERROR MESSAGE IT GENERATES
-        # projection_list[0] = projection_list[0].receiver
-        # projection_list[0] = 3
-        # # FIX: ------------------------
-
-
         # Parse each Projection specification in projection_list using self as connectee_state:
         # - calls _parse_projection_spec for each projection_spec in list
         # - validates that Projection specification is compatible with its sender and self

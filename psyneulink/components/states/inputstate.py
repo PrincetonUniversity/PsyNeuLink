@@ -649,7 +649,7 @@ class InputState(State_Base):
                                                   params=params)
 
         # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
-        if owner is None or (variable is None and reference_value is None):
+        if owner is None or (variable is None and reference_value is None and projections is None):
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = context

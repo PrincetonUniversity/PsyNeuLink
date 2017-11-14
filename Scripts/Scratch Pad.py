@@ -419,7 +419,7 @@ T = pnl.TransferMechanism(input_states=[{pnl.VARIABLE: [0, 0, 0], pnl.PROJECTION
 p = pnl.MappingProjection()
 T = pnl.TransferMechanism(default_variable=[0, 0], input_states=[p])
 
-
+# FIX: ADD AS TEST:
 m = pnl.TransferMechanism()
 i = pnl.InputState(variable=[0,0])
 m.add_states([i])
@@ -561,25 +561,22 @@ my_mech_C = pnl.TransferMechanism(input_states=[{'MY INPUT':[source_mech_1, sour
 # my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: my_mech,
 #                                                      pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
 
-# FIX: ADD THESE AS TEST
-# FIX: -------------------
-mech_A = pnl.TransferMechanism()
-my_input_state = pnl.InputState(projections=[mech_A])
-# FIX: THROWING ERROR:
-mech_B = pnl.TransferMechanism(input_states=[my_input_state])
+# # FIX: ADD THIS AS TEST
+# mech_A = pnl.TransferMechanism()
+# my_input_state = pnl.InputState(projections=[mech_A])
+# mech_B = pnl.TransferMechanism(input_states=[my_input_state])
 
+# # FIX: ADD THIS AS TEST INCLUDING ASSERTION OF PROJECTION
 # mech_A = pnl.TransferMechanism()
 # my_input_state = pnl.InputState(projections=[mech_A])
 # mech_B = pnl.TransferMechanism()
-# # FIX: THROWING ERROR:
 # mech_B.add_states([my_input_state])
 
-# mech_A = pnl.TransferMechanism()
-# mech_B = pnl.TransferMechanism()
-# # FIX: STAYING IN DEFERRED_INIT:
-# my_input_state = pnl.InputState(owner=mech_B,
-#                                 projections=[mech_A])
-
+# # FIX: ADD THIS AS TEST INCLUDING ASSERTION OF PROJECTION
+mech_A = pnl.TransferMechanism()
+mech_B = pnl.TransferMechanism()
+my_input_state = pnl.InputState(owner=mech_B,
+                                projections=[mech_A])
 
 assert True
 
