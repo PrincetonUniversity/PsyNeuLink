@@ -18,27 +18,11 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('.'))
+
 sys.path.insert(0, os.path.abspath('../../'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms'))
-# sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/ControlMechanism'))
-# sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/MonitoringMechanisms'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/ProcessingMechanisms'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/ProcessingMechanisms/ObjectiveMechanisms'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdaptiveMechanisms'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdaptiveMechanisms/LearningMechanism'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdaptiveMechanisms/ControlMechanism'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdaptiveMechanisms/GatingMechanism'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Projections'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Projections/PathwayProjections'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Projections/ModulatoryProjections'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/States'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/States/ModulatorySignals'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Functions'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Scheduling'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Globals/'))
+# adding this path alone so that Run/Environment module can go in the dropdown underneath Scheduling
+sys.path.insert(0, os.path.abspath('../../psyneulink/globals/'))
+
 
 # -- General configuration ------------------------------------------------
 
@@ -51,8 +35,13 @@ sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Globals/'))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinx.ext.mathjax',
+    # 'sphinx.ext.imgmath'
 ]
+
+pngmath_latex_preamble=r'\usepackage[active]{preview}' # + other custom stuff for inline math, such as non-default math fonts etc.
+pngmath_use_preview=True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

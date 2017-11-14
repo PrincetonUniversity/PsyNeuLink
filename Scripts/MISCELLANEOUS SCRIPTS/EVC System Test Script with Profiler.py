@@ -1,11 +1,11 @@
 import profile
 
-from PsyNeuLink.Components.Mechanisms.IntegratorMechanism import *
-from PsyNeuLink.Components.Mechanisms.LinearMechanism import *
+from psyneulink.components.mechanisms.IntegratorMechanism import *
+from psyneulink.components.mechanisms.LinearMechanism import *
 
-from PsyNeuLink.Components.Process import Process_Base
-from PsyNeuLink.Components.System import System_Base
-from PsyNeuLink.Globals.Keywords import *
+from psyneulink.components.process import Process
+from psyneulink.components.system import System
+from psyneulink.globals.keywords import *
 
 
 def run():
@@ -34,23 +34,23 @@ def run():
     #endregion
 
     #region Processes
-    TaskExecutionProcess = Process_Base(default_input_value=[0],
-                                        params={PATHWAY:[(Input, 0),
+    TaskExecutionProcess = Process(default_input_value=[0],
+                                   params={PATHWAY:[(Input, 0),
                                                                  IDENTITY_MATRIX,
                                                                  (Decision, 0)]},
-                                        prefs = process_prefs,
-                                        name = 'TaskExecutionProcess')
+                                   prefs = process_prefs,
+                                   name = 'TaskExecutionProcess')
 
-    RewardProcess = Process_Base(default_input_value=[0],
-                                 params={PATHWAY:[(Reward, 1)]},
-                                 prefs = process_prefs,
-                                 name = 'RewardProcess')
+    RewardProcess = Process(default_input_value=[0],
+                            params={PATHWAY:[(Reward, 1)]},
+                            prefs = process_prefs,
+                            name = 'RewardProcess')
     #endregion
 
     #region System
-    mySystem = System_Base(params={PROCESSES:[TaskExecutionProcess, RewardProcess],
-                                   MONITOR_FOR_CONTROL:[Reward, ERROR_RATE,(RESPONSE_TIME, -1, 1)]},
-                           name='EVC Test System')
+    mySystem = System(params={PROCESSES:[TaskExecutionProcess, RewardProcess],
+                              MONITOR_FOR_CONTROL:[Reward, ERROR_RATE,(RESPONSE_TIME, -1, 1)]},
+                      name='EVC Test System')
     #endregion
 
     #region Show

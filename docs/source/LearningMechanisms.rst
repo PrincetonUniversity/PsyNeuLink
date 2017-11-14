@@ -1,5 +1,5 @@
-LearningMechanisms
-==================
+Learning Mechanisms
+===================
 
 **Base class**:
 

@@ -1,10 +1,9 @@
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms import EVCControlMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import *
+from psyneulink.components.process import Process
+from psyneulink.components.system import System
+from psyneulink.globals.keywords import *
+from psyneulink.library.mechanisms.adaptive import EVCControlMechanism
 
 # Stimulus Mechanisms
 Color_Input = TransferMechanism(name='Color Input', function=Linear(slope = 0.2995))
@@ -25,14 +24,14 @@ Output = TransferMechanism(name='Output',
                                  )
 
 # Processes:
-ColorNamingProcess = process(
+ColorNamingProcess = Process(
         default_variable=[0],
         pathway=[Color_Input, Color_Hidden, Output],
         target=[0],
         learning=LEARNING,
         name = 'Color Naming Process')
 
-WordReadingProcess = process(
+WordReadingProcess = Process(
         default_variable=[0],
         pathway=[Word_Input, Word_Hidden, Output],
         learning=LEARNING,
@@ -41,7 +40,7 @@ WordReadingProcess = process(
 
 
 # System:
-mySystem = system(processes=[ColorNamingProcess, WordReadingProcess],
+mySystem = System(processes=[ColorNamingProcess, WordReadingProcess],
                   controller=EVCControlMechanism,
                   enable_controller=True,
                   monitor_for_control=[Output],
