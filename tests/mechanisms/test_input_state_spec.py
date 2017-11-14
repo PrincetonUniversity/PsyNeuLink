@@ -4,7 +4,12 @@ import pytest
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.states.state import StateError
 from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, VARIABLE
+
+mismatches_default_variable_error_text = 'not compatible with the specified default variable'
+mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
 
 
 class TestInputStateSpec:
@@ -35,11 +40,11 @@ class TestInputStateSpec:
     def test_mismatch_with_default_variable_error(self):
 
         with pytest.raises(MechanismError) as error_text:
-            T = TransferMechanism(
+            TransferMechanism(
                 default_variable=[[0], [0]],
                 input_states=[[32, 24], 'HELLO']
             )
-        assert "not compatible with the specified default variable" in str(error_text.value)
+        assert mismatches_default_variable_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 3
@@ -355,25 +360,25 @@ class TestInputStateSpec:
 
     def test_dict_with_variable_mismatches_default(self):
         with pytest.raises(MechanismError) as error_text:
-            T = TransferMechanism(
+            TransferMechanism(
                 default_variable=[0],
                 input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}]
             )
-        assert 'not compatible with the specified default variable' in str(error_text.value)
+        assert mismatches_default_variable_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 23
 
     def test_dict_with_variable_mismatches_default_multiple_input_states(self):
         with pytest.raises(MechanismError) as error_text:
-            T = TransferMechanism(
+            TransferMechanism(
                 default_variable=[[0], [0]],
                 input_states=[
                     {NAME: 'FIRST', VARIABLE: [0, 0]},
                     {NAME: 'SECOND', VARIABLE: [0]}
                 ]
             )
-        assert 'not compatible with the specified default variable' in str(error_text.value)
+        assert mismatches_default_variable_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 24
@@ -391,8 +396,136 @@ class TestInputStateSpec:
 
     def test_dict_with_variable_mismatches_size(self):
         with pytest.raises(MechanismError) as error_text:
-            T = TransferMechanism(
+            TransferMechanism(
                 size=1,
                 input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}]
             )
-        assert 'not compatible with the default variable determined from size parameter' in str(error_text.value)
+        assert mismatches_size_error_text in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 26
+
+    def test_params_override(self):
+        T = TransferMechanism(
+            input_states=[[0], [0]],
+            params={INPUT_STATES: [[0, 0], [0]]}
+        )
+        assert T.instance_defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert len(T.input_states) == 2
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 27
+
+    def test_inputstate_object(self):
+        with pytest.raises(StateError) as error_text:
+            m = TransferMechanism(default_variable=[0, 0, 0])
+            i = InputState(owner=m, variable=[0, 0, 0])
+            TransferMechanism(input_states=[i])
+        assert 'that belongs to another Mechanism' in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 28
+
+    def test_inputstate_class(self):
+        T = TransferMechanism(input_states=[InputState])
+
+        np.testing.assert_array_equal(T.instance_defaults.variable, [InputState.ClassDefaults.variable])
+        assert len(T.input_states) == 1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 29
+
+    def test_inputstate_class_with_variable(self):
+        T = TransferMechanism(default_variable=[0, 0], input_states=[InputState])
+
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        assert len(T.input_states) == 1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 30
+
+    def test_InputState_mismatches_default(self):
+        with pytest.raises(MechanismError) as error_text:
+            i = InputState(reference_value=[0, 0, 0])
+            TransferMechanism(default_variable=[0, 0], input_states=[i])
+        assert mismatches_default_variable_error_text in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 31
+
+    def test_projection_with_matrix_and_sender(self):
+        m = TransferMechanism(size=2)
+        p = MappingProjection(sender=m, matrix=[[0, 0, 0], [0, 0, 0]])
+        T = TransferMechanism(input_states=[p])
+
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0, 0]]))
+        assert len(T.input_states) == 1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 32
+
+    def test_projection_with_matrix_and_sender_mismatches_default(self):
+        with pytest.raises(MechanismError) as error_text:
+            m = TransferMechanism(size=2)
+            p = MappingProjection(sender=m, matrix=[[0, 0, 0], [0, 0, 0]])
+            TransferMechanism(default_variable=[0, 0], input_states=[p])
+        assert mismatches_default_variable_error_text in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 33
+
+    def test_projection_with_sender_and_default(self):
+        t = TransferMechanism(size=3)
+        p = MappingProjection(sender=t)
+        T = TransferMechanism(default_variable=[0, 0], input_states=[p])
+
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        assert len(T.input_states) == 1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 34
+
+    def test_projection_no_args_projection_spec(self):
+        p = MappingProjection()
+        T = TransferMechanism(input_states=[p])
+
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0]]))
+        assert len(T.input_states) == 1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 35
+
+    def test_projection_no_args_projection_spec_with_default(self):
+        p = MappingProjection()
+        T = TransferMechanism(default_variable=[0, 0], input_states=[p])
+
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        assert len(T.input_states) == 1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 36
+
+    def test_projection_no_args_dict_spec(self):
+        p = MappingProjection()
+        T = TransferMechanism(input_states=[{VARIABLE: [0, 0, 0], PROJECTIONS:[p]}])
+
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0, 0]]))
+        assert len(T.input_states) == 1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 37
+
+    def test_projection_no_args_dict_spec_mismatch_with_default(self):
+        with pytest.raises(MechanismError) as error_text:
+            p = MappingProjection()
+            TransferMechanism(default_variable=[0, 0], input_states=[{VARIABLE: [0, 0, 0], PROJECTIONS: [p]}])
+        assert mismatches_default_variable_error_text in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 38
+
+    def test_outputstate_(self):
+        with pytest.raises(MechanismError) as error_text:
+            p = MappingProjection()
+            TransferMechanism(default_variable=[0, 0], input_states=[{VARIABLE: [0, 0, 0], PROJECTIONS: [p]}])
+        assert mismatches_default_variable_error_text in str(error_text.value)
