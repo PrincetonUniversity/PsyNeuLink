@@ -846,7 +846,11 @@ class InputState(State_Base):
             elif len(tuple_spec) == 4:
                 projections_spec = tuple_spec
 
-            if projections_spec is not None:
+            try:
+                projections_spec
+            except UnboundLocalError:
+                pass
+            else:
 
                 try:
                     params_dict[PROJECTIONS] = _parse_connection_specs(self,

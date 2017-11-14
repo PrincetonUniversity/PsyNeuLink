@@ -144,15 +144,17 @@ Examples
 The following example creates an instance of a TransferMechanism that names the default InputState ``MY_INPUT``,
 and assigns three `standard OutputStates <OutputState_Standard>`::
 
-     my_mech = TransferMechanism(input_states=['MY_INPUT'],
-                                 output_states=[RESULT, MEAN, VARIANCE])
+    >>> import psyneulink as pnl
+    >>> my_mech = pnl.TransferMechanism(input_states=['MY_INPUT'],
+    ...                                 output_states=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE])
+
 
 .. _Mechanism_Example_2:
 
 This shows how the same Mechanism can be specified using a dictionary assigned to the **params** argument::
 
-     my_mech = TransferMechanism(params={INPUT_STATES: ['MY_INPUT'],
-                                         OUTPUT_STATES: [RESULT, MEAN, VARIANCE]})
+     >>> my_mech = pnl.TransferMechanism(params={pnl.INPUT_STATES: ['MY_INPUT'],
+     ...                                         pnl.OUTPUT_STATES: [pnl.RESULT, pnl.MEAN, pnl.VARIANCE]})
 
 .. _Mechanism_Parameter_Specification:
 
@@ -187,7 +189,7 @@ be specified using the name of `Function <Function>` class, or its constructor (
 parameters).  For example, the `function <TransferMechanism.function>` of a `TransferMechanism`, which is `Linear` by
 default, can be specified to be the `Logistic` function as follows::
 
-    my_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4))
+    >>> my_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4))
 
 Notice that the parameters of the :keyword:`function` (in this case, `gain` and `bias`) can be specified by including
 them in its constructor.  Some Mechanisms support only a single function.  In that case, the :keyword:`function`
@@ -201,9 +203,8 @@ The parameters for a Mechanism's primary function can also be specified as entri
 constructor.  For example, the parameters of the `Logistic` function in the example above can
 also be assigned as follows::
 
-    my_mechanism = TransferMechanism(function=Logistic,
-                                     params={FUNCTION_PARAMS: {GAIN:1.0,
-                                                               BIAS:-4.0})
+    >>> my_mechanism = pnl.TransferMechanism(function=pnl.Logistic,
+    ...                                      params={pnl.FUNCTION_PARAMS: {pnl.GAIN: 1.0, pnl.BIAS: -4.0}})
 
 Again, while not as simple as specifying these as arguments in the function's construtor, this format is more flexible.
 Any values specified in the parameter dictionary will **override** any specified within the constructor for the function

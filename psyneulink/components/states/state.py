@@ -1251,7 +1251,10 @@ class State_Base(State):
                 if not (projection_spec or len(projection_spec)):
                     projection_spec = {SENDER: self, RECEIVER: receiver_state}
                 projection = projection_type(**projection_spec)
-                projection.receiver = projection.receiver or receiver
+                try:
+                    projection.receiver = projection.receiver
+                except AttributeError:
+                    projection.receiver = receiver
                 proj_recvr = projection.receiver
 
             else:
@@ -1746,7 +1749,7 @@ def _instantiate_state_list(owner,
         # Get name of state, and use as index to assign to states ContentAddressableList
         default_name = state._assign_default_name()
         if default_name:
-             state_name = default_name
+            state_name = default_name
         elif state.init_status is InitStatus.DEFERRED_INITIALIZATION:
             state_name = state.init_args[NAME]
         else:

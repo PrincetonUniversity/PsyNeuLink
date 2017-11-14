@@ -162,17 +162,19 @@ Examples
 The following example generates an LCMechanism that modulates the function of two TransferMechanisms, one that uses
 a `Linear` function and the other a `Logistic` function::
 
-    my_mech_1 = TransferMechanism(function=Linear,
-                                  name='my_linear_mechanism')
-    my_mech_2 = TransferMechanism(function=Logistic,
-                                  name='my_logistic_mechanism')
+    >>> import psyneulink as pnl
+    >>> my_mech_1 = pnl.TransferMechanism(function=pnl.Linear,
+    ...                                   name='my_linear_mechanism')
+    >>> my_mech_2 = pnl.TransferMechanism(function=pnl.Logistic,
+    ...                                   name='my_logistic_mechanism')
 
-    LC = LCMechanism(modulated_mechanisms=[my_mech_1, my_mech_2],
-                     name='my_LC')
+    >>> LC = LCMechanism(modulated_mechanisms=[my_mech_1, my_mech_2],
+    ...                  name='my_LC')
 
-Calling `my_LC.show()` generates the following report::
+Calling `LC.show()` generates the following report::
 
-    my_LC
+    >>> LC.show()
+
 COMMENT:
         Monitoring the following Mechanism OutputStates:
             None
@@ -379,7 +381,7 @@ class LCMechanism(ControlMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 monitor_for_control:tc.optional(list)=None,
+                 # monitor_for_control:tc.optional(list)=None,
                  mode:tc.optional(float)=0.0,
                  modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -395,7 +397,7 @@ class LCMechanism(ControlMechanism):
 
         super().__init__(default_variable=default_variable,
                          size=size,
-                         monitor_for_control=monitor_for_control,
+                         # monitor_for_control=monitor_for_control,
                          modulation=modulation,
                          params=params,
                          name=name,

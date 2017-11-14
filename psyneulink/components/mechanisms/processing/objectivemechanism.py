@@ -185,12 +185,17 @@ a single value, that it can compare with the value of the reward Mechanism (moni
 environment).  In the example below, this is accomplished by using `default_variable` in the constructor of the
 ObjectiveMechanism to force the InputState for the ObjectiveMechanism to have a single value::
 
-    my_action_select_mech = TransferMechanism(default_variable = [0,0,0], function=SoftMax(output=PROB))
+    >>> import psyneulink as pnl
+    >>> my_action_select_mech = pnl.TransferMechanism(default_variable=[0, 0, 0],
+    ...                                               function=pnl.SoftMax(output=pnl.PROB),
+    ...                                               name='Action Selection Mech')
 
-    my_reward_mech = TransferMechanism(default_variable = [0])
+    >>> my_reward_mech = pnl.TransferMechanism(default_variable=[0],
+    ...                                        name='Reward Mech')
 
-    my_objective_mech = ObjectiveMechanism(default_variable = [[0],[0]],
-                                           monitored_output_states = [my_action_select_mech, my_reward_mech])
+    >>> my_objective_mech = pnl.ObjectiveMechanism(default_variable=[[0],[0]],
+    ...                                            monitored_output_states=[my_action_select_mech,
+    ...                                                                     my_reward_mech])
 
 Note that the OutputStates for the ``my_action_selection`` and ``my_reward_mech`` are specified
 in `monitored_output_states`.  If that were the only specification, the InputState created for ``my_action_select_mech``
@@ -208,9 +213,9 @@ An alternative would be to explicitly specify the `variable <InputState.variable
 for ``my_action_select_mech`` using a `InputState specification dictionary <InputState_Specification_Dictionary>` in
 the **monitored_output_states** argument of ``my_objective_mech``, as follows::
 
-    my_objective_mech = ObjectiveMechanism(monitored_output_states = [{MECHANISM: my_action_select_mech,
-                                                                       VARIABLE: [0]},
-                                                                      my_reward_mech])
+    >>> my_objective_mech = pnl.ObjectiveMechanism(monitored_output_states=[{pnl.MECHANISM: my_action_select_mech,
+    ...                                                                      pnl.VARIABLE: [0]},
+    ...                                                                     my_reward_mech])
 
 Note that the *VARIABLE* entry here specifies the `variable <InputState.variable>` for the InputState of the
 ObjectiveMechanism created to receive a Projection from ``my_action_selcect_mech``, and not ``my_action_selcect_mech``
@@ -223,8 +228,9 @@ specify the Projections it receives from the OutputState it monitors.  The follo
 specification <InputState_Tuple_Specification:>` to assign the matrix for the MappingProjection from
 ``my_action_select_mech`` to the corresponding InputState of ``my_objective_mech``::
 
-    my_objective_mech = ObjectiveMechanism(monitored_output_states = [(my_action_select_mech, np.ones((3,1)),
-                                                                      my_reward_mech])
+    >>> import numpy as np
+    >>> my_objective_mech = pnl.ObjectiveMechanism(monitored_output_states=[(my_action_select_mech, np.ones((3,1))),
+    ...                                                                     my_reward_mech])
 
 Since the matrix specified has three rows (for its inputs) and one col (for the output), it will take the length three
 vector provided as the output of ``my_action_select_mech`` and combine its elements into a single value that is
@@ -247,8 +253,9 @@ attributes of its InputStates.  This can be done by placing them in a `tuple spe
 below, the ObjectiveMechanism used in the previous example is further customized to subtract the value of the action
 selected from the value of the reward::
 
-    my_objective_mech = ObjectiveMechanism(default_variable = [[0],[0]],
-                                           monitored_output_states = [(my_action_select_mech, -1, 1), my_reward_mech])
+    >>> my_objective_mech = pnl.ObjectiveMechanism(default_variable = [[0],[0]],
+    ...                                            monitored_output_states = [(my_action_select_mech, -1, 1),
+    ...                                                                       my_reward_mech])
 
 This specifies that ``my_action_select_mech`` should be assigned a weight of -1 and an exponent of 1 when it is
 submitted to the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.  Notice that the exponent had to be
@@ -260,10 +267,11 @@ Tuples can also be included in a specification dictionary for the **monitored_ou
 allow several OutputStates for the same Mechanism to be specified more easily, each by name rather than by full
 reference (which is required if they are specified on their own or in a tuple)::
 
-    my_objective_mech = ObjectiveMechanism(monitored_output_states=[Reward,
-                                                            {MECHANISM: Decision,
-                                                             OUTPUT_STATES: [PROBABILITY_UPPER_THRESHOLD,
-                                                                             (RESPONSE_TIME, 1, -1)]}])
+    >>> my_objective_mech = pnl.ObjectiveMechanism(monitored_output_states=[my_reward_mech,
+    ...                                                        {pnl.MECHANISM: pnl.DDM_MECHANISM,
+    ...                                                         pnl.OUTPUT_STATES: [pnl.PROBABILITY_UPPER_THRESHOLD,
+    ...                                                                         (pnl.RESPONSE_TIME, 1, -1)],
+    ...                                                         pnl.NAME: 'DDM Mechanism'}])
 
 Note that, as shown in this example, the tuple format can still be used for each individual OutputState in the list
 assigned to the *OUTPUT_STATES* entry.
@@ -275,9 +283,9 @@ In the examples above, the weights and exponents assigned to the InputStates are
 `function <ObjectiveMechanism.function>` for use in combining their values.  The same can be accomplished by
 specifying the relevant parameter(s) of the function itself, as in the following example::
 
-    my_objective_mech = ObjectiveMechanism(default_variable = [[0],[0]],
-                                           monitored_output_states = [my_action_select_mech, my_reward_mech],
-                                           function=LinearCombination(weights=[[-1], [1]]))
+    >>> my_objective_mech = pnl.ObjectiveMechanism(default_variable = [[0],[0]],
+    ...                                            monitored_output_states = [my_action_select_mech, my_reward_mech],
+    ...                                            function=pnl.LinearCombination(weights=[[-1], [1]]))
 
 Here, the `weights <LinearCombination.weights>` parameter of the `LinearCombination` function is specified directly,
 with two values [-1] and [1] corresponding to the two items in `monitored_output_states` (and `default_variable`).

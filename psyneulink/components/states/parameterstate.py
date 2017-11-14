@@ -150,11 +150,16 @@ Examples
 In the following example, a Mechanism is created by specifying two of its parameters, as well as its
 `function <Component.function>` and two of that function's parameters, each using a different specification format::
 
-    my_mechanism = RecurrentTransferMechanism(size=5,
-                                              noise=ControlSignal),
-                                              function=Logistic(gain=(0.5, ControlSignal),
-                                                                bias=(1.0, ControlSignal(
-                                                                              modulation=ModulationParam.ADDITIVE))))
+    >>> import psyneulink as pnl
+    >>> my_mechanism = pnl.RecurrentTransferMechanism(size=5,
+    ...                                               noise=pnl.ControlSignal(),
+    ...                                               function=pnl.Logistic(gain=(0.5, pnl.ControlSignal),
+    ...                                                                     bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))))
+
+COMMENT:
+    If assigning a default ControlSignal makes the noise value the same as the
+    default noise value, why are we using a ControlSignal here??
+COMMENT
 
 The first argument of the constructor for the Mechanism specifies its `size <Component.size>` parameter by
 directly assigning a value to it.  The second specifies the `noise <RecurrentTransferMechanism.noise>` parameter
@@ -170,9 +175,12 @@ In the following example, a `MappingProjection` is created, and its
 `matrix <MappingProjection.MappingProjection.matrix>` parameter is assigned a random weight matrix (using a
 `matrix keyword <Matrix_Keywords>`) and `LearningSignal`::
 
-    my_mapping_projection = MappingProjection(sender=my_input_mechanism,
-                                              receiver=my_output_mechanism,
-                                              matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningSignal))
+    >>> my_input_mechanism = pnl.TransferMechanism()
+    >>> my_output_mechanism = pnl.TransferMechanism()
+    >>> my_mapping_projection = pnl.MappingProjection(sender=my_input_mechanism,
+    ...                                               receiver=my_output_mechanism,
+    ...                                               matrix=(pnl.RANDOM_CONNECTIVITY_MATRIX,
+    ...                                                       pnl.LearningSignal))
 
 .. note::
    The `matrix <MappingProjection.MappingProjection.matrix>` parameter belongs to the MappingProjection's
@@ -182,13 +190,13 @@ In the following example, a `MappingProjection` is created, and its
 
 The example below shows how to specify the parameters in the first example using a parameter specification dictionary::
 
-    my_mechanism = RecurrentTransferMechanism(
-                              size=5,
-                              params={NOISE:5,
-                                      'size':ControlSignal,
-                                      FUNCTION:Logistic,
-                                      FUNCTION_PARAMS:{GAIN:(0.5, ControlSignal),
-                                                       BIAS:(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
+    >>> my_mechanism = pnl.RecurrentTransferMechanism(
+    ...                          size=5,
+    ...                          params={pnl.NOISE: 5,
+    ...                                  'size': pnl.ControlSignal,
+    ...                                  pnl.FUNCTION: pnl.Logistic,
+    ...                                  pnl.FUNCTION_PARAMS:{pnl.GAIN:(0.5, pnl.ControlSignal),
+    ...                                                       pnl.BIAS:(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))}})
 
 There are several things to note here.  First, the parameter specification dictionary must be assigned to the
 **params** argument of the constructor.  Second, both methods for specifying a parameter -- directly in an argument

@@ -154,11 +154,12 @@ defines `TRANSFER_OUTPUT`, with attributes *MEAN*, *MEDIAN*, *VARIANCE* and *STA
 predefined OutputStates in its `standard_output_states <TransferMechanism.standard_output_states>` attribute.
 These can be used in the list of OutputStates specified for a TransferMechanism object, as in the following example::
 
-    my_mech = TransferMechanism(default_variable=[0,0],
-                                function=Logistic(),
-                                output_states=[TRANSFER_OUTPUT.RESULT,
-                                               TRANSFER_OUTPUT.MEAN,
-                                               TRANSFER_OUTPUT.VARIANCE])
+    >>> import psyneulink as pnl
+    >>> my_mech = pnl.TransferMechanism(default_variable=[0,0],
+    ...                                 function=pnl.Logistic(),
+    ...                                 output_states=[pnl.TRANSFER_OUTPUT.RESULT,
+    ...                                                pnl.TRANSFER_OUTPUT.MEAN,
+    ...                                                pnl.TRANSFER_OUTPUT.VARIANCE])
 
 In this example, ``my_mech`` is configured with three OutputStates;  the first will be named *RESULT* and will
 represent logistic transform of the 2-element input vector;  the second will be named  *MEAN* and will represent mean
@@ -182,12 +183,14 @@ and `calculate <OutputState.calculate>` attributes can be assigned when the Outp
 by including *INDEX* and *CALCULATE* entries in a  `specification dictionary <OutputState_Specification>` for the
 OutputState, as in the following example::
 
-    my_mech = DDM(function=BogaczEtAl(),
-                  output_states=[ DDM_OUTPUT.DECISION_VARIABLE,
-                                  DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
-                                  {NAME: 'DECISION ENTROPY',
-                                   INDEX: 2,
-                                   CALCULATE: Entropy().function }])
+
+    >>> my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
+    ...                   output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
+    ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
+    ...                                  {pnl.NAME: 'DECISION ENTROPY',
+    ...                                   pnl.INDEX: 2,
+    ...                                   pnl.CALCULATE: pnl.Stability(metric=pnl.ENTROPY).function }])
+
 COMMENT:
     what is this Entropy() class???
 COMMENT
@@ -209,24 +212,24 @@ argument of the constructor for ``my_mech``.
 Custom OutputStates can also be created on their own, and separately assigned or added to a Mechanism.  For example,
 the ``DECISION ENTROPY`` OutputState could be created as follows::
 
-    decision_entropy_output_state = OutputState(name='DECISION ENTROPY',
-                                                index=2,
-                                                calculate=Entropy().function)
+    >>> decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
+    ...                                                 index=2,
+    ...                                                 calculate=pnl.Stability(metric=pnl.ENTROPY).function)
 
 and then assigned either as::
 
-    my_mech = DDM(function=BogaczEtAl(),
-                  output_states=[ DDM.DECISION_VARIABLE,
-                                  DDM.PROB_UPPER_THRESHOLD,
-                                  decision_entropy_output_state])
+    >>> my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
+    ...                      output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
+    ...                                     pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
+    ...                                     decision_entropy_output_state])
 
 or::
 
-    my_mech = DDM(function=BogaczEtAl(),
-                  output_states=[ DDM.DECISION_VARIABLE,
-                                  DDM.PROB_UPPER_THRESHOLD])
+    >>> my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
+    ...              output_states=[ pnl.DDM_OUTPUT.DECISION_VARIABLE,
+    ...                              pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
 
-    my_mech.add_states(decision_entropy_output_state)
+    >>> my_mech.add_states(decision_entropy_output_state)
 
 
 .. _OutputState_Projections:

@@ -293,9 +293,14 @@ Example
 
 The following example implements a System with an EVCControlMechanism (and two processes not shown)::
 
-    mySystem = System(processes=[myRewardProcess, myDecisionProcess],
-                      controller=EVCControlMechanism,
-                      monitor_for_control=[Reward, DDM_DECISION_VARIABLE,(RESPONSE_TIME, 1, -1)],
+    >>> import psyneulink as pnl
+    >>> myRewardProcess = pnl.Process()
+    >>> myDecisionProcess = pnl.Process()
+    >>> mySystem = pnl.System(processes=[myRewardProcess, myDecisionProcess],
+    ...                       controller=pnl.EVCControlMechanism,
+    ...                       monitor_for_control=[Reward,
+    ...                                            pnl.DDM_OUTPUT.DECISION_VARIABLE,
+    ...                                            (pnl.RESPONSE_TIME, 1, -1)],
 
 It uses the System's `monitor_for_control` argument to assign three OutputStates to be monitored.  The first one
 references the Reward Mechanism (not shown);  its `primary OutputState <OutputState_Primary>` will be used by default.

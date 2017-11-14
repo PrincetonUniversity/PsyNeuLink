@@ -239,16 +239,18 @@ Examples
 The following example creates a ControlMechanism by specifying its **objective_mechanism** using a constructor
 that specifies the OutputStates to be monitored by its `objective_mechanism <ControlMechanism.objective_mechanism>`::
 
-    my_transfer_mech_A = TransferMechanism()
-    my_DDM = DDM()
-    my_transfer_mech_B = TransferMechanism(function=Logistic)
+    >>> import psyneulink as pnl
+    >>> my_transfer_mech_A = pnl.TransferMechanism()
+    >>> my_DDM = pnl.DDM()
+    >>> my_transfer_mech_B = pnl.TransferMechanism(function=pnl.Logistic)
 
-    my_control_mech = ControlMechanism(
-                         objective_mechanism=ObjectiveMechanism(monitored_output_states=[(my_transfer_mech_A, 2, 1),
-                                                                                  my_DDM.output_states[RESPONSE_TIME]],
-                                                                function=LinearCombination(operation=PRODUCT)),
-                         control_signals=[(THRESHOLD, my_DDM),
-                                          (GAIN, my_transfer_mech_B)])
+    >>> my_control_mech = pnl.ControlMechanism(
+    ...                          objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[(my_transfer_mech_A, 2, 1),
+    ...                                                                                               my_DDM.output_states[pnl.RESPONSE_TIME]],
+    ...                                                                     function=pnl.LinearCombination(operation=pnl.PRODUCT)),
+    ...                          control_signals=[(pnl.THRESHOLD, my_DDM),
+    ...                                           (pnl.GAIN, my_transfer_mech_B)])
+
 
 This creates an ObjectiveMechanism for the ControlMechanism that monitors the `primary OutputState
 <OutputState_Primary>` of ``my_Transfer_mech_A`` and the *RESPONSE_TIME* OutputState of ``my_DDM``;  its function
@@ -260,25 +262,26 @@ the allocation for its ControlSignals, that control the value of the `threshold 
 The following example specifies the same set of OutputStates for the ObjectiveMechanism, by assigning them directly
 to the **objective_mechanism** argument::
 
-    my_control_mech = ControlMechanism(
-                            objective_mechanism=[(my_transfer_mech_A, 2, 1),
-                                                 my_DDM.output_states[RESPONSE_TIME]],
-                            control_signals=[(THRESHOLD, my_DDM),
-                                             (GAIN, my_transfer_mech_B)])
+    >>> my_control_mech = pnl.ControlMechanism(
+    ...                             objective_mechanism=[(my_transfer_mech_A, 2, 1),
+    ...                                                  my_DDM.output_states[pnl.RESPONSE_TIME]],
+    ...                             control_signals=[(pnl.THRESHOLD, my_DDM),
+    ...                                              (pnl.GAIN, my_transfer_mech_B)])
+    ...
 
 Note that, while this form is more succinct, it precludes specifying the ObjectiveMechanism's function.  Therefore,
 the values of the monitored OutputStates will be added (the default) rather than multiplied.
 
 The ObjectiveMechanism can also be created on its own, and then referenced in the constructor for the ControlMechanism::
 
-    my_obj_mech=ObjectiveMechanism(monitored_output_states=[(my_transfer_mech_A, 2, 1),
-                                                     my_DDM.output_states[RESPONSE_TIME]],
-                                   function=LinearCombination(operation=PRODUCT))
+    >>> my_obj_mech = pnl.ObjectiveMechanism(monitored_output_states=[(my_transfer_mech_A, 2, 1),
+    ...                                                               my_DDM.output_states[pnl.RESPONSE_TIME]],
+    ...                                      function=pnl.LinearCombination(operation=pnl.PRODUCT))
 
-    my_control_mech = ControlMechanism(
-                            objective_mechanism=my_obj_mech,
-                            control_signals=[(THRESHOLD, my_DDM),
-                                             (GAIN, my_transfer_mech_B)])
+    >>> my_control_mech = pnl.ControlMechanism(
+    ...                        objective_mechanism=my_obj_mech,
+    ...                        control_signals=[(pnl.THRESHOLD, my_DDM),
+    ...                                         (pnl.GAIN, my_transfer_mech_B)])
 
 Here, as in the first example, the constructor for the ObjectiveMechanism can be used to specify its function, as well
 as the OutputState that it monitors.

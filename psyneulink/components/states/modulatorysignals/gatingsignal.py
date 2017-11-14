@@ -145,9 +145,11 @@ Examples
 `primary InputState <InputState_Primary>` of one Mechanism, and the `primary OutputState <OutputState_Primary>`
 of another::
 
-    my_mechanism_A = TransferMechanism()
-    my_mechanism_B = TransferMechanism()
-    my_gating_mechanism = GatingMechanism(gating_signals=[my_mechanism_A, my_mechanism_B.output_state)
+    >>> import psyneulink as pnl
+    >>> my_mechanism_A = pnl.TransferMechanism(name="Mechanism A")
+    >>> my_mechanism_B = pnl.TransferMechanism(name="Mechanism B")
+    >>> my_gating_mechanism = pnl.GatingMechanism(gating_signals=[my_mechanism_A.input_state,
+    ...                                                           my_mechanism_B.output_state])
 
 Note that, in the **gating_signals** argument, the first item references a Mechanism (``my_mechanism_A``) rather than
 one of its states -- this is all that is necessary, since the default for a `GatingSignal` is to modulate the
@@ -164,13 +166,14 @@ the `InputState` of all the layers in a 3-layered feedforward neural network.  O
 *MULTIPLICATIVE_PARAM* of an InputState's `function <InputState.function>`.  In the example, this is changed so that
 it *adds* the `value <GatingSignal.value>` of the `GatingSignal` to the `value <InputState.value>` of each InputState::
 
-    my_input_layer = TransferMechanism(size=3)
-    my_hidden_layer = TransferMechanism(size=5)
-    my_output_layer = TransferMechanism(size=2)
-    my_gating_mechanism = GatingMechanism(gating_signals=[{'GATE_ALL': [my_input_layer,
-                                                                        my_hidden_layer,
-                                                                        my_output_layer]}],
-                                          modulation=ModulationParam.ADDITIVE)
+    >>> my_input_layer = pnl.TransferMechanism(size=3)
+    >>> my_hidden_layer = pnl.TransferMechanism(size=5)
+    >>> my_output_layer = pnl.TransferMechanism(size=2)
+    >>> my_gating_mechanism = pnl.GatingMechanism(gating_signals=[{pnl.NAME: 'GATE_ALL',
+    ...                                                            pnl.PROJECTIONS: [my_input_layer,
+    ...                                                                              my_hidden_layer,
+    ...                                                                              my_output_layer]}],
+    ...                                           modulation=pnl.ModulationParam.ADDITIVE)
 
 Note that, again, the **gating_signals** are listed as Mechanisms, since in this case it is their primary InputStates
 that are to be gated. Since they are all listed in a single entry of a
@@ -188,12 +191,12 @@ are updated, the value of the GatingSignal will be assigned as the `intercept` o
 using a single GatingSignal.  In the example below, a different GatingSignal is assigned to the InputState of each
 Mechanism::
 
-    my_gating_mechanism = GatingMechanism(gating_signals=[{NAME: 'GATING_SIGNAL_A',
-                                                           MODULATION: ModulationParam.ADDITIVE,
-                                                           PROJECTIONS: my_input_layer},
-                                                          {NAME: 'GATING_SIGNAL_B',
-                                                           PROJECTIONS: [my_hidden_layer,
-                                                                         my_output_layer]}])
+    >>> my_gating_mechanism = pnl.GatingMechanism(gating_signals=[{pnl.NAME: 'GATING_SIGNAL_A',
+    ...                                                            pnl.MODULATION: pnl.ModulationParam.ADDITIVE,
+    ...                                                            pnl.PROJECTIONS: my_input_layer},
+    ...                                                           {pnl.NAME: 'GATING_SIGNAL_B',
+    ...                                                            pnl.PROJECTIONS: [my_hidden_layer,
+    ...                                                                              my_output_layer]}])
 
 Here, two GatingSignals are specified as `specification dictionaries <GatingSignal_Specification>`, each of which
 contains an entry for the name of the GatingSignal, and a *PROJECTIONS* entry that specifies the States to which the
@@ -209,14 +212,14 @@ modulated by ``GATING_SIGNAL_B``.
 assigned to a GatingMechanism.  In the example below, the same GatingSignals specified in the previous example are
 created directly and then assigned to ``my_gating_mechanism``::
 
-    my_gating_signal_A = GatingSignal(name='GATING_SIGNAL_A',
-                                      modulation=ModulationParams.ADDITIVE,
-                                      projections=my_input_layer)
-    my_gating_signal_B = GatingSignal(name='GATING_SIGNAL_B',
-                                      projections=my_hidden_layer,
-                                                  my_output_layer)
-    my_gating_mechanism = GatingMechanism(gating_signals=[my_gating_signal_A,
-                                                          my_gating_signal_B])
+    >>> my_gating_signal_A = pnl.GatingSignal(name='GATING_SIGNAL_A',
+    ...                                       modulation=pnl.ModulationParam.ADDITIVE,
+    ...                                       projections=my_input_layer)
+    >>> my_gating_signal_B = pnl.GatingSignal(name='GATING_SIGNAL_B',
+    ...                                       projections=[my_hidden_layer,
+    ...                                                    my_output_layer])
+    >>> my_gating_mechanism = pnl.GatingMechanism(gating_signals=[my_gating_signal_A,
+    ...                                                           my_gating_signal_B])
 
 
 Class Reference

@@ -42,8 +42,9 @@ A TransferMechanism can be created directly by calling its constructor, or using
 **function** argument, which can be the name of a `Function <Function>` class (first example below), or a call to its
 constructor which can include arguments specifying the function's parameters (second example)::
 
-    my_linear_transfer_mechanism = TransferMechanism(function=Linear)
-    my_logistic_transfer_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4)
+    >>> import psyneulink as pnl
+    >>> my_linear_transfer_mechanism = pnl.TransferMechanism(function=pnl.Linear)
+    >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4))
 
 In addition to function-specific parameters, `noise <TransferMechanism.noise>` and `time_constant
 <TransferMechanism.time_constant>` parameters can be specified for the Mechanism (see `Transfer_Execution`).
@@ -569,9 +570,9 @@ class TransferMechanism(ProcessingMechanism_Base):
             #                         .format(noise, self.name))
 
         elif not isinstance(noise, (float, int)) and not callable(noise):
-            raise MechanismError(
-                "Noise parameter ({}) for {} must be a float, function, or array/list of these."
-                    .format(noise, self.name))
+            raise MechanismError("Noise parameter ({}) for {} must be a float, "
+                                 "function, or array/list of these.".format(noise,
+                                                                            self.name))
 
     def _try_execute_param(self, param, var):
 
@@ -597,6 +598,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             # if the variable is not a list/array, execute the param function
             else:
                 param = param()
+        elif hasattr(param, 'function'):
+            param = param.function()
         return param
 
     def _instantiate_parameter_states(self, context=None):

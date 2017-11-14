@@ -99,14 +99,15 @@ as its value.  This will not match the reward signal specified in the Comparator
 value of which is a single scalar.  This can be dealt with by explicitly specifying the format for the SAMPLE and
 TARGET InputStates in the **variable** argument of the ComparatorMechanism's constructor, as follows::
 
-    my_action_selection_mech = TransferMechanism(size=5,
-                                                 function=SoftMax(output=PROB))
+    >>> import psyneulink as pnl
+    >>> my_action_selection_mech = pnl.TransferMechanism(size=5,
+    ...                                                  function=pnl.SoftMax(output=pnl.PROB))
 
-    my_reward_mech = TransferMechanism(default_variable = [0])
+    >>> my_reward_mech = pnl.TransferMechanism(default_variable = [0])
 
-    my_comparator_mech = ComparatorMechanism(sample=my_action_selection_mech,
-                                             target=my_reward_mech,
-                                             variable = [[0],[0]])
+    >>> my_comparator_mech = ComparatorMechanism(sample=my_action_selection_mech,
+    ...                                          target=my_reward_mech,
+    ...                                          variable = [[0],[0]])
 
 Note that ``my_action_selection_mechanism`` is specified to take an array of length 5 as its input, and therefore
 generate one of the same length as its `primary output <OutputState_Primary>`.  Since it is assigned as the **sample**
@@ -452,12 +453,15 @@ class ComparatorMechanism(ObjectiveMechanism):
                                         state_spec=target,
                                         name=TARGET)
 
-        # If input_states arg is provided, parse it and use it to upate sample and target dicts
+        # If input_states arg is provided, parse it and use it to update sample
+        # and target dicts
         if input_states:
 
             if len(input_states) != 2:
-                raise ComparatorMechanismError("If an \'input_states\' arg is included in the constructor for a {}"
-                                               "it must be a list with exactly two items (not {})".
+                raise ComparatorMechanismError("If an \'input_states\' arg is "
+                                               "included in the constructor for "
+                                               "a {}, it must be a list with "
+                                               "exactly two items (not {})".
                                                format(ComparatorMechanism.__name__, len(input_states)))
 
             sample_input_state_dict = _parse_state_spec(owner=self,
