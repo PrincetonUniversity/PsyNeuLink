@@ -554,6 +554,10 @@ my_mech_C = pnl.TransferMechanism(input_states=[{'MY INPUT':[source_mech_1, sour
 #                                                      pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
 
 
+m = pnl.TransferMechanism(default_variable=[0, 0, 0])
+i = pnl.InputState(owner=m, variable=[0, 0, 0])
+T = pnl.TransferMechanism(input_states=[i])
+
 assert True
 
 # --------------------------------------------------------------------------------------------------
