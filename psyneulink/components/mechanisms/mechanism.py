@@ -486,12 +486,13 @@ attribute.
 .. note::
     Adding InputStates to a Mechanism using its `add_states <Mechanism_Base.add_states>` method may introduce an
     incompatibility with the Mechanism's `function <Mechanism_Base.function>`, which takes the Mechanism's `variable
-    <Mechanism_Base.variable>` as its input; such an incompatibility will generate an error.  It is the user's
-    responsibility to ensure that the assignment of InputStates to a Mechanism using the `add_states
-    <Mechanism_Base.add_states>` is coordinated with the specification of its `function <Mechanism_Base.function>`,
-    so that the total number of InputStates (listed in the Mechanism's `input_states <Mechanism_Base.input_states>`
-    attribute matches the number of items expected for the input to the function specified in the Mechanism's
-    `function <Mechanism_Base.function>` attribute  (i.e., its size along axis 0).
+    <Mechanism_Base.variable>` as its input; such an incompatibility will generate an error.  It may also influence
+    the number of OutputStates created for the Mechanism. It is the user's responsibility to ensure that the
+    assignment of InputStates to a Mechanism using the `add_states <Mechanism_Base.add_states>` is coordinated with
+    the specification of its `function <Mechanism_Base.function>`, so that the total number of InputStates (listed
+    in the Mechanism's `input_states <Mechanism_Base.input_states>` attribute matches the number of items expected
+    for the input to the function specified in the Mechanism's `function <Mechanism_Base.function>` attribute
+    (i.e., its length along axis 0).
 
 .. _Mechanism_InputState_Projections:
 

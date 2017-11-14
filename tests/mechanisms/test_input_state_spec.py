@@ -4,6 +4,8 @@ import pytest
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.states.state import StateError
+from psyneulink.components.states.inputstate import InputState
 from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, VARIABLE
 
 
@@ -396,3 +398,44 @@ class TestInputStateSpec:
                 input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}]
             )
         assert 'not compatible with the default variable determined from size parameter' in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 26
+
+    def test_add_input_state_with_projection_in_mech_constructor(self):
+        T1 = TransferMechanism()
+        I = InputState(projections=[T1])
+        T2 = TransferMechanism(input_states=[I])
+        assert T2.input_states[0].path_afferents[0].sender.owner is T1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 27
+
+    def test_add_input_state_with_projection_using_add_states(self):
+        T1 = TransferMechanism()
+        I = InputState(projections=[T1])
+        T2 = TransferMechanism()
+        T2.add_states([I])
+        assert T2.input_states[1].path_afferents[0].sender.owner is T1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 28
+
+    def test_add_input_state_with_projection_by_assigning_owner(self):
+        T1 = TransferMechanism()
+        T2 = TransferMechanism()
+        InputState(owner=T2, projections=[T1])
+        assert T2.input_states[1].path_afferents[0].sender.owner is T1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 29
+
+    def test_add_input_state_with_projection_by_assigning_owner(self):
+        with pytest.raises(StateError) as error_text:
+            S1 = TransferMechanism()
+            S2 = TransferMechanism()
+            TransferMechanism(name='T',
+                              input_states=[{'MY INPUT 1':[S1],
+                                             'MY INPUT 2':[S2]}])
+        assert 'There is more than one entry of the InputState specification dictionary for T (MY INPUT 1, MY INPUT 2) that is not a keyword; there should be only one (used to name the State, with a list of Projection specifications' in str(error_text.value)
+

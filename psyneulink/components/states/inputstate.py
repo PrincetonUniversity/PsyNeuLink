@@ -73,12 +73,12 @@ parameter dictionary, any specified in the **input_states** argument are ignored
     the parameter dictionary in the **params** argument).  The number of InputStates specified must also be equal
     to the number of items in the Mechanism's <variable <Mechanism_Base.variable>` attribute.
 
-InputStates can also be **added** to a Mechanism, using the Mechanism's `add_states <Mechanism_Base.add_states>` method.
-However, this has consequences for the Mechanism's `variable <Mechanism_Base.variable>` and possibly its relationship to
-the Mechanism's `function <Mechanism_Base.function>` (see `Mechanism_InputStates`). If the name of an InputState added
-to a Mechanism is the same as one that already exists, its name will be suffixed with a numerical index (incremented
-for each InputState with that name), and the InputState will be added to the list (that is, it will *not* replace
-ones that already exist).
+InputStates can also be **added** to a Mechanism, using the Mechanism's `add_states <Mechanism_Base.add_states>`
+method. However, this has consequences for the Mechanism's `variable <Mechanism_Base.variable>` and possibly its
+relationship to the Mechanism's `function <Mechanism_Base.function>`, as well as the number of its  `OutputState
+<OutputState>` (see `note <Mechanism_Add_InputStates_Note>`). If the name of an InputState added to a Mechanism is the
+same as one that already exists, its name will be suffixed with a numerical index (incremented for each InputState with
+that name), and the InputState will be added to the list (that is, it will *not* replace ones that already exist).
 
 .. _InputState_Variable_and_Value:
 

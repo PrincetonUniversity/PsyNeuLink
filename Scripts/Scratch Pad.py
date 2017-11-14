@@ -548,35 +548,11 @@ destination_mech = pnl.TransferMechanism()
 my_mech_C = pnl.TransferMechanism(input_states=[{'MY INPUT':[source_mech_1, source_mech_2]}],
                                   output_states=[{'RESULT':[destination_mech]}])
 
-# FIX: CORRECTLY GENERATES ERROR - ADD AS TEST
-# source_mech_1 = pnl.TransferMechanism()
-# source_mech_2 = pnl.TransferMechanism()
-# destination_mech = pnl.TransferMechanism()
-# my_mech_C = pnl.TransferMechanism(input_states=[{'MY INPUT 1':[source_mech_1],
-#                                                  'MY INPUT 2':[source_mech_2]}])
-# Error message:
-# 'There is more than one entry of the InputState specification dictionary for TransferMechanism-17 (MY INPUT 2, MY INPUT 1) that is not a keyword; there should be only one (used to name the State, with a list of Projection specifications'
 
 # my_mech = pnl.DDM(name='MY DDM')
 # my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: my_mech,
 #                                                      pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
 
-# # FIX: ADD THIS AS TEST
-# mech_A = pnl.TransferMechanism()
-# my_input_state = pnl.InputState(projections=[mech_A])
-# mech_B = pnl.TransferMechanism(input_states=[my_input_state])
-
-# # FIX: ADD THIS AS TEST INCLUDING ASSERTION OF PROJECTION
-# mech_A = pnl.TransferMechanism()
-# my_input_state = pnl.InputState(projections=[mech_A])
-# mech_B = pnl.TransferMechanism()
-# mech_B.add_states([my_input_state])
-
-# # FIX: ADD THIS AS TEST INCLUDING ASSERTION OF PROJECTION
-mech_A = pnl.TransferMechanism()
-mech_B = pnl.TransferMechanism()
-my_input_state = pnl.InputState(owner=mech_B,
-                                projections=[mech_A])
 
 assert True
 
