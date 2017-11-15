@@ -356,7 +356,7 @@ class MappingProjection(PathwayProjection_Base):
         override any assigned to those parameters in arguments of the constructor.
 
     name : str : default see MappingProjection `name <MappingProjection.name>`
-        specifies the name of the MappingProjection; see MappingProjection `name <MappingProjection.name>` for details.
+        specifies the name of the MappingProjection.
 
     prefs : PreferenceSet or specification dict : default State.classPreferences
         specifies the `PreferenceSet` for the MappingProjection; see `prefs <MappingProjection.prefs>` for details.
@@ -403,16 +403,10 @@ class MappingProjection(PathwayProjection_Base):
     name : str
         the name of the MappingProjection. See `Naming` for conventions used for duplicate names.
         If the MappingProjection's `initialization has been deferred <Projection_Deferred_Initialization>`,
-        COMMENT:
-        *** CONFIRM / FIX:
-        its name remains unassigned until initialization is complete.
-        ??OR??
-        it is assigned a standard default name (using the Projection's type as its name with a hyphenated integer
-        suffix, beginning with '0', and incremented for each additional Projection of that type.
-        COMMENT
-        If the MappingProjection's name is not specified in the **name** argument of its constructor, a default name
-        is assigned using the following format: 'MappingProjection from <sender's name> to <receiver's name>'
-        (for example, ``MappingProjection from my_mech_1 to my_mech2``).
+        its name remains unassigned until initialization is complete.  If the MappingProjection's name is not
+        specified in the **name** argument of its constructor, a default name is assigned using the following format:
+        'MappingProjection from <sender's name> to <receiver's name>'
+        (for example, ``'MappingProjection from my_mech_1 to my_mech2'``).
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the MappingProjection; if it is not specified in the **prefs** argument of the

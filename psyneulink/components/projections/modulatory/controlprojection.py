@@ -210,8 +210,8 @@ class ControlProjection(ModulatoryProjection_Base):
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name : str : default see ControlProjection `name <ControlProjection.name>`
-        specifies the name of the ControlProjection; see ControlProjection `name <ControlProjection.name>` for details.
+    name : str : default see ModulatoryProjection `name <ModulatoryProjection.name>`
+        specifies the name of the ControlProjection.
 
     prefs : PreferenceSet or specification dict : default Projection.classPreferences
         specifies the `PreferenceSet` for the ControlProjection; see `prefs <ControlProjection.prefs>` for details.
@@ -256,7 +256,8 @@ class ControlProjection(ModulatoryProjection_Base):
 
     name : str
         name of the ControlProjection; if it is not specified in the **name** argument of its constructor,
-        a default name is assigned (see `name <ModulatoryProjection.name>`).
+        a default name is assigned (see ModulatoryProjection `name <ModulatoryProjection.name>`;
+        also see `Naming` for conventions regarding duplicate names).
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the ControlProjection; if it is not specified in the **prefs** argument of the

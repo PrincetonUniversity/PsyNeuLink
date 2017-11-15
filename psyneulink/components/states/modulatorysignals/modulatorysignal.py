@@ -325,16 +325,16 @@ class ModulatorySignal(OutputState):
 
         * one `ModulatoryProjection` -- the following template is used:
           "<target Mechanism name> <target State name> <ModulatorySignal type name>"
-          (for example, ``Decision drift_rate ControlSignal``, or ``Input Layer INPUT_STATE-0 GatingSignal``);
+          (for example, ``'Decision drift_rate ControlSignal'``, or ``'Input Layer INPUT_STATE-0 GatingSignal'``);
 
         * multiple ModulatoryProjections, all to States of the same Mechanism -- the following template is used:
           "<target Mechanism name> (<target State name>,...) <ModulatorySignal type name>"
           (for example, ``Decision (drift_rate, threshold) ControlSignal``, or
-          ``Input Layer (INPUT_STATE-0, INPUT_STATE-1) GatingSignal``);
+          ``'Input Layer (INPUT_STATE-0, INPUT_STATE-1) GatingSignal'``);
 
         * multiple ModulatoryProjections to States of different Mechanisms -- the following template is used:
           "<owner Mechanism's name> divergent <ModulatorySignal type name>"
-          (for example, ``ControlMechanism divergent ControlSignal``, or ``GatingMechanism divergent GatingSignal``).
+          (for example, ``'ControlMechanism divergent ControlSignal'`` or ``'GatingMechanism divergent GatingSignal'``).
 
         .. note::
             Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with

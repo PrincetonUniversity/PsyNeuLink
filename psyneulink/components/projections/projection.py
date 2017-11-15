@@ -538,22 +538,11 @@ class Projection_Base(Projection):
             Used to instantiate projectionSender
     COMMENT
 
-    name : str : default <State subclass>-<index>
-        the name of the State; if it is not specified in the **name** argument of its constructor, a default name
-        is assigned by the subclass (also see `Naming` for
-        .  If a State's `initialization has been deferred
-        <State_Deferred_Initialization>`,
-        its name remains unassigned until initialization is complete.
-
     name : str
-        the name of the Projection.  See `Naming` for conventions used for duplicate names.
-        COMMENT:
-        *** CONFIRM / FIX:
-        If the Projection's `initialization has been deferred <Projection_Deferred_Initialization>`, its name remains
-        unassigned until initialization is complete.
-        COMMENT
-        If the Projectoin's name is not specified in the **name** argument of its constructor, a default name
-        is assigned by the subclass (see subclass for details).
+        the name of the Projection.  See `Naming` for conventions used for duplicate names. If the Projection's
+        `initialization has been deferred <Projection_Deferred_Initialization>`, its name remains unassigned until
+        initialization is complete. If the Projection's name is not specified in the **name** argument of its
+        constructor, a default name is assigned by the subclass (see subclass for details).
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the Projection; if it is not specified in the **prefs** argument of the constructor,
