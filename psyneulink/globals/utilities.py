@@ -73,6 +73,7 @@ OTHER
 
 """
 
+import collections
 import inspect
 import numbers
 import warnings
@@ -84,7 +85,7 @@ import numpy as np
 from psyneulink.globals.keywords import DISTANCE_METRICS, MATRIX_KEYWORD_VALUES, NAME, VALUE
 
 __all__ = [
-    'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array', 'get_class_attributes',
+    'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array', 'convert_all_elements_to_np_array', 'get_class_attributes',
     'get_modulationOperation_name', 'get_value_from_array', 'is_distance_metric', 'is_matrix', 'is_matrix_spec',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
@@ -1023,3 +1024,18 @@ def get_class_attributes(cls):
             for item in inspect.getmembers(cls)
             if item[0] not in boring]
 
+
+def convert_all_elements_to_np_array(arr):
+    '''
+        Recursively converts all items in **arr** to numpy arrays
+    '''
+    if not isinstance(arr, collections.Iterable) or isinstance(arr, str):
+        return np.asarray(arr)
+
+    if isinstance(arr, np.matrix):
+        if arr.dtype == object:
+            return np.matrix([convert_all_elements_to_np_array(arr.item(i)) for i in range(arr.size)])
+        else:
+            return arr
+
+    return np.asarray([convert_all_elements_to_np_array(x) for x in arr])
