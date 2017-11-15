@@ -3441,7 +3441,7 @@ class SystemInputState(OutputState):
         Mechanism of the System.
 
         .. Declared as a subclass of OutputState so that it is recognized as a legitimate sender to a Projection
-           in Projection._instantiate_sender()
+           in Projection_Base._instantiate_sender()
 
            self.value is used to represent the item of the targets arg to system.execute or system.run
     COMMENT

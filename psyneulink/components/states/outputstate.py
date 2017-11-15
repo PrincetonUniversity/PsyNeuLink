@@ -323,7 +323,7 @@ specified by its `calculate <OutputState_Calculate>` attribute with the designat
 its `mod_afferents <OutputState.mod_afferents>` attribute), to generate the `value <OutputState.value>` of the
 OutputState.  This is assigned to a corresponding item of the Mechanism's `output_values
 <Mechanism_Base.output_values>` attribute, and is used as the input to any projections for which the
-OutputState is the `sender <Projection.Projection.sender>`.
+OutputState is the `sender <Projection_Base.sender>`.
 
 .. _OutputState_Class_Reference:
 
@@ -510,7 +510,7 @@ class OutputState(State_Base):
         the Mechanism to which the OutputState belongs.
 
     mod_afferents : List[GatingProjection]
-        a list of the `GatingProjections <GatingProjection>` received by the InputState.
+        a list of the `GatingProjections <GatingProjection>` received by the OutputState.
 
     variable : value, list or np.ndarray
         assigned the item of the owner Mechanism's `value <Mechanism_Base.value>` specified by the
@@ -539,7 +539,7 @@ class OutputState(State_Base):
 
     efferents : List[MappingProjection]
         a list of the `MappingProjections <MappingProjection>` sent by the OutputState (i.e., for which the OutputState
-        is a `sender <Projection.Projection.sender>`).
+        is a `sender <Projection_Base.sender>`).
 
     name : str : default <State subclass>-<index>
         name of the OutputState.

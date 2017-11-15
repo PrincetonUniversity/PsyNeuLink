@@ -62,9 +62,9 @@ Execution
 ---------
 
 A ModulatoryProjection, like any Projection, cannot be executed directly.  It is executed when the `State <State>` to
-which it projects — its `receiver <Projection.receiver>` — is updated;  that occurs when the State's owner Mechanism
-is executed.  When a ModulatoryProjection executes, it conveys both the `value <ModulatorySignal.value>` of the
-`ModulatorySignal <ModulatorySignal>` from which it projects, and the ModulatorySignal's `modulation
+which it projects — its `receiver <Projection_Base.receiver>` — is updated;  that occurs when the State's owner
+Mechanism is executed.  When a ModulatoryProjection executes, it conveys both the `value <ModulatorySignal.value>` of
+the `ModulatorySignal <ModulatorySignal>` from which it projects, and the ModulatorySignal's `modulation
 <ModulatorySignal.modulation>` attribute, to the State that receives the Projection.  The State assigns the value to
 the parameter of the State's `function <State_Base.function>` specified by the `modulation` attribute, and then calls
 the `function <State_Base.function>` to determine the `value <State_Base.value>` of the State.
@@ -144,7 +144,7 @@ class ModulatoryProjection_Base(Projection_Base):
         If not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences] : default : None
+    prefs : Optional[PreferenceSet or specification dict : Projection_Base.classPreferences] : default : None
         the `PreferenceSet` for the ModulatoryProjection.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -192,8 +192,8 @@ class ModulatoryProjection_Base(Projection_Base):
         if not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for projection.
+    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences
+        the `PreferenceSet` for Projection.
         Specified in the **prefs** argument of the constructor for the ModulatoryProjection;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).

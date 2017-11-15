@@ -551,7 +551,7 @@ parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 def _is_learning_spec(spec):
     """Evaluate whether spec is a valid learning specification
 
-    Return `True` if spec is LEARNING or a valid projection_spec (see Projection._is_projection_spec)
+    Return `True` if spec is LEARNING or a valid projection_spec (see Projection_Base._is_projection_spec)
     Otherwise, return `False`
 
     """

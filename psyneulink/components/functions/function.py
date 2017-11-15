@@ -568,7 +568,7 @@ class Function_Base(Function):
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -740,7 +740,7 @@ class ArgumentTherapy(Function_Base):
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -991,7 +991,7 @@ class UserDefinedFunction(Function_Base):
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -1167,7 +1167,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -1432,7 +1432,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).

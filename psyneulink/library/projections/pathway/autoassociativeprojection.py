@@ -165,7 +165,7 @@ class AutoAssociativeProjection(MappingProjection):
         a string used for the name of the MappingProjection. When an AutoAssociativeProjection is created by a
         RecurrentTransferMechanism, its name is specified as "<name of RecurrentTransferMechanism> recurrent projection".
 
-    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
+    prefs : Optional[PreferenceSet or specification dict : Projection_Base.classPreferences]
         the `PreferenceSet` for the MappingProjection.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see `PreferenceSet <LINK>` for details).
@@ -210,7 +210,7 @@ class AutoAssociativeProjection(MappingProjection):
         If not is specified, a default is assigned by `ProjectionRegistry`
         (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences
         the `PreferenceSet` for Projection.
         Specified in the **prefs** argument of the constructor for the Projection;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py

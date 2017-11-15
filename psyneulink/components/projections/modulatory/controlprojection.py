@@ -373,7 +373,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
         Overrides Projection._instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:
             the receiver Mechanism must have one and only one ParameterState;
-            otherwise, passes control to Projection._instantiate_receiver for validation
+            otherwise, passes control to Projection_Base._instantiate_receiver for validation
 
         :return:
         """

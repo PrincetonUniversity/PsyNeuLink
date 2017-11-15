@@ -169,24 +169,24 @@ these is described below:
       MappingProjection.  However, if **default_variable** argument is specified in the constructor for the InputState's
       owner Mechanism, then the corresponding item of its value is used as the format for the InputState's `variable
       <InputState.variable>`, and `AUTO_ASSIGN` is used for the MappingProjection, which adjusts its `value
-      <Projection.value>` to match the InputState's `variable <InputState.variable>`.
+      <Projection_Base.value>` to match the InputState's `variable <InputState.variable>`.
 
     * **Mechanism** -- the Mechanism's `primary OutputState <OutputState_Primary>` is used, and the InputState
       (and MappingProjection to it) are created as for an OutputState specification (see above).
     ..
     * **Projection object**.  this creates a default InputState and assigns it as the `Projection's <Projection>`
-      `receiver <Projection.receiver>`;  the Projection's `value <Projection.value>` must be compatible with the
+      `receiver <Projection_Base.receiver>`;  the Projection's `value <Projection_Base.value>` must be compatible with
       the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState is assigned.
     ..
     * **Projection subclass** -- this creates a default InputState, formattig its `variable <InputState.variable>`
       in the same manner as an InputState class, keyword or string (see above), and using this as the format for the
-      Projection's `value <Projection.value>`.  Since the Projection's `sender <Projection.sender>` is unspecified,
-      its `initialization is deferred <Projection_Deferred_Initialization>`.  In some cases, initialization
+      Projection's `value <Projection_Base.value>`.  Since the Projection's `sender <Projection_Base.sender>` is
+      unspecified, its `initialization is deferred <Projection_Deferred_Initialization>`.  In some cases, initialization
       can happen automatically -- for example, when a `ControlProjection` is created for the parameter of a Mechanism
-      that is included in a `System`, a `ControlSignal` is created as the Projection's `sender <Projection.sender>`
-      that is added to the System's `controller System_Base.controller` (see `System_Control`).  However, for cases
-      in which `deferred initialization <Component_Deferred_Init>` is not automatically completed, the Projection will
-      not be operational until its `sender <Projection.sender>` has been specified and its initialization completed.
+      that is included in a `System`, a `ControlSignal` is created as the Projection's `sender <Projection_Base.sender>`
+      that is added to the System's `controller System_Base.controller` (see `System_Control`).  However, for cases in
+      which `deferred initialization <Component_Deferred_Init>` is not automatically completed, the Projection will not
+      be operational until its `sender <Projection_Base.sender>` has been specified and its initialization completed.
 
     .. _InputState_Specification_Dictionary:
 
@@ -228,14 +228,14 @@ COMMENT
           the InputState, or a Mechanism or OutputState specification indicating an OutputState that should project to
           it (see above); the second item must be a `Projection specification <Projection_Specification>`. This creates
           an InputState and the specified Projection.  If the Projection is a `MappingProjection`, its `value
-          <Projection.value>` is used to format of the InputState's `variable <InputState.variable>` (see `note
+          <Projection_Base.value>` is used to format of the InputState's `variable <InputState.variable>` (see `note
           <InputState_Projection_Specification>` below), and therefore must be compatible with the item of the owner
           Mechanism's `variable <Mechanism_Base.variable>` attribute;   the InputState is assigned as the Projection's
-          `receiver <Projection.receiver>` and, if the first item specifies an  OutputState, that is assigned as the
-          Projection's `sender <Projection.sender>`.  If the specificaton is for 'ModulatoryProjection`, it is created
-          (along with a corresponding `ModulatorySignal`) if necessary, the InputState is assigned as its `receiver
-          <ModulatoryProjection.receiver>`, and the the Projection is assigned to the InputState's `mod_afferents
-          <InputState>` attribute.
+          `receiver <Projection_Base.receiver>` and, if the first item specifies an  OutputState, that is assigned as
+          the Projection's `sender <Projection_Base.sender>`.  If the specificaton is for `ModulatoryProjection`, it is
+          created (along with a corresponding `ModulatorySignal`) if necessary, the InputState is assigned as its
+          receiver <ModulatoryProjection.receiver>`, and the the Projection is assigned to the InputState's
+          `mod_afferents <InputState>` attribute.
 
         * **ConnectionTuple** -- this is an expanded version of the 2-item tuple that allows the specification of the
           `weight <InputState.weight>` and/or `exponent <InputState.exponent>` attributes of the InputState, as well as
@@ -254,23 +254,24 @@ COMMENT
               InputState before it is combined with others by the ObjectiveMechanism's `function
               <ObjectiveMechanism.function>` (see `ObjectiveMechanism_Weights_and_Exponents` for examples);
             |
-            * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` in the same
-              same manner as the second item of a 2-item tuple (see above);  it's `sender <Projection.sender>` must be
-              compatible with the specification in the first item (i.e., for either the `variable <InputState.variable>`
-              of the InputState, or the `value <OutputState.value>` of the OutputState specified to project to it.
+            * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` in the
+              same manner as the second item of a 2-item tuple (see above);  it's `sender <Projection_Base.sender>`
+              must be compatible with the specification in the first item (i.e., for either the `variable
+              <InputState.variable>` of the InputState, or the `value <OutputState.value>` of the OutputState
+              specified to project to it.
 
               .. _InputState_Projection_Specification:
 
               .. note::
                  If a Projection specification is for a `MappingProjection`, it can use the Projection itself or a
                  `matrix specification <Mapping_Matrix_Specification>`.  If it is a Projection, then its `value
-                 <Projection.value>` is used to determine the InputState's `variable <InputState.variable>`; if it
-                 is a matrix, then its receiver dimensionality determines the format of the InputState's `variable
+                 <Projection_Base.value>` is used to determine the InputState's `variable <InputState.variable>`; if
+                 it is a matrix, then its receiver dimensionality determines the format of the InputState's `variable
                  <InputState.variable>`. For a standard 2d weight matrix (i.e., one that maps a 1d array from its
-                 `sender <Projection.sender>` to a 1d array of its `receiver <Projection.receiver>`), the receiver
-                 dimensionality is its outer dimension (axis 1, or its number of columns).  However, if the `sender
-                 <Projection.sender>` has more than one dimension, then the dimensionality of the receiver is
-                 the overall dimension of the matrix minus the number of its sender's dimensions.
+                 `sender <Projection_Base.sender>` to a 1d array of its `receiver <Projection_Base.receiver>`), the
+                 receiver dimensionality is its outer dimension (axis 1, or its number of columns).  However, if
+                 the `sender <Projection_Base.sender>` has more than one dimension, then the dimensionality of the
+                 receiver is the overall dimension of the matrix minus the number of its sender's dimensions.
 
 .. _InputState_Projections:
 
@@ -280,10 +281,10 @@ Projections
 When an InputState is created, it can be assigned one or more `Projections <Projection>`, using either the
 **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument with
 the key *PROJECTIONS*.  An InputState can be assigned either `MappingProjection(s) <MappingProjection>` or
-`GatingProjection(s) <GatingProjection>`.  MappingProjections are assigned to its
-`pathway_afferents <InputState.pathway_afferents>` attribute and GatingProjections to its
-`mod_afferents <InputState.mod_afferents>` attribute.  See `State Projections <State_Projections>` for additional
-details concerning the specification of Projections when creating a State.
+`GatingProjection(s) <GatingProjection>`.  MappingProjections are assigned to its `path_afferents
+<InputState.path_afferents>` attribute and GatingProjections to its `mod_afferents <InputState.mod_afferents>`
+attribute.  See `State Projections <State_Projections>` for additional details concerning the specification of
+Projections when creating a State.
 
 
 .. _InputState_Structure:
@@ -316,7 +317,7 @@ COMMENT
 Variable
 ~~~~~~~~
 
-This serves as the template for the `value <Projection.value>` of the `Projections <Projection>` received by the
+This serves as the template for the `value <Projection_Base.value>` of the `Projections <Projection>` received by the
 InputState:  each must be compatible with (that is, match both the number and type of elements of) the InputState's
 `variable <InputState.variable>`.  In general, this must also be compatible with the item of the owner
 Mechanism's `variable <Mechanism_Base.variable>` to which the InputState is assigned (see `above
@@ -339,7 +340,7 @@ is 1 for both.
 Function
 ~~~~~~~~
 
-An InputState's `function <InputState.function>` aggregates the `value <Projection.value>` of all of the
+An InputState's `function <InputState.function>` aggregates the `value <Projection_Base.value>` of all of the
 `Projections <Projection>` received by the InputState, and assigns the result to the InputState's `value
 <InputState.value>` attribute.  The default function is `LinearCombination` that performs an elementwise (Hadamard)
 sums the values. However, the parameters of the `function <InputState.function>` -- and thus the `value
@@ -491,7 +492,7 @@ class InputState(State_Base):
         specifies the template for the InputState's `variable <InputState.variable>` attribute.
 
     function : Function or method : default LinearCombination(operation=SUM)
-        specifies the function used to aggregate the `values <Projection.value>` of the `Projections <Projection>`
+        specifies the function used to aggregate the `values <Projection_Base.value>` of the `Projections <Projection>`
         received by the InputState, under the possible influence of `GatingProjections <GatingProjection>` received
         by the InputState.  It must produce a result that has the same format (number and type of elements) as the
         item of its owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState has been assigned.
@@ -532,13 +533,13 @@ class InputState(State_Base):
 
     path_afferents : List[MappingProjection]
         a list of the `MappingProjections <MappingProjection>` received by the InputState
-        (i.e., for which it is a `receiver <Projection.Projection.receiver>`).
+        (i.e., for which it is a `receiver <Projection_Base.receiver>`).
 
     mod_afferents : List[GatingProjection]
         a list of the `GatingProjections <GatingProjection>` received by the InputState.
 
     variable : value, list or np.ndarray
-        the template for the `value <Projection.Projection.value>` of each Projection that the InputState receives,
+        the template for the `value <Projection_Base.value>` of each Projection that the InputState receives,
         each of which must match the format (number and types of elements) of the InputState's
         `variable <InputState.variable>`.
 
@@ -550,7 +551,7 @@ class InputState(State_Base):
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     function : CombinationFunction : default LinearCombination(operation=SUM))
-        performs an element-wise (Hadamard) aggregation of the `value <Projection.Projection.value>` of each Projection
+        performs an element-wise (Hadamard) aggregation of the `value <Projection_Base.value>` of each Projection
         received by the InputState, under the possible influence of any `GatingProjections <GatingProjection>` received
         by the InputState.
 
@@ -751,7 +752,7 @@ class InputState(State_Base):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
 
         Call _instantiate_projections_to_state to assign:
-            PathwayProjections to .pathway_afferents
+            PathwayProjections to .path_afferents
             ModulatoryProjections to .mod_afferents
         """
         self._instantiate_projections_to_state(projections=projections, context=context)

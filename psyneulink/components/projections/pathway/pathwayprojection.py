@@ -15,9 +15,9 @@ Overview
 --------
 
 PathwayProjections allow information to be passed between mechanisms.  A PathwayProjection takes its input from the
-`OutputState` of one Mechanism (its `sender <Projection.sender>`), and does whatever conversion is needed to transmit
-that information to the `InputState` of another Mechanism (its `receiver <Projection.receiver>`).  The primary
-type of PathwayProjection is a `MappingProjection`.
+`OutputState` of one Mechanism (its `sender <Projection_Base.sender>`), and does whatever conversion is needed to
+transmit that information to the `InputState` of another Mechanism (its `receiver <Projection_Base.receiver>`).  The
+primary type of PathwayProjection is a `MappingProjection`.
 
 .. _Projection_Creation:
 

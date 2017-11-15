@@ -25,12 +25,12 @@ Overview
 --------
 
 Projections allow information to be passed between `Mechanisms <Mechanism>`.  A Projection takes its input from
-its `sender <Projection.sender>` and transmits that information to its `receiver <Projection.receiver>`.  The
-`sender <Projection.sender>` and `receiver <Projection.receiver>` of a Projection are always `States <State>`:
-the`sender <Projection.sender>` is always the `OutputState` of a `Mechanism <Mechanism>`; the `receiver
-<Projection.receiver>` depends upon the type of Projection.  There are two broad categories of Projections,
+its `sender <Projection_Base.sender>` and transmits that information to its `receiver <Projection_Base.receiver>`.  The
+`sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` of a Projection are always `States <State>`:
+the`sender <Projection_Base.sender>` is always the `OutputState` of a `Mechanism <Mechanism>`; the `receiver
+<Projection_Base.receiver>` depends upon the type of Projection.  There are two broad categories of Projections,
 each of which has subtypes that differ in the type of information they transmit, how they do this, and the type of
-`State <State>` to which they project (i.e., of their `receiver <Projection.receiver>`):
+`State <State>` to which they project (i.e., of their `receiver <Projection_Base.receiver>`):
 
 * `PathwayProjection <PathwayProjection>`
     Used in conjunction with `ProcessingMechanisms <ProcessingMechanism>` to convey information along a processing
@@ -95,9 +95,9 @@ Projection in context:
   ..
   * **Projection object** -- must be a reference to a Projection that has already been created.
   ..
-  * **Projection subclass** -- creates a default instance of the specified Projection type.  The assignment or
-    creation of the Projection's `sender <Projection.sender>` is handled in the same manner as described below for
-    keyword specifications.
+  * **Projection subclass** -- creates a default instance of the specified Projection type.  The assignment or creation
+    of the Projection's `sender <Projection_Base.sender>` is handled in the same manner as described below for keyword
+    specifications.
   ..
   * **Keyword** -- creates a default instance of the specified type, which can be any of the following:
 
@@ -133,8 +133,8 @@ Projection in context:
         it can be determined (e.g., a `GatingMechanism` or `GatingSignal` is created to which it is assigned).
   ..
   * **value** -- creates a Projection of a type determined by the context of the specification, and using the
-    specified value as the `value <Projection.value>` of the Projection, which must be compatible with the `variable
-    <State_Base.variable>` attribute of its `receiver <Projection.receiver>`.  If the Projection is a
+    specified value as the `value <Projection_Base.value>` of the Projection, which must be compatible with the
+    `variable <State_Base.variable>` attribute of its `receiver <Projection_Base.receiver>`.  If the Projection is a
     `MappingProjection`, the value is interpreted as a `matrix specification <Mapping_Matrix_Specification>` and
     assigned as the `matrix <MappingProjection.matrix>` parameter of the Projection;  it must be compatible with the
     `value <State_Base.value>` attribute of its `sender <MappingProjection.sender>` and `variable <State_Base.variable>`
@@ -184,8 +184,8 @@ Projection in context:
     items in order, and contain the fourth optional item:
     (<`State specification <State_Specification>`>, <weight value>, <exponent value>, <projection specification>).
     The first item specifies the State to connect with (**not** the one being connected; that is known from context).
-    The next two items specify a `weight <Projection.weight>` and `exponent <Projection.exponent>` for the Projection
-    (note:  these are **not** for the State). The fourth item is optional, and can be any of the forms of
+    The next two items specify a `weight <Projection_Base.weight>` and `exponent <Projection_Base.exponent>` for the
+    Projection (note:  these are **not** for the State). The fourth item is optional, and can be any of the forms of
     Projection specification described above or for any Projection subclass; it and can be used to provide additional
     specifications for the Projection, such as its `matrix <MappingProjection.matrix>` if it is a `MappingProjection`.
     Any (but not all) of the items can be `None`.  If the State specification is `None`, then there must be a
@@ -211,14 +211,15 @@ Deferred Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 When a Projection is created, its full initialization is `deferred <Component_Deferred_Init>` until its `sender
-<ControlProjection.sender>` and `receiver <ControlProjection.receiver>` have been fully specified.  This allows
-a Projection to be created before its `sender` and/or `receiver` have been created (e.g., before them in a script),
-by calling its constructor without specifying its **sender** or **receiver** arguments. However, for the Projection
-to be operational, initialization must be completed by calling its `_deferred_init` method.  Under most conditions
-this occurs automatically (e.g., when the projection is assigned to a type of Component that expects to be the
-`sender <Projection.sender>` or `receiver <Projection.receiver>` for that type of Projection); these conditions are
-described in the section on *Deferred Initialization* for each type of Projection.  Otherwise, the Projection's
-`_deferred_init` method must be called explicitly, once the missing attribute assignments have been made.
+<Projection_Base.sender>` and `receiver <Projection_Base.receiver>` have been fully specified.  This allows a
+Projection to be created before its `sender <Projection_Base.sender>` and/or `receiver <Projection_Base.receiver>` have
+been created (e.g., before them in a script), by calling its constructor without specifying its **sender** or
+**receiver** arguments. However, for the Projection to be operational, initialization must be completed by calling
+its `_deferred_init` method.  Under most conditions this occurs automatically (e.g., when the projection is assigned
+to a type of Component that expects to be the `sender <Projection_Base.sender>` or `receiver <Projection_Base.receiver>`
+for that type of Projection); these conditions are described in the section on *Deferred Initialization* for each type
+of Projection.  Otherwise, the  Projection's `_deferred_init` method must be called explicitly, once the missing
+attribute assignments have been made.
 
 
 .. _Projection_Structure:
@@ -226,8 +227,8 @@ described in the section on *Deferred Initialization* for each type of Projectio
 Structure
 ---------
 
-In addition to its `function <Projection.function>`, a Projection has two primary attributes: a `sender
-<Projection.sender>` and `receiver <Projection.receiver>`.  The types of `State(s) <State>` that can be
+In addition to its `function <Projection_Base.function>`, a Projection has two primary attributes: a `sender
+<Projection_Base.sender>` and `receiver <Projection_Base.receiver>`.  The types of `State(s) <State>` that can be
 assigned to these, and the attributes of those States to which Projections of each type are assigned, are
 summarized in the following table, and described in greater detail in the subsections below.  In addition to the
 State attributes to which different types of Projections are assigned (shown in the table), all of the Projections
@@ -264,7 +265,8 @@ This must be an `OutputState` or a `ModulatorySignal <ModulatorySignal>` (a subc
 `ModulatoryProjections <ModulatoryProjection>`).  The Projection is assigned to the OutputState or ModulatorySignal's
 `efferents <State_Base.efferents>` list and, for ModulatoryProjections, to the list of ModulatorySignals specific to
 the `AdaptiveMechanism <AdaptiveMechanism>` from which it projects.  The OutputState or ModulatorySignal's `value
-<OutputState.value>` is used as the `variable <Function.variable>` for Projection's `function <Projection.function>`.
+<OutputState.value>` is used as the `variable <Function.variable>` for Projection's `function
+<Projection_Base.function>`.
 
 A sender can be specified as:
 
@@ -272,10 +274,10 @@ A sender can be specified as:
     `specifying an OutputState <OutputState_Specification>`.
   ..
   * a **Mechanism**;  for a `MappingProjection`, the Mechanism's `primary OutputState <OutputState_Primary>` is
-    assigned as the `sender <Projection.sender>`; for a `ModulatoryProjection <ModulatoryProjection>`, a
+    assigned as the `sender <Projection_Base.sender>`; for a `ModulatoryProjection <ModulatoryProjection>`, a
     `ModulatorySignal <ModulatorySignal>` of the appropriate type is created and assigned to the Mechanism.
 
-If the `sender <Projection.sender>` is not specified and it can't be determined from the context, or an OutputState
+If the `sender <Projection_Base.sender>` is not specified and it can't be determined from the context, or an OutputState
 specification is not associated with a Mechanism that can be determined from context, then the initialization of the
 Projection is `deferred <Projection_Deferred_Initialization>`.
 
@@ -284,7 +286,7 @@ Projection is `deferred <Projection_Deferred_Initialization>`.
 Receiver
 ~~~~~~~~
 
-The `receiver <Projection.receiver>` required by a Projection depends on its type, as listed below:
+The `receiver <Projection_Base.receiver>` required by a Projection depends on its type, as listed below:
 
     * MappingProjection: `InputState`
     * LearningProjection: `ParameterState` (for the `matrix <MappingProjection>` of a `MappingProjection`)
@@ -292,10 +294,10 @@ The `receiver <Projection.receiver>` required by a Projection depends on its typ
     * GatingProjection: `InputState` or OutputState`
 
 A `MappingProjection` (as a `PathwayProjection <PathwayProjection>`) is assigned to the `path_afferents
-<State.path_afferents>` attribute of its `receiver <Projection.receiver>`.  The ModulatoryProjections are assigned to
-the `mod_afferents <State.mod_afferents>` attribute of their `receiver <Projection.receiver>`.
+<State.path_afferents>` attribute of its `receiver <Projection_Base.receiver>`.  The ModulatoryProjections are assigned
+to the `mod_afferents <State.mod_afferents>` attribute of their `receiver <Projection_Base.receiver>`.
 
-A `receiver <Projection.receiver>` can be specified as:
+A `receiver <Projection_Base.receiver>` can be specified as:
 
   * an existing **State**;
   ..
@@ -309,16 +311,16 @@ A `receiver <Projection.receiver>` can be specified as:
 Weight and Exponent
 ~~~~~~~~~~~~~~~~~~~
 
-Every Projection has a `weight <Projection.weight>` and `exponent <Projection.exponent>` attribute. These are applied
-to its `value <Projection.value>` before combining it with other Projections that project to the same `State`.  If
-both are specified, the `exponent <Projection.exponent>` is applied before the `weight <Projection.weight>`.  These
-attributes determine both how the Projection's `value <Projection.value>` is combined with others to determine the
-`variable <State.variable>` of the State to which they project.
+Every Projection has a `weight <Projection_Base.weight>` and `exponent <Projection_Base.exponent>` attribute. These
+are applied to its `value <Projection_Base.value>` before combining it with other Projections that project to the same
+`State`.  If both are specified, the `exponent <Projection_Base.exponent>` is applied before the `weight
+<Projection_Base.weight>`.  These attributes determine both how the Projection's `value <Projection.value>` is combined
+with others to determine the `variable <State_Base.variable>` of the State to which they project.
 
 .. note::
-   The `weight <Projection.weight>` and `exponent <Projection.exponent>` attributes of a Projection are not the same
-   as a State's `weight <State_Base.weight>` and `exponent <State_Base.exponent>` attributes.  Also, they are not
-   normalized: their aggregate effects contribute to the magnitude of the `variable <State.variable>` to which
+   The `weight <Projection_Base.weight>` and `exponent <Projection_Base.exponent>` attributes of a Projection are not
+   the same as a State's `weight <State_Base.weight>` and `exponent <State_Base.exponent>` attributes.  Also, they are
+   not normalized: their aggregate effects contribute to the magnitude of the `variable <State.variable>` to which
    they project.
 
 
@@ -328,7 +330,7 @@ ParameterStates and Parameters
 `ParameterStates <ParameterState>` provide the value for each parameter of a Projection and its `function
 <Mechanism_Base.function>`.  ParameterStates and their associated parameters are handled in the same way by
 Projections as they are for Mechanisms (see `Mechanism_ParameterStates` for details).  The ParameterStates for a
-Projection are listed in its `parameter_states <Projection.parameter_states>` attribute.
+Projection are listed in its `parameter_states <Projection_Base.parameter_states>` attribute.
 
 
 .. _Projection_Execution:
@@ -337,12 +339,12 @@ Execution
 ---------
 
 A Projection cannot be executed directly.  It is executed when the `State <State>` to which it projects (i.e., its
-`receiver <Projection.receiver>`) is updated;  that occurs when the State's owner `Mechanism <Mechanism>` is executed.
-When a Projection executes, it gets the value of its `sender <Projection.sender>`, assigns this as the `variable
-<Projection.variable>` of its `function <Projection.function>`, calls the `function <Projection.function>`, and
-provides the result as to its `receiver <Projection.receiver>`.  The `function <Projection.function>` of a Projection
-converts the value received from its `sender <Projection.sender>` to a form suitable as input for its `receiver
-<Projection.receiver>`.
+`receiver <Projection_Base.receiver>`) is updated;  that occurs when the State's owner `Mechanism <Mechanism>` is
+executed. When a Projection executes, it gets the value of its `sender <Projection_Base.sender>`, assigns this as the
+`variable <Projection_Base.variable>` of its `function <Projection_Base.function>`, calls the `function
+<Projection_Base.function>`, and provides the result as to its `receiver <Projection_Base.receiver>`.  The `function
+<Projection_Base.function>` of a Projection converts the value received from its `sender <Projection_Base.sender>` to
+a form suitable as input for its `receiver <Projection_Base.receiver>`.
 
 
 COMMENT:
@@ -484,45 +486,46 @@ class Projection_Base(Projection):
               a count for all instances of that type, and a dictionary of those instances
     COMMENT
 
+
     Attributes
     ----------
 
     variable : value
-        input to Projection, received from OutputState.value of sender.
+        input to Projection, received from OutputState.value of `sender <Projection_Base.sender>`.
 
     sender : State
-        State from which Projection receives its input.
+        State from which Projection receives its input (see `Projection_Sender` for additional information).
 
     receiver : State
-        State to which Projection sends its output.
+        State to which Projection sends its output  (see `Projection_Receiver` for additional information)
 
     value : value
-        Output of Projection, transmitted as variable to InputState of receiver.
+        Output of Projection, transmitted as variable to InputState of `receiver <Projection_Base.receiver>`.
 
     parameter_states : ContentAddressableList[str, ParameterState]
         a list of the Projection's `ParameterStates <Projection_ParameterStates>`, one for each of its specifiable
         parameters and those of its `function <Mechanism_Base.function>` (i.e., the ones for which there are
         arguments in their constructors).  The value of the parameters of the Projection are also accessible as
         attributes of the Projection (using the name of the parameter); the function parameters are listed in the
-        Projection's `function_params <Projection.function_params>` attribute, and as attributes of the `Function`
+        Projection's `function_params <Projection_Base.function_params>` attribute, and as attributes of the `Function`
         assigned to its `function_object <Component.function_object>` attribute.
 
     parameter_states : ContentAddressableList[str, ParameterState]
         a read-only list of the Projection's `ParameterStates <Mechanism_ParameterStates>`, one for each of its
         `configurable parameters <ParameterState_Configurable_Parameters>`, including those of its `function
-        <Projection.function>`.  The value of the parameters of the Projection and its `function
-        <Projection.function>` are also accessible as (and can be modified using) attributes of the Projection,
+        <Projection_Base.function>`.  The value of the parameters of the Projection and its `function
+        <Projection_Base.function>` are also accessible as (and can be modified using) attributes of the Projection,
         in the same manner as they can for a `Mechanism <Mechanism_ParameterStates>`).
 
     weight : number
-       multiplies `value <Projection.value>` of the Projection after applying `exponent <Projection.exponent>`,
-       and before combining with any others that project to the same `State` to determine that State's `variable
-       <State.variable>`.
+       multiplies the `value <Projection_Base.value>` of the Projection after applying the `exponent
+       <Projection_Base.exponent>`, and before combining with any other Projections that project to the same `State`
+       to determine that State's `variable <State_Base.variable>`.
 
     exponent : number
-        exponentiates the `value <Projection.value>` of the Projection, before applying `weight <Projection.weight>`,
-        and before combining it with any other Projections that project to the same `State` to determine that State's
-        `variable <State.variable>`.
+        exponentiates the `value <Projection_Base.value>` of the Projection, before applying `weight
+        <Projection_Base.weight>`, and before combining it with any other Projections that project to the same
+        `State` to determine that State's `variable <State_Base.variable>`.
 
     COMMENT:
         projectionSender : Mechanism, State, or Object
@@ -541,7 +544,7 @@ class Projection_Base(Projection):
         a default is assigned by ProjectionRegistry based on the Projection's subclass
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences
         the `PreferenceSet` for the Projection.
         Specified in the **prefs** argument of the constructor for the Projection;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py

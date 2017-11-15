@@ -2552,7 +2552,7 @@ class ProcessInputState(OutputState):
 
     COMMENT:
     .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
-       in Projection._instantiate_sender()
+       in Projection_Base._instantiate_sender()
 
        self.value is used to represent the corresponding item of the input arg to process.execute or process.run
     COMMENT

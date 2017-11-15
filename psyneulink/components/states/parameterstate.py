@@ -109,7 +109,7 @@ The specification of the initial value of a parameter can take any of the follow
       ParameterState, assign the parameter's default value as the ParameterState's `value <ParameterState.value>`,
       and assign the parameter's name as the name of the ParameterState.  They also create and/or assign the
       corresponding ModulatorySignal and ModulatoryProjection, and assign the ParameterState as the
-      ModulatoryProjection's `receiver <Projection.Projection.receiver>`. If the ModulatorySignal and/or
+      ModulatoryProjection's `receiver <Projection_Base.receiver>`. If the ModulatorySignal and/or
       ModulatoryProjection already exist, their value(s) must be valid one(s) for the parameter.  Note that only
       Control and Learning Modulatory components can be assigned to a ParameterState (Gating components cannot be
       used -- they can only be assigned to `InputStates <InputState>` and `OutputStates <OutputState>`).
@@ -120,7 +120,7 @@ The specification of the initial value of a parameter can take any of the follow
       (1st) item of the tuple as parameter's `value assignment <ParameterState_Value_Assignment>`, and assigns the
       parameter's name as the name of the ParameterState.  The Modulatory (2nd) item of the tuple is used as the
       ParameterState's `modulatory assignment <ParameterState_Modulatory_Specification>`, and the ParameterState
-      is assigned as the `receiver <Projection.Projection.receiver>` for the corresponding `ModulatoryProjection
+      is assigned as the `receiver <Projection_Base.receiver>` for the corresponding `ModulatoryProjection
       <ModulatoryProjection>`.
 
       .. note::
@@ -405,7 +405,7 @@ class ParameterState(State_Base):
 
     mod_afferents : Optional[List[Projection]]
         a list of the `ModulatoryProjection <ModulatoryProjection>` that project to the ParameterState (i.e.,
-        for which it is a `receiver <Projection.Projection.receiver>`); these can be
+        for which it is a `receiver <Projection_Base.receiver>`); these can be
         `ControlProjection(s) <ControlProjection>` and/or `LearningProjection(s) <LearningProjection>`,
         but not `GatingProjection <GatingProjection>`.  The `value <ModulatoryProjection.value>` of each
         must match the format (number and types of elements) of the ParameterState's

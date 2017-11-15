@@ -114,7 +114,9 @@ A State can be specified using any of the following:
       specified type, using a default value for the State that is determined by the context in which it is specified.
     ..
     * **value** -- creates a default State using the specified value as its default `value <State_Base.value>`.
-    ..
+
+    .. _State_Specification_Dictionary:
+
     * **State specification dictionary** -- can use the following: *KEY*:<value> entries, in addition to those
       specific to the State's type (see documentation for each type):
 
@@ -127,8 +129,6 @@ A State can be specified using any of the following:
       ..
       * *VALUE*:<value>
           the value is used as the default value of the State.
-
-      .. _State_Specification_Dictionary:
 
       A State specification dictionary can also be used to specify one or more `Projections <Projection>' to or from
       the State, including `ModulatoryProjection(s) <ModulatoryProjection>` used to modify the `value
@@ -162,7 +162,12 @@ A State can be specified using any of the following:
       * *<STATES_KEYWORD>:List[<str or State.name>,...]
          this must accompany a *MECHANISM* entry (described above), and is used to specify its State(s) by name.
          Each entry must use one of the following keywords as its key, and there can be no more than one of each:
-         *INPUT_STATES*, *OUTPUT_STATES*, *PARAMETER_STATES*, *LEARNING_SIGNAL*, *CONTROL_SIGNAL*, *GATING_SIGNAL*.
+            - *INPUT_STATES*
+            - *OUTPUT_STATES*
+            - *PARAMETER_STATES*
+            - *LEARNING_SIGNAL*
+            - *CONTROL_SIGNAL*
+            - *GATING_SIGNAL*.
          Each entry must contain a list States of the specified type, all of which belong to the Mechanism specified in
          the *MECHANISM* entry;  each item in the list must be the name of one the Mechanism's States, or a
          `ConnectionTuple <State_ConnectionTuple>` the first item of which is the name of a State. The types of
@@ -197,8 +202,8 @@ The following types of Projections can be specified for each type of State:
         +------------------+-------------------------------+-------------------------------------+
         | *State Type*     || *PROJECTIONS* specification  || *Assigned to Attribute*            |
         +==================+===============================+=====================================+
-        |`InputState`      || `PathwayProjection(s)        || `pathway_afferents                 |
-        |                  |   <PathwayProjection>`        |   <InputState.pathway_afferents>`   |
+        |`InputState`      || `PathwayProjection(s)        || `path_afferents                    |
+        |                  |   <PathwayProjection>`        |   <InputState.path_afferents>`      |
         |                  || `GatingProjection(s)         || `mod_afferents                     |
         |                  |   <GatingProjection>`         |   <InputState.mod_afferents>`       |
         +------------------+-------------------------------+-------------------------------------+
@@ -215,13 +220,14 @@ The following types of Projections can be specified for each type of State:
         +------------------+-------------------------------+-------------------------------------+
 
 Projections must be specified in a list.  Each entry must be either a `specification for a projection
-<Projection_Specification>`, or for a `sender <Projection.sender>` or `receiver <Projection.receiver>` of one, in
-which case the appropriate type of Projection is created.  A sender or receiver can be specified as a `State <State>`
-or a `Mechanism <Mechanism>`. If a Mechanism is specified, its primary `InputState <InputState_Primary>` or `OutputState
-<OutputState_Primary>`  is used, as appropriate.  When a sender or receiver is used to specify the Projection, the type
-of Projection created is inferred from the State and the type of sender or receiver specified, as illustrated in the
-`examples <State_Projections_Examples>` below.  Note that the State must be `assigned to an owner <State_Creation>` in
-order to be functional, irrespective of whether any `Projections <Projection>` have been assigned to it.
+<Projection_Specification>`, or for a `sender <Projection_Base.sender>` or `receiver <Projection_Base.receiver>` of
+one, in which case the appropriate type of Projection is created.  A sender or receiver can be specified as a `State
+<State>` or a `Mechanism <Mechanism>`. If a Mechanism is specified, its primary `InputState <InputState_Primary>` or
+`OutputState <OutputState_Primary>`  is used, as appropriate.  When a sender or receiver is used to specify the
+Projection, the type of Projection created is inferred from the State and the type of sender or receiver specified,
+as illustrated in the `examples <State_Projections_Examples>` below.  Note that the State must be `assigned to an
+owner <State_Creation>` in order to be functional, irrespective of whether any `Projections <Projection>` have been
+assigned to it.
 
 
 .. _State_Deferred_Initialization:
@@ -292,19 +298,19 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
     ..
     * `function <State_Base.function>`:  for an `InputState` this aggregates the values of the Projections that the
       State receives (the default is `LinearCombination` that sums the values), under the potential influence of a
-      `GatingSignal`;  for a `ParameterState`, it determines the value of the associated parameter, under the
-      potential influence of a `ControlSignal` (for a `Mechanism <Mechanism>`) or a `LearningSignal` (for a
-      `MappingProjection`); for an OutputState, it conveys the result  of the Mechanism's function to its
-      `output_values <Mechanism_Base.output_values>` attribute, under the potential influence of a `GatingSignal`.  See
+      `GatingSignal`;  for a `ParameterState`, it determines the value of the associated parameter, under the potential
+      influence of a `ControlSignal` (for a `Mechanism <Mechanism>`) or a `LearningSignal` (for a `MappingProjection`);
+      for an OutputState, it conveys the result  of the Mechanism's function to its `output_values
+      <Mechanism_Base.output_values>` attribute, under the potential influence of a `GatingSignal`.  See
       `ModulatorySignals <ModulatorySignal_Structure>` and the `AdaptiveMechanism <AdaptiveMechanism>` associated with
       each type for a description of how they can be used to modulate the `function <State_Base.function>` of a State.
     ..
     * `value <State_Base.value>`:  for an `InputState` this is the aggregated value of the `PathwayProjections` it
-      receives;  for a `ParameterState`, this represents the value of the parameter that will be used by the
-      State's owner or its `function <Component.function>`; for an `OutputState`, it is the item of the  owner
-      Mechanism's `value <Mechanisms.value>` to which the OutputState is assigned, possibly modified by its
-      `calculate <OutputState_Calculate>` attribute and/or a `GatingSignal`, and used as the
-      `value <Projection.value>` of the projections listed in its `efferents <OutputState.path_efferents>` attribute.
+      receives;  for a `ParameterState`, this represents the value of the parameter that will be used by the State's
+      owner or its `function <Component.function>`; for an `OutputState`, it is the item of the  owner Mechanism's
+      `value <Mechanisms.value>` to which the OutputState is assigned, possibly modified by its `calculate
+      <OutputState_Calculate>` attribute and/or a `GatingSignal`, and used as the `value <Projection_Base.value>` of
+      the Projections listed in its `efferents <OutputState.path_efferents>` attribute.
 
 .. _State_Modulation:
 
@@ -917,7 +923,7 @@ class State_Base(State):
         value with which the State was initialized.
 
     all_afferents : Optional[List[Projection]]
-        list of all Projections received by the State (i.e., for which it is a `receiver <Projection.receiver>`.
+        list of all Projections received by the State (i.e., for which it is a `receiver <Projection_Base.receiver>`.
 
     path_afferents : Optional[List[Projection]]
         list all `PathwayProjections <PathwayProjection>` received by the State;
@@ -930,7 +936,7 @@ class State_Base(State):
         list of all of the `Projections <Projection>` sent or received by the State.
 
     efferents : Optional[List[Projection]]
-        list of outgoing Projections from the State (i.e., for which is a `sender <Projection.sender>`;
+        list of outgoing Projections from the State (i.e., for which is a `sender <Projection_Base.sender>`;
         note:  only `OutputStates <OutputState>`, and members of its `ModulatoryProjection <ModulatoryProjection>`
         subclass (`LearningProjection, ControlProjection and GatingProjection) have efferents;  the list is empty for
         InputStates and ParameterStates.
@@ -1319,7 +1325,7 @@ class State_Base(State):
         Must be implemented by subclasss, to handle interpretation of projection specification(s)
         in a class-appropriate manner:
             PathwayProjections:
-              InputState: _instantiate_projections_to_state (.pathway_afferents)
+              InputState: _instantiate_projections_to_state (.path_afferents)
               ParameterState: disallowed
               OutputState: _instantiate_projections_from_state (.efferents)
               ModulatorySignal: disallowed
@@ -1353,8 +1359,8 @@ class State_Base(State):
                  which returns either a Projection object or Projection specification dictionary for each spec;
                  that is placed in projection_spec entry of ConnectionTuple (State, weight, exponent, projection_spec).
             When the Projection is instantiated, it assigns itself to
-               its receiver's .path_afferents attribute (in Projection._instantiate_receiver) and
-               its sender's .efferents attribute (in Projection._instantiate_sender);
+               its receiver's .path_afferents attribute (in Projection_Base._instantiate_receiver) and
+               its sender's .efferents attribute (in Projection_Base._instantiate_sender);
                so, need to test for prior assignment to avoid duplicates.
         """
 
@@ -1540,8 +1546,8 @@ class State_Base(State):
                that is placed in projection_spec entry of ConnectionTuple (State, weight, exponent, projection_spec).
 
             When the Projection is instantiated, it assigns itself to
-               its self.path_afferents or .mod_afferents attribute (in Projection._instantiate_receiver) and
-               its sender's .efferents attribute (in Projection._instantiate_sender);
+               its self.path_afferents or .mod_afferents attribute (in Projection_Base._instantiate_receiver) and
+               its sender's .efferents attribute (in Projection_Base._instantiate_sender);
                so, need to test for prior assignment to avoid duplicates.
 
         Returns instantiated Projection
