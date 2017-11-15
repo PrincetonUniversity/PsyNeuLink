@@ -15,13 +15,10 @@ Default Names
 
 If the name of an object is not specified in its constructor, a default name is assigned.  Some classes of objects use
 class-specific conventions for default names (see individual classes for specifics). Otherwise, the default name is
-handled by the `Registry` for the class, which assigns a default name based on the name of the class, with a
-hyphenated integer suffix (<object class name>-n), beginning with '0', that is incremented for each additional object
-of that type requiring a default name.  For example, the first TransferMechanism to be constructed without
-specifying its name will be assigned the name 'TransferMechanism-0', the next 'TransferMechanism-1', etc..
-
-# Handled by Registry for class or general one??
-# *** FIX:  -0 FOR MECHANISMS
+handled by the `Registry`, which assigns a default name based on the name of the class, with a hyphenated integer
+suffix (<object class name>-n), beginning with '0', that is incremented for each additional object of that type
+requiring a default name.  For example, the first TransferMechanism to be constructed without specifying its name
+will be assigned the name 'TransferMechanism-0', the next 'TransferMechanism-1', etc..
 
 
 Duplicate Names

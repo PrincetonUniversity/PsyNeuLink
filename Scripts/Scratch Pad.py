@@ -356,20 +356,20 @@ class ScratchPadError(Exception):
 
 
 #region TEST State Specification Examples @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-print("TEST State Specification Examples")
-
-m = pnl.DDM(name='MY DDM')
-# # c = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [m.parameter_states[pnl.DRIFT_RATE],
-# #                                                              m.parameter_states[pnl.THRESHOLD]]}])
-# # c = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[m.parameter_states[pnl.DRIFT_RATE],
-# #                                                                m.parameter_states[pnl.THRESHOLD]]}])
-g = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS: [m.output_states[pnl.DECISION_VARIABLE],
-                                                             m.output_states[pnl.RESPONSE_TIME]]}])
-g = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[m.output_states[pnl.DECISION_VARIABLE],
-                                                            m.output_states[pnl.RESPONSE_TIME]]}])
-g = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM:m,
-                                         pnl.NAME:pnl.DECISION_VARIABLE}])
-assert True
+# print("TEST State Specification Examples")
+#
+# m = pnl.DDM(name='MY DDM')
+# # # c = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [m.parameter_states[pnl.DRIFT_RATE],
+# # #                                                              m.parameter_states[pnl.THRESHOLD]]}])
+# # # c = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[m.parameter_states[pnl.DRIFT_RATE],
+# # #                                                                m.parameter_states[pnl.THRESHOLD]]}])
+# g = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS: [m.output_states[pnl.DECISION_VARIABLE],
+#                                                              m.output_states[pnl.RESPONSE_TIME]]}])
+# g = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[m.output_states[pnl.DECISION_VARIABLE],
+#                                                             m.output_states[pnl.RESPONSE_TIME]]}])
+# g = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM:m,
+#                                          pnl.NAME:pnl.DECISION_VARIABLE}])
+# assert True
 #
 # # my_mech = pnl.TransferMechanism(default_variable=[[0],[0]])
 # #
