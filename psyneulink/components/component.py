@@ -354,7 +354,7 @@ from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, D
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
-from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength
+from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
@@ -940,24 +940,18 @@ class Component(object):
                 return int_x
 
             #region Convert variable (if given) to a 2D array, and size (if given) to a 1D integer array
-            try:
-                if variable is not None:
+            if variable is not None:
+                variable = np.array(variable)
+                if variable.dtype == object:
+                    # CAVEAT: assuming here that object dtype implies there are list objects (i.e. array with
+                    # different sized arrays/lists inside like [[0, 1], [2, 3, 4]]), even though putting a None
+                    # value in the array will give object dtype. This case doesn't really make sense in our
+                    # context though, so ignoring this case in the interest of quickly fixing 3D variable behavior
+                    variable = np.atleast_1d(variable)
+                else:
                     variable = np.atleast_2d(variable)
-                    # 6/30/17 (CW): Previously, using variable or default_variable to create
-                    # input states of differing lengths (e.g. default_variable = [[1, 2], [1, 2, 3]])
-                    # caused a bug. The if statement below fixes this bug. This solution is ugly, though.
-                    if isinstance(variable[0], list) or isinstance(variable[0], np.ndarray):
-                        allLists = True
-                        for i in range(len(variable[0])):
-                            if isinstance(variable[0][i], (list, np.ndarray)):
-                                variable[0][i] = np.array(variable[0][i])
-                            else:
-                                allLists = False
-                                break
-                        if allLists:
-                            variable = variable[0]
-            except:
-                raise ComponentError("Failed to convert variable (of type {}) to a 2D array.".format(type(variable)))
+
+                variable = convert_all_elements_to_np_array(variable)
 
             try:
                 if size is not None:
