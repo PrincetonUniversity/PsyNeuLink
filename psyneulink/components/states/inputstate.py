@@ -226,16 +226,16 @@ COMMENT
 
         * **2-item tuple** -- the first item can be either a value (specifying the `variable <InputState.variable>` for
           the InputState, or a Mechanism or OutputState specification indicating an OutputState that should project to
-          it (see above); the second item must be a `Projection specification <Projection_In_Context_Specification>`.
-          This creates an InputState and the specified Projection.  If the Projection is a `MappingProjection`, its
-          `value <Projection.value>` is used to format of the InputState's `variable <InputState.variable>` (see
-          see `note <InputState_Projection_Specification>` below), and therefore must be compatible with the item of
-          the owner Mechanism's `variable <Mechanism_Base.variable>` attribute;   the InputState is assigned as the
-          Projection's `receiver <Projection.receiver>` and, if the first item specifies an  OutputState, that is
-          assigned as the Projection's `sender <Projection.sender>`.  If the specificaton is for 'ModulatoryProjection`,
-          it is created (along with a corresponding `ModulatorySignal`) if necessary, the InputState is assigned as
-          its `receiver <ModulatoryProjection.receiver>`, and the the Projection is assigned to the InputState's
-          `mod_afferents <InputState>` attribute.
+          it (see above); the second item must be a `Projection specification <Projection_Specification>`. This creates
+          an InputState and the specified Projection.  If the Projection is a `MappingProjection`, its `value
+          <Projection.value>` is used to format of the InputState's `variable <InputState.variable>` (see `note
+          <InputState_Projection_Specification>` below), and therefore must be compatible with the item of the owner
+          Mechanism's `variable <Mechanism_Base.variable>` attribute;   the InputState is assigned as the Projection's
+          `receiver <Projection.receiver>` and, if the first item specifies an  OutputState, that is assigned as the
+          Projection's `sender <Projection.sender>`.  If the specificaton is for 'ModulatoryProjection`, it is created
+          (along with a corresponding `ModulatorySignal`) if necessary, the InputState is assigned as its `receiver
+          <ModulatoryProjection.receiver>`, and the the Projection is assigned to the InputState's `mod_afferents
+          <InputState>` attribute.
 
         * **ConnectionTuple** -- this is an expanded version of the 2-item tuple that allows the specification of the
           `weight <InputState.weight>` and/or `exponent <InputState.exponent>` attributes of the InputState, as well as
@@ -254,11 +254,10 @@ COMMENT
               InputState before it is combined with others by the ObjectiveMechanism's `function
               <ObjectiveMechanism.function>` (see `ObjectiveMechanism_Weights_and_Exponents` for examples);
             |
-            * **Projection specification** (optional) -- `specifies a Projection <Projection_In_Context_Specification>`
-              in the same manner as the second item of a 2-item tuple (see above);  it's `sender <Projection.sender>`
-              must be compatible with the specification in the first item (i.e., for either the `variable
-              <InputState.variable>` of the InputState, or the `value <OutputState.value>` of the OutputState specified
-              to project to it.
+            * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` in the same
+              same manner as the second item of a 2-item tuple (see above);  it's `sender <Projection.sender>` must be
+              compatible with the specification in the first item (i.e., for either the `variable <InputState.variable>`
+              of the InputState, or the `value <OutputState.value>` of the OutputState specified to project to it.
 
               .. _InputState_Projection_Specification:
 

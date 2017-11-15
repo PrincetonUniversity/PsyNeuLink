@@ -76,14 +76,14 @@ Creating a Projection
 ---------------------
 
 A Projection can be created on its own, by calling the constructor for the desired type of Projection.  More
-commonly, however, Projections are either specified `in context <Projection_In_Context_Specification>`, or
-are `created automatically <Projection_Automatic_Creation>`, as described below.
+commonly, however, Projections are either specified `in context <Projection_Specification>`, or are `created
+automatically <Projection_Automatic_Creation>`, as described below.
 
 
-.. _Projection_In_Context_Specification:
+.. _Projection_Specification:
 
-In Context Specification
-~~~~~~~~~~~~~~~~~~~~~~~~
+Specifying a Projection
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Projections can be specified in a number of places where they are required or permitted, for example in the
 specification of a `pathway <Process.pathway>` for a `Process`, where the value of a parameter is specified
@@ -449,7 +449,7 @@ class Projection_Base(Projection):
     .. note::
        Projection is an abstract class and should NEVER be instantiated by a direct call to its constructor.
        It should be created by calling the constructor for a subclass` or by using any of the other methods for
-       `specifying a Projection <Projection_In_Context_Specification>`.
+       `specifying a Projection <Projection_Specification>`.
 
 
     COMMENT:

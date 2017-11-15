@@ -360,12 +360,11 @@ of a System can be displayed using the System's `show_graph` method with its **s
 Single layer learning
 ^^^^^^^^^^^^^^^^^^^^^
 
-This configuration occurs when only a single `MappingProjection` is `specified for learning
-<Projection_In_Context_Specification>`, or the LearningMechanism's `function <LearningMechanism.function>` only
-considers the error on its `output_source` (and not any additional sources of error) when calculating the
-`learning_signal <LearningMechanism.learning_signal>`  (e.g., for `Reinforcement` learning).  In this case, a single
-`ComparatorMechanism` and LearningMechanism are created (if they do not already exist);  in addition, the following
-MappingProjections are created:
+This configuration occurs when only a single `MappingProjection` is `specified for learning <Projection_Specification>`,
+or the LearningMechanism's `function <LearningMechanism.function>` only considers the error on its `output_source`
+(and not any additional sources of error) when calculating the `learning_signal <LearningMechanism.learning_signal>`
+(e.g., for `Reinforcement` learning).  In this case, a single `ComparatorMechanism` and LearningMechanism are created
+(if they do not already exist);  in addition, the following MappingProjections are created:
 
 * from an `OutputState` of the LearningMechanism's `output_source` to the ComparatorMechanism's *SAMPLE* `InputState
   <ComparatorMechanism_Structure>`.  By default, the `primary OutputState <OutputState_Primary>` of the

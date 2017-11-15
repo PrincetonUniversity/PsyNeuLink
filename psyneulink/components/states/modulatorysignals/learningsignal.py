@@ -63,7 +63,7 @@ specified.  This can take any of the following forms:
         appending "_LearningSignal" to the name of the Projection.
 
     * *PROJECTION*:MappingProjection
-        the MappingProjection must be valid `projection specification <Projection_In_Context_Specification>`
+        the MappingProjection must be valid `projection specification <Projection_Specification>`
         for the one to be learned.
 
     The dictionary can also contain entries for any other LearningSignal attributes to be specified

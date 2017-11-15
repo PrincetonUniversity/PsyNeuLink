@@ -25,8 +25,9 @@ Creating a PathwayProjection
 ---------------------------------
 
 A PathwayProjection can be created on its own, by calling the constructor for the desired type of projection.  More
-commonly, however, projections are either specified `in context <Projection_In_Context_Specification>`, or
-are `created automatically <Projection_Automatic_Creation>`, as described below.
+commonly, however, projections are either specified in the context of creating a State to or from which they project
+ (see `Projection_Specification`, and `State_Projections` in State), or are `created automatically
+ <Projection_Automatic_Creation>`, as described below.
 
 
 

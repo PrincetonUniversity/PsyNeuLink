@@ -131,22 +131,23 @@ A State can be specified using any of the following:
       .. _State_Specification_Dictionary:
 
       A State specification dictionary can also be used to specify one or more `Projections <Projection>' to or from
-      the State, including `ModulatoryProjection(s) <ModulatoryProjection>` used to modified the `value
+      the State, including `ModulatoryProjection(s) <ModulatoryProjection>` used to modify the `value
       <State_Base.value>` of the State.  The type of Projection(s) created depend on the type of State specified and
-      context of the specification (see `examples <XXX>` below).  This can be done using any of the following entries,
-      each of which can contain any of the forms used to `specify a Projection <Projection_In_Context_Specification>`:
+      context of the specification (see `examples <State_Specification_Dictionary_Examples>`).  This can be done using
+      any of the following entries, each of which can contain any of the forms used to `specify a Projection
+      <Projection_Specification>`:
 
-      * *PROJECTIONS*:List[<`projection specification <Projection_In_Context_Specification>`>,...]
-          the list must contain a one or more `Projection specifications <Projection_In_Context_Specification>`
-          to or from the State, and/or `ModulatorySignals <ModulatorySignal>` from which it should receive projections
-          (see `State_Projections` below).
+      * *PROJECTIONS*:List[<`projection specification <Projection_Specification>`>,...]
+          the list must contain a one or more `Projection specifications <Projection_Specification>` to or from
+          the State, and/or `ModulatorySignals <ModulatorySignal>` from which it should receive projections (see
+          `State_Projections` below).
 
       .. _State_State_Name_Entry:
 
-      * *<str>*:List[<`projection specification <Projection_In_Context_Specification>`>,...]
+      * *<str>*:List[<`projection specification <Projection_Specification>`>,...]
           this must be the only entry in the dictionary, and the string cannot be a PsyNeuLink
           keyword;  it is used as the name of the State, and the list must contain one or more `Projection
-          specifications <Projection_In_Context_Specification>`.
+          specifications <Projection_Specification>`.
 
       .. _State_MECHANISM_STATES_Entries:
 
@@ -156,7 +157,7 @@ A State can be specified using any of the following:
           `MappingProjection` to the Mechanism's `primary InputState <InputState_Primary>` or from its `primary
           OutputState <OutputState_Primary>`, depending upon the type of Mechanism and context of specification.  It
           can also be accompanied by one or more State specification entries described below, to create one or more
-          Projections to/from those States.
+          Projections to/from those States (see `examples <State_State_Name_Entry_Example>`).
       ..
       * *<STATES_KEYWORD>:List[<str or State.name>,...]
          this must accompany a *MECHANISM* entry (described above), and is used to specify its State(s) by name.
@@ -166,7 +167,7 @@ A State can be specified using any of the following:
          the *MECHANISM* entry;  each item in the list must be the name of one the Mechanism's States, or a
          `ConnectionTuple <State_ConnectionTuple>` the first item of which is the name of a State. The types of
          States that can be specified in this manner depends on the type of the Mechanism and context of the
-         specification (see `examples <XXX>` below).
+         specification (see `examples <State_State_Name_Entry_Example>`).
 
     .. _State_ConnectionTuple:
 
@@ -174,9 +175,9 @@ A State can be specified using any of the following:
       (its first item), along with the weight, exponent, and/or Projection to use (its subsequent items; see
       `ConnectionTuple <Projection_ConnectionTuple>` for additional details).
     ..
-    * a **2-item tuple** - the first item must be a value, used as the default value for the State,
-      and the second item must be a specification for a `Projection <Projection_In_Context_Specification>`
-      to or from the State, depending on the type of State and the context in which it is specified;
+    * a **2-item tuple** - the first item must be a value, used as the default value for the State, and the second
+      item must be a specification for a `Projection <Projection_Specification>` to or from the State, depending on
+      the type of State and the context in which it is specified;
 
 .. _State_Projections:
 
@@ -213,14 +214,14 @@ The following types of Projections can be specified for each type of State:
         |                  |   <ModulatoryProjection>`     |   <ModulatorySignal.efferents>`     |
         +------------------+-------------------------------+-------------------------------------+
 
-Projections must be specified in a list.  Each entry must be either a specification for a `projection
-<Projection_In_Context_Specification>`, or for a `sender <Projection.sender>` or `receiver <Projection.receiver>`, in
+Projections must be specified in a list.  Each entry must be either a `specification for a projection
+<Projection_Specification>`, or for a `sender <Projection.sender>` or `receiver <Projection.receiver>` of one, in
 which case the appropriate type of Projection is created.  A sender or receiver can be specified as a `State <State>`
 or a `Mechanism <Mechanism>`. If a Mechanism is specified, its primary `InputState <InputState_Primary>` or `OutputState
 <OutputState_Primary>`  is used, as appropriate.  When a sender or receiver is used to specify the Projection, the type
 of Projection created is inferred from the State and the type of sender or receiver specified, as illustrated in the
-examples below.  Note that the State must be `assigned to an owner <State_Creation>` in order to be functional,
-irrespective of whether any `Projections <Projection>` have been assigned to it.
+`examples <State_Projections_Examples>` below.  Note that the State must be `assigned to an owner <State_Creation>` in
+order to be functional, irrespective of whether any `Projections <Projection>` have been assigned to it.
 
 
 .. _State_Deferred_Initialization:
@@ -447,7 +448,7 @@ above.  If the name of a specified OutputState matches the name of a Standard Ou
 the type of Mechanism, then that is used (as is the case for both of the OutputStates specified for the
 `TransferMechanism` in the example above); otherwise, a new OutputState is created.
 
-.. _State_Specification_Dictionary_Example:
+.. _State_Specification_Dictionary_Examples:
 
 *State specification dictionary*
 
@@ -492,7 +493,7 @@ from ``source_mech_2``, and that its OutputState send one to ``destination_mech`
     > MappingProjection from MY_MECH[RESULT] to DEST[InputState]
 
 
-A *PROJECTIONS* entry can contain any of the forms used to `specify a Projection <Projection_In_Context_Specification>`.
+A *PROJECTIONS* entry can contain any of the forms used to `specify a Projection <Projection_Specification>`.
 Here, Mechanisms are used, which creates Projections from the `primary InputState <InputState_Primary>` of
 ``source_mech``, and to the `primary OutputState <OutputState_Primary>` of ``destination_mech``.  Note that
 MappingProjections are created, since the Projections specified are between InputStates and OutputStates.
