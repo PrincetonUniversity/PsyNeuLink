@@ -541,8 +541,7 @@ class Function_Base(Function):
         `component <Component>` to which to assign the Function.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
 
     Attributes
@@ -569,9 +568,9 @@ class Function_Base(Function):
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+        the `PreferenceSet` for function. If it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 
@@ -721,8 +720,7 @@ class ArgumentTherapy(Function_Base):
         `component <Component>` to which to assign the Function.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
 
     Attributes
@@ -740,10 +738,8 @@ class ArgumentTherapy(Function_Base):
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     """
 
@@ -963,10 +959,13 @@ class UserDefinedFunction(Function_Base):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default LearningProjection-<index>
+        a string used for the name of the LearningProjection.
+        If not is specified, a default is assigned by ProjectionRegistry
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -990,6 +989,12 @@ class UserDefinedFunction(Function_Base):
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
+
+    name : str : default LearningProjection-<index>
+        the name of the LearningMechanism.
+        Specified in the **name** argument of the constructor for the Projection;
+        if not is specified, a default is assigned by ProjectionRegistry
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection_Base.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;

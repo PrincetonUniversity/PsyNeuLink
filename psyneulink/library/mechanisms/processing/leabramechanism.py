@@ -150,7 +150,7 @@ class LeabraFunction(Function_Base):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
 
