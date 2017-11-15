@@ -813,9 +813,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     name : str : default LearningProjection-<index>
         the name of the LearningMechanism.
-        Specified in the **name** argument of the constructor for the Projection;
-        if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+        Specified in the **name** argument of the constructor for the LearningMechanism;
+        if not is specified, a default is assigned by MechanismRegistry (see `Naming` for conventions
+        used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for LearningMechanism. Specified in the **prefs** argument of the constructor for the
