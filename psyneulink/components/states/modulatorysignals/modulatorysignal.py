@@ -316,7 +316,9 @@ class ModulatorySignal(OutputState):
 
     name : str
         name of the ModulatorySignal; if not is specified in the **name** argument of its constructor, a default name
-        is assigned as described below. If the ModulatorySignal has:
+        is assigned as described below. If a State's `initialization has been deferred <State_Deferred_Initialization>`,
+        its name remains unassigned until initialization is complete. If a default name is assigned, it is based on
+        the following considerations;  if a ModulatorySignal has:
 
         * no projections (which are used to name it) -- the name of its class is used, with an index that is
         incremented for each ModulatorySignal with a default named assigned to its `owner <ModulatorySignal.owner>`;

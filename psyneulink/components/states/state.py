@@ -236,7 +236,7 @@ Deferred Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 If a State is created on its own, and its `owner <State_Owner>` Mechanism is specified, it is assigned to that
-Mechanism; if its owner not specified, then its initialization is `deferred <Component_Deferred_Initialization>`.
+Mechanism; if its owner not specified, then its initialization is `deferred <State_Deferred_Initialization>`.
 Its initialization is completed automatically when it is assigned to an owner `Mechanism <Mechanism_Base>` using the
 owner's `add_states <Mechanism_Base.add_states>` method.  If the State is not assigned to an owner, it will not be
 functional (i.e., used during the execution of `Mechanisms <Mechanism_Base_Execution>` and/or `Compositions
@@ -950,11 +950,9 @@ class State_Base(State):
         current value of the State (updated by `update <State_Base.update>` method).
 
     name : str : default <State subclass>-<index>
-        the name of the State.
-        Specified in the **name** argument of the constructor for the State;
-        if not specified, a default is assigned by StateRegistry based on the
-        States's subclass (see :doc:`Registry <LINK>` for conventions used in naming,
-        including for default and duplicate names).
+        the name of the State; if it is not specified in the **name** argument of its constructor, a default name
+        is assigned by the subclass.  If a State's `initialization has been deferred <State_Deferred_Initialization>`,
+        its name remains unassigned until initialization is complete.
 
         .. note::
             Unlike other PsyNeuLink Components, States names are "scoped" within a Mechanism, meaning that States with

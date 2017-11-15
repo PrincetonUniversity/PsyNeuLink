@@ -504,7 +504,7 @@ class ControlSignal(ModulatorySignal):
         specifies the name of the ControlSignal; see `name <ControlSignal.name>` for details.
 
     prefs : PreferenceSet or specification dict : default State.classPreferences
-        specifies the `PreferenceSet` for the GatingSignal; see `prefs <ControlSignal.prefs>` for details.
+        specifies the `PreferenceSet` for the ControlSignal; see `prefs <ControlSignal.prefs>` for details.
 
 
     Attributes
@@ -594,7 +594,7 @@ class ControlSignal(ModulatorySignal):
 
     name : str
         name of the ControlSignal; if it is not specified in the **name** argument of its constructor, a default name
-        is assigned (see `name <ModulatorySignal.name>`)
+        is assigned (see `name <ModulatorySignal.name>`).
 
         .. note::
             Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with

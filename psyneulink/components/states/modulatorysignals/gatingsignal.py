@@ -326,7 +326,7 @@ class GatingSignal(ModulatorySignal):
     name : str : default see `name <ModulatorySignal>`
         specifies the name of the GatingSignal; see `name <GatingSignal.name>` for details.
 
-    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
+    prefs : PreferenceSet or specification dict : default State.classPreferences
         specifies the `PreferenceSet` for the GatingSignal; see `prefs <GatingSignal.prefs>` for details.
 
 
@@ -365,7 +365,7 @@ class GatingSignal(ModulatorySignal):
 
     name : str
         name of the GatingSignal; if not is specified in the **name** argument of its constructor, a default name
-        is assigned (see `name <ModulatorySignal.name>`)
+        is assigned (see `name <ModulatorySignal.name>`).
 
         .. note::
             Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
