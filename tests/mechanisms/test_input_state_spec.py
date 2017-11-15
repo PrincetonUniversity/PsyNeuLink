@@ -10,6 +10,7 @@ from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_ST
 
 mismatches_default_variable_error_text = 'not compatible with the specified default variable'
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
+belongs_to_another_mechanism_error_text = 'that belongs to another Mechanism'
 
 
 class TestInputStateSpec:
@@ -421,7 +422,21 @@ class TestInputStateSpec:
             m = TransferMechanism(default_variable=[0, 0, 0])
             i = InputState(owner=m, variable=[0, 0, 0])
             TransferMechanism(input_states=[i])
-        assert 'that belongs to another Mechanism' in str(error_text.value)
+        assert belongs_to_another_mechanism_error_text in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 39
+
+    def test_name_assigned_before_error(self):
+        name = 'target'
+        with pytest.raises(StateError) as error_text:
+            m = TransferMechanism(default_variable=[0, 0, 0])
+            i = InputState(owner=m, variable=[0, 0, 0])
+            TransferMechanism(name=name, input_states=[i])
+        assert (
+            belongs_to_another_mechanism_error_text in str(error_text.value)
+            and 'Attempt to assign a State to {0}'.format(name) in str(error_text.value)
+        )
 
     # ------------------------------------------------------------------------------------------------
     # TEST 28

@@ -1097,69 +1097,6 @@ class Mechanism_Base(Mechanism):
             raise MechanismError("Direct call to abstract class Mechanism() is not allowed; "
                                  "use a subclass")
 
-        # TODO:
-        # this is a hack to accept input_states as a way to instantiate default_variable for this release
-        # should be cleaned ASAP in default_variable overhaul
-        default_variable_from_input_states = None
-
-        def spec_incompatible_with_default_error(spec_variable, default_variable):
-            return MechanismError(
-                'default variable determined from the specified input_states spec ({0}) '
-                'is not compatible with the specified default variable ({1})'.format(
-                    spec_variable, default_variable
-                )
-            )
-
-        # handle specifying through params dictionary
-        try:
-            default_variable_from_input_states, input_states_variable_was_specified = \
-                self._parse_arg_input_states(params[INPUT_STATES])
-        except (TypeError, KeyError):
-            pass
-
-        if default_variable_from_input_states is None:
-            # fallback to standard arg specification
-            default_variable_from_input_states, input_states_variable_was_specified = \
-                self._parse_arg_input_states(input_states)
-
-        if default_variable_from_input_states is not None:
-            if variable is None:
-                if size is None:
-                    variable = default_variable_from_input_states
-                else:
-                    if input_states_variable_was_specified:
-                        size_variable = self._handle_size(size, None)
-                        if iscompatible(size_variable, default_variable_from_input_states):
-                            variable = default_variable_from_input_states
-                        else:
-                            raise MechanismError(
-                                'default variable determined from the specified input_states spec ({0}) '
-                                'is not compatible with the default variable determined from size parameter ({1})'.
-                                    format(default_variable_from_input_states, size_variable,
-                                )
-                            )
-                    else:
-                        # do not pass input_states variable as default_variable, fall back to size specification
-                        pass
-            else:
-                compatible = iscompatible(self._parse_arg_variable(variable), default_variable_from_input_states)
-                if size is None:
-                    if input_states_variable_was_specified:
-                        if compatible:
-                            variable = default_variable_from_input_states
-                        else:
-                            raise spec_incompatible_with_default_error(default_variable_from_input_states, variable)
-                    else:
-                        pass
-                else:
-                    if input_states_variable_was_specified:
-                        if compatible:
-                            variable = default_variable_from_input_states
-                        else:
-                            raise spec_incompatible_with_default_error(default_variable_from_input_states, variable)
-                    else:
-                        pass
-
         # IMPLEMENT **kwargs (PER State)
 
 
@@ -1222,6 +1159,8 @@ class Mechanism_Base(Mechanism):
                           base_class=State_Base,
                           registry=self._stateRegistry,
                           context=context)
+
+        variable = self._handle_default_variable(variable, size, input_states, params)
 
         # Mark initialization in context
         if not context or isinstance(context, object) or inspect.isclass(context):
@@ -1345,6 +1284,65 @@ class Mechanism_Base(Mechanism):
             default_variable_from_input_states.append(variable)
 
         return default_variable_from_input_states, variable_was_specified
+
+    def _handle_default_variable(self, default_variable=None, size=None, input_states=None, params=None):
+        '''
+            Finds whether default_variable can be determined using **default_variable** and **size**
+            arguments.
+
+            Returns
+            -------
+                a default variable if possible
+                None otherwise
+        '''
+        default_variable_from_input_states = None
+
+        # handle specifying through params dictionary
+        try:
+            default_variable_from_input_states, input_states_variable_was_specified = self._parse_arg_input_states(params[INPUT_STATES])
+        except (TypeError, KeyError):
+            pass
+
+        if default_variable_from_input_states is None:
+            # fallback to standard arg specification
+            default_variable_from_input_states, input_states_variable_was_specified = self._parse_arg_input_states(input_states)
+
+        if default_variable_from_input_states is not None:
+            if default_variable is None:
+                if size is None:
+                    default_variable = default_variable_from_input_states
+                else:
+                    if input_states_variable_was_specified:
+                        size_variable = self._handle_size(size, None)
+                        if iscompatible(size_variable, default_variable_from_input_states):
+                            default_variable = default_variable_from_input_states
+                        else:
+                            raise MechanismError(
+                                'default variable determined from the specified input_states spec ({0}) '
+                                'is not compatible with the default variable determined from size parameter ({1})'.format(
+                                    default_variable_from_input_states,
+                                    size_variable,
+                                )
+                            )
+                    else:
+                        # do not pass input_states variable as default_variable, fall back to size specification
+                        pass
+            else:
+                if input_states_variable_was_specified:
+                    if iscompatible(self._parse_arg_variable(default_variable), default_variable_from_input_states):
+                        default_variable = default_variable_from_input_states
+                    else:
+                        raise MechanismError(
+                            'default variable determined from the specified input_states spec ({0}) '
+                            'is not compatible with the specified default variable ({1})'.format(
+                                default_variable_from_input_states, default_variable
+                            )
+                        )
+                else:
+                    # do not pass input_states variable as default_variable, fall back to default_variable specification
+                    pass
+
+        return default_variable
 
     def _validate_variable(self, variable, context=None):
         """Convert ClassDefaults.variable and variable to 2D np.array: one 1D value for each InputState
