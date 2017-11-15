@@ -540,6 +540,9 @@ class Function_Base(Function):
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -564,11 +567,15 @@ class Function_Base(Function):
         for details).
     COMMENT
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
     prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function. If it is not specified in the **prefs** argument of the Function's
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
@@ -719,6 +726,9 @@ class ArgumentTherapy(Function_Base):
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -735,11 +745,13 @@ class ArgumentTherapy(Function_Base):
     pertinacity : float : default 10.0
         determines consistency with which the manner complies with the propensity.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
 
     """
 
@@ -959,10 +971,8 @@ class UserDefinedFunction(Function_Base):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    name : str : default LearningProjection-<index>
-        a string used for the name of the LearningProjection.
-        If not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
@@ -987,19 +997,17 @@ class UserDefinedFunction(Function_Base):
         for details).
     COMMENT
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    name : str : default LearningProjection-<index>
-        the name of the LearningMechanism.
-        Specified in the **name** argument of the constructor for the Projection;
-        if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the Function; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
     componentName = USER_DEFINED_FUNCTION
@@ -1167,7 +1175,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         value is added to each element of the array after applying the `operation <Reduce.operation>`
         and `scale <Reduce.scale>` (if it is specified).
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -1427,7 +1435,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         for details).
     COMMENT
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -1882,7 +1890,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         for details).
     COMMENT
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -2255,7 +2263,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     bounds : None
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -2471,7 +2479,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     bounds : (0, None)
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -2620,7 +2628,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     bounds : (0,1)
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -2778,7 +2786,7 @@ class SoftMax(TransferFunction):
 
     bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -3027,7 +3035,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         Rows correspond to elements of the input array (outer index), and
         columns correspond to elements of the output array (inner index).
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -3554,7 +3562,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <Integrator.variable>` is integrated.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -3862,7 +3870,7 @@ class SimpleIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <SimpleIntegrator.variable>` is integrated.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -4064,7 +4072,7 @@ class LCAIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <LCAIntegrator.variable>` is integrated.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -4274,7 +4282,7 @@ class ConstantIntegrator(
         stores previous value to which `rate <ConstantIntegrator.rate>` and `noise <ConstantIntegrator.noise>` will be
         added.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -4484,7 +4492,7 @@ class AdaptiveIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <AdaptiveIntegrator.variable>` is integrated.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -4760,7 +4768,7 @@ class DriftDiffusionIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -4983,7 +4991,7 @@ class OrnsteinUhlenbeckIntegrator(
         stores previous time at which the function was executed and accumulates with each execution according to
         `time_step_size <OrnsteinUhlenbeckIntegrator.default_time_step_size>`.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -5361,7 +5369,7 @@ class FHNIntegrator(
     previous_t : float
         stores accumulated value of time, which is incremented by time_step_size on each execution of the function
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     initial_w : float, list or 1d np.array : default 0.0
@@ -5816,7 +5824,7 @@ class AccumulatorIntegrator(
         stores previous value to which `rate <AccumulatorIntegrator.rate>` and `noise <AccumulatorIntegrator.noise>`
         will be added.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -6146,7 +6154,7 @@ class AGTUtilityIntegrator(
         stores previous value with which `variable <AGTUtilityIntegrator.variable>` is integrated using the EWMA filter and
         long term parameters
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -6484,7 +6492,7 @@ class BogaczEtAl(
         (`starting_point <BogaczEtAl.starting_point>` + `threshold <BogaczEtAl.threshold>`) /
         (2 * `threshold <BogaczEtAl.threshold>`)
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -6776,7 +6784,7 @@ class NavarroAndFuss(IntegratorFunction):
         (`starting_point <BogaczEtAl.starting_point>` + `threshold <BogaczEtAl.threshold>`) /
         (2 * `threshold <BogaczEtAl.threshold>`)
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -8027,7 +8035,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
          scales that by the `learning_rate <Hebbian.learning_rate>` to generate the weight change matrix
          returned by the function.
 
-    owner : Mechanism
+    owner : Component
         `Mechanism <Mechanism>` to which the Function belongs.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -8258,7 +8266,7 @@ class Reinforcement(
          the function that computes the weight change matrix, and returns that along with the
          `error_signal <Reinforcement.error_signal>` received.
 
-    owner : Mechanism
+    owner : Component
         `Mechanism <Mechanism>` to which the Function belongs.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
@@ -8515,7 +8523,7 @@ class BackPropagation(LearningFunction):
          `activation_output <BackPropagation.activation_output>` as a function of the
          `error_matrix <BackPropagation.error_matrix>`.
 
-    owner : Mechanism
+    owner : Component
         `Mechanism <Mechanism>` to which the Function belongs.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences

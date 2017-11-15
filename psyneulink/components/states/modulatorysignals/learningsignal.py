@@ -264,8 +264,9 @@ class LearningSignal(ModulatorySignal):
         listed in its `efferents <LearningSignal.efferents>` attribute (see `LearningSignal_Projections` for additional
         details).
 
-    name : str : default see `name <ModulatorySignal>`
-        specifies the name of the LearningSignal; see `name <LearningSignal.name>` for details.
+    name : str : default see ModulatorySignal `name <ModulatorySignal.name>`
+        specifies the name of the LearningSignal; see LearningSignal `name <ModulatorySignal.name>` for additional
+        details.
 
     prefs : PreferenceSet or specification dict : default State.classPreferences
         specifies the `PreferenceSet` for the LearningSignal; see `prefs <LearningSignal.prefs>` for details.

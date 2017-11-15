@@ -492,15 +492,11 @@ class OutputState(State_Base):
         the OutputState, its function, and/or a custom function and its parameters. Values specified for parameters
         in the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default OutputState-<index>
-        a string used for the name of the OutputState.
-        If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
-        belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <OutputState.name>`
+        specifies the name of the OutputState; see OutputState `name <OutputState.name>` for details.
 
-    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the OutputState.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default State.classPreferences
+        specifies the `PreferenceSet` for the OutputState; see `prefs <OutputState.prefs>` for details.
 
 
     Attributes
@@ -541,11 +537,10 @@ class OutputState(State_Base):
         a list of the `MappingProjections <MappingProjection>` sent by the OutputState (i.e., for which the OutputState
         is a `sender <Projection_Base.sender>`).
 
-    name : str : default <State subclass>-<index>
-        name of the OutputState.
-        Specified in the **name** argument of the constructor for the OutputState.  If not is specified, a default is
-        assigned by the StateRegistry of the Mechanism to which the OutputState belongs
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the OutputState; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by the StateRegistry of the Mechanism to which the OutputState belongs (see `Naming` for conventions
+        used for default and duplicate names).
 
         .. note::
             Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
@@ -553,11 +548,10 @@ class OutputState(State_Base):
             Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
-    prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the OutputState.
-        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
-        assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the OutputState; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 

@@ -1015,17 +1015,14 @@ class Mechanism_Base(Mechanism):
     time_scale : TimeScale : default TimeScale.TRIAL
         determines the default value of the `TimeScale` used by the Mechanism when `executed <Mechanism_Execution>`.
 
-    name : str : default <Mechanism subclass>-<index>
-        the name of the Mechanism.
-        Specified in the **name** argument of the constructor for the Mechanism;  if not is specified,
-        a default is assigned by `MechanismRegistry` based on the Mechanism's subclass
-        (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the Mechanism; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for the Mechanism.
-        Specified in the **prefs** argument of the constructor for the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the Mechanism; if it is not specified in the **prefs** argument of the 
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        <LINK>` for details).
 
         .. _stateRegistry : Registry
                registry containing dicts for each State type (InputState, OutputState and ParameterState) with instance

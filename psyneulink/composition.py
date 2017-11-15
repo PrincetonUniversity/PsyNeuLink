@@ -321,6 +321,15 @@ class Composition(object):
 
         mechanisms : `list[Mechanism]`
             A list of all `Mechanisms <Mechanism>` contained in this Composition
+
+        COMMENT:
+        name : str
+            see `name <Composition_Name>`
+
+        prefs : PreferenceSet
+            see `prefs <Composition_Prefs>`
+        COMMENT
+
     '''
 
     def __init__(self):

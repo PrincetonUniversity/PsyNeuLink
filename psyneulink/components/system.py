@@ -752,12 +752,14 @@ class System(System_Base):
     results : List[OutputState.value]
         list of return values (OutputState.value) from the sequence of executions.
 
-    name : str : default System-<index>
-        the name of the System; (see :doc:`Registry <LINK>` for conventions used in naming, including for default and
-        duplicate names).
+    name : str
+        the name of the System; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by SystemRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for System (see :ref:`PreferenceSet <LINK>` for details).
+        the `PreferenceSet` for the System; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 

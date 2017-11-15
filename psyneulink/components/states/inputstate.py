@@ -514,15 +514,11 @@ class InputState(State_Base):
         the InputState or its function, and/or a custom function and its parameters. Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default InputState-<index>
-        a string used for the name of the InputState.
-        If not is specified, a default is assigned by StateRegistry of the Mechanism to which the InputState belongs
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <InputState.name>`
+        specifies the name of the InputState; see InputState `name <InputState.name>` for details.
 
-    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the InputState.
-        If it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default State.classPreferences
+        specifies the `PreferenceSet` for the InputState; see `prefs <InputState.prefs>` for details.
 
 
     Attributes
@@ -569,11 +565,10 @@ class InputState(State_Base):
     exponent : number
         see `InputState_Weights_And_Exponents` for description.
 
-    name : str : default <State subclass>-<index>
-        the name of the InputState.
-        Specified in the **name** argument of the constructor for the OutputState.  If not is specified, a default is
-        assigned by the StateRegistry of the Mechanism to which the OutputState belongs
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the InputState; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by the StateRegistry of the Mechanism to which the InputState belongs (see `Naming` for conventions 
+        used for default and duplicate names).
 
         .. note::
             Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
@@ -581,11 +576,11 @@ class InputState(State_Base):
             Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
-    prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the InputState.
-        Specified in the **prefs** argument of the constructor for the Projection;  if it is not specified, a default is
-        assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the InputState; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+
 
     """
 

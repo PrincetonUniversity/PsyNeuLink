@@ -691,15 +691,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default LearningProjection-<index>
-        a string used for the name of the LearningProjection.
-        If not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <LearningMechanism.name>`
+        specifies the name of the LearningMechanism.
 
     prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        the `PreferenceSet` for the LearningMechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+        specifies the `PreferenceSet` for the LearningMechanism; see `prefs <LearningMechanism.prefs>` for details.
 
 
     Attributes
@@ -811,16 +807,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
         the default form of modulation used by the LearningMechanism's `LearningSignal(s)
         <LearningMechanism_LearningSignal>`, unless they are `individually specified <LearningSignal_Specification>`.
 
-    name : str : default LearningProjection-<index>
-        the name of the LearningMechanism.
-        Specified in the **name** argument of the constructor for the LearningMechanism;
-        if not is specified, a default is assigned by MechanismRegistry (see `Naming` for conventions
-        used for default and duplicate names).
+    name : str
+        the name of the LearningMechanism; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for LearningMechanism. Specified in the **prefs** argument of the constructor for the
-        Mechanism; if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+        the `PreferenceSet` for the LearningMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 

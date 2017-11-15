@@ -283,10 +283,10 @@ class ModulatorySignal(OutputState):
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default see `name <ModulatorySignal>`
+    name : str : default see `name <ModulatorySignal.name>`
         specifies the name of the ModulatorySignal.
 
-    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
+    prefs : PreferenceSet or specification dict : default State.classPreferences
         specifies the `PreferenceSet` for the LearningSignal; see `prefs <ControlSignal.prefs>` for details.
 
 

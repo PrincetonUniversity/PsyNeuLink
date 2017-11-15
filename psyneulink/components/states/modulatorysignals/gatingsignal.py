@@ -323,8 +323,9 @@ class GatingSignal(ModulatorySignal):
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default see `name <ModulatorySignal>`
-        specifies the name of the GatingSignal; see `name <GatingSignal.name>` for details.
+    name : str : default see ModulatorySignal `name <ModulatorySignal.name>`
+        specifies the name of the GatingSignal;  see GatingSignal `name <ModulatorySignal.name>` for additional
+        details.
 
     prefs : PreferenceSet or specification dict : default State.classPreferences
         specifies the `PreferenceSet` for the GatingSignal; see `prefs <GatingSignal.prefs>` for details.

@@ -782,16 +782,14 @@ class Process(Process_Base):
     timeScale : TimeScale : default TimeScale.TRIAL
         determines the default `TimeScale` value used by Mechanisms in the pathway.
 
-    name : str : default Process-<index>
-        the name of the Process.
-        Specified in the **name** argument of the constructor for the Process;
-        if not is specified, a default is assigned by ProcessRegistry
-        (see :ref:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the Process; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by ProcessRegistry (see `Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Process.classPreferences
-        the `PreferenceSet` for the Process.
-        Specified in the **prefs** argument of the constructor for the Process;  if it is not specified, a default is
-        assigned using `classPreferences` defined in __init__.py (see :ref:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the Process; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
 
     """

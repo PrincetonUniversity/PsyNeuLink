@@ -164,15 +164,11 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default LearningProjection-<index>
-        a string used for the name of the LearningProjection.
-        If not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <AutoAssociativeLearningMechanism.name>`
+        specifies the name of the AutoAssociativeLearningMechanism.
 
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for the AutoAssociativeLearingMechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the AutoAssociativeLearningMechanism; see `prefs <AutoAssociativeLearningMechanism.prefs>` for details.
 
 
     Attributes
@@ -267,18 +263,15 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         the default form of modulation used by the AutoAssociativeLearningMechanism's `LearningSignal(s)
         <LearningMechanism_LearningSignal>`, unless they are `individually specified <LearningSignal_Specification>`.
 
-    name : str : default LearningProjection-<index>
-        the name of the AutoAssociativeLearningMechanism.
-        Specified in the **name** argument of the constructor for the Projection;
-        if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the AutoAssociativeLearningMechanism; if it is not specified in the **name** argument of the
+        constructor, a default is assigned by MechanismRegistry (see `Naming` for conventions used for default and
+        duplicate names).
 
-    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for AutoAssociativeLearningMechanism.
-        Specified in the **prefs** argument of the constructor for the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
-
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the AutoAssociativeLearningMechanism; if it is not specified in the **prefs** argument
+        of the constructor, a default is assigned using `classPreferences` defined in __init__.py (see
+        `PreferenceSet <LINK>` for details).
     """
 
     componentType = AUTOASSOCIATIVE_LEARNING_MECHANISM

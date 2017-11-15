@@ -977,6 +977,10 @@ print(PDN1.name)
 TDN1.name = 'NEW NAME'
 print(TDN1.name)
 
+PR = pnl.Process(pathway=[TDN1])
+print(PR.name)
+S = pnl.System(processes=[PR])
+print(S.name)
 
 #endregion
 

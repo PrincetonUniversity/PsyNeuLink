@@ -151,8 +151,7 @@ class LeabraFunction(Function_Base):
         `component <Component>` to which to assign the Function.
 
     prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+        specifies the `PreferenceSet` for the LeabraMechanism; see `prefs <LeabraMechanism.prefs>` for details.
 
 
     Attributes
@@ -167,10 +166,10 @@ class LeabraFunction(Function_Base):
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for LeabraMechanism. Specified in the **prefs** argument of the constructor for the
-        Mechanism; if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the LeabraMechanism; if it is not specified in the **prefs** argument of the 
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        <LINK>` for details).
 
     """
 

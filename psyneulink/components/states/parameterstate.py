@@ -386,14 +386,11 @@ class ParameterState(State_Base):
         the ParameterState or its function, and/or a custom function and its parameters.  Values specified for
         parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default ParameterState-<index>
-        a string used for the name of the ParameterState, assigned based on the name of the parameter of the
-        Mechanism, Projection or Function to which it belongs (see :doc:`Registry <LINK>` for conventions used in
-        naming, including for default and duplicate names).
+    name : str : default see `name <ParameterState.name>`
+        specifies the name of the ParameterState; see ParameterState `name <ParameterState.name>` for details.
 
-    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the ParameterState; if it is not specified, a default is assigned using
-        `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default State.classPreferences
+        specifies the `PreferenceSet` for the ParameterState; see `prefs <ParameterState.prefs>` for details.
 
 
     Attributes
@@ -430,17 +427,20 @@ class ParameterState(State_Base):
         `mod_afferents <ParameterState.mod_afferents>`.
 
     name : str
-        the name of the ParameterState (see :doc:`Registry <LINK>` for conventions used in naming, including for
-        default and duplicate names).
+        the name of the ParameterState; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by the StateRegistry of the Mechanism to which the ParameterState belongs (see `Naming` for conventions 
+        used for default and duplicate names).
 
         .. note::
-            Unlike other PsyNeuLink components, states' names are "scoped" within a Mechanism, meaning that states with
+            Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: states within a Mechanism with the same base name are appended an index in the order of their
+            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ParameterState (see :doc:`PreferenceSet <LINK>` for details).
+        the `PreferenceSet` for the ParameterState; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 
