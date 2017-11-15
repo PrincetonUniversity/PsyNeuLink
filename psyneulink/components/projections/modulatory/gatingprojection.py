@@ -195,15 +195,11 @@ class GatingProjection(ModulatoryProjection_Base):
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name : str : default GatingProjection-<index>
-        a string used for the name of the GatingProjection.
-        If not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see GatingProjection `name <GatingProjection.name>`
+        specifies the name of the GatingProjection; see GatingProjection `name <GatingProjection.name>` for details.
 
-    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
-        the `PreferenceSet` for the GatingProjection.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Projection.classPreferences
+        specifies the `PreferenceSet` for the GatingProjection; see `prefs <GatingProjection.prefs>` for details.
 
     Attributes
     ----------
@@ -244,19 +240,14 @@ class GatingProjection(ModulatoryProjection_Base):
        or `OutputState` to determine how that State's `variable <State.variable>` is modified (see description in
        `Projection <Projection_Weight_and_Exponent>` for details).
 
-    name : str : default GatingProjection-<index>
-        the name of the GatingProjection.
-        Specified in the **name** argument of the constructor for the GatingProjection;
-        if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        name of the GatingProjection; if it is not specified in the **name** argument of its constructor,
+        a default name is assigned (see `name <ModulatoryProjection.name>`).
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for the GatingProjection.
-        Specified in the **prefs** argument of the constructor for the GatingProjection;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
-
-
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the GatingProjection; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     color = 0

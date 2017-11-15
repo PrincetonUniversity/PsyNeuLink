@@ -299,12 +299,11 @@ class LearningProjection(ModulatoryProjection_Base):
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
     name : str : default see LearningProjection `name <LearningProjection.name>`
-        specifies the name of the LearningProjection; see LearningProjection `name <LearningProjection.name>` 
+        specifies the name of the LearningProjection; see LearningProjection `name <LearningProjection.name>`
         for details.
 
     prefs : PreferenceSet or specification dict : default Projection.classPreferences
-        specifies the `PreferenceSet` for the LearningProjection; see `prefs <LearningProjection.prefs>` for 
-        details.
+        specifies the `PreferenceSet` for the LearningProjection; see `prefs <LearningProjection.prefs>` for details.
 
 
     Attributes

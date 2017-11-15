@@ -210,15 +210,11 @@ class ControlProjection(ModulatoryProjection_Base):
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name : str : default ControlProjection-<index>
-        a string used for the name of the ControlProjection.
-        If not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see ControlProjection `name <ControlProjection.name>`
+        specifies the name of the ControlProjection; see ControlProjection `name <ControlProjection.name>` for details.
 
-    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
-        the `PreferenceSet` for the ControlProjection.
-        If it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Projection.classPreferences
+        specifies the `PreferenceSet` for the ControlProjection; see `prefs <ControlProjection.prefs>` for details.
 
     Attributes
     ----------
@@ -258,19 +254,14 @@ class ControlProjection(ModulatoryProjection_Base):
         to determine how that ParameterState's `variable <ParameterState.variable>` is modified (see description in
         `Projection <Projection_Weight_and_Exponent>` for details).
 
-    name : str : default ControlProjection-<index>
-        the name of the ControlProjection.
-        Specified in the **name** argument of the constructor for the ControlProjection;
-        if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        name of the ControlProjection; if it is not specified in the **name** argument of its constructor,
+        a default name is assigned (see `name <ModulatoryProjection.name>`).
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for ControlProjection.
-        Specified in the **prefs** argument of the constructor for the ControlProjection;
-        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
-
-
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the ControlProjection; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     color = 0
