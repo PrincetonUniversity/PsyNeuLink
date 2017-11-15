@@ -139,15 +139,13 @@ class ModulatoryProjection_Base(Projection_Base):
         and parameter assignments.  Values specified for parameters in the dictionary override any assigned to those
         parameters in arguments of the constructor.
 
-    name : str : default LearningProjection-<index>
-        a string used for the name of the ModulatoryProjection.
-        If not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see ModulatoryProjection `name <ModulatoryProjection.name>`
+        specifies the name of the ModulatoryProjection; see ModulatoryProjection `name <ModulatoryProjection.name>` 
+        for details.
 
-    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences : default : None
-        the `PreferenceSet` for the ModulatoryProjection.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Projection.classPreferences
+        specifies the `PreferenceSet` for the ModulatoryProjection; see `prefs <ModulatoryProjection.prefs>` for 
+        details.
 
     context : str : default None
         optional reference to a subclass
@@ -186,17 +184,24 @@ class ModulatoryProjection_Base(Projection_Base):
         determine that State's `variable <State.variable>` is modified (see description in `Projection
         <Projection_Weight_and_Exponent>` for details).
 
-    name : str : default ModulatoryProjection-<index>
-        the name of the ModulatoryProjection.
-        Specified in the **name** argument of the constructor for the ModulatoryProjection;
-        if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the ModulatoryProjection. See `Naming` for conventions used for duplicate names.
+        If the ModulatoryProjection's `initialization has been deferred <Projection_Deferred_Initialization>`,
+        COMMENT:
+        *** CONFIRM / FIX:
+        its name remains unassigned until initialization is complete.
+        ??OR??
+        it is assigned a standard default name (using the Projection's type as its name with a hyphenated integer 
+        suffix, beginning with '0', and incremented for each additional Projection of that type.
+        COMMENT
+        If the ModulatoryProjection's name is not specified in the **name** argument of its constructor, a default name
+        is assigned using the following format: '<ModualatorySignal type> for <receiver's name> to
+        <receiver owner Mechanism's name>' (for example, ``GatingSignal for INPUT_STATE-0 of my_mech``).
 
-    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences
-        the `PreferenceSet` for Projection.
-        Specified in the **prefs** argument of the constructor for the ModulatoryProjection;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the ModulatoryProjection; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
     componentCategory = MODULATORY_PROJECTION

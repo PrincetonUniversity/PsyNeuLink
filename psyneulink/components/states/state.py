@@ -949,10 +949,11 @@ class State_Base(State):
     value : number, list or np.ndarray
         current value of the State (updated by `update <State_Base.update>` method).
 
-    name : str : default <State subclass>-<index>
-        the name of the State; if it is not specified in the **name** argument of its constructor, a default name
-        is assigned by the subclass.  If a State's `initialization has been deferred <State_Deferred_Initialization>`,
-        its name remains unassigned until initialization is complete.
+    name : str
+        the name of the State.  See `Naming` for conventions used for duplicate names.  If the State's `initialization
+        has been deferred <State_Deferred_Initialization>`, its name remains unassigned until initialization is
+        complete.  If the State's name is not  specified in the **name** argument of its constructor, a default name
+        is assigned by the subclass (see subclass for details).
 
         .. _State_Naming_Note:
 
@@ -962,11 +963,10 @@ class State_Base(State):
             Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation).
 
-    prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the State.
-        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
-        assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the State; if it is not specified in the **prefs** argument of the constructor,
+        a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
+        details).
 
     """
 

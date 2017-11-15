@@ -748,9 +748,14 @@ class ArgumentTherapy(Function_Base):
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
 
     """
@@ -1153,6 +1158,9 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -1178,8 +1186,14 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
     componentName = REDUCE_FUNCTION
 
@@ -1380,6 +1394,9 @@ class LinearCombination(CombinationFunction):  # -------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -1438,8 +1455,14 @@ class LinearCombination(CombinationFunction):  # -------------------------------
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = LINEAR_COMBINATION_FUNCTION
@@ -1835,6 +1858,9 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -1893,8 +1919,14 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = COMBINE_MEANS_FUNCTION
@@ -2244,6 +2276,9 @@ class Linear(TransferFunction):  # ---------------------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2266,8 +2301,14 @@ class Linear(TransferFunction):  # ---------------------------------------------
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = LINEAR_FUNCTION
@@ -2462,6 +2503,9 @@ class Exponential(TransferFunction):  # ----------------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2482,8 +2526,14 @@ class Exponential(TransferFunction):  # ----------------------------------------
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = EXPONENTIAL_FUNCTION
@@ -2609,6 +2659,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2631,8 +2684,14 @@ class Logistic(TransferFunction):  # -------------------------------------------
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = LOGISTIC_FUNCTION
@@ -2762,6 +2821,9 @@ class SoftMax(TransferFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2789,8 +2851,14 @@ class SoftMax(TransferFunction):
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = SOFTMAX_FUNCTION
@@ -3017,6 +3085,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -3038,8 +3109,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = LINEAR_MATRIX_FUNCTION
@@ -3516,6 +3593,9 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -3565,8 +3645,14 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = INTEGRATOR_FUNCTION
@@ -3830,6 +3916,9 @@ class SimpleIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -3873,8 +3962,14 @@ class SimpleIntegrator(
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = SIMPLE_INTEGRATOR_FUNCTION
@@ -4032,6 +4127,9 @@ class LCAIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4075,8 +4173,14 @@ class LCAIntegrator(
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = SIMPLE_INTEGRATOR_FUNCTION
@@ -4238,6 +4342,9 @@ class ConstantIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4285,8 +4392,14 @@ class ConstantIntegrator(
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = CONSTANT_INTEGRATOR_FUNCTION
@@ -4448,6 +4561,9 @@ class AdaptiveIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4495,8 +4611,14 @@ class AdaptiveIntegrator(
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = ADAPTIVE_INTEGRATOR_FUNCTION
@@ -4726,6 +4848,9 @@ class DriftDiffusionIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4771,8 +4896,14 @@ class DriftDiffusionIntegrator(
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = DRIFT_DIFFUSION_INTEGRATOR_FUNCTION
@@ -4949,6 +5080,9 @@ class OrnsteinUhlenbeckIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4994,8 +5128,14 @@ class OrnsteinUhlenbeckIntegrator(
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION
@@ -5351,6 +5491,9 @@ class FHNIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -5774,6 +5917,9 @@ class AccumulatorIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -5827,8 +5973,14 @@ class AccumulatorIntegrator(
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = ACCUMULATOR_INTEGRATOR_FUNCTION
@@ -6110,6 +6262,9 @@ class AGTUtilityIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -6157,8 +6312,14 @@ class AGTUtilityIntegrator(
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = UTILITY_INTEGRATOR_FUNCTION
@@ -6460,6 +6621,9 @@ class BogaczEtAl(
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -6495,8 +6659,14 @@ class BogaczEtAl(
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = kwBogaczEtAl
@@ -6752,6 +6922,9 @@ class NavarroAndFuss(IntegratorFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -6787,8 +6960,14 @@ class NavarroAndFuss(IntegratorFunction):
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = kwNavarrosAndFuss
@@ -6916,6 +7095,9 @@ class NormalDist(DistributionFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -6936,6 +7118,9 @@ class NormalDist(DistributionFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7013,6 +7198,9 @@ class ExponentialDist(DistributionFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7030,6 +7218,9 @@ class ExponentialDist(DistributionFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7107,6 +7298,9 @@ class UniformDist(DistributionFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7127,6 +7321,9 @@ class UniformDist(DistributionFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7207,6 +7404,9 @@ class GammaDist(DistributionFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7227,6 +7427,9 @@ class GammaDist(DistributionFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7472,6 +7675,9 @@ COMMENT
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     Attributes
@@ -7732,6 +7938,9 @@ class Distance(ObjectiveFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -8002,6 +8211,9 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     Attributes
@@ -8222,6 +8434,9 @@ class Reinforcement(
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -8478,6 +8693,9 @@ class BackPropagation(LearningFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 

@@ -981,6 +981,28 @@ PR = pnl.Process(pathway=[TDN1])
 print(PR.name)
 S = pnl.System(processes=[PR])
 print(S.name)
+S = pnl.System(processes=[PR])
+print(S.name)
+
+LP1 = pnl.LearningProjection()
+LP2 = pnl.LearningProjection()
+print(LP1.name)
+print(LP2.name)
+
+CP1 = pnl.ControlProjection()
+CP2 = pnl.ControlProjection()
+print(CP1.name)
+print(CP2.name)
+
+GP1 = pnl.GatingProjection()
+GP2 = pnl.GatingProjection()
+print(GP1.name)
+print(GP2.name)
+
+m1 = pnl.TransferMechanism()
+m2 = pnl.TransferMechanism()
+p12 = pnl.MappingProjection(sender=m1, receiver=m2)
+print(p12.name)
 
 #endregion
 

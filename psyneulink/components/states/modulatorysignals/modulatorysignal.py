@@ -315,26 +315,26 @@ class ModulatorySignal(OutputState):
         a list of the `ModulatoryProjections <ModulatoryProjection>` assigned to the ModulatorySignal.
 
     name : str
-        name of the ModulatorySignal; if not is specified in the **name** argument of its constructor, a default name
-        is assigned as described below. If a State's `initialization has been deferred <State_Deferred_Initialization>`,
-        its name remains unassigned until initialization is complete. If a default name is assigned, it is based on
-        the following considerations;  if a ModulatorySignal has:
+        name of the ModulatorySignal (see `Naming` for conventions used for duplicate names).  If a State's
+        `initialization has been deferred <State_Deferred_Initialization>`, its name remains unassigned until
+        initialization is complete.  If the ModulatorySignal's name is not specified in the **name** argument of its
+        constructor, a default name is assigned as follows; if the ModulatorySignal has:
 
         * no projections (which are used to name it) -- the name of its class is used, with an index that is
         incremented for each ModulatorySignal with a default named assigned to its `owner <ModulatorySignal.owner>`;
 
         * one `ModulatoryProjection` -- the following template is used:
           "<target Mechanism name> <target State name> <ModulatorySignal type name>"
-          (e.g., "Decision drift_rate ControlSignal", or "Input Layer INPUT_STATE-0 GatingSignal")
+          (for example, ``Decision drift_rate ControlSignal``, or ``Input Layer INPUT_STATE-0 GatingSignal``);
 
         * multiple ModulatoryProjections, all to States of the same Mechanism -- the following template is used:
           "<target Mechanism name> (<target State name>,...) <ModulatorySignal type name>"
-          (e.g., "Decision (drift_rate, threshold) ControlSignal", or
-          "Input Layer (INPUT_STATE-0, INPUT_STATE-1) GatingSignal")
+          (for example, ``Decision (drift_rate, threshold) ControlSignal``, or
+          ``Input Layer (INPUT_STATE-0, INPUT_STATE-1) GatingSignal``);
 
         * multiple ModulatoryProjections to States of different Mechanisms -- the following template is used:
           "<owner Mechanism's name> divergent <ModulatorySignal type name>"
-          (e.g., "ControlMechanism divergent ControlSignal", or "GatingMechanism divergent GatingSignal")
+          (for example, ``ControlMechanism divergent ControlSignal``, or ``GatingMechanism divergent GatingSignal``).
 
         .. note::
             Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
