@@ -368,11 +368,12 @@ automatically creates an InputState, ParameterStates for its parameters, includi
     print(my_mech.output_states)
     > [(OutputState RESULT)]
 
+.. _States_Constructor_Arguments:
+
 *Using the* **input_states** *argument of Mechanism constructor.*
 
-When States are specified explicitly, it is usually in an
-argument of the constructor for the Mechanism to which they belong.  For example, the following specifies that
-``my_mech`` should have an InputState named 'MY INPUT`::
+When States are specified explicitly, it is usually in an argument of the constructor for the Mechanism to which they
+belong.  For example, the following specifies that ``my_mech`` should have an InputState named 'MY INPUT`::
 
     my_mech = pnl.TransferMechanism(input_states=['MY INPUT'])
     print(my_mech.input_states)
@@ -380,12 +381,8 @@ argument of the constructor for the Mechanism to which they belong.  For example
 
 The InputState was specified by a string (for its name) in the **input_states** argument.  It can also be specified in
 a variety of other ways, as described `above <State_Specification>` and illustrated in the examples below.
-
-    .. _State_Default_Suppression_Note:
-
-    .. note::
-       When one or more States is specified in the argument of a Mechanism's constructor, it replaces any
-       defaults States created by the Mechanism when none are specified.
+Note that when one or more States is specified in the argument of a Mechanism's constructor, it replaces any defaults
+States created by the Mechanism when none are specified (see `note <Mechanism_Default_State_Suppression_Note>`.
 
 .. _State_Value_Spec_Example:
 
@@ -431,7 +428,7 @@ than one InputState.  OutputStates can be specified in a similar way, using the 
         <Mechanism_Base.function>` is assigned, and can be accessed and subsequently modified, as described under
         `ParameterState_Specification>`.
 
-.. _State_Standard_OutputSates_Example:
+.. _State_Standard_OutputStates_Example:
 
 *OutputStates*
 
@@ -442,15 +439,13 @@ The following example specifies two OutputStates for ``my_mech``, using its `Sta
 
 As with InputStates, specification of OutputStates in the **output_states** argument suppresses the creation of any
 default OutPutStates that would have been created if no OutputStates were specified (see `note
-<State_Default_Suppression_Note>` above).  This is particularly relevant for OutputStates, as most Mechanisms create
-one or more `Standard OutputStates <OutputState_Standard>` by default, that have useful properties.  For example,
-most Mechanisms create a *RESULT* OutputState by default, that contains the result of their `function
-<OutputState.function>`.  This default behavior is suppressed by any specifications in its **output_states**
-argument.  Therefore, to preserve the *RESULTS* OutputState, it must be included in the **output_states** argument
-along with any others that are specified, as in the example above.  If the name of specified OutputState matches the
-name of a Standard OutputState <OutputState_Standard>` for the type of Mechanism, then that is used (as is the case
-for both of the OutputStates specified for the `TransferMechanism` in the example above); otherwise, a new OutputState
-is created.
+<Mechanism_Default_State_Suppression_Note>` above).  For example, TransferMechanisms create a *RESULT* OutputState
+by default, that contains the result of their `function <OutputState.function>`.  This default behavior is suppressed
+by any specifications in its **output_states** argument.  Therefore, to retain a *RESULTS* OutputState,
+it must be included in the **output_states** argument along with any others that are specified, as in the example
+above.  If the name of a specified OutputState matches the name of a Standard OutputState <OutputState_Standard>` for
+the type of Mechanism, then that is used (as is the case for both of the OutputStates specified for the
+`TransferMechanism` in the example above); otherwise, a new OutputState is created.
 
 .. _State_Specification_Dictionary_Example:
 
@@ -589,6 +584,7 @@ This produces the same result as the `earlier example <State_Control_Projections
 once again in a simpler and easier to read form.  However, it be used only to specify Projections for a State to or
 from the States of a single Mechanism;  Projections involving other Mechanisms must be assigned to other States.
 
+.. _State_Create_State_Examples:
 
 *Create and Then Assign a State*
 
@@ -611,7 +607,6 @@ by explicity adding it using ``mech_B``\\'s `add_states <Mechanism_Base.add_stat
                                     projections=[mech_A])
     mech_B = pnl.TransferMechanism()
     mech_B.add_states([my_input_state])
-    print(mech_B.input_states)
 
 or by constructing it after ``mech_B`` and assigning ``mech_B`` as its owner::
 
@@ -629,17 +624,9 @@ when it was created, as shown by printing the `input_states <Mechanism_Base.inpu
     > [(InputState INPUT_STATE-0), (InputState MY INPUT STATE)]
 
 As a consequence, ``my_input_state`` is  **not** the `primary InputState <InputState_Primary>` for ``mech_B`` (i.e.,
-input_states[0]), but rather its second InputState (input_states[1]).
-
-    .. _State_Add_State_Note:
-
-    .. note::
-       When one or more States is added to a Mechanism using its `add_states <Mechanism_Base.add_states>` method,
-       they are added to, and do not replace any that already exist for the Mechanism, including any default States
-       generated by the Mechanism when it was created.
-
-This is differs from specifying the InputState as part of the constructor for the Mechanism, which suppresses
-generation of the default InputState (see `note <State_Default_Suppression_Note>` above).
+input_states[0]), but rather its second InputState (input_states[1]). This is differs from specifying the InputState
+as part of the constructor for the Mechanism, which suppresses generation of the default InputState,
+as in the first example above (see `note <Mechanism_Default_State_Suppression_Note_Note>`).
 
 COMMENT:
 
