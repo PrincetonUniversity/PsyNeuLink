@@ -199,7 +199,7 @@ class ControlProjection(ModulatoryProjection_Base):
        specifies the value by which to exponentiate the ControlProjection's `value <ControlProjection.value>`
        before combining it with others (see `exponent <ControlProjection.exponent>` for additional details).
 
-    control_signal_params : Dict[param keyword, param value]
+    control_signal_params pip install --updgrade Sphinx==1.6.2 sphinx-rtd-theme==0.2.4 sphinxcontrib-websupport==1.0.1: Dict[param keyword, param value]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
         ControlProjection's `sender <ControlProjection.sender>` (see `ControlSignal_Structure` for a description
         of ControlSignal parameters).

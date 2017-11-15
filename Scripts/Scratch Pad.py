@@ -949,60 +949,60 @@ class ScratchPadError(Exception):
 #region TEST Naming
 # print ('TEST Naming')
 
-T1 = pnl.TransferMechanism()
-T2 = pnl.TransferMechanism()
-print(T1.name)
-print(T2.name)
-
-TN1 = pnl.TransferMechanism(name='MY TRANSFER MECHANISM')
-TN2 = pnl.TransferMechanism(name='MY TRANSFER MECHANISM')
-print(TN1.name)
-print(TN2.name)
-
+# T1 = pnl.TransferMechanism()
+# T2 = pnl.TransferMechanism()
+# print(T1.name)
+# print(T2.name)
+#
+# TN1 = pnl.TransferMechanism(name='MY TRANSFER MECHANISM')
+# TN2 = pnl.TransferMechanism(name='MY TRANSFER MECHANISM')
+# print(TN1.name)
+# print(TN2.name)
+#
 P1 = pnl.MappingProjection()
 P2 = pnl.MappingProjection()
-print(P1.name)
-print(P2.name)
-
-PN1 = pnl.MappingProjection(name='MY PROJECTION')
-PN2 = pnl.MappingProjection(name='MY PROJECTION')
-print(PN1.name)
-print(PN2.name)
-
-TDN1 = pnl.TransferMechanism(name='MY NAME')
-PDN1 = pnl.MappingProjection(name='MY NAME')
-print(TDN1.name)
-print(PDN1.name)
-
-TDN1.name = 'NEW NAME'
-print(TDN1.name)
-
-PR = pnl.Process(pathway=[TDN1])
-print(PR.name)
-S = pnl.System(processes=[PR])
-print(S.name)
-S = pnl.System(processes=[PR])
-print(S.name)
-
-LP1 = pnl.LearningProjection()
-LP2 = pnl.LearningProjection()
-print(LP1.name)
-print(LP2.name)
-
-CP1 = pnl.ControlProjection()
-CP2 = pnl.ControlProjection()
-print(CP1.name)
-print(CP2.name)
-
-GP1 = pnl.GatingProjection()
-GP2 = pnl.GatingProjection()
-print(GP1.name)
-print(GP2.name)
-
-m1 = pnl.TransferMechanism()
-m2 = pnl.TransferMechanism()
-p12 = pnl.MappingProjection(sender=m1, receiver=m2)
-print(p12.name)
+# print(P1.name)
+# print(P2.name)
+#
+# PN1 = pnl.MappingProjection(name='MY PROJECTION')
+# PN2 = pnl.MappingProjection(name='MY PROJECTION')
+# print(PN1.name)
+# print(PN2.name)
+#
+# TDN1 = pnl.TransferMechanism(name='MY NAME')
+# PDN1 = pnl.MappingProjection(name='MY NAME')
+# print(TDN1.name)
+# print(PDN1.name)
+#
+# TDN1.name = 'NEW NAME'
+# print(TDN1.name)
+#
+# PR = pnl.Process(pathway=[TDN1])
+# print(PR.name)
+# S = pnl.System(processes=[PR])
+# print(S.name)
+# S = pnl.System(processes=[PR])
+# print(S.name)
+#
+# LP1 = pnl.LearningProjection()
+# LP2 = pnl.LearningProjection()
+# print(LP1.name)
+# print(LP2.name)
+#
+# CP1 = pnl.ControlProjection()
+# CP2 = pnl.ControlProjection()
+# print(CP1.name)
+# print(CP2.name)
+#
+# GP1 = pnl.GatingProjection()
+# GP2 = pnl.GatingProjection()
+# print(GP1.name)
+# print(GP2.name)
+#
+# m1 = pnl.TransferMechanism()
+# m2 = pnl.TransferMechanism()
+# p12 = pnl.MappingProjection(sender=m1, receiver=m2)
+# print(p12.name)
 
 #endregion
 

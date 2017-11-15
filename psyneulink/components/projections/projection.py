@@ -642,20 +642,22 @@ class Projection_Base(Projection):
                                  "use projection() or one of the following subclasses: {0}".
                                  format(", ".join("{!s}".format(key) for (key) in ProjectionRegistry.keys())))
 
-        # Register with ProjectionRegistry or create one
-        register_category(entry=self,
-                          base_class=Projection_Base,
-                          name=name,
-                          registry=ProjectionRegistry,
-                          context=context)
-
-        # Create projection's _stateRegistry and ParameterState entry
-        self._stateRegistry = {}
-
-        register_category(entry=ParameterState,
-                          base_class=State_Base,
-                          registry=self._stateRegistry,
-                          context=context)
+        # # MODIFIED 11/15/17 OLD:
+        # # Register with ProjectionRegistry or create one
+        # register_category(entry=self,
+        #                   base_class=Projection_Base,
+        #                   name=name,
+        #                   registry=ProjectionRegistry,
+        #                   context=context)
+        #
+        # # Create projection's _stateRegistry and ParameterState entry
+        # self._stateRegistry = {}
+        #
+        # register_category(entry=ParameterState,
+        #                   base_class=State_Base,
+        #                   registry=self._stateRegistry,
+        #                   context=context)
+        # # MODIFIED 11/15/17 END
 
         params = self._assign_args_to_param_dicts(weight=weight,
                                                   exponent=exponent,
@@ -680,6 +682,23 @@ class Projection_Base(Projection):
 
         self.sender = sender
         self.receiver = receiver
+
+        # MODIFIED 11/15/17 NEW:
+        # Register with ProjectionRegistry or create one
+        register_category(entry=self,
+                          base_class=Projection_Base,
+                          name=name,
+                          registry=ProjectionRegistry,
+                          context=context)
+
+        # Create projection's _stateRegistry and ParameterState entry
+        self._stateRegistry = {}
+
+        register_category(entry=ParameterState,
+                          base_class=State_Base,
+                          registry=self._stateRegistry,
+                          context=context)
+        # MODIFIED 11/15/17 END
 
         # FIX: ADD _validate_variable, THAT CHECKS FOR SENDER?
         # FIX: NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR STATE
