@@ -132,7 +132,7 @@ class ModulatoryProjection_Base(Projection_Base):
        specifies the value by which to exponentiate the ModulatoryProjection's `value <ModulatoryProjection.value>`
        before combining it with others (see `exponent <ModulatoryProjection.exponent>` for additional details).
 
-    params : Optional[Dict[param keyword, param value]] : default None
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         ModulatoryProjection, its `function <ModulatoryProject.function>`, and/or a custom function and its parameters.
         By default, it contains an entry for the ModulatoryProjection's default `function <ModulatoryProject.function>`
@@ -144,7 +144,7 @@ class ModulatoryProjection_Base(Projection_Base):
         If not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : Optional[PreferenceSet or specification dict : Projection_Base.classPreferences] : default : None
+    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences : default : None
         the `PreferenceSet` for the ModulatoryProjection.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).

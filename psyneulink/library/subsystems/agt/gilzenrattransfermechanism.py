@@ -206,7 +206,7 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
         takes a list or 1d array of numeric values as its `variable <Function_Base.variable>` and returns a sqaure
         matrix of numeric values with the same dimensions as the length of the input.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.

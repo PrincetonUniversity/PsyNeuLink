@@ -248,7 +248,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         specifies the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
         unless they are `individually specified <GatingSignal_Specification>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
         for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the

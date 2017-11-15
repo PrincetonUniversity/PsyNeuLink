@@ -474,7 +474,7 @@ class ControlSignal(ModulatorySignal):
         specifies the function used to calculate the contribution of the change in the ControlSignal's `intensity`
         (from its `last_intensity` value) to its `cost <ControlSignal.cost>`.
 
-    duration_cost_function : Optional[IntegratorFunction] : default Integrator
+    duration_cost_function : IntegratorFunction : default Integrator
         specifies the function used to calculate the contribution of the ControlSignal's duration to its
         `cost <ControlSignal.cost>`.
 
@@ -495,7 +495,7 @@ class ControlSignal(ModulatorySignal):
         listed in its `efferents <ControlSignal.efferents>` attribute (see `ControlSignal_Projections` for additional
         details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.

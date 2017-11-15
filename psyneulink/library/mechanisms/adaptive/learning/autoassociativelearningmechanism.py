@@ -158,7 +158,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         specifies the learning rate for the AutoAssociativeLearningMechanism. (see `learning_rate
         <AutoAssociativeLearningMechanism.learning_rate>` for details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified

@@ -318,7 +318,7 @@ class GatingSignal(ModulatorySignal):
         listed in its `efferents <GatingSignal.efferents>` attribute (see `GatingSignal_Projections` for additional
         details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.

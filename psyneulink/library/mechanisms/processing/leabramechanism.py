@@ -142,7 +142,7 @@ class LeabraFunction(Function_Base):
     network : leabra.Network
         specifies the leabra network to be used.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -150,7 +150,7 @@ class LeabraFunction(Function_Base):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -316,7 +316,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
         If **leabra_net** argument is provided and `training_flag` is None, then the existing learning rules of the
         **leabra_net** will be preserved.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.

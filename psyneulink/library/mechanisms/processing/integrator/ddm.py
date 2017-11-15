@@ -506,7 +506,7 @@ class DDM(ProcessingMechanism_Base):
         specifies the function to use to `execute <DDM_Execution>` the decision process; determines the mode of
         execution (see `function <DDM.function>` and `DDM_Modes` for additional information).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a dictionary that can be used to specify parameters of the Mechanism, parameters of its `function
         <DDM.function>`, and/or  a custom function and its parameters (see `Mechanism <Mechanism>` for specification of
         a params dict).

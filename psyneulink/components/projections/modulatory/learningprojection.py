@@ -292,7 +292,7 @@ class LearningProjection(ModulatoryProjection_Base):
        specifies the value by which to exponentiate the LearningProjection's `value <LearningProjection.value>`
        before combining it with others (see `exponent <LearningProjection.exponent>` for additional details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified

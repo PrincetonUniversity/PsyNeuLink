@@ -155,7 +155,7 @@ class AutoAssociativeProjection(MappingProjection):
         the matrix used by `function <AutoAssociativeProjection.function>` (default: `LinearCombination`) to transform
         the value of the `sender <AutoAssociativeProjection.sender>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary

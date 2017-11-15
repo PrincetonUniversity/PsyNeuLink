@@ -381,7 +381,7 @@ class ParameterState(State_Base):
         specifies the function used to convert the parameter's attribute value (same as the ParameterState's
         `variable <ParameterState.variable>`) to the ParameterState's `value <ParameterState.value>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the ParameterState or its function, and/or a custom function and its parameters.  Values specified for
         parameters in the dictionary override any assigned to those parameters in arguments of the constructor.

@@ -204,7 +204,7 @@ class ControlProjection(ModulatoryProjection_Base):
         ControlProjection's `sender <ControlProjection.sender>` (see `ControlSignal_Structure` for a description
         of ControlSignal parameters).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the ControlProjection, its `function <ControlProjection.function>`, and/or a custom function and its parameters.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the

@@ -391,7 +391,7 @@ class LCControlMechanism(ControlMechanism):
         `ProcessingMechanisms <ProcessingMechanism>` in the Composition(s) to which the LCControlMechanism
         belongs.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
         for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the

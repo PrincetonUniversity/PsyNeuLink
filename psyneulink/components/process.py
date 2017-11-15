@@ -2334,7 +2334,7 @@ class Process(Process_Base):
             each `TRIAL`;  if it is `False`, then `initialize <Process.initialize>` is called only *once*,
             before the first `TRIAL` executed.
 
-        initial_values : Optional[Dict[ProcessingMechanism, List[input] or np.ndarray(input)]] : default None
+        initial_values : ProcessingMechanism, List[input] or np.ndarray(input)] : default None
             specifies the values used to initialize `ProcessingMechanisms <ProcessingMechanism>` designated as
             `INITIALIZE_CYCLE` whenever the Process' `initialize <Process.initialize>` method is called. The key
             for each entry must be a ProcessingMechanism `designated <Process_Mechanism_Initialize_Cycle>`
@@ -2343,7 +2343,7 @@ class Process(Process_Base):
             `INITIALIZE_CYCLE` but not specified in **initial_values** are initialized with the value of their
             `variable <Mechanism_Base.variable>` attribute (the default input for that Mechanism).
 
-        targets : Optional[List[input] or np.ndarray(input)] : default None
+        targets : List[input] or np.ndarray(input) : default None
             specifies the target value assigned to each of the `target_mechanisms <Process.target_mechanisms>` in
             each `TRIAL` of execution.  Each item of the outermost level (if a nested list) or axis 0 (if an ndarray)
             corresponds to a single `TRIAL`;  the number of items must equal the number of items in the **inputs**

@@ -433,7 +433,7 @@ class EVCControlMechanism(ControlMechanism):
         Each instance is named using the name of the `ORIGIN` Mechanism + "PREDICTION_MECHANISM"
         and assigned an `OutputState` with a name based on the same.
 
-    prediction_mechanism_params : Optional[Dict[param keyword, param value]] : default None
+    prediction_mechanism_params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` passed to the constructor for a Mechanism
         of `prediction_mechanism_type`. The same parameter dictionary is passed to all
         `prediction mechanisms <EVCControlMechanism_Prediction_Mechanisms>` created for the EVCControlMechanism.
@@ -461,7 +461,7 @@ class EVCControlMechanism(ControlMechanism):
         specifies the parameters to be controlled by the EVCControlMechanism
         (see `ControlSignal_Specification` for details of specification).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
         Mechanism, its `function <EVCControlMechanism.function>`, and/or a custom function and its parameters.  Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
