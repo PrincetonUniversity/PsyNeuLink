@@ -267,7 +267,7 @@ class LearningSignal(ModulatorySignal):
     name : str : default see `name <ModulatorySignal>`
         specifies the name of the LearningSignal; see `name <LearningSignal.name>` for details.
 
-    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
+    prefs : PreferenceSet or specification dict : default State.classPreferences
         specifies the `PreferenceSet` for the LearningSignal; see `prefs <LearningSignal.prefs>` for details.
 
 

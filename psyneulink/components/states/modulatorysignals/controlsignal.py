@@ -503,7 +503,7 @@ class ControlSignal(ModulatorySignal):
     name : str : default see `name <ModulatorySignal>`
         specifies the name of the ControlSignal; see `name <ControlSignal.name>` for details.
 
-    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
+    prefs : PreferenceSet or specification dict : default State.classPreferences
         specifies the `PreferenceSet` for the GatingSignal; see `prefs <ControlSignal.prefs>` for details.
 
 
@@ -593,7 +593,7 @@ class ControlSignal(ModulatorySignal):
         a list of the `ControlProjections <ControlProjection>` assigned to (i.e., that project from) the ControlSignal.
 
     name : str
-        name of the ControlSignal; if not is specified in the **name** argument of its constructor, a default name
+        name of the ControlSignal; if it is not specified in the **name** argument of its constructor, a default name
         is assigned (see `name <ModulatorySignal.name>`)
 
         .. note::
