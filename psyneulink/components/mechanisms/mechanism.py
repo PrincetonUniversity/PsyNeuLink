@@ -2328,7 +2328,7 @@ class Mechanism_Base(Mechanism):
                                                                   context=context)
             for state in instantiated_input_states:
                 if state.name is state.componentName or state.componentName + '-' in state.name:
-                        state._assign_default_name(context=context)
+                        state._assign_default_state_name(context=context)
         if output_states:
             instantiated_output_states = _instantiate_output_states(self, output_states, context=context)
 

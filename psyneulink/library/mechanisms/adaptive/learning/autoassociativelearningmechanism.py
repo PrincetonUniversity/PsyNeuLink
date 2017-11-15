@@ -169,8 +169,8 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         If not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
-        the `PreferenceSet` for the LearningProjection.
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+        the `PreferenceSet` for the AutoAssociativeLearingMechanism.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -273,9 +273,9 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         if not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for Projection.
-        Specified in the **prefs** argument of the constructor for the Projection;
+    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
+        the `PreferenceSet` for AutoAssociativeLearningMechanism.
+        Specified in the **prefs** argument of the constructor for the Mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 

@@ -675,7 +675,7 @@ class InputState(State_Base):
                                          context=context)
 
         if self.name is self.componentName or self.componentName + '-' in self.name:
-            self._assign_default_name(context=context)
+            self._assign_default_state_name(context=context)
 
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -781,7 +781,7 @@ class InputState(State_Base):
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
 
-    def _assign_default_name(self, context=None):
+    def _assign_default_state_name(self, context=None):
         # """Assign 'INPUT_STATE-n' to any InputStates with default name (i.e., name of State: 'InputState'),
         #    where n is the next index of InputStates with the default name
         # Returns name assigned to State

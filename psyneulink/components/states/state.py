@@ -1083,7 +1083,7 @@ class State_Base(State):
 
         # If name is not specified, assign default name
         if name is not None and DEFERRED_INITIALIZATION in name:
-            name = self._assign_default_name(context=name)
+            name = self._assign_default_state_name(context=name)
 
 
 
@@ -2064,7 +2064,7 @@ class State_Base(State):
     def all_afferents(self):
         return self.path_afferents + self.mod_afferents
 
-    def _assign_default_name(self, context=None):
+    def _assign_default_state_name(self, context=None):
         return False
 
 def _instantiate_state_list(owner,
@@ -2177,7 +2177,7 @@ def _instantiate_state_list(owner,
     for index, state_spec in enumerate(state_list):
 
         # # Get name of state, and use as index to assign to states ContentAddressableList
-        # default_name = state_type._assign_default_name(state_type)
+        # default_name = state_type._assign_default_state_name(state_type)
         # name = default_name or None
 
         state = _instantiate_state(state_type=state_type,
@@ -2189,7 +2189,7 @@ def _instantiate_state_list(owner,
                                    context=context)
 
         # # Get name of state, and use as index to assign to states ContentAddressableList
-        # default_name = state._assign_default_name()
+        # default_name = state._assign_default_state_name()
         # if default_name:
         #      state_name = default_name
         # elif state.init_status is InitStatus.DEFERRED_INITIALIZATION:

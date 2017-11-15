@@ -358,17 +358,18 @@ class ScratchPadError(Exception):
 #region TEST State Specification Examples @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 print("TEST State Specification Examples")
 
-# # m = pnl.DDM(name='MY DDM')
+m = pnl.DDM(name='MY DDM')
 # # c = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [m.parameter_states[pnl.DRIFT_RATE],
 # #                                                              m.parameter_states[pnl.THRESHOLD]]}])
 # # c = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[m.parameter_states[pnl.DRIFT_RATE],
 # #                                                                m.parameter_states[pnl.THRESHOLD]]}])
-# # g = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS: [m.output_states[pnl.DECISION_VARIABLE],
-# #                                                              m.output_states[pnl.RESPONSE_TIME]]}])
-# # g = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[m.output_states[pnl.DECISION_VARIABLE],
-# #                                                             m.output_states[pnl.RESPONSE_TIME]]}])
-# # g = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM:m,
-# #                                          pnl.NAME:pnl.DECISION_VARIABLE}])
+g = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS: [m.output_states[pnl.DECISION_VARIABLE],
+                                                             m.output_states[pnl.RESPONSE_TIME]]}])
+g = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[m.output_states[pnl.DECISION_VARIABLE],
+                                                            m.output_states[pnl.RESPONSE_TIME]]}])
+g = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM:m,
+                                         pnl.NAME:pnl.DECISION_VARIABLE}])
+assert True
 #
 # # my_mech = pnl.TransferMechanism(default_variable=[[0],[0]])
 # #
@@ -543,11 +544,11 @@ print("TEST State Specification Examples")
 # # my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: my_mech,
 # #                                                      pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
 
-mech_A = pnl.TransferMechanism()
-my_input_state = pnl.InputState(projections=[mech_A])
-mech_B = pnl.TransferMechanism(input_states=[my_input_state])
-assert mech_B.input_states[0].name == 'INPUT_STATE-0'
-print(mech_B.input_states)
+# mech_A = pnl.TransferMechanism()
+# my_input_state = pnl.InputState(projections=[mech_A])
+# mech_B = pnl.TransferMechanism(input_states=[my_input_state])
+# assert mech_B.input_states[0].name == 'INPUT_STATE-0'
+# print(mech_B.input_states)
 
 
 assert True

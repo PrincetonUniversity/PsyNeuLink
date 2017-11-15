@@ -257,10 +257,10 @@ class LCA(RecurrentTransferMechanism):
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default TransferMechanism-<index>
-        a string used for the name of the Mechanism.
-        If not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default LCA-<index>
+        a string used for the name of the LCA Mechanism; if not is specified, a default is assigned by
+        `MechanismRegistry` (see :doc:`Registry <LINK>` for conventions used in naming, including for default and
+        duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the `PreferenceSet` for Mechanism.
@@ -366,17 +366,12 @@ class LCA(RecurrentTransferMechanism):
         * **max_vs_next** of the result (:keyword:`value` of MAX_VS_NEXT OutputState);
         * **max_vs_avg** of the result (:keyword:`value` of MAX_VS_AVG OutputState).
 
-    name : str : default TransferMechanism-<index>
-        the name of the Mechanism.
-        Specified in the **name** argument of the constructor for the projection;
-        if not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the LCA Mechanism (see :doc:`Registry <LINK>` for conventions used in naming, including for default
+        and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for Mechanism.
-        Specified in the **prefs** argument of the constructor for the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for LCA Mechanism; (see :doc:`PreferenceSet <LINK>` for details).
 
     Returns
     -------

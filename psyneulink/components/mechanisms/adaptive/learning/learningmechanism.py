@@ -696,8 +696,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         If not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
-        the `PreferenceSet` for the LearningProjection.
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        the `PreferenceSet` for the LearningMechanism.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -817,10 +817,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for Projection.
-        Specified in the **prefs** argument of the constructor for the Projection;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for LearningMechanism. Specified in the **prefs** argument of the constructor for the
+        Mechanism; if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """

@@ -568,7 +568,7 @@ class Function_Base(Function):
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -1892,7 +1892,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -2270,7 +2270,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -2491,7 +2491,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -2645,7 +2645,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -2808,7 +2808,7 @@ class SoftMax(TransferFunction):
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -3062,7 +3062,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -3594,7 +3594,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -3907,7 +3907,7 @@ class SimpleIntegrator(
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -4114,7 +4114,7 @@ class LCAIntegrator(
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -4329,7 +4329,7 @@ class ConstantIntegrator(
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -4544,7 +4544,7 @@ class AdaptiveIntegrator(
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -4825,7 +4825,7 @@ class DriftDiffusionIntegrator(
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -5053,7 +5053,7 @@ class OrnsteinUhlenbeckIntegrator(
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -5506,7 +5506,7 @@ class FHNIntegrator(
     time_constant_w : float : default 12.5
         scaling factor on the dv/dt equation
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -5896,7 +5896,7 @@ class AccumulatorIntegrator(
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -6231,7 +6231,7 @@ class AGTUtilityIntegrator(
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -6574,7 +6574,7 @@ class BogaczEtAl(
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -6871,7 +6871,7 @@ class NavarroAndFuss(IntegratorFunction):
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -8151,7 +8151,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     owner : Mechanism
         `Mechanism <Mechanism>` to which the Function belongs.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -8387,7 +8387,7 @@ class Reinforcement(
     owner : Mechanism
         `Mechanism <Mechanism>` to which the Function belongs.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -8649,7 +8649,7 @@ class BackPropagation(LearningFunction):
     owner : Mechanism
         `Mechanism <Mechanism>` to which the Function belongs.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
+    prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).

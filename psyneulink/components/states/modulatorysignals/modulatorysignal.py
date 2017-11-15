@@ -283,15 +283,11 @@ class ModulatorySignal(OutputState):
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default OutputState-<index>
-        a string used for the name of the OutputState.
-        If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
-        belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <ModulatorySignal>`
+        specifies the name of the ModulatorySignal.
 
     prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the OutputState.
-        If it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+        specifies the `PreferenceSet` for the LearningSignal; see `prefs <ControlSignal.prefs>` for details.
 
 
     Attributes
@@ -318,11 +314,25 @@ class ModulatorySignal(OutputState):
     efferents : [List[GatingProjection]]
         a list of the `ModulatoryProjections <ModulatoryProjection>` assigned to the ModulatorySignal.
 
-    name : str : default <ModulatorySignal>-<index>
-        name of the ModulatorySignal.
-        Specified in the **name** argument of the constructor for the ModulatorySignal.  If not is specified, a default
-        is assigned by the StateRegistry of the Mechanism to which the ModulatorySignal belongs
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        name of the ModulatorySignal; if not is specified in the **name** argument of its constructor, a default name
+        is assigned as described below. If the ModulatorySignal has:
+
+        * no projections (which are used to name it) -- the name of its class is used, with an index that is
+        incremented for each ModulatorySignal with a default named assigned to its `owner <ModulatorySignal.owner>`;
+
+        * one `ModulatoryProjection` -- the following template is used:
+          "<target Mechanism name> <target State name> <ModulatorySignal type name>"
+          (e.g., "Decision drift_rate ControlSignal", or "Input Layer INPUT_STATE-0 GatingSignal")
+
+        * multiple ModulatoryProjections, all to States of the same Mechanism -- the following template is used:
+          "<target Mechanism name> (<target State name>,...) <ModulatorySignal type name>"
+          (e.g., "Decision (drift_rate, threshold) ControlSignal", or
+          "Input Layer (INPUT_STATE-0, INPUT_STATE-1) GatingSignal")
+
+        * multiple ModulatoryProjections to States of different Mechanisms -- the following template is used:
+          "<owner Mechanism's name> divergent <ModulatorySignal type name>"
+          (e.g., "ControlMechanism divergent ControlSignal", or "GatingMechanism divergent GatingSignal")
 
         .. note::
             Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
@@ -330,11 +340,10 @@ class ModulatorySignal(OutputState):
             Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
-    prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the ModulatorySignal.
-        Specified in the **prefs** argument of the constructor for the ModulatorySignal;
-        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the ModulatorySignal; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 
@@ -394,7 +403,7 @@ class ModulatorySignal(OutputState):
                          context=context)
 
         if self.init_status is InitStatus.INITIALIZED:
-            self._assign_default_name(context=context)
+            self._assign_default_state_name(context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
         # If owner is specified but modulation has not been specified, assign to owner's value
@@ -419,7 +428,7 @@ class ModulatorySignal(OutputState):
                                                                  context=context)
             projection._assign_default_projection_name(state=self)
 
-    def _assign_default_name(self, context=None):
+    def _assign_default_state_name(self, context=None):
 
         # If the name is not a default name for the class,
         #    or the ModulatorySignal has no projections (which are used to name it)
@@ -443,15 +452,19 @@ class ModulatorySignal(OutputState):
             receiver_owner_names.append(receiver_owner_name)
             receiver_owner_receiver_names.append("{} {}".format(receiver_owner_name, receiver_name))
 
-        # Only one param: "<Mech> <param> ControlSignal" (e.g., Decision drift_rate ControlSignal)
+        # Only one ModulatoryProjection: "<target mech> <State.name> <ModulatorySignal>"
+        # (e.g., "Decision drift_rate ControlSignal", or "Input Layer INPUT_STATE-0 GatingSignal")
         if len(receiver_owner_receiver_names) == 1:
             default_name = receiver_owner_receiver_names[0] + " " + class_name
 
-        # Multiple params all for same mech: "<Mech> params ControlSignal" (e.g., Decision params ControlSignal)
+        # Multiple ModulatoryProjections all for same mech: "<target mech> (<State.name>,...) <ModulatorySignal>"
+        # (e.g., "Decision (drift_rate, threshold) ControlSignal" or
+        #        "InputLayer (INPUT_STATE-0, INPUT_STATE-0) ControlSignal")
         elif all(name is receiver_owner_names[0] for name in receiver_owner_names):
             default_name = "{} ({}) {}".format(receiver_owner_names[0], ", ".join(receiver_names), class_name)
 
-        # Mult params for diff mechs: "<ControlMechanism> divergent ControlSignal" (e.g., EVC divergent ControlSignal)
+        # Mult ModulatoryProjections for diff mechs: "<owner mech> divergent <ModulatorySignal>"
+        # (e.g., "EVC divergent ControlSignal", or "GatingMechanism divergent GatingSignal")
         else:
             default_name = self.name + " divergent " + class_name
 

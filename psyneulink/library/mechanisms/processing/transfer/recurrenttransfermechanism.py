@@ -336,13 +336,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
     name : str : default RecurrentTransferMechanism-<index>
-        a string used for the name of the Mechanism.
-        If not is specified, a default is assigned by `MechanismRegistry`
+        a string used for the name of the RecurrentTransferMechanism;
+        if not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for Mechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for RecurrentTransferMechanism;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
     context : str : default componentType+INITIALIZING
@@ -458,16 +458,12 @@ class RecurrentTransferMechanism(TransferMechanism):
         * **entropy** of the result (if the ENTROPY OutputState is present).
 
     name : str : default RecurrentTransferMechanism-<index>
-        the name of the Mechanism.
-        Specified in the **name** argument of the constructor for the Projection;
-        if not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+        the name of the Mechanism; (see :doc:`Registry <LINK>` for conventions used in naming, including for default
+        and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for Mechanism.
-        Specified in the **prefs** argument of the constructor for the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for RecurrentTransferMechanism (see :doc:`PreferenceSet <LINK>` for details).
+
 
     Returns
     -------
