@@ -140,8 +140,8 @@ class TestInputStateSpec:
         )
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0], [0]]))
         assert len(T.input_states) == 2
-        assert T.input_states.names[0] == 'INPUT_STATE-0'
-        assert T.input_states.names[1] == 'INPUT_STATE-1'
+        assert T.input_states.names[0] == 'InputState-0'
+        assert T.input_states.names[1] == 'InputState-1'
         for input_state in T.input_states:
             for projection in input_state.path_afferents:
                 assert projection.sender.owner is R1
@@ -159,7 +159,7 @@ class TestInputStateSpec:
         )
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0]]))
         assert len(T.input_states) == 1
-        assert T.input_states.names[0] == 'INPUT_STATE-0'
+        assert T.input_states.names[0] == 'InputState-0'
         T.input_state.path_afferents[0].sender == R1.output_state
         T.execute()
 
@@ -601,5 +601,5 @@ class TestInputStateSpec:
         T1 = TransferMechanism()
         my_input_state = InputState(projections=[T1])
         T2 = TransferMechanism(input_states=[my_input_state])
-        assert T2.input_states[0].name == 'INPUT_STATE-0'
+        assert T2.input_states[0].name == 'InputState-0'
         assert T2.input_states[0].projections[0].sender.name == 'RESULT'

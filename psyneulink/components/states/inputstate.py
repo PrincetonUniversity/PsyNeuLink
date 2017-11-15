@@ -567,8 +567,11 @@ class InputState(State_Base):
 
     name : str
         the name of the InputState; if it is not specified in the **name** argument of the constructor, a default is
-        assigned by the StateRegistry of the Mechanism to which the InputState belongs (see `Naming` for conventions 
-        used for default and duplicate names).
+        assigned by the InputStateRegistry of the Mechanism to which the InputState belongs.  Note that some Mechanisms
+        automatically create one or more non-default InputStates, that have pre-specified names.  However, if any
+        InputStates are specified in the **input_states** argument of the Mechanism's constructor, those replace those
+        InputStates (see `note <Mechanism_Default_State_Suppression_Note>`), and `standard naming conventions <Naming>`
+        apply to the InputStates specified, as well as any that are added to the Mechanism once it is created.
 
         .. note::
             Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
@@ -776,29 +779,29 @@ class InputState(State_Base):
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
 
-    def _assign_default_state_name(self, context=None):
-        # """Assign 'INPUT_STATE-n' to any InputStates with default name (i.e., name of State: 'InputState'),
-        #    where n is the next index of InputStates with the default name
-        # Returns name assigned to State
-        # """
-
-        # Call for State being instantiated in the context of constructing its owner
-        if isinstance(context,State_Base):
-            self.name = self.name.replace(self.componentName, 'INPUT_STATE')
-
-        # Call in the context of adding a state to an existing owner
-        elif any(key in context for key in {ADD_STATES, DEFERRED_INITIALIZATION}):
-            try:
-                i=len([input_state for input_state in self.owner.input_states if 'INPUT_STATE-' in input_state.name])
-                self.name = 'INPUT_STATE-'+str(i)
-            except TypeError:
-                i=0
-                self.name = 'INPUT_STATE-'+str(i)
-
-        else:
-            raise InputStateError("PROGRAM ERROR: unrecognized context (\'{}\') for assigning default {} to {}".
-                                  format(context, NAME, InputState.__name__))
-        return self.name
+    # def _assign_default_state_name(self, context=None):
+    #     # """Assign 'INPUT_STATE-n' to any InputStates with default name (i.e., name of State: 'InputState'),
+    #     #    where n is the next index of InputStates with the default name
+    #     # Returns name assigned to State
+    #     # """
+    #
+    #     # Call for State being instantiated in the context of constructing its owner
+    #     if isinstance(context,State_Base):
+    #         self.name = self.name.replace(self.componentName, 'INPUT_STATE')
+    #
+    #     # Call in the context of adding a state to an existing owner
+    #     elif any(key in context for key in {ADD_STATES, DEFERRED_INITIALIZATION}):
+    #         try:
+    #             i=len([input_state for input_state in self.owner.input_states if 'INPUT_STATE-' in input_state.name])
+    #             self.name = 'INPUT_STATE-'+str(i)
+    #         except TypeError:
+    #             i=0
+    #             self.name = 'INPUT_STATE-'+str(i)
+    #
+    #     else:
+    #         raise InputStateError("PROGRAM ERROR: unrecognized context (\'{}\') for assigning default {} to {}".
+    #                               format(context, NAME, InputState.__name__))
+    #     return self.name
 
 # MODIFIED 9/30/17 NEW:
     @tc.typecheck

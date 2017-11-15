@@ -190,7 +190,7 @@ class ModulatoryProjection_Base(Projection_Base):
         its name remains unassigned until initialization is complete. If the ModulatoryProjection's name is not
         specified in the **name** argument of its constructor, a default name is assigned using the following format:
         '<ModualatorySignal type> for <receiver's name> to <receiver owner Mechanism's name>'
-        (for example, ``'GatingSignal for INPUT_STATE-0 of my_mech'``).
+        (for example, ``'GatingSignal for InputState-0 of my_mech'``).
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the ModulatoryProjection; if it is not specified in the **prefs** argument of the

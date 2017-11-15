@@ -539,8 +539,12 @@ class OutputState(State_Base):
 
     name : str
         the name of the OutputState; if it is not specified in the **name** argument of the constructor, a default is
-        assigned by the StateRegistry of the Mechanism to which the OutputState belongs (see `Naming` for conventions
-        used for default and duplicate names).
+        assigned by the OutputStateRegistry of the Mechanism to which the OutputState belongs.  Note that most
+        Mechanisms automatically create one or more `Standard OutputStates <OutputState_Standard>`, that have
+        pre-specified names.  However, if any OutputStates are specified in the **input_states** argument of the
+        Mechanism's constructor, those replace its Standard OutputStates (see `note
+        <Mechanism_Default_State_Suppression_Note>`);  `standard naming conventions <Naming>` apply to the
+        OutputStates specified, as well as any that are added to the Mechanism once it is created.
 
         .. note::
             Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with

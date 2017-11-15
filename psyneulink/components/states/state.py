@@ -369,7 +369,7 @@ automatically creates an InputState, ParameterStates for its parameters, includi
 <TransferMechanism.function>`), and an OutputState (named *RESULT*)::
 
     print(my_mech.input_states)
-    > [(InputState INPUT_STATE-0)]
+    > [(InputState InputState-0)]
     print(my_mech.parameter_states)
     > [(ParameterState intercept), (ParameterState slope), (ParameterState noise), (ParameterState time_constant)]
     print(my_mech.output_states)
@@ -627,8 +627,8 @@ Note that, in both cases, adding the InputState to ``mech_B`` does not replace i
 when it was created, as shown by printing the `input_states <Mechanism_Base.input_states>` for ``mech_B``::
 
     print(mech_B.input_states)
-    > [(InputState INPUT_STATE-0), (InputState MY INPUT STATE)]
-    > [(InputState INPUT_STATE-0), (InputState MY INPUT STATE)]
+    > [(InputState InputState-0), (InputState MY INPUT STATE)]
+    > [(InputState InputState-0), (InputState MY INPUT STATE)]
 
 As a consequence, ``my_input_state`` is  **not** the `primary InputState <InputState_Primary>` for ``mech_B`` (i.e.,
 input_states[0]), but rather its second InputState (input_states[1]). This is differs from specifying the InputState

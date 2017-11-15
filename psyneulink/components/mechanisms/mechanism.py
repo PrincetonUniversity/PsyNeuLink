@@ -405,7 +405,7 @@ items specified for the Mechanism's `variable <Mechanism_Base.variable>`, as in 
 
     my_mech_A = pnl.TransferMechanism(default_variable=[[0],[0,0]])
     print(my_mech_A.input_states)
-    > [(InputState INPUT_STATE-0), (InputState INPUT_STATE-1)]
+    > [(InputState InputState-0), (InputState InputState-1)]
     print(my_mech_A.input_states[0].value)
     > [ 0.]
     print(my_mech_A.input_states[1].value)
@@ -413,14 +413,14 @@ items specified for the Mechanism's `variable <Mechanism_Base.variable>`, as in 
 
     my_mech_B = pnl.TransferMechanism(default_variable=[[0],[0],[0]])
     print(my_mech_B.input_states)
-    > [(InputState INPUT_STATE-0), (InputState INPUT_STATE-1), (InputState INPUT_STATE-2)]
+    > [(InputState InputState-0), (InputState InputState-1), (InputState InputState-2)]
 
 Conversely, if the **input_states** argument is used to specify InputStates for the Mechanism, they are used to format
 the Mechanism's variable::
 
     my_mech_C = pnl.TransferMechanism(input_states=[[0,0], 'Hello'])
     print(my_mech_C.input_states)
-    > [(InputState INPUT_STATE-0), (InputState Hello)]
+    > [(InputState InputState-0), (InputState Hello)]
     print(my_mech_C.variable)
     > [array([0, 0]) array([0])]
 
