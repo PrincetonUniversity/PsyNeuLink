@@ -224,12 +224,12 @@ MATRIX_KEYWORD_NAMES = MATRIX_KEYWORDS._names()
 
 
 class DistanceMetrics:
-    """Distance between two arrays
+    """Distance between two arrays.
 
-    Each keyword specifies a calcuation for the distance between two arrays, :math:`a_1` and :math:`v_2`, of equal
-    length (i.e., same number of elements), in which *len* is their length, :math:`\\bar{v_a}` is the mean of an array,
-    :math:`\\sigma_{v_a}` its standard deviation, and :math:`w_{a_1a_2}` a coupling coefficient for a pair of elements,
-    one from each array (e.g., "weight matrix"):
+    Each keyword specifies a metric for the distance between two arrays, :math:`a_1` and :math:`a_2`, of equal length
+    for which *len* is their length, :math:`\\bar{a}` is the mean of an array, :math:`\\sigma_{a}` the standard
+    deviation of an array, and :math:`w_{a_1a_2}` a coupling coefficient ("weight") between a pair of elements,
+    one from each array:
 
     Attributes
     ----------
@@ -252,7 +252,7 @@ class DistanceMetrics:
         <Description>
     COMMENT
 
-    ENTROPY (and CROSS_ENTROPY)
+    ENTROPY and CROSS_ENTROPY
         :math:`d = \\sum\limits^{len}a_1log(a_2)`
 
     ENERGY:

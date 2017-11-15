@@ -52,7 +52,7 @@ class TestTransferMechanismInputs:
             default_variable=[[[0, 0, 0, 0]], [[1, 1, 1, 1]]],
             integrator_mode=True
         )
-        assert len(T.instance_defaults.variable) == 1 and len(T.instance_defaults.variable[0]) == 4 and (T.instance_defaults.variable[0] == 0).all()
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[[0, 0, 0, 0]], [[1, 1, 1, 1]]]))
 
     def test_transfer_mech_variable_none_size_none(self):
 

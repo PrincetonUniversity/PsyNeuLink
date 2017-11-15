@@ -138,17 +138,20 @@ ModulatorySignal. If it is not specified when a ModulatorySignal is created, it 
    and modulated parameter of its recipient State.  The figure shows a detailed view of how ModulatorySignals
    modulate the parameters of a State's `function <State_Base.function>`.
 
-   +--------------------+-----------------------+--------------------------------------+-----------------------------+
-   |     Modulatory     |Default ModulationParam|                                      |Default Function (mod param) |
-   |     Component      |for ModulatorySignal   |           Recipient State            |for Recipient State          |
-   +====================+=======================+======================================+=============================+
-   | **Control** (blue) |   *MULTIPLICATIVE*    | Mechanism `ParameterState`           | `Linear` (`slope`)          |
-   +--------------------+-----------------------+--------------------------------------+-----------------------------+
-   | **Gating** (brown) |   *MULTIPLICATIVE*    | Mechanism `InputState`/`OutputState` | `Linear` (`slope`)          |
-   +--------------------+-----------------------+--------------------------------------+-----------------------------+
-   |**Learning** (green)|     *ADDITIVE*        | MappingProjection `ParameterState`   | `AccumulatorIntegrator`     |
-   |                    |                       |                                      | (`increment`)               |
-   +--------------------+-----------------------+--------------------------------------+-----------------------------+
+   .. table:: **ModulatorySignals and States they Modulate**
+      :align: left
+
+      +--------------------+-----------------------+--------------------------------------+----------------------------+
+      |     Modulatory     |Default ModulationParam|                                      |Default Function (mod param)|
+      |     Component      |for ModulatorySignal   |           Recipient State            |for Recipient State         |
+      +====================+=======================+======================================+============================+
+      | **Control** (blue) |   *MULTIPLICATIVE*    | Mechanism `ParameterState`           | `Linear` (`slope`)         |
+      +--------------------+-----------------------+--------------------------------------+----------------------------+
+      | **Gating** (brown) |   *MULTIPLICATIVE*    | Mechanism `InputState`/`OutputState` | `Linear` (`slope`)         |
+      +--------------------+-----------------------+--------------------------------------+----------------------------+
+      |**Learning** (green)|     *ADDITIVE*        | MappingProjection `ParameterState`   | `AccumulatorIntegrator`    |
+      |                    |                       |                                      | (`increment`)              |
+      +--------------------+-----------------------+--------------------------------------+----------------------------+
 
 .. _ModulatorySignal_Detail_Figure:
 
