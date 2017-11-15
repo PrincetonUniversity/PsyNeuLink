@@ -655,7 +655,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         time_constant = self.time_constant
         range = self.range
         noise = self.noise
-
         #endregion
 
         #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
@@ -683,7 +682,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                       RATE: self.time_constant},
                                                               context=context
 
-                                                             )[0]
+                                                             )
         else:
         # elif time_scale is TimeScale.TRIAL:
             noise = self._try_execute_param(self.noise, variable)
@@ -698,15 +697,16 @@ class TransferMechanism(ProcessingMechanism_Base):
         # self.previous_input = current_input
 
         # Apply TransferMechanism function
-        output_vector = self.function(variable=current_input, params=runtime_params)
-
-        if range is not None:
-            minCapIndices = np.where(output_vector < range[0])
-            maxCapIndices = np.where(output_vector > range[1])
-            output_vector[minCapIndices] = np.min(range)
-            output_vector[maxCapIndices] = np.max(range)
-
-        return output_vector
+        outputs = []
+        for elem in current_input:
+            output_item = self.function(variable=elem, params=runtime_params)
+            if range is not None:
+                minCapIndices = np.where(output_item < range[0])
+                maxCapIndices = np.where(output_item > range[1])
+                output_item[minCapIndices] = np.min(range)
+                output_item[maxCapIndices] = np.max(range)
+            outputs.append(output_item)
+        return outputs
         #endregion
 
     def _report_mechanism_execution(self, input, params, output):
