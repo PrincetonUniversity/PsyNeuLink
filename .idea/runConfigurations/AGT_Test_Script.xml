@@ -10,7 +10,7 @@
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <module name="PsyNeuLink (Dropbox)" />
+    <module name="PsyNeuLink" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Scripts/DEBUGGING SCRIPTS/AGT Test Script.py" />
     <option name="PARAMETERS" value="" />
     <option name="SHOW_COMMAND_LINE" value="false" />

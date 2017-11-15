@@ -550,8 +550,8 @@ assert True
 # assert mech_B.input_states[0].name == 'INPUT_STATE-0'
 # print(mech_B.input_states)
 
-
-assert True
+#
+# assert True
 
 # --------------------------------------------------------------------------------------------------
 
@@ -945,6 +945,41 @@ assert True
 #
 # TEST = True
 # endregion
+
+#region TEST Naming
+# print ('TEST Naming')
+
+T1 = pnl.TransferMechanism()
+T2 = pnl.TransferMechanism()
+print(T1.name)
+print(T2.name)
+
+TN1 = pnl.TransferMechanism(name='MY TRANSFER MECHANISM')
+TN2 = pnl.TransferMechanism(name='MY TRANSFER MECHANISM')
+print(TN1.name)
+print(TN2.name)
+
+P1 = pnl.MappingProjection()
+P2 = pnl.MappingProjection()
+print(P1.name)
+print(P2.name)
+
+PN1 = pnl.MappingProjection(name='MY PROJECTION')
+PN2 = pnl.MappingProjection(name='MY PROJECTION')
+print(PN1.name)
+print(PN2.name)
+
+TDN1 = pnl.TransferMechanism(name='MY NAME')
+PDN1 = pnl.MappingProjection(name='MY NAME')
+print(TDN1.name)
+print(PDN1.name)
+
+TDN1.name = 'NEW NAME'
+print(TDN1.name)
+
+
+#endregion
+
 
 #region TEST InputState SPECIFICATION
 # print ('TEST InputState SPECIFICATION')

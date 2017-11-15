@@ -954,6 +954,8 @@ class State_Base(State):
         is assigned by the subclass.  If a State's `initialization has been deferred <State_Deferred_Initialization>`,
         its name remains unassigned until initialization is complete.
 
+        .. _State_Naming_Note:
+
         .. note::
             Unlike other PsyNeuLink Components, States names are "scoped" within a Mechanism, meaning that States with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same

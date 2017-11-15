@@ -7,29 +7,32 @@ Naming
 ======
 
 Every object in PsyNeuLink has a `name` attribute, that is a string used to refer to it in printouts and display.
-The name of a object can be specified in the **name** argument of its constructor.
+The name of a object can be specified in the **name** argument of its constructor.  An object's name can be reassignd,
+but this should be done with caution, as other objects may depend on its name.
 
 Default Names
 -------------
 
-If the name of an object is not specified in its construtor, a default name is assigned.  Some classes of objects use
+If the name of an object is not specified in its constructor, a default name is assigned.  Some classes of objects use
 class-specific conventions for default names (see individual classes for specifics). Otherwise, the default name is
 handled by the `Registry` for the class, which assigns a default name based on the name of the class, with a
-hyphenated integer suffix (<object class name>-n that is incremented for each additional object of that type
-requiring a default name, beginning with '0'.  For example, the first TransferMechanism to be constructed without
-specifying its name will be assigned the name 'TransferMechanism-0', the next 'TransferMechanism-1', etc.. An
-object's name cannot be changed once the object has been constructed.
+hyphenated integer suffix (<object class name>-n), beginning with '0', that is incremented for each additional object
+of that type requiring a default name.  For example, the first TransferMechanism to be constructed without
+specifying its name will be assigned the name 'TransferMechanism-0', the next 'TransferMechanism-1', etc..
 
-# *** CONFIRM -0 FOR FIRST INSTANCE AND, IF NOT, FIX
+# Handled by Registry for class or general one??
+# *** FIX:  -0 FOR MECHANISMS
 
 
 Duplicate Names
 ---------------
 
-If the name of an object specified in its construtor is the same as the name of an existing object of that type, its
+If the name of an object specified in its constructor is the same as the name of an existing object of that type, its
 name is appended with a hyphenated integer suffix (<object name>-n) that is incremented for each additional
 duplicated name, beginning with '1'.  The object with the original name (implicitly instance '0') is left intact.
 
-# *** CONFIRM -1 FOR DUPLICATE NAMES
-# *** CAN OBJECXTS OF DIFFERENT TYPES HVAE THE SAME NAME?
-# *** NOTE ABOUT SCOPE OF STATES HERE
+There is one exception to this rule, for the naming of `State <State>`.  States of the same type, but that belong to
+different `Mechanisms <Mechanism>`, can have the same name (for example, TransferMechanism-0 and TransferMechanism-1
+can both have an `InputState` named INPUT_STATE-0 (the default name for the first InputState);  however, if a State
+is assigned a name that is the same as another State of that type belonging to the *same* Mechanism, it is treated as
+a duplicate, and its name is suffixed as described above.
