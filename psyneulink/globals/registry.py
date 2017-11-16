@@ -16,7 +16,8 @@ from collections import namedtuple
 from psyneulink.globals.keywords import CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_STATE, MAPPING_PROJECTION, OUTPUT_STATE, PARAMETER_STATE, kwComponentCategory, kwComponentPreferenceSet, kwMechanismComponentCategory, kwPreferenceSet, kwProcessComponentCategory, kwProjectionComponentCategory, kwStateComponentCategory, kwSystemComponentCategory
 
 __all__ = [
-    'RegistryError'
+    'RegistryError',
+    'clear_registry'
 ]
 
 # IMPLEMENTATION NOTE:
@@ -177,7 +178,7 @@ def register_category(entry,
             # Set instance's name to first instance:
             # If name was not provided, assign component_type_name-1 as default;
             if not name:
-                entry.name = component_type_name + "-1"
+                entry.name = component_type_name + "-0"
             else:
                 entry.name = name
 
@@ -238,11 +239,14 @@ def register_instance(entry, name, base_class, registry, sub_dict):
             entry.name += '-{0}'.format(renamed_instance_counts[entry.name])
         else:
             name_stripped_of_suffix = match.groups()[0]
-        entry.name = numeric_suffix_pat.sub(r'\1-{0}'.
-                                            format(renamed_instance_counts[name_stripped_of_suffix]), entry.name)
+            entry.name = numeric_suffix_pat.sub(r'\1-{0}'.
+                                                format(renamed_instance_counts[name_stripped_of_suffix]), entry.name)
 
     # Add instance to instanceDict:
     registry[sub_dict].instanceDict.update({entry.name: entry})
 
     # Update instanceCount in registry:
     registry[sub_dict] = registry[sub_dict]._replace(instanceCount=registry[sub_dict].instanceCount + 1)
+
+def clear_registry(registry):
+    registry.clear()

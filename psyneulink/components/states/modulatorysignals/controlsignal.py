@@ -474,7 +474,7 @@ class ControlSignal(ModulatorySignal):
         specifies the function used to calculate the contribution of the change in the ControlSignal's `intensity`
         (from its `last_intensity` value) to its `cost <ControlSignal.cost>`.
 
-    duration_cost_function : Optional[IntegratorFunction] : default Integrator
+    duration_cost_function : IntegratorFunction : default Integrator
         specifies the function used to calculate the contribution of the ControlSignal's duration to its
         `cost <ControlSignal.cost>`.
 
@@ -495,20 +495,17 @@ class ControlSignal(ModulatorySignal):
         listed in its `efferents <ControlSignal.efferents>` attribute (see `ControlSignal_Projections` for additional
         details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default OutputState-<index>
-        a string used for the name of the OutputState.
-        If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
-        belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see ModulatorySignal `name <ModulatorySignal.name>`
+        specifies the name of the ControlSignal; see ControlSignal `name <ModulatorySignal.name>` for additional
+        details.
 
-    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the OutputState.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default State.classPreferences
+        specifies the `PreferenceSet` for the ControlSignal; see `prefs <ControlSignal.prefs>` for details.
 
 
     Attributes
@@ -596,23 +593,20 @@ class ControlSignal(ModulatorySignal):
     efferents : [List[ControlProjection]]
         a list of the `ControlProjections <ControlProjection>` assigned to (i.e., that project from) the ControlSignal.
 
-    name : str : default <State subclass>-<index>
-        name of the OutputState.
-        Specified in the **name** argument of the constructor for the OutputState.  If not is specified, a default is
-        assigned by the StateRegistry of the Mechanism to which the OutputState belongs
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        name of the ControlSignal; if it is not specified in the **name** argument of its constructor, a default name
+        is assigned (see `name <ModulatorySignal.name>`).
 
         .. note::
-            Unlike other PsyNeuLink components, state names are "scoped" within a Mechanism, meaning that states with
+            Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: states within a Mechanism with the same base name are appended an index in the order of their
+            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
-    prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the OutputState.
-        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
-        assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the ControlSignal; if it is not specified in the **prefs** argument of the constructor,
+        a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
+        details).
 
     """
 

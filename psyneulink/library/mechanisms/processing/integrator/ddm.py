@@ -506,20 +506,17 @@ class DDM(ProcessingMechanism_Base):
         specifies the function to use to `execute <DDM_Execution>` the decision process; determines the mode of
         execution (see `function <DDM.function>` and `DDM_Modes` for additional information).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a dictionary that can be used to specify parameters of the Mechanism, parameters of its `function
         <DDM.function>`, and/or  a custom function and its parameters (see `Mechanism <Mechanism>` for specification of
         a params dict).
 
-    name : str : default DDM-<index>
-        a string used for the name of the Mechanism.
-        If not is specified, a default is assigned by `MechanismRegistry`
-        (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <DDM.name>`
+        specifies the name of the DDM.
 
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the PreferenceSet for the process.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see `PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the DDM; see `prefs <DDM.prefs>` for details.
+
     COMMENT:
     context=componentType+INITIALIZING):
         context : str : default ''None''
@@ -567,17 +564,13 @@ class DDM(ProcessingMechanism_Base):
         **output_states** argument of the DDM's constructor (see `DDM Standard OutputStates
         <DDM_Standard_OutputStates>`).
 
-    name : str : default DDM-<index>
-        the name of the Mechanism.
-        Specified in the name argument of the call to create the projection;
-        if not is specified, a default is assigned by MechanismRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the DDM; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        a PreferenceSet for the Mechanism.
-        Specified in the prefs argument of the call to create the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the DDM; if it is not specified in the **prefs** argument of the constructor, a default
+        is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
 
     COMMENT:
         MOVE TO METHOD DEFINITIONS:
