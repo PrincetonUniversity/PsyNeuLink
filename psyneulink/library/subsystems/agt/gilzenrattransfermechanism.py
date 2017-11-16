@@ -368,7 +368,7 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
                  decay: is_numeric_or_none=None,
                  noise=0.0,
                  time_step_size=0.02,
-                 range=None,
+                 clip=None,
                  input_states: tc.optional(tc.any(list, dict)) = None,
                  enable_learning:bool=False,
                  learning_rate: tc.optional(tc.any(parameter_spec, bool))=None,
@@ -414,7 +414,7 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
                          function=function,
                          initial_value=initial_value,
                          noise=noise,
-                         range=range,
+                         clip=clip,
                          output_states=output_states,
                          time_scale=time_scale,
                          params=params,
@@ -475,7 +475,7 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
         #region ASSIGN PARAMETER VALUES
 
         time_constant = self.time_constant
-        range = self.range
+        clip = self.clip
         noise = self.noise
 
         #endregion
@@ -510,12 +510,12 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
         # # MODIFIED  OLD:
         # if list(range):
         # MODIFIED  NEW:
-        if range is not None:
+        if clip is not None:
         # MODIFIED  END
-            minCapIndices = np.where(output_vector < range[0])
-            maxCapIndices = np.where(output_vector > range[1])
-            output_vector[minCapIndices] = np.min(range)
-            output_vector[maxCapIndices] = np.max(range)
+            minCapIndices = np.where(output_vector < clip[0])
+            maxCapIndices = np.where(output_vector > clip[1])
+            output_vector[minCapIndices] = np.min(clip)
+            output_vector[maxCapIndices] = np.max(clip)
 
         return output_vector
         #endregion

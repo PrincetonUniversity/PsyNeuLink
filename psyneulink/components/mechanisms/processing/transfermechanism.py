@@ -83,8 +83,8 @@ the following parameters (in addition to any specified for the `function <Transf
 
     * `noise <TransferMechanism.noise>`: applied element-wise to the input before transforming it.
     ..
-    * `range <TransferMechanism.range>`: caps all elements of the `function <TransferMechanism.function>` result by
-      the lower and upper values specified by range.
+    * `clip <TransferMechanism.clip>`: caps all elements of the `function <TransferMechanism.function>` result by
+      the lower and upper values specified by clip.
     ..
     * `integrator_mode <TransferMechanism.integrator_mode>`: determines whether the input will be time-averaged before
       passing through the function of the mechanisms. When `integrator_mode <TransferMechanism.integrator_mode>` is set
@@ -129,12 +129,12 @@ from psyneulink.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
 __all__ = [
-    'INITIAL_VALUE', 'RANGE', 'TIME_CONSTANT', 'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH',
+    'INITIAL_VALUE', 'CLIP', 'TIME_CONSTANT', 'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH',
     'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT', 'TransferError', 'TransferMechanism',
 ]
 
 # TransferMechanism parameter keywords:
-RANGE = "range"
+CLIP = "clip"
 TIME_CONSTANT = "time_constant"
 INITIAL_VALUE = 'initial_value'
 
@@ -206,7 +206,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     noise=0.0,                   \
     time_constant=1.0,           \
     integrator_mode=False,       \
-    range=(float:min, float:max),\
+    clip=(float:min, float:max),\
     params=None,                 \
     name=None,                   \
     prefs=None)
@@ -276,11 +276,11 @@ class TransferMechanism(ProcessingMechanism_Base):
 
          result = (time_constant * current input) + ((1-time_constant) * result on previous time_step)
 
-    range : Optional[Tuple[float, float]]
+    clip : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <TransferMechanism.function>`:
         the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
         any element of the result that exceeds the specified minimum or maximum value is set to the value of
-        `range <TransferMechanism.range>` that it exceeds.
+        `clip <TransferMechanism.clip>` that it exceeds.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -342,11 +342,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         when set to True, the Mechanism time averages its input according to an exponentially weighted moving average
         (see `time_constant <TransferMechanisms.time_constant>`).
 
-    range : Optional[Tuple[float, float]]
+    clip : Optional[Tuple[float, float]]
         determines the allowable range of the result: the first value specifies the minimum allowable value
         and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
-        is set to the value of `range <TransferMechanism.range>` it exceeds.  If `function <TransferMechanism.function>`
-        is `Logistic`, `range <TransferMechanism.range>` is set by default to (0,1).
+        is set to the value of `clip <TransferMechanism.clip>` it exceeds.  If `function <TransferMechanism.function>`
+        is `Logistic`, `clip <TransferMechanism.clip>` is set by default to (0,1).
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`.
@@ -416,7 +416,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  noise=0.0,
                  time_constant=1.0,
                  integrator_mode=False,
-                 range=None,
+                 clip=None,
                  output_states:tc.optional(tc.any(list, dict))=[RESULT],
                  time_scale=TimeScale.TRIAL,
                  params=None,
@@ -438,7 +438,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   time_constant=time_constant,
                                                   integrator_mode=integrator_mode,
                                                   time_scale=time_scale,
-                                                  range=range,
+                                                  clip=clip,
                                                   params=params)
 
         self.integrator_function = None
@@ -518,15 +518,15 @@ class TransferMechanism(ProcessingMechanism_Base):
                                     format(time_constant, self.name))
 
         # Validate RANGE:
-        if RANGE in target_set:
-            range = target_set[RANGE]
-            if range:
-                if not (isinstance(range, tuple) and len(range)==2 and all(isinstance(i, numbers.Number) for i in range)):
-                    raise TransferError("range parameter ({}) for {} must be a tuple with two numbers".
-                                        format(range, self.name))
-                if not range[0] < range[1]:
-                    raise TransferError("The first item of the range parameter ({}) must be less than the second".
-                                        format(range, self.name))
+        if CLIP in target_set:
+            clip = target_set[CLIP]
+            if clip:
+                if not (isinstance(clip, tuple) and len(clip)==2 and all(isinstance(i, numbers.Number) for i in clip)):
+                    raise TransferError("clip parameter ({}) for {} must be a tuple with two numbers".
+                                        format(clip, self.name))
+                if not clip[0] < clip[1]:
+                    raise TransferError("The first item of the clip parameter ({}) must be less than the second".
+                                        format(clip, self.name))
 
         # self.integrator_function = Integrator(
         #     # default_variable=self.default_variable,
@@ -586,11 +586,11 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_parameter_states(self, context=None):
 
         from psyneulink.components.functions.function import Logistic
-        # If function is a logistic, and range has not been specified, bound it between 0 and 1
+        # If function is a logistic, and clip has not been specified, bound it between 0 and 1
         if ((isinstance(self.function, Logistic) or
                  (inspect.isclass(self.function) and issubclass(self.function,Logistic))) and
-                self.range is None):
-            self.range = (0,1)
+                self.clip is None):
+            self.clip = (0,1)
 
         super()._instantiate_parameter_states(context=context)
 
@@ -653,7 +653,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         #region ASSIGN PARAMETER VALUES
 
         time_constant = self.time_constant
-        range = self.range
+        clip = self.clip
         noise = self.noise
         #endregion
 
@@ -700,11 +700,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         outputs = []
         for elem in current_input:
             output_item = self.function(variable=elem, params=runtime_params)
-            if range is not None:
-                minCapIndices = np.where(output_item < range[0])
-                maxCapIndices = np.where(output_item > range[1])
-                output_item[minCapIndices] = np.min(range)
-                output_item[maxCapIndices] = np.max(range)
+            if clip is not None:
+                minCapIndices = np.where(output_item < clip[0])
+                maxCapIndices = np.where(output_item > clip[1])
+                output_item[minCapIndices] = np.min(clip)
+                output_item[maxCapIndices] = np.max(clip)
             outputs.append(output_item)
         return outputs
         #endregion
@@ -721,7 +721,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         if params['time_scale'] is TimeScale.TRIAL:
             del print_params[TIME_CONSTANT]
         # Suppress reporting of range (not currently used)
-        del print_params[RANGE]
+        del print_params[CLIP]
 
         super()._report_mechanism_execution(input_val=print_input, params=print_params)
 
@@ -737,13 +737,13 @@ class TransferMechanism(ProcessingMechanism_Base):
     #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for TransferMechanism
     #
     @property
-    def range(self):
-        return self._range
+    def clip(self):
+        return self._clip
 
 
-    @range.setter
-    def range(self, value):
-        self._range = value
+    @clip.setter
+    def clip(self, value):
+        self._clip = value
 
     # MODIFIED 4/17/17 NEW:
     @property

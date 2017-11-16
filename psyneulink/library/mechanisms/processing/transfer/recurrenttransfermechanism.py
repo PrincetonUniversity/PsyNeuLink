@@ -224,7 +224,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     decay=None,                        \
     noise=0.0,                         \
     time_constant=1.0,                 \
-    range=(float:min, float:max),      \
+    clip=(float:min, float:max),      \
     learning_rate=None,                \
     learning_function=Hebbian,         \
     params=None,                       \
@@ -307,11 +307,11 @@ class RecurrentTransferMechanism(TransferMechanism):
          result = (time_constant * current input) +
          (1-time_constant * result on previous time_step)
 
-    range : Optional[Tuple[float, float]]
+    clip : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`:
         the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
         any element of the result that exceeds the specified minimum or maximum value is set to the value of
-        `range <RecurrentTransferMechanism.range>` that it exceeds.
+        `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
     enable_learning : boolean : default False
         specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
@@ -389,12 +389,12 @@ class RecurrentTransferMechanism(TransferMechanism):
 
           result = (time_constant * current input) + (1-time_constant * result on previous time_step)
 
-    range : Tuple[float, float]
+    clip : Tuple[float, float]
         determines the allowable range of the result: the first value specifies the minimum allowable value
         and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
-        is set to the value of `range <RecurrentTransferMechanism.range>` it exceeds.  If
+        is set to the value of `clip <RecurrentTransferMechanism.clip>` it exceeds.  If
         `function <RecurrentTransferMechanism.function>`
-        is `Logistic`, `range <RecurrentTransferMechanism.range>` is set by default to (0,1).
+        is `Logistic`, `clip <RecurrentTransferMechanism.clip>` is set by default to (0,1).
 
     previous_input : 1d np.array of floats
         the value of the input on the previous execution, including the value of `recurrent_projection`.
@@ -494,7 +494,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  noise=0.0,
                  time_constant: is_numeric_or_none=1.0,
                  integrator_mode=False,
-                 range=None,
+                 clip=None,
                  input_states: tc.optional(tc.any(list, dict)) = None,
                  enable_learning:bool=False,
                  learning_rate: tc.optional(tc.any(parameter_spec, bool))=None,
@@ -543,7 +543,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                          integrator_mode=integrator_mode,
 
                          time_constant=time_constant,
-                         range=range,
+                         clip=clip,
                          output_states=output_states,
                          time_scale=time_scale,
                          params=params,
@@ -767,7 +767,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.output_states[ENERGY]._calculate = energy.function
 
         if ENTROPY in self.output_states.names:
-            if self.function_object.bounds == (0,1) or range == (0,1):
+            if self.function_object.bounds == (0,1) or clip == (0,1):
                 entropy = Stability(self.instance_defaults.variable[0],
                                     metric=ENTROPY,
                                     transfer_fct=self.function,

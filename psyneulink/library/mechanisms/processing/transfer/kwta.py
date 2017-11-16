@@ -192,7 +192,7 @@ class KWTA(RecurrentTransferMechanism):
     ratio=0.5,                  \
     average_based=False,        \
     inhibition_only=True,       \
-    range=None,                 \
+    clip=None,                 \
     params=None,                \
     name=None,                  \
     prefs=None)
@@ -289,11 +289,11 @@ class KWTA(RecurrentTransferMechanism):
         is allowed, including positive offsets;  if set to `True`, a positive offset will be re-assigned the value of 0
         (see `inhibition_only <KWTA_inhibition_only>` for additional information).
 
-    range : Optional[Tuple[float, float]]
+    clip : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <KWTA.function>`:
         the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
         any element of the result that exceeds the specified minimum or maximum value is set to the value of
-        `range <KWTA.range>` that it exceeds.
+        `clip <KWTA.clip>` that it exceeds.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -377,11 +377,11 @@ class KWTA(RecurrentTransferMechanism):
         "clipped" at (that is, any positive value is replaced by) 0.  Otherwise, any offset is allowed (see
         `inhibition_only <KWTA_inhibition_only>` for additional information).
 
-    range : Tuple[float, float]
+    clip : Tuple[float, float]
         determines the allowable range of the result: the first value specifies the minimum allowable value
         and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
-        is set to the value of `range <KWTA.range>` it exceeds.  If `function <KWTA.function>`
-        is `Logistic`, `range <KWTA.range>` is set by default to (0,1).
+        is set to the value of `clip <KWTA.clip>` it exceeds.  If `function <KWTA.function>`
+        is `Logistic`, `clip <KWTA.clip>` is set by default to (0,1).
 
     previous_input : 1d np.array of floats
         the value of the input on the previous execution, including the value of `recurrent_projection`.
@@ -462,7 +462,7 @@ class KWTA(RecurrentTransferMechanism):
                  ratio: is_numeric_or_none = 0.5,
                  average_based=False,
                  inhibition_only=True,
-                 range=None,
+                 clip=None,
                  input_states: tc.optional(tc.any(list, dict)) = None,
                  output_states: tc.optional(tc.any(list, dict))=None,
                  time_scale=TimeScale.TRIAL,
@@ -501,7 +501,7 @@ class KWTA(RecurrentTransferMechanism):
                          decay=decay,
                          noise=noise,
                          time_constant=time_constant,
-                         range=range,
+                         clip=clip,
                          output_states=output_states,
                          time_scale=time_scale,
                          params=params,

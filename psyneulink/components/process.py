@@ -1781,7 +1781,7 @@ class Process(Process_Base):
                                format(len(input), self.name, len(self.process_input_states)))
 
         # Assign items in input to value of each process_input_state
-        for i in range (len(self.process_input_states)):
+        for i in range(len(self.process_input_states)):
             self.process_input_states[i].value = input[i]
 
         return input
