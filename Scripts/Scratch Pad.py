@@ -957,27 +957,11 @@ class ScratchPadError(Exception):
 # T1.add_states([O])
 # T1.output_states[2].name == 'OutputState-1'
 
-D1 = pnl.DDM(name='D1')
-D2 = pnl.DDM(name='D2')
-
-# ControlSignal with one ControlProjection
-C1 = pnl.ControlMechanism(control_signals=[D1.parameter_states[pnl.DRIFT_RATE]])
-assert C1.control_signals[0].name == 'D1[drift_rate] ControlSignal'
-assert C1.control_signals[0].efferents[0].name == 'ControlProjection for drift_rate of D1'
-
-# ControlSignal with two ControlProjection to two parameters of same Mechanism
-C2 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_states[pnl.DRIFT_RATE],
-                                                             D1.parameter_states[pnl.THRESHOLD]]}])
-assert C2.control_signals[0].name == 'D1[drift_rate, threshold] ControlSignal'
-assert C2.control_signals[0].efferents[0].name == 'ControlProjection for drift_rate of D1'
-assert C2.control_signals[0].efferents[1].name == 'ControlProjection for threshold of D1'
-
-# ControlSignal with two ControlProjection to two parameters of different Mechanisms
-C3 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_states[pnl.DRIFT_RATE],
-                                                             D2.parameter_states[pnl.DRIFT_RATE]]}])
-assert C3.control_signals[0].name == 'ControlSignal-0 divergent ControlSignal'
-assert C3.control_signals[0].efferents[0].name == 'ControlProjection for drift_rate of D1'
-assert C3.control_signals[0].efferents[1].name == 'ControlProjection for drift_rate of D2'
+T1 = pnl.TransferMechanism(output_states=['MY OUTPUT_STATE',[0]])
+assert T1.output_states[0].name == 'MY OUTPUT_STATE'
+assert T1.output_states[1].name == 'OutputState-0'
+O = pnl.OutputState(owner=T1)
+assert T1.output_states[2].name == 'OutputState-1'
 
 
 

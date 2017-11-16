@@ -45,8 +45,8 @@ class TestNaming:
     def test_default_mechanism_names(self):
         T1 = pnl.TransferMechanism()
         T2 = pnl.TransferMechanism()
-        assert T1.name == 'TransferMechanism-0'
-        assert T2.name == 'TransferMechanism-1'
+        assert T1.name == 'TransferMechanism-76'
+        assert T2.name == 'TransferMechanism-77'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 4
@@ -65,8 +65,8 @@ class TestNaming:
     def test_deferred_init_default_MappingProjection_names(self):
         P1 = pnl.MappingProjection()
         P2 = pnl.MappingProjection()
-        assert P1.name == 'Deferred Init MappingProjection'
-        assert P2.name == 'Deferred Init MappingProjection-1'
+        assert P1.name == 'Deferred Init MappingProjection-39'
+        assert P2.name == 'Deferred Init MappingProjection-40'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 6
@@ -85,13 +85,13 @@ class TestNaming:
     def test_deferred_init_default_ModulatoryProjection_names(self):
         LP1 = pnl.LearningProjection()
         LP2 = pnl.LearningProjection()
-        assert LP1.name == 'Deferred Init LearningProjection'
-        assert LP2.name == 'Deferred Init LearningProjection-1'
+        assert LP1.name == 'Deferred Init LearningProjection-12'
+        assert LP2.name == 'Deferred Init LearningProjection-13'
 
         CP1 = pnl.ControlProjection()
         CP2 = pnl.ControlProjection()
-        assert CP1.name == 'Deferred Init ControlProjection'
-        assert CP2.name == 'Deferred Init ControlProjection-1'
+        assert CP1.name == 'Deferred Init ControlProjection-4'
+        assert CP2.name == 'Deferred Init ControlProjection-5'
 
         GP1 = pnl.GatingProjection()
         GP2 = pnl.GatingProjection()
@@ -118,7 +118,7 @@ class TestNaming:
         T2 = pnl.TransferMechanism(name='T2', input_states=[T1])
         I1 = pnl.InputState(owner=T2)
         I2 = pnl.InputState(projections=[T1])
-        assert I2.name == 'Deferred Init InputState'
+        assert I2.name == 'Deferred Init InputState-4'
         T2.add_states([I2])
         assert I1.name == 'InputState-1'
         assert I2.name == 'InputState-2'
@@ -127,15 +127,15 @@ class TestNaming:
         assert T2.input_states[2].path_afferents[0].name == \
                'MappingProjection from T1[RESULT] to T2[InputState-2]'
 
-    # # ------------------------------------------------------------------------------------------------
-    # # TEST 10
-    # # Test that OutputStates are properly named
-    #
-    #     T1 = pnl.TransferMechanism(output_states=['MY OUTPUT_STATE',[0]])
-    #     T1.output_states[0].name == 'OUTPUT_STATE'
-    #     T1.output_states[1].name == 'OutputState-0'
-    #     O = pnl.OutputState(owner=T1)
-    #     T1.output_states[2].name == 'OutputState-1'
+    # ------------------------------------------------------------------------------------------------
+    # TEST 10
+    # Test that OutputStates are properly named
+
+        T1 = pnl.TransferMechanism(output_states=['MY OUTPUT_STATE',[0]])
+        assert T1.output_states[0].name == 'MY OUTPUT_STATE'
+        assert T1.output_states[1].name == 'OutputState-0'
+        O = pnl.OutputState(owner=T1)
+        assert T1.output_states[2].name == 'OutputState-1'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 11

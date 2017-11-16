@@ -341,7 +341,7 @@ import typecheck as tc
 from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination, is_function_type
 from psyneulink.components.shellclasses import Mechanism, Projection
-from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
 from psyneulink.globals.keywords import \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, INPUT_STATE, INPUT_STATES, RECEIVER, GATING_SIGNAL, \
     COMMAND_LINE, STATE, OUTPUT_STATE, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, DEFERRED_INITIALIZATION, \
@@ -662,7 +662,10 @@ class OutputState(State_Base):
         self.instance_defaults.variable = self.reference_value
 
         # Insure that variable is compatible with (relevant item of) output value of owner's function
-        if not iscompatible(variable, self.reference_value):
+        # if not iscompatible(variable, self.reference_value):
+        if (variable is not None
+            and self.reference_value is not None
+            and not iscompatible(variable, self.reference_value)):
             raise OutputStateError("Variable ({}) of OutputState for {} is not compatible with "
                                            "the output ({}) of its function".
                                            format(variable,
@@ -729,6 +732,12 @@ class OutputState(State_Base):
             raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible "
                                    "with its expected format ({})".
                                    format(name, self.componentName, self.owner.name, self.instance_defaults.variable, reference_value))
+
+    # MODIFIED 11/15/17 NEW:
+    def _instantiate_attributes_before_function(self, context=None):
+        if self.variable is None and self.reference_value is None:
+            self.instance_defaults.variable = self.owner.default_value[0]
+    # MODIFIED 11/15/17 END
 
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate calculate function
@@ -1030,7 +1039,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
-    if 'COMMAND_LINE' in context:
+    if any(keyword in context for keyword in {COMMAND_LINE, ADD_STATES}):
         owner.output_states.extend(state_list)
     else:
         owner._output_states = state_list
