@@ -16,7 +16,8 @@ from collections import namedtuple
 from psyneulink.globals.keywords import CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_STATE, MAPPING_PROJECTION, OUTPUT_STATE, PARAMETER_STATE, kwComponentCategory, kwComponentPreferenceSet, kwMechanismComponentCategory, kwPreferenceSet, kwProcessComponentCategory, kwProjectionComponentCategory, kwStateComponentCategory, kwSystemComponentCategory
 
 __all__ = [
-    'RegistryError'
+    'RegistryError',
+    'clear_registry'
 ]
 
 # IMPLEMENTATION NOTE:
@@ -246,3 +247,6 @@ def register_instance(entry, name, base_class, registry, sub_dict):
 
     # Update instanceCount in registry:
     registry[sub_dict] = registry[sub_dict]._replace(instanceCount=registry[sub_dict].instanceCount + 1)
+
+def clear_registry(registry):
+    registry.clear()
