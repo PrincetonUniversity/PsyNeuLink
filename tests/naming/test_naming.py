@@ -6,13 +6,14 @@ import psyneulink as pnl
 class TestNaming:
     # ------------------------------------------------------------------------------------------------
 
-    # Clear Registry to have a stable reference for indexed suffixes of default names
-    from psyneulink.components.component import DeferredInitRegistry
-    from psyneulink.components.mechanisms.mechanism import MechanismRegistry
-    from psyneulink.components.projections.projection import ProjectionRegistry
-    pnl.clear_registry(DeferredInitRegistry)
-    pnl.clear_registry(MechanismRegistry)
-    pnl.clear_registry(ProjectionRegistry)
+    def clear_registry_for_naming_tests(self):
+        # Clear Registry to have a stable reference for indexed suffixes of default names
+        from psyneulink.components.component import DeferredInitRegistry
+        from psyneulink.components.mechanisms.mechanism import MechanismRegistry
+        from psyneulink.components.projections.projection import ProjectionRegistry
+        pnl.clear_registry(DeferredInitRegistry)
+        pnl.clear_registry(MechanismRegistry)
+        pnl.clear_registry(ProjectionRegistry)
 
 
     # NAMING CONVENTIONS
