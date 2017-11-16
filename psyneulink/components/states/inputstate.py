@@ -32,7 +32,8 @@ An InputState can be created by calling its constructor, but in general this is 
 usually automatically create the InputState(s) it needs when it is created.  For example, if the Mechanism is
 being created within the `pathway <Process.pathway` of a `Process`, its InputState will be created and  assigned
 as the `receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding `Mechanism <Mechanism>` in
-the `pathway <Process.pathway>`.
+the `pathway <Process.pathway>`.  If it is created using its constructor, and a Mechanism is specified in the
+**owner** argument, it will be automatically assigned to that Mechanism.
 
 .. _InputState_Deferred_Initialization:
 
@@ -648,7 +649,10 @@ class InputState(State_Base):
                                                   params=params)
 
         # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
-        if owner is None or (variable is None and reference_value is None and projections is None):
+        # if owner is None or (variable is None and reference_value is None and projections is None):
+        if owner is None:
+            # Temporarily name InputState
+            self._assign_deferred_init_name(name, context)
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = context
@@ -780,7 +784,7 @@ class InputState(State_Base):
         return mechanism.input_state
 
     # def _assign_default_state_name(self, context=None):
-    #     # """Assign 'INPUT_STATE-n' to any InputStates with default name (i.e., name of State: 'InputState'),
+    #     # """Assign 'InputState-n' to any InputStates with default name (i.e., name of State: 'InputState'),
     #     #    where n is the next index of InputStates with the default name
     #     # Returns name assigned to State
     #     # """
@@ -792,11 +796,11 @@ class InputState(State_Base):
     #     # Call in the context of adding a state to an existing owner
     #     elif any(key in context for key in {ADD_STATES, DEFERRED_INITIALIZATION}):
     #         try:
-    #             i=len([input_state for input_state in self.owner.input_states if 'INPUT_STATE-' in input_state.name])
-    #             self.name = 'INPUT_STATE-'+str(i)
+    #             i=len([input_state for input_state in self.owner.input_states if 'InputState-' in input_state.name])
+    #             self.name = 'InputState-'+str(i)
     #         except TypeError:
     #             i=0
-    #             self.name = 'INPUT_STATE-'+str(i)
+    #             self.name = 'InputState-'+str(i)
     #
     #     else:
     #         raise InputStateError("PROGRAM ERROR: unrecognized context (\'{}\') for assigning default {} to {}".

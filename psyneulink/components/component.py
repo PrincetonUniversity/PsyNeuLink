@@ -346,6 +346,7 @@ from enum import Enum, IntEnum
 import numpy as np
 import typecheck as tc
 
+from psyneulink.globals.registry import register_category
 from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, DEFERRED_DEFAULT_NAME, COMPONENT_INIT, \
     CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, \
     INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, \
@@ -362,6 +363,8 @@ __all__ = [
 ]
 
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
+
+DeferredInitRegistry = {}
 
 class ResetMode(Enum):
     """
@@ -497,11 +500,12 @@ class ComponentLog(IntEnum):
 
 
 class ComponentError(Exception):
-     def __init__(self, error_value):
-         self.error_value = error_value
+    def __init__(self, error_value):
+        self.error_value = error_value
 
-     def __str__(self):
-         return repr(self.error_value)
+    def __str__(self):
+        return repr(self.error_value)
+
 
 # *****************************************   COMPONENT CLASS  ********************************************************
 
@@ -699,7 +703,6 @@ class Component(object):
 
     # Determines whether ClassDefaults.variable can be changed (to match an variable in __init__ method)
     variableClassDefault_locked = False
-
 
     # Names and types of params required to be implemented in all subclass paramClassDefaults:
     # Notes:
@@ -1078,6 +1081,18 @@ class Component(object):
             super(self.__class__,self).__init__(**self.init_args)
 
             self.init_status = InitStatus.INITIALIZED
+
+    def _assign_deferred_init_name(self, name, context):
+
+        name = "{} [{}]".format(name,DEFERRED_INITIALIZATION) if name \
+          else "{} {}".format(DEFERRED_INITIALIZATION,self.__class__.__name__)
+
+        # Register with ProjectionRegistry or create one
+        register_category(entry=self,
+                          base_class=Component,
+                          name=name,
+                          registry=DeferredInitRegistry,
+                          context=context)
 
     def _assign_args_to_param_dicts(self, **kwargs):
         """Assign args passed in __init__() to params
@@ -1794,7 +1809,6 @@ class Component(object):
         context = context or COMMAND_LINE
 
         self._assign_params(request_set=request_set, context=context)
-
 
     @tc.typecheck
     def _assign_params(self, request_set:tc.optional(dict)=None, context=None):

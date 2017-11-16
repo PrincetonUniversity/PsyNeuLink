@@ -344,7 +344,7 @@ from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.keywords import \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, INPUT_STATE, INPUT_STATES, RECEIVER, GATING_SIGNAL, \
-    COMMAND_LINE, STATE, OUTPUT_STATE, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, \
+    COMMAND_LINE, STATE, OUTPUT_STATE, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, DEFERRED_INITIALIZATION, \
     CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE, REFERENCE_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -612,7 +612,10 @@ class OutputState(State_Base):
                                                   params=params)
 
         # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
-        if owner is None or reference_value is None:
+        # if owner is None or reference_value is None:
+        if owner is None:
+            # Temporarily name OutputState
+            self._assign_deferred_init_name(name, context)
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = context

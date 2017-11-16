@@ -371,7 +371,7 @@ import warnings
 from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.keywords import \
-    CONTEXT, CONTROL, CONTROL_PROJECTION, EXPONENT, GATING, GATING_PROJECTION, \
+    CONTEXT, CONTROL, CONTROL_PROJECTION, EXPONENT, GATING, GATING_PROJECTION, DEFERRED_INITIALIZATION, \
     INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
     MECHANISM, NAME, OUTPUT_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, \
     PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, \
@@ -539,10 +539,12 @@ class Projection_Base(Projection):
     COMMENT
 
     name : str
-        the name of the Projection.  See `Naming` for conventions used for duplicate names. If the Projection's
-        `initialization has been deferred <Projection_Deferred_Initialization>`, its name remains unassigned until
-        initialization is complete. If the Projection's name is not specified in the **name** argument of its
-        constructor, a default name is assigned by the subclass (see subclass for details).
+        the name of the Projection. If the Projection's `initialization has been deferred
+        <Projection_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
+        status) until initialization is completed, at which time it is assigned its designated name.  If that is the
+        name of an existing Projection, it is appended with an indexed suffix, incremented for each Projection with the
+        same base name (see `Naming`). If the name is not  specified in the **name** argument of its constructor, a
+        default name is assigned by the subclass (see subclass for details)
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the Projection; if it is not specified in the **prefs** argument of the constructor,
@@ -654,6 +656,7 @@ class Projection_Base(Projection):
 
         try:
             if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                self._assign_deferred_init_name(name, context)
                 self.init_args = locals().copy()
                 self.init_args[CONTEXT] = self
                 self.init_args[NAME] = name

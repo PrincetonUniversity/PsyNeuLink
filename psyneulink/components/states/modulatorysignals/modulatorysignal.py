@@ -315,10 +315,12 @@ class ModulatorySignal(OutputState):
         a list of the `ModulatoryProjections <ModulatoryProjection>` assigned to the ModulatorySignal.
 
     name : str
-        name of the ModulatorySignal (see `Naming` for conventions used for duplicate names).  If a State's
-        `initialization has been deferred <State_Deferred_Initialization>`, its name remains unassigned until
-        initialization is complete.  If the ModulatorySignal's name is not specified in the **name** argument of its
-        constructor, a default name is assigned as follows; if the ModulatorySignal has:
+        the name of the ModulatorySignal. If the ModulatorySignal's `initialization has been deferred
+        <State_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
+        status) until initialization is completed, at which time it is assigned its designated name.  If that is the
+        name of an existing ModulatorySignal, it is appended with an indexed suffix, incremented for each State with
+        the same base name (see `Naming`). If the name is not  specified in the **name** argument of its constructor,
+        a default name is assigned as follows; if the ModulatorySignal has:
 
         * no projections (which are used to name it) -- the name of its class is used, with an index that is
         incremented for each ModulatorySignal with a default named assigned to its `owner <ModulatorySignal.owner>`;
@@ -455,13 +457,13 @@ class ModulatorySignal(OutputState):
             receiver_owner_receiver_names.append("{} {}".format(receiver_owner_name, receiver_name))
 
         # Only one ModulatoryProjection: "<target mech> <State.name> <ModulatorySignal>"
-        # (e.g., "Decision drift_rate ControlSignal", or "Input Layer INPUT_STATE-0 GatingSignal")
+        # (e.g., "Decision drift_rate ControlSignal", or "Input Layer InputState-0 GatingSignal")
         if len(receiver_owner_receiver_names) == 1:
             default_name = receiver_owner_receiver_names[0] + " " + class_name
 
         # Multiple ModulatoryProjections all for same mech: "<target mech> (<State.name>,...) <ModulatorySignal>"
         # (e.g., "Decision (drift_rate, threshold) ControlSignal" or
-        #        "InputLayer (INPUT_STATE-0, INPUT_STATE-0) ControlSignal")
+        #        "InputLayer (InputState-0, InputState-0) ControlSignal")
         elif all(name is receiver_owner_names[0] for name in receiver_owner_names):
             default_name = "{} ({}) {}".format(receiver_owner_names[0], ", ".join(receiver_names), class_name)
 

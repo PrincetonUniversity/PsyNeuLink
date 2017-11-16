@@ -238,8 +238,8 @@ def register_instance(entry, name, base_class, registry, sub_dict):
             entry.name += '-{0}'.format(renamed_instance_counts[entry.name])
         else:
             name_stripped_of_suffix = match.groups()[0]
-        entry.name = numeric_suffix_pat.sub(r'\1-{0}'.
-                                            format(renamed_instance_counts[name_stripped_of_suffix]), entry.name)
+            entry.name = numeric_suffix_pat.sub(r'\1-{0}'.
+                                                format(renamed_instance_counts[name_stripped_of_suffix]), entry.name)
 
     # Add instance to instanceDict:
     registry[sub_dict].instanceDict.update({entry.name: entry})

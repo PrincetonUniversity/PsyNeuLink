@@ -185,10 +185,12 @@ class ModulatoryProjection_Base(Projection_Base):
         <Projection_Weight_and_Exponent>` for details).
 
     name : str
-        the name of the ModulatoryProjection. See `Naming` for conventions used for duplicate names.
-        If the ModulatoryProjection's `initialization has been deferred <Projection_Deferred_Initialization>`,
-        its name remains unassigned until initialization is complete. If the ModulatoryProjection's name is not
-        specified in the **name** argument of its constructor, a default name is assigned using the following format:
+        the name of the ModulatoryProjection. If the ModulatoryProjection's `initialization has been deferred
+        <Projection_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
+        status) until initialization is completed, at which time it is assigned its designated name.  If that is the
+        name of an existing ModulatoryProjection, it is appended with an indexed suffix, incremented for each
+        ModulatoryProjection with the same base name (see `Naming`). If the name is not  specified in the **name**
+        argument of its constructor, a default name is assigned using the following format:
         '<ModualatorySignal type> for <receiver's name> to <receiver owner Mechanism's name>'
         (for example, ``'GatingSignal for InputState-0 of my_mech'``).
 

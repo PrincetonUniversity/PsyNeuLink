@@ -401,10 +401,12 @@ class MappingProjection(PathwayProjection_Base):
         <Mapping_Weight_Exponent>` for details).
 
     name : str
-        the name of the MappingProjection. See `Naming` for conventions used for duplicate names.
-        If the MappingProjection's `initialization has been deferred <Projection_Deferred_Initialization>`,
-        its name remains unassigned until initialization is complete.  If the MappingProjection's name is not
-        specified in the **name** argument of its constructor, a default name is assigned using the following format:
+        the name of the MappingProjection. If the MappingProjection's `initialization has been deferred
+        <Projection_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
+        status) until initialization is completed, at which time it is assigned its designated name.  If that is the
+        name of an existing MappingProjection, it is appended with an indexed suffix, incremented for each
+        MappingProjection with the same base name (see `Naming`). If the name is not  specified in the **name**
+        argument of its constructor, a default name is assigned using the following format:
         'MappingProjection from <sender's name> to <receiver's name>'
         (for example, ``'MappingProjection from my_mech_1 to my_mech2'``).
 

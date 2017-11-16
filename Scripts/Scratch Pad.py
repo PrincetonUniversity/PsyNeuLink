@@ -429,15 +429,15 @@ class ScratchPadError(Exception):
 # assert len(m.variable)==2
 # assert len(m.variable[0])==1
 # assert len(m.variable[1])==2
-# assert m.input_states[0].name == 'INPUT_STATE-0'
-# assert m.input_states[1].name == 'INPUT_STATE-1'
+# assert m.input_states[0].name == 'InputState-0'
+# assert m.input_states[1].name == 'InputState-1'
 #
 # m = pnl.TransferMechanism()
 # i = pnl.InputState(owner=m, variable=[0, 0, 0])
 # m.execute()
 # assert len(m.input_states) == 2
-# assert m.input_states[0].name == 'INPUT_STATE-0'
-# assert m.input_states[1].name == 'INPUT_STATE-1'
+# assert m.input_states[0].name == 'InputState-0'
+# assert m.input_states[1].name == 'InputState-1'
 # assert len(m.variable)==2
 # assert len(m.variable[0])==1
 # assert len(m.variable[1])==3
@@ -547,7 +547,7 @@ class ScratchPadError(Exception):
 # mech_A = pnl.TransferMechanism()
 # my_input_state = pnl.InputState(projections=[mech_A])
 # mech_B = pnl.TransferMechanism(input_states=[my_input_state])
-# assert mech_B.input_states[0].name == 'INPUT_STATE-0'
+# assert mech_B.input_states[0].name == 'InputState-0'
 # print(mech_B.input_states)
 
 #
@@ -838,9 +838,9 @@ class ScratchPadError(Exception):
 # s.run(inputs)
 # #endregion
 
-# #region TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# region TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # print("TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS")
-#
+
 # a = TransferMechanism(name='a', default_variable=[0, 0])
 # b = TransferMechanism(name='b')
 # c = TransferMechanism(name='c')
@@ -871,10 +871,10 @@ class ScratchPadError(Exception):
 # TEST = p1.execute(input=[2,2])
 # # p1.run(inputs)
 # TEST=True
-#
-# #endregion
 
-# #region TEST ControlMechanism and ObjectiveMechanism EXAMPLES @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# endregion
+
+# region TEST ControlMechanism and ObjectiveMechanism EXAMPLES @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # print("TEST ControlMechanism and ObjectiveMechanism EXAMPLES")
 
 # my_transfer_mech_A = TransferMechanism()
@@ -998,17 +998,22 @@ class ScratchPadError(Exception):
 # GP2 = pnl.GatingProjection()
 # print(GP1.name)
 # print(GP2.name)
-#
+
 m1 = pnl.TransferMechanism()
 m2 = pnl.TransferMechanism(input_states=[m1])
-p2 = pnl.MappingProjection(sender=m1, receiver=m2)
-# print(p2.name)
+x = pnl.InputState(owner=m2)
+# y = pnl.InputState(owner=m2)
+# m2.add_states([x])
+print(m2.input_states.names)
+print(x.name)
+# print(y.name)
+
+# p2 = pnl.MappingProjection(sender=m1, receiver=m2)
+# # print(p2.name)
 for projection in m2.input_states[0].path_afferents:
     print(projection.name)
 
-
 #endregion
-
 
 #region TEST InputState SPECIFICATION
 # print ('TEST InputState SPECIFICATION')

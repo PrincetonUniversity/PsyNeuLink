@@ -950,10 +950,12 @@ class State_Base(State):
         current value of the State (updated by `update <State_Base.update>` method).
 
     name : str
-        the name of the State.  See `Naming` for conventions used for duplicate names.  If the State's `initialization
-        has been deferred <State_Deferred_Initialization>`, its name remains unassigned until initialization is
-        complete.  If the State's name is not  specified in the **name** argument of its constructor, a default name
-        is assigned by the subclass (see subclass for details).
+        the name of the State. If the State's `initialization has been deferred <State_Deferred_Initialization>`,
+        it is assigned a temporary name (indicating its deferred initialization status) until initialization is
+        completed, at which time it is assigned its designated name.  If that is the name of an existing State,
+        it is appended with an indexed suffix, incremented for each State with the same base name (see `Naming`). If
+        the name is not  specified in the **name** argument of its constructor, a default name is assigned by the
+        subclass (see subclass for details).
 
         .. _State_Naming_Note:
 
@@ -2570,8 +2572,8 @@ def _parse_state_spec(state_type=None,
                 state_owner = state_specification.owner
             if owner is not None and state_owner is not None and not state_owner is owner:
                 raise StateError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
-                                 format(State.__name__, owner.name, state_specification.name,
-                                        Mechanism.__name__,state_owner.name))
+                                 format(State.__name__, state_specification.name, owner.name,
+                                        Mechanism.__name__, state_owner.name))
             return state_specification
 
         else:
