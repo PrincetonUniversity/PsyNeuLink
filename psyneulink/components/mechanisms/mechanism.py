@@ -478,7 +478,7 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   **default_variable** is not specified, a default value is specified by the Mechanism.
 
 COMMENT:
-*** ADD SOME EXAMPLES HERE
+*** ADD SOME EXAMPLES HERE (see `examples <XXX>`)
 COMMENT
 
 COMMENT:
@@ -499,11 +499,13 @@ COMMENT
 
 InputStates can be added to a Mechanism using its `add_states <Mechanism_Base.add_states>` method;  this extends its
 `variable <Mechanism_Base.variable>` by a number of items equal to the number of InputStates added, and each new item
-is assigned a format compatible with the `value <InputState.value>` of the corresponding InputState added.  The
-InputStates are appended to the end of the list in the Mechanism's `input_states <Mechanism_Base.input_states>`
-attribute.  Adding in States in this manner does **not** replace any existing States, including any default States
-generated when the Mechanism was constructed (this is contrast to States specified in a Mechanism's constructor
-which *do* replace any default State(s) of the same type (see note XXX*** RE: DEFAULT SUPPRESSION).
+is assigned a format compatible with the `value <InputState.value>` of the corresponding InputState added;  if the
+InputState's `variable <InputState.variable>` is not specified, it is assigned the default format for an item of the
+owner's `variable <Mechanism_Base.variable>` attribute. The InputStates are appended to the end of the list in the
+Mechanism's `input_states <Mechanism_Base.input_states>` attribute.  Adding in States in this manner does **not**
+replace any existing States, including any default States generated when the Mechanism was constructed (this is
+contrast to States specified in a Mechanism's constructor which *do* replace any default State(s) of the same type (see
+`note <Mechanism_Default_State_Suppression_Note>`).
 
 .. _Mechanism_Add_InputStates_Note:
 

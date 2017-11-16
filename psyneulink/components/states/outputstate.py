@@ -177,7 +177,7 @@ OutputState Customization
 The default OutputState uses the first (and usually only) item of the owner Mechanism's
 `value <Mechanism_Base.value>` as its value.  However, this can be modified in two ways, using the
 OutputState's `index <OutputState.index>` and `calculate <OutputState.calculate>` attributes (see
-`OutputState_Attributes` below). If the Mechanism's `function <Mechanism_Base.function>` returns a value with more
+`OutputState_Structure` below). If the Mechanism's `function <Mechanism_Base.function>` returns a value with more
 than one item (i.e., a list of lists, or a 2d np.array), then an OutputState can be assigned to any of those items by
 specifying its `index <OutputState.index>` attribute. An OutputState can also be configured to transform
 the value of the item, by specifying a function for its `calculate <OutputState.calculate>` attribute; the result
@@ -252,39 +252,8 @@ Structure
 Every OutputState is owned by a `Mechanism <Mechanism>`. It can send one or more
 `MappingProjections <MappingProjection>` to other Mechanisms.  If its owner is a `TERMINAL` Mechanism of a Process
 and/or System, then the OutputState will also be treated as the output of that `Process <Process_Input_And_Output>`
-and/or of a System.  The `MappingProjections <MappingProjection>` sent by an OutputState are listed in its
-`efferents <OutputState.efferents>` attribute.  An OutputState can also receive one or more `GatingProjections
-<GatingProjection>` and that regulate its value (see the descriptions of Modulation under
-`ModulatorySignals <ModulatorySignal_Modulation>` and `GatingSignals <GatingSignal_Modulation>` for additional details).
-The GatingProjections received by an OutputState are listed in its `mod_afferents <OutputState.mod_afferents>`
-attribute.
-
-Like all PsyNeuLink components, an OutputState has the three following core attributes:
-
-* `variable <OutputState.variable>`:  the item of its owner Mechanism's `value <Mechanism_Base.value>`
-  to which it is assigned (designated by its `index <OutputState.index>` attribute);  it must match the value of that
-  item (both in the number and types of its elements).
-..
-* `function <OutputState.function>`: takes the OutputState's `variable <OutputState.variable>` as its input, and
-  generates the OutpuState's `value <OutputState.value>` as its result.  The default function is `Linear` that simply
-  assigns the OutputState's `variable <OutputState.variable>` as its `value <OutputState.value>`.  However, the
-  parameters of the `function <OutputState.function>` -- and thus the `value <OutputState.value>` of the OutputState --
-  can be modified by any `GatingProjections <GatingProjection>` received by the OutputState (listed in its
-  `mod_afferents <OutputState.mod_afferents>` attribute.  A custom function can also be specified, so long as it can
-  take as its input a value that is compatiable with the OutputState's `variable <OutputState.variable>`.
-..
-* `value <OutputState.value>`:  assigned the result of the function specified by the
-  `calculate <OutputState.calculate>` attribute, possibly modified by the result of the OutputState`s
-  `function <OutputState.function>` and any `GatingProjections <GatingProjection>` received by the OutputState.
-  It is used as the input to any projections that the OutputStatue sends.
-
-.. _OutputState_Attributes:
-
-Additional Attributes
-~~~~~~~~~~~~~~~~~~~~~
-
-An OutputState also has two additional attributes that determine its operation, and can be used to further
-`customize the OutputState <OutputState_Customization>`:
+and/or of a System.  It has the following attributes, that includes ones specific to, and that can be used to
+`customize, the OutputState <OutputState_Customization>`:
 
 .. _OutputState_Index:
 
@@ -306,6 +275,37 @@ An OutputState also has two additional attributes that determine its operation, 
   The default is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0), that simply assigns the
   specified item of the Mechanism's `value <Mechanism_Base.value>` unmodified as the input for OutputState's
   `function <OutputState.function>`.
+..
+* `variable <OutputState.variable>` --  the value provided as the input to the OutputState's `function
+  <OutputState.function>`; it must match the value of the item of its owner Mechanism's `value  <Mechanism_Base.value>`
+  to which it is assigned (designated by its `index <OutputState.index>` attribute), both in the number and types of
+  its elements)
+
+* `function <OutputState.function>` -- takes the OutputState's `variable <OutputState.variable>` as its input, and
+  generates the OutpuState's `value <OutputState.value>` as its result.  The default function is `Linear` that simply
+  assigns the OutputState's `variable <OutputState.variable>` as its `value <OutputState.value>`.  However, the
+  parameters of the `function <OutputState.function>` -- and thus the `value <OutputState.value>` of the OutputState --
+  can be modified by any `GatingProjections <GatingProjection>` received by the OutputState (listed in its
+  `mod_afferents <OutputState.mod_afferents>` attribute.  A custom function can also be specified, so long as it can
+  take as its input a value that is compatiable with the OutputState's `variable <OutputState.variable>`.
+
+* `projections <OutputState.projections>` -- all of the `Projections <Projection>` sent and received by the OutputState;
+
+.. _OutputState_Effent_and_Modulatory_Projections:
+
+* `efferents <OutputState.path_afferents>` -- `MappingProjections <MappingProjection>` that project from the
+  OutputState.
+
+* `mod_afferents <OutputState.mod_afferents>` -- `GatingProjections <GatingProjection>` that project to the OutputState,
+  the `value <GatingProjection.value>` of which can modify the OutputState's `value <InputState.value>` (see the
+  descriptions of Modulation under `ModulatorySignals <ModulatorySignal_Modulation>` and `GatingSignals
+  <GatingSignal_Modulation>` for additional details).  If the OutputState receives more than one GatingProjection,
+  their values are combined before they are used to modify the `value <OutputState.value>` of the OutputState.
+..
+* `value <OutputState.value>`:  assigned the result of the function specified by the
+  `calculate <OutputState.calculate>` attribute, possibly modified by the result of the OutputState`s
+  `function <OutputState.function>` and any `GatingProjections <GatingProjection>` received by the OutputState.
+  It is used as the input to any projections that the OutputStatue sends.
 
 
 .. _OutputState_Execution:
@@ -506,7 +506,7 @@ class OutputState(State_Base):
         the Mechanism to which the OutputState belongs.
 
     mod_afferents : List[GatingProjection]
-        a list of the `GatingProjections <GatingProjection>` received by the OutputState.
+        `GatingProjections <GatingProjection>` received by the OutputState.
 
     variable : value, list or np.ndarray
         assigned the item of the owner Mechanism's `value <Mechanism_Base.value>` specified by the
@@ -534,8 +534,11 @@ class OutputState(State_Base):
         of the owner Mechanism's `output_values <Mechanism_Base.output_values>` attribute.
 
     efferents : List[MappingProjection]
-        a list of the `MappingProjections <MappingProjection>` sent by the OutputState (i.e., for which the OutputState
+        `MappingProjections <MappingProjection>` sent by the OutputState (i.e., for which the OutputState
         is a `sender <Projection_Base.sender>`).
+
+    projections : List[Projection]
+        all of the `Projections <Projection>` received and sent by the OutputState.
 
     name : str
         the name of the OutputState; if it is not specified in the **name** argument of the constructor, a default is

@@ -375,9 +375,9 @@ automatically creates an InputState, ParameterStates for its parameters, includi
     print(my_mech.output_states)
     > [(OutputState RESULT)]
 
-.. _States_Constructor_Arguments:
+.. _State_Constructor_Argument_Examples:
 
-*Using the* **input_states** *argument of Mechanism constructor.*
+*Using the* **input_states** *argument of a Mechanism constructor.*
 
 When States are specified explicitly, it is usually in an argument of the constructor for the Mechanism to which they
 belong.  For example, the following specifies that ``my_mech`` should have an InputState named 'MY INPUT`::
@@ -512,7 +512,7 @@ specifies that the InputState of ``my_mech`` should receive a `GatingProjection`
                                                    pnl.PROJECTIONS:[my_gating_mech]}])
 
 
-.. _State_Control_Projections_Examples:
+.. _State_Modulatory_Projections_Examples:
 
 Conversely, ModulatoryProjections can also be specified from a Mechanism to one or more States that it modulates.  In
 the following example, a `ControlMechanism` is created that sends `ControlProjections <ControlProjection>` to the
@@ -587,7 +587,7 @@ given Mechanism, as in the following example::
     my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: my_mech,
                                                          pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
 
-This produces the same result as the `earlier example <State_Control_Projections_Examples>` of ControlProjections,
+This produces the same result as the `earlier example <State_Modulatory_Projections_Examples>` of ControlProjections,
 once again in a simpler and easier to read form.  However, it be used only to specify Projections for a State to or
 from the States of a single Mechanism;  Projections involving other Mechanisms must be assigned to other States.
 
