@@ -949,26 +949,26 @@ class ScratchPadError(Exception):
 #region TEST Naming
 # print ('TEST Naming')
 
-# T1 = pnl.TransferMechanism()
-# T2 = pnl.TransferMechanism()
-# print(T1.name)
-# print(T2.name)
-#
-# TN1 = pnl.TransferMechanism(name='MY TRANSFER MECHANISM')
-# TN2 = pnl.TransferMechanism(name='MY TRANSFER MECHANISM')
-# print(TN1.name)
-# print(TN2.name)
-#
-# P1 = pnl.MappingProjection()
-# P2 = pnl.MappingProjection()
-# print(P1.name)
-# print(P2.name)
-#
-# PN1 = pnl.MappingProjection(name='MY PROJECTION')
-# PN2 = pnl.MappingProjection(name='MY PROJECTION')
-# print(PN1.name)
-# print(PN2.name)
-#
+T1 = pnl.TransferMechanism()
+T2 = pnl.TransferMechanism()
+assert T1.name == 'TransferMechanism-0'
+assert T2.name == 'TransferMechanism-1'
+
+TN1 = pnl.TransferMechanism(name='MY TRANSFER MECHANISM')
+TN2 = pnl.TransferMechanism(name='MY TRANSFER MECHANISM')
+assert TN1.name == 'MY TRANSFER MECHANISM'
+assert TN2.name == 'MY TRANSFER MECHANISM-1'
+
+P1 = pnl.MappingProjection()
+P2 = pnl.MappingProjection()
+assert P1.name == 'Deferred Init MappingProjection'
+assert P2.name == 'Deferred Init MappingProjection-1'
+
+PN1 = pnl.MappingProjection(name='MY PROJECTION')
+PN2 = pnl.MappingProjection(name='MY PROJECTION')
+assert PN1.name == 'MY PROJECTION [Deferred Init]'
+assert PN2.name == 'MY PROJECTION [Deferred Init]-1'
+
 # TDN1 = pnl.TransferMechanism(name='MY NAME')
 # PDN1 = pnl.MappingProjection(name='MY NAME')
 # print(TDN1.name)
@@ -999,19 +999,26 @@ class ScratchPadError(Exception):
 # print(GP1.name)
 # print(GP2.name)
 
-m1 = pnl.TransferMechanism()
-m2 = pnl.TransferMechanism(input_states=[m1])
-x = pnl.InputState(owner=m2)
-# y = pnl.InputState(owner=m2)
-# m2.add_states([x])
-print(m2.input_states.names)
-print(x.name)
+# FIX: ADD THESE AS TESTS
+T1 = pnl.TransferMechanism()
+T2 = pnl.TransferMechanism(input_states=[T1])
+I1 = pnl.InputState(owner=T2)
+I2 = pnl.InputState(projections=[T1])
+assert I2.name == 'Deferred Init InputState'
+T2.add_states([I2])
+assert I1.name == 'InputState-1'
+assert I2.name == 'InputState-2'
+assert T2.input_states[0].path_afferents[0].name == 'MappingProjection from TransferMechanism-2[RESULT] to TransferMechanism-3[InputState-0]'
+assert T2.input_states[2].path_afferents[0].name == 'MappingProjection from TransferMechanism-2[RESULT] to TransferMechanism-3[InputState-2]'
+
+# assert T1.name == 'InputState'
 # print(y.name)
 
 # p2 = pnl.MappingProjection(sender=m1, receiver=m2)
 # # print(p2.name)
-for projection in m2.input_states[0].path_afferents:
-    print(projection.name)
+# for projection in T2.input_states[2].path_afferents:
+#     print(projection.name)
+
 
 #endregion
 
