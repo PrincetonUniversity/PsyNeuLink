@@ -20,8 +20,8 @@ class TestTransferMechanismInputs:
             default_variable=[0, 0, 0, 0],
             integrator_mode=True
         )
-        val = T.execute([10, 10, 10, 10]).tolist()
-        assert val == [[10.0, 10.0, 10.0, 10.0]]
+        val = T.execute([10, 10, 10, 10])
+        assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
         assert len(T.size) == 1 and T.size[0] == 4 and isinstance(T.size[0], np.integer)
         # this test assumes size is returned as a 1D array: if it's not, then several tests in this file must be changed
 
@@ -32,8 +32,8 @@ class TestTransferMechanismInputs:
             default_variable=[0, 0, 0, 0],
             integrator_mode=True
         )
-        val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
-        assert val == [[10.0, 10.0, 10.0, 10.0]]
+        val = T.execute([10.0, 10.0, 10.0, 10.0])
+        assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # def test_transfer_mech_inputs_list_of_fns(self):
     #
@@ -42,8 +42,8 @@ class TestTransferMechanismInputs:
     #         default_variable=[0, 0, 0, 0],
     #         integrator_mode=True
     #     )
-    #     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
-    #     assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
+    #     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()])
+    #     assert np.allclose(val, [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
 
     def test_transfer_mech_variable_3D_array(self):
 
@@ -52,7 +52,7 @@ class TestTransferMechanismInputs:
             default_variable=[[[0, 0, 0, 0]], [[1, 1, 1, 1]]],
             integrator_mode=True
         )
-        assert len(T.instance_defaults.variable) == 1 and len(T.instance_defaults.variable[0]) == 4 and (T.instance_defaults.variable[0] == 0).all()
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[[0, 0, 0, 0]], [[1, 1, 1, 1]]]))
 
     def test_transfer_mech_variable_none_size_none(self):
 
@@ -68,7 +68,7 @@ class TestTransferMechanismInputs:
                 default_variable=[0, 0, 0, 0],
                 integrator_mode=True
             )
-            T.execute(["one", "two", "three", "four"]).tolist()
+            T.execute(["one", "two", "three", "four"])
         assert "has non-numeric entries" in str(error_text.value)
 
     def test_transfer_mech_inputs_mismatched_with_default_longer(self):
@@ -78,7 +78,7 @@ class TestTransferMechanismInputs:
                 default_variable=[0, 0, 0, 0],
                 integrator_mode=True
             )
-            T.execute([1, 2, 3, 4, 5]).tolist()
+            T.execute([1, 2, 3, 4, 5])
         assert "does not match required length" in str(error_text.value)
 
     def test_transfer_mech_inputs_mismatched_with_default_shorter(self):
@@ -88,7 +88,7 @@ class TestTransferMechanismInputs:
                 default_variable=[0, 0, 0, 0, 0, 0],
                 integrator_mode=True
             )
-            T.execute([1, 2, 3, 4, 5]).tolist()
+            T.execute([1, 2, 3, 4, 5])
         assert "does not match required length" in str(error_text.value)
 
 
@@ -104,8 +104,8 @@ class TestTransferMechanismNoise:
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[5.0, 5.0, 5.0, 5.0]]
+        val = T.execute([0, 0, 0, 0])
+        assert np.allclose(val, [[5.0, 5.0, 5.0, 5.0]])
 
     def test_transfer_mech_array_var_normal_len_1_noise(self):
 
@@ -117,8 +117,8 @@ class TestTransferMechanismNoise:
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[0.41059850193837233, 0.144043571160878, 1.454273506962975, 0.7610377251469934]]
+        val = T.execute([0, 0, 0, 0])
+        assert np.allclose(val, [[0.41059850193837233, 0.144043571160878, 1.454273506962975, 0.7610377251469934]])
 
     def test_transfer_mech_array_var_normal_array_noise(self):
 
@@ -130,9 +130,10 @@ class TestTransferMechanismNoise:
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-
-        assert np.allclose(val, [0.7610377251469934, 0.12167501649282841, 0.44386323274542566, 0.33367432737426683])
+        val = T.execute([0, 0, 0, 0])
+        expected = [0.7610377251469934, 0.12167501649282841, 0.44386323274542566, 0.33367432737426683]
+        for i in range(len(val[0])):
+            assert val[0][i] ==  expected[i]
 
     def test_transfer_mech_array_var_normal_array_noise2(self):
 
@@ -144,8 +145,8 @@ class TestTransferMechanismNoise:
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[5.0, 5.0, 5.0, 5.0]]
+        val = T.execute([0, 0, 0, 0])
+        assert np.allclose(val, [[5.0, 5.0, 5.0, 5.0]])
 
     def test_transfer_mech_mismatched_shape_noise(self):
         with pytest.raises(MechanismError) as error_text:
@@ -188,8 +189,8 @@ class TestDistributionFunctions:
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[0.41059850193837233, 0.144043571160878, 1.454273506962975, 0.7610377251469934]]
+        val = T.execute([0, 0, 0, 0])
+        assert np.allclose(val, [[0.41059850193837233, 0.144043571160878, 1.454273506962975, 0.7610377251469934]])
 
     def test_transfer_mech_exponential_noise(self):
 
@@ -201,8 +202,8 @@ class TestDistributionFunctions:
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[0.4836021009022533, 1.5688961399691683, 0.7526741095365884, 0.8394328467388229]]
+        val = T.execute([0, 0, 0, 0])
+        assert np.allclose(val, [[0.4836021009022533, 1.5688961399691683, 0.7526741095365884, 0.8394328467388229]])
 
     def test_transfer_mech_Uniform_noise(self):
 
@@ -214,8 +215,8 @@ class TestDistributionFunctions:
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[0.3834415188257777, 0.7917250380826646, 0.5288949197529045, 0.5680445610939323]]
+        val = T.execute([0, 0, 0, 0])
+        assert np.allclose(val, [[0.3834415188257777, 0.7917250380826646, 0.5288949197529045, 0.5680445610939323]])
 
     def test_transfer_mech_Gamma_noise(self):
 
@@ -227,8 +228,8 @@ class TestDistributionFunctions:
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[0.4836021009022533, 1.5688961399691683, 0.7526741095365884, 0.8394328467388229]]
+        val = T.execute([0, 0, 0, 0])
+        assert np.allclose(val, [[0.4836021009022533, 1.5688961399691683, 0.7526741095365884, 0.8394328467388229]])
 
     def test_transfer_mech_Wald_noise(self):
 
@@ -240,8 +241,8 @@ class TestDistributionFunctions:
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[1.3939555850782692, 0.25118783985272053, 1.2272797824363235, 0.1190661760253029]]
+        val = T.execute([0, 0, 0, 0])
+        assert np.allclose(val, [[1.3939555850782692, 0.25118783985272053, 1.2272797824363235, 0.1190661760253029]])
 
 
 class TestTransferMechanismFunctions:
@@ -255,8 +256,8 @@ class TestTransferMechanismFunctions:
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[0.5, 0.5, 0.5, 0.5]]
+        val = T.execute([0, 0, 0, 0])
+        assert np.allclose(val, [[0.5, 0.5, 0.5, 0.5]])
 
     def test_transfer_mech_exponential_fun(self):
 
@@ -267,8 +268,8 @@ class TestTransferMechanismFunctions:
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[1.0, 1.0, 1.0, 1.0]]
+        val = T.execute([0, 0, 0, 0])
+        assert np.allclose(val, [[1.0, 1.0, 1.0, 1.0]])
 
     def test_transfer_mech_softmax_fun(self):
 
@@ -279,8 +280,8 @@ class TestTransferMechanismFunctions:
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[0.25, 0.25, 0.25, 0.25]]
+        val = T.execute([0, 0, 0, 0])
+        assert np.allclose(val, [[0.25, 0.25, 0.25, 0.25]])
 
     def test_transfer_mech_normal_fun(self):
         with pytest.raises(TransferError) as error_text:
@@ -291,7 +292,7 @@ class TestTransferMechanismFunctions:
                 time_constant=1.0,
                 integrator_mode=True
             )
-            T.execute([0, 0, 0, 0]).tolist()
+            T.execute([0, 0, 0, 0])
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
 
     def test_transfer_mech_reinforcement_fun(self):
@@ -303,7 +304,7 @@ class TestTransferMechanismFunctions:
                 time_constant=1.0,
                 integrator_mode=True
             )
-            T.execute([0, 0, 0, 0]).tolist()
+            T.execute([0, 0, 0, 0])
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
 
     def test_transfer_mech_integrator_fun(self):
@@ -315,7 +316,7 @@ class TestTransferMechanismFunctions:
                 time_constant=1.0,
                 integrator_mode=True
             )
-            T.execute([0, 0, 0, 0]).tolist()
+            T.execute([0, 0, 0, 0])
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
 
     def test_transfer_mech_reduce_fun(self):
@@ -327,7 +328,7 @@ class TestTransferMechanismFunctions:
                 time_constant=1.0,
                 integrator_mode=True
             )
-            T.execute([0, 0, 0, 0]).tolist()
+            T.execute([0, 0, 0, 0])
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
 
 
@@ -341,10 +342,10 @@ class TestTransferMechanismTimeConstant:
             time_constant=0.8,
             integrator_mode=True
         )
-        val = T.execute([1, 1, 1, 1]).tolist()
-        assert val == [[0.8, 0.8, 0.8, 0.8]]
-        val = T.execute([1, 1, 1, 1]).tolist()
-        assert val == [[0.96, 0.96, 0.96, 0.96]]
+        val = T.execute([1, 1, 1, 1])
+        assert np.allclose(val, [[0.8, 0.8, 0.8, 0.8]])
+        val = T.execute([1, 1, 1, 1])
+        assert np.allclose(val, [[0.96, 0.96, 0.96, 0.96]])
 
     def test_transfer_mech_time_constant_1_0(self):
         T = TransferMechanism(
@@ -354,8 +355,8 @@ class TestTransferMechanismTimeConstant:
             time_constant=1.0,
             integrator_mode=True
         )
-        val = T.execute([1, 1, 1, 1]).tolist()
-        assert val == [[1.0, 1.0, 1.0, 1.0]]
+        val = T.execute([1, 1, 1, 1])
+        assert np.allclose(val, [[1.0, 1.0, 1.0, 1.0]])
 
     def test_transfer_mech_time_constant_0_0(self):
         T = TransferMechanism(
@@ -365,8 +366,8 @@ class TestTransferMechanismTimeConstant:
             time_constant=0.0,
             integrator_mode=True
         )
-        val = T.execute([1, 1, 1, 1]).tolist()
-        assert val == [[0.0, 0.0, 0.0, 0.0]]
+        val = T.execute([1, 1, 1, 1])
+        assert np.allclose(val, [[0.0, 0.0, 0.0, 0.0]])
 
     def test_transfer_mech_time_constant_0_8_initial_0_5(self):
         T = TransferMechanism(
@@ -377,11 +378,11 @@ class TestTransferMechanismTimeConstant:
             initial_value=np.array([[.5, .5, .5, .5]]),
             integrator_mode=True
         )
-        val = T.execute([1, 1, 1, 1]).tolist()
-        assert val == [[0.9, 0.9, 0.9, 0.9]]
+        val = T.execute([1, 1, 1, 1])
+        assert np.allclose(val, [[0.9, 0.9, 0.9, 0.9]])
         T.noise = 10
-        val = T.execute([1, 2, -3, 0]).tolist()
-        assert val == [[10.98, 11.78, 7.779999999999999, 10.18]]  # testing noise changes to an integrator
+        val = T.execute([1, 2, -3, 0])
+        assert np.allclose(val, [[10.98, 11.78, 7.779999999999999, 10.18]]) # testing noise changes to an integrator
 
 
     def test_transfer_mech_time_constant_0_8_list(self):
@@ -393,7 +394,7 @@ class TestTransferMechanismTimeConstant:
                 time_constant=[0.8, 0.8, 0.8, 0.8],
                 integrator_mode=True
             )
-            T.execute([1, 1, 1, 1]).tolist()
+            T.execute([1, 1, 1, 1])
         assert (
             "time_constant parameter" in str(error_text.value)
             and "must be a float" in str(error_text.value)
@@ -408,7 +409,7 @@ class TestTransferMechanismTimeConstant:
                 time_constant=2,
                 integrator_mode=True
             )
-            T.execute([1, 1, 1, 1]).tolist()
+            T.execute([1, 1, 1, 1])
         assert (
             "time_constant parameter" in str(error_text.value)
             and "must be a float between 0 and 1" in str(error_text.value)
@@ -423,7 +424,7 @@ class TestTransferMechanismTimeConstant:
                 time_constant=1,
                 integrator_mode=True
             )
-            T.execute([1, 1, 1, 1]).tolist()
+            T.execute([1, 1, 1, 1])
         assert (
             "time_constant parameter" in str(error_text.value)
             and "must be a float between 0 and 1" in str(error_text.value)
@@ -438,7 +439,7 @@ class TestTransferMechanismTimeConstant:
                 time_constant=0,
                 integrator_mode=True
             )
-            T.execute([1, 1, 1, 1]).tolist()
+            T.execute([1, 1, 1, 1])
         assert (
             "time_constant parameter" in str(error_text.value)
             and "must be a float between 0 and 1" in str(error_text.value)
@@ -460,8 +461,8 @@ class TestTransferMechanismSize:
             name='T',
             size=4
         )
-        val = T.execute([10, 10, 10, 10]).tolist()
-        assert val == [[10.0, 10.0, 10.0, 10.0]]
+        val = T.execute([10, 10, 10, 10])
+        assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 3
@@ -472,8 +473,8 @@ class TestTransferMechanismSize:
             name='T',
             size=4
         )
-        val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
-        assert val == [[10.0, 10.0, 10.0, 10.0]]
+        val = T.execute([10.0, 10.0, 10.0, 10.0])
+        assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 4
@@ -485,8 +486,8 @@ class TestTransferMechanismSize:
     #         size=4,
     #         integrator_mode=True
     #     )
-    #     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
-    #     assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
+    #     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()])
+    #     assert np.allclose(val, [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
 
     # ------------------------------------------------------------------------------------------------
     # TEST 5
@@ -509,8 +510,8 @@ class TestTransferMechanismSize:
             name='T',
             size=4.0
         )
-        val = T.execute([10, 10, 10, 10]).tolist()
-        assert val == [[10.0, 10.0, 10.0, 10.0]]
+        val = T.execute([10, 10, 10, 10])
+        assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 7
@@ -521,8 +522,8 @@ class TestTransferMechanismSize:
             name='T',
             size=4.0
         )
-        val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
-        assert val == [[10.0, 10.0, 10.0, 10.0]]
+        val = T.execute([10.0, 10.0, 10.0, 10.0])
+        assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 8
@@ -534,8 +535,8 @@ class TestTransferMechanismSize:
     #         size=4.0,
     #         integrator_mode=True
     #     )
-    #     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
-    #     assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
+    #     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()])
+    #     assert np.allclose(val, [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
 
     # ------------------------------------------------------------------------------------------------
     # TEST 9
@@ -605,8 +606,8 @@ class TestTransferMechanismSize:
             size=2
         )
         assert len(T.instance_defaults.variable) == 1 and (T.instance_defaults.variable[0] == [1, 2, 3, 4]).all()
-        val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
-        assert val == [[10.0, 10.0, 10.0, 10.0]]
+        val = T.execute([10.0, 10.0, 10.0, 10.0])
+        assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 15
@@ -619,8 +620,8 @@ class TestTransferMechanismSize:
             size=[2, 3, 4]
         )
         assert len(T.instance_defaults.variable) == 1 and (T.instance_defaults.variable[0] == [1, 2, 3, 4]).all()
-        val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
-        assert val == [[10.0, 10.0, 10.0, 10.0]]
+        val = T.execute([10.0, 10.0, 10.0, 10.0])
+        assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 16
@@ -723,7 +724,7 @@ class TestTransferMechanismMultipleInputStates:
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
         expected = [[3.0, 5.0], [7.0, 9.0]]
-
+        print(T.output_states)
         assert np.allclose(val, expected)
 
     def test_transfer_mech_2d_variable_noise(self):
@@ -735,5 +736,5 @@ class TestTransferMechanismMultipleInputStates:
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
         expected = [[3.0, 5.0], [7.0, 9.0]]
-        print(val)
+
         # assert np.allclose(val, expected)
