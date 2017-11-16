@@ -663,7 +663,7 @@ def get_value_from_array(array):
     :return:
     """
 
-def random_matrix(sender, receiver, range=1, offset=0):
+def random_matrix(sender, receiver, clip=1, offset=0):
     """Generate a random matrix
 
     Calls np.random.rand to generate a 2d np.array with random values.
@@ -686,7 +686,7 @@ def random_matrix(sender, receiver, range=1, offset=0):
     -------
     2d np.array
     """
-    return (range * np.random.rand(sender, receiver)) + offset
+    return (clip * np.random.rand(sender, receiver)) + offset
 
 def underscore_to_camelCase(item):
     item = item[1:]
