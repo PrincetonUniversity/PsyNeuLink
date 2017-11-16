@@ -3,9 +3,10 @@ import pytest
 
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.projections.projection import ProjectionError
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.state import StateError
+from psyneulink.components.states.inputstate import InputState
 from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, VARIABLE
 
 mismatches_default_variable_error_text = 'not compatible with the specified default variable'
@@ -140,8 +141,8 @@ class TestInputStateSpec:
         )
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0], [0]]))
         assert len(T.input_states) == 2
-        assert T.input_states.names[0] == 'INPUT_STATE-0'
-        assert T.input_states.names[1] == 'INPUT_STATE-1'
+        assert T.input_states.names[0] == 'InputState-0'
+        assert T.input_states.names[1] == 'InputState-1'
         for input_state in T.input_states:
             for projection in input_state.path_afferents:
                 assert projection.sender.owner is R1
@@ -159,7 +160,7 @@ class TestInputStateSpec:
         )
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0]]))
         assert len(T.input_states) == 1
-        assert T.input_states.names[0] == 'INPUT_STATE-0'
+        assert T.input_states.names[0] == 'InputState-0'
         T.input_state.path_afferents[0].sender == R1.output_state
         T.execute()
 
@@ -417,7 +418,7 @@ class TestInputStateSpec:
     # ------------------------------------------------------------------------------------------------
     # TEST 27
 
-    def test_inputstate_object(self):
+    def test_add_input_state_belonging_to_another_mech_error(self):
         with pytest.raises(StateError) as error_text:
             m = TransferMechanism(default_variable=[0, 0, 0])
             i = InputState(owner=m, variable=[0, 0, 0])
@@ -431,11 +432,11 @@ class TestInputStateSpec:
         name = 'target'
         with pytest.raises(StateError) as error_text:
             m = TransferMechanism(default_variable=[0, 0, 0])
-            i = InputState(owner=m, variable=[0, 0, 0])
-            TransferMechanism(name=name, input_states=[i])
+            i = InputState(owner=m, name=name, variable=[0, 0, 0])
+            TransferMechanism(input_states=[i])
         assert (
             belongs_to_another_mechanism_error_text in str(error_text.value)
-            and 'Attempt to assign a State to {0}'.format(name) in str(error_text.value)
+            and 'Attempt to assign a State ({})'.format(name) in str(error_text.value)
         )
 
     # ------------------------------------------------------------------------------------------------
@@ -544,3 +545,76 @@ class TestInputStateSpec:
             p = MappingProjection()
             TransferMechanism(default_variable=[0, 0], input_states=[{VARIABLE: [0, 0, 0], PROJECTIONS: [p]}])
         assert mismatches_default_variable_error_text in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 26
+
+    def test_add_input_state_with_projection_in_mech_constructor(self):
+        T1 = TransferMechanism()
+        I = InputState(projections=[T1])
+        T2 = TransferMechanism(input_states=[I])
+        assert T2.input_states[0].path_afferents[0].sender.owner is T1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 27
+
+    def test_add_input_state_with_projection_using_add_states(self):
+        T1 = TransferMechanism()
+        I = InputState(projections=[T1])
+        T2 = TransferMechanism()
+        T2.add_states([I])
+        assert T2.input_states[1].path_afferents[0].sender.owner is T1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 28
+
+    def test_add_input_state_with_projection_by_assigning_owner(self):
+        T1 = TransferMechanism()
+        T2 = TransferMechanism()
+        InputState(owner=T2, projections=[T1])
+        assert T2.input_states[1].path_afferents[0].sender.owner is T1
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 29
+
+    def test_add_input_state_with_projection_by_assigning_owner_error(self):
+        with pytest.raises(StateError) as error_text:
+            S1 = TransferMechanism()
+            S2 = TransferMechanism()
+            TransferMechanism(name='T',
+                              input_states=[{'MY INPUT 1':[S1],
+                                             'MY INPUT 2':[S2]}])
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 30
+
+    def test_use_set_to_specify_projections_for_input_state_error(self):
+        with pytest.raises(ProjectionError) as error_text:
+            T1 = TransferMechanism()
+            T2 = TransferMechanism()
+            TransferMechanism(input_states=[{'MY STATE':{T1, T2}}])
+        assert ('Connection specification for InputState of' in str(error_text.value)
+                and 'is a set' in str(error_text.value)
+                and 'it should be a list' in str(error_text.value))
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 31
+
+    def test_multiple_states_specified_using_STATE_NAME_format_error(self):
+        with pytest.raises(StateError) as error_text:
+            # Don't bother to specify anything as the value for each entry in the dict, since doesn't get there
+            TransferMechanism(input_states=[{'MY STATE A':{},
+                                             'MY STATE B':{}}])
+        assert ('There is more than one entry of the InputState specification dictionary' in str(error_text.value)
+                and'that is not a keyword; there should be only one (used to name the State, with a list of '
+                   'Projection specifications' in str(error_text.value))
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 32
+
+    def test_default_name_and_projections_listing_for_input_state_in_constructor(self):
+        T1 = TransferMechanism()
+        my_input_state = InputState(projections=[T1])
+        T2 = TransferMechanism(input_states=[my_input_state])
+        assert T2.input_states[0].name == 'InputState-0'
+        assert T2.input_states[0].projections[0].sender.name == 'RESULT'

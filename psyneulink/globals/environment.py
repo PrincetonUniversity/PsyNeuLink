@@ -208,7 +208,7 @@ InputState for each `TRIAL`.
 Initial Values
 ~~~~~~~~~~~~~~
 
-Any Mechanism that is the `sender <Projection.Projection.sender>` of a Projection that closes a loop in a Process or
+Any Mechanism that is the `sender <Projection_Base.sender>` of a Projection that closes a loop in a Process or
 System, and that is not an `ORIGIN` Mechanism, is designated as `INITIALIZE_CYCLE`. An initial value can be assigned
 to such Mechanisms, that will be used to initialize them when the Process or System is first run.  These values are
 specified in the **initial_values** argument of :keyword:`run`, as a dictionary. The key for each entry must
@@ -811,9 +811,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                        projection in target.input_states[SAMPLE].path_afferents
                        for mech in stimuli.keys()):
                     raise RunError("Entry for {} is missing from specification of targets for run of {}".
-                                   format(target.input_states[SAMPLE].
-                                          afferents[0].sender.owner.name,
-                                          object.name))
+                                   format(target.input_states[SAMPLE].path_afferents[0].sender.owner.name, object.name))
 
         # FIX: COULD JUST IGNORE THOSE, OR WARN ABOUT THEM IF VERBOSE?
 

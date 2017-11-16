@@ -15,9 +15,9 @@ Overview
 --------
 
 PathwayProjections allow information to be passed between mechanisms.  A PathwayProjection takes its input from the
-`OutputState` of one Mechanism (its `sender <Projection.sender>`), and does whatever conversion is needed to transmit
-that information to the `InputState` of another Mechanism (its `receiver <Projection.receiver>`).  The primary
-type of PathwayProjection is a `MappingProjection`.
+`OutputState` of one Mechanism (its `sender <Projection_Base.sender>`), and does whatever conversion is needed to
+transmit that information to the `InputState` of another Mechanism (its `receiver <Projection_Base.receiver>`).  The
+primary type of PathwayProjection is a `MappingProjection`.
 
 .. _Projection_Creation:
 
@@ -25,8 +25,9 @@ Creating a PathwayProjection
 ---------------------------------
 
 A PathwayProjection can be created on its own, by calling the constructor for the desired type of projection.  More
-commonly, however, projections are either specified `in context <Projection_In_Context_Specification>`, or
-are `created automatically <Projection_Automatic_Creation>`, as described below.
+commonly, however, projections are either specified in the context of creating a State to or from which they project
+ (see `Projection_Specification`, and `State_Projections` in State), or are `created automatically
+ <Projection_Automatic_Creation>`, as described below.
 
 
 
@@ -45,7 +46,7 @@ Execution
 """
 
 from psyneulink.components.projections.projection import Projection_Base
-from psyneulink.globals.keywords import PATHWAY_PROJECTION, NAME, SENDER, RECEIVER
+from psyneulink.globals.keywords import PATHWAY_PROJECTION, NAME, SENDER, RECEIVER, CONTEXT
 from psyneulink.components.component import InitStatus
 
 __all__ = []
