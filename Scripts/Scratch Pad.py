@@ -949,15 +949,36 @@ class ScratchPadError(Exception):
 #region TEST Naming
 # print ('TEST Naming')
 
-T = pnl.TransferMechanism()
-P1 = pnl.Process(name='MY PROCESS', pathway=[T])
-P2 = pnl.Process(name='MY PROCESS', pathway=[T])
-assert P1.name == 'MY PROCESS'
-assert P2.name == 'MY PROCESS-1'
-S1 = pnl.System(name='MY SYSTEM', processes=[P1])
-S2 = pnl.System(name='MY SYSTEM', processes=[P1])
-assert S1.name == 'MY SYSTEM'
-assert S2.name == 'MY SYSTEM-1'
+# T1 = pnl.TransferMechanism(output_states=['MY OUTPUT_STATE',[0]])
+# T1.output_states[0].name == 'OUTPUT_STATE'
+# T1.output_states[1].name == 'OutputState-0'
+# # O = pnl.OutputState(owner=T1)
+# O = pnl.OutputState()
+# T1.add_states([O])
+# T1.output_states[2].name == 'OutputState-1'
+
+D1 = pnl.DDM(name='D1')
+D2 = pnl.DDM(name='D2')
+
+# ControlSignal with one ControlProjection
+C1 = pnl.ControlMechanism(control_signals=[D1.parameter_states[pnl.DRIFT_RATE]])
+assert C1.control_signals[0].name == 'D1[drift_rate] ControlSignal'
+assert C1.control_signals[0].efferents[0].name == 'ControlProjection for drift_rate of D1'
+
+# ControlSignal with two ControlProjection to two parameters of same Mechanism
+C2 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_states[pnl.DRIFT_RATE],
+                                                             D1.parameter_states[pnl.THRESHOLD]]}])
+assert C2.control_signals[0].name == 'D1[drift_rate, threshold] ControlSignal'
+assert C2.control_signals[0].efferents[0].name == 'ControlProjection for drift_rate of D1'
+assert C2.control_signals[0].efferents[1].name == 'ControlProjection for threshold of D1'
+
+# ControlSignal with two ControlProjection to two parameters of different Mechanisms
+C3 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_states[pnl.DRIFT_RATE],
+                                                             D2.parameter_states[pnl.DRIFT_RATE]]}])
+assert C3.control_signals[0].name == 'ControlSignal-0 divergent ControlSignal'
+assert C3.control_signals[0].efferents[0].name == 'ControlProjection for drift_rate of D1'
+assert C3.control_signals[0].efferents[1].name == 'ControlProjection for drift_rate of D2'
+
 
 
 #endregion

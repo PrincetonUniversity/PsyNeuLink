@@ -327,12 +327,12 @@ class ModulatorySignal(OutputState):
 
         * one `ModulatoryProjection` -- the following template is used:
           "<target Mechanism name> <target State name> <ModulatorySignal type name>"
-          (for example, ``'Decision drift_rate ControlSignal'``, or ``'Input Layer InputState-0 GatingSignal'``);
+          (for example, ``'Decision[drift_rate] ControlSignal'``, or ``'Input Layer[InputState-0] GatingSignal'``);
 
         * multiple ModulatoryProjections, all to States of the same Mechanism -- the following template is used:
           "<target Mechanism name> (<target State name>,...) <ModulatorySignal type name>"
           (for example, ``Decision (drift_rate, threshold) ControlSignal``, or
-          ``'Input Layer (InputState-0, InputState-1) GatingSignal'``);
+          ``'Input Layer[InputState-0, InputState-1] GatingSignal'``);
 
         * multiple ModulatoryProjections to States of different Mechanisms -- the following template is used:
           "<owner Mechanism's name> divergent <ModulatorySignal type name>"
@@ -454,7 +454,7 @@ class ModulatorySignal(OutputState):
             receiver_owner_name = receiver.owner.name
             receiver_names.append(receiver_name)
             receiver_owner_names.append(receiver_owner_name)
-            receiver_owner_receiver_names.append("{} {}".format(receiver_owner_name, receiver_name))
+            receiver_owner_receiver_names.append("{}[{}]".format(receiver_owner_name, receiver_name))
 
         # Only one ModulatoryProjection: "<target mech> <State.name> <ModulatorySignal>"
         # (e.g., "Decision drift_rate ControlSignal", or "Input Layer InputState-0 GatingSignal")
@@ -465,7 +465,7 @@ class ModulatorySignal(OutputState):
         # (e.g., "Decision (drift_rate, threshold) ControlSignal" or
         #        "InputLayer (InputState-0, InputState-0) ControlSignal")
         elif all(name is receiver_owner_names[0] for name in receiver_owner_names):
-            default_name = "{} ({}) {}".format(receiver_owner_names[0], ", ".join(receiver_names), class_name)
+            default_name = "{}[{}] {}".format(receiver_owner_names[0], ", ".join(receiver_names), class_name)
 
         # Mult ModulatoryProjections for diff mechs: "<owner mech> divergent <ModulatorySignal>"
         # (e.g., "EVC divergent ControlSignal", or "GatingMechanism divergent GatingSignal")

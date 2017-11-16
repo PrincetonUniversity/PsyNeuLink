@@ -82,6 +82,7 @@ class TestNaming:
     # TEST 7
     # Test that default ModulatoryProjections in deferred init are assigned indexed names
 
+    def test_deferred_init_default_ModulatoryProjection_names(self):
         LP1 = pnl.LearningProjection()
         LP2 = pnl.LearningProjection()
         assert LP1.name == 'Deferred Init LearningProjection'
@@ -100,6 +101,8 @@ class TestNaming:
     # ------------------------------------------------------------------------------------------------
     # TEST 8
     # Test that objects of different types can have the same name
+
+    def test_different_object_types_with_same_names(self):
         T1 = pnl.TransferMechanism(name='MY NAME')
         T2 = pnl.TransferMechanism(name='MY NAME')
         P1 = pnl.MappingProjection(sender=T1, receiver=T2, name='MY NAME')
@@ -110,6 +113,7 @@ class TestNaming:
     # TEST 9
     # Test that InputStates and Projections constructed on their own and assigned are properly named
 
+    def test_input_state_and_assigned_projection_names(self):
         T1 = pnl.TransferMechanism(name='T1')
         T2 = pnl.TransferMechanism(name='T2', input_states=[T1])
         I1 = pnl.InputState(owner=T2)
@@ -122,3 +126,66 @@ class TestNaming:
                'MappingProjection from T1[RESULT] to T2[InputState-0]'
         assert T2.input_states[2].path_afferents[0].name == \
                'MappingProjection from T1[RESULT] to T2[InputState-2]'
+
+    # # ------------------------------------------------------------------------------------------------
+    # # TEST 10
+    # # Test that OutputStates are properly named
+    #
+    #     T1 = pnl.TransferMechanism(output_states=['MY OUTPUT_STATE',[0]])
+    #     T1.output_states[0].name == 'OUTPUT_STATE'
+    #     T1.output_states[1].name == 'OutputState-0'
+    #     O = pnl.OutputState(owner=T1)
+    #     T1.output_states[2].name == 'OutputState-1'
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 11
+    # Test that ControlSignals and ControlProjections are properly named
+
+    def test_control_signal_and_control_projection_names(self):
+        D1 = pnl.DDM(name='D1')
+        D2 = pnl.DDM(name='D2')
+
+        # ControlSignal with one ControlProjection
+        C1 = pnl.ControlMechanism(control_signals=[D1.parameter_states[pnl.DRIFT_RATE]])
+        assert C1.control_signals[0].name == 'D1[drift_rate] ControlSignal'
+        assert C1.control_signals[0].efferents[0].name == 'ControlProjection for drift_rate of D1'
+
+        # ControlSignal with two ControlProjection to two parameters of same Mechanism
+        C2 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_states[pnl.DRIFT_RATE],
+                                                                     D1.parameter_states[pnl.THRESHOLD]]}])
+        assert C2.control_signals[0].name == 'D1[drift_rate, threshold] ControlSignal'
+        assert C2.control_signals[0].efferents[0].name == 'ControlProjection for drift_rate of D1'
+        assert C2.control_signals[0].efferents[1].name == 'ControlProjection for threshold of D1'
+
+        # ControlSignal with two ControlProjection to two parameters of different Mechanisms
+        C3 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_states[pnl.DRIFT_RATE],
+                                                                     D2.parameter_states[pnl.DRIFT_RATE]]}])
+        assert C3.control_signals[0].name == 'ControlSignal-0 divergent ControlSignal'
+        assert C3.control_signals[0].efferents[0].name == 'ControlProjection for drift_rate of D1'
+        assert C3.control_signals[0].efferents[1].name == 'ControlProjection for drift_rate of D2'
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 12
+    # Test that GatingSignals and GatingProjections are properly named
+
+    def test_gating_signal_and_gating_projection_names(self):
+        T3 = pnl.TransferMechanism(name='T3')
+        T4 = pnl.TransferMechanism(name='T4', input_states=['First State','Second State'])
+
+        # GatingSignal with one GatingProjection
+        G1 = pnl.GatingMechanism(gating_signals=[T3])
+        assert G1.gating_signals[0].name == 'T3[InputState-0] GatingSignal'
+        assert G1.gating_signals[0].efferents[0].name == 'GatingProjection for InputState-0 of T3'
+
+        # GatingSignal with two GatingProjections to two States of same Mechanism
+        G2 = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS:[T4.input_states[0], T4.input_states[1]]}])
+        assert G2.gating_signals[0].name == 'T4[First State, Second State] GatingSignal'
+        assert G2.gating_signals[0].efferents[0].name == 'GatingProjection for First State of T4'
+        assert G2.gating_signals[0].efferents[1].name == 'GatingProjection for Second State of T4'
+
+        # GatingSignal with two GatingProjections to two States of different Mechanisms
+        G3 = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS:[T3, T4]}])
+        assert G3.gating_signals[0].name == 'GatingSignal-0 divergent GatingSignal'
+        assert G3.gating_signals[0].efferents[0].name == 'GatingProjection for InputState-0 of T3'
+        assert G3.gating_signals[0].efferents[1].name == 'GatingProjection for First State of T4'
+
