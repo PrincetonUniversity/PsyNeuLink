@@ -132,7 +132,8 @@ added to the list (that is, it will *not* replace ones that already exist).
 
 .. _InputState_Forms_of_Specification:
 
-**Forms of Specification**
+Forms of Specification
+^^^^^^^^^^^^^^^^^^^^^^
 
 InputStates can be specified in a variety of ways, that fall into three broad categories:  specifying an InputState
 directly; by an `OutputState` or `Projection` that should project to it; or by using a `State specification dictionary
@@ -322,13 +323,6 @@ to, and that can be used to `customize, the InputState <InputState_Customization
   compatible with the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState is
   assigned (see `above <InputState_Variable_and_Value>` and `Mechanism_InputState_Specification`).
 
-.. _InputState_Weights_And_Exponents:
-
-* `weight <InputState.weight>` and `exponent <InputState.exponent>` -- these can be used by the Mechanism to which the
-  InputState belongs when that combines the `value <InputState.value>`\\s of its States (e.g., an ObjectiveMechanism
-  uses the weights and exponents assigned to its InputStates to determine how the values it monitors are combined by
-  its `function <ObjectiveMechanism>`).  The value of each must be an integer or float, and the default is 1 for both.
-
 .. _InputState_Function:
 
 * `function <InputState.function>` -- aggregates the `value <Projection_Base.value>` of all of the
@@ -348,6 +342,12 @@ to, and that can be used to `customize, the InputState <InputState_Customization
   item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the `InputState has been assigned
   <Mechanism_Base.InputState>` (see `above <InputState_Variable_and_Value>` and `Mechanism_InputState_Specification`).
 
+.. _InputState_Weights_And_Exponents:
+
+* `weight <InputState.weight>` and `exponent <InputState.exponent>` -- these can be used by the Mechanism to which the
+  InputState belongs when that combines the `value <InputState.value>`\\s of its States (e.g., an ObjectiveMechanism
+  uses the weights and exponents assigned to its InputStates to determine how the values it monitors are combined by
+  its `function <ObjectiveMechanism>`).  The value of each must be an integer or float, and the default is 1 for both.
 
 .. _InputState_Execution:
 
