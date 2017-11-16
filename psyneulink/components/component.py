@@ -670,10 +670,30 @@ class Component(object):
     componentType = None
 
     class Defaults(object):
+        def _attributes(obj):
+            return {k: getattr(obj, k) for k in dir(obj) if k[:2]+k[-2:] != '____' and not callable(getattr(obj, k))}
+
         @classmethod
         def values(cls):
-            vardict = {k: getattr(cls, k) for k in dir(cls) if k[:2]+k[-2:] != '____' and not callable(getattr(cls, k))}
-            return vardict
+            '''
+                Returns
+                -------
+                A dictionary consisting of the non-dunder and non-function attributes of **obj**
+            '''
+            return cls._attributes(cls)
+
+        def _show(obj):
+            vals = obj.values()
+            return '(\n\t{0}\n)'.format('\n\t'.join(['{0} = {1},'.format(k, vals[k]) for k in vals]))
+
+        @classmethod
+        def show(cls):
+            '''
+                Returns
+                -------
+                A pretty string version of the non-dunder and non-function attributes of **obj**
+            '''
+            return cls._show(cls)
 
     class ClassDefaults(Defaults):
         exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
@@ -683,6 +703,18 @@ class Component(object):
         def __init__(self, **kwargs):
             for param in kwargs:
                 setattr(self, param, kwargs[param])
+
+        def values(self):
+            return self._attributes()
+
+        def show(self):
+            return self._show()
+
+        def __repr__(self):
+            return '{0} :\n{1}'.format(super().__repr__(), self.__str__())
+
+        def __str__(self):
+            return self.show()
 
     initMethod = INIT_FULL_EXECUTE_METHOD
 
