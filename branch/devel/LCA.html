@@ -92,7 +92,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink      </a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
@@ -255,7 +255,7 @@ For an LCA with more than two elements, <code class="xref any docutils literal">
 <dt><em>ENTROPY</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>the entropy of the result, which is calculated using the <code class="xref any docutils literal"><span class="pre">Stability</span>
 <span class="pre">Function</span></code> with <code class="docutils literal"><span class="pre">ENTROPY</span></code> metric (Note:
-this is only present if the Mechanism’s <a class="reference internal" href="Function.html#psyneulink.components.functions.function.ConstantIntegrator.function" title="psyneulink.components.functions.function.ConstantIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> is bounded between
+this is only present if the Mechanism’s <a class="reference internal" href="Function.html#psyneulink.components.functions.function.BogaczEtAl.function" title="psyneulink.components.functions.function.BogaczEtAl.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> is bounded between
 0 and 1)</dd>
 </dl>
 <dl class="docutils">
@@ -301,7 +301,7 @@ or a custom function.</li>
 <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.lca.LCA.matrix" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.transfer.lca.LCA.recurrent_projection" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>.</li>
 <li><strong>decay</strong> (<em>number : default 1.0</em>) – specifies the amount by which to decrement its <code class="xref any docutils literal"><span class="pre">previous_input</span></code>
 in each execution of the Mechanism.</li>
-<li><strong>initial_value</strong> (<a class="reference internal" href="Process.html#psyneulink.components.process.Process.value" title="psyneulink.components.process.Process.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the starting value for time-averaged input (only relevant if
+<li><strong>initial_value</strong> (<a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.value" title="psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the starting value for time-averaged input (only relevant if
 <code class="xref any docutils literal"><span class="pre">beta</span></code> is not 1.0).</li>
 <li><strong>noise</strong> (<em>float</em><em> or </em><em>function : default 0.0</em>) – a stochastically-sampled value added to the result of the <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
 if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
@@ -316,15 +316,11 @@ to True:</p>
 the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
 any element of the result that exceeds the specified minimum or maximum value is set to the value of
 <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.range" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> that it exceeds.</li>
-<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
 the dictionary override any assigned to those parameters in arguments of the constructor.</li>
-<li><strong>name</strong> (<em>str : default TransferMechanism-&lt;index&gt;</em>) – a string used for the name of the Mechanism.
-If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : Mechanism.classPreferences</em><em>]</em>) – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for Mechanism.
-If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the LCA Mechanism.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Mechanism.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the LCA Mechanism; see <code class="xref any docutils literal"><span class="pre">prefs</span></code> for details.</li>
 <li><strong>context</strong> (<em>str : default ''componentType+INITIALIZNG''</em>) – string used for contextualization of instantiation, hierarchical calls, executions, etc.</li>
 </ul>
 </td>
@@ -460,19 +456,15 @@ and the average of the value of all its other elements;</li>
 <dl class="attribute">
 <dt id="psyneulink.library.mechanisms.processing.transfer.lca.LCA.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.lca.LCA.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default TransferMechanism-&lt;index&gt;</em> – the name of the Mechanism.
-Specified in the <strong>name</strong> argument of the constructor for the projection;
-if not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+<dd><p><em>str</em> – the name of the LCA Mechanism; if it is not specified in the <strong>name</strong> argument of the constructor, a
+default is assigned by MechanismRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.library.mechanisms.processing.transfer.lca.LCA.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.transfer.lca.LCA.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for Mechanism.
-Specified in the <strong>prefs</strong> argument of the constructor for the Mechanism;
-if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the LCA Mechanism; if it is not specified in the <strong>prefs</strong> argument of the
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
 <table class="docutils field-list" frame="void" rules="none">

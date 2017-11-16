@@ -92,7 +92,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink      </a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
@@ -393,19 +393,15 @@ the context in which the Projection is used, or its initialization will be <a cl
 before combining it with others (see <a class="reference internal" href="#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.weight" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> for additional details).</li>
 <li><strong>exponent</strong> (<em>number : default None</em>) – specifies the value by which to exponentiate the MappingProjection’s <a class="reference internal" href="#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.value" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
 before combining it with others (see <a class="reference internal" href="#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.exponent" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> for additional details).</li>
-<li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="Function.html#psyneulink.components.functions.function.ConstantIntegrator.function" title="psyneulink.components.functions.function.ConstantIntegrator.function"><em>function</em></a><em> or </em><em>keyword : default DEFAULT_MATRIX</em>) – the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination" title="psyneulink.components.functions.function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform the
+<li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="Function.html#psyneulink.components.functions.function.BogaczEtAl.function" title="psyneulink.components.functions.function.BogaczEtAl.function"><em>function</em></a><em> or </em><em>keyword : default DEFAULT_MATRIX</em>) – the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination" title="psyneulink.components.functions.function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform the
 value of the <a class="reference internal" href="#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> into a form suitable for the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 of its <a class="reference internal" href="#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</li>
-<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
 the Projection’s default assignment (<a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination" title="psyneulink.components.functions.function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>).  Values specified for parameters in the dictionary
 override any assigned to those parameters in arguments of the constructor.</li>
-<li><strong>name</strong> (<em>str : default MappingProjection-&lt;index&gt;</em>) – a string used for the name of the MappingProjection.
-If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">ProjectionRegistry</span></code>
-(see <code class="xref any docutils literal"><span class="pre">Registry</span></code> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : Projection.classPreferences</em><em>]</em>) – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the MappingProjection.
-If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
+<li><strong>name</strong> (str : default see MappingProjection <a class="reference internal" href="#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.name" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) – specifies the name of the MappingProjection.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default State.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the MappingProjection; see <a class="reference internal" href="#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.prefs" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details.</li>
 </ul>
 </td>
 </tr>
@@ -472,19 +468,20 @@ determine that InputState’s <a class="reference internal" href="InputState.htm
 <dl class="attribute">
 <dt id="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default MappingProjection-&lt;index&gt;</em> – the name of the MappingProjection.
-Specified in the <strong>name</strong> argument of the constructor for the Projection;
-if not is specified, a default is assigned by ProjectionRegistry
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+<dd><p><em>str</em> – the name of the MappingProjection. If the MappingProjection’s <a class="reference internal" href="Projection.html#projection-deferred-initialization"><span class="std std-ref">initialization has been deferred</span></a>, it is assigned a temporary name (indicating its deferred initialization
+status) until initialization is completed, at which time it is assigned its designated name.  If that is the
+name of an existing MappingProjection, it is appended with an indexed suffix, incremented for each
+MappingProjection with the same base name (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a>). If the name is not  specified in the <strong>name</strong>
+argument of its constructor, a default name is assigned using the following format:
+‘MappingProjection from &lt;sender’s name&gt; to &lt;receiver’s name&gt;’
+(for example, <code class="docutils literal"><span class="pre">'MappingProjection</span> <span class="pre">from</span> <span class="pre">my_mech_1</span> <span class="pre">to</span> <span class="pre">my_mech2'</span></code>).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for Projection.
-Specified in the <strong>prefs</strong> argument of the constructor for the Projection;
-if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the MappingProjection; if it is not specified in the <strong>prefs</strong> argument of the
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
 </dd></dl>

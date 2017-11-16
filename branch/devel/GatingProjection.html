@@ -92,7 +92,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink      </a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
@@ -209,7 +209,7 @@ specified, its initialization is <a class="reference internal" href="#gatingproj
 <span id="gatingprojection-deferred-initialization"></span><h3>Deferred Initialization<a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
 <p>When a GatingProjection is created, its full initialization is <a class="reference internal" href="Component.html#component-deferred-init"><span class="std std-ref">deferred</span></a> until its
 <a class="reference internal" href="ControlProjection.html#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.sender" title="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="ControlProjection.html#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.receiver" title="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been fully specified.  This allows
-a GatingProjection to be created before its <a class="reference internal" href="LearningProjection.html#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.sender" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them in a
+a GatingProjection to be created before its <a class="reference internal" href="ControlProjection.html#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.sender" title="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them in a
 script), by calling its constructor without specifying its <strong>sender</strong> or <strong>receiver</strong> arguments. However, for the
 GatingProjection to be operational, initialization must be completed by calling its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code> method.  This is
 not necessary if the State(s) to be gated are specified in the <strong>gating_signals</strong> argument of a <a class="reference internal" href="GatingMechanism.html#gatingmechanism-specifying-gating"><span class="std std-ref">GatingMechanism</span></a>, in which case deferred initialization is completed automatically by the
@@ -267,16 +267,12 @@ before combining it with others (see <a class="reference internal" href="#psyneu
 <li><strong>gating_signal_params</strong> (<em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for the
 GatingProjection’s <a class="reference internal" href="ControlProjection.html#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.sender" title="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> (see <a class="reference internal" href="GatingSignal.html#gatingsignal-structure"><span class="std std-ref">Structure</span></a> for a description
 of GatingSignal parameters).</li>
-<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the GatingProjection, its <a class="reference internal" href="#psyneulink.components.projections.modulatory.gatingprojection.GatingProjection.function" title="psyneulink.components.projections.modulatory.gatingprojection.GatingProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or a custom function and its parameters.
 Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
 constructor.</li>
-<li><strong>name</strong> (<em>str : default GatingProjection-&lt;index&gt;</em>) – a string used for the name of the GatingProjection.
-If not is specified, a default is assigned by ProjectionRegistry
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : Projection.classPreferences</em><em>]</em>) – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the GatingProjection.
-If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
+<li><strong>name</strong> (str : default see ModulatoryProjection <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the GatingProjection.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Projection.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the GatingProjection; see <a class="reference internal" href="#psyneulink.components.projections.modulatory.gatingprojection.GatingProjection.prefs" title="psyneulink.components.projections.modulatory.gatingprojection.GatingProjection.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details.</li>
 </ul>
 </td>
 </tr>
@@ -350,19 +346,16 @@ or <a class="reference internal" href="OutputState.html"><span class="doc">Outpu
 <dl class="attribute">
 <dt id="psyneulink.components.projections.modulatory.gatingprojection.GatingProjection.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.components.projections.modulatory.gatingprojection.GatingProjection.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default GatingProjection-&lt;index&gt;</em> – the name of the GatingProjection.
-Specified in the <strong>name</strong> argument of the constructor for the GatingProjection;
-if not is specified, a default is assigned by ProjectionRegistry
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+<dd><p><em>str</em> – name of the GatingProjection; if it is not specified in the <strong>name</strong> argument of its constructor,
+a default name is assigned (see ModulatoryProjection <code class="xref any docutils literal"><span class="pre">name</span></code>;
+also see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions regarding duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.components.projections.modulatory.gatingprojection.GatingProjection.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.components.projections.modulatory.gatingprojection.GatingProjection.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the GatingProjection.
-Specified in the <strong>prefs</strong> argument of the constructor for the GatingProjection;
-if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the GatingProjection; if it is not specified in the <strong>prefs</strong> argument of the
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
 </dd></dl>

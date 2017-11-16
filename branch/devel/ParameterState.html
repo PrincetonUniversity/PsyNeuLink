@@ -92,7 +92,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink      </a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
@@ -258,7 +258,7 @@ keywords <em>CONTROL</em>, <em>CONTROL_PROJECTION</em>, <em>LEARNING</em>, or <a
 ParameterState, assign the parameter’s default value as the ParameterState’s <a class="reference internal" href="#psyneulink.components.states.parameterstate.ParameterState.value" title="psyneulink.components.states.parameterstate.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>,
 and assign the parameter’s name as the name of the ParameterState.  They also create and/or assign the
 corresponding ModulatorySignal and ModulatoryProjection, and assign the ParameterState as the
-ModulatoryProjection’s <code class="xref any docutils literal"><span class="pre">receiver</span></code>. If the ModulatorySignal and/or
+ModulatoryProjection’s <a class="reference internal" href="Projection.html#psyneulink.components.projections.projection.Projection_Base.receiver" title="psyneulink.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>. If the ModulatorySignal and/or
 ModulatoryProjection already exist, their value(s) must be valid one(s) for the parameter.  Note that only
 Control and Learning Modulatory components can be assigned to a ParameterState (Gating components cannot be
 used – they can only be assigned to <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> and <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>).</li>
@@ -268,7 +268,7 @@ used – they can only be assigned to <a class="reference internal" href="InputS
 (1st) item of the tuple as parameter’s <a class="reference internal" href="#parameterstate-value-assignment"><span class="std std-ref">value assignment</span></a>, and assigns the
 parameter’s name as the name of the ParameterState.  The Modulatory (2nd) item of the tuple is used as the
 ParameterState’s <a class="reference internal" href="#parameterstate-modulatory-specification"><span class="std std-ref">modulatory assignment</span></a>, and the ParameterState
-is assigned as the <code class="xref any docutils literal"><span class="pre">receiver</span></code> for the corresponding <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>.</p>
+is assigned as the <a class="reference internal" href="Projection.html#psyneulink.components.projections.projection.Projection_Base.receiver" title="psyneulink.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> for the corresponding <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Currently, the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a Component, although it can be specified as a parameter
@@ -409,42 +409,6 @@ additional details).</p>
 <em class="property">class </em><code class="descclassname">psyneulink.components.states.parameterstate.</code><code class="descname">ParameterState</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value=None                                             function=LinearCombination(operation=PRODUCT)</em>, <em>variable=None</em>, <em>size=None</em>, <em>parameter_modulation_operation=Modulation.MULTIPLY</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.states.parameterstate.ParameterState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="State.html"><span class="doc">State</span></a> that represents and possibly modifies the parameter of
 a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, or its <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> (<em>Mechanism</em><em> or </em><a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection"><em>MappingProjection</em></a>) – the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to which to which the ParameterState belongs; it must be
-specified or determinable from the context in which the ParameterState is created. The owner of a ParameterState
-for the parameter of a <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> should be specified as the Mechanism or Projection to
-which the function belongs.</li>
-<li><strong>reference_value</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – specifies the default value of the parameter for which the ParameterState is responsible.</li>
-<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – specifies the parameter’s initial value and attribute value —&nbsp;that is, the value of the attribute of the
-ParameterState’s owner or its <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> assigned to the parameter.</li>
-<li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints</em>) – <p>specifies variable as array(s) of zeros if <strong>variable</strong> is not passed as an argument;
-if <strong>variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.
-As an example, the following mechanisms are equivalent:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">T1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
-<span class="n">T2</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
-</pre></div>
-</div>
-</li>
-<li><strong>function</strong> (<em>Function</em><em> or </em><em>method : default LinearCombination</em><em>(</em><em>operation=SUM</em><em>)</em>) – specifies the function used to convert the parameter’s attribute value (same as the ParameterState’s
-<a class="reference internal" href="#psyneulink.components.states.parameterstate.ParameterState.variable" title="psyneulink.components.states.parameterstate.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) to the ParameterState’s <a class="reference internal" href="#psyneulink.components.states.parameterstate.ParameterState.value" title="psyneulink.components.states.parameterstate.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
-<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
-the ParameterState or its function, and/or a custom function and its parameters.  Values specified for
-parameters in the dictionary override any assigned to those parameters in arguments of the constructor.</li>
-<li><strong>name</strong> (<em>str : default InputState-&lt;index&gt;</em>) – a string used for the name of the InputState.
-If not is specified, a default is assigned by StateRegistry of the Mechanism to which the InputState belongs
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : State.classPreferences</em><em>]</em>) – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the InputState.
-If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
 <dl class="attribute">
 <dt id="psyneulink.components.states.parameterstate.ParameterState.owner">
 <code class="descname">owner</code><a class="headerlink" href="#psyneulink.components.states.parameterstate.ParameterState.owner" title="Permalink to this definition">¶</a></dt>
@@ -455,7 +419,7 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dt id="psyneulink.components.states.parameterstate.ParameterState.mod_afferents">
 <code class="descname">mod_afferents</code><a class="headerlink" href="#psyneulink.components.states.parameterstate.ParameterState.mod_afferents" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Optional[List[Projection]]</em> – a list of the <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that project to the ParameterState (i.e.,
-for which it is a <code class="xref any docutils literal"><span class="pre">receiver</span></code>); these can be
+for which it is a <a class="reference internal" href="Projection.html#psyneulink.components.projections.projection.Projection_Base.receiver" title="psyneulink.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>); these can be
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> and/or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a>,
 but not <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>.  The <code class="xref any docutils literal"><span class="pre">value</span></code> of each
 must match the format (number and types of elements) of the ParameterState’s
@@ -493,26 +457,20 @@ ParmeterState is responsible.  Note that this is not necessarily the same as the
 <dl class="attribute">
 <dt id="psyneulink.components.states.parameterstate.ParameterState.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.components.states.parameterstate.ParameterState.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default &lt;State subclass&gt;-&lt;index&gt;</em> – the name of the InputState.
-Specified in the <strong>name</strong> argument of the constructor for the OutputState.  If not is specified, a default is
-assigned by the StateRegistry of the Mechanism to which the OutputState belongs
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+<dd><p><em>str</em> – the name of the ParameterState; same as the name of the attribute for the Parameter to which the
+ParameterState corresponds.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Unlike other PsyNeuLink components, states’ names are “scoped” within a Mechanism, meaning that states with
-the same name are permitted in different Mechanisms.  However, they are <em>not</em> permitted in the same
-Mechanism: states within a Mechanism with the same base name are appended an index in the order of their
-creation.</p>
+<p class="last">Unlike other PsyNeuLink components, State names are “scoped” within a Mechanism, meaning that States with
+the same name are permitted in different Mechanisms.</p>
 </div>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.components.states.parameterstate.ParameterState.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.components.states.parameterstate.ParameterState.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : State.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the InputState.
-Specified in the <strong>prefs</strong> argument of the constructor for the Projection;  if it is not specified, a default is
-assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the ParameterState; if it is not specified in the <strong>prefs</strong> argument of the
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
 </dd></dl>
