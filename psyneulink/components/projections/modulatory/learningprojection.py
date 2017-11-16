@@ -292,21 +292,17 @@ class LearningProjection(ModulatoryProjection_Base):
        specifies the value by which to exponentiate the LearningProjection's `value <LearningProjection.value>`
        before combining it with others (see `exponent <LearningProjection.exponent>` for additional details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default LearningProjection-<index>
-        a string used for the name of the LearningProjection.
-        If not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see ModulatoryProjection `name <ModulatoryProjection.name>`
+        specifies the name of the LearningProjection.
 
-    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
-        the `PreferenceSet` for the LearningProjection.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Projection.classPreferences
+        specifies the `PreferenceSet` for the LearningProjection; see `prefs <LearningProjection.prefs>` for details.
 
 
     Attributes
@@ -381,17 +377,15 @@ class LearningProjection(ModulatoryProjection_Base):
        <LearningProjection_Weight_and_Exponent>` for additional details, including relationship to `learning_rate
        <LearningProjection.learning_rate>`).
 
-    name : str : default LearningProjection-<index>
-        the name of the LearningProjection.
-        Specified in the **name** argument of the constructor for the LearningProjection;
-        if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        name of the LearningProjection; if it is not specified in the **name** argument of its constructor,
+        a default name is assigned (see ModulatoryProjection `name <ModulatoryProjection.name>`;
+        also see `Naming` for conventions regarding duplicate names).
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for LearningProjection.
-        Specified in the **prefs** argument of the constructor for the LearningProjection;
-        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the LearningProjection; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 
