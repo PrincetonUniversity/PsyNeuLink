@@ -962,8 +962,9 @@ assert T1.output_states[0].name == 'MY OUTPUT_STATE'
 assert T1.output_states[1].name == 'OutputState-0'
 O = pnl.OutputState(owner=T1)
 assert T1.output_states[2].name == 'OutputState-1'
-
-
+O2 = pnl.OutputState()
+T1.add_states([O2])
+assert T1.output_states[3].name == 'OutputState-2'
 
 #endregion
 
