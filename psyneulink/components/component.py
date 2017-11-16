@@ -891,18 +891,6 @@ class Component(object):
         # Used by run to store return value of execute
         self.results = []
 
-        # ENFORCE REQUIRED CLASS DEFAULTS
-
-        # All subclasses must implement self.ClassDefaults.variable
-        # Do this here, as _validate_variable might be overridden by subclass
-        try:
-            if self.ClassDefaults.variable is NotImplemented:
-                raise ComponentError("self.ClassDefaults.variable for {} must be assigned a value or \'None\'".
-                                     format(self.componentName))
-        except AttributeError:
-            raise ComponentError("self.ClassDefaults.variable must be defined for {} or its base class".
-                                format(self.componentName))
-
         # CHECK FOR REQUIRED PARAMS
 
         # All subclasses must implement, in their paramClassDefaults, params of types specified in
