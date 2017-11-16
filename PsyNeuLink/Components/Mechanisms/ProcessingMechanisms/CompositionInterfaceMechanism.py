@@ -46,13 +46,13 @@ Class Reference
 
 import typecheck as tc
 
-from PsyNeuLink.Components.Functions.Function import Linear
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-from PsyNeuLink.Globals.Keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.components.functions.Function import Linear
+from psyneulink.components.mechanisms.Mechanism import Mechanism_Base
+from psyneulink.components.mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from psyneulink.globals.Keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
+from psyneulink.globals.preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from psyneulink.scheduling.TimeScale import TimeScale
 
 
 class CompositionInterfaceMechanism(ProcessingMechanism_Base):

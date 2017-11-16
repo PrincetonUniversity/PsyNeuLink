@@ -1,4 +1,4 @@
-from PsyNeuLink.Components.Process import *
+from psyneulink.components.Process import *
 
 # myMechanism = DDM(function=NavarroAndFuss(drift_rate=1.0,
 #                                       threshold=10.0,

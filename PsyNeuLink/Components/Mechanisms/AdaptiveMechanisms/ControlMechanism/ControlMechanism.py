@@ -300,22 +300,22 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import InitStatus
-from PsyNeuLink.Components.Functions.Function import LinearCombination, ModulationParam, _is_modulation_param
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import EXPONENT_INDEX, MONITORED_OUTPUT_STATES, ObjectiveMechanism, ObjectiveMechanismError, WEIGHT_INDEX, _parse_monitored_output_states
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.Projection import _validate_receiver
-from PsyNeuLink.Components.ShellClasses import Mechanism, System
-from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import _parse_control_signal_spec
-from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROLLED_PARAM, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, INIT__EXECUTE__METHOD_ONLY, MECHANISM, NAME, OBJECTIVE_MECHANISM, OWNER, PARAMETER_STATE, PARAMS, PRODUCT, REFERENCE_VALUE, SYSTEM
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import ContentAddressableList
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+from psyneulink.components.Component import InitStatus
+from psyneulink.components.functions.Function import LinearCombination, ModulationParam, _is_modulation_param
+from psyneulink.components.mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
+from psyneulink.components.mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
+from psyneulink.components.mechanisms.ProcessingMechanisms.ObjectiveMechanism import EXPONENT_INDEX, MONITORED_OUTPUT_STATES, ObjectiveMechanism, ObjectiveMechanismError, WEIGHT_INDEX, _parse_monitored_output_states
+from psyneulink.components.projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.projections.Projection import _validate_receiver
+from psyneulink.components.ShellClasses import Mechanism, System
+from psyneulink.components.states.modulatorysignals.ControlSignal import _parse_control_signal_spec
+from psyneulink.components.states.OutputState import OutputState
+from psyneulink.globals.Defaults import defaultControlAllocation
+from psyneulink.globals.Keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROLLED_PARAM, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, INIT__EXECUTE__METHOD_ONLY, MECHANISM, NAME, OBJECTIVE_MECHANISM, OWNER, PARAMETER_STATE, PARAMS, PRODUCT, REFERENCE_VALUE, SYSTEM
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Utilities import ContentAddressableList
+from psyneulink.scheduling.TimeScale import CentralClock, TimeScale
 
 OBJECTIVE_MECHANISM = 'objective_mechanism'
 ALLOCATION_POLICY = 'allocation_policy'
@@ -492,7 +492,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = defaultControlAllocation
 
-    from PsyNeuLink.Components.Functions.Function import Linear
+    from psyneulink.components.functions.Function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         OBJECTIVE_MECHANISM: None,
@@ -609,7 +609,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                    ObjectiveMechanism.componentName))
 
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
-            from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
+            from psyneulink.components.States.ModulatorySignals.ControlSignal import ControlSignal
             # # MODIFIED 9/17/17 OLD:
             # if not isinstance(target_set[CONTROL_SIGNALS], (list, UserList)):
             #     raise ControlMechanismError("{} arg of {} must be list or ContentAddressableList".
@@ -717,9 +717,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def _instantiate_output_states(self, context=None):
 
         # Create registry for GatingSignals (to manage names)
-        from PsyNeuLink.Globals.Registry import register_category
-        from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-        from PsyNeuLink.Components.States.State import State_Base
+        from psyneulink.globals.Registry import register_category
+        from psyneulink.components.states.modulatorysignals.ControlSignal import ControlSignal
+        from psyneulink.components.states.State import State_Base
         register_category(entry=ControlSignal,
                           base_class=State_Base,
                           registry=self._stateRegistry,
@@ -770,9 +770,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         Returns ControlSignal (OutputState)
         """
-        from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-        # from PsyNeuLink.Components.States.ParameterState import _get_parameter_state
-        # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from psyneulink.components.states.modulatorysignals.ControlSignal import ControlSignal
+        # from psyneulink.components.States.ParameterState import _get_parameter_state
+        # from psyneulink.components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 
         # EXTEND allocation_policy TO ACCOMMODATE NEW ControlSignal -------------------------------------------------
         #        also used to determine constraint on ControlSignal value
@@ -845,8 +845,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         else:
             control_signal_name = default_name
 
-            from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-            from PsyNeuLink.Components.States.State import _instantiate_state
+            from psyneulink.components.States.ModulatorySignals.ControlSignal import ControlSignal
+            from psyneulink.components.States.State import _instantiate_state
 
             control_signal_params.update({CONTROLLED_PARAM:param_name})
 
@@ -868,7 +868,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if control_projection:
             _validate_receiver(self, control_projection, Mechanism, CONTROL_SIGNAL, context=context)
 
-            from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+            from psyneulink.components.projections.ModulatoryProjections.ControlProjection import ControlProjection
             if not isinstance(control_projection, ControlProjection):
                 raise ControlMechanismError("PROGRAM ERROR: Attempt to assign {}, "
                                                   "that is not a ControlProjection, to ControlSignal of {}".
@@ -886,7 +886,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Instantiate ControlProjection
         else:
             # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-            from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+            from psyneulink.components.projections.ModulatoryProjections.ControlProjection import ControlProjection
             control_projection = ControlProjection(sender=control_signal,
                                                    receiver=parameter_state,
                                                    # name=CONTROL_PROJECTION + control_signal_name)
@@ -914,7 +914,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         try:
             self._output_states[control_signal.name] = control_signal
         except (AttributeError, TypeError):
-            from PsyNeuLink.Components.States.State import State_Base
+            from psyneulink.components.States.State import State_Base
             self._output_states = ContentAddressableList(component_type=State_Base,
                                                         list=[control_signal],
                                                         name = self.name+'.output_states')

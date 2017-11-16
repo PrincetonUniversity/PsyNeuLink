@@ -1,11 +1,11 @@
 import numpy as np
 
-from PsyNeuLink.Components.Functions.Function import Linear, Logistic
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import system, process
-from PsyNeuLink.Globals.Keywords import FULL_CONNECTIVITY_MATRIX, LEARNING, LEARNING_PROJECTION
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
+from psyneulink.components.functions.Function import Linear, Logistic
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.System import system, process
+from psyneulink.globals.Keywords import FULL_CONNECTIVITY_MATRIX, LEARNING, LEARNING_PROJECTION
+from psyneulink.globals.preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism import MSE
 
 

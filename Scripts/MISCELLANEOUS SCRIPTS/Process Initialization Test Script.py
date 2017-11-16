@@ -1,7 +1,7 @@
-from PsyNeuLink.Components.Function import Linear
+from psyneulink.components.Function import Linear
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import *
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.Process import *
 
 linear_transfer_mechanism = TransferMechanism(function=Linear(slope = 1, intercept = 0))
 

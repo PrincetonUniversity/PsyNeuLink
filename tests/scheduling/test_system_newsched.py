@@ -1,17 +1,17 @@
 import numpy
 
-from PsyNeuLink.Components.Functions.Function import BogaczEtAl, Linear, Logistic, SimpleIntegrator
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism \
+from psyneulink.components.functions.Function import BogaczEtAl, Linear, Logistic, SimpleIntegrator
+from psyneulink.components.mechanisms.ProcessingMechanisms.IntegratorMechanism \
     import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.System import system
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.Process import process
+from psyneulink.components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+from psyneulink.components.System import system
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
 from PsyNeuLink.Library.Subsystems.EVC.EVCControlMechanism import EVCControlMechanism
-from PsyNeuLink.Scheduling.Condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan
-from PsyNeuLink.Scheduling.Scheduler import Scheduler
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.scheduling.Condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan
+from psyneulink.scheduling.Scheduler import Scheduler
+from psyneulink.scheduling.TimeScale import TimeScale
 
 
 class TestInit:

@@ -89,17 +89,17 @@ Class Reference
 """
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
-from PsyNeuLink.Components.Functions.Function import FunctionOutputType, Linear
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import GatingMechanism
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
-from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
-from PsyNeuLink.Components.ShellClasses import Mechanism, Process
-from PsyNeuLink.Globals.Defaults import defaultGatingPolicy
-from PsyNeuLink.Globals.Keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, INITIALIZING, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Scheduling.TimeScale import CentralClock
+from psyneulink.components.Component import InitStatus, parameter_keywords
+from psyneulink.components.functions.Function import FunctionOutputType, Linear
+from psyneulink.components.mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import GatingMechanism
+from psyneulink.components.projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+from psyneulink.components.projections.Projection import ProjectionError, Projection_Base, projection_keywords
+from psyneulink.components.ShellClasses import Mechanism, Process
+from psyneulink.globals.Defaults import defaultGatingPolicy
+from psyneulink.globals.Keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, INITIALIZING, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.scheduling.TimeScale import CentralClock
 
 parameter_keywords.update({GATING_PROJECTION, GATING})
 projection_keywords.update({GATING_PROJECTION, GATING})
@@ -298,8 +298,8 @@ class GatingProjection(ModulatoryProjection_Base):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         if INITIALIZING in context:
-            from PsyNeuLink.Components.States.InputState import InputState
-            from PsyNeuLink.Components.States.OutputState import OutputState
+            from psyneulink.components.States.InputState import InputState
+            from psyneulink.components.States.OutputState import OutputState
             if not isinstance(self.receiver, (InputState, OutputState, Mechanism)):
                 raise GatingProjectionError("Receiver specified for {} {} is not a "
                                             "Mechanism, InputState or OutputState".

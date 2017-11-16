@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import *
 
 threshold = 10
 

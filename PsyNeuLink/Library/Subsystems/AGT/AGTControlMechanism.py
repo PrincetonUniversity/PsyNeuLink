@@ -119,17 +119,17 @@ Class Reference
 """
 import typecheck as tc
 
-from PsyNeuLink.Components.Functions.Function import AGTUtilityIntegrator, ModulationParam, _is_modulation_param
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import MonitoredOutputStatesOption, ObjectiveMechanism, _parse_monitored_output_states
-from PsyNeuLink.Components.ShellClasses import Mechanism, System
-from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, INIT__EXECUTE__METHOD_ONLY, MECHANISM, OBJECTIVE_MECHANISM
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+from psyneulink.components.functions.Function import AGTUtilityIntegrator, ModulationParam, _is_modulation_param
+from psyneulink.components.mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
+from psyneulink.components.mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
+from psyneulink.components.mechanisms.ProcessingMechanisms.ObjectiveMechanism import MonitoredOutputStatesOption, ObjectiveMechanism, _parse_monitored_output_states
+from psyneulink.components.ShellClasses import Mechanism, System
+from psyneulink.components.States.OutputState import OutputState
+from psyneulink.globals.Defaults import defaultControlAllocation
+from psyneulink.globals.Keywords import CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, INIT__EXECUTE__METHOD_ONLY, MECHANISM, OBJECTIVE_MECHANISM
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.scheduling.TimeScale import CentralClock, TimeScale
 
 MONITORED_OUTPUT_STATES = 'monitored_output_states'
 MONITORED_OUTPUT_STATE_NAME_SUFFIX = '_Monitor'
@@ -265,7 +265,7 @@ class AGTControlMechanism(ControlMechanism):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = defaultControlAllocation
 
-    from PsyNeuLink.Components.Functions.Function import Linear
+    from psyneulink.components.functions.Function import Linear
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({CONTROL_SIGNALS: None,
                                CONTROL_PROJECTIONS: None

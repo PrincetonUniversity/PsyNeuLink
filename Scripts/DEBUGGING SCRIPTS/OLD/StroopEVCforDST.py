@@ -5,9 +5,9 @@ Created on Mon Feb  6 13:47:38 2017
 @author: lauraab
 """
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.System import *
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+from psyneulink.components.System import *
 from PsyNeuLink.Library.Subsystems.EVC.EVCControlMechanism import EVCControlMechanism
 
 #helpful commands! .show()   .excute()

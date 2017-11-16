@@ -4,20 +4,20 @@
 import numpy as np
 
 from PsyNeuLink import Logistic, Linear
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism \
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism \
     import \
     TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection \
+from psyneulink.components.Process import process
+from psyneulink.components.Projections.PathwayProjections.MappingProjection \
     import \
     MappingProjection
-from PsyNeuLink.Components.System import system
+from psyneulink.components.System import system
 
 # The following code starts to build a 3 layer neural network
-from PsyNeuLink.Globals.Keywords import LEARNING
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import VERBOSE_PREF, \
+from psyneulink.globals.Keywords import LEARNING
+from psyneulink.globals.preferences.ComponentPreferenceSet import VERBOSE_PREF, \
     REPORT_OUTPUT_PREF
-from PsyNeuLink.Scheduling.TimeScale import CentralClock
+from psyneulink.scheduling.TimeScale import CentralClock
 
 input_layer = TransferMechanism(name='Input Layer',
                                 function=Logistic,

@@ -6,18 +6,18 @@ and electrophysiological data (from LC recordings) in non-human primates.
 """
 
 import numpy as np
-from PsyNeuLink.Components.Functions.Function import Linear, Logistic
-from PsyNeuLink.Components.Functions.Function import ModulationParam
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from psyneulink.components.functions.Function import Linear, Logistic
+from psyneulink.components.functions.Function import ModulationParam
+from psyneulink.components.System import system
+from psyneulink.components.Process import process
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism \
     import RecurrentTransferMechanism
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA import LCA
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Library.Subsystems.AGT.LCControlMechanism import LCControlMechanism
-from PsyNeuLink.Globals.Keywords import FULL_CONNECTIVITY_MATRIX, VALUE, PROJECTIONS
+from psyneulink.globals.Keywords import FULL_CONNECTIVITY_MATRIX, VALUE, PROJECTIONS
 
 
 input_layer = TransferMechanism(size=2,

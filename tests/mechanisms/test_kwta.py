@@ -1,15 +1,15 @@
 import pytest
 
-from PsyNeuLink.Components.Component import ComponentError
-from PsyNeuLink.Components.Functions.Function import Linear, Logistic
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import RANDOM_CONNECTIVITY_MATRIX
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
-from PsyNeuLink.Globals.Utilities import *
+from psyneulink.components.Component import ComponentError
+from psyneulink.components.functions.Function import Linear, Logistic
+from psyneulink.components.mechanisms.Mechanism import MechanismError
+from psyneulink.components.Process import process
+from psyneulink.components.System import system
+from psyneulink.globals.Keywords import RANDOM_CONNECTIVITY_MATRIX
+from psyneulink.globals.preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
+from psyneulink.globals.Utilities import *
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA import KWTA, KWTAError
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.scheduling.TimeScale import TimeScale
 
 
 class TestKWTAInputs:

@@ -3,10 +3,10 @@
 
 # In[ ]:
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import system
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.Process import process
+from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.System import system
 
 #The following code starts to build a 3 layer neural network
 

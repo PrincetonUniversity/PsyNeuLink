@@ -13,17 +13,17 @@ import numpy as np
 import typecheck as tc
 
 from PsyNeuLink import CentralClock
-from PsyNeuLink.Components.Functions.Function import ModulationParam, \
+from psyneulink.components.functions.Function import ModulationParam, \
     is_function_type, _is_modulation_param, TDLearning
-from PsyNeuLink.Components.Mechanisms import Mechanism
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism \
+from psyneulink.components.mechanisms import Mechanism
+from psyneulink.components.mechanisms.AdaptiveMechanisms.LearningMechanism \
     .LearningMechanism import LearningMechanismError, LearningMechanism
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import parameter_spec
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Utilities import parameter_spec
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms \
     .PredictionErrorMechanism import PredictionErrorMechanism
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.scheduling.TimeScale import TimeScale
 
 
 class TDLearningMechanismError(LearningMechanismError):

@@ -93,10 +93,10 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import ADAPTIVE_MECHANISM
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from psyneulink.components.mechanisms.Mechanism import Mechanism_Base
+from psyneulink.globals.Defaults import defaultControlAllocation
+from psyneulink.globals.Keywords import ADAPTIVE_MECHANISM
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
 
 
 class AdaptiveMechanismError(Exception):

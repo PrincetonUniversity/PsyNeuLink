@@ -1,7 +1,7 @@
-from PsyNeuLink.Components.Functions.Function import Linear, Logistic
-from PsyNeuLink.Components.Functions.Function import ModulationParam
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import GatingMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.functions.Function import Linear, Logistic
+from psyneulink.components.functions.Function import ModulationParam
+from psyneulink.components.mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import GatingMechanism
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Library.Subsystems.AGT.LCControlMechanism import LCControlMechanism
 
 

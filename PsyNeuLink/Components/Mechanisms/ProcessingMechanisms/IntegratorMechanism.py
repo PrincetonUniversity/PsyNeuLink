@@ -68,11 +68,11 @@ Class Reference
 """
 import typecheck as tc
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-from PsyNeuLink.Globals.Keywords import INTEGRATOR_MECHANISM, OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, kwPreferenceSetName
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.components.mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from psyneulink.globals.Keywords import INTEGRATOR_MECHANISM, OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, kwPreferenceSetName
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
+from psyneulink.globals.preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from psyneulink.scheduling.TimeScale import TimeScale
 
 # IntegratorMechanism parameter keywords:
 DEFAULT_RATE = 0.5
@@ -190,7 +190,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
     })
 
-    from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator
+    from psyneulink.components.functions.Function import AdaptiveIntegrator
 
     @tc.typecheck
     def __init__(self,

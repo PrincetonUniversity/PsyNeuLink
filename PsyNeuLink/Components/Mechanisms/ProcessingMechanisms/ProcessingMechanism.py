@@ -49,9 +49,9 @@ A ProcessingMechanism always executes before any `AdaptiveMechanisms <AdaptiveMe
 
 """
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from psyneulink.components.mechanisms.Mechanism import Mechanism_Base
+from psyneulink.globals.Defaults import defaultControlAllocation
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
 
 # ControlMechanismRegistry = {}
 

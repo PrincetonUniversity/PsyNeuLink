@@ -1,14 +1,14 @@
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.States.OutputState import *
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
-from PsyNeuLink.Scheduling.Condition import AfterNCalls
-from PsyNeuLink.Scheduling.TimeScale import TimeScale, CentralClock
+from psyneulink.components.functions.Function import Logistic
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.Process import process
+from psyneulink.components.States.OutputState import *
+from psyneulink.components.System import system
+from psyneulink.globals.Keywords import *
+from psyneulink.globals.preferences.ComponentPreferenceSet import *
+from psyneulink.scheduling.Condition import AfterNCalls
+from psyneulink.scheduling.TimeScale import TimeScale, CentralClock
 
-# from PsyNeuLink.Globals.Run import run, construct_inputs
+# from psyneulink.globals.Run import run, construct_inputs
 
 Input_Layer = TransferMechanism(name='Input Layer',
                                 function=Logistic,

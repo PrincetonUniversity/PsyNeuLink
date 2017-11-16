@@ -226,15 +226,15 @@ Class Reference
 """
 import typecheck as tc
 
-from PsyNeuLink.Components.Functions.Function import Integrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
-from PsyNeuLink.Components.ShellClasses import Mechanism
-from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+from psyneulink.components.functions.Function import Integrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
+from psyneulink.components.mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
+from psyneulink.components.mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
+from psyneulink.components.ShellClasses import Mechanism
+from psyneulink.globals.Defaults import defaultControlAllocation
+from psyneulink.globals.Keywords import ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.scheduling.TimeScale import CentralClock, TimeScale
 
 MODULATED_MECHANISMS = 'modulated_mechanisms'
 CONTROL_SIGNAL_NAME = 'LCMechanism_ControlSignal'
@@ -492,7 +492,7 @@ class LCMechanism(ControlMechanism):
 
         Returns ControlSignal (OutputState)
         """
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+        from psyneulink.components.mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 
         # *ALL* is specified for modulated_mechanisms:
         #    assign all Processing Mechanisms in the LCMechanism's Composition(s) to its modulated_mechanisms attribute

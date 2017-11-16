@@ -286,13 +286,13 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import InitStatus
-from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination
-from PsyNeuLink.Components.States.State import StateError, State_Base, _instantiate_state_list, state_type_keywords
-from PsyNeuLink.Globals.Keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
+from psyneulink.components.Component import InitStatus
+from psyneulink.components.functions.Function import Linear, LinearCombination
+from psyneulink.components.states.State import StateError, State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.globals.Keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Utilities import append_type_to_name, iscompatible
 state_type_keywords = state_type_keywords.update({INPUT_STATE})
 
 # InputStatePreferenceSet = ComponentPreferenceSet(log_pref=logPrefTypeDefault,

@@ -1,9 +1,9 @@
-#from PsyNeuLink.Components.Functions.Function import Logistic , random_matrix
-# from PsyNeuLink.Components.Functions.Function import Logistic , random_matrix
-from PsyNeuLink.Components.Functions.Function import Logistic, Linear
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import *
+#from psyneulink.components.functions.Function import Logistic , random_matrix
+# from psyneulink.components.functions.Function import Logistic , random_matrix
+from psyneulink.components.functions.Function import Logistic, Linear
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.System import *
 
 # specification of task environment
 NFeatures = 1

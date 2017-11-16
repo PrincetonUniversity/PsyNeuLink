@@ -36,16 +36,16 @@ COMMENT
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.States.InputState import InputState
-from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPUT_STATES, INTERCEPT, MODULATION, NAME, OBJECTIVE_MECHANISM, SLOPE
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import ContentAddressableList
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+from psyneulink.components.mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
+from psyneulink.components.mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from psyneulink.components.states.InputState import InputState
+from psyneulink.components.states.ParameterState import ParameterState
+from psyneulink.globals.Defaults import defaultControlAllocation
+from psyneulink.globals.Keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPUT_STATES, INTERCEPT, MODULATION, NAME, OBJECTIVE_MECHANISM, SLOPE
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Utilities import ContentAddressableList
+from psyneulink.scheduling.TimeScale import CentralClock, TimeScale
 
 
 class DefaultControlMechanismError(Exception):
@@ -92,7 +92,7 @@ class DefaultControlMechanism(ControlMechanism):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = defaultControlAllocation
 
-    from PsyNeuLink.Components.Functions.Function import Linear
+    from psyneulink.components.functions.Function import Linear
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION:Linear,
                                FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0},
@@ -238,8 +238,8 @@ class DefaultControlMechanism(ControlMechanism):
         variable_item_index = self.instance_defaults.variable.size-1
 
         # Instantiate inputState
-        from PsyNeuLink.Components.States.State import _instantiate_state
-        from PsyNeuLink.Components.States.InputState import InputState
+        from psyneulink.components.States.State import _instantiate_state
+        from psyneulink.components.States.InputState import InputState
         input_state = _instantiate_state(owner=self,
                                          state_type=InputState,
                                          state_name=input_state_name,
@@ -253,7 +253,7 @@ class DefaultControlMechanism(ControlMechanism):
         if self.input_states:
             self._input_states[input_state.name] = input_state
         else:
-            from PsyNeuLink.Components.States.State import State_Base
+            from psyneulink.components.States.State import State_Base
             self._input_states = ContentAddressableList(component_type=State_Base,
                                                         list=[input_state],
                                                         name=self.name+'.input_states')

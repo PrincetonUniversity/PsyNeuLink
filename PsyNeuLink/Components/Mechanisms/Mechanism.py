@@ -31,7 +31,7 @@ Overview
 --------
 
 A Mechanism takes an input, transforms it in some way, and makes the result available as its output.  There are two
-types of Mechanisms in PsyNeuLink:
+types of Mechanisms in psyneulink:
 
     * `ProcessingMechanisms <ProcessingMechanism>` aggregrate the input they receive from other Mechanisms, and/or the
       input to the `Process` or `System` to which they belong, transform it in some way, and
@@ -109,7 +109,7 @@ mentioned above, or using one of the following:
           the Mechanism's `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method, or where it is
           specified in the `pathway <Process_Base.pathway>` attribute of a `Process`.
 
-  * **automatically** -- PsyNeuLink automatically creates one or more Mechanisms under some circumstances. For example,
+  * **automatically** -- psyneulink automatically creates one or more Mechanisms under some circumstances. For example,
     a `ComparatorMechanism` and `LearningMechanism <LearningMechanism>` are created automatically when `learning is
     specified <Process_Learning_Sequence>` for a Process; and an `ObjectiveMechanism` and `ControlMechanism
     <ControlMechanism>` are created when the `controller <System_Base.controller>` is specified for a `System`.
@@ -179,7 +179,7 @@ Function
 The core of every Mechanism is its function, which transforms its input to generate its output.  The function is
 specified by the Mechanism's `function <Mechanism_Base.function>` attribute.  Every type of Mechanism has at least one
 (primary) function, and some have additional (auxiliary) ones (for example, `TransferMechanism` and `EVCControlMechanism`).
-Mechanism functions are generally from the PsyNeuLink `Function` class.  Most Mechanisms allow their function to be
+Mechanism functions are generally from the psyneulink `Function` class.  Most Mechanisms allow their function to be
 specified, using the `function` argument of the Mechanism's constructor.  The function can be specified using the
 name of `Function <Function>` class, or its constructor (including arguments that specify its parameters).  For
 example, the `function <TransferMechanism.function>` of a `TransferMechanism`, which is `Linear` by default, can be
@@ -218,7 +218,7 @@ to the Mechanism's `function <Mechanism_Base.function>` attribute.
 
 .. note::
    It is important to recognize the distinction between a `Function <Function>` and its `function
-   <Function_Base.function>` attribute (note the difference in capitalization).  A *Function* is a PsyNeuLink `Component
+   <Function_Base.function>` attribute (note the difference in capitalization).  A *Function* is a psyneulink `Component
    <Component>`, that can be created using a constructor; a *function* is an attribute that contains a callable method
    belonging to a Function, and that is executed when the Component to which the Function belongs is executed.
    Functions are used to assign, store, and apply parameter values associated with their function (see `Function
@@ -292,7 +292,7 @@ unpredictable effects.
 
 COMMENT:
     When a custom function is specified,
-    the function itself is assigned to the Mechanism's designated attribute.  At the same time, PsyNeuLink automatically
+    the function itself is assigned to the Mechanism's designated attribute.  At the same time, psyneulink automatically
     creates a `UserDefinedFunction` object, and assigns the custom function to its
     `function <UserDefinedFunction.function>` attribute.
 COMMENT
@@ -360,7 +360,7 @@ These receive and represent the input to a Mechanism. A Mechanism usually has on
 more  than one InputState. For example, a `ComparatorMechanism` has one InputState for its **SAMPLE** and another for
 its **TARGET** input. If a Mechanism has more than one InputState, they are listed in the Mechanism's `input_states
 <Mechanism_Base.input_states>` attribute (note the plural).  The `input_states <Mechanism_Base.input_states>` attribute
-is a ContentAddressableList -- a PsyNeuLink-defined subclass of the Python class
+is a ContentAddressableList -- a psyneulink-defined subclass of the Python class
 `UserList <https://docs.python.org/3.6/library/collections.html?highlight=userlist#collections.UserList>`_ --
 that allows a specific InputState in the list to be accessed using its name as the index for the list (e.g.,
 ``my_mechanism['InputState name']``).
@@ -469,7 +469,7 @@ be configured (see `OutputState Specification <OutputState_Specification>`. Thes
 
 All of a Mechanism's OutputStates (including the primary one) are listed in its `output_states
 <Mechanism_Base.output_states>` attribute (note the plural). The `output_states <Mechanism_Base.output_states>`
-attribute is a ContentAddressableList -- a PsyNeuLink-defined subclass of the Python class
+attribute is a ContentAddressableList -- a psyneulink-defined subclass of the Python class
 `UserList <https://docs.python.org/3.6/library/collections.html?highlight=userlist#collections.UserList>`_ -- that
 allows a specific OutputState in the list to be accessed using its name as the index for the list (e.g.,
 ``my_mechanism['OutputState name']``).  This list can also be used to assign additional OutputStates to the Mechanism
@@ -634,14 +634,14 @@ from inspect import isclass
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import Component, ExecutionStatus, function_type, method_type
-from PsyNeuLink.Components.ShellClasses import Function, Mechanism, Projection
-from PsyNeuLink.Globals.Defaults import timeScaleSystemDefault
-from PsyNeuLink.Globals.Keywords import CHANGED, COMMAND_LINE, DDM_MECHANISM, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, kwMechanismComponentCategory, kwMechanismExecuteFunction, kwMechanismType, kwProcessDefaultMechanism
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.Utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+from psyneulink.components.Component import Component, ExecutionStatus, function_type, method_type
+from psyneulink.components.ShellClasses import Function, Mechanism, Projection
+from psyneulink.globals.Defaults import timeScaleSystemDefault
+from psyneulink.globals.Keywords import CHANGED, COMMAND_LINE, DDM_MECHANISM, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, kwMechanismComponentCategory, kwMechanismExecuteFunction, kwMechanismType, kwProcessDefaultMechanism
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Registry import register_category
+from psyneulink.globals.Utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
+from psyneulink.scheduling.TimeScale import CentralClock, TimeScale
 
 logger = logging.getLogger(__name__)
 MechanismRegistry = {}
@@ -1114,23 +1114,23 @@ class Mechanism_Base(Mechanism):
                               context=context)
 
         # Create Mechanism's _stateRegistry and state type entries
-        from PsyNeuLink.Components.States.State import State_Base
+        from psyneulink.components.states.State import State_Base
         self._stateRegistry = {}
 
         # InputState
-        from PsyNeuLink.Components.States.InputState import InputState
+        from psyneulink.components.states.InputState import InputState
         register_category(entry=InputState,
                           base_class=State_Base,
                           registry=self._stateRegistry,
                           context=context)
         # ParameterState
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        from psyneulink.components.states.ParameterState import ParameterState
         register_category(entry=ParameterState,
                           base_class=State_Base,
                           registry=self._stateRegistry,
                           context=context)
         # OutputState
-        from PsyNeuLink.Components.States.OutputState import OutputState
+        from psyneulink.components.states.OutputState import OutputState
         register_category(entry=OutputState,
                           base_class=State_Base,
                           registry=self._stateRegistry,
@@ -1327,8 +1327,8 @@ class Mechanism_Base(Mechanism):
                                    and calling on corresponding subclass to get default values (if param not found)
                                    (as PROJECTION_TYPE and PROJECTION_SENDER are currently handled)
         """
-        from PsyNeuLink.Components.States.State import _parse_state_spec
-        from PsyNeuLink.Components.States.InputState import InputState
+        from psyneulink.components.states.State import _parse_state_spec
+        from psyneulink.components.states.InputState import InputState
 
         # Perform first-pass validation in Function.__init__():
         # - returns full set of params based on subclass paramClassDefaults
@@ -1382,7 +1382,7 @@ class Mechanism_Base(Mechanism):
                 raise MechanismError("{0} in {1} must be a dict of param specifications".
                                      format(FUNCTION_PARAMS, self.__class__.__name__))
             # Validate params
-            from PsyNeuLink.Components.States.ParameterState import ParameterState
+            from psyneulink.components.states.ParameterState import ParameterState
             for param_name, param_value in function_param_specs.items():
                 try:
                     default_value = self.paramInstanceDefaults[FUNCTION_PARAMS][param_name]
@@ -1419,7 +1419,7 @@ class Mechanism_Base(Mechanism):
             # Validate each item in the list or OrderedDict
             i = 0
             for key, item in param_value if isinstance(param_value, dict) else enumerate(param_value):
-                from PsyNeuLink.Components.States.OutputState import OutputState
+                from psyneulink.components.states.OutputState import OutputState
                 # If not valid...
                 if not ((isclass(item) and issubclass(item, OutputState)) or # OutputState class ref
                             isinstance(item, OutputState) or   # OutputState object
@@ -1515,7 +1515,7 @@ class Mechanism_Base(Mechanism):
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_input_states
             or process InputStates before and/or after call to _instantiate_input_states
         """
-        from PsyNeuLink.Components.States.InputState import _instantiate_input_states
+        from psyneulink.components.states.InputState import _instantiate_input_states
         return _instantiate_input_states(owner=self, input_states=input_states or self.input_states, context=context)
 
     def _instantiate_parameter_states(self, context=None):
@@ -1525,7 +1525,7 @@ class Mechanism_Base(Mechanism):
             or process InputStates before and/or after call to _instantiate_parameter_states
         """
 
-        from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
+        from psyneulink.components.states.ParameterState import _instantiate_parameter_states
         _instantiate_parameter_states(owner=self, context=context)
 
     def _instantiate_output_states(self, context=None):
@@ -1534,18 +1534,18 @@ class Mechanism_Base(Mechanism):
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_output_states
             or process InputStates before and/or after call to _instantiate_output_states
         """
-        from PsyNeuLink.Components.States.OutputState import _instantiate_output_states
+        from psyneulink.components.states.OutputState import _instantiate_output_states
         _instantiate_output_states(owner=self, output_states=self.output_states, context=context)
 
     def _add_projection_to_mechanism(self, state, projection, context=None):
 
-        from PsyNeuLink.Components.Projections.Projection import _add_projection_to
+        from psyneulink.components.projections.Projection import _add_projection_to
         _add_projection_to(receiver=self, state=state, projection_spec=projection, context=context)
 
     def _add_projection_from_mechanism(self, receiver, state, projection, context=None):
         """Add projection to specified state
         """
-        from PsyNeuLink.Components.Projections.Projection import _add_projection_from
+        from psyneulink.components.projections.Projection import _add_projection_from
         _add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
     def execute(self,
@@ -1842,7 +1842,7 @@ class Mechanism_Base(Mechanism):
             <Mechanism_OutputStates>` for each execution of the Mechanism.
 
         """
-        from PsyNeuLink.Globals.Run import run
+        from psyneulink.globals.Run import run
         return run(self,
                    inputs=inputs,
                    num_trials=num_trials,
@@ -2079,9 +2079,9 @@ class Mechanism_Base(Mechanism):
             specifying the class or keyword for InputState or OutputState).
 
         """
-        from PsyNeuLink.Components.States.State import _parse_state_type
-        from PsyNeuLink.Components.States.InputState import InputState, _instantiate_input_states
-        from PsyNeuLink.Components.States.OutputState import OutputState, _instantiate_output_states
+        from psyneulink.components.states.State import _parse_state_type
+        from psyneulink.components.states.InputState import InputState, _instantiate_input_states
+        from psyneulink.components.states.OutputState import OutputState, _instantiate_output_states
 
         # Put in list to standardize treatment below
         if not isinstance(states, list):
@@ -2114,14 +2114,14 @@ class Mechanism_Base(Mechanism):
         """Return dict with current value of each ParameterState in paramsCurrent
         :return: (dict)
         """
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        from psyneulink.components.states.ParameterState import ParameterState
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, ParameterState) )
 
     def _get_primary_state(self, state_type):
-        from PsyNeuLink.Components.States.InputState import InputState
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        from PsyNeuLink.Components.States.OutputState import OutputState
+        from psyneulink.components.states.InputState import InputState
+        from psyneulink.components.states.ParameterState import ParameterState
+        from psyneulink.components.states.OutputState import OutputState
         if issubclass(state_type, InputState):
             return self.input_state
         if issubclass(state_type, OutputState):

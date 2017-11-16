@@ -320,21 +320,21 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import function_type
-from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.ShellClasses import Function, System
-from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import CONTROL, COST_FUNCTION, EVC_MECHANISM, FUNCTION, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, SUM
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import ContentAddressableList
-from PsyNeuLink.Library.Subsystems.EVC.EVCAuxiliary import ControlSignalGridSearch, ValueFunction
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, Clock, TimeScale
+from psyneulink.components.Component import function_type
+from psyneulink.components.functions.Function import ModulationParam, _is_modulation_param
+from psyneulink.components.mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
+from psyneulink.components.mechanisms.Mechanism import MechanismList
+from psyneulink.components.mechanisms.ProcessingMechanisms import IntegratorMechanism
+from psyneulink.components.mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from psyneulink.components.projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.ShellClasses import Function, System
+from psyneulink.globals.Defaults import defaultControlAllocation
+from psyneulink.globals.Keywords import CONTROL, COST_FUNCTION, EVC_MECHANISM, FUNCTION, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, SUM
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Utilities import ContentAddressableList
+from psyneulink.library.subsystems.evc.EVCAuxiliary import ControlSignalGridSearch, ValueFunction
+from psyneulink.scheduling.TimeScale import CentralClock, Clock, TimeScale
 
 
 class EVCError(Exception):
@@ -669,7 +669,7 @@ class EVCControlMechanism(ControlMechanism):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = defaultControlAllocation
 
-    from PsyNeuLink.Components.Functions.Function import LinearCombination
+    from psyneulink.components.functions.Function import LinearCombination
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
@@ -1024,7 +1024,7 @@ class EVCControlMechanism(ControlMechanism):
 
     @cost_function.setter
     def cost_function(self, value):
-        from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
+        from psyneulink.components.functions.Function import UserDefinedFunction
         if isinstance(value, function_type):
             udf = UserDefinedFunction(function=value)
             self._cost_function = udf
@@ -1037,7 +1037,7 @@ class EVCControlMechanism(ControlMechanism):
 
     @combine_outcome_and_cost_function.setter
     def combine_outcome_and_cost_function(self, value):
-        from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
+        from psyneulink.components.functions.Function import UserDefinedFunction
         if isinstance(value, function_type):
             udf = UserDefinedFunction(function=value)
             self._combine_outcome_and_cost_function = udf

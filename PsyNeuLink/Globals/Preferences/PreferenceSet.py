@@ -12,8 +12,9 @@ import inspect
 from collections import namedtuple
 from enum import Enum, IntEnum
 
-from PsyNeuLink.Globals.Keywords import kwPreferenceSetName
-from PsyNeuLink.Globals.Utilities import iscompatible, kwCompatibilityType
+from psyneulink.globals.Keywords import kwPreferenceSetName, \
+    kwDefaultPreferenceSetOwner
+from psyneulink.globals.Utilities import iscompatible, kwCompatibilityType
 
 PreferenceSetRegistry = {}
 
@@ -234,7 +235,7 @@ class PreferenceSet(object):
 
         #region REGISTER
         # FIX: MAKE SURE THIS MAKES SENSE
-        from PsyNeuLink.Globals.Registry import  register_category
+        from psyneulink.globals.Registry import  register_category
         register_category(entry=self,
                           base_class=PreferenceSet,
                           name=name,
@@ -606,7 +607,7 @@ class PreferenceSet(object):
         :return:
         """
         candidate_log_class = type(candidate_log_item)
-        from PsyNeuLink.Globals.Log import LogEntry
+        from psyneulink.globals.Log import LogEntry
 
         # Candidate_log_item must be from a LogEntry declared in the same module as the owner of the preference
         #    unless it is for the DefaultPeferenceSetOwner (which is used by many classes),
@@ -686,7 +687,7 @@ class PreferenceSet(object):
                 # If classPreferences for level have not yet been assigned as PreferenceSet, assign them
                 if (not hasattr(next_level, 'classPreferences') or
                         not isinstance(next_level.classPreferences, PreferenceSet)):
-                    from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet
+                    from psyneulink.globals.preferences.ComponentPreferenceSet import ComponentPreferenceSet
                     ComponentPreferenceSet(owner=next_level, level=next_level.classPreferenceLevel)
                 # MODIFIED ~4/30/17 END
                 return_val = next_level.classPreferences.get_pref_setting_for_level(pref_ivar_name, requested_level)
@@ -720,7 +721,7 @@ class PreferenceSet(object):
             # If requested level is higher than current one:
             if requested_level > self.owner.classPreferenceLevel:
                 # Call class at next level
-                from PsyNeuLink.Components.Component import Component
+                from psyneulink.components.Component import Component
                 # THis is needed to skip ShellClass, which has no classPreferences, to get to Function (System) level
                 if 'ShellClass' in repr(self.owner.__bases__[0]):
                     try:
@@ -747,7 +748,7 @@ class PreferenceSet(object):
                     next_level = self.owner.__bases__[0]
                     if (not hasattr(next_level, 'classPreferences') or
                             not isinstance(next_level.classPreferences, PreferenceSet)):
-                        from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet
+                        from psyneulink.globals.preferences.ComponentPreferenceSet import ComponentPreferenceSet
                         ComponentPreferenceSet(owner=next_level, level=next_level.classPreferenceLevel)
                     # MODIFIED 5/2/17 END
                     return_val = self.owner.__bases__[0].classPreferences.get_pref_setting_for_level(pref_ivar_name,
@@ -783,7 +784,7 @@ class PreferenceSet(object):
         for pref_name in pref_names_sorted:
             if '_pref' in pref_name:
 
-                from PsyNeuLink.Globals.Utilities import get_modulationOperation_name
+                from psyneulink.globals.Utilities import get_modulationOperation_name
 
                 # GET TABLE INFO
                 # Get base_value of pref

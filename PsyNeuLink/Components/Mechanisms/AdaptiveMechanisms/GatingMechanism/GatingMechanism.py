@@ -149,20 +149,20 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import InitStatus
-from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Components.Projections.Projection import _validate_receiver
-from PsyNeuLink.Components.ShellClasses import Mechanism
-from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal, _parse_gating_signal_spec
-from PsyNeuLink.Components.States.State import State_Base, _instantiate_state
-from PsyNeuLink.Globals.Defaults import defaultGatingPolicy
-from PsyNeuLink.Globals.Keywords import GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, NAME, OWNER, PARAMS, REFERENCE_VALUE, STATES
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import ContentAddressableList
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+from psyneulink.components.Component import InitStatus
+from psyneulink.components.functions.Function import ModulationParam, _is_modulation_param
+from psyneulink.components.mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
+from psyneulink.components.mechanisms.Mechanism import Mechanism_Base
+from psyneulink.components.projections.Projection import _validate_receiver
+from psyneulink.components.ShellClasses import Mechanism
+from psyneulink.components.states.modulatorysignals.GatingSignal import GatingSignal, _parse_gating_signal_spec
+from psyneulink.components.states.State import State_Base, _instantiate_state
+from psyneulink.globals.Defaults import defaultGatingPolicy
+from psyneulink.globals.Keywords import GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, NAME, OWNER, PARAMS, REFERENCE_VALUE, STATES
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Utilities import ContentAddressableList
+from psyneulink.scheduling.TimeScale import CentralClock, TimeScale
 
 GatingMechanismRegistry = {}
 
@@ -308,7 +308,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         # This must be a list, as there may be more than one (e.g., one per GATING_SIGNAL)
         variable = defaultGatingPolicy
 
-    from PsyNeuLink.Components.Functions.Function import Linear
+    from psyneulink.components.functions.Function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({GATING_PROJECTIONS: None})
 
@@ -361,7 +361,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     def _instantiate_output_states(self, context=None):
 
         # Create registry for GatingSignals (to manage names)
-        from PsyNeuLink.Globals.Registry import register_category
+        from psyneulink.globals.Registry import register_category
         register_category(entry=GatingSignal,
                           base_class=State_Base,
                           registry=self._stateRegistry,
@@ -406,7 +406,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         Returns GatingSignal (OutputState)
         """
 
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+        from psyneulink.components.projections.ModulatoryProjections.GatingProjection import GatingProjection
 
         # EXTEND gating_policy TO ACCOMMODATE NEW GatingSignal -------------------------------------------------
         #        also used to determine constraint on GatingSignal value

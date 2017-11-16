@@ -2,10 +2,15 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-from PsyNeuLink import CentralClock, LearningProjection, SoftMax, \
-    TransferMechanism, process, system
-from PsyNeuLink.Components.Functions.Function import TDLearning
-from PsyNeuLink.Globals.Keywords import PROB, SAMPLE
+from psyneulink.components.Process import process
+from psyneulink.components.System import system
+from psyneulink.components.functions.Function import SoftMax, TDLearning
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism \
+    import TransferMechanism
+from psyneulink.components.projections.ModulatoryProjections\
+    .LearningProjection import LearningProjection
+from psyneulink.globals.Keywords import SAMPLE, PROB
+from psyneulink.scheduling.TimeScale import CentralClock
 
 
 def test_td_learning():
@@ -24,19 +29,18 @@ def test_td_learning():
     )
 
     # samples = [[0]] * 60
-    samples = np.zeros((1, 1, 60))
+    samples = np.zeros((1, 60))
     # samples[41] = [1]
-    samples[0][0][41] = 1
+    samples[0][41] = 1
 
     # targets = [[0]] * 60
-    targets = np.zeros((1, 1, 60))
+    targets = np.zeros((1, 60))
     # targets[53] = [1]
-    targets[0][0][53] = 1
+    targets[0][53] = 1
     # targets[4] = [1]
 
     p = process(
             default_variable=np.zeros(60),
-            size=60,
             pathway=[sample, action_selection],
             learning=LearningProjection(
                     learning_function=TDLearning(learning_rate=0.3),

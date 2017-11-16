@@ -283,15 +283,15 @@ import inspect
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import Component, function_type, method_type, parameter_keywords
-from PsyNeuLink.Components.Functions.Function import Linear, get_param_value_for_keyword
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.ShellClasses import Mechanism, Projection
-from PsyNeuLink.Components.States.State import StateError, State_Base, _instantiate_state, state_type_keywords
-from PsyNeuLink.Globals.Keywords import CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTION_TYPE, VALUE
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import ContentAddressableList, ReadOnlyOrderedDict, is_numeric, is_value_spec, iscompatible
+from psyneulink.components.Component import Component, function_type, method_type, parameter_keywords
+from psyneulink.components.functions.Function import Linear, get_param_value_for_keyword
+from psyneulink.components.projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.ShellClasses import Mechanism, Projection
+from psyneulink.components.states.State import StateError, State_Base, _instantiate_state, state_type_keywords
+from psyneulink.globals.Keywords import CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTION_TYPE, VALUE
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Utilities import ContentAddressableList, ReadOnlyOrderedDict, is_numeric, is_value_spec, iscompatible
 
 state_type_keywords = state_type_keywords.update({PARAMETER_STATE})
 
@@ -544,7 +544,7 @@ class ParameterState(State_Base):
         # MODIFIED 7/8/17
         # FIX:  THIS SHOULD ALSO LOOK FOR OTHER FORMS OF SPECIFICATION
         # FIX:  OF A PathwayProjection (E.G., TARGET STATE OR MECHANISM)
-        from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection import PathwayProjection_Base
+        from psyneulink.components.projections.PathwayProjections.PathwayProjection import PathwayProjection_Base
         pathway_projections = [proj for proj in projections if isinstance(proj, PathwayProjection_Base)]
         if pathway_projections:
             pathway_proj_names = []
@@ -676,16 +676,16 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     # WHAT ABOUT GatingProjection??
     # Allow ControlProjection, LearningProjection
     elif isinstance(param_value, Projection):
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+        from psyneulink.components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from psyneulink.components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         if isinstance(param_value, (ControlProjection, LearningProjection)):
             pass
         else:
             return
     # Allow Projection class
     elif inspect.isclass(param_value) and issubclass(param_value, Projection):
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+        from psyneulink.components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from psyneulink.components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         if issubclass(param_value, (ControlProjection, LearningProjection)):
             pass
         else:

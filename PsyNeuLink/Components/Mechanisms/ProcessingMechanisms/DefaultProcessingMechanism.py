@@ -14,11 +14,11 @@
 """
 import typecheck as tc
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Globals.Defaults import SystemDefaultInputValue
-from PsyNeuLink.Globals.Keywords import DEFAULT_PROCESSING_MECHANISM, FUNCTION, FUNCTION_PARAMS, INTERCEPT, SLOPE
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from psyneulink.components.mechanisms.Mechanism import Mechanism_Base
+from psyneulink.globals.Defaults import SystemDefaultInputValue
+from psyneulink.globals.Keywords import DEFAULT_PROCESSING_MECHANISM, FUNCTION, FUNCTION_PARAMS, INTERCEPT, SLOPE
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
 
 
 # **************************************** DefaultProcessingMechanism ******************************************************
@@ -55,11 +55,11 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     class ClassDefaults(Mechanism_Base.ClassDefaults):
         variable = SystemDefaultInputValue
 
-    from PsyNeuLink.Components.Functions.Function import Linear
+    from psyneulink.components.functions.Function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        FUNCTION:Linear,
-        FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
+        FUNCTION: Linear,
+        FUNCTION_PARAMS: {SLOPE: 1, INTERCEPT: 0}
     })
 
     @tc.typecheck

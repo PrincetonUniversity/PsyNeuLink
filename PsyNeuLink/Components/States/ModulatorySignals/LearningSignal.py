@@ -170,14 +170,14 @@ Class Reference
 
 import typecheck as tc
 
-from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, ModulationParam, _is_modulation_param
-from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
-from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
-from PsyNeuLink.Components.States.State import State_Base
-from PsyNeuLink.Globals.Keywords import LEARNED_PARAM, LEARNING_PROJECTION, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, SUM
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import parameter_spec
+from psyneulink.components.functions.Function import Linear, LinearCombination, ModulationParam, _is_modulation_param
+from psyneulink.components.states.modulatorysignals.ModulatorySignal import ModulatorySignal
+from psyneulink.components.states.OutputState import PRIMARY_OUTPUT_STATE
+from psyneulink.components.states.State import State_Base
+from psyneulink.globals.Keywords import LEARNED_PARAM, LEARNING_PROJECTION, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, SUM
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Utilities import parameter_spec
 
 
 class LearningSignalError(Exception):

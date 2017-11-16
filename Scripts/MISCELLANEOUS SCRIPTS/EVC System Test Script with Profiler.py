@@ -1,11 +1,11 @@
 import profile
 
-from PsyNeuLink.Components.Mechanisms.IntegratorMechanism import *
-from PsyNeuLink.Components.Mechanisms.LinearMechanism import *
+from psyneulink.components.mechanisms.IntegratorMechanism import *
+from psyneulink.components.mechanisms.LinearMechanism import *
 
-from PsyNeuLink.Components.Process import Process_Base
-from PsyNeuLink.Components.System import System_Base
-from PsyNeuLink.Globals.Keywords import *
+from psyneulink.components.Process import Process_Base
+from psyneulink.components.System import System_Base
+from psyneulink.globals.Keywords import *
 
 
 def run():

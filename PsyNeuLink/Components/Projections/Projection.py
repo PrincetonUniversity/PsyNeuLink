@@ -295,12 +295,12 @@ import inspect
 import typecheck as tc
 import warnings
 
-from PsyNeuLink.Components.Component import Component, InitStatus
-from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
-from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_PROJECTION, GATING, GATING_PROJECTION, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX_KEYWORD_SET, MECHANISM, OUTPUT_STATE, PARAMETER_STATE_PARAMS, PROJECTION, PROJECTION_SENDER, PROJECTION_TYPE, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.Utilities import ContentAddressableList, iscompatible, type_match
+from psyneulink.components.Component import Component, InitStatus
+from psyneulink.components.ShellClasses import Mechanism, Process, Projection, State
+from psyneulink.globals.Keywords import CONTROL, CONTROL_PROJECTION, GATING, GATING_PROJECTION, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX_KEYWORD_SET, MECHANISM, OUTPUT_STATE, PARAMETER_STATE_PARAMS, PROJECTION, PROJECTION_SENDER, PROJECTION_TYPE, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Registry import register_category
+from psyneulink.globals.Utilities import ContentAddressableList, iscompatible, type_match
 
 ProjectionRegistry = {}
 
@@ -520,8 +520,8 @@ class Projection_Base(Projection):
         :param context: (str)
         :return: None
         """
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        from PsyNeuLink.Components.States.State import State_Base
+        from psyneulink.components.states.ParameterState import ParameterState
+        from psyneulink.components.states.State import State_Base
 
         if not isinstance(context, Projection_Base):
             raise ProjectionError("Direct call to abstract class Projection() is not allowed; "
@@ -720,7 +720,7 @@ class Projection_Base(Projection):
 
     def _instantiate_parameter_states(self, context=None):
 
-        from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
+        from psyneulink.components.states.ParameterState import _instantiate_parameter_states
         _instantiate_parameter_states(owner=self, context=context)
 
 
@@ -736,8 +736,8 @@ class Projection_Base(Projection):
         If self.value / self.instance_defaults.variable is None, set to sender.value
         """
 
-        from PsyNeuLink.Components.States.OutputState import OutputState
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        from psyneulink.components.states.OutputState import OutputState
+        from psyneulink.components.states.ParameterState import ParameterState
 
         # If sender is specified as a Mechanism (rather than a State),
         #     get relevant OutputState and assign it to self.sender
@@ -888,7 +888,7 @@ def _is_projection_spec(spec, include_matrix_keywords=True):
     if include_matrix_keywords:
         if isinstance(spec, str) and spec in MATRIX_KEYWORD_SET:
             return True
-        from PsyNeuLink.Components.Functions.Function import get_matrix
+        from psyneulink.components.functions.Function import get_matrix
         if get_matrix(spec) is not None:
             return True
     if isinstance(spec, tuple) and len(spec) == 2:
@@ -1042,10 +1042,10 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     # IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS
     #                       CURRENTLY, ASSUMES projection_spec IS AN ALREADY INSTANTIATED PROJECTION
 
-    from PsyNeuLink.Components.States.State import _instantiate_state
-    from PsyNeuLink.Components.States.State import State_Base
-    from PsyNeuLink.Components.States.InputState import InputState
-    from PsyNeuLink.Components.States.ParameterState import ParameterState
+    from psyneulink.components.states.State import _instantiate_state
+    from psyneulink.components.states.State import State_Base
+    from psyneulink.components.states.InputState import InputState
+    from psyneulink.components.states.ParameterState import ParameterState
 
     if not isinstance(state, (int, str, InputState, ParameterState)):
         raise ProjectionError("State specification(s) for {0} (as receivers of {1}) contain(s) one or more items"
@@ -1146,9 +1146,9 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
     """
 
 
-    from PsyNeuLink.Components.States.State import _instantiate_state
-    from PsyNeuLink.Components.States.State import State_Base
-    from PsyNeuLink.Components.States.OutputState import OutputState
+    from psyneulink.components.states.State import _instantiate_state
+    from psyneulink.components.states.State import State_Base
+    from psyneulink.components.states.OutputState import OutputState
 
     # Validate that projection is not already assigned to sender; if so, warn and ignore
 
@@ -1222,7 +1222,7 @@ context=context)
         sender.output_states[output_state.name] = output_state
     # No OutputState(s) yet, so create them
     except AttributeError:
-        from PsyNeuLink.Components.States.State import State_Base
+        from psyneulink.components.States.State import State_Base
         sender.output_states = ContentAddressableList(component_type=State_Base,
                                                       list=[output_state],
                                                       name=sender.name+'.output_states')

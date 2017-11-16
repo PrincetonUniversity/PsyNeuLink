@@ -116,16 +116,16 @@ import numbers
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import Component, function_type, method_type
-from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, Linear
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError, Mechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates, standard_output_states
-from PsyNeuLink.Globals.Keywords import FUNCTION, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NOISE, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+from psyneulink.components.Component import Component, function_type, method_type
+from psyneulink.components.functions.Function import AdaptiveIntegrator, Linear
+from psyneulink.components.mechanisms.Mechanism import MechanismError, Mechanism_Base
+from psyneulink.components.mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from psyneulink.components.states.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates, standard_output_states
+from psyneulink.globals.Keywords import FUNCTION, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NOISE, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
+from psyneulink.globals.preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from psyneulink.globals.Utilities import append_type_to_name, iscompatible
+from psyneulink.scheduling.TimeScale import CentralClock, TimeScale
 
 # TransferMechanism parameter keywords:
 RANGE = "range"
@@ -594,7 +594,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _instantiate_parameter_states(self, context=None):
 
-        from PsyNeuLink.Components.Functions.Function import Logistic
+        from psyneulink.components.functions.Function import Logistic
         # If function is a logistic, and range has not been specified, bound it between 0 and 1
         if ((isinstance(self.function, Logistic) or
                  (inspect.isclass(self.function) and issubclass(self.function,Logistic))) and

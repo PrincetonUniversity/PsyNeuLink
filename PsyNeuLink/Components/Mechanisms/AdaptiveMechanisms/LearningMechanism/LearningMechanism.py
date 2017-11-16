@@ -520,21 +520,21 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
-from PsyNeuLink.Components.Functions.Function import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import OUTCOME, ObjectiveMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.Projection import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
-from PsyNeuLink.Components.ShellClasses import Mechanism, Projection
-from PsyNeuLink.Globals.Keywords import CONTROL_PROJECTIONS, FUNCTION_PARAMS, IDENTITY_MATRIX, INDEX, INITIALIZING, \
+from psyneulink.components.Component import InitStatus, parameter_keywords
+from psyneulink.components.functions.Function import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.components.mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
+from psyneulink.components.mechanisms.ProcessingMechanisms.ObjectiveMechanism import OUTCOME, ObjectiveMechanism
+from psyneulink.components.projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.projections.Projection import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
+from psyneulink.components.ShellClasses import Mechanism, Projection
+from psyneulink.globals.Keywords import CONTROL_PROJECTIONS, FUNCTION_PARAMS, IDENTITY_MATRIX, INDEX, INITIALIZING, \
     INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
     LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, PARAMETER_STATE, PARAMS, PROJECTION, \
     PROJECTIONS
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import is_numeric, parameter_spec
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Utilities import is_numeric, parameter_spec
+from psyneulink.scheduling.TimeScale import CentralClock, TimeScale
 
 # Params:
 
@@ -915,10 +915,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS (AKIN TO CONTROL_SIGNAL)
         if LEARNING_SIGNALS in target_set and target_set[LEARNING_SIGNALS]:
 
-            from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal \
+            from psyneulink.components.states.modulatorysignals.LearningSignal \
                 import LearningSignal
-            from PsyNeuLink.Components.States.ParameterState import ParameterState
-            from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+            from psyneulink.components.states.ParameterState import ParameterState
+            from psyneulink.components.projections.ModulatoryProjections.LearningProjection import LearningProjection
 
             for spec in target_set[LEARNING_SIGNALS]:
 
@@ -1047,9 +1047,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _instantiate_output_states(self, context=None):
 
         # Create registry for LearningSignals (to manage names)
-        from PsyNeuLink.Globals.Registry import register_category
-        from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
-        from PsyNeuLink.Components.States.State import State_Base
+        from psyneulink.globals.Registry import register_category
+        from psyneulink.components.states.modulatorysignals.LearningSignal import LearningSignal
+        from psyneulink.components.states.State import State_Base
         register_category(entry=LearningSignal,
                           base_class=State_Base,
                           registry=self._stateRegistry,
@@ -1111,10 +1111,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
 #                         learning_signal -> learning_signals (WITH SINGULAR ONE INDEXING INTO learning_signals.values)
 #  FIX: THIS MAY NEED TO BE A 3d array (TO ACCOMDOATE 2d array (MATRICES) AS ENTRIES)
 
-        from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
-        from PsyNeuLink.Components.States.State import _parse_state_spec
-        from PsyNeuLink.Components.States.ParameterState import ParameterState, _get_parameter_state
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+        from psyneulink.components.states.modulatorysignals.LearningSignal import LearningSignal
+        from psyneulink.components.states.State import _parse_state_spec
+        from psyneulink.components.states.ParameterState import ParameterState, _get_parameter_state
+        from psyneulink.components.projections.ModulatoryProjections.LearningProjection import LearningProjection
 
         # FIX: NEED TO CHARACTERIZE error_signal FOR BELOW
         # # EXTEND error_signals TO ACCOMMODATE NEW LearningSignal -------------------------------------------------
@@ -1268,9 +1268,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
             learning_signal_name = LEARNING_SIGNAL
             # MODIFIED 9/22/17 END
 
-            from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal \
+            from psyneulink.components.states.modulatorysignals.LearningSignal \
                 import LearningSignal
-            from PsyNeuLink.Components.States.State import _instantiate_state
+            from psyneulink.components.states.State import _instantiate_state
 
             # Get constraint for OutputState's value
             # - assume that LearningMechanism.value has only two items (learning_signal and error_signal)
@@ -1294,7 +1294,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if learning_projection:
             _validate_receiver(self, learning_projection, MappingProjection, LEARNING_SIGNAL, context=context)
 
-            from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+            from psyneulink.components.projections.ModulatoryProjections.LearningProjection import LearningProjection
             if not isinstance(learning_projection, LearningProjection):
                 raise LearningMechanismError("PROGRAM ERROR: Attempt to assign {}, "
                                                   "that is not a LearningProjection, to LearningSignal of {}".

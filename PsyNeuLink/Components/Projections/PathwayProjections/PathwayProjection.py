@@ -44,8 +44,8 @@ Execution
 
 """
 
-from PsyNeuLink.Components.Projections.Projection import Projection_Base
-from PsyNeuLink.Globals.Keywords import PATHWAY_PROJECTION
+from psyneulink.components.projections.Projection import Projection_Base
+from psyneulink.globals.Keywords import PATHWAY_PROJECTION
 
 class PathwayProjection_Base(Projection_Base):
     """Subclass of `Projection <Projection>` that projects from an `OutputState` to an `InputState`

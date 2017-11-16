@@ -1,10 +1,10 @@
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
+from psyneulink.components.mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 
-from PsyNeuLink.Components.Functions.Function import Exponential, Linear
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.System import System_Base
-from PsyNeuLink.Globals.Keywords import *
+from psyneulink.components.functions.Function import Exponential, Linear
+from psyneulink.components.Process import process
+from psyneulink.components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+from psyneulink.components.System import System_Base
+from psyneulink.globals.Keywords import *
 
 if MPI_IMPLEMENTATION:
     import time

@@ -1,9 +1,9 @@
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import system
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.Process import process
+from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.System import system
 
-# from PsyNeuLink.Globals.Run import run, construct_inputs
+# from psyneulink.globals.Run import run, construct_inputs
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Linear,

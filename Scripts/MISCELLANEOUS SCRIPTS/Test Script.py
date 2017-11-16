@@ -1,5 +1,5 @@
-from PsyNeuLink.Components.Process import Process_Base
-from PsyNeuLink.Globals.Keywords import *
+from psyneulink.components.Process import Process_Base
+from psyneulink.globals.Keywords import *
 
 # x = Process_Base()
 # x.execute(10.0)

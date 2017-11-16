@@ -226,16 +226,16 @@ Class Reference
 
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import InitStatus
-from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, _is_modulation_param
-from PsyNeuLink.Components.ShellClasses import Mechanism
-from PsyNeuLink.Components.States.InputState import InputState
-from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal, modulatory_signal_keywords
-from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
-from PsyNeuLink.Components.States.State import State_Base
-from PsyNeuLink.Globals.Keywords import GATE, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, INPUT_STATE, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION_TYPE, STATES, SUM
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from psyneulink.components.Component import InitStatus
+from psyneulink.components.functions.Function import Linear, LinearCombination, _is_modulation_param
+from psyneulink.components.ShellClasses import Mechanism
+from psyneulink.components.states.InputState import InputState
+from psyneulink.components.states.modulatorysignals.ModulatorySignal import ModulatorySignal, modulatory_signal_keywords
+from psyneulink.components.states.OutputState import OutputState, PRIMARY_OUTPUT_STATE
+from psyneulink.components.states.State import State_Base
+from psyneulink.globals.Keywords import GATE, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, INPUT_STATE, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION_TYPE, STATES, SUM
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
 
 
 class GatingSignalError(Exception):
@@ -478,9 +478,9 @@ def _parse_gating_signal_spec(owner, state_spec):
         PARAMS:dict - params dict if any were included in the state_spec
     """
 
-    from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal
-    from PsyNeuLink.Components.Projections.Projection import _validate_receiver
-    from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+    from psyneulink.components.States.ModulatorySignals.GatingSignal import GatingSignal
+    from psyneulink.components.Projections.Projection import _validate_receiver
+    from psyneulink.components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
 
     GATING_SIGNAL_SUFFIX = '_' + GatingSignal.__name__
     DEFAULT_GATING_SIGNAL_NAME = 'Default'+ GATING_SIGNAL_SUFFIX

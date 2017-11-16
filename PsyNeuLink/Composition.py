@@ -53,12 +53,12 @@ from enum import Enum
 
 import numpy as np
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.CompositionInterfaceMechanism import CompositionInterfaceMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.ShellClasses import Mechanism, Projection
-from PsyNeuLink.Globals.Keywords import EXECUTING
-from PsyNeuLink.Scheduling.Scheduler import Scheduler
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.components.mechanisms.ProcessingMechanisms.CompositionInterfaceMechanism import CompositionInterfaceMechanism
+from psyneulink.components.projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.ShellClasses import Mechanism, Projection
+from psyneulink.globals.Keywords import EXECUTING
+from psyneulink.scheduling.Scheduler import Scheduler
+from psyneulink.scheduling.TimeScale import TimeScale
 
 logger = logging.getLogger(__name__)
 

@@ -471,7 +471,7 @@
 # FIX: Implement same for LearningSignal and ControlSignal:
 #           GatingMechanism, LINE 290:
 #           # Create registry for GatingSignals (to manage names)
-#             from PsyNeuLink.Globals.Registry import register_category
+#             from psyneulink.globals.Registry import register_category
 #             register_category(entry=GatingSignal,
 #                               base_class=State_Base,
 #                               registry=self._stateRegistry,

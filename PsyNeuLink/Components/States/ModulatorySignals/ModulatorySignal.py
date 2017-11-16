@@ -196,12 +196,12 @@ Class Reference
 ---------------
 """
 
-from PsyNeuLink.Components.Component import InitStatus, component_keywords
-from PsyNeuLink.Components.ShellClasses import Mechanism, State
-from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Components.States.State import StateError, State_Base
-from PsyNeuLink.Globals.Keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from psyneulink.components.Component import InitStatus, component_keywords
+from psyneulink.components.ShellClasses import Mechanism, State
+from psyneulink.components.states.OutputState import OutputState
+from psyneulink.components.states.State import StateError, State_Base
+from psyneulink.globals.Keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
 
 
 class ModulatorySignalError(Exception):
@@ -396,7 +396,7 @@ class ModulatorySignal(OutputState):
         Call _instantiate_projection_from_state to assign ModulatoryProjections to .efferents
 
         """
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
+        from psyneulink.components.Projections.ModulatoryProjections.ModulatoryProjection \
             import ModulatoryProjection_Base
 
         modulatory_projection_specs = [proj for proj in projections

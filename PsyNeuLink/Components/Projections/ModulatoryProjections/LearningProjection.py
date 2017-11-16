@@ -145,21 +145,21 @@ import inspect
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
-from PsyNeuLink.Components.Functions.Function import BackPropagation, Linear, is_function_type
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import ERROR_SIGNAL, LearningMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.Projection import Projection_Base, _is_projection_spec, projection_keywords
-from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
-from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Globals.Keywords import ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, MATRIX, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import iscompatible, parameter_spec
-from PsyNeuLink.Scheduling.TimeScale import CentralClock
+from psyneulink.components.Component import InitStatus, parameter_keywords
+from psyneulink.components.functions.Function import BackPropagation, Linear, is_function_type
+from psyneulink.components.mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import ERROR_SIGNAL, LearningMechanism
+from psyneulink.components.mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from psyneulink.components.projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+from psyneulink.components.projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.projections.Projection import Projection_Base, _is_projection_spec, projection_keywords
+from psyneulink.components.states.modulatorysignals.LearningSignal import LearningSignal
+from psyneulink.components.states.OutputState import OutputState
+from psyneulink.components.states.ParameterState import ParameterState
+from psyneulink.globals.Keywords import ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, MATRIX, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Utilities import iscompatible, parameter_spec
+from psyneulink.scheduling.TimeScale import CentralClock
 
 # Params:
 
@@ -466,7 +466,7 @@ class LearningProjection(ModulatoryProjection_Base):
         #    so call composition for "automatic" instantiation of a LearningMechanism
         # Note: this also instantiates an ObjectiveMechanism if necessary and assigns it the necessary projections
         if not isinstance(self.sender, (OutputState, LearningMechanism)):
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningAuxilliary \
+            from psyneulink.components.mechanisms.AdaptiveMechanisms.LearningMechanism.LearningAuxilliary \
                 import _instantiate_learning_components
             _instantiate_learning_components(learning_projection=self,
                                              context=context + " " + self.name)

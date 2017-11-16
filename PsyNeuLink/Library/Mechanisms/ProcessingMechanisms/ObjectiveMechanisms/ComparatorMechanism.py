@@ -127,17 +127,17 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Functions.Function import LinearCombination
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import MONITORED_OUTPUT_STATES, OUTCOME, ObjectiveMechanism
-from PsyNeuLink.Components.ShellClasses import Mechanism
-from PsyNeuLink.Components.States.InputState import InputState
-from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE, StandardOutputStates
-from PsyNeuLink.Globals.Keywords import CALCULATE, COMPARATOR_MECHANISM, INPUT_STATES, NAME, SAMPLE, TARGET, TIME_SCALE, VARIABLE, kwPreferenceSetName
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from PsyNeuLink.Globals.Utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.components.functions.Function import LinearCombination
+from psyneulink.components.mechanisms.Mechanism import Mechanism_Base
+from psyneulink.components.mechanisms.ProcessingMechanisms.ObjectiveMechanism import MONITORED_OUTPUT_STATES, OUTCOME, ObjectiveMechanism
+from psyneulink.components.ShellClasses import Mechanism
+from psyneulink.components.states.InputState import InputState
+from psyneulink.components.states.OutputState import OutputState, PRIMARY_OUTPUT_STATE, StandardOutputStates
+from psyneulink.globals.Keywords import CALCULATE, COMPARATOR_MECHANISM, INPUT_STATES, NAME, SAMPLE, TARGET, TIME_SCALE, VARIABLE, kwPreferenceSetName
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
+from psyneulink.globals.preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from psyneulink.globals.Utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric
+from psyneulink.scheduling.TimeScale import TimeScale
 
 SSE = 'SSE'
 MSE = 'MSE'
@@ -336,7 +336,7 @@ class ComparatorMechanism(ObjectiveMechanism):
 
         # Parse items of input_states arg for validation (in _validate_params)
         input_states = input_states or [None] * 2
-        from PsyNeuLink.Components.States.State import _parse_state_spec
+        from psyneulink.components.states.State import _parse_state_spec
         sample_input = _parse_state_spec(owner=self,
                                          state_type=InputState,
                                          state_spec=input_states[0],

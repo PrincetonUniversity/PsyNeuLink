@@ -1,8 +1,8 @@
 import numpy as np
 
-from PsyNeuLink.Components.Functions.Function import BogaczEtAl
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Globals.Keywords import IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX
+from psyneulink.components.functions.Function import BogaczEtAl
+from psyneulink.components.Process import process
+from psyneulink.globals.Keywords import IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
 
 

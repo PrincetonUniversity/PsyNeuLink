@@ -232,14 +232,14 @@ import inspect
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
-from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, LinearMatrix, get_matrix
-from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection import PathwayProjection_Base
-from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
-from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from PsyNeuLink.Scheduling.TimeScale import CentralClock
+from psyneulink.components.Component import InitStatus, parameter_keywords
+from psyneulink.components.functions.Function import AccumulatorIntegrator, LinearMatrix, get_matrix
+from psyneulink.components.projections.PathwayProjections.PathwayProjection import PathwayProjection_Base
+from psyneulink.components.projections.Projection import ProjectionError, Projection_Base, projection_keywords
+from psyneulink.globals.Keywords import AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from psyneulink.scheduling.TimeScale import CentralClock
 
 parameter_keywords.update({MAPPING_PROJECTION})
 projection_keywords.update({MAPPING_PROJECTION})
@@ -632,7 +632,7 @@ class MappingProjection(PathwayProjection_Base):
 
         # Specification is a two-item tuple, so validate that 2nd item is:
         # *LEARNING* or *LEARNING_PROJECTION* keyword, LearningProjection subclass, or instance of a LearningPojection
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+        from psyneulink.components.projections.ModulatoryProjections.LearningProjection import LearningProjection
         if (isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], tuple) and
                     len(self.paramsCurrent[FUNCTION_PARAMS][MATRIX]) is 2 and
                 (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {LEARNING, LEARNING_PROJECTION}

@@ -1,9 +1,9 @@
-from PsyNeuLink.Components.Functions.Function import Integrator, Linear
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.System import *
-from PsyNeuLink.Scheduling.Condition import AfterNCalls, Any, AtPass, EveryNCalls
-from PsyNeuLink.Scheduling.Scheduler import Scheduler
+from psyneulink.components.functions.Function import Integrator, Linear
+from psyneulink.components.mechanisms.ProcessingMechanisms import IntegratorMechanism
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.System import *
+from psyneulink.scheduling.Condition import AfterNCalls, Any, AtPass, EveryNCalls
+from psyneulink.scheduling.Scheduler import Scheduler
 
 logger = logging.getLogger(__name__)
 

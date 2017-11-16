@@ -77,18 +77,18 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import parameter_keywords
-from PsyNeuLink.Components.Functions.Function import Hebbian, ModulationParam, _is_modulation_param, is_function_type
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import ACTIVATION_INPUT, LearningMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.Projection import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
-from PsyNeuLink.Components.ShellClasses import Projection
-from PsyNeuLink.Globals.Keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, FUNCTION_PARAMS, INDEX, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, PROJECTION
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import is_numeric, parameter_spec
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+from psyneulink.components.Component import parameter_keywords
+from psyneulink.components.functions.Function import Hebbian, ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.components.mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import ACTIVATION_INPUT, LearningMechanism
+from psyneulink.components.mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.Projections.Projection import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
+from psyneulink.components.ShellClasses import Projection
+from psyneulink.globals.Keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, FUNCTION_PARAMS, INDEX, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, PROJECTION
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Utilities import is_numeric, parameter_spec
+from psyneulink.scheduling.TimeScale import CentralClock, TimeScale
 
 # Params:
 
@@ -365,10 +365,10 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS (AKIN TO CONTROL_SIGNAL
         if LEARNING_SIGNALS in target_set and target_set[LEARNING_SIGNALS]:
 
-            from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal \
+            from psyneulink.components.States.ModulatorySignals.LearningSignal \
                 import LearningSignal
-            from PsyNeuLink.Components.States.ParameterState import ParameterState
-            from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+            from psyneulink.components.States.ParameterState import ParameterState
+            from psyneulink.components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 
             for spec in target_set[LEARNING_SIGNALS]:
 
@@ -489,9 +489,9 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     def _instantiate_output_states(self, context=None):
 
         # Create registry for LearningSignals (to manage names)
-        from PsyNeuLink.Globals.Registry import register_category
-        from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
-        from PsyNeuLink.Components.States.State import State_Base
+        from psyneulink.globals.Registry import register_category
+        from psyneulink.components.States.ModulatorySignals.LearningSignal import LearningSignal
+        from psyneulink.components.States.State import State_Base
         register_category(entry=LearningSignal,
                           base_class=State_Base,
                           registry=self._stateRegistry,

@@ -77,7 +77,7 @@ from enum import Enum, EnumMeta, IntEnum
 
 import numpy as np
 
-from PsyNeuLink.Globals.Keywords import DISTANCE_METRICS, MATRIX_KEYWORD_VALUES, NAME, VALUE
+from psyneulink.globals.Keywords import DISTANCE_METRICS, MATRIX_KEYWORD_VALUES, NAME, VALUE
 
 # THE FOLLOWING CAUSES ALL WARNINGS TO GENERATE AN EXCEPTION:
 warnings.filterwarnings("error")
@@ -191,9 +191,9 @@ def parameter_spec(param):
     # if isinstance(param, property):
     #     param = ??
     # if is_numeric(param):
-    from PsyNeuLink.Components.Functions.Function import function_type
-    from PsyNeuLink.Components.ShellClasses import Projection
-    from PsyNeuLink.Components.Component import parameter_keywords
+    from psyneulink.components.functions.Function import function_type
+    from psyneulink.components.ShellClasses import Projection
+    from psyneulink.components.Component import parameter_keywords
 
     if (isinstance(param, (numbers.Number,
                            np.ndarray,
@@ -363,7 +363,7 @@ def iscompatible(candidate, reference=None, **kargs):
 
     # # FIX??
     # # Reference is a matrix or a keyword specification for one
-    # # from PsyNeuLink.Components.Functions.Function import matrix_spec
+    # # from psyneulink.components.functions.Function import matrix_spec
     if is_matrix_spec(reference):
         return is_matrix(candidate)
 
@@ -927,7 +927,7 @@ def is_same_function_spec(fct_spec_1, fct_spec_2):
     Arguments can be either a class or instance of a PsyNeuLink Function, or any other callable method or function
     Return True only if both are instances or classes of a PsyNeuLink Function;  otherwise, return False
     """
-    from PsyNeuLink.Components.Functions.Function import Function
+    from psyneulink.components.functions.Function import Function
 
     def _convert_to_type(fct):
         if isinstance(fct, Function):

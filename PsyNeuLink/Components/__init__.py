@@ -17,8 +17,8 @@
 
 import inspect
 
-from PsyNeuLink.Globals.Keywords import DEFAULT_PROCESSING_MECHANISM, PROJECTION_SENDER, PROJECTION_TYPE
-from PsyNeuLink.Globals.Registry import register_category
+from psyneulink.globals.Keywords import DEFAULT_PROCESSING_MECHANISM, PROJECTION_SENDER, PROJECTION_TYPE
+from psyneulink.globals.Registry import register_category
 
 kwInitPy = '__init__.py'
 
@@ -32,18 +32,18 @@ class InitError(Exception):
 
 #region ***************************************** MECHANISM SUBCLASSES *************************************************
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismRegistry
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism \
+from psyneulink.components.mechanisms.Mechanism import MechanismRegistry
+from psyneulink.components.mechanisms.Mechanism import Mechanism_Base
+from psyneulink.components.mechanisms.ProcessingMechanisms.DefaultProcessingMechanism \
     import DefaultProcessingMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
+from psyneulink.components.mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
     import ControlMechanism
 register_category(entry=ControlMechanism,
                   base_class=Mechanism_Base,
                   registry=MechanismRegistry,
                   context=kwInitPy)
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.DefaultControlMechanism \
+from psyneulink.components.mechanisms.AdaptiveMechanisms.ControlMechanism.DefaultControlMechanism \
     import DefaultControlMechanism
 register_category(entry=DefaultControlMechanism,
                   base_class=Mechanism_Base,
@@ -51,7 +51,7 @@ register_category(entry=DefaultControlMechanism,
                   context=kwInitPy)
 
 # DDM (used as DefaultMechanism)
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
+from psyneulink.library.mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
 register_category(entry=DDM,
                   base_class=Mechanism_Base,
                   registry=MechanismRegistry,
@@ -90,25 +90,25 @@ SystemDefaultControlMechanism = DefaultControlMechanism
 #              while still indexing multiple uses of the same base name within an owner
 #
 # State registry
-from PsyNeuLink.Components.States.State import StateRegistry
-from PsyNeuLink.Components.States.State import State_Base
+from psyneulink.components.states.State import StateRegistry
+from psyneulink.components.states.State import State_Base
 
 # InputState
-from PsyNeuLink.Components.States.InputState import InputState
+from psyneulink.components.states.InputState import InputState
 register_category(entry=InputState,
                   base_class=State_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
 
 # OutputState
-from PsyNeuLink.Components.States.OutputState import OutputState
+from psyneulink.components.states.OutputState import OutputState
 register_category(entry=OutputState,
                   base_class=State_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
 
 # ParameterState
-from PsyNeuLink.Components.States.ParameterState import ParameterState
+from psyneulink.components.states.ParameterState import ParameterState
 register_category(entry=ParameterState,
                   base_class=State_Base,
                   registry=StateRegistry,
@@ -117,25 +117,25 @@ register_category(entry=ParameterState,
 # Projection -----------------------------------------------------------------------------------------------------------
 
 # Projection registry
-from PsyNeuLink.Components.Projections.Projection import ProjectionRegistry
-from PsyNeuLink.Components.Projections.Projection import Projection_Base
+from psyneulink.components.projections.Projection import ProjectionRegistry
+from psyneulink.components.projections.Projection import Projection_Base
 
 # MappingProjection
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.projections.PathwayProjections.MappingProjection import MappingProjection
 register_category(entry=MappingProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
 
 # ControlProjection
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+from psyneulink.components.projections.ModulatoryProjections.ControlProjection import ControlProjection
 register_category(entry=ControlProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
 
 # LearningProjection
-from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+from psyneulink.components.projections.ModulatoryProjections.LearningProjection import LearningProjection
 register_category(entry=LearningProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
@@ -229,23 +229,23 @@ for projection_type in ProjectionRegistry:
 
 #region ***************************************** CLASS _PREFERENCES ***************************************************
 
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet \
+from psyneulink.globals.preferences.ComponentPreferenceSet \
     import ComponentPreferenceSet, ComponentDefaultPrefDicts, PreferenceLevel
 
-from PsyNeuLink.Components.ShellClasses import System
+from psyneulink.components.ShellClasses import System
 System.classPreferences = ComponentPreferenceSet(owner=System,
                                                  prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
                                                  level=PreferenceLevel.INSTANCE,
                                                  context=".__init__.py")
 
-from PsyNeuLink.Components.ShellClasses import Process
+from psyneulink.components.ShellClasses import Process
 Process.classPreferences = ComponentPreferenceSet(owner=Process,
                                                  prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
                                                  level=PreferenceLevel.INSTANCE,
                                                  context=".__init__.py")
 
 
-from PsyNeuLink.Components.ShellClasses import Mechanism
+from psyneulink.components.ShellClasses import Mechanism
 Mechanism.classPreferences = ComponentPreferenceSet(owner=Mechanism,
                                                    prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
                                                    level=PreferenceLevel.TYPE,
@@ -257,7 +257,7 @@ DDM.classPreferences = ComponentPreferenceSet(owner=DDM,
                                              context=".__init__.py")
 
 
-from PsyNeuLink.Components.ShellClasses import State
+from psyneulink.components.ShellClasses import State
 State.classPreferences = ComponentPreferenceSet(owner=State,
                                                prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
                                                level=PreferenceLevel.CATEGORY,
@@ -273,13 +273,13 @@ MappingProjection.classPreferences = ComponentPreferenceSet(owner=MappingProject
                                                  level=PreferenceLevel.TYPE,
                                                  context=".__init__.py")
 
-from PsyNeuLink.Components.ShellClasses import Projection
+from psyneulink.components.ShellClasses import Projection
 Projection.classPreferences = ComponentPreferenceSet(owner=Projection,
                                                     prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
                                                     level=PreferenceLevel.CATEGORY,
                                                     context=".__init__.py")
 
-from PsyNeuLink.Components.Functions.Function import Function
+from psyneulink.components.functions.Function import Function
 Function.classPreferences = ComponentPreferenceSet(owner=Function,
                                                  prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
                                                  level=PreferenceLevel.CATEGORY,

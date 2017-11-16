@@ -332,19 +332,19 @@ import numpy as np
 
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import InitStatus
-from PsyNeuLink.Components.Functions.Function import LinearCombination
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-from PsyNeuLink.Components.ShellClasses import Mechanism, State
-from PsyNeuLink.Components.States.InputState import InputState
-from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE, standard_output_states
-from PsyNeuLink.Components.States.State import _parse_state_spec
-from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CONTROL, DEFAULT_MATRIX, EXPONENT, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, MECHANISM, NAME, OBJECTIVE_MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PROJECTIONS, SENDER, TIME_SCALE, VALUE, VARIABLE, WEIGHT, WEIGHTS, kwPreferenceSetName
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from PsyNeuLink.Globals.Utilities import ContentAddressableList, is_matrix
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.components.Component import InitStatus
+from psyneulink.components.functions.Function import LinearCombination
+from psyneulink.components.mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
+from psyneulink.components.mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from psyneulink.components.ShellClasses import Mechanism, State
+from psyneulink.components.states.InputState import InputState
+from psyneulink.components.states.OutputState import OutputState, PRIMARY_OUTPUT_STATE, standard_output_states
+from psyneulink.components.states.State import _parse_state_spec
+from psyneulink.globals.Keywords import AUTO_ASSIGN_MATRIX, CONTROL, DEFAULT_MATRIX, EXPONENT, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, MECHANISM, NAME, OBJECTIVE_MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PROJECTIONS, SENDER, TIME_SCALE, VALUE, VARIABLE, WEIGHT, WEIGHTS, kwPreferenceSetName
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
+from psyneulink.globals.preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from psyneulink.globals.Utilities import ContentAddressableList, is_matrix
+from psyneulink.scheduling.TimeScale import TimeScale
 
 ROLE = 'role'
 MONITORED_OUTPUT_STATES = 'monitored_output_states'
@@ -574,7 +574,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                   params=params)
         self._learning_role = None
 
-        from PsyNeuLink.Components.States.OutputState import StandardOutputStates
+        from psyneulink.components.states.OutputState import StandardOutputStates
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
@@ -989,7 +989,7 @@ def _parse_monitored_output_states(source, output_state_list, mech=None, context
             output_state = output_state_tuple.output_state
 
             # If output_state is a string,
-            from PsyNeuLink.Components.ShellClasses import System
+            from psyneulink.components.ShellClasses import System
             if isinstance(output_state, str):
                 if not isinstance(source, System):
                     raise ObjectiveMechanismError("A string was used to specify an OutputState (presumably its name: "
@@ -1110,8 +1110,8 @@ def _instantiate_monitoring_projections(owner,
                                         receiver_projection_specs:tc.optional(list)=None,
                                         context=None):
 
-    from PsyNeuLink.Components.States.OutputState import OutputState
-    from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+    from psyneulink.components.states.OutputState import OutputState
+    from psyneulink.components.projections.PathwayProjections.MappingProjection import MappingProjection
 
     receiver_projection_specs = receiver_projection_specs or [DEFAULT_MATRIX] * len(sender_list)
 

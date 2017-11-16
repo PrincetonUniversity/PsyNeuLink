@@ -324,15 +324,15 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import Component, InitStatus
-from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, is_function_type
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.States.State import State_Base, _instantiate_state_list, state_type_keywords
-from PsyNeuLink.Globals.Keywords import CALCULATE, INDEX, MAPPING_PROJECTION, MEAN, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import UtilitiesError
-from PsyNeuLink.Globals.Utilities import iscompatible, type_match
+from psyneulink.components.Component import Component, InitStatus
+from psyneulink.components.functions.Function import Linear, LinearCombination, is_function_type
+from psyneulink.components.projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.states.State import State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.globals.Keywords import CALCULATE, INDEX, MAPPING_PROJECTION, MEAN, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Utilities import UtilitiesError
+from psyneulink.globals.Utilities import iscompatible, type_match
 
 state_type_keywords = state_type_keywords.update({OUTPUT_STATE})
 
@@ -709,9 +709,9 @@ class OutputState(State_Base):
         Call _instantiate_projections_from_state to assign MappingProjections to .efferents
 
         """
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
-        from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
+        from psyneulink.components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+        from psyneulink.components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
+        from psyneulink.components.mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 
         # Treat as ModulatoryProjection spec if it is a ModulatoryProjection, ModulatorySignal or AdaptiveMechanism
         modulatory_projections = [proj for proj in projections

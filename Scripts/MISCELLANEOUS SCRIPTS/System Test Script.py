@@ -1,7 +1,7 @@
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import Process_Base
-from PsyNeuLink.Components.System import System_Base
-from PsyNeuLink.Globals.Keywords import *
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.Process import Process_Base
+from psyneulink.components.System import System_Base
+from psyneulink.globals.Keywords import *
 
 # DDM_prefs = ComponentPreferenceSet(
 #                 prefs = {

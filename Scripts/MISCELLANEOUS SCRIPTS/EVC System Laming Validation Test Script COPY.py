@@ -1,10 +1,10 @@
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms import EVCControlMechanism
+# from psyneulink.components.mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import *
+from psyneulink.components.Process import process
+from psyneulink.components.projections.ModulatoryProjections.ControlProjection import ControlProjection
+from psyneulink.components.System import system
+from psyneulink.globals.Keywords import *
+from psyneulink.library.mechanisms.AdaptiveMechanisms import EVCControlMechanism
 
 # Preferences:
 DDM_prefs = ComponentPreferenceSet(

@@ -109,7 +109,7 @@ import warnings
 from collections import namedtuple
 from enum import IntEnum
 
-from PsyNeuLink.Globals.Keywords import kwContext, kwTime, kwValue
+from psyneulink.globals.Keywords import kwContext, kwTime, kwValue
 
 
 class LogLevel(IntEnum):

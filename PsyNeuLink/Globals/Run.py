@@ -300,12 +300,12 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import ExecutionStatus, function_type
-from PsyNeuLink.Components.Process import ProcessInputState
-from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
-from PsyNeuLink.Globals.Keywords import EVC_SIMULATION, MECHANISM, PROCESS, PROCESSES_DIM, RUN, SAMPLE, SYSTEM, TARGET
-from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+from psyneulink.components.Component import ExecutionStatus, function_type
+from psyneulink.components.Process import ProcessInputState
+from psyneulink.components.ShellClasses import Mechanism, Process, System
+from psyneulink.globals.Keywords import EVC_SIMULATION, MECHANISM, PROCESS, PROCESSES_DIM, RUN, SAMPLE, SYSTEM, TARGET
+from psyneulink.globals.Utilities import append_type_to_name, iscompatible
+from psyneulink.scheduling.TimeScale import CentralClock, TimeScale
 
 HOMOGENOUS = 1
 HETEROGENOUS = 0
@@ -509,7 +509,7 @@ def run(object,
 
     # SET LEARNING_RATE, if specified, for all learningProjections in process or system
     if object.learning_rate is not None:
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+        from psyneulink.components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         for learning_mech in object.learning_mechanisms.mechanisms:
             for projection in learning_mech.output_state.efferents:
                 if isinstance(projection, LearningProjection):

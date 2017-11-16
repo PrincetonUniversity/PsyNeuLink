@@ -291,15 +291,15 @@ import random
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import method_type
-from PsyNeuLink.Components.Functions.Function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, STARTING_POINT, THRESHOLD
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-from PsyNeuLink.Components.States.OutputState import SEQUENTIAL
-from PsyNeuLink.Globals.Keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, TIME_SCALE, kwPreferenceSetName
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+from psyneulink.components.Component import method_type
+from psyneulink.components.functions.Function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, STARTING_POINT, THRESHOLD
+from psyneulink.components.mechanisms.Mechanism import Mechanism_Base
+from psyneulink.components.mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from psyneulink.components.states.OutputState import SEQUENTIAL
+from psyneulink.globals.Keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, TIME_SCALE, kwPreferenceSetName
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
+from psyneulink.globals.preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from psyneulink.scheduling.TimeScale import CentralClock, TimeScale
 
 logger = logging.getLogger(__name__)
 
@@ -653,7 +653,7 @@ class DDM(ProcessingMechanism_Base):
         # self.size = size
         self.threshold = thresh
 
-        from PsyNeuLink.Components.States.OutputState import StandardOutputStates
+        from psyneulink.components.States.OutputState import StandardOutputStates
         self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states, SEQUENTIAL)
 
         super(DDM, self).__init__(variable=default_variable,

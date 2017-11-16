@@ -12,10 +12,10 @@
 
 import inspect
 
-from PsyNeuLink.Globals.Keywords import NAME
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import kpReportOutputPref, kpRuntimeParamStickyAssignmentPref, kpVerbosePref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from PsyNeuLink.Globals.Utilities import Modulation
+from psyneulink.globals.Keywords import NAME
+from psyneulink.globals.preferences.ComponentPreferenceSet import kpReportOutputPref, kpRuntimeParamStickyAssignmentPref, kpVerbosePref
+from psyneulink.globals.preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from psyneulink.globals.Utilities import Modulation
 
 # MODIFIED 11/29/16 OLD:
 # # Keypaths for preferences:

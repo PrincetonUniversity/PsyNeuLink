@@ -435,20 +435,20 @@ import numpy as np
 import typecheck as tc
 from toposort import toposort, toposort_flatten
 
-from PsyNeuLink.Components.Component import Component, ExecutionStatus, InitStatus, function_type
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism, OBJECTIVE_MECHANISM
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import LearningMechanism
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MonitoredOutputStatesOption
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import MonitoredOutputStateTuple, OUTPUT_STATE_INDEX, ObjectiveMechanism
-from PsyNeuLink.Components.Process import ProcessList, ProcessTuple, Process_Base
-from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
-from PsyNeuLink.Globals.Keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CONTROL_SIGNAL_SPECS, CYCLE, EVC_SIMULATION, EXECUTING, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, kwSeparator, kwSystemComponentCategory
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.Utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, parameter_spec
-from PsyNeuLink.Scheduling.Scheduler import Scheduler
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+from psyneulink.components.Component import Component, ExecutionStatus, InitStatus, function_type
+from psyneulink.components.mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism, OBJECTIVE_MECHANISM
+from psyneulink.components.mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import LearningMechanism
+from psyneulink.components.mechanisms.Mechanism import MechanismList, MonitoredOutputStatesOption
+from psyneulink.components.mechanisms.ProcessingMechanisms.ObjectiveMechanism import MonitoredOutputStateTuple, OUTPUT_STATE_INDEX, ObjectiveMechanism
+from psyneulink.components.Process import ProcessList, ProcessTuple, Process_Base
+from psyneulink.components.ShellClasses import Mechanism, Process, System
+from psyneulink.globals.Keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CONTROL_SIGNAL_SPECS, CYCLE, EVC_SIMULATION, EXECUTING, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, kwSeparator, kwSystemComponentCategory
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Registry import register_category
+from psyneulink.globals.Utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, parameter_spec
+from psyneulink.scheduling.Scheduler import Scheduler
+from psyneulink.scheduling.TimeScale import CentralClock, TimeScale
 
 logger = logging.getLogger(__name__)
 
@@ -495,7 +495,7 @@ class SystemError(Exception):
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
 
-from PsyNeuLink.Components.Process import process
+from psyneulink.components.Process import process
 
 # System factory method:
 @tc.typecheck
@@ -1086,7 +1086,7 @@ class System_Base(System):
 
         # Assign default Process if PROCESS is empty, or invalid
         if not processes_spec:
-            from PsyNeuLink.Components.Process import Process_Base
+            from psyneulink.components.Process import Process_Base
             processes_spec.append(ProcessTuple(Process_Base(), None))
 
         # If input to system is specified, number of items must equal number of processes with origin mechanisms
@@ -1687,7 +1687,7 @@ class System_Base(System):
             self.inputs.append(stimulus_input_state.value)
 
             # Add MappingProjection from stimulus_input_state to ORIGIN mechainsm's inputState
-            from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+            from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
             MappingProjection(sender=stimulus_input_state,
                     receiver=origin_mech,
                     name=self.name+' Input Projection to '+origin_mech.name)
@@ -1703,7 +1703,7 @@ class System_Base(System):
 
             # MappingProjections are legal recipients of learning projections (hence the call)
             #  but do not send any projections, so no need to consider further
-            from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+            from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
             if isinstance(sender_mech, MappingProjection):
                 return
 
@@ -1782,7 +1782,7 @@ class System_Base(System):
                         raise SystemError("{} does not project to a LearningMechanism in the same process {}".
                                           format(sender_mech.name, process.name))
 
-                    from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningAuxilliary \
+                    from psyneulink.components.mechanisms.AdaptiveMechanisms.LearningMechanism.LearningAuxilliary \
                         import ACTIVATION_INPUT, ERROR_SIGNAL
 
                     # Get the ProcessingMechanism that projected to sender_mech
@@ -1942,7 +1942,7 @@ class System_Base(System):
         self._learning_mechs = []
         self._target_mechs = []
 
-        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+        from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
         for item in self.learningexecution_list:
             if isinstance(item, MappingProjection):
                 continue
@@ -2011,7 +2011,7 @@ class System_Base(System):
             self.target_input_states.append(system_target_input_state)
 
             # Add MappingProjection from system_target_input_state to TARGET mechainsm's target inputState
-            from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+            from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
             MappingProjection(sender=system_target_input_state,
                     receiver=target_mech_TARGET_input_state,
                     name=self.name+' Input Projection to '+target_mech_TARGET_input_state.name)
@@ -2128,8 +2128,8 @@ class System_Base(System):
 
         """
 
-        from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
+        from psyneulink.components.mechanisms.Mechanism import MonitoredOutputStatesOption
+        from psyneulink.components.mechanisms.ProcessingMechanisms.ObjectiveMechanism \
             import _parse_monitored_output_states
 
         # PARSE SPECS
@@ -2479,7 +2479,7 @@ class System_Base(System):
             self.execution_status = ExecutionStatus.EXECUTING
 
         # Update execution_id for self and all mechanisms in graph (including learning) and controller
-        from PsyNeuLink.Globals.Run import _get_unique_id
+        from psyneulink.globals.Run import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
         # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
         # self.learningexecution_list
@@ -2692,7 +2692,7 @@ class System_Base(System):
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
 
-                from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+                from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
                 if isinstance(component, MappingProjection):
                     continue
 
@@ -2856,7 +2856,7 @@ class System_Base(System):
 
         logger.debug(inputs)
 
-        from PsyNeuLink.Globals.Run import run
+        from psyneulink.globals.Run import run
         return run(self,
                    inputs=inputs,
                    num_trials=num_trials,
@@ -3102,8 +3102,8 @@ class System_Base(System):
                 output_state_names.append(name)
         output_value_array = np.array(output_value_array)
 
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+        from psyneulink.components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from psyneulink.components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         learning_projections = []
         controlled_parameters = []
         for mech in list(self.mechanisms):
@@ -3302,11 +3302,11 @@ class System_Base(System):
 
         """
 
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
+        from psyneulink.components.mechanisms.ProcessingMechanisms.ObjectiveMechanism \
             import ObjectiveMechanism
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
+        from psyneulink.components.mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
             import LearningMechanism
-        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+        from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
         import graphviz as gv
 
@@ -3468,7 +3468,7 @@ class System_Base(System):
 
 SYSTEM_TARGET_INPUT_STATE = 'SystemInputState'
 
-from PsyNeuLink.Components.States.OutputState import OutputState
+from psyneulink.components.states.OutputState import OutputState
 class SystemInputState(OutputState):
     """Represents inputs and targets specified in a call to the System's `execute <Process_Base.execute>` and `run
     <Process_Base.run>` methods.

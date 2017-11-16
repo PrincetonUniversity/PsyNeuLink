@@ -10,20 +10,20 @@
 from typing import List, Union
 
 import numpy as np
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
+from psyneulink.components.mechanisms.Mechanism import MechanismError
 
-from PsyNeuLink.Components import Mechanism_Base
-from PsyNeuLink.Components.Functions.Function import PreferenceSet, \
+from psyneulink.components import Mechanism_Base
+from psyneulink.components.functions.Function import PreferenceSet, \
     ModulationParam
-from PsyNeuLink.Components.Functions.TDLearning import TDLearning
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism \
+from psyneulink.components.functions.TDLearning import TDLearning
+from psyneulink.components.mechanisms.AdaptiveMechanisms.AdaptiveMechanism \
     import \
     AdaptiveMechanismError, AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms \
+from psyneulink.components.mechanisms.AdaptiveMechanisms.LearningMechanisms \
     .LearningMechanism import Function, LearningMechanism, \
     LearningMechanismError
-from PsyNeuLink.Globals.Keywords import LEARNING_MECHANISM, MECHANISM
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Keywords import LEARNING_MECHANISM, MECHANISM
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
 
 
 class TDLearningMechanismError(MechanismError):

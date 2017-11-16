@@ -133,25 +133,24 @@ import warnings
 
 import numpy as np
 
-from PsyNeuLink.Components.Component import function_type, method_type
-from PsyNeuLink.Components.Functions.Function import BackPropagation, Hebbian, \
+from psyneulink.components.Component import function_type, method_type
+from psyneulink.components.functions.Function import BackPropagation, Hebbian, \
     Linear, Reinforcement, TDLearning
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
-from PsyNeuLink.Components.ShellClasses import Function
-from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Globals.Keywords import BACKPROPAGATION_FUNCTION, \
+from psyneulink.components.mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
+from psyneulink.components.mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from psyneulink.components.mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from psyneulink.components.projections.ModulatoryProjections.LearningProjection import LearningProjection
+from psyneulink.components.projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.projections.Projection import _is_projection_spec
+from psyneulink.components.ShellClasses import Function
+from psyneulink.components.states.OutputState import OutputState
+from psyneulink.components.states.ParameterState import ParameterState
+from psyneulink.globals.Keywords import BACKPROPAGATION_FUNCTION, \
     COMPARATOR_MECHANISM, ERROR, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, \
     LEARNING_MECHANISM, MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, \
     TARGET, VARIABLE, WEIGHT, TDLEARNING_FUNCTION, PREDICTION_ERROR_MECHANISM
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism import ComparatorMechanism
-
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms\
+from psyneulink.library.mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism import ComparatorMechanism
+from psyneulink.library.mechanisms.ProcessingMechanisms.ObjectiveMechanisms\
     .PredictionErrorMechanism import \
     PredictionErrorMechanism
 

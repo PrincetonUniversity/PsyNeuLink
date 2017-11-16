@@ -1,34 +1,34 @@
 import numpy as np
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms \
+from psyneulink.components.mechanisms.ProcessingMechanisms \
     .IntegratorMechanism import \
     IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms \
+from psyneulink.components.mechanisms.ProcessingMechanisms \
     .RecurrentTransferMechanism import \
     RecurrentTransferMechanism
-from PsyNeuLink.Scheduling.condition import EveryNCalls, Any, AfterNCalls, EveryNPasses
+from psyneulink.scheduling.condition import EveryNCalls, Any, AfterNCalls, EveryNPasses
 
 from PsyNeuLink import ModulationParam
-from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, \
+from psyneulink.components.functions.Function import AdaptiveIntegrator, \
     BogaczEtAl, DriftDiffusionIntegrator, Linear, Logistic, PROB, SoftMax
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism \
+from psyneulink.components.mechanisms.AdaptiveMechanisms.GatingMechanism \
     .GatingMechanism import \
     GatingMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import \
+from psyneulink.components.mechanisms.ProcessingMechanisms.ObjectiveMechanism import \
     ComparatorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism \
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism \
     import \
     MEAN, RESULT, TransferMechanism, VARIANCE, TRANSFER_OUTPUT
-from PsyNeuLink.Components.Process import PARAMETER_STATE_PARAMS, \
+from psyneulink.components.Process import PARAMETER_STATE_PARAMS, \
     RANDOM_CONNECTIVITY_MATRIX, process
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection \
+from psyneulink.components.Projections.PathwayProjections.MappingProjection \
     import MappingProjection
-from PsyNeuLink.Components.States.ModulatorySignals import ControlSignal
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import ENABLED, GAIN, NAME, INDEX, CALCULATE, \
+from psyneulink.components.States.ModulatorySignals import ControlSignal
+from psyneulink.components.System import system
+from psyneulink.globals.Keywords import ENABLED, GAIN, NAME, INDEX, CALCULATE, \
     INTERCEPT, MECHANISM, MODULATION, GATE
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, \
     NOISE, THRESHOLD, TimeScale
-from PsyNeuLink.Scheduling.Scheduler import Scheduler
+from psyneulink.scheduling.Scheduler import Scheduler
 
 
 def intro():

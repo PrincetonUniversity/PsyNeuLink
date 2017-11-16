@@ -1,13 +1,13 @@
 import numpy as np
 import pytest
 
-from PsyNeuLink.Components.Functions.Function import PROB
-from PsyNeuLink.Components.Functions.Function import Reinforcement, SoftMax
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Scheduling.TimeScale import CentralClock
+from psyneulink.components.functions.Function import PROB
+from psyneulink.components.functions.Function import Reinforcement, SoftMax
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.Process import process
+from psyneulink.components.projections.ModulatoryProjections.LearningProjection import LearningProjection
+from psyneulink.components.System import system
+from psyneulink.scheduling.TimeScale import CentralClock
 
 
 def test_reinforcement():

@@ -1,7 +1,7 @@
 from pprint import pprint
 
-from PsyNeuLink.Components.Functions.Function import Integrator, BogaczEtAl
-from PsyNeuLink.Components.Process import process
+from psyneulink.components.functions.Function import Integrator, BogaczEtAl
+from psyneulink.components.Process import process
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms import DDM
 
 

@@ -11,7 +11,7 @@
 
 from collections import namedtuple
 
-from PsyNeuLink.Globals.Keywords import CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_STATE, MAPPING_PROJECTION, OUTPUT_STATE, PARAMETER_STATE, kwComponentCategory, kwComponentPreferenceSet, kwMechanismComponentCategory, kwPreferenceSet, kwProcessComponentCategory, kwProjectionComponentCategory, kwStateComponentCategory, kwSystemComponentCategory
+from psyneulink.globals.Keywords import CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_STATE, MAPPING_PROJECTION, OUTPUT_STATE, PARAMETER_STATE, kwComponentCategory, kwComponentPreferenceSet, kwMechanismComponentCategory, kwPreferenceSet, kwProcessComponentCategory, kwProjectionComponentCategory, kwStateComponentCategory, kwSystemComponentCategory
 
 # IMPLEMENTATION NOTE:
 # - Implement Registry as class, and each Registry as subclass
@@ -101,8 +101,8 @@ def register_category(entry,
     :return:
     """
 
-    from PsyNeuLink.Components.Component import Component
-    from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceSet
+    from psyneulink.components.Component import Component
+    from psyneulink.globals.preferences.PreferenceSet import PreferenceSet
     if not issubclass(base_class, (Component, PreferenceSet)):
         raise RegistryError("base_class ({0}) for registry must be a subclass of "
                             "Component or PreferenceSet".format(base_class))

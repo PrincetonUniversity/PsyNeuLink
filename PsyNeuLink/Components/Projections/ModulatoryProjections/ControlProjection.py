@@ -99,17 +99,17 @@ Class Reference
 
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
-from PsyNeuLink.Components.Functions.Function import Linear
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
-from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
-from PsyNeuLink.Components.ShellClasses import Mechanism, Process
-from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_PROJECTION, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Scheduling.TimeScale import CentralClock
+from psyneulink.components.Component import InitStatus, parameter_keywords
+from psyneulink.components.functions.Function import Linear
+from psyneulink.components.mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
+from psyneulink.components.projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+from psyneulink.components.projections.Projection import ProjectionError, Projection_Base, projection_keywords
+from psyneulink.components.ShellClasses import Mechanism, Process
+from psyneulink.globals.Defaults import defaultControlAllocation
+from psyneulink.globals.Keywords import CONTROL, CONTROL_PROJECTION, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.scheduling.TimeScale import CentralClock
 
 parameter_keywords.update({CONTROL_PROJECTION, CONTROL})
 projection_keywords.update({CONTROL_PROJECTION, CONTROL})
@@ -343,7 +343,7 @@ class ControlProjection(ModulatoryProjection_Base):
         if isinstance(self.receiver, Mechanism):
             # If there is just one param of ParameterState type in the receiver Mechanism
             # then assign it as actual receiver (which must be a State);  otherwise, raise exception
-            from PsyNeuLink.Components.States.ParameterState import ParameterState
+            from psyneulink.components.States.ParameterState import ParameterState
             if len(dict((param_name, state) for param_name, state in self.receiver.paramsCurrent.items()
                     if isinstance(state, ParameterState))) == 1:
                 receiver_parameter_state = [state for state in dict.values()][0]

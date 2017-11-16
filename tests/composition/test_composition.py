@@ -5,15 +5,15 @@ from timeit import timeit
 import numpy as np
 import pytest
 
-from PsyNeuLink.Components.Functions.Function import Linear, SimpleIntegrator
-from PsyNeuLink.Components.Mechanisms.Mechanism import mechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.functions.Function import Linear, SimpleIntegrator
+from psyneulink.components.mechanisms.Mechanism import mechanism
+from psyneulink.components.mechanisms.ProcessingMechanisms import IntegratorMechanism
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Composition import Composition, CompositionError, MechanismRole
-from PsyNeuLink.Scheduling.Condition import EveryNCalls
-from PsyNeuLink.Scheduling.Scheduler import Scheduler
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.scheduling.Condition import EveryNCalls
+from psyneulink.scheduling.Scheduler import Scheduler
+from psyneulink.scheduling.TimeScale import TimeScale
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ class TestAddMechanism:
         t = timeit(
             'comp.add_mechanism(mechanism())',
             setup='''
-from PsyNeuLink.Components.Mechanisms.Mechanism import mechanism
+from psyneulink.components.mechanisms.Mechanism import mechanism
 from PsyNeuLink.Composition import Composition
 comp = Composition()
 ''',
@@ -128,8 +128,8 @@ class TestAddProjection:
     def test_timing_stress(self, count):
         t = timeit('comp.add_projection(A, MappingProjection(), B)',
                    setup='''
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Composition import Composition
 comp = Composition()
 A = TransferMechanism(name='A')

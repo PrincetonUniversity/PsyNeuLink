@@ -1,9 +1,9 @@
-from PsyNeuLink.Components.Functions.Function import Linear, SimpleIntegrator
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Globals.Keywords import EXECUTING
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.components.functions.Function import Linear, SimpleIntegrator
+from psyneulink.components.mechanisms.ProcessingMechanisms import IntegratorMechanism
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.globals.Keywords import EXECUTING
+from psyneulink.scheduling.TimeScale import TimeScale
 
 I = IntegratorMechanism(
         name='IntegratorMechanism',

@@ -1,9 +1,9 @@
 import numpy as np
 
 from PsyNeuLink import TransferMechanism, process
-from PsyNeuLink.Components.Functions.Function import TDDeltaFunction
-from PsyNeuLink.Components.States.InputState import InputState
-from PsyNeuLink.Globals.Keywords import NAME, SAMPLE, VARIABLE, TARGET, VALUE, \
+from psyneulink.components.functions.Function import TDDeltaFunction
+from psyneulink.components.States.InputState import InputState
+from psyneulink.globals.Keywords import NAME, SAMPLE, VARIABLE, TARGET, VALUE, \
     STATE_TYPE
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms \
     .PredictionErrorMechanism import PredictionErrorMechanism

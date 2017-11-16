@@ -282,26 +282,26 @@ from enum import IntEnum
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import InitStatus, function_type, method_type
+from psyneulink.components.Component import InitStatus, function_type, method_type
 # import Components
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
-from PsyNeuLink.Components.Functions.Function import CombinationFunction, Exponential, IntegratorFunction, Linear, \
+from psyneulink.components.functions.Function import CombinationFunction, Exponential, IntegratorFunction, Linear, \
     LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
-from PsyNeuLink.Components.ShellClasses import Function, Mechanism
-from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
-from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
-from PsyNeuLink.Components.States.State import State_Base
-from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAM, CONTROL_PROJECTION, EXECUTING, \
+from psyneulink.components.ShellClasses import Function, Mechanism
+from psyneulink.components.states.modulatorysignals.ModulatorySignal import ModulatorySignal
+from psyneulink.components.states.OutputState import PRIMARY_OUTPUT_STATE
+from psyneulink.components.states.State import State_Base
+from psyneulink.globals.Defaults import defaultControlAllocation
+from psyneulink.globals.Keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAM, CONTROL_PROJECTION, EXECUTING, \
     FUNCTION, FUNCTION_PARAMS, INTERCEPT, OFF, ON, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, SEPARATOR_BAR, \
     SLOPE, SUM, kwAssign
-from PsyNeuLink.Globals.Log import LogEntry, LogLevel
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, \
+from psyneulink.globals.Log import LogEntry, LogLevel
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set
+from psyneulink.globals.preferences.PreferenceSet import PreferenceLevel
+from psyneulink.globals.Utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, \
     kwCompatibilityType
-from PsyNeuLink.Scheduling.TimeScale import CurrentTime, TimeScale
+from psyneulink.scheduling.TimeScale import CurrentTime, TimeScale
 
 # class OutputStateLog(IntEnum):
 #     NONE            = 0
@@ -1200,10 +1200,10 @@ def _parse_control_signal_spec(owner, control_signal_spec, context=None):
         CONTROL_SIGNAL:ControlSignal or None
         PARAMS:dict - params dict if any were included in the state_spec
     """
-    from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-    from PsyNeuLink.Components.States.State import _parse_state_spec
-    from PsyNeuLink.Components.States.ParameterState import ParameterState, _get_parameter_state
-    from PsyNeuLink.Globals.Keywords import NAME, PARAMS, \
+    from psyneulink.components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+    from psyneulink.components.States.State import _parse_state_spec
+    from psyneulink.components.States.ParameterState import ParameterState, _get_parameter_state
+    from psyneulink.globals.Keywords import NAME, PARAMS, \
                                             CONTROL_SIGNAL, CONTROL_SIGNAL_SPECS, PARAMETER_STATE, \
                                             MECHANISM, PROJECTIONS, SENDER, RECEIVER
 

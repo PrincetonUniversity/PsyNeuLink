@@ -345,11 +345,11 @@ from enum import Enum, IntEnum
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Globals.Keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
-from PsyNeuLink.Globals.Log import Log
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet, kpVerbosePref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel, PreferenceSet
-from PsyNeuLink.Globals.Utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_to_np_array, is_same_function_spec, iscompatible, kwCompatibilityLength
+from psyneulink.globals.Keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+from psyneulink.globals.Log import Log
+from psyneulink.globals.preferences.ComponentPreferenceSet import ComponentPreferenceSet, kpVerbosePref
+from psyneulink.globals.preferences.PreferenceSet import PreferenceEntry, PreferenceLevel, PreferenceSet
+from psyneulink.globals.Utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_to_np_array, is_same_function_spec, iscompatible, kwCompatibilityLength
 
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
 
@@ -810,7 +810,7 @@ class Component(object):
             # type_requirements = [self.__class__ if item=='Function' else item for item in type_requirements]
 
             # get type for kwComponentCategory specification
-            from PsyNeuLink.Components.Functions.Function import Function_Base
+            from psyneulink.components.functions.Function import Function_Base
             if kwComponentCategory in type_requirements:
                type_requirements[type_requirements.index(kwComponentCategory)] = \
                    type(Function_Base)
@@ -1100,7 +1100,7 @@ class Component(object):
             return name
 
         def _convert_function_to_class(function, source):
-            from PsyNeuLink.Components.Functions.Function import Function
+            from psyneulink.components.functions.Function import Function
             from inspect import isfunction
             fct_cls = None
             fct_params = None
@@ -1219,7 +1219,7 @@ class Component(object):
                     # FIX:    CAN IT BE TRUSTED THAT function WILL BE PROCESSED BEFORE FUNCTION_PARAMS,
                     # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
 
-                    from PsyNeuLink.Components.Functions.Function import Function
+                    from psyneulink.components.functions.Function import Function
                     from inspect import isfunction
 
                     # It is a PsyNeuLink Function
@@ -1290,7 +1290,7 @@ class Component(object):
                 #    or for an instantiated function specified in FUNCTION entry of params dict
 
                 # First, if the function is instantiated, get the parameters from its user_params dict
-                from PsyNeuLink.Components.Functions.Function import Function
+                from psyneulink.components.functions.Function import Function
                 if FUNCTION in params_arg and isinstance(params_arg[FUNCTION], Function):
                     for param_name in params_arg[FUNCTION].user_params:
                         params[FUNCTION_PARAMS].__additem__(param_name, params_arg[FUNCTION].user_params[param_name])
@@ -1713,7 +1713,7 @@ class Component(object):
                 if param_name is FUNCTION:
                     try:
                         if function_class != default_function_class and COMMAND_LINE in context:
-                            from PsyNeuLink.Components.Functions.Function import Function_Base
+                            from psyneulink.components.functions.Function import Function_Base
                             if isinstance(function, Function_Base):
                                 request_set[FUNCTION] = function.__class__
                             default_set[FUNCTION_PARAMS] = function.user_params
@@ -1781,7 +1781,7 @@ class Component(object):
     @tc.typecheck
     def _assign_params(self, request_set:tc.optional(dict)=None, context=None):
 
-        from PsyNeuLink.Components.Functions.Function import Function
+        from psyneulink.components.functions.Function import Function
 
         # FIX: Hack to prevent recursion in calls to setter and assign_params
         # MODIFIED 5/6/17 NEW:
@@ -2032,7 +2032,7 @@ class Component(object):
                     # MODIFIED 2/14/17 END
                     continue
                 # If the value is a Function class, allow any instance of Function class
-                from PsyNeuLink.Components.Functions.Function import Function_Base
+                from psyneulink.components.functions.Function import Function_Base
                 if issubclass(self.paramClassDefaults[param_name], Function_Base):
                     # if isinstance(param_value, (function_type, Function_Base)):  <- would allow function of any kind
                     if isinstance(param_value, Function_Base):
@@ -2051,9 +2051,9 @@ class Component(object):
             #    the FUNCTION param (which is not allowed to be specified as a projection)
             #    then simply assign value to paramClassDefault (implication of not specifying it explicitly);
             #    this also allows it to pass the test below and function execution to occur for initialization;
-            from PsyNeuLink.Components.ShellClasses import Projection
-            # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-            # from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+            from psyneulink.components.ShellClasses import Projection
+            # from psyneulink.components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+            # from psyneulink.components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
             if (((isinstance(param_value, str) and
                           param_value in {CONTROL_PROJECTION, LEARNING_PROJECTION, LEARNING}) or
                 isinstance(param_value, Projection) or  # These should be just ControlProjection or LearningProjection
@@ -2062,7 +2062,7 @@ class Component(object):
                 param_value = self.paramClassDefaults[param_name]
 
             # If self is a Function and param is a class ref for function, instantiate it as the function
-            from PsyNeuLink.Components.Functions.Function import Function_Base
+            from psyneulink.components.functions.Function import Function_Base
             if (isinstance(self, Function_Base) and
                     inspect.isclass(param_value) and
                     issubclass(param_value, self.paramClassDefaults[param_name])):
@@ -2169,10 +2169,10 @@ class Component(object):
     def _get_param_value_from_tuple(self, param_spec):
         """Returns param value (first item) of a (value, projection) tuple
         """
-        # from PsyNeuLink.Components.Projections.Modulatory.ControlProjection import ControlProjection
-        # from PsyNeuLink.Components.Projections.Modulatory.LearningProjection import LearningProjection
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
-        from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
+        # from psyneulink.components.Projections.Modulatory.ControlProjection import ControlProjection
+        # from psyneulink.components.Projections.Modulatory.LearningProjection import LearningProjection
+        from psyneulink.components.projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+        from psyneulink.components.states.modulatorysignals.ModulatorySignal import ModulatorySignal
         ALLOWABLE_TUPLE_SPEC_KEYWORDS = {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING}
         ALLOWABLE_TUPLE_SPEC_CLASSES = (ModulatoryProjection_Base, ModulatorySignal)
 
@@ -2414,7 +2414,7 @@ class Component(object):
                     # parse entries of FUNCTION_PARAMS dict
                     else:
                         # Get param value from any params specified in a tuple or a dict
-                        from PsyNeuLink.Components.ShellClasses import Projection
+                        from psyneulink.components.ShellClasses import Projection
                         for param_name, param_spec in function_param_specs.items():
                             # Get param value from (param, projection) tuple
                             if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
@@ -2422,7 +2422,7 @@ class Component(object):
                                          isinstance(param_spec[1], Projection) or
                                          (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
                                 ):
-                                from PsyNeuLink.Components.States.ParameterState import ParameterState
+                                from psyneulink.components.states.ParameterState import ParameterState
                                 function_param_specs[param_name] =  param_spec[0]
                             # Get param value from VALUE entry of a parameter specification dictionary
                             elif isinstance(param_spec, dict) and VALUE in param_spec:
@@ -2457,7 +2457,7 @@ class Component(object):
             elif inspect.isfunction(function):
 
 
-                from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
+                from psyneulink.components.functions.Function import UserDefinedFunction
                 self.function = UserDefinedFunction(function=function, context=context).function
 
             # If FUNCTION is NOT a Function class reference:
@@ -2501,7 +2501,7 @@ class Component(object):
 
         #  - for all Components other than a Function itself,
         #    assign function_object, function_params dict, and function's parameters from any ParameterStates
-        from PsyNeuLink.Components.Functions.Function import Function
+        from psyneulink.components.functions.Function import Function
         if not isinstance(self, Function):
             self.function_object = self.function.__self__
             if not self.function_object.owner:
@@ -2763,7 +2763,7 @@ def make_property(name, default_value):
             #    example: slope or intercept parameter of a Linear Function)
             #    rationale: most common and therefore requires the greatest efficiency
             #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
-            from PsyNeuLink.Components.Functions.Function import Function
+            from psyneulink.components.functions.Function import Function
             if not isinstance(self, Function):
                 raise TypeError
             return self.owner._parameter_states[name].value
@@ -2798,7 +2798,7 @@ def make_property(name, default_value):
 
         # If Component is a Function and has an owner, update function_params dict for owner
         #    also, get parameter_state_owner if one exists
-        from PsyNeuLink.Components.Functions.Function import Function_Base
+        from psyneulink.components.functions.Function import Function_Base
         if isinstance(self, Function_Base) and self.owner:
             param_state_owner = self.owner
             self.owner.function_params.__additem__(name, val)

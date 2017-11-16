@@ -8,7 +8,7 @@
 #
 from enum import Enum
 
-from PsyNeuLink.Globals.Keywords import CENTRAL_CLOCK
+from psyneulink.globals.Keywords import CENTRAL_CLOCK
 
 
 # ********************************************* TimeScale ***************************************************************

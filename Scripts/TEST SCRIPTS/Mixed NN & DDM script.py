@@ -1,7 +1,7 @@
-from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Globals.Run import run
+from psyneulink.components.functions.Function import *
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import *
+from psyneulink.components.Process import process
+from psyneulink.globals.Run import run
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import *
 
 # import random

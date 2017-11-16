@@ -27,7 +27,7 @@ TBI:
 
 """
 
-from PsyNeuLink.Components.Component import Component
+from psyneulink.components.Component import Component
 
 
 class ShellClassError(Exception):

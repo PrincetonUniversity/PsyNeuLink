@@ -11,21 +11,21 @@
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink import CentralClock
-from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, \
+from psyneulink import CentralClock
+from psyneulink.components.functions.Function import AdaptiveIntegrator, \
     LinearCombination
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
+from psyneulink.components.mechanisms.Mechanism import Mechanism_Base
+from psyneulink.components.mechanisms.ProcessingMechanisms.ObjectiveMechanism \
     import OUTCOME
-from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Globals.Keywords import INITIALIZING, INPUT_STATES, \
+from psyneulink.components.states.OutputState import OutputState
+from psyneulink.globals.Keywords import INITIALIZING, INPUT_STATES, \
     PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET, kwPreferenceSetName
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, \
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set, \
     kpReportOutputPref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, \
+from psyneulink.globals.preferences.PreferenceSet import PreferenceEntry, \
     PreferenceLevel
-from PsyNeuLink.Globals.Utilities import is_numeric
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms \
+from psyneulink.globals.Utilities import is_numeric
+from psyneulink.library.mechanisms.ProcessingMechanisms.ObjectiveMechanisms \
     .ComparatorMechanism import ComparatorMechanism, ComparatorMechanismError, \
     MSE
 
@@ -136,7 +136,8 @@ class PredictionErrorMechanism(ComparatorMechanism):
             delta = np.zeros_like(sample)
 
             for t in range(0, len(sample) - 1):
-                delta[t] = reward[t + 1] + self.function(sample[t + 1], sample[t])
+                delta[t] = reward[t + 1] + self.function(sample[t + 1],
+                                                         sample[t])
 
             # v_t = sample
             # if self.t == 0:
@@ -182,7 +183,8 @@ class PredictionErrorMechanism(ComparatorMechanism):
             #
             # else:
             #
-            #     # delta_t = self.eligibility_trace[self.t + 1] + output_vector[0]
+            #     # delta_t = self.eligibility_trace[self.t + 1] +
+            # output_vector[0]
             #     # self.t += 1
             #
             #     if self.t == self.max_t:
@@ -195,9 +197,6 @@ class PredictionErrorMechanism(ComparatorMechanism):
 
     def _update_eligibility_trace(self, lambda_=0.5, gamma=.99):
         self.e = self.e * lambda_ * gamma
-
-    def _update_utility_matrix(self, alpha, delta):
-        self.utility_matrix += alpha * delta * self.e
 
     def reset(self):
         self.e.fill(0)

@@ -202,9 +202,9 @@ import numpy as np
 import typecheck as tc
 from numpy import abs, exp, tanh
 
-from PsyNeuLink.Components.Component import Component, ComponentError, function_type, method_type, parameter_keywords
-from PsyNeuLink.Components.ShellClasses import Function
-from PsyNeuLink.Globals.Keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
+from psyneulink.components.Component import Component, ComponentError, function_type, method_type, parameter_keywords
+from psyneulink.components.ShellClasses import Function
+from psyneulink.globals.Keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ANGLE, ARGUMENT_THERAPY_FUNCTION, \
     AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, \
     COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, \
@@ -230,11 +230,11 @@ from PsyNeuLink.Globals.Keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, \
     UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, \
     kwComponentCategory, kwPreferenceSetName, TDLEARNING_FUNCTION
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.Utilities import AutoNumber, is_distance_metric, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
+from psyneulink.globals.preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from psyneulink.globals.Registry import register_category
+from psyneulink.globals.Utilities import AutoNumber, is_distance_metric, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
+from psyneulink.scheduling.TimeScale import TimeScale
 
 EPSILON = np.finfo(float).eps
 
@@ -366,7 +366,7 @@ def _is_modulation_param(val):
 
 ModulatedParam = namedtuple('ModulatedParam', 'meta_param, function_param, function_param_val')
 
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+from psyneulink.components.projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 @tc.typecheck
 def _get_modulated_param(owner, mod_proj:ModulatoryProjection_Base):
     """Return ModulationParam object, function param name and value of param modulated by ModulatoryProjection
@@ -3267,6 +3267,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         :return matrix: (2D list)
         """
 
+        print("specification = {}".format(specification))
         # Matrix provided (and validated in _validate_params); convert to np.array
         if isinstance(specification, np.matrix):
             return np.array(specification)
@@ -3329,7 +3330,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def keyword(self, keyword):
 
-        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+        from psyneulink.components.projections.PathwayProjections.MappingProjection import MappingProjection
         rows = None
         cols = None
         # use of variable attribute here should be ok because it's using it as a format/type
@@ -5681,8 +5682,7 @@ class AccumulatorIntegrator(
             self.previous_value = value
         return value
 
-class AGTUtilityIntegrator(
-    Integrator):  # --------------------------------------------------------------------------------
+class AGTUtilityIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
     AGTUtilityIntegrator(                    \
         default_variable=None,            \
@@ -7163,8 +7163,8 @@ class Stability(ObjectiveFunction):
         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
      """
 
-    from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-    from PsyNeuLink.Components.States.ParameterState import ParameterState
+    from psyneulink.components.projections.PathwayProjections.MappingProjection import MappingProjection
+    from psyneulink.components.states.ParameterState import ParameterState
 
     componentName = STABILITY_FUNCTION
 
@@ -7218,8 +7218,8 @@ class Stability(ObjectiveFunction):
         # Validate error_matrix specification
         if MATRIX in target_set:
 
-            from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-            from PsyNeuLink.Components.States.ParameterState import ParameterState
+            from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
+            from psyneulink.components.States.ParameterState import ParameterState
 
             matrix = target_set[MATRIX]
 
@@ -7276,9 +7276,9 @@ class Stability(ObjectiveFunction):
 
         size = len(np.squeeze(self.instance_defaults.variable))
 
-        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        if isinstance(self.matrix,MappingProjection):
+        from psyneulink.components.projections.PathwayProjections.MappingProjection import MappingProjection
+        from psyneulink.components.states.ParameterState import ParameterState
+        if isinstance(self.matrix, MappingProjection):
             self._matrix = self.matrix._parameter_states[MATRIX]
         elif isinstance(self.matrix,ParameterState):
             pass
@@ -7315,7 +7315,7 @@ class Stability(ObjectiveFunction):
         # Validate variable and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        from psyneulink.components.states.ParameterState import ParameterState
         if isinstance(self.matrix, ParameterState):
             matrix = self.matrix.value
         else:
@@ -8276,8 +8276,8 @@ class BackPropagation(LearningFunction):
 
             error_matrix = target_set[ERROR_MATRIX]
 
-            from PsyNeuLink.Components.States.ParameterState import ParameterState
-            from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+            from psyneulink.components.States.ParameterState import ParameterState
+            from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
             if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
                 raise FunctionError("The {} arg for {} ({}) must be a list, 2d np.array, ParamaterState or "
                                     "MappingProjection".format(ERROR_MATRIX, self.__class__.__name__, error_matrix))
@@ -8367,7 +8367,7 @@ class BackPropagation(LearningFunction):
 
         self._check_args(variable=variable, params=params, context=context)
 
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        from psyneulink.components.states.ParameterState import ParameterState
         if isinstance(self.error_matrix, ParameterState):
             error_matrix = self.error_matrix.value
         else:

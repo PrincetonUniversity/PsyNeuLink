@@ -80,8 +80,8 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Projections.Projection import Projection_Base
-from PsyNeuLink.Globals.Keywords import MODULATORY_PROJECTION
+from psyneulink.components.projections.Projection import Projection_Base
+from psyneulink.globals.Keywords import MODULATORY_PROJECTION
 
 MODULATORY_SIGNAL_PARAMS = 'modulatory_signal_params'
 

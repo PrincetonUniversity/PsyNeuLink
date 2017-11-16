@@ -1,15 +1,15 @@
 import numpy as np
 import pytest
 
-from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, ConstantIntegrator, NormalDist, \
+from psyneulink.components.functions.Function import AccumulatorIntegrator, ConstantIntegrator, NormalDist, \
     SimpleIntegrator, FHNIntegrator
-from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, \
+from psyneulink.components.functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, \
     OrnsteinUhlenbeckIntegrator, AGTUtilityIntegrator
-from PsyNeuLink.Components.Functions.Function import FunctionError
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism \
+from psyneulink.components.functions.Function import FunctionError
+from psyneulink.components.mechanisms.Mechanism import MechanismError
+from psyneulink.components.mechanisms.ProcessingMechanisms.IntegratorMechanism \
     import IntegratorMechanism
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.scheduling.TimeScale import TimeScale
 
 
 # ======================================= FUNCTION TESTS ============================================

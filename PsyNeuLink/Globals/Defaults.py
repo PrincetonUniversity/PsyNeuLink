@@ -14,7 +14,7 @@ This is an attempt to show the value of defaultControlAllocation:  :py:print:`De
 
 from enum import Enum
 
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from psyneulink.scheduling.TimeScale import TimeScale
 
 MPI_IMPLEMENTATION = False
 

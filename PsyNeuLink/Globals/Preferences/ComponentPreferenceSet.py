@@ -12,10 +12,10 @@
 
 import inspect
 
-from PsyNeuLink.Globals.Keywords import NAME, kwDefaultPreferenceSetOwner, kwPrefLevel, kwPreferenceSetName, kwPrefs, kwPrefsOwner
-from PsyNeuLink.Globals.Log import LogLevel
-from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel, PreferenceSet
-from PsyNeuLink.Globals.Utilities import Modulation
+from psyneulink.globals.Keywords import NAME, kwDefaultPreferenceSetOwner, kwPrefLevel, kwPreferenceSetName, kwPrefs, kwPrefsOwner
+from psyneulink.globals.Log import LogLevel
+from psyneulink.globals.preferences.PreferenceSet import PreferenceEntry, PreferenceLevel, PreferenceSet
+from psyneulink.globals.Utilities import Modulation
 
 # Keypaths for preferences:
 REPORT_OUTPUT_PREF = kpReportOutputPref = '_report_output_pref'
@@ -274,12 +274,12 @@ class ComponentPreferenceSet(PreferenceSet):
 
         # If baseClass has not been assigned, do so here:
         if self.baseClass is None:
-            from PsyNeuLink.Components.Component import Component
+            from psyneulink.components.Component import Component
             self.baseClass = Component
 
         # If owner is not specified, assign DefaultProcessingMechanism_Base as default owner
         if owner is None:
-            from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
+            from psyneulink.components.mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
             DefaultPreferenceSetOwner = DefaultProcessingMechanism_Base(name=kwDefaultPreferenceSetOwner)
             owner = DefaultPreferenceSetOwner
 

@@ -1,9 +1,9 @@
 
-from PsyNeuLink.Components.Functions.Function import Linear
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.functions.Function import Linear
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Composition import Composition
-from PsyNeuLink.Scheduling.Scheduler import Scheduler
+from psyneulink.scheduling.Scheduler import Scheduler
 
 comp = Composition()
 A = TransferMechanism(default_variable=1.0, function=Linear(slope=5.0))
