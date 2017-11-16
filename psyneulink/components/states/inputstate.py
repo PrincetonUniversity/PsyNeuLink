@@ -49,8 +49,11 @@ An InputState must be owned by a `Mechanism <Mechanism>`.  When InputState is sp
 Mechanism (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as its owner. If
 the InputState is created directly, its `owner <InputState.owner>` can specified in the **owner**  argument of its
 constructor, in which case it will be assigned to that Mechanism. Otherwise, its initialization will be
-`deferred <State_Deferred_Initialization>` until its `owner <State_Base.owner>` attribute is assigned or the InputState
-is assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method.
+`deferred <State_Deferred_Initialization>` until
+COMMENT:
+TBI: its `owner <State_Base.owner>` attribute is assigned or
+COMMENT
+the InputState is assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method.
 
 .. _InputState_Primary:
 
@@ -69,11 +72,13 @@ entry of the Mechanism's `input_states <Mechanism_Base.input_states>` attribute 
 InputState Specification
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-If one or more custom InputStates need to be specified for a `Mechanism <Mechanism>` when it is created, or the type
-of Mechanism requires their specification, this can be done in the **input_states** argument of the Mechanism's
-constructor, or in an *INPUT_STATES* entry of a parameter dictionary assigned to the constructor's **params**
-argument.  The latter takes precedence over the former (that is, if an *INPUT_STATES* entry is included in the
-parameter dictionary, any specified in the **input_states** argument are ignored).
+Specifying InputStates when a Mechanism is created
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+InputStates can be specified for a `Mechanism <Mechanism>` when it is created, in the **input_states** argument of the
+Mechanism's constructor, or in an *INPUT_STATES* entry of a parameter dictionary assigned to the constructor's
+**params** argument.  The latter takes precedence over the former (that is, if an *INPUT_STATES* entry is included in
+the parameter dictionary, any specified in the **input_states** argument are ignored).
 
 .. note::
     Assigning InputStates to a Mechanism in its constructor **replaces** any that are automatically generated for that
@@ -82,15 +87,7 @@ parameter dictionary, any specified in the **input_states** argument are ignored
     the parameter dictionary in the **params** argument).  The number of InputStates specified must also be equal
     to the number of items in the Mechanism's <variable <Mechanism_Base.variable>` attribute.
 
-InputStates can also be **added** to a Mechanism, using the Mechanism's `add_states <Mechanism_Base.add_states>` method.
-However, this has consequences for the Mechanism's `variable <Mechanism_Base.variable>` and possibly its relationship
-to the Mechanism's `function <Mechanism_Base.function>`, as well as the number of its `OutputStates <OutputState>` (see
-`note <Mechanism_Add_InputStates_Note>`). If the name of an InputState added to a Mechanism is the same as one that
-already exists, its name will be suffixed with a numerical index (incremented for each InputState with that name; see
-`Naming`), and the InputState will be added to the list (that is, it will *not* replace ones that already exist).
-
-.. _InputState_Variable_and_Value:
-
+** MOVE TO ABOVE UNDER "Specifying InputStates when a Mechanism is created"
 Each InputState is assigned to an item of its owner Mechanism's `variable <Mechanism_Base.variable>` attribute (see
 `Mechanism InputStates <Mechanism_InputStates`), and the `value <InputState.value>` of the InputState must be
 compatible with that item (that is, have the same number and type of elements).  By default, this is also true of the
@@ -103,7 +100,28 @@ item of its owner's `variable <Mechanism_Base.variable>` to which the InputState
 
 If InputStates are specified in the constructor for a Mechanism then, as described above (
 *** REFERENCE RELEVANT SECTION OF AND EXAMPLES IN MECHANISM
-*** EXPLAIN DIFFERENCE BETWEEN SPECIFYING IN CONSTRUCTOR AND ADDING (WHICH EXTENDS)
+
+Adding InputStates to a Mechanism after it is created
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+InputStates can also be **added** to a Mechanism, either by creating the InputState on its own, and specifying the
+Mechanism in the InputState's **owner** argument, or by using the Mechanism's `add_states <Mechanism_Base.add_states>`
+method (see `examples <XXX>`).
+
+.. note::
+    Adding InputStates *does not replace* any that the Mechanism generates by default;  rather they are added to the
+    Mechanism, and appended to the list of InputStates in its `input_states <Mechanism_Base>` attribute. Importantly,
+    the Mechanism's `variable <Mechanism_Base.variable>` attribute is extended with items that correspond to the `value
+    <InputState.value>` attribute of each added InputState.  This may affect the relationship of the Mechanism's
+    `variable <Mechanism_Base.variable>` to its `function <Mechanism_Base.function>`, as well as the number of its
+    `OutputStates <OutputState>` (see `note <Mechanism_Add_InputStates_Note>`).
+
+If the name of an InputState added to a Mechanism is the same as one that already exists, its name will be suffixed
+with a numerical index (incremented for each InputState with that name; see `Naming`), and the InputState will be
+added to the list (that is, it will *not* replace ones that already exist).
+
+=-----------------------------
+.. _InputState_Variable_and_Value:
 
 The format of an InputState's `variable <InputState.variable>` can be specified in a variety of ways.  The most
 straightforward is in the **variable** argument of its constructor.  More commonly it is determined by another
@@ -205,16 +223,9 @@ these is described below:
 
     **InputState Specification Dictionary or Tuple*
 
-COMMENT:
-*** VERSION THAT ACCOMPANIES IMPLEMENTATION OF MECHANISM/OUTPUT_STATES:
-    * **InputState specification dictionary** -- this can be used to specify one or more InputStates, depending on
-      the entries included.  In the simplest case, it is used to specify a single InputState using any of the entries
-      that can be included in a `State specification dictionary <State_Specification>`, as well as well as the
-      following two entries specific to an InputState:
-COMMENT
     * **InputState specification dictionary** -- this can be used to specify the attributes of an InputState,
       using any of the entries that can be included in a `State specification dictionary <State_Specification>`,
-      as well as well as the following two entries specific to an InputState:
+      as well as well as the following entries specific to an InputState:
       ..
       * *WEIGHT*:<number>
           the value must be an integer or float, and is assigned as the value of the InputState's `weight
