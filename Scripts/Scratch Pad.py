@@ -946,26 +946,17 @@ class ScratchPadError(Exception):
 # TEST = True
 # endregion
 
-#region TEST TransferMechanism OutputStates @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-print ('TEST TransferMechanism OutputStates')
-
-T = pnl.TransferMechanism(input_states=['a','b','c'])
-print(T.variable)
-print(T.output_states)
-
-# endregion
-
 #region TEST Naming
 # print ('TEST Naming')
-# from psyneulink.components.mechanisms.mechanism import MechanismRegistry
-#
-# T1 = pnl.TransferMechanism()
-# print(T1.name)
-# T2 = pnl.TransferMechanism()
-# print(T2.name)
-# pnl.clear_registry(MechanismRegistry)
-# T3 = pnl.TransferMechanism()
-# print(T3.name)
+from psyneulink.components.mechanisms.mechanism import MechanismRegistry
+
+T1 = pnl.TransferMechanism()
+print(T1.name)
+T2 = pnl.TransferMechanism()
+print(T2.name)
+pnl.clear_registry(MechanismRegistry)
+T3 = pnl.TransferMechanism()
+print(T3.name)
 
 #
 # # I = pnl.InputState(name='I', owner=T)
