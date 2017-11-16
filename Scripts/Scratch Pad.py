@@ -949,75 +949,15 @@ class ScratchPadError(Exception):
 #region TEST Naming
 # print ('TEST Naming')
 
-T1 = pnl.TransferMechanism()
-T2 = pnl.TransferMechanism()
-assert T1.name == 'TransferMechanism-0'
-assert T2.name == 'TransferMechanism-1'
-
-TN1 = pnl.TransferMechanism(name='MY TRANSFER MECHANISM')
-TN2 = pnl.TransferMechanism(name='MY TRANSFER MECHANISM')
-assert TN1.name == 'MY TRANSFER MECHANISM'
-assert TN2.name == 'MY TRANSFER MECHANISM-1'
-
-P1 = pnl.MappingProjection()
-P2 = pnl.MappingProjection()
-assert P1.name == 'Deferred Init MappingProjection'
-assert P2.name == 'Deferred Init MappingProjection-1'
-
-PN1 = pnl.MappingProjection(name='MY PROJECTION')
-PN2 = pnl.MappingProjection(name='MY PROJECTION')
-assert PN1.name == 'MY PROJECTION [Deferred Init]'
-assert PN2.name == 'MY PROJECTION [Deferred Init]-1'
-
-# TDN1 = pnl.TransferMechanism(name='MY NAME')
-# PDN1 = pnl.MappingProjection(name='MY NAME')
-# print(TDN1.name)
-# print(PDN1.name)
-#
-# TDN1.name = 'NEW NAME'
-# print(TDN1.name)
-#
-# PR = pnl.Process(pathway=[TDN1])
-# print(PR.name)
-# S = pnl.System(processes=[PR])
-# print(S.name)
-# S = pnl.System(processes=[PR])
-# print(S.name)
-#
-# LP1 = pnl.LearningProjection()
-# LP2 = pnl.LearningProjection()
-# print(LP1.name)
-# print(LP2.name)
-#
-# CP1 = pnl.ControlProjection()
-# CP2 = pnl.ControlProjection()
-# print(CP1.name)
-# print(CP2.name)
-#
-# GP1 = pnl.GatingProjection()
-# GP2 = pnl.GatingProjection()
-# print(GP1.name)
-# print(GP2.name)
-
-# FIX: ADD THESE AS TESTS
-T1 = pnl.TransferMechanism()
-T2 = pnl.TransferMechanism(input_states=[T1])
-I1 = pnl.InputState(owner=T2)
-I2 = pnl.InputState(projections=[T1])
-assert I2.name == 'Deferred Init InputState'
-T2.add_states([I2])
-assert I1.name == 'InputState-1'
-assert I2.name == 'InputState-2'
-assert T2.input_states[0].path_afferents[0].name == 'MappingProjection from TransferMechanism-2[RESULT] to TransferMechanism-3[InputState-0]'
-assert T2.input_states[2].path_afferents[0].name == 'MappingProjection from TransferMechanism-2[RESULT] to TransferMechanism-3[InputState-2]'
-
-# assert T1.name == 'InputState'
-# print(y.name)
-
-# p2 = pnl.MappingProjection(sender=m1, receiver=m2)
-# # print(p2.name)
-# for projection in T2.input_states[2].path_afferents:
-#     print(projection.name)
+T = pnl.TransferMechanism()
+P1 = pnl.Process(name='MY PROCESS', pathway=[T])
+P2 = pnl.Process(name='MY PROCESS', pathway=[T])
+assert P1.name == 'MY PROCESS'
+assert P2.name == 'MY PROCESS-1'
+S1 = pnl.System(name='MY SYSTEM', processes=[P1])
+S2 = pnl.System(name='MY SYSTEM', processes=[P1])
+assert S1.name == 'MY SYSTEM'
+assert S2.name == 'MY SYSTEM-1'
 
 
 #endregion
