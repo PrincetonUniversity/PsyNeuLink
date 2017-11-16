@@ -441,7 +441,6 @@ class ParameterState(State_Base):
         the `PreferenceSet` for the ParameterState; if it is not specified in the **prefs** argument of the
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
-
     """
 
     #region CLASS ATTRIBUTES
