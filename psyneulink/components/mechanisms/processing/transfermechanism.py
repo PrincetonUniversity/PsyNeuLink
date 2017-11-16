@@ -117,12 +117,12 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, function_type, method_type
-from psyneulink.components.functions.function import AdaptiveIntegrator, Linear
+from psyneulink.components.functions.function import AdaptiveIntegrator, Linear, TransferFunction
 from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
-from psyneulink.globals.keywords import FUNCTION, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NOISE, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
+from psyneulink.globals.keywords import NAME, INDEX, FUNCTION, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NOISE, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, NORMALIZING_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
@@ -481,7 +481,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 transfer_function_class = transfer_function
                 transfer_function_name = transfer_function.__name__
 
-            if not transfer_function_class.componentType is TRANSFER_FUNCTION_TYPE:
+            if not transfer_function_class.componentType is TRANSFER_FUNCTION_TYPE and not transfer_function_class.componentType is NORMALIZING_FUNCTION_TYPE:
                 raise TransferError("Function {} specified as FUNCTION param of {} must be a {}".
                                     format(transfer_function_name, self.name, TRANSFER_FUNCTION_TYPE))
 
@@ -583,6 +583,15 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return param
 
+    def _instantiate_output_states(self, context=None):
+        # If user specified more than one item for variable, but did not specify any custom OutputStates
+        # then assign one OutputState (with the default name, indexed by the number of them) per item of variable
+        if len(self.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULT:
+            self.output_states = []
+            for i, item in enumerate(self.variable):
+                self.output_states.append({NAME: RESULT, INDEX: i})
+        super()._instantiate_output_states(context=context)
+                
     def _instantiate_parameter_states(self, context=None):
 
         from psyneulink.components.functions.function import Logistic
@@ -694,18 +703,34 @@ class TransferMechanism(ProcessingMechanism_Base):
             else:
                 current_input = variable
 
-        # self.previous_input = current_input
-
-        # Apply TransferMechanism function
-        outputs = []
-        for elem in current_input:
-            output_item = self.function(variable=elem, params=runtime_params)
+        if isinstance(self.function_object, TransferFunction):
+            outputs = self.function(variable=current_input, params= runtime_params)
             if clip is not None:
-                minCapIndices = np.where(output_item < clip[0])
-                maxCapIndices = np.where(output_item > clip[1])
-                output_item[minCapIndices] = np.min(clip)
-                output_item[maxCapIndices] = np.max(clip)
-            outputs.append(output_item)
+                minCapIndices = np.where(outputs < clip[0])
+                maxCapIndices = np.where(outputs > clip[1])
+                outputs[minCapIndices] = np.min(clip)
+                outputs[maxCapIndices] = np.max(clip)
+        else:
+            # Apply TransferMechanism's function to each input state separately
+            outputs = []
+            for elem in current_input:
+                output_item = self.function(variable=elem, params=runtime_params)
+                if clip is not None:
+                    minCapIndices = np.where(output_item < clip[0])
+                    maxCapIndices = np.where(output_item > clip[1])
+                    output_item[minCapIndices] = np.min(clip)
+                    output_item[maxCapIndices] = np.max(clip)
+                outputs.append(output_item)
+
+        # outputs = []
+        # for elem in current_input:
+        #     output_item = self.function(variable=elem, params=runtime_params)
+        #     if clip is not None:
+        #         minCapIndices = np.where(output_item < clip[0])
+        #         maxCapIndices = np.where(output_item > clip[1])
+        #         output_item[minCapIndices] = np.min(clip)
+        #         output_item[maxCapIndices] = np.max(clip)
+        #     outputs.append(output_item)
         return outputs
         #endregion
 
