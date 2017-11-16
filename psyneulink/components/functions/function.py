@@ -202,7 +202,7 @@ from psyneulink.globals.keywords import \
     PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, \
     RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, \
     SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, \
-    USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, \
+    USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, NORMALIZING_FUNCTION_TYPE,\
     kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -2144,6 +2144,283 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     def scale(self, val):
         self._scale = val
 
+# *********************************** NORMALIZING FUNCTIONS **************************************************
+
+class NormalizingFunction(Function_Base):
+    """Function that adjusts a set of values
+    """
+    componentType = NORMALIZING_FUNCTION_TYPE
+
+    # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
+    def __init__(self, default_variable,
+                 params,
+                 owner,
+                 prefs,
+                 context):
+
+        if not hasattr(self, MULTIPLICATIVE_PARAM):
+            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
+                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
+
+        if not hasattr(self, ADDITIVE_PARAM):
+            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
+                                format(self.__class__.__name__, ADDITIVE_PARAM))
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+    @property
+    def multiplicative(self):
+        return getattr(self, self.multiplicative_param)
+
+    @multiplicative.setter
+    def multiplicative(self, val):
+        setattr(self, self.multiplicative_param, val)
+
+    @property
+    def additive(self):
+        return getattr(self, self.additive_param)
+
+    @additive.setter
+    def additive(self, val):
+        setattr(self, self.additive_param, val)
+
+class SoftMax(NormalizingFunction):
+    """
+    SoftMax(               \
+         default_variable, \
+         gain=1.0,         \
+         output=ALL,       \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
+
+    .. _SoftMax:
+
+    SoftMax transform of variable (see `The Softmax function and its derivative
+    <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
+
+    Arguments
+    ---------
+
+    default_variable : 1d np.array : default ClassDefaults.variable
+        specifies a template for the value to be transformed.
+
+    gain : float : default 1.0
+        specifies a value by which to multiply `variable <Linear.variable>` before SoftMax transformation.
+
+    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
+        specifies the format of array returned by `function <SoftMax.function>`
+        (see `output <SoftMax.output>` for details).
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : 1d np.array
+        contains value to be transformed.
+
+    gain : float
+        value by which `variable <Logistic.variable>` is multiplied before the SoftMax transformation;  determines
+        the "sharpness" of the distribution.
+
+    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
+        determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
+        in the array returned by `function <SoftMax.funtion>`:
+            * **ALL**: array of all SoftMax-transformed values (the default);
+            * **MAX_VAL**: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
+            * **MAX_INDICATOR**: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
+            * **PROB**: probabilistically chosen element based on SoftMax-transformed values after normalizing sum of
+              values to 1, 0 for all others.
+
+    bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+    """
+
+    componentName = SOFTMAX_FUNCTION
+
+    bounds = (0,1)
+    multiplicative_param = GAIN
+    additive_param = None
+
+    class ClassDefaults(NormalizingFunction.ClassDefaults):
+        variable = 0
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=ClassDefaults.variable,
+                 gain: parameter_spec = 1.0,
+                 output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context='SoftMax Init'):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(gain=gain,
+                                                  output=output,
+                                                  params=params)
+        if output is MAX_VAL:
+            bounds = None
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        """
+        Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
+        sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
+        filtered by `ouptput <SoftMax.output>` specification.
+
+        Arguments
+        ---------
+
+        variable : 1d np.array : default ClassDefaults.variable
+           an array to be transformed.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        SoftMax transformation of variable : number or np.array
+
+        """
+
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        # Assign the params and return the result
+        output_type = self.params[OUTPUT_TYPE]
+        gain = self.params[GAIN]
+
+        # Modulate variable by gain
+        v = gain * variable
+        # Shift by max to avoid extreme values:
+        v = v - np.max(v)
+        # Exponentiate
+        v = np.exp(v)
+        # Normalize (to sum to 1)
+        sm = v / np.sum(v, axis=0)
+
+        # For the element that is max of softmax, set it's value to its softmax value, set others to zero
+        if output_type is MAX_VAL:
+            max_value = np.max(sm)
+            sm = np.where(sm == max_value, max_value, 0)
+
+        # For the element that is max of softmax, set its value to 1, set others to zero
+        elif output_type is MAX_INDICATOR:
+            # sm = np.where(sm == np.max(sm), 1, 0)
+            max_value = np.max(sm)
+            sm = np.where(sm == max_value, 1, 0)
+
+        # Choose a single element probabilistically based on softmax of their values;
+        #    leave that element's value intact, set others to zero
+        elif output_type is PROB:
+            cum_sum = np.cumsum(sm)
+            random_value = np.random.uniform()
+            chosen_item = next(element for element in cum_sum if element > random_value)
+            chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
+            sm = variable * chosen_in_cum_sum
+
+        return sm
+
+    def derivative(self, output, input=None):
+        """
+        derivative(output)
+
+        Calculate the derivative of `function <SoftMax.function>`.  If OUTPUT_TYPE for the SoftMax Function is ALL,
+        return Jacobian matrix (derivative for each element of the output array with respect to each of the others):
+            COMMENT:
+                D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
+            COMMENT
+            D\\ :sub:`j`\\ S\\ :sub:`i` = S\\ :sub:`i`\\ (𝜹\\ :sub:`i,j` - S\\ :sub:`j`),
+            where 𝜹\\ :sub:`i,j`\\ =1 if i=j and 𝜹\\ :sub:`i,j`\\ =0 if i≠j.
+        If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
+        value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
+        (since it is ambiguous as to which element would have been chosen by the SoftMax function)
+
+        Returns
+        -------
+
+        derivative :  1d or 2d np.array (depending on OUTPUT_TYPE of SoftMax)
+            derivative of values returns by SoftMax.
+
+        """
+
+        output_type = self.params[OUTPUT_TYPE]
+        size = len(output)
+        sm = self.function(output, params={OUTPUT_TYPE: ALL})
+
+        if output_type is ALL:
+            # Return full Jacobian matrix of derivatives
+            derivative = np.empty([size, size])
+            for j in range(size):
+                for i, val in zip(range(size), output):
+                    if i==j:
+                        d = 1
+                    else:
+                        d = 0
+                    derivative[j,i] = sm[i] * (d - sm[j])
+
+        elif output_type in {MAX_VAL, MAX_INDICATOR}:
+            # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
+            derivative = np.empty(size)
+            # Get the element of output returned as non-zero when output_type is not ALL
+            index_of_max = int(np.where(output==np.max(output))[0])
+            max_val = sm[index_of_max]
+            for i in range(size):
+                if i==index_of_max:
+                    d = 1
+                else:
+                    d = 0
+                derivative[i] = sm[i] * (d - max_val)
+
+        else:
+            raise FunctionError("Can't calculate derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
+                                "(and therefore the relevant element is ambiguous)".format(self.owner_name))
+
+        return derivative
+
 
 # region ***********************************  TRANSFER FUNCTIONS  ***********************************************
 # endregion
@@ -2741,239 +3018,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
         return output * (1 - output)
 
 # ------------------------------------------------------------------------------------
-class SoftMax(TransferFunction):
-    """
-    SoftMax(               \
-         default_variable, \
-         gain=1.0,         \
-         output=ALL,       \
-         params=None,      \
-         owner=None,       \
-         name=None,        \
-         prefs=None        \
-         )
-
-    .. _SoftMax:
-
-    SoftMax transform of variable (see `The Softmax function and its derivative
-    <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
-
-    Arguments
-    ---------
-
-    default_variable : 1d np.array : default ClassDefaults.variable
-        specifies a template for the value to be transformed.
-
-    gain : float : default 1.0
-        specifies a value by which to multiply `variable <Linear.variable>` before SoftMax transformation.
-
-    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
-        specifies the format of array returned by `function <SoftMax.function>`
-        (see `output <SoftMax.output>` for details).
-
-    params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
-
-
-    Attributes
-    ----------
-
-    variable : 1d np.array
-        contains value to be transformed.
-
-    gain : float
-        value by which `variable <Logistic.variable>` is multiplied before the SoftMax transformation;  determines
-        the "sharpness" of the distribution.
-
-    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
-        determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
-        in the array returned by `function <SoftMax.funtion>`:
-            * **ALL**: array of all SoftMax-transformed values (the default);
-            * **MAX_VAL**: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
-            * **MAX_INDICATOR**: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
-            * **PROB**: probabilistically chosen element based on SoftMax-transformed values after normalizing sum of
-              values to 1, 0 for all others.
-
-    bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
-
-    owner : Mechanism
-        `component <Component>` to which the Function has been assigned.
-
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
-
-    """
-
-    componentName = SOFTMAX_FUNCTION
-
-    bounds = (0,1)
-    multiplicative_param = GAIN
-    additive_param = None
-
-    class ClassDefaults(TransferFunction.ClassDefaults):
-        variable = 0
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
-    @tc.typecheck
-    def __init__(self,
-                 default_variable=ClassDefaults.variable,
-                 gain: parameter_spec = 1.0,
-                 output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
-                 params: tc.optional(dict) = None,
-                 owner=None,
-                 prefs: is_pref_set = None,
-                 context='SoftMax Init'):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(gain=gain,
-                                                  output=output,
-                                                  params=params)
-        if output is MAX_VAL:
-            bounds = None
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
-    def function(self,
-                 variable=None,
-                 params=None,
-                 time_scale=TimeScale.TRIAL,
-                 context=None):
-        """
-        Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
-        sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
-        filtered by `ouptput <SoftMax.output>` specification.
-
-        Arguments
-        ---------
-
-        variable : 1d np.array : default ClassDefaults.variable
-           an array to be transformed.
-
-        params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
-
-        Returns
-        -------
-
-        SoftMax transformation of variable : number or np.array
-
-        """
-
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
-        # Assign the params and return the result
-        output_type = self.params[OUTPUT_TYPE]
-        gain = self.params[GAIN]
-
-        # Modulate variable by gain
-        v = gain * variable
-        # Shift by max to avoid extreme values:
-        v = v - np.max(v)
-        # Exponentiate
-        v = np.exp(v)
-        # Normalize (to sum to 1)
-        sm = v / np.sum(v, axis=0)
-
-        # For the element that is max of softmax, set it's value to its softmax value, set others to zero
-        if output_type is MAX_VAL:
-            max_value = np.max(sm)
-            sm = np.where(sm == max_value, max_value, 0)
-
-        # For the element that is max of softmax, set its value to 1, set others to zero
-        elif output_type is MAX_INDICATOR:
-            # sm = np.where(sm == np.max(sm), 1, 0)
-            max_value = np.max(sm)
-            sm = np.where(sm == max_value, 1, 0)
-
-        # Choose a single element probabilistically based on softmax of their values;
-        #    leave that element's value intact, set others to zero
-        elif output_type is PROB:
-            cum_sum = np.cumsum(sm)
-            random_value = np.random.uniform()
-            chosen_item = next(element for element in cum_sum if element > random_value)
-            chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
-            sm = variable * chosen_in_cum_sum
-
-        return sm
-
-    def derivative(self, output, input=None):
-        """
-        derivative(output)
-
-        Calculate the derivative of `function <SoftMax.function>`.  If OUTPUT_TYPE for the SoftMax Function is ALL,
-        return Jacobian matrix (derivative for each element of the output array with respect to each of the others):
-            COMMENT:
-                D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
-            COMMENT
-            D\\ :sub:`j`\\ S\\ :sub:`i` = S\\ :sub:`i`\\ (𝜹\\ :sub:`i,j` - S\\ :sub:`j`),
-            where 𝜹\\ :sub:`i,j`\\ =1 if i=j and 𝜹\\ :sub:`i,j`\\ =0 if i≠j.
-        If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
-        value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
-        (since it is ambiguous as to which element would have been chosen by the SoftMax function)
-
-        Returns
-        -------
-
-        derivative :  1d or 2d np.array (depending on OUTPUT_TYPE of SoftMax)
-            derivative of values returns by SoftMax.
-
-        """
-
-        output_type = self.params[OUTPUT_TYPE]
-        size = len(output)
-        sm = self.function(output, params={OUTPUT_TYPE: ALL})
-
-        if output_type is ALL:
-            # Return full Jacobian matrix of derivatives
-            derivative = np.empty([size, size])
-            for j in range(size):
-                for i, val in zip(range(size), output):
-                    if i==j:
-                        d = 1
-                    else:
-                        d = 0
-                    derivative[j,i] = sm[i] * (d - sm[j])
-
-        elif output_type in {MAX_VAL, MAX_INDICATOR}:
-            # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
-            derivative = np.empty(size)
-            # Get the element of output returned as non-zero when output_type is not ALL
-            index_of_max = int(np.where(output==np.max(output))[0])
-            max_val = sm[index_of_max]
-            for i in range(size):
-                if i==index_of_max:
-                    d = 1
-                else:
-                    d = 0
-                derivative[i] = sm[i] * (d - max_val)
-
-        else:
-            raise FunctionError("Can't calculate derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
-                                "(and therefore the relevant element is ambiguous)".format(self.owner_name))
-
-        return derivative
-
 
 class LinearMatrix(TransferFunction):  # -------------------------------------------------------------------------------
     """
