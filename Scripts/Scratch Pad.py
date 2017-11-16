@@ -949,23 +949,11 @@ class ScratchPadError(Exception):
 #region TEST Naming
 # print ('TEST Naming')
 
-# T1 = pnl.TransferMechanism(output_states=['MY OUTPUT_STATE',[0]])
-# T1.output_states[0].name == 'OUTPUT_STATE'
-# T1.output_states[1].name == 'OutputState-0'
-# # O = pnl.OutputState(owner=T1)
-# O = pnl.OutputState()
-# T1.add_states([O])
-# T1.output_states[2].name == 'OutputState-1'
-
-T1 = pnl.TransferMechanism(output_states=['MY OUTPUT_STATE',[0]])
-assert T1.output_states[0].name == 'MY OUTPUT_STATE'
-assert T1.output_states[1].name == 'OutputState-0'
-O = pnl.OutputState(owner=T1)
-assert T1.output_states[2].name == 'OutputState-1'
-O2 = pnl.OutputState()
-T1.add_states([O2])
-assert T1.output_states[3].name == 'OutputState-2'
-
+T = pnl.TransferMechanism()
+# I = pnl.InputState(name='I', owner=T)
+I = pnl.InputState(name='I')
+I.owner = T
+assert T.input_states[1].name == 'I'
 #endregion
 
 #region TEST InputState SPECIFICATION
