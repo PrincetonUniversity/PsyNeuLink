@@ -432,11 +432,11 @@ class TestInputStateSpec:
         name = 'target'
         with pytest.raises(StateError) as error_text:
             m = TransferMechanism(default_variable=[0, 0, 0])
-            i = InputState(owner=m, variable=[0, 0, 0])
-            TransferMechanism(name=name, input_states=[i])
+            i = InputState(owner=m, name=name, variable=[0, 0, 0])
+            TransferMechanism(input_states=[i])
         assert (
             belongs_to_another_mechanism_error_text in str(error_text.value)
-            and 'Attempt to assign a State to {0}'.format(name) in str(error_text.value)
+            and 'Attempt to assign a State ({})'.format(name) in str(error_text.value)
         )
 
     # ------------------------------------------------------------------------------------------------

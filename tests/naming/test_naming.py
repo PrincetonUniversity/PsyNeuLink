@@ -45,8 +45,8 @@ class TestNaming:
     def test_default_mechanism_names(self):
         T1 = pnl.TransferMechanism()
         T2 = pnl.TransferMechanism()
-        assert T1.name == 'TransferMechanism-76'
-        assert T2.name == 'TransferMechanism-77'
+        assert T1.name == 'TransferMechanism-77'
+        assert T2.name == 'TransferMechanism-78'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 4
