@@ -959,12 +959,8 @@ class ScratchPadError(Exception):
 # print(TN1.name)
 # print(TN2.name)
 #
-P1 = pnl.MappingProjection()
-P2 = pnl.MappingProjection()
-
-O = pnl.OutputState()
-T = pnl.TransferMechanism(output_states=[O])
-print(T.output_states.names)
+# P1 = pnl.MappingProjection()
+# P2 = pnl.MappingProjection()
 # print(P1.name)
 # print(P2.name)
 #
@@ -1003,10 +999,13 @@ print(T.output_states.names)
 # print(GP1.name)
 # print(GP2.name)
 #
-# m1 = pnl.TransferMechanism()
-# m2 = pnl.TransferMechanism()
-# p12 = pnl.MappingProjection(sender=m1, receiver=m2)
-# print(p12.name)
+m1 = pnl.TransferMechanism()
+m2 = pnl.TransferMechanism(input_states=[m1])
+p2 = pnl.MappingProjection(sender=m1, receiver=m2)
+# print(p2.name)
+for projection in m2.input_states[0].path_afferents:
+    print(projection.name)
+
 
 #endregion
 

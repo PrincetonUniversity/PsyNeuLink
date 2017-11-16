@@ -354,6 +354,8 @@ class ParameterState(State_Base):
 
     COMMENT
 
+    COMMENT:
+
     Arguments
     ---------
 
@@ -392,6 +394,7 @@ class ParameterState(State_Base):
     prefs : PreferenceSet or specification dict : default State.classPreferences
         specifies the `PreferenceSet` for the ParameterState; see `prefs <ParameterState.prefs>` for details.
 
+    COMMENT
 
     Attributes
     ----------
@@ -427,15 +430,12 @@ class ParameterState(State_Base):
         `mod_afferents <ParameterState.mod_afferents>`.
 
     name : str
-        the name of the ParameterState; if it is not specified in the **name** argument of the constructor, a default is
-        assigned by the StateRegistry of the Mechanism to which the ParameterState belongs (see `Naming` for conventions 
-        used for default and duplicate names).
+        the name of the ParameterState; same as the name of the attribute for the Parameter to which the
+        ParameterState corresponds.
 
         .. note::
             Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
-            the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
-            creation.
+            the same name are permitted in different Mechanisms.
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the ParameterState; if it is not specified in the **prefs** argument of the
