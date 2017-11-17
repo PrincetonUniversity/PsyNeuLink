@@ -72,7 +72,9 @@ mySystem = System(processes=[color_naming_process, word_reading_process],
                   name='Stroop Model',
                   prefs=system_prefs)
 
-# mySystem.show_graph_with_learning()
+mySystem.show_graph(
+        # show_learning=True
+)
 
 def print_header():
     print("\n\n**** TRIAL: ", CentralClock.trial)
@@ -111,9 +113,8 @@ mySystem.run(num_trials=2,
 #
 # PsyNeuLink response & weights after 1st trial:
 #
-# Response [NOTE: I THINK THIS IS FROM LAST TRIAL -- JDC]:
+# Response:
 #  [ 0.50899214  0.54318254]
-# [NOTE: THESE ARE DEFINITELY FROM THE CURRENT TRIAL]:
 # Hidden-Output:
 # [[ 0.01462766  1.01351195]
 #  [ 2.00220713  3.00203878]]
@@ -124,7 +125,7 @@ mySystem.run(num_trials=2,
 # [[-0.02380258  0.9793176 ]
 #  [ 1.97619742  2.9793176 ]]
 
-# Correct response & weights after 1st trial:
+# Matlab validated response & weights after 1st trial:
 #
 # response
 #     0.5090    0.5432

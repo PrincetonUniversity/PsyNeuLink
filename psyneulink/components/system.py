@@ -752,17 +752,14 @@ class System(System_Base):
     results : List[OutputState.value]
         list of return values (OutputState.value) from the sequence of executions.
 
-    name : str : default System-<index>
-        the name of the System;
-        Specified in the **name** argument of the constructor for the System;
-        if not is specified, a default is assigned by SystemRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the System; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by SystemRegistry (see `Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : System.classPreferences
-        the `PreferenceSet` for System.
-        Specified in the **prefs** argument of the constructor for the System;  if it is not specified, a default is
-        assigned using `classPreferences` defined in __init__.py
-        (see :ref:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the System; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 
@@ -3441,7 +3438,7 @@ class SystemInputState(OutputState):
         Mechanism of the System.
 
         .. Declared as a subclass of OutputState so that it is recognized as a legitimate sender to a Projection
-           in Projection._instantiate_sender()
+           in Projection_Base._instantiate_sender()
 
            self.value is used to represent the item of the targets arg to system.execute or system.run
     COMMENT

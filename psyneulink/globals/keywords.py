@@ -113,7 +113,7 @@ class MechanismRoles:
         it is simply designated as such (since it will be assigned input and therefore be initialized in any event).
 
     INITIALIZE_CYCLE
-        A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection.Projection.sender>` of a
+        A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection_Base.sender>` of a
         `Projection <Projection>` that closes a loop in a `Process` or `System`, and that is not an `ORIGIN` Mechanism
         (since in that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be
         assigned to such Mechanisms, that will be used to initialize the Process or System when it is first run.  For
@@ -482,6 +482,7 @@ LEABRA_FUNCTION_TYPE = "LEABRA FUNCTION TYPE"
 DISTRIBUTION_FUNCTION_TYPE = "DISTRIBUTION FUNCTION TYPE"
 OBJECTIVE_FUNCTION_TYPE = "OBJECTIVE FUNCTION TYPE"
 LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
+NORMALIZING_FUNCTION_TYPE = "NORMALIZING FUNCTION TYPE"
 
 
 # Component SUBTYPES -----------------
