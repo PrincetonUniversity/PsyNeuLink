@@ -93,7 +93,7 @@ former (that is, if an *INPUT_STATES* entry is included in the parameter diction
 .. _InputState_Variable_and_Value:
 
 Each InputState specified in the **input_states** argument must correspond to an item of the Mechanism's `variable
-<Mechanism_Base.variable>` attribute (see `Mechanism InputStates <Mechanism_InputStates`), and the `value
+<Mechanism_Base.variable>` attribute (see `Mechanism InputStates <Mechanism_InputStates>`), and the `value
 <InputState.value>` of the InputState must be compatible with that item (that is, have the same number and type of
 elements).  By default, this is also true of the InputState's `variable <InputState.variable>` attribute,
 since the default `function <InputState.function>` for an InputState is a `LinearCombination`, the purpose of which
@@ -106,7 +106,8 @@ The format of an InputState's `variable <InputState.variable>` can be specified 
 straightforward is in the **variable** argument of its constructor.  More commonly, however, it is determined by
 the context in which it is being created, such as the specification for its owner Mechanism's `variable
 <Mechanism_Base.variable>` or for the InputState in the Mechanism's **input_states** argument (see `below
-<InputState_Forms_of_Specification>` and `Mechanism_InputState_Specification` for details).
+<InputState_Forms_of_Specification>` and `Mechanism InputState specification <Mechanism_InputState_Specification>`
+for details).
 
 
 Adding InputStates to a Mechanism after it is created
