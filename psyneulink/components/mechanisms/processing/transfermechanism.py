@@ -205,7 +205,7 @@ class TRANSFER_OUTPUT():
       variance of `output_state.value`.
 
     COMMENT:
-    *CONCATENATE* : list
+    *ALL* : list
       a list of all of the items of the TransferMechanism's `value <TransferMechanism.value>` (that is, of the result
       of its `function <TransferMechanism.function>` applied to the `value <InputState>` of each of its InputStates).
 

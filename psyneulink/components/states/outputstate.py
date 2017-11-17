@@ -344,8 +344,8 @@ from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
 from psyneulink.globals.keywords import \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, INPUT_STATE, INPUT_STATES, RECEIVER, GATING_SIGNAL, \
-    COMMAND_LINE, STATE, OUTPUT_STATE, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, DEFERRED_INITIALIZATION, \
-    CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE, REFERENCE_VALUE
+    COMMAND_LINE, STATE, OUTPUT_STATE, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, \
+    CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE, ALL
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import UtilitiesError, iscompatible, type_match
@@ -377,8 +377,7 @@ class OUTPUTS():
     STANDARD_DEVIATION=STANDARD_DEVIATION
     VARIANCE=VARIANCE
 
-standard_output_states = [
-                          {NAME: RESULT},
+standard_output_states = [{NAME: RESULT},
                           {NAME:MEAN,
                            CALCULATE:lambda x: np.mean(x)},
                           {NAME:MEDIAN,
@@ -386,7 +385,9 @@ standard_output_states = [
                           {NAME:STANDARD_DEVIATION,
                            CALCULATE:lambda x: np.std(x)},
                           {NAME:VARIANCE,
-                           CALCULATE:lambda x: np.var(x)}
+                           CALCULATE:lambda x: np.var(x)},
+                          {NAME: ALL,
+                           INDEX: ALL}
                           ]
 
 class OutputStateError(Exception):
@@ -693,7 +694,7 @@ class OutputState(State_Base):
             #    - can't yet determine relationship to default_value
             #    - can't yet evaluate calculate function (below)
             # so just return
-            if target_set[INDEX] is SEQUENTIAL:
+            if target_set[INDEX] in {ALL, SEQUENTIAL}:
                 return
             else:
                 try:
@@ -788,7 +789,7 @@ class OutputState(State_Base):
         """Call self.function with owner's value as variable
         """
 
-        # IMPLEMENTATION NOTE: OutputStates don't current receive TransmissiveProjections,
+        # IMPLEMENTATION NOTE: OutputStates don't currently receive PathwayProjections,
         #                      so there is no need to use their value (as do InputStates)
         value = self.function(variable=self.owner.value[self.index],
                                 params=function_params,

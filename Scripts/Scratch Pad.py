@@ -953,7 +953,7 @@ T = pnl.TransferMechanism(input_states=['x'])
 
 T = pnl.TransferMechanism(input_states=[[[[0],[0]],[[0],[0]]],'b','c'])
 print(T.variable)
-print(T.execute([[[[1],[4]],[[[5],[6]]]],[2],[3]]))
+# print(T.execute([[[[1],[4]],[[[5],[6]]]],[2],[3]]))
 print(T.output_states)
 print(T.output_values)
 print(T.value)
