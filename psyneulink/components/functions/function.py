@@ -216,7 +216,7 @@ __all__ = [
     'ConstantIntegrator', 'DISABLE', 'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
     'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON', 'ERROR_MATRIX', 'Exponential', 'ExponentialDist',
     'FHNIntegrator', 'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
-    'GammaDist', 'get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword', 'Hebbian', 'Integrator',
+    'GammaDist', '_get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword', 'Hebbian', 'Integrator',
     'IntegratorFunction', 'is_Function', 'is_function_type', 'kwBogaczEtAl', 'kwNavarrosAndFuss', 'LCAIntegrator',
     'LEARNING_ACTIVATION_FUNCTION', 'LEARNING_ACTIVATION_INPUT', 'LEARNING_ACTIVATION_OUTPUT', 'LEARNING_ERROR_OUTPUT',
     'LearningFunction', 'Linear', 'LinearCombination', 'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next',
@@ -3640,7 +3640,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
          Specification (validated in _validate_params):
             + single number (used to fill self.matrix)
-            + matrix keyword (see get_matrix)
+            + matrix keyword (see _get_matrix)
             + 2D list or np.ndarray of numbers
 
         :return matrix: (2D list)
@@ -3661,7 +3661,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             # receiver = sender
         receiver_len = receiver.shape[0]
 
-        matrix = get_matrix(specification, rows=sender_len, cols=receiver_len, context=context)
+        matrix = _get_matrix(specification, rows=sender_len, cols=receiver_len, context=context)
 
         # This should never happen (should have been picked up in validate_param or above)
         if matrix is None:
@@ -3714,7 +3714,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         if isinstance(self, MappingProjection):
             rows = len(self.sender.value)
             cols = len(self.receiver.instance_defaults.variable)
-        matrix = get_matrix(keyword, rows, cols)
+        matrix = _get_matrix(keyword, rows, cols)
 
         if matrix is None:
             raise FunctionError("Unrecognized keyword ({}) specified for the {} function of {}".
@@ -3738,7 +3738,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 #     return False
 
 
-def get_matrix(specification, rows=1, cols=1, context=None):
+def _get_matrix(specification, rows=1, cols=1, context=None):
     """Returns matrix conforming to specification with dimensions = rows x cols or None
 
      Specification can be a matrix keyword, filler value or np.ndarray
@@ -8092,9 +8092,9 @@ COMMENT
         elif isinstance(self.matrix,ParameterState):
             pass
         else:
-            self._matrix = get_matrix(self.matrix, size, size)
+            self._matrix = _get_matrix(self.matrix, size, size)
 
-        self._hollow_matrix = get_matrix(HOLLOW_MATRIX,size, size)
+        self._hollow_matrix = _get_matrix(HOLLOW_MATRIX,size, size)
 
         # # MODIFIED 11/12/17 OLD:
         # if self.metric is ENTROPY:

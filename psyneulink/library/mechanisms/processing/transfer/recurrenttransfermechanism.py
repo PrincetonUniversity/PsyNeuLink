@@ -133,7 +133,7 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.functions.function import Hebbian, Linear, Stability, get_matrix, is_function_type
+from psyneulink.components.functions.function import Hebbian, Linear, Stability, _get_matrix, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -592,7 +592,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                 matrix = matrix_param.matrix
 
             elif isinstance(matrix_param, str):
-                matrix = get_matrix(matrix_param, size, size)
+                matrix = _get_matrix(matrix_param, size, size)
 
             elif isinstance(matrix_param, (np.matrix, list)):
                 matrix = np.array(matrix_param)
@@ -647,7 +647,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         super()._instantiate_attributes_before_function(context=context)
 
         param_keys = self._parameter_states.key_values
-        specified_matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
+        specified_matrix = _get_matrix(self.params[MATRIX], self.size[0], self.size[0])
 
         # 9/23/17 JDC: DOESN'T matrix arg default to something?
         # If no matrix was specified, then both AUTO and HETERO must be specified
@@ -741,7 +741,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # MODIFIED 9/23/17 NEW [JDC]:
         else:
-            self.matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
+            self.matrix = _get_matrix(self.params[MATRIX], self.size[0], self.size[0])
             if self.matrix is None:
                 raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
                                              format(self.__class__.__name__))
@@ -839,7 +839,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if hasattr(self, '_parameter_states')\
                 and 'auto' in self._parameter_states and 'hetero' in self._parameter_states:
             if hasattr(self, 'size'):
-                val = get_matrix(val, self.size[0], self.size[0])
+                val = _get_matrix(val, self.size[0], self.size[0])
             temp_matrix = val.copy()
             self.auto = np.diag(temp_matrix).copy()
             np.fill_diagonal(temp_matrix, 0)
@@ -894,7 +894,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if isinstance(matrix, str):
             size = len(mech.instance_defaults.variable[0])
-            matrix = get_matrix(matrix, size, size)
+            matrix = _get_matrix(matrix, size, size)
 
         # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
         return AutoAssociativeProjection(owner=mech,

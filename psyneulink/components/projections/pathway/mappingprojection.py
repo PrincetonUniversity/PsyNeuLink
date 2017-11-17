@@ -247,7 +247,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import InitStatus, parameter_keywords
-from psyneulink.components.functions.function import AccumulatorIntegrator, LinearMatrix, get_matrix
+from psyneulink.components.functions.function import AccumulatorIntegrator, LinearMatrix, _get_matrix
 from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.states.outputstate import OutputState
@@ -445,11 +445,11 @@ class MappingProjection(PathwayProjection_Base):
                  context=None):
 
         # if matrix is DEFAULT_MATRIX:
-        #     initializer = get_matrix(matrix)
+        #     initializer = _get_matrix(matrix)
         #     initial_rate = initializer * 0.0
         #     matrix={VALUE:DEFAULT_MATRIX,
         #             FUNCTION:ConstantIntegrator(owner=self._parameter_states[MATRIX],
-        #                                         initializer=get_matrix(DEFAULT_MATRIX),
+        #                                         initializer=_get_matrix(DEFAULT_MATRIX),
         #                                         rate=initial_rate)}
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -487,7 +487,7 @@ class MappingProjection(PathwayProjection_Base):
         # FIX: UPDATE WITH MODULATION_MODS
         # FIX: MOVE THIS TO MappingProjection.__init__;
         # FIX: AS IT IS, OVER-WRITES USER ASSIGNMENT OF FUNCTION IN params dict FOR MappingProjection
-        matrix = get_matrix(self._parameter_states[MATRIX].value)
+        matrix = _get_matrix(self._parameter_states[MATRIX].value)
         initial_rate = matrix * 0.0
 
         self._parameter_states[MATRIX].function_object = AccumulatorIntegrator(owner=self._parameter_states[MATRIX],
@@ -586,7 +586,7 @@ class MappingProjection(PathwayProjection_Base):
                                  receiver_len,
                                  self.receiver.owner.name))
 
-                self._matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
+                self._matrix = _get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
 
                 # Since matrix shape has changed, output of self.function may have changed, so update self.value
                 self._update_value()
