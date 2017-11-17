@@ -5,12 +5,12 @@
 
 :tocdepth: 5
 
-.. |logo| image:: _static/PsyNeuLink_logo_no_text.svg
+.. |logo| image:: _static/PsyNeuLink_logo.svg
     :width: 20%
-    :target: http://psyneulink.org
 
-Welcome to PsyNeuLink |logo|
-============================
+
+Welcome to       |logo|
+=======================
 
 * `Purpose`
 * `What PsyNeuLink is NOT <What_PsyNeuLink_is_NOT>`
@@ -25,9 +25,8 @@ Welcome to PsyNeuLink |logo|
 
 Purpose
 -------
-
 PsyNeuLink is an open-source, software environment written in Python, and designed for the needs of
-neuroscientists, psychologists, computational psychiatrists and others interested in learning about and building
+neuroscientists, psychologists, computational psychiatrists and others interested learning about and building
 models of the relationship between brain function, mental processes and behavior.
 
 PsyNeuLink can be used as a "block modeling environment", in which to construct, simulate, document, and exchange

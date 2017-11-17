@@ -63,7 +63,7 @@ specified.  This can take any of the following forms:
         appending "_LearningSignal" to the name of the Projection.
 
     * *PROJECTION*:MappingProjection
-        the MappingProjection must be valid `projection specification <Projection_In_Context_Specification>`
+        the MappingProjection must be valid `projection specification <Projection_Specification>`
         for the one to be learned.
 
     The dictionary can also contain entries for any other LearningSignal attributes to be specified
@@ -254,7 +254,7 @@ class LearningSignal(ModulatorySignal):
         of the `matrix <MappingProjection.matrix>` parameter for the `MappingProjection(s) <MappingProjection>` to which
         the LearningSignal's `LearningProjection(s) <LearningProjection>` project.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter specification dictionary <ParameterState_Specification>` that can be used to specify the
         parameters for the LearningSignal and/or a custom function and its parameters. Values specified for
         parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
@@ -264,15 +264,12 @@ class LearningSignal(ModulatorySignal):
         listed in its `efferents <LearningSignal.efferents>` attribute (see `LearningSignal_Projections` for additional
         details).
 
-    name : str : default OutputState-<index>
-        a string used for the name of the OutputState.
-        If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
-        belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see ModulatorySignal `name <ModulatorySignal.name>`
+        specifies the name of the LearningSignal; see LearningSignal `name <ModulatorySignal.name>` for additional
+        details.
 
-    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the OutputState.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default State.classPreferences
+        specifies the `PreferenceSet` for the LearningSignal; see `prefs <LearningSignal.prefs>` for details.
 
 
     Attributes
@@ -311,23 +308,21 @@ class LearningSignal(ModulatorySignal):
         value of the `matrix <MappingProjection.matrix>` parameter for the `MappingProjection` to which the
         LearningSignal's `LearningProjection(s) <LearningProjection>` project.
 
-    name : str : default <State subclass>-<index>
-        name of the OutputState.
-        Specified in the **name** argument of the constructor for the OutputState.  If not is specified, a default is
-        assigned by the StateRegistry of the Mechanism to which the OutputState belongs
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        name of the LearningSignal; the first LearningSignal is always assigned the name *LEARNING_SIGNAL*;  any
+        additional LearningSignals without the **name** argument of their constructor specified are assigned a default
+        name (see `name <ModulatorySignal.name>`).
 
         .. note::
-            Unlike other PsyNeuLink components, state names are "scoped" within a Mechanism, meaning that states with
+            Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: states within a Mechanism with the same base name are appended an index in the order of their
+            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
-    prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the OutputState.
-        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
-        assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the LearningSignal; if it is not specified in the **prefs** argument of the constructor,
+        a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
+        details).
 
     """
 
@@ -411,12 +406,12 @@ class LearningSignal(ModulatorySignal):
     def learning_signal(self):
         return self.value
 
-    def _assign_default_name(self, context=None):
+    def _assign_default_state_name(self, context=None):
         # Preserve LEARNING_SIGNAL as name of the first LearningSignal
         #    as documented, and as it is used by System._instantiate_learning_graph
         if self.name is self.componentName:
             return self.name
         # Otherwise, allow ModulatorySignal to construct default name as usual
         else:
-            super()._assign_default_name(context=context)
+            super()._assign_default_state_name(context=context)
 
