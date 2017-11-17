@@ -1,13 +1,11 @@
-from psyneulink.components.functions.Function import Logistic
-from psyneulink.components.mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import GatingMechanism
-from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from psyneulink.components.Process import process
-from psyneulink.components.States.ModulatorySignals.GatingSignal import GatingSignal
-from psyneulink.components.States.OutputState import *
-from psyneulink.components.System import system
-from psyneulink.scheduling.Condition import AfterNCalls
-
-# from psyneulink.globals.Run import run, construct_inputs
+from psyneulink.components.functions.function import Logistic
+from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
+from psyneulink.components.states.outputstate import *
+from psyneulink.components.system import System
+from psyneulink.scheduling.condition import AfterNCalls
 
 Input_Layer = TransferMechanism(name='Input Layer',
                                 function=Logistic,
@@ -25,7 +23,8 @@ Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic,
                         default_variable = [0,0,0])
 
-from psyneulink.components.States.InputState import InputState
+
+from psyneulink.components.states.inputstate import InputState
 
 my_input_state = InputState(
     # owner=Output_Layer,
@@ -137,7 +136,7 @@ Output_Weights = MappingProjection(name='Output Weights',
                          matrix=Output_Weights_matrix
                          )
 
-z = process(default_variable=[0, 0],
+z = Process(default_variable=[0, 0],
             pathway=[Input_Layer,
                            # The following reference to Input_Weights is needed to use it in the pathway
                            #    since it's sender and receiver args are not specified in its declaration above
@@ -159,7 +158,7 @@ z = process(default_variable=[0, 0],
             prefs={VERBOSE_PREF: False,
                    REPORT_OUTPUT_PREF: True})
 
-g = process(default_variable=[1.0],
+g = Process(default_variable=[1.0],
             pathway=[Gating_Mechanism])
 
 # Input_Weights.matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
@@ -220,7 +219,7 @@ if COMPOSITION is PROCESS:
 
 elif COMPOSITION is SYSTEM:
     # SYSTEM VERSION:
-    x = system(processes=[z, g],
+    x = System(processes=[z, g],
                targets=[0, 0, 1],
                learning_rate=1.0)
 
@@ -230,7 +229,6 @@ elif COMPOSITION is SYSTEM:
     # x.show_graph()
     # x.show_graph(show_learning=True)
 
-    # from psyneulink.components.mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism \
     #     import _add_gating_mechanism_to_system
     # _add_gating_mechanism_to_system(Gating_Mechanism)
     #

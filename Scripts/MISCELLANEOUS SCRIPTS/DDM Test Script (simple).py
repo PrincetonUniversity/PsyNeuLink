@@ -1,4 +1,4 @@
-from psyneulink.components.Process import *
+from psyneulink.components.process import *
 
 # myMechanism = DDM(function=NavarroAndFuss(drift_rate=1.0,
 #                                       threshold=10.0,
@@ -16,8 +16,8 @@ myMechanism = DDM(function=BogaczEtAl(drift_rate=.1,
                   )
 
 
-# simple_ddm_process = process('Simple DDM Process')
-simple_ddm_process = process(pathway=[myMechanism],
+# simple_ddm_process = Process('Simple DDM Process')
+simple_ddm_process = Process(pathway=[myMechanism],
                              prefs={REPORT_OUTPUT_PREF: True})
 simple_ddm_process.execute(1.0)
 

@@ -2,16 +2,17 @@ import logging
 
 import pytest
 
-from psyneulink.components.functions.Function import Linear
-from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Composition import Composition
-from psyneulink.scheduling.Condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, \
+from psyneulink.components.functions.function import Linear
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.composition import Composition
+from psyneulink.scheduling.condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, \
     AfterPass, AfterTrial, All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, BeforePass, BeforeTrial, \
     EveryNCalls, EveryNPasses, NWhen, Not, WhenFinished, WhenFinishedAll, WhenFinishedAny, WhileNot
-from psyneulink.scheduling.Condition import ConditionError, ConditionSet
-from psyneulink.scheduling.Scheduler import Scheduler
-from psyneulink.scheduling.TimeScale import TimeScale
+from psyneulink.scheduling.condition import ConditionError, ConditionSet
+from psyneulink.scheduling.scheduler import Scheduler
+from psyneulink.scheduling.timescale import TimeScale
+
 
 logger = logging.getLogger(__name__)
 

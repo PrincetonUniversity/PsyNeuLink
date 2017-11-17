@@ -1,5 +1,5 @@
-LearningProjections
-===================
+Learning Projections
+====================
 
 **Base class**:
 

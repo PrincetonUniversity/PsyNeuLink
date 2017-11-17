@@ -1,10 +1,9 @@
-# from psyneulink.components.functions.Function import Logistic, random_matrix
-from psyneulink.components.functions.Function import Logistic
-from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from psyneulink.components.Process import process
-from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from psyneulink.components.System import system
-from psyneulink.scheduling.TimeScale import TimeScale
+from psyneulink.components.functions.function import Logistic
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.system import System
+from psyneulink.scheduling.timescale import TimeScale
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic,
@@ -75,7 +74,7 @@ Output_Weights = MappingProjection(name='Output Weights',
                          matrix=Output_Weights_matrix
                          )
 
-z = process(default_variable=[0, 0],
+z = Process(default_variable=[0, 0],
             pathway=[Input_Layer,
                            # The following reference to Input_Weights is needed to use it in the pathway
                            #    since it's sender and receiver args are not specified in its declaration above
@@ -128,7 +127,7 @@ target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
 #       call_after_trial=show_target)
 
 # SYSTEM VERSION:
-x = system(processes=[z],
+x = System(processes=[z],
            targets=[0, 0, 1])
 # x.show_graph()
 x.run(num_trials=10,

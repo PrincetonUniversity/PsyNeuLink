@@ -1,11 +1,9 @@
-# from psyneulink.components.mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
-
-from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import *
-from psyneulink.components.Process import process
-from psyneulink.components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from psyneulink.components.System import system
-from psyneulink.globals.Keywords import *
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms import EVCControlMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import *
+from psyneulink.components.process import Process
+from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.components.system import System
+from psyneulink.globals.keywords import *
+from psyneulink.library.mechanisms.adaptive import EVCControlMechanism
 
 random.seed(0)
 np.random.seed(0)
@@ -41,20 +39,20 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                name='Decision')
 
 # Processes:
-TaskExecutionProcess = process(
+TaskExecutionProcess = Process(
     default_variable=[0],
     pathway=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
     prefs = process_prefs,
     name = 'TaskExecutionProcess')
 
-RewardProcess = process(
+RewardProcess = Process(
     default_variable=[0],
     pathway=[(Reward, 1)],
     prefs = process_prefs,
     name = 'RewardProcess')
 
 # System:
-mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
+mySystem = System(processes=[TaskExecutionProcess, RewardProcess],
                   controller=EVCControlMechanism,
                   # controller=EVCControlMechanism(monitor_for_control=[Reward,
                   #                                              DDM_PROBABILITY_UPPER_THRESHOLD,

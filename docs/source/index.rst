@@ -5,8 +5,12 @@
 
 :tocdepth: 5
 
-Welcome to PsyNeuLink
-=====================
+.. |logo| image:: _static/PsyNeuLink_logo_no_text.svg
+    :width: 20%
+    :target: http://psyneulink.org
+
+Welcome to PsyNeuLink |logo|
+============================
 
 * `Purpose`
 * `What PsyNeuLink is NOT <What_PsyNeuLink_is_NOT>`
@@ -22,53 +26,58 @@ Welcome to PsyNeuLink
 Purpose
 -------
 
-PsyNeuLink is a "block modeling system" for cognitive neuroscience.  Block modeling systems allow components to be
-constructed that implement various, possibly disparate functions, and then link them together into a system to
-examine how they interact.  In PsyNeuLink, components are used to implement the function of brain subsystems and/or
-psychological processes, the interaction of which can then be simulated at the system level.
+PsyNeuLink is an open-source, software environment written in Python, and designed for the needs of
+neuroscientists, psychologists, computational psychiatrists and others interested in learning about and building
+models of the relationship between brain function, mental processes and behavior.
 
-PsyNeuLink is open source, and meant to be extended. Its goal is to provide an environment for implementing models
-of mind/brain function that are modular, customizable, extensible, disseminable, easily reproducible and clearly
-documented.  It does this in a manner that:
+PsyNeuLink can be used as a "block modeling environment", in which to construct, simulate, document, and exchange
+computational models of neural mechanisms and/or psychological processes at the subsystem and system levels.
+A block modeling environment allows components to be constructed that implement various, possibly disparate
+functions, and then link them together into a system to examine how they interact.  In PsyNeuLink, components are
+used to implement the function of brain subsystems and/or psychological processes, the interaction of which can then
+be simulated at the system level.
 
- - is *computationally general* -- that is, that can implement any desired mechanism or process;
- ..
- - adheres as closely as possible to the insights and design principles that have been learned in computer science
-   (e.g., function-based, object-oriented programming);
- ..
- - expresses (as few as possible) *commitments* that reflect general principles of how the mind/brain is organized
-   and operates, without committing to any particular detailed model or theory;
- ..
- - expresses these commitments in a form that is powerful, easy to use, and familiar to cognitive neuroscientists;
- ..
- - allows models to be simply and flexibly implemented, using a minimum of coding, and that provides seamless
-   integration of, and interaction among disparate components that can vary in their:
-     - granularity of representation and function
-     - time-scale of operation
- ..
- - provides a standard and accessible environment for model comparison, sharing, and documentation;
- ..
- - has an interface (API) that allows it to be used with other powerful tools for implementing individual components,
-   such as:
+The purpose of PsyNeuLink is to make it as easy as possible to create new and/or import existing models, and
+integrate them to simluate system-level interactions.  It provides a suite of core components for
+implementing models of various forms of processing, learning, and control, and its Library includes examples that
+combine these components to implement published models.  As an open source project, its suite of components is meant
+to be enhanced and extended, and its library is meant to provide an expanding repository of models, written in a
+concise, executable, and easy to interpret form, that can be shared, and compared by the scientific
+community.
 
-   * MatLab (general purpose mathematical tools);
+
+PsyNeuLink is:
+
+ - *open source*, freeing users of the costs or restrictions associated with proprietary software.
+ ..
+ - *computationally general* -- it can be used to implement, seamlessly integrate, and simulate interactions among
+   disparate components that vary in their granularity of representation and function (from individual neurons or
+   neural populations to functional subsystems and abstract cognitive functions) and at any time scale of execution.
+ ..
+ - *integrative* -- it provides a standard and accessible environment for model comparison, sharing, and documentation;
+ ..
+ - *extensible* -- it has an interface (API) that allows it to be used with other powerful tools for implementing
+   individual components, such as:
+   * Neuron (biophysically realistic models of neuronal function)
    * TensorFlow (ODE's, deep learning);
    * Emergent (broad class of neurally-plausible connectionist models);
    * ACT-R (symbolic, production system models).
 
-The goal is to encourage users to think about information processing in a "mind/brain-like" way, while imposing as few
-constraints as possible on what it is possible to implement or ask the model to do.
+.. note::
+   PsyNeuLink is alpha software, that is still being actively developed.  Although it is useable, and most of the
+   documented functionality is available, some features may not yet be fully implemented and/or subject to
+   modification.  Please report any bugs and/or suggestions for development to psyneulinkhelp@princeton.edu.
 
 .. _What_PsyNeuLink_is_NOT:
 
 What PsyNeuLink is **NOT**
 --------------------------
 
-PsyNeuLink is well suited to the creation of simple to moderately complex models, and to the integration of
+PsyNeuLink is well suited to the creation of simple to moderately complex models, and for the integration of
 disparate existing models into a single, integrated system in which interactions among them can be examined.
-While it is fully general, and can be used to implement virtually any kind of model, it is less well suited to other
-kinds of efforts, that involve massively large computations and/or specialized functions and data types that it
-currently does not support, such as:
+While it is fully general, and can be used to implement virtually any type of model, in its current form it is
+less well suited to certain kinds of efforts, that involve massively large computations and/or specialized functions
+and data types that it currently does not support, such as:
 
  - extensive model fitting
  - large scale simulations
@@ -82,51 +91,50 @@ Other packages that are better suited to such applications are:
 `Genesis <http://www.genesis-sim.org>`_,
 `Neuron <https://www.neuron.yale.edu/neuron/>`_,
 and `Nengo <http://www.nengo.ca>`_  (for biophysically-realistic models of neuronal function).
+
 These packages are good for elaborate and detailed models of a particular form.
 In contrast, the focus in designing and implementing PsyNeuLink has been to make it as flexible and easy to use as
 possible, with the ability to integrate components constructed in other packages (including some of the ones listed
 above) into a single functioning system.  These are characteristics that are often (at least in the initial
-stages of development) in tension with efficiency (think:  interpreted vs. compiled).  One of the goals for future
-development is to make PsyNeuLink more computationally efficient.  At present, however, it is best suited to
-developing simpler models, or taking complex or highly detailed models that have been developed --
-or subjected to extensive parameter fitting -- in other frameworks, and re-expressing them in a form that is amenable
-to integration, documentation, and dissemination.
+stages of development) in tension with efficiency (think:  interpreted vs. compiled).  Two priorities for continued
+development are the accleration of PsyNeuLink using just-in-time compilation methods, parallelization and adaptation
+to FPGA hardware; and the implementation of a graphic interface for the construction of models and realtime display
+of their execution.
 
 .. _Overview:
 
-Overview
---------
+Environment Overview
+--------------------
 
-PsyNeuLink is written in Python, and conforms to the syntax and coding standards for the language.
-`BasicsAndSampler` provides an orientation to PsyNeuLinks Components, some examples of what PsyNeuLink models
-look like, and some of its capabilities. `QuickReference` provides an overview of how PsyNeuLink is organized and
-some of its basic principles of operation.  The `Tutorial <Tutorial>` provides an interactive guide to the
-construction of models using PsyNeuLink.
+PsyNeuLink is written in Python, and conforms to the syntax, coding standards and modular organization shared by
+most Python packages.  `BasicsAndSampler` provides an orientation to PsyNeuLinks Components, some examples of what
+PsyNeuLink models look like, and some of its capabilities. `QuickReference` provides an overview of how PsyNeuLink is
+organized and some of its basic principles of operation.  The `Tutorial <Tutorial>` provides an interactive guide to the
+construction of models using PsyNeuLink.  `Core` contains the fundamental constructs out of which PsyNeuLink models
+are built, and `Library` contains extensions, including speciality components and implemented models.
 
 .. _Installation:
 
 Installation
 ------------
 
-.. note::
-   PsyNeuLink is beta software, that is still being actively developed.  Although it is useable, and most of the
-   documented functionality is available, some features may not yet be fully implemented and/or subject to
-   modification.  Please report any bugs and/or suggestions for development to psyneulinkhelp@princeton.edu.
+PsyNeuLink is compatible with python versions >= 3.5, and is available through `PyPI <https://pypi.python.org/pypi/PsyNeuLink>`__:
 
-Because core elements of PsyNeuLink are still under development, it is not yet available through pypi/pip.
-Instead, you can clone the github repo (https://github.com/PrincetonUniversity/PsyNeuLink). Clone the master branch.
-Download the package with the green "Clone or download" button on the right side of the page and "Download ZIP."
+::
 
-Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal. Note: The
-repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get access.
+    pip install psyneulink
 
-PsyNeuLink is compatible with any version of python 3, but the tutorial (see below) requires a 3.5 installation with
-the latest versions of IPython, jupyter, and matplotlib installed.
-
-To install the package, navigate to the cloned directory in a terminal,
-switch to your preferred python3 environment, then run the command __"pip install ."__
-(make sure to include the period and to use the appropriate pip/pip3 command for python 3.5).
 All prerequisite packages will be automatically added to your environment.
+
+If you downloaded the source code, navigate to the cloned directory in a terminal,
+switch to your preferred python3 environment, then run
+
+::
+
+    pip install .
+
+Lists of required packages for PsyNeuLink, developing PsyNeuLink, and running the PsyNeuLink tutorial are also
+stored in pip-style `requirements.txt`, `dev_requirements.txt`, and `tutorial_requirements.txt` in the source code.
 
 If you have trouble installing the package, or run into other problems, please contact psyneulinkhelp@princeton.edu.
 
@@ -136,14 +144,37 @@ If you have trouble installing the package, or run into other problems, please c
 Tutorial
 --------
 
-The downloaded package includes a tutorial, that provides examples of how to create basic Components
+:download:`Download PsyNeuLink Tutorial.ipynb <../../tutorial/PsyNeuLink Tutorial.ipynb>`
+
+PsyNeuLink includes a tutorial, available :download:`here <../../tutorial/PsyNeuLink Tutorial.ipynb>`, that provides examples of how to create basic Components
 in PsyNeuLink, and combine them into Processes and a System.  The examples include construction of a simple
 decision making process using a Drift Diffusion Model, a neural network model of the Stroop effect, and a
 backpropagation network for learning the XOR problem.
 
-The tutorial can be run using the terminal command ``jupyter notebook`` within the root directory of the PsyNeuLink
-package. Once the jupyter notebook opens, within the list of files click on "PsyNeuLink Tutorial .ipynb".  This will
-open the tutorial, that will provide any additional information needed to get started.
+The tutorial currently requires python 3.5, and additional packages; to install the required tutorial packages, you may use PyPI:
+
+::
+
+    pip install psyneulink[tutorial]
+
+or if you downloaded the source:
+
+::
+
+    pip install .[tutorial]
+
+
+To access the tutorial, make sure you fulfill the requirements
+mentioned above, download the :download:`tutorial notebook <../../tutorial/PsyNeuLink Tutorial.ipynb>`, then run the terminal command
+
+::
+
+    jupyter notebook
+
+
+Once the notebook opens in your browser, navigate to the location where you saved the tutorial notebook, and
+click on "PsyNeuLink Tutorial.ipynb".
+
 
 
 .. _Contributors:
@@ -155,7 +186,7 @@ Contributors
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
 * **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
-* **Kevin Mantel**, Princeton Neuroscience Institute, Princeton University
+* **K. Mantel**, Princeton Neuroscience Institute, Princeton University
 * **Ted Willke**, Intel Labs, Intel Corporation
 * **Changyan Wang**, Princeton Neuroscience Institute, Princeton University
 * **Nate Wilson**, Princeton Neuroscience Institute, Princeton University

@@ -2,13 +2,13 @@ import random
 
 import numpy as np
 
-from psyneulink.components.functions.Function import PROB
-from psyneulink.components.functions.Function import Reinforcement, SoftMax
-from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from psyneulink.components.Process import process
-from psyneulink.components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-from psyneulink.components.System import system
-from psyneulink.scheduling.TimeScale import CentralClock
+from psyneulink.components.functions.function import PROB
+from psyneulink.components.functions.function import Reinforcement, SoftMax
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
+from psyneulink.components.system import System
+from psyneulink.scheduling.timescale import CentralClock
 
 random.seed(0)
 np.random.seed(0)
@@ -21,7 +21,7 @@ action_selection = TransferMechanism(default_variable=[0,0,0],
                                              gain=1.0),
                             name='Action Selection')
 
-p = process(default_variable=[0, 0, 0],
+p = Process(default_variable=[0, 0, 0],
             pathway=[input_layer,action_selection],
             # learning=LearningProjection(learning_function=Reinforcement()),
             # learning=LearningProjection(learning_function=Reinforcement(learning_rate=None)),
@@ -65,7 +65,7 @@ p.run(num_trials=10,
 
 input_list = {input_layer:[[1, 1, 1]]}
 
-s = system(processes=[p],
+s = System(processes=[p],
            # learning_rate=0.05,
            targets=[0])
 

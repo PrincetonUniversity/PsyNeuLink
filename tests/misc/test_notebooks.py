@@ -24,7 +24,7 @@ def _find_ipynbs():
     ipynb_filepaths = []
     for root, dirs, files in os.walk(tutorial_dir):
         for filename in files:
-            if filename.endswith('.ipynb'):# and os.path.split(root)[1] != '.ipynb_checkpoints':
+            if filename.endswith('.ipynb') and os.path.split(root)[1] != '.ipynb_checkpoints':
                 ipynb_filepaths.append(os.path.join(root, filename))
 
     return ipynb_filepaths

@@ -2,11 +2,10 @@
 # coding: utf-8
 
 # In[ ]:
-
-from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from psyneulink.components.Process import process
-from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from psyneulink.components.System import system
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.system import System
 
 #The following code starts to build a 3 layer neural network
 
@@ -14,8 +13,8 @@ input_layer = TransferMechanism(name='Input Layer',
                        function=Logistic,
                        default_variable = np.zeros((2,)))
 
-hidden_layer = TransferMechanism(name='Hidden Layer', 
-                                 function = Linear, 
+hidden_layer = TransferMechanism(name='Hidden Layer',
+                                 function = Linear,
                                  default_variable =[0])
 
 output_layer = TransferMechanism(name='Output Layer',
@@ -35,7 +34,7 @@ input_output_weights = MappingProjection(name = 'Input-Output Weights',
 
 
 
-input_hidden_process = process(default_variable=[0, 0],
+input_hidden_process = Process(default_variable=[0, 0],
                                pathway=[input_layer, input_hidden_weights, hidden_layer],
                                learning=LEARNING,
                                learning_rate=1.0,
@@ -44,7 +43,7 @@ input_hidden_process = process(default_variable=[0, 0],
                                prefs={VERBOSE_PREF: False,
                                       REPORT_OUTPUT_PREF: False})
 
-hidden_output_process = process(default_variable=[0],
+hidden_output_process = Process(default_variable=[0],
                                pathway=[hidden_layer, hidden_output_weights, output_layer],
                                learning=LEARNING,
                                learning_rate=1.0,
@@ -53,7 +52,7 @@ hidden_output_process = process(default_variable=[0],
                                prefs={VERBOSE_PREF: False,
                                       REPORT_OUTPUT_PREF: False})
 
-input_output_process = process(default_variable=[0, 0],
+input_output_process = Process(default_variable=[0, 0],
                                pathway=[input_layer, input_output_weights, output_layer],
                                learning=LEARNING,
                                learning_rate=1.0,
@@ -63,7 +62,7 @@ input_output_process = process(default_variable=[0, 0],
                                       REPORT_OUTPUT_PREF: False})
 
 
-three_layer_net = system(processes=[input_hidden_process, hidden_output_process, input_output_process,],
+three_layer_net = System(processes=[input_hidden_process, hidden_output_process, input_output_process,],
                          targets=[0],
                          # targets=[[0],[0]],
                          learning_rate=1,
@@ -79,7 +78,7 @@ target_list = {output_layer:[[0], [1], [1], [0]]}
 
 def print_header():
     print("\n\n**** TRIAL: ", CentralClock.trial+1)
-    
+
 def show_target():
     i = three_layer_net.input
     t = three_layer_net.target_input_states[0].value
@@ -88,7 +87,7 @@ def show_target():
     print(input_hidden_weights.matrix)
     print('HIDDEN-OUTPUT WEIGHTS:')
     print(hidden_output_weights.matrix)
-    
+
 
 three_layer_net.run(num_trials=100,
                   inputs=input_list,

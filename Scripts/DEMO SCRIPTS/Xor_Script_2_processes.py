@@ -1,31 +1,21 @@
 # coding: utf-8
 
 # In[ ]:
-import numpy as np
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.system import System
 
-from PsyNeuLink import Logistic, Linear
-from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism \
-    import \
-    TransferMechanism
-from psyneulink.components.Process import process
-from psyneulink.components.Projections.PathwayProjections.MappingProjection \
-    import \
-    MappingProjection
-from psyneulink.components.System import system
-
-# The following code starts to build a 3 layer neural network
-from psyneulink.globals.Keywords import LEARNING
-from psyneulink.globals.preferences.ComponentPreferenceSet import VERBOSE_PREF, \
-    REPORT_OUTPUT_PREF
-from psyneulink.scheduling.TimeScale import CentralClock
+#The following code starts to build a 3 layer neural network
 
 input_layer = TransferMechanism(name='Input Layer',
                                 function=Logistic,
                                 default_variable=np.zeros((2,)))
 
 hidden_layer = TransferMechanism(name='Hidden Layer',
-                                 function=Linear,
-                                 default_variable=[0])
+
+                                 function = Linear,
+                                 default_variable =[0])
 
 output_layer = TransferMechanism(name='Output Layer',
                                  function=Linear,
@@ -40,7 +30,7 @@ hidden_output_weights = MappingProjection(name='Hidden-Output Weights',
 input_output_weights = MappingProjection(name='Input-Output Weights',
                                          matrix=np.random.rand(2, 1) * 1 - .5)
 
-input_via_hidden_process = process(default_variable=[0, 0],
+input_via_hidden_process = Process(default_variable=[0, 0],
                                    pathway=[input_layer,
                                             input_hidden_weights,
                                             hidden_layer,
@@ -53,18 +43,20 @@ input_via_hidden_process = process(default_variable=[0, 0],
                                    prefs={VERBOSE_PREF: False,
                                           REPORT_OUTPUT_PREF: False})
 
-input_direct_to_output_process = process(default_variable=[0, 0],
-                                         pathway=[input_layer,
-                                                  input_output_weights,
-                                                  output_layer],
-                                         learning=LEARNING,
-                                         learning_rate=1.0,
-                                         target=[1],
-                                         name='INPUT TO OUTPUT PROCESS',
-                                         prefs={VERBOSE_PREF: False,
-                                                REPORT_OUTPUT_PREF: False})
 
-three_layer_net = system(processes=[input_via_hidden_process,
+input_direct_to_output_process = Process(default_variable=[0, 0],
+                                          pathway=[input_layer,
+                                                   input_output_weights,
+                                                   output_layer],
+                                          learning=LEARNING,
+                                          learning_rate=1.0,
+                                          target=[1],
+                                          name='INPUT TO OUTPUT PROCESS',
+                                          prefs={VERBOSE_PREF: False,
+                                                 REPORT_OUTPUT_PREF: False})
+
+
+three_layer_net = System(processes=[input_via_hidden_process,
                                     input_direct_to_output_process],
                          targets=[0],
                          # targets=[[0],[0]],
@@ -82,8 +74,7 @@ target_list = {output_layer: [[0], [1], [1], [0]]}
 
 
 def print_header():
-    print("\n\n**** TRIAL: ", CentralClock.trial + 1)
-
+    print("\n\n**** TRIAL: ", CentralClock.trial+1)
 
 def show_target():
     i = three_layer_net.input

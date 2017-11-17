@@ -4,9 +4,9 @@ Projections
 .. toctree::
    :maxdepth: 1
 
-   PathwayProjections <PathwayProjection>
-   ModulatoryProjections <ModulatoryProjection>
+   Pathway Projections <PathwayProjection>
+   Modulatory Projections <ModulatoryProjection>
 
-.. automodule:: Projection
+.. automodule:: psyneulink.components.projections.projection
    :members:
-   :exclude-members: Projection_Base, _is_projection_spec, random
+   :exclude-members: _is_projection_spec, random

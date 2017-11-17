@@ -1,9 +1,9 @@
 import numpy as np
 
-from psyneulink.components.functions.Function import BogaczEtAl
-from psyneulink.components.Process import process
-from psyneulink.globals.Keywords import IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
+from psyneulink.components.functions.function import BogaczEtAl
+from psyneulink.components.process import Process
+from psyneulink.globals.keywords import FULL_CONNECTIVITY_MATRIX, IDENTITY_MATRIX
+from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
 
 
 # does not run a system, can be used to ensure that running processes alone still works
@@ -32,7 +32,7 @@ def test_DDM():
         name='My_DDM_3',
     )
 
-    z = process(
+    z = Process(
         default_variable=[[30], [10]],
         pathway=[
             myMechanism,

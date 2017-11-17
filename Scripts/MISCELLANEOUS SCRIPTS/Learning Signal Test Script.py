@@ -1,8 +1,7 @@
-# from psyneulink.components.functions.Function import Logistic, random_matrix
-from psyneulink.components.functions.Function import Logistic
-from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from psyneulink.components.Process import process
-from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from psyneulink.components.functions.function import Logistic
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
@@ -42,15 +41,13 @@ Learned_Weights = MappingProjection(name='Learned Weights',
                           # params={FUNCTION_PARAMS: {MATRIX: (random_weight_matrix, LEARNING_PROJECTION)}}
                           )
 
-z = process(name="TEST LEARNER",
+z = Process(name="TEST LEARNER",
             default_variable=[0, 0],
             pathway=[Input_Layer, Learned_Weights, Output_Layer],
             learning=LEARNING_PROJECTION,
             prefs={VERBOSE_PREF: True,
                    REPORT_OUTPUT_PREF: True})
 
-
-# from psyneulink.components.mechanisms.AdaptiveMechanisms.ObjectiveMechanisms.ComparatorMechanism \
 #                                                                                   import COMPARATOR_TARGET
 # Learned_Weights.monitoringMechanism.paramsCurrent[COMPARATOR_TARGET] = [1,1]
 

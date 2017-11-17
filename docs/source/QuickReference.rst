@@ -34,6 +34,7 @@ The following conventions are used for the names of PsyNeuLink objects and their
 
           Appear in boxed insets.
 
+See `Naming` for conventions for default and user-assigned names of instances.
 
 .. _PsyNeuLink_Objects:
 
@@ -262,7 +263,7 @@ Graphic Displays
 ----------------
 
 At the moment, PsyNeuLink has limited support for graphic displays:  the graph of a `System` can be displayed
-using its `show_graph <System_Base.show_graph>` method.  This can be used to display just the processing components
+using its `show_graph <System.show_graph>` method.  This can be used to display just the processing components
 (i.e., `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`), or to include
 `learning <LearningMechanism>` and/or `control <ControlMechanism>` components.  A future release may include
 a more complete graphical user interface.

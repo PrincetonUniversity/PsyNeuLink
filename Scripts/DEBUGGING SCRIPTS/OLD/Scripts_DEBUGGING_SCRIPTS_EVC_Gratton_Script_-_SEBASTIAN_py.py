@@ -1,11 +1,9 @@
-# from psyneulink.components.mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
-
-from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import *
-from psyneulink.components.Process import process
-from psyneulink.components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from psyneulink.components.System import system
-from psyneulink.globals.Keywords import *
-from PsyNeuLink.Library.Subsystems.EVC.EVCControlMechanism import EVCControlMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import *
+from psyneulink.components.process import Process
+from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.components.system import System
+from psyneulink.globals.keywords import *
+from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
 
 
 def test_search_function(controller=None, **kwargs):
@@ -77,39 +75,39 @@ Reward = TransferMechanism(name='Reward')
 
 
 # Processes:
-TargetControlProcess = process(
+TargetControlProcess = Process(
     default_variable=[0],
     pathway=[Target_Stim, Target_Rep, Decision],
     prefs = process_prefs,
     name = 'Target Control Process')
 
-FlankerControlProcess = process(
+FlankerControlProcess = Process(
     default_variable=[0],
     pathway=[Flanker_Stim, Flanker_Rep, Decision],
     prefs = process_prefs,
     name = 'Flanker Control Process')
 
-TargetAutomaticProcess = process(
+TargetAutomaticProcess = Process(
     default_variable=[0],
     pathway=[Target_Stim, Automatic_Component, Decision],
     prefs = process_prefs,
     name = 'Target Automatic Process')
 
-FlankerAutomaticProcess = process(
+FlankerAutomaticProcess = Process(
     default_variable=[0],
     pathway=[Flanker_Stim, Automatic_Component, Decision],
     prefs = process_prefs,
     name = 'Flanker1 Automatic Process')
 
 
-RewardProcess = process(
+RewardProcess = Process(
     default_variable=[0],
     pathway=[Reward],
     prefs = process_prefs,
     name = 'RewardProcess')
 
 # System:
-mySystem = system(processes=[TargetControlProcess, FlankerControlProcess,
+mySystem = System(processes=[TargetControlProcess, FlankerControlProcess,
                              TargetAutomaticProcess, FlankerAutomaticProcess,
                              RewardProcess],
                   controller=EVCControlMechanism,

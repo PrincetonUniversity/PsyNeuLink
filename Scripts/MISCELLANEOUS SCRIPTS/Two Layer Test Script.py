@@ -1,9 +1,8 @@
-from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from psyneulink.components.Process import process
-from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from psyneulink.components.System import system
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.system import System
 
-# from psyneulink.globals.Run import run, construct_inputs
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Linear,
@@ -24,7 +23,7 @@ Weights = MappingProjection(name='Weights',
                         matrix=Weights_matrix
                         )
 
-my_process = process(default_variable=[0, 0],
+my_process = Process(default_variable=[0, 0],
                      # pathway=[Input_Layer, Weights, Output_Layer],
                      pathway=[Input_Layer, Output_Layer],
                      # clamp_input=SOFT_CLAMP,
@@ -74,7 +73,7 @@ if COMPOSITION is PROCESS:
 
 elif COMPOSITION is SYSTEM:
     # SYSTEM VERSION:
-    x = system(processes=[my_process],
+    x = System(processes=[my_process],
                targets=[0],
                learning_rate=0.1)
 

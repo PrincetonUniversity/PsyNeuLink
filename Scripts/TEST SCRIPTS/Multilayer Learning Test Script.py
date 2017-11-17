@@ -1,14 +1,16 @@
-from psyneulink.components.functions.Function import Logistic
-from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from psyneulink.components.Process import process
-from psyneulink.components.States.OutputState import *
-from psyneulink.components.System import system
-from psyneulink.globals.Keywords import *
-from psyneulink.globals.preferences.ComponentPreferenceSet import *
-from psyneulink.scheduling.Condition import AfterNCalls
-from psyneulink.scheduling.TimeScale import TimeScale, CentralClock
+import numpy as np
 
-# from psyneulink.globals.Run import run, construct_inputs
+from psyneulink.components.functions.function import Logistic
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.states.outputstate import *
+from psyneulink.components.system import System
+from psyneulink.globals.keywords import *
+from psyneulink.globals.preferences.componentpreferenceset import *
+from psyneulink.scheduling.condition import AfterNCalls
+from psyneulink.scheduling.timescale import CentralClock, TimeScale
+
 
 Input_Layer = TransferMechanism(name='Input Layer',
                                 function=Logistic,
@@ -77,7 +79,7 @@ Output_Weights = MappingProjection(name='Output Weights',
                          matrix=Output_Weights_matrix
                          )
 
-z = process(default_variable=[0, 0],
+z = Process(default_variable=[0, 0],
             pathway=[Input_Layer,
                            # The following reference to Input_Weights is needed to use it in the pathway
                            #    since it's sender and receiver args are not specified in its declaration above
@@ -159,15 +161,15 @@ if COMPOSITION is PROCESS:
 
 elif COMPOSITION is SYSTEM:
     # SYSTEM VERSION:
-    x = system(processes=[z],
+    x = System(processes=[z],
                targets=[0, 0, 1],
                learning_rate=2.0)
 
     x.reportOutputPref = True
     composition = x
 
-    x.show_graph(show_learning=ALL)
-    # x.show_graph()
+    # x.show_graph(show_learning=ALL)
+    x.show_graph()
     results = x.run(
         num_trials=10,
         # inputs=stim_list,

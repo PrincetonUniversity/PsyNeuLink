@@ -1,15 +1,13 @@
 import numpy as np
 import pytest
 
-from psyneulink.components.functions.Function import AccumulatorIntegrator, ConstantIntegrator, NormalDist, \
-    SimpleIntegrator, FHNIntegrator
-from psyneulink.components.functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, \
-    OrnsteinUhlenbeckIntegrator, AGTUtilityIntegrator
-from psyneulink.components.functions.Function import FunctionError
-from psyneulink.components.mechanisms.Mechanism import MechanismError
-from psyneulink.components.mechanisms.ProcessingMechanisms.IntegratorMechanism \
-    import IntegratorMechanism
-from psyneulink.scheduling.TimeScale import TimeScale
+from psyneulink.components.functions.function import AGTUtilityIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
+from psyneulink.components.functions.function import AccumulatorIntegrator, ConstantIntegrator, FHNIntegrator, NormalDist, SimpleIntegrator
+from psyneulink.components.functions.function import FunctionError
+from psyneulink.components.mechanisms.mechanism import MechanismError
+from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.scheduling.timescale import TimeScale
+
 
 
 # ======================================= FUNCTION TESTS ============================================
@@ -24,7 +22,7 @@ class TestIntegratorFunctions:
                 offset=10,
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = I.execute(1)
         assert val == 25
 
@@ -36,7 +34,7 @@ class TestIntegratorFunctions:
                 offset=10
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         # constant integrator does not use input value (variable)
 
         # step 1:
@@ -62,7 +60,7 @@ class TestIntegratorFunctions:
                 offset=10,
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         # 10*0.5 + 1*0.5 + 10
         val = I.execute(1)
         assert val == 15.5
@@ -76,7 +74,7 @@ class TestIntegratorFunctions:
                 offset=10,
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         # 10 + 10*0.5 + 0 + 10 = 25
         val = I.execute(1)
         assert val == 25
@@ -92,7 +90,7 @@ class TestIntegratorFunctions:
                 offset= 1.0
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         # value = previous_value + decay * (previous_value -  rate * new_value) * time_step_size + np.sqrt(
         # time_step_size * noise) * np.random.normal()
         # step 1:
@@ -140,7 +138,7 @@ class TestIntegratorFunctions:
 
     def test_integrator_no_function(self):
         I = IntegratorMechanism(time_scale=TimeScale.TIME_STEP)
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute(10))
         assert val == 5
 
@@ -154,7 +152,7 @@ class TestResetInitializer:
             ),
             time_scale=TimeScale.TIME_STEP
         )
-    #     # P = process(pathway=[I])
+    #     # P = Process(pathway=[I])
 
         #  returns previous_value + rate*variable + noise
         # so in this case, returns 10.0
@@ -176,7 +174,7 @@ class TestResetInitializer:
             time_scale=TimeScale.TIME_STEP
         )
         # val = float(I.execute(10)[0])
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute(10))
         # returns (rate)*variable + (1-rate*previous_value) + noise
         # rate = 1, noise = 0, so in this case, returns 10.0
@@ -196,7 +194,7 @@ class TestResetInitializer:
             time_scale=TimeScale.TIME_STEP
         )
         # val = float(I.execute(10)[0])
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute())
         # returns previous_value + rate + noise
         # rate = 1.0, noise = 0, so in this case returns 1.0
@@ -215,7 +213,7 @@ class TestResetInitializer:
             time_scale=TimeScale.TIME_STEP
         )
         # val = float(I.execute(10)[0])
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute(10))
 
         # testing initializer
@@ -238,7 +236,7 @@ class TestIntegratorInputs:
             function=SimpleIntegrator(
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute(10.0))
         assert val == 10.0
 
@@ -250,7 +248,7 @@ class TestIntegratorInputs:
             function=SimpleIntegrator(
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute([10.0]))
         assert val == 10.0
 
@@ -264,7 +262,7 @@ class TestIntegratorInputs:
             function=SimpleIntegrator(
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = I.execute([10.0, 5.0, 2.0, 1.0, 0.0])[0]
         expected_output = [10.0, 5.0, 2.0, 1.0, 0.0]
 
@@ -283,7 +281,7 @@ class TestIntegratorInputs:
             function=SimpleIntegrator(
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         input_array = np.array([10.0, 5.0, 2.0, 1.0, 0.0])
         val = I.execute(input_array)[0]
         expected_output = [10.0, 5.0, 2.0, 1.0, 0.0]
@@ -304,7 +302,7 @@ class TestIntegratorInputs:
                 name='IntegratorMechanism',
                 default_variable=[0, 0, 0]
             )
-            # P = process(pathway=[I])
+            # P = Process(pathway=[I])
             I.execute([10.0, 5.0, 2.0, 1.0, 0.0])
         assert "does not match required length" in str(error_text)
 
@@ -317,7 +315,7 @@ class TestIntegratorInputs:
                 name='IntegratorMechanism',
                 default_variable=[0, 0, 0, 0, 0]
             )
-            # P = process(pathway=[I])
+            # P = Process(pathway=[I])
             I.execute([10.0, 5.0, 2.0])
         assert "does not match required length" in str(error_text)
 
@@ -335,7 +333,7 @@ class TestIntegratorRate:
                 rate=5.0
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute(10.0))
         assert val == 50.0
 
@@ -348,7 +346,7 @@ class TestIntegratorRate:
                 rate=5.0
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute(10.0))
         assert val == 5.0
 
@@ -361,7 +359,7 @@ class TestIntegratorRate:
                 rate=5.0
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = float(I.execute(10.0))
         assert val == 50.0
 
@@ -375,7 +373,7 @@ class TestIntegratorRate:
                 rate=[5.0, 5.0, 5.0]
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [50.0, 50.0, 50.0]
 
@@ -389,7 +387,7 @@ class TestIntegratorRate:
                 rate=[5.0, 5.0, 5.0]
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [5.0, 5.0, 5.0]
 
@@ -403,7 +401,7 @@ class TestIntegratorRate:
                 rate=[5.0, 5.0, 5.0]
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [50.0, 50.0, 50.0]
 
@@ -417,7 +415,7 @@ class TestIntegratorRate:
                 rate=[0.5, 0.5, 0.5]
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [5.0, 5.0, 5.0]
 
@@ -431,7 +429,7 @@ class TestIntegratorRate:
                 rate=0.5
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [5.0, 5.0, 5.0]
 
@@ -444,7 +442,7 @@ class TestIntegratorRate:
                 rate=0.5
             )
         )
-        # P = process(pathway=[I])
+        # P = Process(pathway=[I])
         val = list(I.execute(10.0))
         assert val == [5.0]
 
@@ -459,7 +457,7 @@ class TestIntegratorRate:
                     rate=[5.0, 5.0, 5.0]
                 )
             )
-            # P = process(pathway=[I])
+            # P = Process(pathway=[I])
             float(I.execute(10.0))
         assert (
             "array specified for the rate parameter" in str(error_text)
@@ -475,7 +473,7 @@ class TestIntegratorRate:
                     rate=[5.0, 5.0, 5.0]
                 )
             )
-            # P = process(pathway=[I])
+            # P = Process(pathway=[I])
             float(I.execute(10.0))
         assert (
             "array specified for the rate parameter" in str(error_text)
@@ -491,7 +489,7 @@ class TestIntegratorRate:
                     rate=[5.0, 5.0, 5.0]
                 )
             )
-            # P = process(pathway=[I])
+            # P = Process(pathway=[I])
             float(I.execute(10.0))
         assert (
             "array specified for the rate parameter" in str(error_text)
@@ -507,7 +505,7 @@ class TestIntegratorRate:
     #                 increment= 1.0
     #             )
     #         )
-    # #     P = process(pathway=[I])
+    # #     P = Process(pathway=[I])
 
     #     # value = previous_value * rate + noise + increment
     #     # step 1:
@@ -671,48 +669,6 @@ class TestIntegratorNoise:
         val = float(I.execute(2.5))
 
         np.testing.assert_allclose(val, 4.356601554140335)
-
-class TestFHN:
-
-
-    def test_FHN_defaults(self):
-
-        F = IntegratorMechanism(
-            name='IntegratorMech-FHNFunction',
-            function=FHNIntegrator(
-
-            )
-        )
-        plot_v_list = []
-        plot_w_list = []
-
-        expected_v_list = []
-        expected_w_list = []
-        stimulus = 1.0
-        for i in range(10):
-            for j in range(10):
-                new_v = F.execute(stimulus)[0][0][0]
-                new_w = F.execute(stimulus)[1][0][0]
-                # ** uncomment the lines below if you want to view the plot:
-                # plot_v_list.append(new_v)
-                # plot_w_list.append(new_w)
-            expected_v_list.append(new_v)
-            expected_w_list.append(new_w)
-
-        # ** uncomment the lines below if you want to view the plot:
-        # import matplotlib.pyplot as plt
-        # plt.plot(plot_v_list)
-        # plt.plot(plot_w_list)
-        # plt.show()
-
-        np.testing.assert_allclose(expected_v_list, [1.9861589924245777, 1.9184159304279109, 1.7920107368145777,
-                                                     1.6651158106802393, 1.5360917598075965, 1.4019128309448776,
-                                                     1.2568420252868404, 1.08773745582042, 0.8541804646541804,
-                                                     0.34785588139530099])
-        np.testing.assert_allclose(expected_w_list, [0.28713219302304327, 0.65355262255707869, 0.9581082373550347,
-                                                     1.2070585850028435, 1.4068978270680454, 1.5629844531368104,
-                                                     1.6793901854329185, 1.7583410650743645, 1.7981128658110572,
-                                                     1.7817328532815251])
 
 class TestAGTUtilityIntegrator:
 

@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import *
 from psyneulink.components.Process import process
 from psyneulink.components.System import system
+=======
+from psyneulink.components.mechanisms.processing.transfermechanism import *
+from psyneulink.components.process import Process
+from psyneulink.components.system import System
+>>>>>>> devel
 
 myInputLayer = TransferMechanism(name='Input Layer',
                         function=Linear(),
@@ -15,7 +21,7 @@ myDDM = DDM(name='My_DDM',
                                 threshold=1,
                                 starting_point=0.0,))
 
-myProcess = process(name='Neural Network DDM Process',
+myProcess = Process(name='Neural Network DDM Process',
                     default_variable=[0, 0],
                     pathway=[myInputLayer,
                                    # RANDOM_CONNECTIVITY_MATRIX,
@@ -34,7 +40,7 @@ input_set = {myInputLayer:[[-1,2],[2,3],[5,5]]}
 myProcess.run(inputs=input_set,
               num_trials=2)
 
-mySystem = system(processes=[myProcess])
+mySystem = System(processes=[myProcess])
 
 mySystem.show_graph()
 

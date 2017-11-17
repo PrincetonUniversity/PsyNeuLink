@@ -1,17 +1,17 @@
 import numpy
 
-from psyneulink.components.functions.Function import BogaczEtAl, Linear, Logistic, SimpleIntegrator
-from psyneulink.components.mechanisms.ProcessingMechanisms.IntegratorMechanism \
-    import IntegratorMechanism
-from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from psyneulink.components.Process import process
-from psyneulink.components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from psyneulink.components.System import system
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
-from PsyNeuLink.Library.Subsystems.EVC.EVCControlMechanism import EVCControlMechanism
-from psyneulink.scheduling.Condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan
-from psyneulink.scheduling.Scheduler import Scheduler
-from psyneulink.scheduling.TimeScale import TimeScale
+from psyneulink.components.functions.function import BogaczEtAl, Linear, Logistic, SimpleIntegrator
+from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.components.system import System
+from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
+from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
+from psyneulink.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan
+from psyneulink.scheduling.scheduler import Scheduler
+from psyneulink.scheduling.timescale import TimeScale
+
 
 
 class TestInit:
@@ -49,26 +49,26 @@ class TestInit:
         Reward = TransferMechanism(name='Reward')
 
         # Processes:
-        ColorNamingProcess = process(
+        ColorNamingProcess = Process(
             default_variable=[0],
             pathway=[Color_Input, Color_Hidden, Output, Decision],
             name='Color Naming Process',
         )
 
-        WordReadingProcess = process(
+        WordReadingProcess = Process(
             default_variable=[0],
             pathway=[Word_Input, Word_Hidden, Output, Decision],
             name='Word Reading Process',
         )
 
-        RewardProcess = process(
+        RewardProcess = Process(
             default_variable=[0],
             pathway=[Reward],
             name='RewardProcess',
         )
 
         # System:
-        mySystem = system(
+        mySystem = System(
             processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
             controller=EVCControlMechanism,
             enable_controller=True,
@@ -105,13 +105,13 @@ class TestLinear:
             )
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A],
             name='p'
         )
 
-        s = system(
+        s = System(
             processes=[p],
             name='s'
         )
@@ -147,13 +147,13 @@ class TestLinear:
             function=Linear(slope=2.0),
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, B],
             name='p'
         )
 
-        s = system(
+        s = System(
             processes=[p],
             name='s'
         )
@@ -193,13 +193,13 @@ class TestLinear:
             )
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, B],
             name='p'
         )
 
-        s = system(
+        s = System(
             processes=[p],
             name='s'
         )
@@ -248,19 +248,19 @@ class TestBranching:
             function=Linear(slope=2.0),
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, B],
             name='p'
         )
 
-        q = process(
+        q = Process(
             default_variable=[0],
             pathway=[A, C],
             name='q'
         )
 
-        s = system(
+        s = System(
             processes=[p, q],
             name='s'
         )
@@ -312,19 +312,19 @@ class TestBranching:
             function=Linear(slope=2.0),
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, B],
             name='p'
         )
 
-        q = process(
+        q = Process(
             default_variable=[0],
             pathway=[A, C],
             name='q'
         )
 
-        s = system(
+        s = System(
             processes=[p, q],
             name='s'
         )
@@ -379,19 +379,19 @@ class TestBranching:
             function=Linear(slope=2.0),
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, C],
             name='p'
         )
 
-        q = process(
+        q = Process(
             default_variable=[0],
             pathway=[B, C],
             name='q'
         )
 
-        s = system(
+        s = System(
             processes=[p, q],
             name='s'
         )
@@ -442,19 +442,19 @@ class TestBranching:
             function=Linear(slope=2.0),
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, C],
             name='p'
         )
 
-        q = process(
+        q = Process(
             default_variable=[0],
             pathway=[B, C],
             name='q'
         )
 
-        s = system(
+        s = System(
             processes=[p, q],
             name='s'
         )
@@ -507,19 +507,19 @@ class TestBranching:
             )
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, C],
             name='p'
         )
 
-        q = process(
+        q = Process(
             default_variable=[0],
             pathway=[B, C],
             name='q'
         )
 
-        s = system(
+        s = System(
             processes=[p, q],
             name='s'
         )
@@ -583,19 +583,19 @@ class TestBranching:
             function=Linear(slope=1.0),
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, B, D],
             name='p'
         )
 
-        q = process(
+        q = Process(
             default_variable=[0],
             pathway=[A, C, D],
             name='q'
         )
 
-        s = system(
+        s = System(
             processes=[p, q],
             name='s'
         )
@@ -658,31 +658,31 @@ class TestBranching:
             )
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, C],
             name='p'
         )
 
-        p1 = process(
+        p1 = Process(
             default_variable=[0],
             pathway=[A, D],
             name='p1'
         )
 
-        q = process(
+        q = Process(
             default_variable=[0],
             pathway=[B, C],
             name='q'
         )
 
-        q1 = process(
+        q1 = Process(
             default_variable=[0],
             pathway=[B, D],
             name='q1'
         )
 
-        s = system(
+        s = System(
             processes=[p, p1, q, q1],
             name='s'
         )
@@ -754,19 +754,19 @@ class TestBranching:
             function=Linear(slope=2.0),
         )
 
-        p = process(
+        p = Process(
             default_variable=[0],
             pathway=[A, C, D],
             name='p'
         )
 
-        q = process(
+        q = Process(
             default_variable=[0],
             pathway=[B, C, E],
             name='q'
         )
 
-        s = system(
+        s = System(
             processes=[p, q],
             name='s'
         )
@@ -856,49 +856,49 @@ class TestBranching:
         )
 
         p = [
-            process(
+            Process(
                 default_variable=[0],
                 pathway=[A, C, E],
                 name='p'
             ),
-            process(
+            Process(
                 default_variable=[0],
                 pathway=[A, C, F],
                 name='p1'
             ),
-            process(
+            Process(
                 default_variable=[0],
                 pathway=[A, D, E],
                 name='p2'
             ),
-            process(
+            Process(
                 default_variable=[0],
                 pathway=[A, D, F],
                 name='p3'
             ),
-            process(
+            Process(
                 default_variable=[0],
                 pathway=[B, C, E],
                 name='q'
             ),
-            process(
+            Process(
                 default_variable=[0],
                 pathway=[B, C, F],
                 name='q1'
             ),
-            process(
+            Process(
                 default_variable=[0],
                 pathway=[B, D, E],
                 name='q2'
             ),
-            process(
+            Process(
                 default_variable=[0],
                 pathway=[B, D, F],
                 name='q3'
             )
         ]
 
-        s = system(
+        s = System(
             processes=p,
             name='s'
         )

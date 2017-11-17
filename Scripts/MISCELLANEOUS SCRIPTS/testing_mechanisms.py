@@ -1,18 +1,18 @@
-from psyneulink.components.functions.Function import Linear, SimpleIntegrator
-from psyneulink.components.mechanisms.ProcessingMechanisms import IntegratorMechanism
-from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from psyneulink.globals.Keywords import EXECUTING
-from psyneulink.scheduling.TimeScale import TimeScale
+from psyneulink.components.functions.function import Linear, SimpleIntegrator
+from psyneulink.components.mechanisms.processing import integratormechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.globals.keywords import EXECUTING
+from psyneulink.scheduling.timescale import TimeScale
 
-I = IntegratorMechanism(
+I = integratormechanism(
         name='IntegratorMechanism',
         function=SimpleIntegrator(
         ),
         context="EXECUTING",
         time_scale=TimeScale.TIME_STEP
     )
-# P = process(pathway=[I])
+# P = Process(pathway=[I])
 
 #  returns previous_value + rate*variable + noise
 # so in this case, returns 10.0
@@ -33,7 +33,7 @@ print([val, val2] == [10.0, 5.0])
 #         time_scale=TimeScale.TIME_STEP
 #     )
 # # val = float(I.execute(10)[0])
-# P = process(pathway=[I2])
+# P = Process(pathway=[I2])
 # val = float(P.execute(10))
 # I2.context = None
 # print("after setting context to None [1/2] ", I2.context)
@@ -54,7 +54,7 @@ print([val, val2] == [10.0, 5.0])
 #         time_scale=TimeScale.TIME_STEP
 #     )
 # # val = float(I.execute(10)[0])
-# # P = process(pathway=[T])
+# # P = Process(pathway=[T])
 # val = float(T.execute(10))
 # # returns (rate)*variable + (1-rate*previous_value) + noise
 # # rate = 1, noise = 0, so in this case, returns 10.0
@@ -68,7 +68,7 @@ print([val, val2] == [10.0, 5.0])
 # print([val, val2] == [5.0, 1.0])
 
 def test_mechanisms_without_system_or_process_no_input():
-    I = IntegratorMechanism(
+    I = integratormechanism(
             name='IntegratorMechanism',
             default_variable= 10,
             function=SimpleIntegrator(
