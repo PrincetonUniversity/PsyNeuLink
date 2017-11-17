@@ -970,6 +970,20 @@ for i, o in enumerate(T.output_states):
 
 # endregion
 
+T1 = pnl.TransferMechanism(name='T1')
+T2 = pnl.TransferMechanism(name='T2', input_states=[T1])
+I1 = pnl.InputState(owner=T2)
+I2 = pnl.InputState(projections=[T1])
+assert I2.name == 'Deferred Init InputState'
+T2.add_states([I2])
+assert I1.name == 'InputState-1'
+assert I2.name == 'InputState-2'
+assert T2.input_states[0].path_afferents[0].name == \
+       'MappingProjection from T1[RESULT] to T2[InputState-0]'
+assert T2.input_states[2].path_afferents[0].name == \
+       'MappingProjection from T1[RESULT] to T2[InputState-2]'
+
+
 
 #region TEST Naming
 # print ('TEST Naming')
