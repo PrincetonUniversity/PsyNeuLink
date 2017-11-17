@@ -954,7 +954,7 @@ class ScratchPadError(Exception):
 #
 T = pnl.TransferMechanism(input_states=[[[0],[0]],'b','c'],
 # T = pnl.TransferMechanism(input_states=[[[[0],[0]],[[0],[0]]],'b','c'],
-#                           output_states=pnl.MECHANISM_VALUE
+                          output_states=pnl.MECHANISM_VALUE
                           )
 # print(T.variable)
 # assert T.output_states[MECHANISM_VALUE].value == WHAT IT DOES
