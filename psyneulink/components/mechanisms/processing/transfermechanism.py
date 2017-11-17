@@ -91,8 +91,17 @@ incrementing integer starting at '-1' for each additional OutputState (e.g., 'RE
 <TransferMechanism.function>` applied to the `value <InputState.value>` of the corresponding InputState. Additional
 OutputStates can be assigned using the TransferMechanism's `Standard OutputStates
 <TransferMechanism_Standard_OutputStates>` (see `OutputState_Standard`) or by creating `custom OutputStates
-<OutputState_Customization>`.  Like any OutputStates, the `value <OutputState.value>` of any or all of these can be
-modulated by one or more `GatingSignals <GatingSignal_Modulation>`.
+<OutputState_Customization>` (but see note below).  Like any OutputStates, the `value <OutputState.value>` of any or
+all of these can be modulated by one or more `GatingSignals <GatingSignal_Modulation>`.
+
+    .. _TransferMechanism_OutputStates_Note:
+
+    .. note::
+       If any OutputStates are specified in the **output_states** argument of the TransferMechanism's constructor,
+       then, `as with any Mechanism <Mechanism_Default_State_Suppression_Note>`, its default OutputStates are not
+       automatically generated.  Therefore, an OutputState with the appropriate `index <OutputState.index>` must be
+       explicitly specified for each and every item of the Mechanism's `value <TransferMechanism.value>` (corresponding
+       to each InputState) for which an OutputState is needed.
 
 .. _Transfer_Execution:
 
@@ -331,7 +340,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     output_states : str, list or np.ndarray : default RESULT
         specifies the OutputStates for the TransferMechanism; by default, one is created for each InputState
-        specified in **input_states**;  see `output_states <TransferMechanism.output_states>` for additional details.
+        specified in **input_states**;  see `note <TransferMechanism_OutputStates_Note>`, and `output_states
+        <TransferMechanism.output_states>` for additional details).
 
     params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for

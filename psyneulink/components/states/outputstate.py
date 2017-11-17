@@ -789,13 +789,24 @@ class OutputState(State_Base):
         """Call self.function with owner's value as variable
         """
 
+        # Most common case is OutputState has index, so assume that for efficiency
+        try:
+            # Get indexed item of owner's value
+            owner_val = self.owner.value[self.index]
+        except TypeError:
+            # Index is ALL, so use owner's entire value
+            if self.index is ALL:
+                owner_val = self.owner.value
+            else:
+                raise TypeError
+
         # IMPLEMENTATION NOTE: OutputStates don't currently receive PathwayProjections,
         #                      so there is no need to use their value (as do InputStates)
-        value = self.function(variable=self.owner.value[self.index],
+        value = self.function(variable=owner_val,
                                 params=function_params,
                                 context=context)
 
-        return type_match(self.calculate(self.owner.value[self.index]), type(value))
+        return type_match(self.calculate(owner_val), type(value))
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
