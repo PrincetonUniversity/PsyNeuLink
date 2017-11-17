@@ -138,7 +138,7 @@ Forms of Specification
 
 InputStates can be specified in a variety of ways, that fall into three broad categories:  specifying an InputState
 directly; by an `OutputState` or `Projection` that should project to it; or by using a `State specification dictionary
-<State_Specification` or tuple format to specify attributes for the InputState (including Projections to it). Each of
+<State_Specification>` or tuple format to specify attributes for the InputState (including Projections to it). Each of
 these is described below:
 
     .. _InputState_Direct_Specification:
@@ -147,7 +147,8 @@ these is described below:
 
     * existing **InputState object** or the name of one -- if used to specify an InputState in the constructor for a
       Mechanism, its `value <InputState.value>` must be compatible with the corresponding item of the owner Mechanism's
-      `variable <Mechanism_Base.variable>` (see `Mechanism_InputState_Specification`).
+      `variable <Mechanism_Base.variable>` (see `Mechanism InputState specification
+      <Mechanism_InputState_Specification>`).
     ..
     * **InputState class**, **keyword** *INPUT_STATE*, or a **string** -- this creates a default InputState; if used
       to specify an InputState in the constructor for a Mechanism, the item of the owner Mechanism's `variable
