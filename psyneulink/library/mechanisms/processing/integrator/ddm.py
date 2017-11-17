@@ -919,12 +919,3 @@ class DDM(ProcessingMechanism_Base):
 
             # def _ddm_distr(self, n, x0, t0, a, s, z, dt):
             #     return np.fromiter((self._ddm_rt(x0, t0, a, s, z, dt) for i in range(n)), dtype='float64')
-
-
-            # def terminate_function(self, context=None):
-            #     """Terminate the process
-            #     called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
-            #     returns output
-            #     Returns: value
-            #     """
-            #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM
