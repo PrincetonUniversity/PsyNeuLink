@@ -245,7 +245,7 @@ Shorthand - drop the outer list on **Mechanism a**'s input specification because
         s.run(inputs=input_dictionary)
 ..
 
-* **Case 3: The same input is used on all trials **
+* **Case 3: The same input is used on all trials**
 
 +--------------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
 | Trial #                  |1                  |2                  |3                  |4                  |5                  |
@@ -282,7 +282,7 @@ Shorthand - drop the outer list on **Mechanism a**'s input specification and use
               num_trials=5)
 ..
 
-* **Case 4: There is only one origin mechanism **
+* **Case 4: There is only one origin mechanism**
 
 +--------------------------+-------------------+-------------------+
 | Trial #                  |1                  |2                  |
