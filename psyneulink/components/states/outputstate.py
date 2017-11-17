@@ -345,7 +345,7 @@ from psyneulink.components.states.state import State_Base, _instantiate_state_li
 from psyneulink.globals.keywords import \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, INPUT_STATE, INPUT_STATES, RECEIVER, GATING_SIGNAL, \
     COMMAND_LINE, STATE, OUTPUT_STATE, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, \
-    CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE, ALL
+    CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE, ALL, MECHANISM_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import UtilitiesError, iscompatible, type_match
@@ -386,7 +386,7 @@ standard_output_states = [{NAME: RESULT},
                            CALCULATE:lambda x: np.std(x)},
                           {NAME:VARIANCE,
                            CALCULATE:lambda x: np.var(x)},
-                          {NAME: ALL,
+                          {NAME: MECHANISM_VALUE,
                            INDEX: ALL}
                           ]
 
@@ -793,12 +793,12 @@ class OutputState(State_Base):
         try:
             # Get indexed item of owner's value
             owner_val = self.owner.value[self.index]
-        except TypeError:
+        except IndexError:
             # Index is ALL, so use owner's entire value
             if self.index is ALL:
                 owner_val = self.owner.value
             else:
-                raise TypeError
+                raise IndexError
 
         # IMPLEMENTATION NOTE: OutputStates don't currently receive PathwayProjections,
         #                      so there is no need to use their value (as do InputStates)
@@ -1078,22 +1078,23 @@ class StandardOutputStates():
         the Component to which this OutputState belongs
 
     output_state_dicts : list of dicts
-        list of dictionaries specifying OutputStates for the Component specified
-        by `owner`
+        list of dictionaries specifying OutputStates for the Component specified by `owner`
 
-    indices : PRIMARY_OUTPUT_STATES, SEQUENTIAL, list of ints
-        specifies how to assign the INDEX entry for each dict listed in
-        `output_state_dicts`
+    indices : PRIMARY, SEQUENTIAL, list of ints
+        specifies how to assign the INDEX entry for each dict listed in `output_state_dicts`;
 
         The effects of each value of indices are as follows:
 
-            * PRIMARY_OUTPUT_STATES -- assigns the INDEX for the owner's primary OutputState to all indices
+            * *PRIMARY* -- assigns the INDEX for the owner's primary OutputState to all output_states
+              for which an INDEX entry is not already specified;
 
-            * SEQUENTIAL -- assigns sequentially incremented int to each INDEX entry
+            * *SEQUENTIAL* -- assigns sequentially incremented int to each INDEX entry,
+              ignoring any INDEX entries previously specified for individual OutputStates;
 
-            * list of ints -- assigns each int to the corresponding entry in `output_state_dicts`
+            * list of ints -- assigns each int to the corresponding entry in `output_state_dicts`;
+              ignoring any INDEX entries previously specified for individual OutputStates;
 
-            * None -- assigns `None` to each INDEX entry
+            * None -- assigns `None` to INDEX entries for all OutputStates for which it is not already specified.
 
     Attributes
     ----------
@@ -1154,14 +1155,19 @@ class StandardOutputStates():
             for index, state_dict in enumerate(self.data):
                 state_dict[INDEX] = index
 
-        # Assign PRIMARY as INDEX for all OutputStates in output_state_dicts
+        # Assign PRIMARY as INDEX for all OutputStates in output_state_dicts that don't already have an index specified
         elif indices is PRIMARY:
             for state_dict in self.data:
+                if INDEX in state_dict:
+                    continue
                 state_dict[INDEX] = PRIMARY
 
         # No indices specification, so assign None to INDEX for all OutputStates in output_state_dicts
+        #  that don't already have an index specified
         else:
             for state_dict in self.data:
+                if INDEX in state_dict:
+                    continue
                 state_dict[INDEX] = None
 
 
