@@ -188,7 +188,7 @@ these is described below:
       unspecified, its `initialization is deferred <Projection_Deferred_Initialization>`.  In some cases, initialization
       can happen automatically -- for example, when a `ControlProjection` is created for the parameter of a Mechanism
       that is included in a `System`, a `ControlSignal` is created as the Projection's `sender <Projection_Base.sender>`
-      that is added to the System's `controller <System_Base.controller>` (see `System_Control`).  However, for cases in
+      that is added to the System's `controller <System.controller>` (see `System_Control`).  However, for cases in
       which `deferred initialization <Component_Deferred_Init>` is not automatically completed, the Projection will not
       be operational until its `sender <Projection_Base.sender>` has been specified and its initialization completed.
 
@@ -200,15 +200,15 @@ these is described below:
       using any of the entries that can be included in a `State specification dictionary <State_Specification>`
       (see `examples <State_Specification_Dictionary_Examples>` in State), as well as well as the following entries
       specific to an InputState:
-      ..
+
       * *WEIGHT*:<number>
           the value must be an integer or float, and is assigned as the value of the InputState's `weight
-          <InputState.weight>` attribute (see ` Weights and Exponents <InputState_Weights_And_Exponents>`);
+          <InputState.weight>` attribute (see `weight and exponent <InputState_Weights_And_Exponents>`);
           this takes precedence over any specification in the **weight** argument of the InputState's constructor.
       ..
       * *EXPONENT*:<number>
           the value must be an integer or float, and is assigned as the value of the InputState's `exponent
-          <InputState.exponent>` attribute (see ` Weights and Exponents <InputState_Weights_And_Exponents>`);
+          <InputState.exponent>` attribute (see `weight and exponent <InputState_Weights_And_Exponents>`);
           this takes precedence over any specification in the **exponent** argument of the InputState's constructor.
 
       .. _InputState_Projections_Specification:
@@ -239,7 +239,7 @@ these is described below:
           InputState is assigned as the Projection's `receiver <Projection_Base.receiver>` and, if the first item
           specifies an  OutputState, that is assigned as the Projection's `sender <Projection_Base.sender>`.  If the
           specification is for `ModulatoryProjection`, it is created (along with a corresponding `ModulatorySignal`)
-          if necessary, the InputState is assigned as its receiver <ModulatoryProjection.receiver>`, and the the
+          if necessary, the InputState is assigned as its `receiver <ModulatoryProjection.receiver>`, and the the
           Projection is assigned to the InputState's `mod_afferents <InputState>` attribute.
 
         * **ConnectionTuple** -- this is an expanded version of the 2-item tuple that allows the specification of the
@@ -253,12 +253,12 @@ these is described below:
             |
             * **weight** -- must be an integer or a float; multiplies the `value <InputState.value>` of the InputState
               before it is combined with others by the Mechanism's `function <Mechanism.function>` (see
-              ObjectiveMechanism for `examples <ObjectiveMechanism_Weights_and_Exponents>`);
+              ObjectiveMechanism for `examples <ObjectiveMechanism_Weights_and_Exponents_Example>`);
             |
             * **exponent** -- must be an integer or float; exponentiates the `value <InputState.value>` of the
               InputState before it is combined with others by the ObjectiveMechanism's `function
               <ObjectiveMechanism.function>` (see ObjectiveMechanism for `examples
-              <ObjectiveMechanism_Weights_and_Exponents>`);
+              <ObjectiveMechanism_Weights_and_Exponents_Example>`);
             |
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` in the
               same manner as the second item of a 2-item tuple (see above);  it's `sender <Projection_Base.sender>`
@@ -312,7 +312,7 @@ to, and that can be used to customize the InputState:
   InputState, the `value <MappingProjection.value>`\\s of which are combined by the InputState's `function
   <InputState.function>`, possibly modified by its `mod_afferents <InputState_mod_afferents>`, and assigned to the
   corresponding item of the owner Mechanism's `variable <Mechanism_Base.variable>`.
-
+..
 * `mod_afferents <InputState_mod_afferents>` -- `GatingProjections <GatingProjection>` that project to the InputState,
   the `value <GatingProjection.value>` of which can modify the InputState's `value <InputState.value>` (see the
   descriptions of Modulation under `ModulatorySignals <ModulatorySignal_Modulation>` and `GatingSignals
@@ -345,8 +345,8 @@ to, and that can be used to customize the InputState:
   after aggregating the value of the `PathProjections <PathwayProjection>` it receives, possibly modified by any
   `GatingProjections <GatingProjection>` received by the InputState. It must be compatible with the
   item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the `InputState has been assigned
-  <Mechanism_Base.InputStates>` (see `above <InputState_Variable_and_Value>` and
-  `Mechanism InputState specification <Mechanism_InputState_Specification>`).
+  <Mechanism_InputStates>` (see `above <InputState_Variable_and_Value>` and `Mechanism InputState specification
+  <Mechanism_InputState_Specification>`).
 
 .. _InputState_Weights_And_Exponents:
 
@@ -366,9 +366,9 @@ When this occurs, the InputState executes any `Projections <Projection>` it rece
 (listed in its its `path_afferents  <InputState.path_afferents>` attribute) and modulate them in response to any
 `GatingProjections <GatingProjection>` (listed in its `mod_afferents <InputState.mod_afferents>` attribute),
 and then assigns the result to the InputState's `value <InputState.value>` attribute. This, in turn, is assigned to
-the item of the Mechanism's  `variable <Mechanism_Base.variable>` and `input_values <Mechanism_Base.input_values>`
-attributes  corresponding to that InputState (see `Mechansm <Mechanism_Variable_and_InputStates>` for additional
-details).
+the item of the Mechanism's `variable <Mechanism_Base.variable>` and `input_values <Mechanism_Base.input_values>`
+attributes  corresponding to that InputState (see `Mechanism Variable and InputStates
+<Mechanism_Variable_and_InputStates>` for additional details).
 
 .. _InputState_Class_Reference:
 
@@ -559,10 +559,10 @@ class InputState(State_Base):
         assigned to an item of the owner Mechanism's `variable <Mechanism_Base.variable>`.
 
     weight : number
-        see `InputState_Weights_And_Exponents` for description.
+        see `weight and exponent <InputState_Weights_And_Exponents>` for description.
 
     exponent : number
-        see `InputState_Weights_And_Exponents` for description.
+        see `weight and exponent <InputState_Weights_And_Exponents>` for description.
 
     name : str
         the name of the InputState; if it is not specified in the **name** argument of the constructor, a default is
