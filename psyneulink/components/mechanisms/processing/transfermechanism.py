@@ -411,7 +411,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  time_constant=1.0,
                  integrator_mode=False,
                  clip=None,
-                 output_states:tc.optional(tc.any(str, list, dict))=RESULT,
+                 output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
