@@ -85,10 +85,10 @@ former (that is, if an *INPUT_STATES* entry is included in the parameter diction
 
     .. note::
        Assigning InputStates to a Mechanism in its constructor **replaces** any that are automatically generated for
-       that Mechanism (i.e., those that it creates for itself by default).  If any of those need to be retained, they
-       must be explicitly specified in the list assigned to the **input_states** argument or the *INPUT_STATES* entry
-       of the parameter dictionary in the **params** argument).  The number of InputStates specified must also be equal
-       to the number of items in the Mechanism's <variable <Mechanism_Base.variable>` attribute.
+       that Mechanism (i.e., those that it creates for itself by default).  If any of those are needed, they must be
+       explicitly specified in the list assigned to the **input_states** argument, or the *INPUT_STATES* entry of the
+       parameter dictionary in the **params** argument.  The number of InputStates specified must also be equal to
+       the number of items in the Mechanism's `variable <Mechanism_Base.variable>` attribute.
 
 .. _InputState_Variable_and_Value:
 
