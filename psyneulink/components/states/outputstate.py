@@ -339,13 +339,13 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, InitStatus
-from psyneulink.components.functions.function import Linear, LinearCombination, is_function_type
+from psyneulink.components.functions.function import Linear, is_function_type
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
 from psyneulink.globals.keywords import \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, INPUT_STATE, INPUT_STATES, RECEIVER, GATING_SIGNAL, \
     COMMAND_LINE, STATE, OUTPUT_STATE, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, \
-    CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE, ALL, MECHANISM_VALUE
+    CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, VARIANCE, ALL, MECHANISM_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import UtilitiesError, iscompatible, type_match
@@ -400,18 +400,18 @@ class OutputStateError(Exception):
 
 class OutputState(State_Base):
     """
-    OutputState(                               \
-    owner,                                     \
-    reference_value,                           \
-    variable=None,                             \
-    size=None,                                 \
-    function=LinearCombination(operation=SUM), \
-    index=PRIMARY,                \
-    calculate=Linear,                          \
-    projections=None,                          \
-    params=None,                               \
-    name=None,                                 \
-    prefs=None,                                \
+    OutputState(          \
+    owner,                \
+    reference_value,      \
+    variable=None,        \
+    size=None,            \
+    function=Linear(),    \
+    index=PRIMARY,        \
+    calculate=Linear,     \
+    projections=None,     \
+    params=None,          \
+    name=None,            \
+    prefs=None,           \
     context=None)
 
     Subclass of `State <State>` that calculates and represents an output of a `Mechanism <Mechanism>`.
@@ -428,11 +428,11 @@ class OutputState(State_Base):
         Class attributes:
             + componentType (str) = OUTPUT_STATES
             + paramClassDefaults (dict)
-                + FUNCTION (LinearCombination)
+                + FUNCTION (Linear)
                 + FUNCTION_PARAMS   (Operation.PRODUCT)
 
         Class methods:
-            function (executes function specified in params[FUNCTION];  default: LinearCombination with Operation.SUM)
+            function (executes function specified in params[FUNCTION];  default: Linear)
 
         StateRegistry
         -------------
@@ -466,7 +466,7 @@ class OutputState(State_Base):
             T1 = TransferMechanism(size = [3, 2])
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
-    function : Function, function, or method : default LinearCombination(operation=SUM)
+    function : Function, function, or method : default Linear
         specifies the function used to transform the item of the owner Mechanism's `value <Mechanism_Base.value>`
         designated by the OutputState's `index <OutputState.index>` attribute, under the possible influence of
         `GatingProjections <GatingProjection>` received by the OutputState.
@@ -596,7 +596,6 @@ class OutputState(State_Base):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 # function=LinearCombination(operation=SUM),
                  function=Linear(),
                  index=PRIMARY,
                  calculate:is_function_type=Linear,
