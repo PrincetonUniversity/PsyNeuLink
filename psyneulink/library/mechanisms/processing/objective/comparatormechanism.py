@@ -341,10 +341,6 @@ class ComparatorMechanism(ObjectiveMechanism):
         if isinstance(output_states, (str, tuple)):
             output_states = list(output_states)
 
-        # IMPLEMENTATION NOTE: The following prevents the default from being updated by subsequent assignment
-        #                     (in this case, to [OUTCOME, {NAME= MSE}]), but fails to expose default in IDE
-        # output_states = output_states or [OUTCOME, MSE]
-
         # Create a StandardOutputStates object from the list of stand_output_states specified for the class
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
