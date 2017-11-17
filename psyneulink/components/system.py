@@ -1558,20 +1558,20 @@ class System(System_Base):
                                              len(self.instance_defaults.variable[i][j]),
                                              len(origin_mech.input_states[j].instance_defaults.variable),
                                              origin_mech.name))
-            # MODIFIED 6/27/17 END
+                # MODIFIED 6/27/17 END
+                # MODIFIED 6/27/17 END
+                stimulus_input_state = SystemInputState(owner=self,
+                                                            variable=origin_mech.input_state.instance_defaults.variable,
+                                                            prefs=self.prefs,
+                                                            name="System Input State to Mechansism {}, Input State {}".format(origin_mech.name,j))
+                self.stimulusInputStates.append(stimulus_input_state)
+                self.inputs.append(stimulus_input_state.value)
 
-            stimulus_input_state = SystemInputState(owner=self,
-                                                        variable=origin_mech.input_state.instance_defaults.variable,
-                                                        prefs=self.prefs,
-                                                        name="System Input {}".format(i))
-            self.stimulusInputStates.append(stimulus_input_state)
-            self.inputs.append(stimulus_input_state.value)
-
-            # Add MappingProjection from stimulus_input_state to ORIGIN mechainsm's inputState
-            from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-            MappingProjection(sender=stimulus_input_state,
-                    receiver=origin_mech,
-                    name=self.name+' Input Projection to '+origin_mech.name)
+                # Add MappingProjection from stimulus_input_state to ORIGIN mechainsm's inputState
+                from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+                MappingProjection(sender=stimulus_input_state,
+                        receiver=origin_mech.input_states[j],
+                        name=self.name+' Input Projection to '+origin_mech.name+' Input State '+str(j))
 
     def _instantiate_learning_graph(self, context=None):
         """Build graph of LearningMechanism and LearningProjections
@@ -2486,6 +2486,7 @@ class System(System_Base):
                     system_input_state = next((projection.sender
                                                for projection in origin_mech.input_states[j].path_afferents
                                                if isinstance(projection.sender, SystemInputState)), None)
+
                     if system_input_state:
                         if isinstance(input, dict):
                             system_input_state.value = input[origin_mech][j]
