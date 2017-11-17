@@ -1,8 +1,20 @@
-# Hi Jon and Randy! The following script briefly demos the LeabraMechanism in PsyNeuLink
+# The following script briefly demos the LeabraMechanism in PsyNeuLink.
 # Before running this, please make sure you are using Python 3.5, and that you have installed the leabra package in
 # your Python 3.5 environment.
-# I've emailed Jon the instructions for installing leabra.
-# 10/20/17
+
+# Installation notes:
+#
+# If you see an error such as:
+#  "Runtime warning: numpy.dtype size changed, may indicate binary incompatibility. Expected 96, got 88"
+# then this may be an issue with scipy (or other similar modules such as scikit-learn or sklearn).
+#
+# To resolve this, if you have pip, then use PyCharm to uninstall scipy (or other packages if they continue
+# to give you trouble) and then use "pip install scipy --no-use-wheel". Or, if you can figure out how to get PyCharm
+#  to ignore warnings, that's fine too.
+#
+# More info here: https://stackoverflow.com/questions/40845304/runtimewarning-numpy-dtype-size-changed-may-indicate
+# -binary-incompatibility
+
 import warnings
 warnings.filterwarnings("ignore", message=r".*numpy.dtype size changed.*")
 import numpy as np

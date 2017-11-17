@@ -1,41 +1,32 @@
+import functools
 import numpy as np
+import psyneulink as pnl
 
-from psyneulink.components.functions.function import ConstantIntegrator, Logistic
-from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.system import System
-from psyneulink.globals.keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZER, LEARNING, RATE, SOFT_CLAMP, VALUE
-from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
-from psyneulink.scheduling.timescale import CentralClock
-
-
-Input_Layer = TransferMechanism(
+Input_Layer = pnl.TransferMechanism(
     name='Input Layer',
-    function=Logistic,
+    function=pnl.Logistic,
     default_variable=np.zeros((2,))
 )
 
-Hidden_Layer_1 = TransferMechanism(
+Hidden_Layer_1 = pnl.TransferMechanism(
     name='Hidden Layer_1',
-    function=Logistic(),
+    function=pnl.Logistic(),
     default_variable=np.zeros((5,))
 )
 
-Hidden_Layer_2 = TransferMechanism(
+Hidden_Layer_2 = pnl.TransferMechanism(
     name='Hidden Layer_2',
-    function=Logistic(),
+    function=pnl.Logistic(),
     default_variable=[0, 0, 0, 0]
 )
 
-Output_Layer = TransferMechanism(
+Output_Layer = pnl.TransferMechanism(
     name='Output Layer',
-    function=Logistic,
+    function=pnl.Logistic,
     default_variable=[0, 0, 0]
 )
 
-Gating_Mechanism = GatingMechanism(
+Gating_Mechanism = pnl.GatingMechanism(
     # default_gating_policy=0.0,
     size=[1],
     gating_signals=[
@@ -57,35 +48,35 @@ Output_Weights_matrix = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 3)
 
 # This projection will be used by the process below by referencing it in the process' pathway;
 #    note: sender and receiver args don't need to be specified
-Input_Weights = MappingProjection(
+Input_Weights = pnl.MappingProjection(
     name='Input Weights',
     matrix=Input_Weights_matrix
 )
 
 # This projection will be used by the process below by assigning its sender and receiver args
 #    to mechanismss in the pathway
-Middle_Weights = MappingProjection(
+Middle_Weights = pnl.MappingProjection(
     name='Middle Weights',
     sender=Hidden_Layer_1,
     receiver=Hidden_Layer_2,
     matrix={
-        VALUE: Middle_Weights_matrix,
-        FUNCTION: ConstantIntegrator,
-        FUNCTION_PARAMS: {
-            INITIALIZER: Middle_Weights_matrix,
-            RATE: Middle_Weights_matrix
+        pnl.VALUE: Middle_Weights_matrix,
+        pnl.FUNCTION: pnl.ConstantIntegrator,
+        pnl.FUNCTION_PARAMS: {
+            pnl.INITIALIZER: Middle_Weights_matrix,
+            pnl.RATE: Middle_Weights_matrix
         },
     }
 )
 
-Output_Weights = MappingProjection(
+Output_Weights = pnl.MappingProjection(
     name='Output Weights',
     sender=Hidden_Layer_2,
     receiver=Output_Layer,
     matrix=Output_Weights_matrix
 )
 
-z = Process(
+z = pnl.Process(
     # default_variable=[0, 0],
     size=2,
     pathway=[
@@ -105,17 +96,17 @@ z = Process(
         # Output_Weights,
         Output_Layer
     ],
-    clamp_input=SOFT_CLAMP,
-    learning=LEARNING,
+    clamp_input=pnl.SOFT_CLAMP,
+    learning=pnl.LEARNING,
     learning_rate=1.0,
     target=[0, 0, 1],
     prefs={
-        VERBOSE_PREF: False,
-        REPORT_OUTPUT_PREF: True
+        pnl.VERBOSE_PREF: False,
+        pnl.REPORT_OUTPUT_PREF: True
     }
 )
 
-g = Process(
+g = pnl.Process(
     default_variable=[1.0],
     pathway=[Gating_Mechanism]
 )
@@ -128,12 +119,14 @@ target_list = {
     Output_Layer: [[0, 0, 1]]
 }
 
-def print_header():
-    print("\n\n**** TRIAL: ", CentralClock.trial)
+
+def print_header(system):
+    print("\n\n**** TRIAL: ", system.scheduler_processing.times[pnl.TimeScale.RUN][pnl.TimeScale.TRIAL])
+
 
 def show_target():
-    i = s.input
-    t = s.target_input_states[0].value
+    i = mySystem.input
+    t = mySystem.target_input_states[0].value
     print('\nOLD WEIGHTS: \n')
     print('- Input Weights: \n', Input_Weights.matrix)
     print('- Middle Weights: \n', Middle_Weights.matrix)
@@ -144,19 +137,20 @@ def show_target():
     print('- Middle 2: \n', Hidden_Layer_2.value)
     print('- Output:\n', Output_Layer.value)
 
-s = System(
+
+mySystem = pnl.System(
     processes=[z, g],
     targets=[0, 0, 1],
     learning_rate=1.0
 )
 
-s.reportOutputPref = True
-# s.show_graph(show_learning=True)
+mySystem.reportOutputPref = True
+# mySystem.show_graph(show_learning=True)
 
-results = s.run(
+results = mySystem.run(
     num_trials=10,
     inputs=stim_list,
     targets=target_list,
-    call_before_trial=print_header,
+    call_before_trial=functools.partial(print_header, mySystem),
     call_after_trial=show_target,
 )
