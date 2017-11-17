@@ -349,21 +349,17 @@ class MappingProjection(PathwayProjection_Base):
         value of the `sender <MappingProjection.sender>` into a form suitable for the `variable <InputState.variable>`
         of its `receiver <MappingProjection.receiver>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default MappingProjection-<index>
-        a string used for the name of the MappingProjection.
-        If not is specified, a default is assigned by `ProjectionRegistry`
-        (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see MappingProjection `name <MappingProjection.name>`
+        specifies the name of the MappingProjection.
 
-    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
-        the `PreferenceSet` for the MappingProjection.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see `PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default State.classPreferences
+        specifies the `PreferenceSet` for the MappingProjection; see `prefs <MappingProjection.prefs>` for details.
 
     Attributes
     ----------
@@ -404,17 +400,20 @@ class MappingProjection(PathwayProjection_Base):
         `InputState` to determine that InputState's `variable <InputState.variable>` (see `description above
         <Mapping_Weight_Exponent>` for details).
 
-    name : str : default MappingProjection-<index>
-        the name of the MappingProjection.
-        Specified in the **name** argument of the constructor for the Projection;
-        if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the MappingProjection. If the MappingProjection's `initialization has been deferred
+        <Projection_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
+        status) until initialization is completed, at which time it is assigned its designated name.  If that is the
+        name of an existing MappingProjection, it is appended with an indexed suffix, incremented for each
+        MappingProjection with the same base name (see `Naming`). If the name is not  specified in the **name**
+        argument of its constructor, a default name is assigned using the following format:
+        'MappingProjection from <sender's name> to <receiver's name>'
+        (for example, ``'MappingProjection from my_mech_1 to my_mech2'``).
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for Projection.
-        Specified in the **prefs** argument of the constructor for the Projection;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the MappingProjection; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 

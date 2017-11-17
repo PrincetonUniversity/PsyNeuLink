@@ -318,20 +318,17 @@ class GatingSignal(ModulatorySignal):
         listed in its `efferents <GatingSignal.efferents>` attribute (see `GatingSignal_Projections` for additional
         details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default OutputState-<index>
-        a string used for the name of the OutputState.
-        If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
-        belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see ModulatorySignal `name <ModulatorySignal.name>`
+        specifies the name of the GatingSignal;  see GatingSignal `name <ModulatorySignal.name>` for additional
+        details.
 
-    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the OutputState.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default State.classPreferences
+        specifies the `PreferenceSet` for the GatingSignal; see `prefs <GatingSignal.prefs>` for details.
 
 
     Attributes
@@ -367,11 +364,9 @@ class GatingSignal(ModulatorySignal):
     efferents : [List[GatingProjection]]
         a list of the `GatingProjections <GatingProjection>` assigned to (i.e., that project from) the GatingSignal.
 
-    name : str : default <State subclass>-<index>
-        name of the OutputState.
-        Specified in the **name** argument of the constructor for the OutputState.  If not is specified, a default is
-        assigned by the StateRegistry of the Mechanism to which the OutputState belongs
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        name of the GatingSignal; if not is specified in the **name** argument of its constructor, a default name
+        is assigned (see `name <ModulatorySignal.name>`).
 
         .. note::
             Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
@@ -379,11 +374,10 @@ class GatingSignal(ModulatorySignal):
             Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
-    prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the OutputState.
-        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
-        assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the GatingSignal; if it is not specified in the **prefs** argument of the constructor,
+        a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
+        details).
 
     """
 

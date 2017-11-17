@@ -128,6 +128,7 @@ Class Reference
 """
 
 import numbers
+from collections import Iterable
 
 import numpy as np
 import typecheck as tc
@@ -224,7 +225,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     decay=None,                        \
     noise=0.0,                         \
     time_constant=1.0,                 \
-    range=(float:min, float:max),      \
+    clip=(float:min, float:max),      \
     learning_rate=None,                \
     learning_function=Hebbian,         \
     params=None,                       \
@@ -307,11 +308,11 @@ class RecurrentTransferMechanism(TransferMechanism):
          result = (time_constant * current input) +
          (1-time_constant * result on previous time_step)
 
-    range : Optional[Tuple[float, float]]
+    clip : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`:
         the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
         any element of the result that exceeds the specified minimum or maximum value is set to the value of
-        `range <RecurrentTransferMechanism.range>` that it exceeds.
+        `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
     enable_learning : boolean : default False
         specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
@@ -330,20 +331,17 @@ class RecurrentTransferMechanism(TransferMechanism):
         takes a list or 1d array of numeric values as its `variable <Function_Base.variable>` and returns a sqaure
         matrix of numeric values with the same dimensions as the length of the input.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default RecurrentTransferMechanism-<index>
-        a string used for the name of the Mechanism.
-        If not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <RecurrentTransferMechanism.name>`
+        specifies the name of the RecurrentTransferMechanism.
 
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for Mechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the RecurrentTransferMechanism; see `prefs <RecurrentTransferMechanism.prefs>` 
+        for details.
 
     context : str : default componentType+INITIALIZING
         string used for contextualization of instantiation, hierarchical calls, executions, etc.
@@ -389,12 +387,12 @@ class RecurrentTransferMechanism(TransferMechanism):
 
           result = (time_constant * current input) + (1-time_constant * result on previous time_step)
 
-    range : Tuple[float, float]
+    clip : Tuple[float, float]
         determines the allowable range of the result: the first value specifies the minimum allowable value
         and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
-        is set to the value of `range <RecurrentTransferMechanism.range>` it exceeds.  If
+        is set to the value of `clip <RecurrentTransferMechanism.clip>` it exceeds.  If
         `function <RecurrentTransferMechanism.function>`
-        is `Logistic`, `range <RecurrentTransferMechanism.range>` is set by default to (0,1).
+        is `Logistic`, `clip <RecurrentTransferMechanism.clip>` is set by default to (0,1).
 
     previous_input : 1d np.array of floats
         the value of the input on the previous execution, including the value of `recurrent_projection`.
@@ -457,17 +455,15 @@ class RecurrentTransferMechanism(TransferMechanism):
         * **energy** of the result (``value`` of ENERGY OutputState);
         * **entropy** of the result (if the ENTROPY OutputState is present).
 
-    name : str : default RecurrentTransferMechanism-<index>
-        the name of the Mechanism.
-        Specified in the **name** argument of the constructor for the Projection;
-        if not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the RecurrentTransferMechanism; if it is not specified in the **name** argument of the constructor,
+        a default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for Mechanism.
-        Specified in the **prefs** argument of the constructor for the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the RecurrentTransferMechanism; if it is not specified in the **prefs** argument of the 
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        <LINK>` for details).
+
 
     Returns
     -------
@@ -494,12 +490,12 @@ class RecurrentTransferMechanism(TransferMechanism):
                  noise=0.0,
                  time_constant: is_numeric_or_none=1.0,
                  integrator_mode=False,
-                 range=None,
-                 input_states: tc.optional(tc.any(list, dict)) = None,
+                 clip=None,
+                 input_states:tc.optional(tc.any(list, dict)) = None,
                  enable_learning:bool=False,
-                 learning_rate: tc.optional(tc.any(parameter_spec, bool))=None,
+                 learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
-                 output_states: tc.optional(tc.any(list, dict))=None,
+                 output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
@@ -507,7 +503,11 @@ class RecurrentTransferMechanism(TransferMechanism):
                  context=componentType+INITIALIZING):
         """Instantiate RecurrentTransferMechanism
         """
-        if output_states is None:
+
+        # Default output_states is specified in constructor as a string rather than a list
+        # to avoid "gotcha" associated with mutable default arguments
+        # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
+        if output_states is None or output_states is RESULT:
             output_states = [RESULT]
 
         if isinstance(hetero, (list, np.matrix)):
@@ -543,7 +543,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                          integrator_mode=integrator_mode,
 
                          time_constant=time_constant,
-                         range=range,
+                         clip=clip,
                          output_states=output_states,
                          time_scale=time_scale,
                          params=params,
@@ -767,7 +767,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.output_states[ENERGY]._calculate = energy.function
 
         if ENTROPY in self.output_states.names:
-            if self.function_object.bounds == (0,1) or range == (0,1):
+            if self.function_object.bounds == (0,1) or clip == (0,1):
                 entropy = Stability(self.instance_defaults.variable[0],
                                     metric=ENTROPY,
                                     transfer_fct=self.function,

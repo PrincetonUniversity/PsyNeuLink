@@ -278,20 +278,16 @@ class ModulatorySignal(OutputState):
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
         specifies the type of modulation the ModulatorySignal uses to determine the value of the State(s) it modulates.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default OutputState-<index>
-        a string used for the name of the OutputState.
-        If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
-        belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <ModulatorySignal.name>`
+        specifies the name of the ModulatorySignal.
 
-    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the OutputState.
-        If it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default State.classPreferences
+        specifies the `PreferenceSet` for the LearningSignal; see `prefs <ControlSignal.prefs>` for details.
 
 
     Attributes
@@ -318,11 +314,29 @@ class ModulatorySignal(OutputState):
     efferents : [List[GatingProjection]]
         a list of the `ModulatoryProjections <ModulatoryProjection>` assigned to the ModulatorySignal.
 
-    name : str : default <ModulatorySignal>-<index>
-        name of the ModulatorySignal.
-        Specified in the **name** argument of the constructor for the ModulatorySignal.  If not is specified, a default
-        is assigned by the StateRegistry of the Mechanism to which the ModulatorySignal belongs
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the ModulatorySignal. If the ModulatorySignal's `initialization has been deferred
+        <State_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
+        status) until initialization is completed, at which time it is assigned its designated name.  If that is the
+        name of an existing ModulatorySignal, it is appended with an indexed suffix, incremented for each State with
+        the same base name (see `Naming`). If the name is not  specified in the **name** argument of its constructor,
+        a default name is assigned as follows; if the ModulatorySignal has:
+
+        * no projections (which are used to name it) -- the name of its class is used, with an index that is
+        incremented for each ModulatorySignal with a default named assigned to its `owner <ModulatorySignal.owner>`;
+
+        * one `ModulatoryProjection` -- the following template is used:
+          "<target Mechanism name> <target State name> <ModulatorySignal type name>"
+          (for example, ``'Decision[drift_rate] ControlSignal'``, or ``'Input Layer[InputState-0] GatingSignal'``);
+
+        * multiple ModulatoryProjections, all to States of the same Mechanism -- the following template is used:
+          "<target Mechanism name> (<target State name>,...) <ModulatorySignal type name>"
+          (for example, ``Decision (drift_rate, threshold) ControlSignal``, or
+          ``'Input Layer[InputState-0, InputState-1] GatingSignal'``);
+
+        * multiple ModulatoryProjections to States of different Mechanisms -- the following template is used:
+          "<owner Mechanism's name> divergent <ModulatorySignal type name>"
+          (for example, ``'ControlMechanism divergent ControlSignal'`` or ``'GatingMechanism divergent GatingSignal'``).
 
         .. note::
             Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
@@ -330,11 +344,10 @@ class ModulatorySignal(OutputState):
             Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
-    prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the ModulatorySignal.
-        Specified in the **prefs** argument of the constructor for the ModulatorySignal;
-        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the ModulatorySignal; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 
@@ -394,7 +407,7 @@ class ModulatorySignal(OutputState):
                          context=context)
 
         if self.init_status is InitStatus.INITIALIZED:
-            self._assign_default_name(context=context)
+            self._assign_default_state_name(context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
         # If owner is specified but modulation has not been specified, assign to owner's value
@@ -419,7 +432,7 @@ class ModulatorySignal(OutputState):
                                                                  context=context)
             projection._assign_default_projection_name(state=self)
 
-    def _assign_default_name(self, context=None):
+    def _assign_default_state_name(self, context=None):
 
         # If the name is not a default name for the class,
         #    or the ModulatorySignal has no projections (which are used to name it)
@@ -441,17 +454,21 @@ class ModulatorySignal(OutputState):
             receiver_owner_name = receiver.owner.name
             receiver_names.append(receiver_name)
             receiver_owner_names.append(receiver_owner_name)
-            receiver_owner_receiver_names.append("{} {}".format(receiver_owner_name, receiver_name))
+            receiver_owner_receiver_names.append("{}[{}]".format(receiver_owner_name, receiver_name))
 
-        # Only one param: "<Mech> <param> ControlSignal" (e.g., Decision drift_rate ControlSignal)
+        # Only one ModulatoryProjection: "<target mech> <State.name> <ModulatorySignal>"
+        # (e.g., "Decision drift_rate ControlSignal", or "Input Layer InputState-0 GatingSignal")
         if len(receiver_owner_receiver_names) == 1:
             default_name = receiver_owner_receiver_names[0] + " " + class_name
 
-        # Multiple params all for same mech: "<Mech> params ControlSignal" (e.g., Decision params ControlSignal)
+        # Multiple ModulatoryProjections all for same mech: "<target mech> (<State.name>,...) <ModulatorySignal>"
+        # (e.g., "Decision (drift_rate, threshold) ControlSignal" or
+        #        "InputLayer (InputState-0, InputState-0) ControlSignal")
         elif all(name is receiver_owner_names[0] for name in receiver_owner_names):
-            default_name = "{} ({}) {}".format(receiver_owner_names[0], ", ".join(receiver_names), class_name)
+            default_name = "{}[{}] {}".format(receiver_owner_names[0], ", ".join(receiver_names), class_name)
 
-        # Mult params for diff mechs: "<ControlMechanism> divergent ControlSignal" (e.g., EVC divergent ControlSignal)
+        # Mult ModulatoryProjections for diff mechs: "<owner mech> divergent <ModulatorySignal>"
+        # (e.g., "EVC divergent ControlSignal", or "GatingMechanism divergent GatingSignal")
         else:
             default_name = self.name + " divergent " + class_name
 

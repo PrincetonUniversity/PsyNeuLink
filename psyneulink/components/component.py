@@ -39,8 +39,8 @@ Deferred Initialization
 If information necessary to complete initialization is not specified in the constructor (e.g, the **owner** for a
 `State <State_Base.owner>`, or the **sender** or **receiver** for a `Projection <Projection_Structure>`), then its
 full initialization is deferred until its the information is available (e.g., the `State <State>` is assigned to a
-`Mechanism <Mechanism>`, or a `Projection <Projection>` is assigned its `sender <Projection.sender>` and `receiver
-<Projection.receiver>`).  This allows Components to be created before all of the information they require is
+`Mechanism <Mechanism>`, or a `Projection <Projection>` is assigned its `sender <Projection_Base.sender>` and `receiver
+<Projection_Base.receiver>`).  This allows Components to be created before all of the information they require is
 available (e.g., at the beginning of a script). However, for the Component to be operational, initialization must be
 completed its `deferred_init` method must be called.  This is usually done automatically when the Component is
 assigned to another Component to which it belongs (e.g., assigning a State to a Mechanism) or to a Composition (e.g.,
@@ -346,11 +346,16 @@ from enum import Enum, IntEnum
 import numpy as np
 import typecheck as tc
 
-from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+from psyneulink.globals.registry import register_category
+from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, DEFERRED_DEFAULT_NAME, COMPONENT_INIT, \
+    CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, \
+    INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, \
+    PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, \
+    SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
-from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength
+from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
@@ -358,6 +363,8 @@ __all__ = [
 ]
 
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
+
+DeferredInitRegistry = {}
 
 class ResetMode(Enum):
     """
@@ -493,11 +500,12 @@ class ComponentLog(IntEnum):
 
 
 class ComponentError(Exception):
-     def __init__(self, error_value):
-         self.error_value = error_value
+    def __init__(self, error_value):
+        self.error_value = error_value
 
-     def __str__(self):
-         return repr(self.error_value)
+    def __str__(self):
+        return repr(self.error_value)
+
 
 # *****************************************   COMPONENT CLASS  ********************************************************
 
@@ -670,10 +678,30 @@ class Component(object):
     componentType = None
 
     class Defaults(object):
+        def _attributes(obj):
+            return {k: getattr(obj, k) for k in dir(obj) if k[:2]+k[-2:] != '____' and not callable(getattr(obj, k))}
+
         @classmethod
         def values(cls):
-            vardict = {k: getattr(cls, k) for k in dir(cls) if k[:2]+k[-2:] != '____' and not callable(getattr(cls, k))}
-            return vardict
+            '''
+                Returns
+                -------
+                A dictionary consisting of the non-dunder and non-function attributes of **obj**
+            '''
+            return cls._attributes(cls)
+
+        def _show(obj):
+            vals = obj.values()
+            return '(\n\t{0}\n)'.format('\n\t'.join(['{0} = {1},'.format(k, vals[k]) for k in vals]))
+
+        @classmethod
+        def show(cls):
+            '''
+                Returns
+                -------
+                A pretty string version of the non-dunder and non-function attributes of **obj**
+            '''
+            return cls._show(cls)
 
     class ClassDefaults(Defaults):
         exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
@@ -683,6 +711,18 @@ class Component(object):
         def __init__(self, **kwargs):
             for param in kwargs:
                 setattr(self, param, kwargs[param])
+
+        def values(self):
+            return self._attributes()
+
+        def show(self):
+            return self._show()
+
+        def __repr__(self):
+            return '{0} :\n{1}'.format(super().__repr__(), self.__str__())
+
+        def __str__(self):
+            return self.show()
 
     initMethod = INIT_FULL_EXECUTE_METHOD
 
@@ -695,7 +735,6 @@ class Component(object):
 
     # Determines whether ClassDefaults.variable can be changed (to match an variable in __init__ method)
     variableClassDefault_locked = False
-
 
     # Names and types of params required to be implemented in all subclass paramClassDefaults:
     # Notes:
@@ -796,8 +835,6 @@ class Component(object):
         # Used by run to store return value of execute
         self.results = []
 
-        default_variable, param_defaults = self._preprocess_variable(default_variable, size, param_defaults)
-
 
         # ENFORCE REQUIRED CLASS DEFAULTS
 
@@ -886,12 +923,6 @@ class Component(object):
 
         self.init_status = InitStatus.INITIALIZED
 
-    def _preprocess_variable(self, variable, size, params):
-       # TODO:
-        # this is part of the hack in Mechanism to accept input_states as a way to instantiate default_variable for
-       # this release should be cleaned ASAP in default_variable overhaul
-        return variable, params
-
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
@@ -936,24 +967,18 @@ class Component(object):
                 return int_x
 
             #region Convert variable (if given) to a 2D array, and size (if given) to a 1D integer array
-            try:
-                if variable is not None:
+            if variable is not None:
+                variable = np.array(variable)
+                if variable.dtype == object:
+                    # CAVEAT: assuming here that object dtype implies there are list objects (i.e. array with
+                    # different sized arrays/lists inside like [[0, 1], [2, 3, 4]]), even though putting a None
+                    # value in the array will give object dtype. This case doesn't really make sense in our
+                    # context though, so ignoring this case in the interest of quickly fixing 3D variable behavior
+                    variable = np.atleast_1d(variable)
+                else:
                     variable = np.atleast_2d(variable)
-                    # 6/30/17 (CW): Previously, using variable or default_variable to create
-                    # input states of differing lengths (e.g. default_variable = [[1, 2], [1, 2, 3]])
-                    # caused a bug. The if statement below fixes this bug. This solution is ugly, though.
-                    if isinstance(variable[0], list) or isinstance(variable[0], np.ndarray):
-                        allLists = True
-                        for i in range(len(variable[0])):
-                            if isinstance(variable[0][i], (list, np.ndarray)):
-                                variable[0][i] = np.array(variable[0][i])
-                            else:
-                                allLists = False
-                                break
-                        if allLists:
-                            variable = variable[0]
-            except:
-                raise ComponentError("Failed to convert variable (of type {}) to a 2D array.".format(type(variable)))
+
+                variable = convert_all_elements_to_np_array(variable)
 
             try:
                 if size is not None:
@@ -1073,13 +1098,25 @@ class Component(object):
             # If name is None, mark as deferred so that name can be customized
             #    using info that has become available at time of deferred init
             self.init_args[NAME] = (self.init_args[NAME] or
-                                      ('deferred_init_' + self.className) or
-                                      DEFERRED_DEFAULT_NAME)
+                                      (DEFERRED_INITIALIZATION + ' ' + self.className) or
+                                    DEFERRED_DEFAULT_NAME)
 
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
 
             self.init_status = InitStatus.INITIALIZED
+
+    def _assign_deferred_init_name(self, name, context):
+
+        name = "{} [{}]".format(name,DEFERRED_INITIALIZATION) if name \
+          else "{} {}".format(DEFERRED_INITIALIZATION,self.__class__.__name__)
+
+        # Register with ProjectionRegistry or create one
+        register_category(entry=self,
+                          base_class=Component,
+                          name=name,
+                          registry=DeferredInitRegistry,
+                          context=context)
 
     def _assign_args_to_param_dicts(self, **kwargs):
         """Assign args passed in __init__() to params
@@ -1796,7 +1833,6 @@ class Component(object):
         context = context or COMMAND_LINE
 
         self._assign_params(request_set=request_set, context=context)
-
 
     @tc.typecheck
     def _assign_params(self, request_set:tc.optional(dict)=None, context=None):

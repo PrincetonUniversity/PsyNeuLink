@@ -299,6 +299,7 @@ Class Reference
 
 """
 import warnings
+from collections import Iterable
 
 import typecheck as tc
 
@@ -431,21 +432,17 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     role: Optional[LEARNING, CONTROL]
         specifies if the ObjectiveMechanism is being used for learning or control (see `role` for details).
 
-    params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
-        the Mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
-        the dictionary override any assigned to those parameters in arguments of the
+    params : Dict[param keyword, param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
+        Mechanism, its `function <Mechanism_Base.function>`, and/or a custom function and its parameters. Values
+        specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name : str : default ObjectiveMechanism-<index>
-        a string used for the name of the Mechanism.
-        If not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <ObjectiveMechanism.name>`
+        specifies the name of the ObjectiveMechanism.
 
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for Mechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the ObjectiveMechanism; see `prefs <ObjectiveMechanism.prefs>` for details.
 
 
     Attributes
@@ -478,7 +475,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     role : None, LEARNING or CONTROL
         specifies whether the ObjectiveMechanism is used for learning in a Process or System (in conjunction with a
-        `LearningMechanism`), or for control in a System (in conjunction with a `ControlMechanism <ControlMechanism>`).
+        `ObjectiveMechanism`), or for control in a System (in conjunction with a `ControlMechanism <ControlMechanism>`).
 
     value : 1d np.array
         the output of the evaluation carried out by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.
@@ -494,17 +491,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     output_values : 2d np.array
         contains one item that is the value of the *OUTCOME* `OutputState <ObjectiveMechanism_Output>`.
 
-    name : str : default ObjectiveMechanism-<index>
-        the name of the Mechanism.
-        Specified in the **name** argument of the constructor for the Mechanism;
-        if not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the ObjectiveMechanism; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for Mechanism.
-        Specified in the **prefs** argument of the constructor for the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the ObjectiveMechanism; if it is not specified in the **prefs** argument of the 
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        <LINK>` for details).
 
 
     """
@@ -537,31 +531,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  default_variable=None,
                  size=None,
                  function=LinearCombination,
-                 output_states:tc.optional(tc.any(list, dict))=[OUTCOME],
+                 output_states:tc.optional(tc.any(str, Iterable))=OUTCOME,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None,
                  **kwargs):
 
-        # # MODIFIED 10/26/17 OLD:  NOTE: REQUIRES THAT monitored_input_states NOT BE A CONSTRUCTOR ARGUMENT
-        # if MONITORED_OUTPUT_STATES in kwargs and kwargs[MONITORED_OUTPUT_STATES] is not None:
-        #     name_string = name or 'an ' + ObjectiveMechanism.__name__
-        #     input_states = kwargs[MONITORED_OUTPUT_STATES]
-        #     del kwargs[MONITORED_OUTPUT_STATES]
-        #     if kwargs:
-        #         if INPUT_STATES in kwargs:
-        #             raise ObjectiveMechanismError("\'{}\' argument is not supported for an {} "
-        #                                           "(found in constructor for: \'{}\'); \'{}\' should be used instead".
-        #                                           format(INPUT_STATES,
-        #                                                  self.__class__.__name__,
-        #                                                  name_string,
-        #                                                  MONITORED_OUTPUT_STATES))
-        #         raise ObjectiveMechanismError("\'Invalid arguments used in constructor for {}".
-        #                                       format(kwargs.keys(), name))
-        # MODIFIED 10/26/17 NEW:
         input_states = monitored_output_states
-        # MODIFIED 10/26/17 END
+        if output_states is None or output_states is OUTCOME:
+            output_states = [OUTCOME]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,
@@ -812,7 +791,7 @@ def _instantiate_monitoring_projections(owner,
                 if not receiver.path_afferents[0].init_status is InitStatus.DEFERRED_INITIALIZATION:
                     raise ObjectiveMechanismError("PROGRAM ERROR: {} of {} already has an afferent projection "
                                                   "implemented and initialized ({})".
-                                                  format(receiver.name, owner.name, receiver.afferents[0].name))
+                                                  format(receiver.name, owner.name, receiver.path_afferents[0].name))
                 # FIX: 10/3/17 - IS IT OK TO IGNORE projection_spec IF IT IS None?  SHOULD IT HAVE BEEN SPECIFIED??
                 # FIX:           IN DEVEL, projection_spec HAS BEEN PROPERLY ASSIGNED
                 if (projection_spec and
