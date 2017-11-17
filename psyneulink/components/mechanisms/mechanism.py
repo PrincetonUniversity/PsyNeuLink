@@ -1185,6 +1185,8 @@ class Mechanism_Base(Mechanism):
                           context=context)
 
         variable = self._handle_default_variable(variable, size, input_states, params)
+        if isinstance(output_states, tuple):
+            output_states = list(output_states)
 
         # Mark initialization in context
         if not context or isinstance(context, object) or inspect.isclass(context):
