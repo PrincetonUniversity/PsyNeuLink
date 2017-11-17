@@ -132,7 +132,7 @@ Examples for each, that illustrate all of their parameters, are shown below:
     ...                                             t0 = 2.0),
     ...                         name='my_DDM_BogaczEtAl')
 
-`NavarroAndFuss <NavarroAndFuss>` Function::
+`NavarroAndFuss <NavarroAndFuss>` Function (requires MATLAB engine)::
 
     >>> my_DDM_NavarroAndFuss = DDM(function=NavarroAndFuss(drift_rate=3.0,
     ...                                                     starting_point=1.0,

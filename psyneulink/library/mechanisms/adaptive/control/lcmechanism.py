@@ -228,12 +228,18 @@ Class Reference
 """
 import typecheck as tc
 
-from psyneulink.components.functions.function import Integrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
-from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
-from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.components.functions.function import Integrator, \
+    MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
+from psyneulink.components.mechanisms.adaptive.adaptivemechanism import \
+    AdaptiveMechanism_Base
+from psyneulink.components.mechanisms.adaptive.control.controlmechanism import \
+    ControlMechanism
+from psyneulink.components.projections.modulatory.controlprojection import \
+    ControlProjection
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES
+from psyneulink.globals.keywords import ALL, CONTROL_PROJECTIONS, \
+    CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
@@ -246,6 +252,7 @@ MODULATED_MECHANISMS = 'modulated_mechanisms'
 CONTROL_SIGNAL_NAME = 'LCMechanism_ControlSignal'
 
 ControlMechanismRegistry = {}
+
 
 class LCMechanismError(Exception):
     def __init__(self, error_value):
@@ -372,7 +379,7 @@ class LCMechanism(ControlMechanism):
         variable = defaultControlAllocation
 
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({FUNCTION:Integrator,
+    paramClassDefaults.update({FUNCTION: Integrator,
                                CONTROL_SIGNALS: None,
                                CONTROL_PROJECTIONS: None,
                                })
@@ -442,10 +449,12 @@ class LCMechanism(ControlMechanism):
 
             spec = target_set[MODULATED_MECHANISMS]
 
-            if isinstance (spec, str):
+            if isinstance(spec, str):
                 if not spec == ALL:
-                    raise LCMechanismError("A string other than the keyword \'ALL\' was specified for the {} argument "
-                                           "the constructor for {}".format(MODULATED_MECHANISMS, self.name))
+                    raise LCMechanismError("A string other than the keyword "
+                                           "\'ALL\' was specified for the {} "
+                                           "argument the constructor for {}".format(MODULATED_MECHANISMS,
+                                                                                    self.name))
 
             if not isinstance(spec, list):
                 spec = [spec]
@@ -476,7 +485,7 @@ class LCMechanism(ControlMechanism):
                               method should be implemented that also implements an _instantiate_monitored_output_states
                               method, and that can be used to add OutputStates/Mechanisms to be monitored.
         """
-
+        print("LC objective mechanism name = {}".format(self._objective_mechanism.name))
         self.monitored_output_states = []
 
         if not hasattr(self, INPUT_STATES):
@@ -485,8 +494,6 @@ class LCMechanism(ControlMechanism):
             for input_state in self.input_states:
                 for projection in input_state.path_afferents:
                     self.monitored_output_states.append(projection.sender)
-
-
 
     def _instantiate_output_states(self, context=None):
         """Instantiate ControlSignal and assign ControlProjections to Mechanisms in self.modulated_mechanisms

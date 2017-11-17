@@ -321,18 +321,18 @@ class ComparatorMechanism(ObjectiveMechanism):
     paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
 
     standard_output_states = ObjectiveMechanism.standard_output_states.copy()
-    standard_output_states.extend([{NAME:SSE,
-                                    CALCULATE:lambda x: np.sum(x*x)},
-                                   {NAME:MSE,
-                                    CALCULATE:lambda x: np.sum(x*x)/len(x)}])
+    standard_output_states.extend([{NAME: SSE,
+                                    CALCULATE: lambda x: np.sum(x*x)},
+                                   {NAME: MSE,
+                                    CALCULATE: lambda x: np.sum(x*x)/len(x)}])
 
     # MODIFIED 10/10/17 OLD:
     @tc.typecheck
     def __init__(self,
-                 sample:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
-                 target:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
+                 sample: tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
+                 target: tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  function=LinearCombination(weights=[[-1], [1]]),
-                 output_states:tc.optional(tc.any(list, dict))=[OUTCOME, MSE],
+                 output_states: tc.optional(tc.any(list, dict))=[OUTCOME, MSE],
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -341,7 +341,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  ):
 
         input_states = self._merge_legacy_constructor_args(sample, target, input_states)
-
+        print("Length of input states: {}".format(len(input_states)))
         # IMPLEMENTATION NOTE: The following prevents the default from being updated by subsequent assignment
         #                     (in this case, to [OUTCOME, {NAME= MSE}]), but fails to expose default in IDE
         # output_states = output_states or [OUTCOME, MSE]
@@ -353,7 +353,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                                                                indices=PRIMARY_OUTPUT_STATE)
 
         super().__init__(# monitored_output_states=[sample, target],
-                         monitored_output_states = input_states,
+                         monitored_output_states=input_states,
                          function=function,
                          output_states=output_states.copy(), # prevent default from getting overwritten by later assign
                          params=params,

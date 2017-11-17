@@ -1630,13 +1630,14 @@ class State_Base(State):
     def _assign_default_name(self):
         return False
 
+
 def _instantiate_state_list(owner,
-                           state_list,              # list of State specs, (state_spec, params) tuples, or None
-                           state_type,              # StateType subclass
-                           state_param_identifier,  # used to specify state_type State(s) in params[]
-                           reference_value,         # value(s) used as default for State and to check compatibility
-                           reference_value_name,    # name of reference_value type (e.g. variable, output...)
-                           context=None):
+                            state_list,              # list of State specs, (state_spec, params) tuples, or None
+                            state_type,              # StateType subclass
+                            state_param_identifier,  # used to specify state_type State(s) in params[]
+                            reference_value,         # value(s) used as default for State and to check compatibility
+                            reference_value_name,    # name of reference_value type (e.g. variable, output...)
+                            context=None):
     """Instantiate and return a ContentAddressableList of States specified in state_list
 
     Arguments:
@@ -1687,11 +1688,11 @@ def _instantiate_state_list(owner,
 
         # issue warning if in VERBOSE mode:
         if owner.prefs.verbosePref:
-            print("No {0} specified for {1}; default will be created using {2} of function ({3})"
-                  " as its value".format(state_param_identifier,
-                                         owner.__class__.__name__,
-                                         reference_value_name,
-                                         reference_value))
+            print("No {0} specified for {1}; default will be created using {2} "
+                  "of function ({3}) as its value".format(state_param_identifier,
+                                                          owner.__class__.__name__,
+                                                          reference_value_name,
+                                                          reference_value))
 
     # States should be either in a list, or possibly an np.array (from reference_value assignment above):
     if not isinstance(state_list, (ContentAddressableList, list, np.ndarray)):

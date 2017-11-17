@@ -240,16 +240,19 @@ The following example creates a ControlMechanism by specifying its **objective_m
 that specifies the OutputStates to be monitored by its `objective_mechanism <ControlMechanism.objective_mechanism>`::
 
     >>> import psyneulink as pnl
-    >>> my_transfer_mech_A = pnl.TransferMechanism()
-    >>> my_DDM = pnl.DDM()
-    >>> my_transfer_mech_B = pnl.TransferMechanism(function=pnl.Logistic)
+    >>> my_transfer_mech_A = pnl.TransferMechanism(name="Transfer Mech A")
+    >>> my_DDM = pnl.DDM(name="My DDM")
+    >>> my_transfer_mech_B = pnl.TransferMechanism(function=pnl.Logistic,
+    ...                                            name="Transfer Mech B")
 
     >>> my_control_mech = pnl.ControlMechanism(
     ...                          objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[(my_transfer_mech_A, 2, 1),
     ...                                                                                               my_DDM.output_states[pnl.RESPONSE_TIME]],
-    ...                                                                     function=pnl.LinearCombination(operation=pnl.PRODUCT)),
+    ...                                                                     name="Objective Mechanism"),
+    ...                          function=pnl.LinearCombination(operation=pnl.PRODUCT),
     ...                          control_signals=[(pnl.THRESHOLD, my_DDM),
-    ...                                           (pnl.GAIN, my_transfer_mech_B)])
+    ...                                           (pnl.GAIN, my_transfer_mech_B)],
+    ...                          name="My Control Mech")
 
 
 This creates an ObjectiveMechanism for the ControlMechanism that monitors the `primary OutputState
@@ -618,7 +621,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
             for control_signal in target_set[CONTROL_SIGNALS]:
                 _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=control_signal)
 
-    # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+    # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION
+    # ONCE THAT IS IMPLEMENTED
     def _instantiate_objective_mechanism(self, context=None):
         """
         Assign InputState to ControlMechanism for each OutputState to be monitored;
@@ -688,23 +692,25 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
                                                                function=LinearCombination(operation=PRODUCT),
                                                                name=self.name + '_ObjectiveMechanism')
+
             except ObjectiveMechanismError as e:
                 raise ObjectiveMechanismError(e)
 
         # Print monitored_output_states
         if self.prefs.verbosePref:
-            print ("{0} monitoring:".format(self.name))
+            print("{0} monitoring:".format(self.name))
             for state in self.monitored_output_states:
                 weight = self.monitored_output_states_weights_and_exponents[
                                                          self.monitored_output_states.index(state)][WEIGHT_INDEX]
                 exponent = self.monitored_output_states_weights_and_exponents[
                                                          self.monitored_output_states.index(state)][EXPONENT_INDEX]
-                print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
+                print("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
 
         # Assign ObjectiveMechanism's role as CONTROL
         self.objective_mechanism._role = CONTROL
 
-        # If ControlMechanism is a System controller, name Projection from ObjectiveMechanism based on the System
+        # If ControlMechanism is a System controller, name Projection from
+        # ObjectiveMechanism based on the System
         if self.system is not None:
             name = self.system.name + ' outcome signal'
         # Otherwise, name it based on the ObjectiveMechanism
@@ -719,7 +725,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)
 
-        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION
+        # ONCE THAT IS IMPLEMENTED
         self._instantiate_objective_mechanism(context=context)
 
     def _instantiate_output_states(self, context=None):
@@ -747,7 +754,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
             for i, control_signal in enumerate(self.control_signals):
 
-                # EXTEND allocation_policy TO ACCOMMODATE NEW ControlSignal -------------------------------------------------
+                # EXTEND allocation_policy TO ACCOMMODATE NEW ControlSignal ----
                 #        also used to determine constraint on ControlSignal value
                 if self.allocation_policy is None:
                     self.allocation_policy = np.atleast_2d(defaultControlAllocation)
@@ -799,11 +806,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self._control_signals = [state for state in self.output_states if isinstance(state, ControlSignal)]
 
     def _execute(self,
-                    variable=None,
-                    runtime_params=None,
-                    clock=CentralClock,
-                    time_scale=TimeScale.TRIAL,
-                    context=None):
+                 variable=None,
+                 runtime_params=None,
+                 clock=CentralClock,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
         """Updates ControlSignals based on inputs
 
         Must be overriden by subclass
@@ -817,9 +824,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
         <ControlMechanism.control_signals>`.
         """
 
-        print ("\n---------------------------------------------------------")
+        print("\n---------------------------------------------------------")
 
-        print ("\n{0}".format(self.name))
+        print("\n{0}".format(self.name))
         print("\n\tMonitoring the following Mechanism OutputStates:")
         for state in self.objective_mechanism.input_states:
             for projection in state.path_afferents:
@@ -930,14 +937,22 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Flag ObjectiveMechanism as associated with a ControlMechanism that is a controller for the System
         self._objective_mechanism.controller = True
 
-
     @property
     def monitored_output_states(self):
-        return self.objective_mechanism.monitored_output_states
+        return self._objective_mechanism.monitored_output_states
+
+    @monitored_output_states.setter
+    def monitored_output_states(self, value):
+        try:
+            self._objective_mechanism._monitored_output_states = value
+        except AttributeError:
+            raise ControlMechanismError("Control Mechanism {}'s Objective "
+                                        "Mechanism has not been "
+                                        "instantiated.".format(self.name))
 
     @property
     def monitored_output_states_weights_and_exponents(self):
-        return self.objective_mechanism.monitored_output_states_weights_and_exponents
+        return self._objective_mechanism.monitored_output_states_weights_and_exponents
 
 
 
