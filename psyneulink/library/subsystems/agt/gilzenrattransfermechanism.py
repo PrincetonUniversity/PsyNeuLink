@@ -17,6 +17,7 @@ import numbers
 
 import numpy as np
 import typecheck as tc
+from collections import Iterable
 
 from psyneulink.components.functions.function import Hebbian, Linear, is_function_type, LCAIntegrator
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
@@ -368,7 +369,7 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function:tc.any(is_function_type) = Hebbian,
-                 output_states:tc.optional(tc.any(str, list, dict))=RESULT,
+                 output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,

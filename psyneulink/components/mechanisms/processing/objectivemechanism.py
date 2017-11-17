@@ -531,7 +531,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  default_variable=None,
                  size=None,
                  function=LinearCombination,
-                 output_states:tc.optional(tc.any(str, list, dict))=OUTCOME,
+                 output_states:tc.optional(tc.any(str, Iterable))=OUTCOME,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -539,8 +539,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  **kwargs):
 
         input_states = monitored_output_states
-        if isinstance(output_states, str):
-            output_states = list(output_states)
+        if output_states is None or output_states is OUTCOME:
+            output_states = [OUTCOME]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,

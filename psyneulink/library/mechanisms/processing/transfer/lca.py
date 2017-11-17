@@ -413,7 +413,7 @@ class LCA(RecurrentTransferMechanism):
                  integrator_mode=True,
                  time_step_size=0.1,
                  clip=None,
-                 output_states:tc.optional(tc.any(str, list, dict))=RESULT,
+                 output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,

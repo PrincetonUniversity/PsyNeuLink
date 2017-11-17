@@ -458,13 +458,16 @@ class KWTA(RecurrentTransferMechanism):
                  inhibition_only=True,
                  clip=None,
                  input_states:tc.optional(tc.any(list, dict)) = None,
-                 output_states:tc.optional(tc.any(list, dict))=None,
+                 output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
                  context=componentType + INITIALIZING,
                  ):
+        # Default output_states is specified in constructor as a string rather than a list
+        # to avoid "gotcha" associated with mutable default arguments
+        # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
         if output_states is None:
             output_states = [RESULT]
 
