@@ -368,7 +368,7 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function:tc.any(is_function_type) = Hebbian,
-                 output_states:tc.optional(tc.any(list, dict))=None,
+                 output_states:tc.optional(tc.any(str, list, dict))=RESULT,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
@@ -376,8 +376,8 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
                  context=componentType+INITIALIZING):
         """Instantiate GilzenratTransferMechanism
         """
-        if output_states is None:
-            output_states = [RESULT]
+        if isinstance(output_states, str):
+            output_states = list(output_states)
 
         if isinstance(hetero, (list, np.matrix)):
             hetero = np.array(hetero)

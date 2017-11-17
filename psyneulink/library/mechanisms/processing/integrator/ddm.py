@@ -639,7 +639,7 @@ class DDM(ProcessingMechanism_Base):
         # Default output_states is specified in constructor as a tuple rather than a list
         # to avoid "gotcha" associated with mutable default arguments
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if isinstance(output_states, tuple):
+        if isinstance(output_states, (str, tuple)):
             output_states = list(output_states)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)

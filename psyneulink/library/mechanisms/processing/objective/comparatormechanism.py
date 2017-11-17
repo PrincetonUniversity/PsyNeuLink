@@ -338,7 +338,7 @@ class ComparatorMechanism(ObjectiveMechanism):
         # Default output_states is specified in constructor as a tuple rather than a list
         # to avoid "gotcha" associated with mutable default arguments
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if isinstance(output_states, tuple):
+        if isinstance(output_states, (str, tuple)):
             output_states = list(output_states)
 
         # IMPLEMENTATION NOTE: The following prevents the default from being updated by subsequent assignment

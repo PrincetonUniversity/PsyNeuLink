@@ -538,24 +538,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  context=None,
                  **kwargs):
 
-        # # MODIFIED 10/26/17 OLD:  NOTE: REQUIRES THAT monitored_input_states NOT BE A CONSTRUCTOR ARGUMENT
-        # if MONITORED_OUTPUT_STATES in kwargs and kwargs[MONITORED_OUTPUT_STATES] is not None:
-        #     name_string = name or 'an ' + ObjectiveMechanism.__name__
-        #     input_states = kwargs[MONITORED_OUTPUT_STATES]
-        #     del kwargs[MONITORED_OUTPUT_STATES]
-        #     if kwargs:
-        #         if INPUT_STATES in kwargs:
-        #             raise ObjectiveMechanismError("\'{}\' argument is not supported for an {} "
-        #                                           "(found in constructor for: \'{}\'); \'{}\' should be used instead".
-        #                                           format(INPUT_STATES,
-        #                                                  self.__class__.__name__,
-        #                                                  name_string,
-        #                                                  MONITORED_OUTPUT_STATES))
-        #         raise ObjectiveMechanismError("\'Invalid arguments used in constructor for {}".
-        #                                       format(kwargs.keys(), name))
-        # MODIFIED 10/26/17 NEW:
         input_states = monitored_output_states
-        # MODIFIED 10/26/17 END
+        if isinstance(output_states, str):
+            output_states = list(output_states)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,

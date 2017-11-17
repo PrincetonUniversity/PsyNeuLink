@@ -421,6 +421,8 @@ class LCA(RecurrentTransferMechanism):
                  context=componentType+INITIALIZING):
         """Instantiate LCA
         """
+        if isinstance(output_states, str):
+            output_states = list(output_states)
 
         if matrix is not None:
             warnings.warn("Matrix arg for LCA is not used; matrix was assigned using inhibition arg")
