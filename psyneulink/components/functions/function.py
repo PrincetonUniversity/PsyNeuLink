@@ -2248,7 +2248,7 @@ class SoftMax(NormalizingFunction):
         specifies the format of array returned by `function <SoftMax.function>`
         (see `output <SoftMax.output>` for details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -2256,10 +2256,11 @@ class SoftMax(NormalizingFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
-
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+        
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -2282,14 +2283,17 @@ class SoftMax(NormalizingFunction):
 
     bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = SOFTMAX_FUNCTION
@@ -2342,7 +2346,7 @@ class SoftMax(NormalizingFunction):
         variable : 1d np.array : default ClassDefaults.variable
            an array to be transformed.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.

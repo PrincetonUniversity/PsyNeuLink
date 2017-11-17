@@ -387,7 +387,6 @@ standard_output_states = [{NAME: RESULT},
                           {NAME:VARIANCE,
                            CALCULATE:lambda x: np.var(x)}]
 
-
 class OutputStateError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -1000,11 +999,8 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                     std_output_state = owner.standard_output_states.get_state_dict(output_state[NAME])
                     if std_output_state is not None:
                         # If any params were specified for the OutputState, add them to std_output_state
-                        if PARAMS in output_state:
-                            if PARAMS in std_output_state:
-                                std_output_state[PARAMS].update(output_state[PARAMS])
-                            else:
-                                std_output_state[PARAMS] = output_state[PARAMS]
+                        if PARAMS in output_state and output_state[PARAMS] is not None:
+                            std_output_state.update(output_state[PARAMS])
                         output_states[i] = std_output_state
 
                 if output_state[PARAMS]:

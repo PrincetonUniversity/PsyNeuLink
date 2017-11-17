@@ -150,6 +150,7 @@ Class Reference
 import logging
 import numbers
 import warnings
+from collections import Iterable
 
 import numpy as np
 import typecheck as tc
@@ -456,8 +457,8 @@ class KWTA(RecurrentTransferMechanism):
                  average_based=False,
                  inhibition_only=True,
                  clip=None,
-                 input_states: tc.optional(tc.any(list, dict)) = None,
-                 output_states: tc.optional(tc.any(list, dict))=None,
+                 input_states:tc.optional(tc.any(list, dict)) = None,
+                 output_states:tc.optional(tc.any(list, dict))=None,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,

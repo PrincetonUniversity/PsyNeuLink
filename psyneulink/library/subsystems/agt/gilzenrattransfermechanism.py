@@ -366,9 +366,9 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
                  clip=None,
                  input_states: tc.optional(tc.any(list, dict)) = None,
                  enable_learning:bool=False,
-                 learning_rate: tc.optional(tc.any(parameter_spec, bool))=None,
-                 learning_function: tc.any(is_function_type) = Hebbian,
-                 output_states: tc.optional(tc.any(list, dict))=None,
+                 learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
+                 learning_function:tc.any(is_function_type) = Hebbian,
+                 output_states:tc.optional(tc.any(str, list, dict))=RESULT,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
@@ -376,7 +376,11 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
                  context=componentType+INITIALIZING):
         """Instantiate GilzenratTransferMechanism
         """
-        if output_states is None:
+
+        # Default output_states is specified in constructor as a string rather than a list
+        # to avoid "gotcha" associated with mutable default arguments
+        # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
+        if output_states is None or output_states is RESULT:
             output_states = [RESULT]
 
         if isinstance(hetero, (list, np.matrix)):
