@@ -339,13 +339,13 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, InitStatus
-from psyneulink.components.functions.function import Linear, LinearCombination, is_function_type
+from psyneulink.components.functions.function import Linear, is_function_type
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
 from psyneulink.globals.keywords import \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, INPUT_STATE, INPUT_STATES, RECEIVER, GATING_SIGNAL, \
-    COMMAND_LINE, STATE, OUTPUT_STATE, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, DEFERRED_INITIALIZATION, \
-    CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE, REFERENCE_VALUE
+    COMMAND_LINE, STATE, OUTPUT_STATE, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, \
+    CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, VARIANCE, ALL, MECHANISM_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import UtilitiesError, iscompatible, type_match
@@ -385,7 +385,10 @@ standard_output_states = [{NAME: RESULT},
                           {NAME:STANDARD_DEVIATION,
                            CALCULATE:lambda x: np.std(x)},
                           {NAME:VARIANCE,
-                           CALCULATE:lambda x: np.var(x)}]
+                           CALCULATE:lambda x: np.var(x)},
+                          {NAME: MECHANISM_VALUE,
+                           INDEX: ALL}
+                          ]
 
 class OutputStateError(Exception):
     def __init__(self, error_value):
@@ -397,18 +400,18 @@ class OutputStateError(Exception):
 
 class OutputState(State_Base):
     """
-    OutputState(                               \
-    owner,                                     \
-    reference_value,                           \
-    variable=None,                             \
-    size=None,                                 \
-    function=LinearCombination(operation=SUM), \
-    index=PRIMARY,                \
-    calculate=Linear,                          \
-    projections=None,                          \
-    params=None,                               \
-    name=None,                                 \
-    prefs=None,                                \
+    OutputState(          \
+    owner,                \
+    reference_value,      \
+    variable=None,        \
+    size=None,            \
+    function=Linear(),    \
+    index=PRIMARY,        \
+    calculate=Linear,     \
+    projections=None,     \
+    params=None,          \
+    name=None,            \
+    prefs=None,           \
     context=None)
 
     Subclass of `State <State>` that calculates and represents an output of a `Mechanism <Mechanism>`.
@@ -425,11 +428,11 @@ class OutputState(State_Base):
         Class attributes:
             + componentType (str) = OUTPUT_STATES
             + paramClassDefaults (dict)
-                + FUNCTION (LinearCombination)
+                + FUNCTION (Linear)
                 + FUNCTION_PARAMS   (Operation.PRODUCT)
 
         Class methods:
-            function (executes function specified in params[FUNCTION];  default: LinearCombination with Operation.SUM)
+            function (executes function specified in params[FUNCTION];  default: Linear)
 
         StateRegistry
         -------------
@@ -463,7 +466,7 @@ class OutputState(State_Base):
             T1 = TransferMechanism(size = [3, 2])
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
-    function : Function, function, or method : default LinearCombination(operation=SUM)
+    function : Function, function, or method : default Linear
         specifies the function used to transform the item of the owner Mechanism's `value <Mechanism_Base.value>`
         designated by the OutputState's `index <OutputState.index>` attribute, under the possible influence of
         `GatingProjections <GatingProjection>` received by the OutputState.
@@ -593,7 +596,7 @@ class OutputState(State_Base):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 function=LinearCombination(operation=SUM),
+                 function=Linear(),
                  index=PRIMARY,
                  calculate:is_function_type=Linear,
                  projections=None,
@@ -691,7 +694,7 @@ class OutputState(State_Base):
             #    - can't yet determine relationship to default_value
             #    - can't yet evaluate calculate function (below)
             # so just return
-            if target_set[INDEX] is SEQUENTIAL:
+            if target_set[INDEX] in {ALL, SEQUENTIAL}:
                 return
             else:
                 try:
@@ -786,13 +789,24 @@ class OutputState(State_Base):
         """Call self.function with owner's value as variable
         """
 
-        # IMPLEMENTATION NOTE: OutputStates don't current receive TransmissiveProjections,
+        # Most common case is OutputState has index, so assume that for efficiency
+        try:
+            # Get indexed item of owner's value
+            owner_val = self.owner.value[self.index]
+        except IndexError:
+            # Index is ALL, so use owner's entire value
+            if self.index is ALL:
+                owner_val = self.owner.value
+            else:
+                raise IndexError
+
+        # IMPLEMENTATION NOTE: OutputStates don't currently receive PathwayProjections,
         #                      so there is no need to use their value (as do InputStates)
-        value = self.function(variable=self.owner.value[self.index],
+        value = self.function(variable=owner_val,
                                 params=function_params,
                                 context=context)
 
-        return type_match(self.calculate(self.owner.value[self.index]), type(value))
+        return type_match(self.calculate(owner_val), type(value))
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
@@ -1064,22 +1078,23 @@ class StandardOutputStates():
         the Component to which this OutputState belongs
 
     output_state_dicts : list of dicts
-        list of dictionaries specifying OutputStates for the Component specified
-        by `owner`
+        list of dictionaries specifying OutputStates for the Component specified by `owner`
 
-    indices : PRIMARY_OUTPUT_STATES, SEQUENTIAL, list of ints
-        specifies how to assign the INDEX entry for each dict listed in
-        `output_state_dicts`
+    indices : PRIMARY, SEQUENTIAL, list of ints
+        specifies how to assign the INDEX entry for each dict listed in `output_state_dicts`;
 
         The effects of each value of indices are as follows:
 
-            * PRIMARY_OUTPUT_STATES -- assigns the INDEX for the owner's primary OutputState to all indices
+            * *PRIMARY* -- assigns the INDEX for the owner's primary OutputState to all output_states
+              for which an INDEX entry is not already specified;
 
-            * SEQUENTIAL -- assigns sequentially incremented int to each INDEX entry
+            * *SEQUENTIAL* -- assigns sequentially incremented int to each INDEX entry,
+              ignoring any INDEX entries previously specified for individual OutputStates;
 
-            * list of ints -- assigns each int to the corresponding entry in `output_state_dicts`
+            * list of ints -- assigns each int to the corresponding entry in `output_state_dicts`;
+              ignoring any INDEX entries previously specified for individual OutputStates;
 
-            * None -- assigns `None` to each INDEX entry
+            * None -- assigns `None` to INDEX entries for all OutputStates for which it is not already specified.
 
     Attributes
     ----------
@@ -1140,14 +1155,19 @@ class StandardOutputStates():
             for index, state_dict in enumerate(self.data):
                 state_dict[INDEX] = index
 
-        # Assign PRIMARY as INDEX for all OutputStates in output_state_dicts
+        # Assign PRIMARY as INDEX for all OutputStates in output_state_dicts that don't already have an index specified
         elif indices is PRIMARY:
             for state_dict in self.data:
+                if INDEX in state_dict:
+                    continue
                 state_dict[INDEX] = PRIMARY
 
         # No indices specification, so assign None to INDEX for all OutputStates in output_state_dicts
+        #  that don't already have an index specified
         else:
             for state_dict in self.data:
+                if INDEX in state_dict:
+                    continue
                 state_dict[INDEX] = None
 
 

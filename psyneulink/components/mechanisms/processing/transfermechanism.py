@@ -26,26 +26,26 @@
 Overview
 --------
 
-A TransferMechanism transforms its input using a simple mathematical function.  The input can be a single scalar value
-or an an array of scalars (list or 1d np.array).  The function used to carry out the transformation can be selected
-from a standard set of `Functions <Function>` (`Linear`, `Exponential` or `Logistic`) or specified using a
-user-defined custom function.  The transformation can be carried out instantaneously or in a time-averaged manner,
-as described in `Transfer_Execution`.
+A TransferMechanism transforms its input using a simple mathematical function, that maintains the form (dimensionality)
+of its input.  The input can be a single scalar value, a multidimensional array (list or numpy array), or several
+independent ones.  The function used to carry out the transformation can be selected from a standard set of `Functions
+<Function>` (such as `Linear`, `Exponential`, `Logistic`, and `Softmax`) or specified using a user-defined custom
+function.  The transformation can be carried out instantaneously or in "time averaged" (integrated) manner, as described
+in `Transfer_Execution`.
 
 .. _Transfer_Creation:
 
 Creating a TransferMechanism
 -----------------------------
 
-A TransferMechanism can be created directly by calling its constructor, or using the `mechanism` command and specifying
-*TRANSFER_MECHANISM* as its **mech_spec** argument.  Its `function <TransferMechanism.function>` is specified in the
-**function** argument, which can be the name of a `Function <Function>` class (first example below), or a call to its
-constructor which can include arguments specifying the function's parameters (second example)::
+A TransferMechanism is created by calling its constructor.  Its `function <TransferMechanism.function>` is specified in
+the **function** argument, which can be the name of a `Function <Function>` class (first example below), or a call to
+a Function constructor that can include arguments specifying the Function's parameters (second example)::
 
     my_linear_transfer_mechanism = TransferMechanism(function=Linear)
     my_logistic_transfer_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4)
 
-In addition to function-specific parameters, `noise <TransferMechanism.noise>` and `time_constant
+In addition to Function-specific parameters, `noise <TransferMechanism.noise>` and `time_constant
 <TransferMechanism.time_constant>` parameters can be specified for the Mechanism (see `Transfer_Execution`).
 
 
@@ -54,15 +54,54 @@ In addition to function-specific parameters, `noise <TransferMechanism.noise>` a
 Structure
 ---------
 
-A TransferMechanism has a single `InputState`, the `value <InputState.InputState.value>` of which is
-used as the `variable <TransferMechanism.variable>` for its `function <TransferMechanism.function>`. The
-`function <TransferMechanism.function>` can be selected from one of three standard PsyNeuLink `Functions <Function>`:
-`Linear`, `Logistic` or `Exponential`; or a custom function can be specified, so long as it returns a numeric value or
-list or np.ndarray of numeric values.  The result of the `function <TransferMechanism.function>` is assigned as the
-only item of the TransferMechanism's `value <TransferMechanism.value>` and as the `value <OutputState.value>` of its
-`primary OutputState <OutputState_Primary>` (see `below <Transfer_OutputState>`).  Additional OutputStates can be
-assigned using the TransferMechanism's `Standard OutputStates <TransferMechanism_Standard_OutputStates>`
-(see `OutputState_Standard`) or by creating `custom OutputStates <OutputState_Customization>`.
+.. _TransferMechanism_InputStates:
+
+InputStates
+~~~~~~~~~~~
+
+By default, a TransferMechanism has a single `InputState`;  however, more than one can be specified
+using the **default_variable** or **size** arguments of its constructor (see `Mechanism`).  The `value
+<InputState.value>` of each InputState is used as a separate item of the Mechanism's `variable
+<TransferMechanism.variable>`, and transformed independently by its `function <TransferMechanism.function>`.
+Like any InputStates, the `value <OutputState.value>` of any or all of the TransferMechanism's InputStates can be
+modulated by one or more `GatingSignals <GatingSignal_Modulation>` prior to transformation by its `function
+<TransferMechanism.function>`.
+
+.. _TransferMechanism_Function:
+
+Function
+~~~~~~~~
+
+*Function*.  The `function <TransferMechanism.function>` can be selected from one of four standard PsyNeuLink
+`Functions <Function>`: `Linear`, `Logistic`, `Exponential` or `SoftMax`; or a custom function can be specified,
+so long as it returns a numeric value or a list or numpy array of numeric values.  The result of the `function
+<TransferMechanism.function>` applied to the `value <InputState.value>` of each InputState is to an item of an
+array as the TransferMechanism's `value <TransferMechanism.value>`, and as the `value <OutputState.value>` of each
+of its `OutputStates <OutputState>` (one corresponding to each InputState).
+
+.. _TransferMechanism_OutputStates:
+
+OutputStates
+~~~~~~~~~~~~
+
+By default, a TransferMechanism generates one `OutputState` for each of its `InputStates`.  The first (and `primary
+<OuputState_Primary>`) OutputState is named `RESULT`; subsequent ones use that as the base name, suffixed with an
+incrementing integer starting at '-1' for each additional OutputState (e.g., 'RESULT-1', 'RESULT-2', etc.; see
+`Naming`).  The `value <OutputState.value>` of each OutputState is assigned the result of the Mechanism's `function
+<TransferMechanism.function>` applied to the `value <InputState.value>` of the corresponding InputState. Additional
+OutputStates can be assigned using the TransferMechanism's `Standard OutputStates
+<TransferMechanism_Standard_OutputStates>` (see `OutputState_Standard`) or by creating `custom OutputStates
+<OutputState_Customization>` (but see note below).  Like any OutputStates, the `value <OutputState.value>` of any or
+all of these can be modulated by one or more `GatingSignals <GatingSignal_Modulation>`.
+
+    .. _TransferMechanism_OutputStates_Note:
+
+    .. note::
+       If any OutputStates are specified in the **output_states** argument of the TransferMechanism's constructor,
+       then, `as with any Mechanism <Mechanism_Default_State_Suppression_Note>`, its default OutputStates are not
+       automatically generated.  Therefore, an OutputState with the appropriate `index <OutputState.index>` must be
+       explicitly specified for each and every item of the Mechanism's `value <TransferMechanism.value>` (corresponding
+       to each InputState) for which an OutputState is needed.
 
 .. _Transfer_Execution:
 
@@ -95,14 +134,10 @@ the following parameters (in addition to any specified for the `function <Transf
       integration (a higher value specifies a faster rate); if `integrator_mode <TransferMechanism.integrator_mode>` is
       False, `time_constant <TransferMechanism.time_constant>` is ignored and time-averaging does not occur.
 
-
-
-.. _Transfer_OutputState:
-
-After each execution of the Mechanism the result of `function <TransferMechanism.function>` is assigned as the
-only item of the Mechanism's `value <TransferMechanism.value>`, the `value <OutputState.value>` of its
-`primary OutputState <OutputState_Primary>`, (same as the output_states[RESULT] OutputState if it has been assigned),
-and to the 1st item of the Mechanism's `output_values <TransferMechanism.output_values>` attribute;
+After each execution of the Mechanism the result of `function <TransferMechanism.function>` applied to each
+`InputState` is assigned as an item of the Mechanism's `value <TransferMechanism.value>`, and the `value
+<OutputState.value>` of each of its `OutputStates <OutputState>`, and to the 1st item of the Mechanism's
+`output_values <TransferMechanism.output_values>` attribute.
 
 .. _Transfer_Class_Reference:
 
@@ -178,12 +213,24 @@ class TRANSFER_OUTPUT():
     *VARIANCE* : float
       variance of `output_state.value`.
 
+    COMMENT:
+    *ALL* : list
+      a list of all of the items of the TransferMechanism's `value <TransferMechanism.value>` (that is, of the result
+      of its `function <TransferMechanism.function>` applied to the `value <InputState>` of each of its InputStates).
+
+    *COMBINE* : scalar or numpy array
+      linear combination of the `value <TransferMechanism.value>` of all items of the TransferMechanism's `value
+      <TransferMechanism.value>` (requires that they all have the same dimensionality).
+    COMMENT
+
     """
+
     RESULT=RESULT
     MEAN=MEAN
     MEDIAN=MEDIAN
     STANDARD_DEVIATION=STANDARD_DEVIATION
     VARIANCE=VARIANCE
+
 # THE FOLLOWING WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
 # for item in [item[NAME] for item in DDM_standard_output_states]:
 #     setattr(DDM_OUTPUT.__class__, item, item)
@@ -201,12 +248,14 @@ class TransferMechanism(ProcessingMechanism_Base):
     TransferMechanism(           \
     default_variable=None,       \
     size=None,                   \
+    input_states=None,           \
     function=Linear,             \
     initial_value=None,          \
     noise=0.0,                   \
     time_constant=1.0,           \
     integrator_mode=False,       \
     clip=(float:min, float:max), \
+    output_states=RESULT         \
     params=None,                 \
     name=None,                   \
     prefs=None)
@@ -254,6 +303,13 @@ class TransferMechanism(ProcessingMechanism_Base):
             T1 = TransferMechanism(size = [3, 2])
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
+    input_states : str, list or np.ndarray
+        specifies the InputStates for the TransferMechanism; by default, a single InputState is created using the
+        value of default_variable as its `variable <InputState.variable>`;  if more than one is specified, the number
+        and, if specified, their values must be compatible with any specifications in **default_variable** or
+        **size** (see `Mechanism_InputStates`);  see `input_states <TransferMechanism.output_states>` for additional
+        details.
+
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
         or a custom function.
@@ -282,6 +338,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         any element of the result that exceeds the specified minimum or maximum value is set to the value of
         `clip <TransferMechanism.clip>` that it exceeds.
 
+    output_states : str, list or np.ndarray : default RESULT
+        specifies the OutputStates for the TransferMechanism; by default, one is created for each InputState
+        specified in **input_states**;  see `note <TransferMechanism_OutputStates_Note>`, and `output_states
+        <TransferMechanism.output_states>` for additional details).
+
     params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its `function <Mechanism_Base.function>`, and/or a custom function and its parameters.  Values
@@ -305,13 +366,17 @@ class TransferMechanism(ProcessingMechanism_Base):
     Attributes
     ----------
 
-    variable : value: default Transfer_DEFAULT_BIAS
+    variable : value
         the input to Mechanism's `function <TransferMechanism.function>`.
         COMMENT:
             :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
         COMMENT
 
-    function : Function :  default Linear
+    input_states : *ContentAddressableList[InputState]*
+        list of Mechanism's `OutputStates <OutputStates>`.  By default there is one OutputState for each InputState,
+        with the base name `RESULT` (see `TransferMechanism_InputStates` for additional details).
+
+    function : Function
         the Function used to transform the input.
 
     COMMENT:
@@ -324,18 +389,18 @@ class TransferMechanism(ProcessingMechanism_Base):
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
 
-    noise : float or function : default 0.0
+    noise : float or function
         a stochastically-sampled value added to the output of the `function <TransferMechanism.function>`:
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    time_constant : float : default 1.0
+    time_constant : float
         the time constant for exponential time averaging of input when the Mechanism is executed with `integrator_mode`
         set to True::
 
           result = (time_constant * current input) + ( (1-time_constant) * result on previous time_step)
 
-    integrator_mode : boolean : default False
+    integrator_mode : booleane
         when set to True, the Mechanism time averages its input according to an exponentially weighted moving average
         (see `time_constant <TransferMechanisms.time_constant>`).
 
@@ -355,12 +420,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         the change in `value <TransferMechanism.value>` from the previous execution of the Mechanism
         (i.e., `value <TransferMechanism.value>` - `previous_value <TransferMechanism.previous_value>`).
 
-    output_states : *ContentAddressableList[OutputState]* : default [`RESULT <TRANSFER_MECHANISM_RESULT>`]
-        list of Mechanism's `OutputStates <OutputStates>`.  By default there is a single OutputState,
-        `RESULT <TRANSFER_MECHANISM_RESULT>`, that contains the result of a call to the Mechanism's
-        `function <TransferMechanism.function>`;  additional `standard <TransferMechanism_Standard_OutputStates>`
-        and/or custom OutputStates may be included, based on the specifications made in the **output_states** argument
-        of the Mechanism's constructor.
+    output_states : *ContentAddressableList[OutputState]*
+        list of Mechanism's `OutputStates <OutputStates>`; by default there is one OutputState for each InputState,
+        with the base name `RESULT` (see `TransferMechanism_OutputStates` for additional details).
 
     output_values : List[array(float64)]
         each item is the `value <OutputState.value>` of the corresponding OutputState in `output_states
@@ -442,7 +504,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
-                                                               indices=PRIMARY)
+                                                               indices=PRIMARY
+                                                               )
 
         super(TransferMechanism, self).__init__(
             variable=default_variable,
