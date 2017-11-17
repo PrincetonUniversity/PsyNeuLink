@@ -737,7 +737,6 @@ class DDM(ProcessingMechanism_Base):
             # number of seconds to wait before next point is plotted
             time.sleep(.1)
 
-    # MODIFIED 11/21/16 NEW:
     def _validate_variable(self, variable, context=None):
         """Ensures that input to DDM is a single value.
         Remove when MULTIPROCESS DDM is implemented.
@@ -842,11 +841,6 @@ class DDM(ProcessingMechanism_Base):
             - mean RT (float)
             - correct mean RT (float) - Navarro and Fuss only
             - correct mean ER (float) - Navarro and Fuss only
-        :param self:
-        :param variable (float)
-        :param params: (dict)
-        :param context: (str)
-        :rtype self.outputState.value: (number)
         """
 
         # PLACEHOLDER for a time_step_size parameter when time_step_mode/Scheduling is implemented:
