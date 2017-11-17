@@ -577,15 +577,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return param
 
-    def _instantiate_output_states(self, context=None):
-        # If user specified more than one item for variable, but did not specify any custom OutputStates
-        # then assign one OutputState (with the default name, indexed by the number of them) per item of variable
-        if len(self.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULT:
-            self.output_states = []
-            for i, item in enumerate(self.variable):
-                self.output_states.append({NAME: RESULT, INDEX: i})
-        super()._instantiate_output_states(context=context)
-                
     def _instantiate_parameter_states(self, context=None):
 
         from psyneulink.components.functions.function import Logistic
@@ -603,6 +594,15 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         if self.initial_value is None:
             self.initial_value = self.instance_defaults.variable
+
+    def _instantiate_output_states(self, context=None):
+        # If user specified more than one item for variable, but did not specify any custom OutputStates
+        # then assign one OutputState (with the default name, indexed by the number of them) per item of variable
+        if len(self.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULT:
+            self.output_states = []
+            for i, item in enumerate(self.variable):
+                self.output_states.append({NAME: RESULT, INDEX: i})
+        super()._instantiate_output_states(context=context)
 
     def _execute(self,
                  variable=None,

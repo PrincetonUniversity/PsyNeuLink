@@ -947,6 +947,18 @@ class ScratchPadError(Exception):
 # endregion
 
 #region TEST Naming
+
+T = pnl.TransferMechanism(input_states=['a','b','c'])
+print(T.variable)
+print(T.execute([[1],[2],[3]]))
+print(T.output_states)
+print(T.output_values)
+print(T.value)
+
+# endregion
+
+
+#region TEST Naming
 # print ('TEST Naming')
 from psyneulink.components.mechanisms.mechanism import MechanismRegistry
 
