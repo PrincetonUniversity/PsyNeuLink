@@ -769,22 +769,26 @@ class TransferMechanism(ProcessingMechanism_Base):
                 current_input = variable
 
         if isinstance(self.function_object, TransferFunction):
+
             outputs = self.function(variable=current_input, params= runtime_params)
-            if clip is not None:
-                minCapIndices = np.where(outputs < clip[0])
-                maxCapIndices = np.where(outputs > clip[1])
-                outputs[minCapIndices] = np.min(clip)
-                outputs[maxCapIndices] = np.max(clip)
+            # if clip is not None:
+            #     print(clip)
+            #     minCapIndices = np.where(outputs < clip[0])
+            #     print(minCapIndices)
+            #     maxCapIndices = np.where(outputs > clip[1])
+            #     print(maxCapIndices)
+            #     outputs[minCapIndices] = np.min(clip)
+            #     outputs[maxCapIndices] = np.max(clip)
         else:
             # Apply TransferMechanism's function to each input state separately
             outputs = []
             for elem in current_input:
                 output_item = self.function(variable=elem, params=runtime_params)
-                if clip is not None:
-                    minCapIndices = np.where(output_item < clip[0])
-                    maxCapIndices = np.where(output_item > clip[1])
-                    output_item[minCapIndices] = np.min(clip)
-                    output_item[maxCapIndices] = np.max(clip)
+                # if clip is not None:
+                #     minCapIndices = np.where(output_item < clip[0])
+                #     maxCapIndices = np.where(output_item > clip[1])
+                #     output_item[minCapIndices] = np.min(clip)
+                #     output_item[maxCapIndices] = np.max(clip)
                 outputs.append(output_item)
 
         # outputs = []
