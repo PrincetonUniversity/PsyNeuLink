@@ -204,12 +204,24 @@ class TRANSFER_OUTPUT():
     *VARIANCE* : float
       variance of `output_state.value`.
 
+    COMMENT:
+    *CONCATENATE* : list
+      a list of all of the items of the TransferMechanism's `value <TransferMechanism.value>` (that is, of the result
+      of its `function <TransferMechanism.function>` applied to the `value <InputState>` of each of its InputStates).
+
+    *COMBINE* : scalar or numpy array
+      linear combination of the `value <TransferMechanism.value>` of all items of the TransferMechanism's `value
+      <TransferMechanism.value>` (requires that they all have the same dimensionality).
+    COMMENT
+
     """
+
     RESULT=RESULT
     MEAN=MEAN
     MEDIAN=MEDIAN
     STANDARD_DEVIATION=STANDARD_DEVIATION
     VARIANCE=VARIANCE
+
 # THE FOLLOWING WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
 # for item in [item[NAME] for item in DDM_standard_output_states]:
 #     setattr(DDM_OUTPUT.__class__, item, item)

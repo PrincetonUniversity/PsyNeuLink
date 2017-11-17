@@ -377,7 +377,8 @@ class OUTPUTS():
     STANDARD_DEVIATION=STANDARD_DEVIATION
     VARIANCE=VARIANCE
 
-standard_output_states = [{NAME: RESULT},
+standard_output_states = [
+                          {NAME: RESULT},
                           {NAME:MEAN,
                            CALCULATE:lambda x: np.mean(x)},
                           {NAME:MEDIAN,
@@ -385,7 +386,8 @@ standard_output_states = [{NAME: RESULT},
                           {NAME:STANDARD_DEVIATION,
                            CALCULATE:lambda x: np.std(x)},
                           {NAME:VARIANCE,
-                           CALCULATE:lambda x: np.var(x)}]
+                           CALCULATE:lambda x: np.var(x)}
+                          ]
 
 class OutputStateError(Exception):
     def __init__(self, error_value):
