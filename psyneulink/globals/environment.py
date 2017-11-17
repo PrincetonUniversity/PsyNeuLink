@@ -250,7 +250,7 @@ Shorthand - drop the outer list on **Mechanism a**'s input specification because
 +--------------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
 | Trial #                  |1                  |2                  |3                  |4                  |5                  |
 +--------------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
-| Input to **Mechanism a** ||[[1.0], [2.0]]    ||[[1.0], [2.0]]    ||[[1.0], [2.0]]    ||[[1.0], [2.0]]    ||[[1.0], [2.0]]    |
+| Input to **Mechanism a** | [[1.0], [2.0]]    | [[1.0], [2.0]]    | [[1.0], [2.0]]    | [[1.0], [2.0]]    | [[1.0], [2.0]]    |
 +--------------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
 
 Complete input specification:
@@ -281,6 +281,43 @@ Shorthand - drop the outer list on **Mechanism a**'s input specification and use
         s.run(inputs=input_dictionary,
               num_trials=5)
 ..
+
+* **Case 4: There is only one origin mechanism **
+
++--------------------------+-------------------+-------------------+
+| Trial #                  |1                  |2                  |
++--------------------------+-------------------+-------------------+
+| Input to **Mechanism a** | [1.0, 2.0, 3.0]   |  [1.0, 2.0, 3.0]  |
++--------------------------+-------------------+-------------------+
+
+Complete input specification:
+
+::
+
+        import psyneulink as pnl
+
+        a = pnl.TransferMechanism(name='a',
+                                  default_variable=[[1.0, 2.0, 3.0]])
+        b = pnl.TransferMechanism(name='b')
+
+        p1 = pnl.Process(pathway=[a, b])
+
+        s = pnl.System(processes=[p1])
+
+        input_dictionary = input_dictionary = {a: [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]}
+
+        s.run(inputs=input_dictionary)
+..
+
+Shorthand - drop the outer list on **Mechanism a**'s input specification and use `num_trials` to repeat the input value
+
+::
+
+        input_list = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
+
+        s.run(inputs=input_list)
+..
+
 
 .. _Run_Initial_Values:
 
@@ -508,7 +545,23 @@ def run(object,
         or of the OutputStates of the `TERMINAL` Mechanisms for the Process or System run.
     """
 
+    # small version of 'sequence' format in the once case where it was still working (single origin mechanism)
+    if isinstance(inputs, (list, np.ndarray)):
+        if len(object.origin_mechanisms) == 1:
+            inputs = {object.origin_mechanisms[0]: inputs}
+        else:
+            raise RunError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
+                           "mechanisms.".format(object.name, len(object.origin_mechanisms)))
+    elif not isinstance(inputs, dict):
+        if len(object.origin_mechanisms) == 1:
+            raise RunError("Inputs to {} must be specified in a list or in a dictionary with the origin mechanism({}) "
+                           "as its only key".format(object.name, object.origin_mechanisms[0].name))
+        else:
+            raise RunError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
+                           "mechanisms.".format(object.name, len(object.origin_mechanisms)))
+
     inputs, num_inputs_sets = _adjust_stimulus_dict(object, inputs)
+
     num_trials = num_trials or num_inputs_sets  # num_trials may be provided by user, otherwise = # of input sets
 
     if targets:
@@ -603,7 +656,6 @@ def run(object,
                 elif object_type == SYSTEM:
                     object.current_targets = targets[input_num]
             # MODIFIED 3/16/17 END
-
             if RUN in context and not EVC_SIMULATION in context:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
                 object.execution_status = ExecutionStatus.EXECUTING
@@ -645,14 +697,15 @@ def run(object,
 @tc.typecheck
 
 def _input_matches_variable(input, var):
-    if np.shape(input) == np.shape(var):
-        return True
-    # If heterogeneous:
-    elif np.shape(var) == 1 and isinstance(np.shape[0], (list, np.ndarray)):
+    # input states are uniform
+    if np.shape(np.atleast_2d(input)) == np.shape(var):
+        return "homogeneous"
+    # input states have different lengths
+    elif len(np.shape(var)) == 1 and isinstance(var[0], (list, np.ndarray)):
         for i in range(len(input)):
             if len(input[i]) != len(var[i]):
                 return False
-            return True
+        return "heterogeneous"
     return False
 
 def _adjust_stimulus_dict(obj, stimuli):
@@ -684,11 +737,15 @@ def _adjust_stimulus_dict(obj, stimuli):
 
     for mech, stim_list in stimuli.items():
 
+        check_spec_type = _input_matches_variable(stim_list, mech.instance_defaults.variable)
         # If a mechanism provided a single input, wrap it in one more list in order to represent trials
-        if _input_matches_variable(np.atleast_2d(stim_list), mech.instance_defaults.variable):
-            # np.atleast_2d will catch any single-input states specified without an outer list
-            # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-            adjusted_stimuli[mech] = [np.atleast_2d(stim_list)]
+        if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
+            if check_spec_type == "homogeneous":
+                # np.atleast_2d will catch any single-input states specified without an outer list
+                # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
+                adjusted_stimuli[mech] = [np.atleast_2d(stim_list)]
+            else:
+                adjusted_stimuli[mech] = [stim_list]
 
             # verify that all mechanisms have provided the same number of inputs
             if num_input_sets == -1:
@@ -700,9 +757,9 @@ def _adjust_stimulus_dict(obj, stimuli):
         else:
             adjusted_stimuli[mech] = []
             for stim in stimuli[mech]:
-
+                check_spec_type = _input_matches_variable(stim, mech.instance_defaults.variable)
                 # loop over each input to verify that it matches variable
-                if not iscompatible(np.atleast_2d(stim), mech.instance_defaults.variable):
+                if check_spec_type == False:
                     err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
                         format(stim, mech.name, mech.instance_defaults.variable)
                     # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
@@ -711,10 +768,13 @@ def _adjust_stimulus_dict(obj, stimuli):
                         err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
                                             " to represent the outside stimulus for the inhibition input state, and " \
                                             "for systems, put your inputs"
-
-                # np.atleast_2d will catch any single-input states specified without an outer list
-                # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-                adjusted_stimuli[mech].append(np.atleast_2d(stim))
+                    raise RunError(err_msg)
+                elif check_spec_type == "homogeneous":
+                    # np.atleast_2d will catch any single-input states specified without an outer list
+                    # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
+                    adjusted_stimuli[mech].append(np.atleast_2d(stim))
+                else:
+                    adjusted_stimuli[mech].append(stim)
 
             # verify that all mechanisms have provided the same number of inputs
             if num_input_sets == -1:

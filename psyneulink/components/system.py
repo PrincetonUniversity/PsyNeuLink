@@ -1561,7 +1561,7 @@ class System(System_Base):
                 # MODIFIED 6/27/17 END
                 # MODIFIED 6/27/17 END
                 stimulus_input_state = SystemInputState(owner=self,
-                                                            variable=origin_mech.input_state.instance_defaults.variable,
+                                                            variable=origin_mech.input_states[j].instance_defaults.variable,
                                                             prefs=self.prefs,
                                                             name="System Input State to Mechansism {}, Input State {}".format(origin_mech.name,j))
                 self.stimulusInputStates.append(stimulus_input_state)

@@ -140,6 +140,7 @@ class TestInputSpecsDocumentationExamples:
         for mech in input_dictionary:
             assert np.allclose(check_inputs_dictionary[mech], input_dictionary[mech])
 
+        
     def test_example_2(self):
         # "If num_trials is in use, run will iterate over the inputs until num_trials is reached. For example, if five
         # inputs are provided for each ORIGIN mechanism, and num_trials = 7, the system will execute seven times. The
@@ -350,20 +351,112 @@ class TestInputSpecsDocumentationExamples:
 
         assert np.allclose(check_inputs, [[[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]]])
 
-# class TestInputSpecsHeterogeneousVariables:
-#
-#     def test_heterogeneous_variables(self):
-#         a = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
-#
-#         p1 = Process(pathway=[a])
-#
-#         s = System(
-#             processes=[p1]
-#         )
-#
-#         inputs = {a: [[[1.0], [2.0, 2.0]]]}
-#
-#         s.run(inputs)
+    def test_example_10(self):
+        # There is only one origin mechanism in the system
+        # COMPLETE SPECIFICATION
+
+        import psyneulink as pnl
+
+        a = pnl.TransferMechanism(name='a',
+                                  default_variable=[[1.0, 2.0, 3.0]])
+        b = pnl.TransferMechanism(name='b')
+
+        p1 = pnl.Process(pathway=[a, b])
+
+        s = pnl.System(processes=[p1])
+
+        check_inputs = []
+
+        def store_inputs():
+            check_inputs.append(a.input_values)
+
+        input_dictionary = {a: [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]}
+
+        s.run(inputs=input_dictionary,
+              call_after_trial=store_inputs)
+
+        assert np.allclose(check_inputs, [[[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]])
+
+    def test_example_11(self):
+        # There is only one origin mechanism in the system
+        # SHORT CUT - specify inputs as a list instead of a dictionary
+
+        import psyneulink as pnl
+
+        a = pnl.TransferMechanism(name='a',
+                                  default_variable=[[1.0, 2.0, 3.0]])
+        b = pnl.TransferMechanism(name='b')
+
+        p1 = pnl.Process(pathway=[a, b])
+
+        s = pnl.System(processes=[p1])
+
+        check_inputs = []
+
+        def store_inputs():
+            check_inputs.append(a.input_values)
+
+        input_list = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
+
+        s.run(inputs=input_list,
+              call_after_trial=store_inputs)
+
+        assert np.allclose(check_inputs, [[[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]])
+
+    def test_example_12(self):
+        # run process
+
+        import psyneulink as pnl
+
+        a = pnl.TransferMechanism(name='a',
+                                  default_variable=[[1.0, 2.0, 3.0]])
+        b = pnl.TransferMechanism(name='b')
+
+        p1 = pnl.Process(pathway=[a, b])
+
+        check_inputs = []
+
+        def store_inputs():
+            check_inputs.append(a.input_values)
+
+        input_dictionary = [1.0, 2.0, 3.0]
+
+        p1.run(inputs=input_dictionary,
+              call_after_trial=store_inputs)
+
+        assert np.allclose(check_inputs, [[[1.0, 2.0, 3.0]]])
+
+        p1.execute(input_dictionary)
+
+class TestInputSpecsHeterogeneousVariables:
+
+    def test_heterogeneous_variables_drop_outer_list(self):
+        # from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+        a = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
+
+        p1 = Process(pathway=[a])
+
+        s = System(
+            processes=[p1]
+        )
+
+        inputs = {a: [[1.0], [2.0, 2.0]]}
+
+        s.run(inputs)
+
+    def test_heterogeneous_variables(self):
+        # from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+        a = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
+
+        p1 = Process(pathway=[a])
+
+        s = System(
+            processes=[p1]
+        )
+
+        inputs = {a: [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]}
+
+        s.run(inputs)
 class TestGraphAndInput:
 
     def test_branch(self):
