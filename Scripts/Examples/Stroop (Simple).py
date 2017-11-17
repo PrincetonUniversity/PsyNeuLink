@@ -8,6 +8,9 @@ from psyneulink.globals.keywords import *
 from psyneulink.globals.environment import CentralClock
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 
+# NOTE:  This implements the two stimulus processing pathways (color naming and word reading)
+#        but not an "attention" mechanism that selects between them... stay tuned!
+
 process_prefs = {REPORT_OUTPUT_PREF: True,
                  VERBOSE_PREF: False}
 
