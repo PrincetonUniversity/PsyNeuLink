@@ -360,12 +360,11 @@ of a System can be displayed using the System's `show_graph` method with its **s
 Single layer learning
 ^^^^^^^^^^^^^^^^^^^^^
 
-This configuration occurs when only a single `MappingProjection` is `specified for learning
-<Projection_In_Context_Specification>`, or the LearningMechanism's `function <LearningMechanism.function>` only
-considers the error on its `output_source` (and not any additional sources of error) when calculating the
-`learning_signal <LearningMechanism.learning_signal>`  (e.g., for `Reinforcement` learning).  In this case, a single
-`ComparatorMechanism` and LearningMechanism are created (if they do not already exist);  in addition, the following
-MappingProjections are created:
+This configuration occurs when only a single `MappingProjection` is `specified for learning <Projection_Specification>`,
+or the LearningMechanism's `function <LearningMechanism.function>` only considers the error on its `output_source`
+(and not any additional sources of error) when calculating the `learning_signal <LearningMechanism.learning_signal>`
+(e.g., for `Reinforcement` learning).  In this case, a single `ComparatorMechanism` and LearningMechanism are created
+(if they do not already exist);  in addition, the following MappingProjections are created:
 
 * from an `OutputState` of the LearningMechanism's `output_source` to the ComparatorMechanism's *SAMPLE* `InputState
   <ComparatorMechanism_Structure>`.  By default, the `primary OutputState <OutputState_Primary>` of the
@@ -552,7 +551,7 @@ parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 def _is_learning_spec(spec):
     """Evaluate whether spec is a valid learning specification
 
-    Return `True` if spec is LEARNING or a valid projection_spec (see Projection._is_projection_spec)
+    Return `True` if spec is LEARNING or a valid projection_spec (see Projection_Base._is_projection_spec)
     Otherwise, return `False`
 
     """
@@ -686,21 +685,17 @@ class LearningMechanism(AdaptiveMechanism_Base):
         specifies the learning rate for the LearningMechanism (see `learning_rate <LearningMechanism.learning_rate>`
         for details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default LearningProjection-<index>
-        a string used for the name of the LearningProjection.
-        If not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <LearningMechanism.name>`
+        specifies the name of the LearningMechanism.
 
-    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
-        the `PreferenceSet` for the LearningProjection.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the LearningMechanism; see `prefs <LearningMechanism.prefs>` for details.
 
 
     Attributes
@@ -812,17 +807,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
         the default form of modulation used by the LearningMechanism's `LearningSignal(s)
         <LearningMechanism_LearningSignal>`, unless they are `individually specified <LearningSignal_Specification>`.
 
-    name : str : default LearningProjection-<index>
-        the name of the LearningMechanism.
-        Specified in the **name** argument of the constructor for the Projection;
-        if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the LearningMechanism; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for Projection.
-        Specified in the **prefs** argument of the constructor for the Projection;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the LearningMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 

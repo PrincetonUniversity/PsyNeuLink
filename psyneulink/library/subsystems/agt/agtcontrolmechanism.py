@@ -182,21 +182,17 @@ class AGTControlMechanism(ControlMechanism):
         specifies the parameters to be controlled by the AGTControlMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
         for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name : str : default AGTControlMechanism-<index>
-        a string used for the name of the Mechanism.
-        If not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <AGTControlMechanism.name>`
+        specifies the name of the AGTControlMechanism.
 
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for the Mechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the AGTControlMechanism; see `prefs <AGTControlMechanism.prefs>` for details.
 
 
     Attributes
@@ -253,6 +249,16 @@ class AGTControlMechanism(ControlMechanism):
     modulation : ModulationParam
         the default form of modulation used by the ControlMechanism's `ControlSignals <GatingSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
+        
+    name : str
+        the name of the AGTControlMechanism; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the AGTControlMechanism; if it is not specified in the **prefs** argument of the 
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        <LINK>` for details).
+
    """
 
     componentName = "AGTControlMechanism"

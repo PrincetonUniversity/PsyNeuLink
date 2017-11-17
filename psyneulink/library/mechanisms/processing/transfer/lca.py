@@ -74,6 +74,7 @@ Class Reference
 """
 
 import warnings
+from collections import Iterable
 
 import numpy as np
 import typecheck as tc
@@ -183,7 +184,7 @@ class LCA(RecurrentTransferMechanism):
         inhibition=1.0,                    \
         noise=0.0,                         \
         beta=1.0,                 \
-        range=(float:min, float:max),      \
+        clip=(float:min, float:max),      \
         params=None,                       \
         name=None,                         \
         prefs=None)
@@ -246,26 +247,22 @@ class LCA(RecurrentTransferMechanism):
 
         `result = (beta * current input) + (1-beta * result on previous time_step)`
 
-    range : Optional[Tuple[float, float]]
+    clip : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <TransferMechanism.function>`:
         the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
         any element of the result that exceeds the specified minimum or maximum value is set to the value of
-        `range <TransferMechanism.range>` that it exceeds.
+        `clip <TransferMechanism.clip>` that it exceeds.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default TransferMechanism-<index>
-        a string used for the name of the Mechanism.
-        If not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <LCA Mechanism.name>`
+        specifies the name of the LCA Mechanism.
 
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for Mechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the LCA Mechanism; see `prefs <LCA Mechanism.prefs>` for details.
 
     context : str : default ''componentType+INITIALIZNG''
            string used for contextualization of instantiation, hierarchical calls, executions, etc.
@@ -317,11 +314,11 @@ class LCA(RecurrentTransferMechanism):
 
           result = (beta * current input) + (1-beta * result on previous time_step)
 
-    range : Tuple[float, float]
+    clip : Tuple[float, float]
         determines the allowable range of the result: the first value specifies the minimum allowable value
         and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
-        is set to the value of `range <TransferMechanism.range>` it exceeds.  If `function <TransferMechanism.function>`
-        is `Logistic`, `range <TransferMechanism.range>` is set by default to (0,1).
+        is set to the value of `clip <TransferMechanism.clip>` it exceeds.  If `function <TransferMechanism.function>`
+        is `Logistic`, `clip <TransferMechanism.clip>` is set by default to (0,1).
 
     previous_input : 1d np.array of floats
         the value of the input on the previous execution of the Mechanism, including the value of
@@ -366,17 +363,14 @@ class LCA(RecurrentTransferMechanism):
         * **max_vs_next** of the result (:keyword:`value` of MAX_VS_NEXT OutputState);
         * **max_vs_avg** of the result (:keyword:`value` of MAX_VS_AVG OutputState).
 
-    name : str : default TransferMechanism-<index>
-        the name of the Mechanism.
-        Specified in the **name** argument of the constructor for the projection;
-        if not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the LCA Mechanism; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for Mechanism.
-        Specified in the **prefs** argument of the constructor for the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the LCA Mechanism; if it is not specified in the **prefs** argument of the 
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        <LINK>` for details).
 
     Returns
     -------
@@ -418,8 +412,8 @@ class LCA(RecurrentTransferMechanism):
                  beta=1.0,
                  integrator_mode=True,
                  time_step_size=0.1,
-                 range=None,
-                 output_states:tc.optional(tc.any(list, dict))=[RESULT],
+                 clip=None,
+                 output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
@@ -427,6 +421,12 @@ class LCA(RecurrentTransferMechanism):
                  context=componentType+INITIALIZING):
         """Instantiate LCA
         """
+
+        # Default output_states is specified in constructor as a string rather than a list
+        # to avoid "gotcha" associated with mutable default arguments
+        # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
+        if output_states is None or output_states is RESULT:
+            output_states = [RESULT]
 
         if matrix is not None:
             warnings.warn("Matrix arg for LCA is not used; matrix was assigned using inhibition arg")
@@ -456,7 +456,7 @@ class LCA(RecurrentTransferMechanism):
                          initial_value=initial_value,
                          decay=decay,
                          noise=noise,
-                         range=range,
+                         clip=clip,
                          output_states=output_states,
                          time_scale=time_scale,
                          params=params,
@@ -517,7 +517,7 @@ class LCA(RecurrentTransferMechanism):
         #region ASSIGN PARAMETER VALUES
 
         beta = self.beta
-        range = self.range
+        clip = self.clip
         noise = self.noise
         time_step_size = self.time_step_size
 
@@ -570,14 +570,14 @@ class LCA(RecurrentTransferMechanism):
         # Apply TransferMechanism function
         output_vector = self.function(variable=current_input, params=runtime_params)
         # # MODIFIED  OLD:
-        # if list(range):
+        # if list(clip):
         # MODIFIED  NEW:
-        if range is not None:
+        if clip is not None:
         # MODIFIED  END
-            minCapIndices = np.where(output_vector < range[0])
-            maxCapIndices = np.where(output_vector > range[1])
-            output_vector[minCapIndices] = np.min(range)
-            output_vector[maxCapIndices] = np.max(range)
+            minCapIndices = np.where(output_vector < clip[0])
+            maxCapIndices = np.where(output_vector > clip[1])
+            output_vector[minCapIndices] = np.min(clip)
+            output_vector[maxCapIndices] = np.max(clip)
         print("output_vector = ", output_vector)
         return output_vector
     @property

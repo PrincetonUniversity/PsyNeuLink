@@ -177,7 +177,7 @@ OutputState Customization
 The default OutputState uses the first (and usually only) item of the owner Mechanism's
 `value <Mechanism_Base.value>` as its value.  However, this can be modified in two ways, using the
 OutputState's `index <OutputState.index>` and `calculate <OutputState.calculate>` attributes (see
-`OutputState_Attributes` below). If the Mechanism's `function <Mechanism_Base.function>` returns a value with more
+`OutputState_Structure` below). If the Mechanism's `function <Mechanism_Base.function>` returns a value with more
 than one item (i.e., a list of lists, or a 2d np.array), then an OutputState can be assigned to any of those items by
 specifying its `index <OutputState.index>` attribute. An OutputState can also be configured to transform
 the value of the item, by specifying a function for its `calculate <OutputState.calculate>` attribute; the result
@@ -252,39 +252,8 @@ Structure
 Every OutputState is owned by a `Mechanism <Mechanism>`. It can send one or more
 `MappingProjections <MappingProjection>` to other Mechanisms.  If its owner is a `TERMINAL` Mechanism of a Process
 and/or System, then the OutputState will also be treated as the output of that `Process <Process_Input_And_Output>`
-and/or of a System.  The `MappingProjections <MappingProjection>` sent by an OutputState are listed in its
-`efferents <OutputState.efferents>` attribute.  An OutputState can also receive one or more `GatingProjections
-<GatingProjection>` and that regulate its value (see the descriptions of Modulation under
-`ModulatorySignals <ModulatorySignal_Modulation>` and `GatingSignals <GatingSignal_Modulation>` for additional details).
-The GatingProjections received by an OutputState are listed in its `mod_afferents <OutputState.mod_afferents>`
-attribute.
-
-Like all PsyNeuLink components, an OutputState has the three following core attributes:
-
-* `variable <OutputState.variable>`:  the item of its owner Mechanism's `value <Mechanism_Base.value>`
-  to which it is assigned (designated by its `index <OutputState.index>` attribute);  it must match the value of that
-  item (both in the number and types of its elements).
-..
-* `function <OutputState.function>`: takes the OutputState's `variable <OutputState.variable>` as its input, and
-  generates the OutpuState's `value <OutputState.value>` as its result.  The default function is `Linear` that simply
-  assigns the OutputState's `variable <OutputState.variable>` as its `value <OutputState.value>`.  However, the
-  parameters of the `function <OutputState.function>` -- and thus the `value <OutputState.value>` of the OutputState --
-  can be modified by any `GatingProjections <GatingProjection>` received by the OutputState (listed in its
-  `mod_afferents <OutputState.mod_afferents>` attribute.  A custom function can also be specified, so long as it can
-  take as its input a value that is compatiable with the OutputState's `variable <OutputState.variable>`.
-..
-* `value <OutputState.value>`:  assigned the result of the function specified by the
-  `calculate <OutputState.calculate>` attribute, possibly modified by the result of the OutputState`s
-  `function <OutputState.function>` and any `GatingProjections <GatingProjection>` received by the OutputState.
-  It is used as the input to any projections that the OutputStatue sends.
-
-.. _OutputState_Attributes:
-
-Additional Attributes
-~~~~~~~~~~~~~~~~~~~~~
-
-An OutputState also has two additional attributes that determine its operation, and can be used to further
-`customize the OutputState <OutputState_Customization>`:
+and/or of a System.  It has the following attributes, that includes ones specific to, and that can be used to
+`customize, the OutputState <OutputState_Customization>`:
 
 .. _OutputState_Index:
 
@@ -306,6 +275,37 @@ An OutputState also has two additional attributes that determine its operation, 
   The default is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0), that simply assigns the
   specified item of the Mechanism's `value <Mechanism_Base.value>` unmodified as the input for OutputState's
   `function <OutputState.function>`.
+..
+* `variable <OutputState.variable>` --  the value provided as the input to the OutputState's `function
+  <OutputState.function>`; it must match the value of the item of its owner Mechanism's `value  <Mechanism_Base.value>`
+  to which it is assigned (designated by its `index <OutputState.index>` attribute), both in the number and types of
+  its elements)
+
+* `function <OutputState.function>` -- takes the OutputState's `variable <OutputState.variable>` as its input, and
+  generates the OutpuState's `value <OutputState.value>` as its result.  The default function is `Linear` that simply
+  assigns the OutputState's `variable <OutputState.variable>` as its `value <OutputState.value>`.  However, the
+  parameters of the `function <OutputState.function>` -- and thus the `value <OutputState.value>` of the OutputState --
+  can be modified by any `GatingProjections <GatingProjection>` received by the OutputState (listed in its
+  `mod_afferents <OutputState.mod_afferents>` attribute.  A custom function can also be specified, so long as it can
+  take as its input a value that is compatiable with the OutputState's `variable <OutputState.variable>`.
+
+* `projections <OutputState.projections>` -- all of the `Projections <Projection>` sent and received by the OutputState;
+
+.. _OutputState_Effent_and_Modulatory_Projections:
+
+* `efferents <OutputState.path_afferents>` -- `MappingProjections <MappingProjection>` that project from the
+  OutputState.
+
+* `mod_afferents <OutputState.mod_afferents>` -- `GatingProjections <GatingProjection>` that project to the OutputState,
+  the `value <GatingProjection.value>` of which can modify the OutputState's `value <InputState.value>` (see the
+  descriptions of Modulation under `ModulatorySignals <ModulatorySignal_Modulation>` and `GatingSignals
+  <GatingSignal_Modulation>` for additional details).  If the OutputState receives more than one GatingProjection,
+  their values are combined before they are used to modify the `value <OutputState.value>` of the OutputState.
+..
+* `value <OutputState.value>`:  assigned the result of the function specified by the
+  `calculate <OutputState.calculate>` attribute, possibly modified by the result of the OutputState`s
+  `function <OutputState.function>` and any `GatingProjections <GatingProjection>` received by the OutputState.
+  It is used as the input to any projections that the OutputStatue sends.
 
 
 .. _OutputState_Execution:
@@ -323,7 +323,7 @@ specified by its `calculate <OutputState_Calculate>` attribute with the designat
 its `mod_afferents <OutputState.mod_afferents>` attribute), to generate the `value <OutputState.value>` of the
 OutputState.  This is assigned to a corresponding item of the Mechanism's `output_values
 <Mechanism_Base.output_values>` attribute, and is used as the input to any projections for which the
-OutputState is the `sender <Projection.Projection.sender>`.
+OutputState is the `sender <Projection_Base.sender>`.
 
 .. _OutputState_Class_Reference:
 
@@ -339,13 +339,13 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, InitStatus
-from psyneulink.components.functions.function import Linear, LinearCombination, is_function_type
+from psyneulink.components.functions.function import Linear, is_function_type
 from psyneulink.components.shellclasses import Mechanism, Projection
-from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
 from psyneulink.globals.keywords import \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, INPUT_STATE, INPUT_STATES, RECEIVER, GATING_SIGNAL, \
     COMMAND_LINE, STATE, OUTPUT_STATE, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, \
-    CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE, REFERENCE_VALUE
+    CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, VARIANCE, ALL, MECHANISM_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import UtilitiesError, iscompatible, type_match
@@ -385,8 +385,10 @@ standard_output_states = [{NAME: RESULT},
                           {NAME:STANDARD_DEVIATION,
                            CALCULATE:lambda x: np.std(x)},
                           {NAME:VARIANCE,
-                           CALCULATE:lambda x: np.var(x)}]
-
+                           CALCULATE:lambda x: np.var(x)},
+                          {NAME: MECHANISM_VALUE,
+                           INDEX: ALL}
+                          ]
 
 class OutputStateError(Exception):
     def __init__(self, error_value):
@@ -398,18 +400,18 @@ class OutputStateError(Exception):
 
 class OutputState(State_Base):
     """
-    OutputState(                               \
-    owner,                                     \
-    reference_value,                           \
-    variable=None,                             \
-    size=None,                                 \
-    function=LinearCombination(operation=SUM), \
-    index=PRIMARY,                \
-    calculate=Linear,                          \
-    projections=None,                          \
-    params=None,                               \
-    name=None,                                 \
-    prefs=None,                                \
+    OutputState(          \
+    owner,                \
+    reference_value,      \
+    variable=None,        \
+    size=None,            \
+    function=Linear(),    \
+    index=PRIMARY,        \
+    calculate=Linear,     \
+    projections=None,     \
+    params=None,          \
+    name=None,            \
+    prefs=None,           \
     context=None)
 
     Subclass of `State <State>` that calculates and represents an output of a `Mechanism <Mechanism>`.
@@ -426,11 +428,11 @@ class OutputState(State_Base):
         Class attributes:
             + componentType (str) = OUTPUT_STATES
             + paramClassDefaults (dict)
-                + FUNCTION (LinearCombination)
+                + FUNCTION (Linear)
                 + FUNCTION_PARAMS   (Operation.PRODUCT)
 
         Class methods:
-            function (executes function specified in params[FUNCTION];  default: LinearCombination with Operation.SUM)
+            function (executes function specified in params[FUNCTION];  default: Linear)
 
         StateRegistry
         -------------
@@ -464,7 +466,7 @@ class OutputState(State_Base):
             T1 = TransferMechanism(size = [3, 2])
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
-    function : Function, function, or method : default LinearCombination(operation=SUM)
+    function : Function, function, or method : default Linear
         specifies the function used to transform the item of the owner Mechanism's `value <Mechanism_Base.value>`
         designated by the OutputState's `index <OutputState.index>` attribute, under the possible influence of
         `GatingProjections <GatingProjection>` received by the OutputState.
@@ -487,20 +489,16 @@ class OutputState(State_Base):
         these will be listed in its `efferents <OutputState.efferents>` and `mod_afferents <InputState.mod_afferents>`
         attributes, respectively (see `OutputState_Projections` for additional details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the OutputState, its function, and/or a custom function and its parameters. Values specified for parameters
         in the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default OutputState-<index>
-        a string used for the name of the OutputState.
-        If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
-        belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <OutputState.name>`
+        specifies the name of the OutputState; see OutputState `name <OutputState.name>` for details.
 
-    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the OutputState.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default State.classPreferences
+        specifies the `PreferenceSet` for the OutputState; see `prefs <OutputState.prefs>` for details.
 
 
     Attributes
@@ -510,7 +508,7 @@ class OutputState(State_Base):
         the Mechanism to which the OutputState belongs.
 
     mod_afferents : List[GatingProjection]
-        a list of the `GatingProjections <GatingProjection>` received by the InputState.
+        `GatingProjections <GatingProjection>` received by the OutputState.
 
     variable : value, list or np.ndarray
         assigned the item of the owner Mechanism's `value <Mechanism_Base.value>` specified by the
@@ -538,14 +536,20 @@ class OutputState(State_Base):
         of the owner Mechanism's `output_values <Mechanism_Base.output_values>` attribute.
 
     efferents : List[MappingProjection]
-        a list of the `MappingProjections <MappingProjection>` sent by the OutputState (i.e., for which the OutputState
-        is a `sender <Projection.Projection.sender>`).
+        `MappingProjections <MappingProjection>` sent by the OutputState (i.e., for which the OutputState
+        is a `sender <Projection_Base.sender>`).
 
-    name : str : default <State subclass>-<index>
-        name of the OutputState.
-        Specified in the **name** argument of the constructor for the OutputState.  If not is specified, a default is
-        assigned by the StateRegistry of the Mechanism to which the OutputState belongs
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    projections : List[Projection]
+        all of the `Projections <Projection>` received and sent by the OutputState.
+
+    name : str
+        the name of the OutputState; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by the OutputStateRegistry of the Mechanism to which the OutputState belongs.  Note that most
+        Mechanisms automatically create one or more `Standard OutputStates <OutputState_Standard>`, that have
+        pre-specified names.  However, if any OutputStates are specified in the **input_states** argument of the
+        Mechanism's constructor, those replace its Standard OutputStates (see `note
+        <Mechanism_Default_State_Suppression_Note>`);  `standard naming conventions <Naming>` apply to the
+        OutputStates specified, as well as any that are added to the Mechanism once it is created.
 
         .. note::
             Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
@@ -553,11 +557,10 @@ class OutputState(State_Base):
             Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
-    prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the OutputState.
-        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
-        assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the OutputState; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 
@@ -593,7 +596,7 @@ class OutputState(State_Base):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 function=LinearCombination(operation=SUM),
+                 function=Linear(),
                  index=PRIMARY,
                  calculate:is_function_type=Linear,
                  projections=None,
@@ -614,7 +617,10 @@ class OutputState(State_Base):
                                                   params=params)
 
         # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
-        if owner is None or reference_value is None:
+        # if owner is None or reference_value is None:
+        if owner is None:
+            # Temporarily name OutputState
+            self._assign_deferred_init_name(name, context)
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = context
@@ -661,7 +667,10 @@ class OutputState(State_Base):
         self.instance_defaults.variable = self.reference_value
 
         # Insure that variable is compatible with (relevant item of) output value of owner's function
-        if not iscompatible(variable, self.reference_value):
+        # if not iscompatible(variable, self.reference_value):
+        if (variable is not None
+            and self.reference_value is not None
+            and not iscompatible(variable, self.reference_value)):
             raise OutputStateError("Variable ({}) of OutputState for {} is not compatible with "
                                            "the output ({}) of its function".
                                            format(variable,
@@ -685,7 +694,7 @@ class OutputState(State_Base):
             #    - can't yet determine relationship to default_value
             #    - can't yet evaluate calculate function (below)
             # so just return
-            if target_set[INDEX] is SEQUENTIAL:
+            if target_set[INDEX] in {ALL, SEQUENTIAL}:
                 return
             else:
                 try:
@@ -728,6 +737,12 @@ class OutputState(State_Base):
             raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible "
                                    "with its expected format ({})".
                                    format(name, self.componentName, self.owner.name, self.instance_defaults.variable, reference_value))
+
+    # MODIFIED 11/15/17 NEW:
+    def _instantiate_attributes_before_function(self, context=None):
+        if self.variable is None and self.reference_value is None:
+            self.instance_defaults.variable = self.owner.default_value[0]
+    # MODIFIED 11/15/17 END
 
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate calculate function
@@ -774,13 +789,24 @@ class OutputState(State_Base):
         """Call self.function with owner's value as variable
         """
 
-        # IMPLEMENTATION NOTE: OutputStates don't current receive TransmissiveProjections,
+        # Most common case is OutputState has index, so assume that for efficiency
+        try:
+            # Get indexed item of owner's value
+            owner_val = self.owner.value[self.index]
+        except IndexError:
+            # Index is ALL, so use owner's entire value
+            if self.index is ALL:
+                owner_val = self.owner.value
+            else:
+                raise IndexError
+
+        # IMPLEMENTATION NOTE: OutputStates don't currently receive PathwayProjections,
         #                      so there is no need to use their value (as do InputStates)
-        value = self.function(variable=self.owner.value[self.index],
+        value = self.function(variable=owner_val,
                                 params=function_params,
                                 context=context)
 
-        return type_match(self.calculate(self.owner.value[self.index]), type(value))
+        return type_match(self.calculate(owner_val), type(value))
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
@@ -987,11 +1013,8 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                     std_output_state = owner.standard_output_states.get_state_dict(output_state[NAME])
                     if std_output_state is not None:
                         # If any params were specified for the OutputState, add them to std_output_state
-                        if PARAMS in output_state:
-                            if PARAMS in std_output_state:
-                                std_output_state[PARAMS].update(output_state[PARAMS])
-                            else:
-                                std_output_state[PARAMS] = output_state[PARAMS]
+                        if PARAMS in output_state and output_state[PARAMS] is not None:
+                            std_output_state.update(output_state[PARAMS])
                         output_states[i] = std_output_state
 
                 if output_state[PARAMS]:
@@ -1029,7 +1052,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
-    if 'COMMAND_LINE' in context:
+    if any(keyword in context for keyword in {COMMAND_LINE, ADD_STATES}):
         owner.output_states.extend(state_list)
     else:
         owner._output_states = state_list
@@ -1055,22 +1078,23 @@ class StandardOutputStates():
         the Component to which this OutputState belongs
 
     output_state_dicts : list of dicts
-        list of dictionaries specifying OutputStates for the Component specified
-        by `owner`
+        list of dictionaries specifying OutputStates for the Component specified by `owner`
 
-    indices : PRIMARY_OUTPUT_STATES, SEQUENTIAL, list of ints
-        specifies how to assign the INDEX entry for each dict listed in
-        `output_state_dicts`
+    indices : PRIMARY, SEQUENTIAL, list of ints
+        specifies how to assign the INDEX entry for each dict listed in `output_state_dicts`;
 
         The effects of each value of indices are as follows:
 
-            * PRIMARY_OUTPUT_STATES -- assigns the INDEX for the owner's primary OutputState to all indices
+            * *PRIMARY* -- assigns the INDEX for the owner's primary OutputState to all output_states
+              for which an INDEX entry is not already specified;
 
-            * SEQUENTIAL -- assigns sequentially incremented int to each INDEX entry
+            * *SEQUENTIAL* -- assigns sequentially incremented int to each INDEX entry,
+              ignoring any INDEX entries previously specified for individual OutputStates;
 
-            * list of ints -- assigns each int to the corresponding entry in `output_state_dicts`
+            * list of ints -- assigns each int to the corresponding entry in `output_state_dicts`;
+              ignoring any INDEX entries previously specified for individual OutputStates;
 
-            * None -- assigns `None` to each INDEX entry
+            * None -- assigns `None` to INDEX entries for all OutputStates for which it is not already specified.
 
     Attributes
     ----------
@@ -1131,14 +1155,19 @@ class StandardOutputStates():
             for index, state_dict in enumerate(self.data):
                 state_dict[INDEX] = index
 
-        # Assign PRIMARY as INDEX for all OutputStates in output_state_dicts
+        # Assign PRIMARY as INDEX for all OutputStates in output_state_dicts that don't already have an index specified
         elif indices is PRIMARY:
             for state_dict in self.data:
+                if INDEX in state_dict:
+                    continue
                 state_dict[INDEX] = PRIMARY
 
         # No indices specification, so assign None to INDEX for all OutputStates in output_state_dicts
+        #  that don't already have an index specified
         else:
             for state_dict in self.data:
+                if INDEX in state_dict:
+                    continue
                 state_dict[INDEX] = None
 
 

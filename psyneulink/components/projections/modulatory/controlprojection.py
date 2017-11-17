@@ -199,26 +199,22 @@ class ControlProjection(ModulatoryProjection_Base):
        specifies the value by which to exponentiate the ControlProjection's `value <ControlProjection.value>`
        before combining it with others (see `exponent <ControlProjection.exponent>` for additional details).
 
-    control_signal_params : Dict[param keyword, param value]
+    control_signal_params pip install --updgrade Sphinx==1.6.2 sphinx-rtd-theme==0.2.4 sphinxcontrib-websupport==1.0.1: Dict[param keyword, param value]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
         ControlProjection's `sender <ControlProjection.sender>` (see `ControlSignal_Structure` for a description
         of ControlSignal parameters).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the ControlProjection, its `function <ControlProjection.function>`, and/or a custom function and its parameters.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name : str : default ControlProjection-<index>
-        a string used for the name of the ControlProjection.
-        If not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see ModulatoryProjection `name <ModulatoryProjection.name>`
+        specifies the name of the ControlProjection.
 
-    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
-        the `PreferenceSet` for the ControlProjection.
-        If it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Projection.classPreferences
+        specifies the `PreferenceSet` for the ControlProjection; see `prefs <ControlProjection.prefs>` for details.
 
     Attributes
     ----------
@@ -258,19 +254,15 @@ class ControlProjection(ModulatoryProjection_Base):
         to determine how that ParameterState's `variable <ParameterState.variable>` is modified (see description in
         `Projection <Projection_Weight_and_Exponent>` for details).
 
-    name : str : default ControlProjection-<index>
-        the name of the ControlProjection.
-        Specified in the **name** argument of the constructor for the ControlProjection;
-        if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        name of the ControlProjection; if it is not specified in the **name** argument of its constructor,
+        a default name is assigned (see ModulatoryProjection `name <ModulatoryProjection.name>`;
+        also see `Naming` for conventions regarding duplicate names).
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for ControlProjection.
-        Specified in the **prefs** argument of the constructor for the ControlProjection;
-        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
-
-
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the ControlProjection; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     color = 0
@@ -373,7 +365,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
         Overrides Projection._instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:
             the receiver Mechanism must have one and only one ParameterState;
-            otherwise, passes control to Projection._instantiate_receiver for validation
+            otherwise, passes control to Projection_Base._instantiate_receiver for validation
 
         :return:
         """

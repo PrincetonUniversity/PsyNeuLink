@@ -31,6 +31,7 @@ from . import functions
 from . import mechanisms
 from . import process
 from . import projections
+from . import shellclasses
 from . import states
 from . import system
 
@@ -39,6 +40,7 @@ from .functions import *
 from .mechanisms import *
 from .process import *
 from .projections import *
+from .shellclasses import *
 from .states import *
 from .system import *
 
@@ -50,6 +52,7 @@ __all__.extend(functions.__all__)
 __all__.extend(mechanisms.__all__)
 __all__.extend(process.__all__)
 __all__.extend(projections.__all__)
+__all__.extend(shellclasses.__all__)
 __all__.extend(states.__all__)
 __all__.extend(system.__all__)
 
