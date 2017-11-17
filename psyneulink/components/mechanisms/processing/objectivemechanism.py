@@ -363,7 +363,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         default_variable,             \
         size,                         \
         function=LinearCombination,   \
-        output_states=[OUTCOME],      \
+        output_states=OUTCOME,        \
         params=None,                  \
         name=None,                    \
         prefs=None)
