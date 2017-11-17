@@ -714,7 +714,7 @@ import typecheck as tc
 
 from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, function_type
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, \
-    _get_matrix, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
+    get_matrix, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.keywords import DEFERRED_INITIALIZATION, \
     CONTEXT, COMMAND_LINE, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
