@@ -188,13 +188,14 @@ these is described below:
       unspecified, its `initialization is deferred <Projection_Deferred_Initialization>`.  In some cases, initialization
       can happen automatically -- for example, when a `ControlProjection` is created for the parameter of a Mechanism
       that is included in a `System`, a `ControlSignal` is created as the Projection's `sender <Projection_Base.sender>`
-      that is added to the System's `controller <System.controller>` (see `System_Control`).  However, for cases in
-      which `deferred initialization <Component_Deferred_Init>` is not automatically completed, the Projection will not
-      be operational until its `sender <Projection_Base.sender>` has been specified and its initialization completed.
+      that is added to the System's `controller <System.controller>` (see `System Control <System_Control>`).  However,
+      for cases in which `deferred initialization <Component_Deferred_Init>` is not automatically completed,
+      the Projection will not be operational until its `sender <Projection_Base.sender>` has been specified and its
+      initialization completed.
 
     .. _InputState_Specification_Dictionary:
 
-    **InputState Specification Dictionary or Tuple*
+    **InputState Specification Dictionary or Tuple**
 
     * **InputState specification dictionary** -- this can be used to specify the attributes of an InputState,
       using any of the entries that can be included in a `State specification dictionary <State_Specification>`
