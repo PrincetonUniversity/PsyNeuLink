@@ -340,17 +340,6 @@ class TestInputStateSpec:
 
     def test_dict_with_variable_matches_default(self):
         T = TransferMechanism(
-            default_variable=[0, 0],
-            input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}]
-        )
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
-        assert len(T.input_states) == 1
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 20
-
-    def test_dict_with_variable_matches_default_2(self):
-        T = TransferMechanism(
             default_variable=[[0, 0]],
             input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}]
         )
@@ -377,7 +366,7 @@ class TestInputStateSpec:
     def test_dict_with_variable_mismatches_default(self):
         with pytest.raises(MechanismError) as error_text:
             TransferMechanism(
-                default_variable=[0],
+                default_variable=[[0]],
                 input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}]
             )
         assert mismatches_default_variable_error_text in str(error_text.value)
@@ -466,7 +455,7 @@ class TestInputStateSpec:
     # TEST 29
 
     def test_inputstate_class_with_variable(self):
-        T = TransferMechanism(default_variable=[0, 0], input_states=[InputState])
+        T = TransferMechanism(default_variable=[[0, 0]], input_states=[InputState])
 
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
@@ -507,7 +496,7 @@ class TestInputStateSpec:
     def test_projection_with_sender_and_default(self):
         t = TransferMechanism(size=3)
         p = MappingProjection(sender=t)
-        T = TransferMechanism(default_variable=[0, 0], input_states=[p])
+        T = TransferMechanism(default_variable=[[0, 0]], input_states=[p])
 
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
@@ -527,7 +516,7 @@ class TestInputStateSpec:
 
     def test_projection_no_args_projection_spec_with_default(self):
         p = MappingProjection()
-        T = TransferMechanism(default_variable=[0, 0], input_states=[p])
+        T = TransferMechanism(default_variable=[[0, 0]], input_states=[p])
 
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1

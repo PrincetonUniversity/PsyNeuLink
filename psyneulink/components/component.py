@@ -371,7 +371,7 @@ from psyneulink.globals.registry import register_category
 # from psyneulink.globals.log import Log, LogCondition
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
-from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength
+from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength, object_has_single_value
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
@@ -983,6 +983,8 @@ class Component(object):
         '''
         if self._default_variable_handled:
             return default_variable
+
+        default_variable = self._parse_arg_variable(default_variable)
 
         if default_variable is None:
             default_variable = self._handle_size(size, default_variable)
@@ -2033,6 +2035,40 @@ class Component(object):
         elif mode == ResetMode.ALL_TO_CLASS_DEFAULTS:
             self.params_current = self.paramClassDefaults.copy()
             self.paramInstanceDefaults = self.paramClassDefaults.copy()
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Parsing methods
+    # ------------------------------------------------------------------------------------------------------------------
+    # ---------------------------------------------------------
+    # Argument parsers
+    # ---------------------------------------------------------
+
+    def _parse_arg_variable(self, variable):
+        """
+            Transforms **variable** into a form that Components expect. Used to allow
+            users to pass input in convenient forms, like a single float when a list
+            for input states is expected
+
+            Returns
+            -------
+            The transformed **input**
+        """
+        if variable is None:
+            return variable
+
+        variable = np.atleast_1d(variable)
+        # variable = convert_all_elements_to_np_array(variable)
+
+        try:
+            # if variable has a single int/float/etc. within some number of dimensions, and the
+            # instance default variable expects a single value within another number of dimensions,
+            # convert variable to match instance default
+            if object_has_single_value(self.instance_defaults.variable) and object_has_single_value(variable):
+                variable.resize(self.instance_defaults.variable.shape)
+        except AttributeError:
+            pass
+
+        return variable
 
     # ------------------------------------------------------------------------------------------------------------------
     # Validation methods

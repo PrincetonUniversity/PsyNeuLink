@@ -1301,29 +1301,8 @@ class Mechanism_Base(Mechanism):
     # Argument parsers
     # ---------------------------------------------------------
 
-    def _parse_arg_variable(self, variable):
-        '''
-        Takes user-inputted argument **variable** and returns an instance_defaults.variable-like
-        object that it represents
-
-        Currently supports types:
-            numbers.Number
-            list
-            numpy.ndarray
-
-        Returns
-        -------
-            an at-least-two-dimensional form of **variable**
-        '''
-        if isinstance(variable, numbers.Number):
-            variable = [[variable]]
-        elif isinstance(variable, list):
-            if all([not isinstance(x, Iterable) for x in variable]):
-                variable = [variable]
-        elif isinstance(variable, np.ndarray):
-            variable = np.atleast_2d(variable)
-
-        return variable
+    # def _parse_arg_variable(self, variable):
+    #     pass
 
     # ------------------------------------------------------------------------------------------------------------------
     # Handlers
