@@ -1294,6 +1294,13 @@ class Mechanism_Base(Mechanism):
         self.processes = {}
         self.systems = {}
 
+    # ------------------------------------------------------------------------------------------------------------------
+    # Parsing methods
+    # ------------------------------------------------------------------------------------------------------------------
+    # ---------------------------------------------------------
+    # Argument parsers
+    # ---------------------------------------------------------
+
     def _parse_arg_variable(self, variable):
         '''
         Takes user-inputted argument **variable** and returns an instance_defaults.variable-like
@@ -1381,6 +1388,10 @@ class Mechanism_Base(Mechanism):
 
         return default_variable_from_input_states, variable_was_specified
 
+    # ------------------------------------------------------------------------------------------------------------------
+    # Handlers
+    # ------------------------------------------------------------------------------------------------------------------
+
     def _handle_default_variable(self, default_variable=None, size=None, input_states=None, params=None):
         '''
             Finds whether default_variable can be determined using **default_variable** and **size**
@@ -1437,6 +1448,10 @@ class Mechanism_Base(Mechanism):
                     pass
 
         return super()._handle_default_variable(default_variable=default_variable, size=size)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Validation methods
+    # ------------------------------------------------------------------------------------------------------------------
 
     def _validate_variable(self, variable, context=None):
         """Convert ClassDefaults.variable and variable to 2D np.array: one 1D value for each InputState

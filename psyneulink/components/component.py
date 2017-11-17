@@ -967,6 +967,10 @@ class Component(object):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
 
+    # ------------------------------------------------------------------------------------------------------------------
+    # Handlers
+    # ------------------------------------------------------------------------------------------------------------------
+
     def _handle_default_variable(self, default_variable=None, size=None):
         '''
             Finds whether default_variable can be determined using **default_variable** and **size**
@@ -2029,6 +2033,10 @@ class Component(object):
         elif mode == ResetMode.ALL_TO_CLASS_DEFAULTS:
             self.params_current = self.paramClassDefaults.copy()
             self.paramInstanceDefaults = self.paramClassDefaults.copy()
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Validation methods
+    # ------------------------------------------------------------------------------------------------------------------
 
     def _validate_variable(self, variable, context=None):
         """Validate variable and return validated variable
