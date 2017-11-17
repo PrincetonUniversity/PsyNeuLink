@@ -621,8 +621,6 @@ thoese values to the the TARGET <a class="reference internal" href="InputState.h
 <dd>values used to initialize Mechanisms that close recurrent loops (designated as <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE" title="psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>).
 Length must equal the number of <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE" title="psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a> Mechanisms listed in the System’s
 <a class="reference internal" href="#psyneulink.components.system.System.recurrent_init_mechanisms" title="psyneulink.components.system.System.recurrent_init_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_init_mechanisms</span></code></a> attribute.</dd>
-<dt>timeScale <span class="classifier-delimiter">:</span> <span class="classifier">TimeScale</span> <span class="classifier-delimiter">:</span> <span class="classifier">default TimeScale.TRIAL</span></dt>
-<dd>determines the default <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> value used by Mechanisms in the System.</dd>
 <dt>results <span class="classifier-delimiter">:</span> <span class="classifier">List[OutputState.value]</span></dt>
 <dd>list of return values (OutputState.value) from the sequence of executions.</dd>
 <dt>name <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
@@ -690,7 +688,6 @@ If it is <code class="xref any docutils literal"><span class="pre">True</span></
 <li><strong>call_after_trial</strong> (Function : default= <code class="xref any docutils literal"><span class="pre">None</span></code>) – called after each trial in the sequence is executed.</li>
 <li><strong>call_before_time_step</strong> (Function : default= <code class="xref any docutils literal"><span class="pre">None</span></code>) – called before each time_step of each trial is executed.</li>
 <li><strong>call_after_time_step</strong> (Function : default= <code class="xref any docutils literal"><span class="pre">None</span></code>) – called after each time_step of each trial is executed.</li>
-<li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) – specifies whether Mechanisms are executed for a single time step or a trial.</li>
 </ul>
 </td>
 </tr>
