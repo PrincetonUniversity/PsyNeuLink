@@ -461,7 +461,7 @@ OutputState is the <a class="reference internal" href="Projection.html#psyneulin
 <span id="outputstate-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.components.states.outputstate.OutputState">
-<em class="property">class </em><code class="descclassname">psyneulink.components.states.outputstate.</code><code class="descname">OutputState</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value</em>, <em>variable=None</em>, <em>size=None</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>index=PRIMARY</em>, <em>calculate=Linear</em>, <em>projections=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.states.outputstate.OutputState" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.states.outputstate.</code><code class="descname">OutputState</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value</em>, <em>variable=None</em>, <em>size=None</em>, <em>function=Linear()</em>, <em>index=PRIMARY</em>, <em>calculate=Linear</em>, <em>projections=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.states.outputstate.OutputState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="State.html"><span class="doc">State</span></a> that calculates and represents an output of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -484,13 +484,13 @@ As an example, the following mechanisms are equivalent:</p>
 </pre></div>
 </div>
 </li>
-<li><strong>function</strong> (<em>Function</em><em>, </em><a class="reference internal" href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function" title="psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function"><em>function</em></a><em>, or </em><em>method : default LinearCombination</em><em>(</em><em>operation=SUM</em><em>)</em>) – specifies the function used to transform the item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+<li><strong>function</strong> (<em>Function</em><em>, </em><a class="reference internal" href="Function.html#psyneulink.components.functions.function.SoftMax.function" title="psyneulink.components.functions.function.SoftMax.function"><em>function</em></a><em>, or </em><em>method : default Linear</em>) – specifies the function used to transform the item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
 designated by the OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.index" title="psyneulink.components.states.outputstate.OutputState.index"><code class="xref any py py-attr docutils literal"><span class="pre">index</span></code></a> attribute, under the possible influence of
 <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> received by the OutputState.</li>
 <li><strong>index</strong> (<em>int : default PRIMARY</em>) – specifies the item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> used as input for the
 function specified by the OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.calculate" title="psyneulink.components.states.outputstate.OutputState.calculate"><code class="xref any py py-attr docutils literal"><span class="pre">calculate</span></code></a> attribute, to determine the
 OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
-<li><strong>calculate</strong> (<em>Function</em><em>, </em><a class="reference internal" href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function" title="psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function"><em>function</em></a><em>, or </em><em>method : default Linear</em>) – specifies the function used to convert the designated item of the owner Mechanism’s
+<li><strong>calculate</strong> (<em>Function</em><em>, </em><a class="reference internal" href="Function.html#psyneulink.components.functions.function.SoftMax.function" title="psyneulink.components.functions.function.SoftMax.function"><em>function</em></a><em>, or </em><em>method : default Linear</em>) – specifies the function used to convert the designated item of the owner Mechanism’s
 <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (specified by the OutputState’s <code class="xref std std-keyword docutils literal"><span class="pre">index</span></code> attribute),
 before it is assigned as the OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  The function must accept a value that
 has the same format (number and type of elements) as the item of the Mechanism’s
@@ -601,7 +601,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 
 <dl class="class">
 <dt id="psyneulink.components.states.outputstate.StandardOutputStates">
-<em class="property">class </em><code class="descclassname">psyneulink.components.states.outputstate.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: psyneulink.components.component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x10589f3c8&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.states.outputstate.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.states.outputstate.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: psyneulink.components.component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x1056a9748&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.states.outputstate.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collection of OutputState specification dictionaries for <a class="reference internal" href="#outputstate-standard"><span class="std std-ref">standard
 OutputStates</span></a> of a class</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -610,17 +610,18 @@ OutputStates</span></a> of a class</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.components.component.Component" title="psyneulink.components.component.Component"><em>Component</em></a>) – the Component to which this OutputState belongs</li>
-<li><strong>output_state_dicts</strong> (<em>list of dicts</em>) – list of dictionaries specifying OutputStates for the Component specified
-by <a class="reference internal" href="GatingSignal.html#psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.owner" title="psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a></li>
-<li><strong>indices</strong> (<em>PRIMARY_OUTPUT_STATES</em><em>, </em><em>SEQUENTIAL</em><em>, </em><em>list of ints</em>) – <p>specifies how to assign the INDEX entry for each dict listed in
-<code class="xref any docutils literal"><span class="pre">output_state_dicts</span></code></p>
+<li><strong>output_state_dicts</strong> (<em>list of dicts</em>) – list of dictionaries specifying OutputStates for the Component specified by <a class="reference internal" href="ModulatorySignal.html#psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.owner" title="psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a></li>
+<li><strong>indices</strong> (<em>PRIMARY</em><em>, </em><em>SEQUENTIAL</em><em>, </em><em>list of ints</em>) – <p>specifies how to assign the INDEX entry for each dict listed in <code class="xref any docutils literal"><span class="pre">output_state_dicts</span></code>;</p>
 <p>The effects of each value of indices are as follows:</p>
 <blockquote>
 <div><ul>
-<li>PRIMARY_OUTPUT_STATES – assigns the INDEX for the owner’s primary OutputState to all indices</li>
-<li>SEQUENTIAL – assigns sequentially incremented int to each INDEX entry</li>
-<li>list of ints – assigns each int to the corresponding entry in <code class="xref any docutils literal"><span class="pre">output_state_dicts</span></code></li>
-<li>None – assigns <code class="xref any docutils literal"><span class="pre">None</span></code> to each INDEX entry</li>
+<li><em>PRIMARY</em> – assigns the INDEX for the owner’s primary OutputState to all output_states
+for which an INDEX entry is not already specified;</li>
+<li><em>SEQUENTIAL</em> – assigns sequentially incremented int to each INDEX entry,
+ignoring any INDEX entries previously specified for individual OutputStates;</li>
+<li>list of ints – assigns each int to the corresponding entry in <code class="xref any docutils literal"><span class="pre">output_state_dicts</span></code>;
+ignoring any INDEX entries previously specified for individual OutputStates;</li>
+<li>None – assigns <code class="xref any docutils literal"><span class="pre">None</span></code> to INDEX entries for all OutputStates for which it is not already specified.</li>
 </ul>
 </div></blockquote>
 </li>
