@@ -213,10 +213,12 @@ class TestKWTARatio:
         )
         p = Process(pathway = [K], prefs = TestKWTARatio.simple_prefs)
         s = System(processes=[p], prefs = TestKWTARatio.simple_prefs)
+
         s.run(inputs = {K: [2, 4, 1, 6]})
         assert np.allclose(K.value, [[0.2689414213699951, 0.7310585786300049, 0.11920292202211755, 0.9525741268224334]])
         s.run(inputs = {K: [1, 2, 3, 4]})
         assert np.allclose(K.value, [[0.09271329298112314, 0.7368459299092773, 0.2631540700907225, 0.9842837170829899]])
+
 
     def test_kwta_ratio_1(self):
         K = KWTA(
@@ -226,10 +228,12 @@ class TestKWTARatio:
         )
         p = Process(pathway = [K], prefs = TestKWTARatio.simple_prefs)
         s = System(processes=[p], prefs = TestKWTARatio.simple_prefs)
+
         s.run(inputs = {K: [2, 4, 1, 6]})
         assert np.allclose(K.value, [[0.5, 0.8807970779778823, 0.2689414213699951, 0.9820137900379085]])
         s.run(inputs = {K: [1, 2, 3, 4]})
         assert np.allclose(K.value, [[0.30054433998850033, 0.8868817857039745, 0.5, 0.9897010588046231]])
+
 
     def test_kwta_ratio_0(self):
         K = KWTA(
@@ -239,10 +243,12 @@ class TestKWTARatio:
         )
         p = Process(pathway = [K], prefs = TestKWTARatio.simple_prefs)
         s = System(processes=[p], prefs = TestKWTARatio.simple_prefs)
+
         s.run(inputs = {K: [2, 4, 1, 6]})
         assert np.allclose(K.value, [[0.11920292202211755, 0.5, 0.04742587317756678, 0.8807970779778823]])
         s.run(inputs = {K: [1, 2, 3, 4]})
         assert np.allclose(K.value, [[0.051956902301427035, 0.5, 0.22048012438199008, 0.9802370486903237]])
+
 
     # answers for this tests should be exactly 70% of the way between the answers for ratio=0 and ratio=1
     # (after taking the inverse of the Logistic function on the output)
@@ -254,10 +260,12 @@ class TestKWTARatio:
         )
         p = Process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
         s = System(processes=[p], prefs=TestKWTARatio.simple_prefs)
+
         s.run(inputs={K: [2, 4, 1, 6]})
         assert np.allclose(K.value, [[0.19781611144141834, 0.6456563062257956, 0.08317269649392241, 0.9308615796566533]])
         s.run(inputs={K: [1, 2, 3, 4]})
         assert np.allclose(K.value, [[0.06324086143390241, 0.6326786177649943, 0.21948113371757957, 0.9814716617176014]])
+
 
     def test_kwta_ratio_2(self):
         with pytest.raises(KWTAError) as error_text:
@@ -287,8 +295,10 @@ class TestKWTAKValue:
         assert K.k_value == 0.5
         p = Process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
         s = System(processes=[p], prefs=TestKWTARatio.simple_prefs)
+
         s.run(inputs={K: [1, 2, 3, 4]})
         assert np.allclose(K.value, [[0.18242552380635635, 0.3775406687981454, 0.6224593312018546, 0.8175744761936437]])
+
 
     def test_kwta_k_value_empty_size_6(self):
         K = KWTA(
@@ -298,9 +308,11 @@ class TestKWTAKValue:
         assert K.k_value == 0.5
         p = Process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
         s = System(processes=[p], prefs=TestKWTARatio.simple_prefs)
+
         s.run(inputs={K: [1, 2, 2, 3, 3, 4]})
         assert np.allclose(K.value, [[0.18242552380635635, 0.3775406687981454, 0.3775406687981454,
                                      0.6224593312018546, 0.6224593312018546, 0.8175744761936437]])
+
 
     def test_kwta_k_value_int_size_5(self):
         K = KWTA(
@@ -382,6 +394,7 @@ class TestKWTAThreshold:
         )
         p = Process(pathway=[K], prefs=TestKWTAThreshold.simple_prefs)
         s = System(processes=[p], prefs=TestKWTAThreshold.simple_prefs)
+
         s.run(inputs={K: [1, 2, 3, 4]})
         assert np.allclose(K.value, [[0.07585818002124355, 0.18242552380635635, 0.3775406687981454, 0.6224593312018546]])
 
@@ -393,6 +406,7 @@ class TestKWTAThreshold:
         )
         p = Process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
         s = System(processes=[p], prefs=TestKWTARatio.simple_prefs)
+
         s.run(inputs={K: [1, 2, 3, 3]})
         assert np.allclose(K.value, [[0.2689414213699951, 0.5, 0.7310585786300049, 0.7310585786300049]])
 
@@ -416,7 +430,7 @@ class TestKWTALongTerm:
         )
         p = Process(pathway=[K], prefs=TestKWTALongTerm.simple_prefs)
         s = System(processes=[p], prefs=TestKWTALongTerm.simple_prefs)
-        kwta_input = {K: [-1, -.5, 0, 0, 0, 1, 1, 2, 3, 3]}
+        kwta_input = {K: [[-1, -.5, 0, 0, 0, 1, 1, 2, 3, 3]]}
         print("")
         for i in range(20):
             s.run(inputs=kwta_input)
@@ -424,8 +438,10 @@ class TestKWTALongTerm:
             print('K.value: ', K.value)
         assert np.allclose(K.value, [[0.012938850123312412, 0.022127587008877226, 0.039010157367582114,
                                      0.039010157367582114, 0.039010157367582114, 0.19055156271846602,
+
                                      0.19055156271846602, 0.969124504436019, 0.9895271824560731, 0.9895271824560731]])
         kwta_input2 = {K: [0] * 10}
+
         print('\n\nturning to zero-inputs now:')
         for i in range(20):
             s.run(inputs=kwta_input2)
@@ -450,7 +466,7 @@ class TestKWTAAverageBased:
         )
         p = Process(pathway=[K], prefs=TestKWTAAverageBased.simple_prefs)
         s = System(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
-        kwta_input = {K: [1, 2, 3, 4]}
+        kwta_input = {K: [[1, 2, 3, 4]]}
         s.run(inputs=kwta_input)
         assert np.allclose(K.value, [[-1.5, -0.5, 0.5, 1.5]])
 
@@ -465,7 +481,7 @@ class TestKWTAAverageBased:
         )
         p = Process(pathway=[K], prefs=TestKWTAAverageBased.simple_prefs)
         s = System(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
-        kwta_input = {K: [1, 2, 3, 4]}
+        kwta_input = {K: [[1, 2, 3, 4]]}
         s.run(inputs=kwta_input)
         assert np.allclose(K.value, [[-2, -1, 0, 1]])
 
@@ -481,7 +497,7 @@ class TestKWTAAverageBased:
         )
         p = Process(pathway=[K], prefs=TestKWTAAverageBased.simple_prefs)
         s = System(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
-        kwta_input = {K: [1, 2, 3, 4]}
+        kwta_input = {K: [[1, 2, 3, 4]]}
         s.run(inputs=kwta_input)
         assert np.allclose(K.value, [[-2.6, -1.6, -0.6000000000000001, 0.3999999999999999]])
 
@@ -497,6 +513,6 @@ class TestKWTAAverageBased:
         )
         p = Process(pathway=[K], prefs=TestKWTAAverageBased.simple_prefs)
         s = System(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
-        kwta_input = {K: [1, 2, 3, 4]}
+        kwta_input = {K: [[1, 2, 3, 4]]}
         s.run(inputs=kwta_input)
         assert np.allclose(K.value, [[-1.4, -0.3999999999999999, 0.6000000000000001, 1.6]])

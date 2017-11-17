@@ -555,8 +555,7 @@ class System(System_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + ClassDefaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {PROCESSES: [Mechanism_Base.default_mechanism],
-                                CONTROLLER: None
-                                TIME_SCALE: TimeScale.TRIAL}
+                                CONTROLLER: None}
        Class methods
        -------------
         - _validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
@@ -744,9 +743,6 @@ class System(System_Base):
         values used to initialize Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`).
         Length must equal the number of `INITIALIZE_CYCLE` Mechanisms listed in the System's
         `recurrent_init_mechanisms <System.recurrent_init_mechanisms>` attribute.
-
-    timeScale : TimeScale  : default TimeScale.TRIAL
-        determines the default `TimeScale` value used by Mechanisms in the System.
 
     results : List[OutputState.value]
         list of return values (OutputState.value) from the sequence of executions.
@@ -1561,20 +1557,20 @@ class System(System_Base):
                                              len(self.instance_defaults.variable[i][j]),
                                              len(origin_mech.input_states[j].instance_defaults.variable),
                                              origin_mech.name))
-            # MODIFIED 6/27/17 END
+                # MODIFIED 6/27/17 END
+                # MODIFIED 6/27/17 END
+                stimulus_input_state = SystemInputState(owner=self,
+                                                            variable=origin_mech.input_states[j].instance_defaults.variable,
+                                                            prefs=self.prefs,
+                                                            name="System Input State to Mechansism {}, Input State {}".format(origin_mech.name,j))
+                self.stimulusInputStates.append(stimulus_input_state)
+                self.inputs.append(stimulus_input_state.value)
 
-            stimulus_input_state = SystemInputState(owner=self,
-                                                        variable=origin_mech.input_state.instance_defaults.variable,
-                                                        prefs=self.prefs,
-                                                        name="System Input {}".format(i))
-            self.stimulusInputStates.append(stimulus_input_state)
-            self.inputs.append(stimulus_input_state.value)
-
-            # Add MappingProjection from stimulus_input_state to ORIGIN mechainsm's inputState
-            from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-            MappingProjection(sender=stimulus_input_state,
-                    receiver=origin_mech,
-                    name=self.name+' Input Projection to '+origin_mech.name)
+                # Add MappingProjection from stimulus_input_state to ORIGIN mechainsm's inputState
+                from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+                MappingProjection(sender=stimulus_input_state,
+                        receiver=origin_mech.input_states[j],
+                        name=self.name+' Input Projection to '+origin_mech.name+' Input State '+str(j))
 
     def _instantiate_learning_graph(self, context=None):
         """Build graph of LearningMechanism and LearningProjections
@@ -2413,9 +2409,6 @@ class System(System_Base):
         input : list or ndarray
             a list or array of input value arrays, one for each `ORIGIN` Mechanism in the System.
 
-            .. [TBI: time_scale : TimeScale : default TimeScale.TRIAL
-               specifies a default TimeScale for the System]
-
             .. context : str
 
         Returns
@@ -2470,8 +2463,7 @@ class System(System_Base):
                 input[i] = self.origin_mechanisms[i].instance_defaults.variable
 
         else:
-            num_inputs = np.size(input,0)
-
+            num_inputs = len(input)
             # Check if input items are of different lengths (indicated by dtype == np.dtype('O'))
             if num_inputs != num_origin_mechs:
                 num_inputs = np.size(input)
@@ -2484,15 +2476,21 @@ class System(System_Base):
                                       format(num_inputs, self.name,  num_origin_mechs ))
 
             # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
-            for i, origin_mech in zip(range(num_origin_mechs), self.origin_mechanisms):
+            for origin_mech in self.origin_mechanisms:
                 # For each inputState of the ORIGIN mechanism
+
                 for j in range(len(origin_mech.input_states)):
                    # Get the input from each projection to that inputState (from the corresponding SystemInputState)
                     system_input_state = next((projection.sender
                                                for projection in origin_mech.input_states[j].path_afferents
                                                if isinstance(projection.sender, SystemInputState)), None)
+
                     if system_input_state:
-                        system_input_state.value = input[i][j]
+                        if isinstance(input, dict):
+                            system_input_state.value = input[origin_mech][j]
+
+                        else:
+                            system_input_state.value = input[j]
                     else:
                         logger.warning("Failed to find expected SystemInputState "
                                        "for {} at input state number ({}), ({})".
@@ -2790,9 +2788,6 @@ class System(System_Base):
         call_after_time_step : Function : default= `None`
             called after each time_step of each trial is executed.
 
-        time_scale : TimeScale :  default TimeScale.TRIAL
-            specifies whether Mechanisms are executed for a single time step or a trial.
-
         Returns
         -------
 
@@ -2846,11 +2841,12 @@ class System(System_Base):
                   format(self.name, system_string, clock.time_step))
             processes = list(process.name for process in self.processes)
             print("- processes: {}".format(processes))
-            if np.size(self.input, 0) == 1:
+            print("self.input = ", self.input)
+            if np.size(self.input) == 1:
                 input_string = ''
             else:
                 input_string = 's'
-            print("- input{}: {}".format(input_string, self.input.tolist()))
+            print("- input{}: {}".format(input_string, self.input))
 
         else:
             print("\n\'{}\'{} executing ********** (time_step {}) ".

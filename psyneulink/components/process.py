@@ -1756,6 +1756,9 @@ class Process(Process_Base):
         Returns:
 
         """
+
+        if isinstance(input, dict):
+            input = list(input.values())[0]
         # Validate input
         if input is None:
             input = self.first_mechanism.instance_defaults.variable

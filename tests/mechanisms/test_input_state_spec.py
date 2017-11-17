@@ -617,4 +617,4 @@ class TestInputStateSpec:
         my_input_state = InputState(projections=[T1])
         T2 = TransferMechanism(input_states=[my_input_state])
         assert T2.input_states[0].name == 'InputState-0'
-        assert T2.input_states[0].projections[0].sender.name == 'RESULT'
+        assert T2.input_states[0].projections[0].sender.name == 'RESULTS'
