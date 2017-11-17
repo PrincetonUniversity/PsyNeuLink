@@ -90,18 +90,7 @@ class PathwayProjection_Base(Projection_Base):
 
         from psyneulink.components.mechanisms.mechanism import Mechanism
 
-        # If the name is not a default name, leave intact
-        if not self.className + '-' in self.name:
-            return self.name
-
-        if self.init_status is InitStatus.INITIALIZED:
-            if self.sender.owner:
-                sender_name = "{}[{}]".format(self.sender.owner.name, sender_name)
-            if self.receiver.owner:
-                receiver_name = "{}[{}]".format(self.receiver.owner.name, receiver_name)
-            self.name = self.className + " from " + sender_name + " to " + receiver_name
-
-        elif self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
             if self.init_args[SENDER]:
                 sender = self.init_args[SENDER]
                 if isinstance(sender.owner, Mechanism):
@@ -113,6 +102,17 @@ class PathwayProjection_Base(Projection_Base):
             projection_name = self.className + " from " + sender_name + " to " + receiver_name
             self.init_args[NAME] = self.init_args[NAME] or projection_name
             self.name = self.init_args[NAME]
+
+        # If the name is not a default name, leave intact
+        elif not self.className + '-' in self.name:
+            return self.name
+
+        elif self.init_status is InitStatus.INITIALIZED:
+            if self.sender.owner:
+                sender_name = "{}[{}]".format(self.sender.owner.name, sender_name)
+            if self.receiver.owner:
+                receiver_name = "{}[{}]".format(self.receiver.owner.name, receiver_name)
+            self.name = self.className + " from " + sender_name + " to " + receiver_name
 
         else:
             raise PathwayProjectionError("PROGRAM ERROR: {} has unrecognized InitStatus ({})".

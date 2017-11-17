@@ -135,9 +135,9 @@ class TestNaming:
         assert I1.name == 'InputState-1'
         assert I2.name == 'InputState-2'
         assert T2.input_states[0].path_afferents[0].name == \
-               'MappingProjection from T1[RESULT] to T2[InputState-0]'
+               'MappingProjection from T1[RESULTS] to T2[InputState-0]'
         assert T2.input_states[2].path_afferents[0].name == \
-               'MappingProjection from T1[RESULT] to T2[InputState-2]'
+               'MappingProjection from T1[RESULTS] to T2[InputState-2]'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 10
