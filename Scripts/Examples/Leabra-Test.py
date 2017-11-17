@@ -15,7 +15,6 @@ from psyneulink.components.process import Process
 from psyneulink.components.system import System
 import time
 
-
 random_seed_value = 1  # feel free to change this value
 random.seed(random_seed_value)
 num_trials = 10  # how many trials should we run?
