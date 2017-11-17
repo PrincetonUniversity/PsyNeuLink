@@ -299,6 +299,7 @@ Class Reference
 
 """
 import warnings
+from collections import Iterable
 
 import typecheck as tc
 
@@ -530,7 +531,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  default_variable=None,
                  size=None,
                  function=LinearCombination,
-                 output_states:tc.optional(tc.any(list, dict))=[OUTCOME],
+                 output_states:tc.optional(tc.any(str, list, dict))=OUTCOME,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

@@ -112,6 +112,7 @@ Class Reference
 """
 import inspect
 import numbers
+from collections import Iterable
 
 import numpy as np
 import typecheck as tc
@@ -187,7 +188,6 @@ class TRANSFER_OUTPUT():
 # for item in [item[NAME] for item in DDM_standard_output_states]:
 #     setattr(DDM_OUTPUT.__class__, item, item)
 
-
 class TransferError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -199,14 +199,14 @@ class TransferError(Exception):
 class TransferMechanism(ProcessingMechanism_Base):
     """
     TransferMechanism(           \
-    default_variable=None,    \
+    default_variable=None,       \
     size=None,                   \
     function=Linear,             \
     initial_value=None,          \
     noise=0.0,                   \
     time_constant=1.0,           \
     integrator_mode=False,       \
-    clip=(float:min, float:max),\
+    clip=(float:min, float:max), \
     params=None,                 \
     name=None,                   \
     prefs=None)
@@ -411,7 +411,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  time_constant=1.0,
                  integrator_mode=False,
                  clip=None,
-                 output_states:tc.optional(tc.any(list, dict))=[RESULT],
+                 output_states:tc.optional(tc.any(str, list, dict))=RESULT,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
@@ -419,9 +419,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                  context=componentType+INITIALIZING):
         """Assign type-level preferences and call super.__init__
         """
-        # MODIFIED 7/21/17 CW: Removed output_states = [RESULT] from initialization, due to potential bugs with
-        # mutable default arguments (see: bit.ly/2uID3s3)
-        if output_states is None:
+        # Default output_states is specified in constructor as a string rather than a list
+        # to avoid "gotcha" associated with mutable default arguments
+        # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
+        if output_states is None or output_states is RESULT:
             output_states = [RESULT]
 
         params = self._assign_args_to_param_dicts(function=function,

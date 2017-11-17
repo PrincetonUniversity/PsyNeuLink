@@ -128,6 +128,7 @@ Class Reference
 """
 
 import numbers
+from collections import Iterable
 
 import numpy as np
 import typecheck as tc
@@ -490,11 +491,11 @@ class RecurrentTransferMechanism(TransferMechanism):
                  time_constant: is_numeric_or_none=1.0,
                  integrator_mode=False,
                  clip=None,
-                 input_states: tc.optional(tc.any(list, dict)) = None,
+                 input_states:tc.optional(tc.any(list, dict)) = None,
                  enable_learning:bool=False,
-                 learning_rate: tc.optional(tc.any(parameter_spec, bool))=None,
+                 learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
-                 output_states: tc.optional(tc.any(list, dict))=None,
+                 output_states:tc.optional(tc.any(list, dict))=None,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,

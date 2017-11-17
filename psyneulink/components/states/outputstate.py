@@ -387,7 +387,6 @@ standard_output_states = [{NAME: RESULT},
                           {NAME:VARIANCE,
                            CALCULATE:lambda x: np.var(x)}]
 
-
 class OutputStateError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value

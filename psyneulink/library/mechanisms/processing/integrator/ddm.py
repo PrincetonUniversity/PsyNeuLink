@@ -290,6 +290,7 @@ import random
 
 import numpy as np
 import typecheck as tc
+from collections import Iterable
 
 from psyneulink.components.component import method_type
 from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, STARTING_POINT, THRESHOLD
@@ -625,7 +626,7 @@ class DDM(ProcessingMechanism_Base):
                                      threshold=1.0,
                                      noise=0.5,
                                      t0=.200),
-                 output_states:tc.optional(tc.any(list, dict))=[DECISION_VARIABLE, RESPONSE_TIME],
+                 output_states:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  name=None,
@@ -634,6 +635,12 @@ class DDM(ProcessingMechanism_Base):
                  thresh=0,
                  context=componentType + INITIALIZING
     ):
+
+        # Default output_states is specified in constructor as a tuple rather than a list
+        # to avoid "gotcha" associated with mutable default arguments
+        # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
+        if isinstance(output_states, tuple):
+            output_states = list(output_states)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,

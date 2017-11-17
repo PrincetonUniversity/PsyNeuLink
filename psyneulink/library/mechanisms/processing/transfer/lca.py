@@ -74,6 +74,7 @@ Class Reference
 """
 
 import warnings
+from collections import Iterable
 
 import numpy as np
 import typecheck as tc
@@ -412,7 +413,7 @@ class LCA(RecurrentTransferMechanism):
                  integrator_mode=True,
                  time_step_size=0.1,
                  clip=None,
-                 output_states:tc.optional(tc.any(list, dict))=[RESULT],
+                 output_states:tc.optional(tc.any(str, list, dict))=RESULT,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,

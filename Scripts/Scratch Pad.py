@@ -948,6 +948,9 @@ class ScratchPadError(Exception):
 
 #region TEST Naming
 
+D = pnl.DDM()
+T = pnl.TransferMechanism(input_states=['x'])
+
 T = pnl.TransferMechanism(input_states=['a','b','c'])
 print(T.variable)
 print(T.execute([[1],[2],[3]]))
