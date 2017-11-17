@@ -16,7 +16,8 @@ from collections import namedtuple
 from psyneulink.globals.keywords import CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_STATE, MAPPING_PROJECTION, OUTPUT_STATE, PARAMETER_STATE, kwComponentCategory, kwComponentPreferenceSet, kwMechanismComponentCategory, kwPreferenceSet, kwProcessComponentCategory, kwProjectionComponentCategory, kwStateComponentCategory, kwSystemComponentCategory
 
 __all__ = [
-    'RegistryError'
+    'RegistryError',
+    'clear_registry'
 ]
 
 # IMPLEMENTATION NOTE:
@@ -106,6 +107,34 @@ def register_category(entry,
     :return:
     """
 
+    # IMPLEMENTATION NOTE:  Move to State when that is implemented as ABC
+    import inspect
+    from psyneulink.components.states.state import State, State_Base
+    if inspect.isclass(entry) and issubclass(entry, State) and not entry == State_Base:
+        try:
+           entry.stateAttributes
+        except AttributeError:
+            raise RegistryError("PROGRAM ERROR: {} must implement a stateSpecificParams attribute".
+                                format(entry.__name__))
+        try:
+           entry.connectsWith
+        except AttributeError:
+            raise RegistryError("PROGRAM ERROR: {} must implement a connectsWith attribute".format(entry.__name__))
+        try:
+           entry.connectsWithAttribute
+        except AttributeError:
+            raise RegistryError("PROGRAM ERROR: {} must implement a connectsWithAttribute attribute".
+                                format(entry.__name__))
+        try:
+           entry.projectionSocket
+        except AttributeError:
+            raise RegistryError("PROGRAM ERROR: {} must implement a projectionSocket attribute".format(entry.__name__))
+        try:
+           entry.modulators
+        except AttributeError:
+            raise RegistryError("PROGRAM ERROR: {} must implement a modulators attribute".format(entry.__name__))
+
+
     from psyneulink.components.component import Component
     from psyneulink.globals.preferences.preferenceset import PreferenceSet
     if not issubclass(base_class, (Component, PreferenceSet)):
@@ -128,20 +157,6 @@ def register_category(entry,
     # If entry is an instance (presumably of a component type of the base class):
     if isinstance(entry, base_class):
 
-        # MODIFIED 6/8/17 OLD:
-        # try:
-        #     component_type_name = entry.componentType
-        # except AttributeError:
-        #     component_type_name = entry.__class__.__name__
-        #
-        # # Component type is registered (i.e., there is an entry for component_type_name)
-        # if component_type_name in registry:
-        #     register_instance(entry=entry,
-        #                       name=name,
-        #                       base_class=base_class,
-        #                       registry=registry,
-        #                       sub_dict=component_type_name)
-        # MODIFIED 6/8/17 NEW:
         try:
             component_type_name = entry.componentName
         except AttributeError:
@@ -157,14 +172,13 @@ def register_category(entry,
                               base_class=base_class,
                               registry=registry,
                               sub_dict=component_type_name)
-        # MODIFIED 6/8/17 END
 
         # If component type is not already registered in registry, then:
         else:
             # Set instance's name to first instance:
             # If name was not provided, assign component_type_name-1 as default;
             if not name:
-                entry.name = component_type_name + "-1"
+                entry.name = component_type_name + "-0"
             else:
                 entry.name = name
 
@@ -197,13 +211,14 @@ def register_category(entry,
 
 
 def register_instance(entry, name, base_class, registry, sub_dict):
+
     renamed_instance_counts = registry[sub_dict].renamed_instance_counts
 
-    # If entry (instance) does not have a name, set entry's name to sub_dict-n where n is the next available
-    # numeric suffix based on the number of unnamed/renamed sub_dict objects that have already been assigned names
+    # If entry (instance) name is None, set entry's name to sub_dict-n where n is the next available numeric suffix
+    # starting at 0)based on the number of unnamed/renamed sub_dict objects that have already been assigned namesGG
     if not name:
-        renamed_instance_counts[sub_dict] += 1
         entry.name = '{0}-{1}'.format(sub_dict, renamed_instance_counts[sub_dict])
+        renamed_instance_counts[sub_dict] += 1
     else:
         entry.name = name
 
@@ -224,17 +239,8 @@ def register_instance(entry, name, base_class, registry, sub_dict):
             entry.name += '-{0}'.format(renamed_instance_counts[entry.name])
         else:
             name_stripped_of_suffix = match.groups()[0]
-        # # MODIFIED 10/29/17 OLD:
-        entry.name = numeric_suffix_pat.sub(r'\1-{0}'.format(renamed_instance_counts[name_stripped_of_suffix]), entry.name)
-        # # MODIFIED 10/29/17 NEW:
-        # try:
-        #     entry.name = numeric_suffix_pat.sub(r'\1-{0}'.
-        #                                         format(renamed_instance_counts[name_stripped_of_suffix]), entry.name)
-        # except KeyError:
-        #     entry.name = numeric_suffix_pat.sub(r'\1-{0}'.
-        #                                         format(renamed_instance_counts[entry.__class__.__name__]), entry.name)
-        # MODIFIED 10/29/17 END
-
+            entry.name = numeric_suffix_pat.sub(r'\1-{0}'.
+                                                format(renamed_instance_counts[name_stripped_of_suffix]), entry.name)
 
     # Add instance to instanceDict:
     registry[sub_dict].instanceDict.update({entry.name: entry})
@@ -242,39 +248,5 @@ def register_instance(entry, name, base_class, registry, sub_dict):
     # Update instanceCount in registry:
     registry[sub_dict] = registry[sub_dict]._replace(instanceCount=registry[sub_dict].instanceCount + 1)
 
-
-# def set_default_mechanism(mechanism_subclass):
-#     """Sets DefaultMechanism to specified component type
-#
-#     :param mechanism_subclass:
-#     :return:
-#     """
-#
-#     if not (issubclass(mechanism_subclass, Mechanism)):
-#         raise MechanismError("Requested mechanism {0} not of type {1}".format(mechanism_subclass, type(Mechanism)))
-#
-#     # Remove existing default flag
-#     old_default_name = NotImplemented
-#     for component_type_name in MechanismRegistry:
-#         if MechanismRegistry[component_type_name].default:
-#             old_default_name = component_type_name
-#             MechanismRegistry[component_type_name] = MechanismRegistry[component_type_name]._replace(default=False)
-#
-#
-#     # Flag specified component type as default
-#     try:
-#         MechanismRegistry[mechanism_subclass.componentType] =\
-#             MechanismRegistry[mechanism_subclass.componentType]._replace(default=True)
-#     # Not yet registered, so do so as default
-#     except KeyError:
-#         register_mechanism_subclass(mechanism_subclass)
-#         MechanismRegistry[mechanism_subclass.componentType] =\
-#             MechanismRegistry[mechanism_subclass.componentType]._replace(default=True)
-
-#     # Assign to DefaultMechanism
-#     Components.DefaultMechanism = MechanismRegistry[mechanism_subclass.name].mechanismSubclass
-# mechanism_subclass
-#     # Issue warning
-#     if self.prefs.verbosePref:
-#         print("{0} set as new default mechanism ({1}) removed)".format(mechanism_subclass.name, old_default_name))
-
+def clear_registry(registry):
+    registry.clear()

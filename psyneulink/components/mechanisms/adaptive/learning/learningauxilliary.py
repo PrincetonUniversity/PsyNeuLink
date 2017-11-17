@@ -158,19 +158,6 @@ class LearningAuxilliaryError(Exception):
         self.error_value = error_value
 
 
-def _is_learning_spec(spec):
-    """Evaluate whether spec is a valid learning specification
-
-    Return `True` if spec is LEARNING or a valid projection_spec (see Projection._is_projection_spec
-    Otherwise, return :keyword:`False`
-
-    """
-    if spec is LEARNING:
-        return True
-    else:
-        return _is_projection_spec(spec)
-
-
 def _instantiate_learning_components(learning_projection, context=None):
     """Instantiate learning components for a LearningProjection
 

@@ -208,7 +208,7 @@ InputState for each `TRIAL`.
 Initial Values
 ~~~~~~~~~~~~~~
 
-Any Mechanism that is the `sender <Projection.Projection.sender>` of a Projection that closes a loop in a Process or
+Any Mechanism that is the `sender <Projection_Base.sender>` of a Projection that closes a loop in a Process or
 System, and that is not an `ORIGIN` Mechanism, is designated as `INITIALIZE_CYCLE`. An initial value can be assigned
 to such Mechanisms, that will be used to initialize them when the Process or System is first run.  These values are
 specified in the **initial_values** argument of :keyword:`run`, as a dictionary. The key for each entry must
@@ -811,9 +811,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                        projection in target.input_states[SAMPLE].path_afferents
                        for mech in stimuli.keys()):
                     raise RunError("Entry for {} is missing from specification of targets for run of {}".
-                                   format(target.input_states[SAMPLE].
-                                          afferents[0].sender.owner.name,
-                                          object.name))
+                                   format(target.input_states[SAMPLE].path_afferents[0].sender.owner.name, object.name))
 
         # FIX: COULD JUST IGNORE THOSE, OR WARN ABOUT THEM IF VERBOSE?
 
@@ -877,6 +875,10 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                                   format(mech.name, object.name, stimuli[mech]))
 
         for stim in stimuli[mech]:
+            # 10/3/17 CW: This could be smarter: if it's incompatible, we could try other ways of unpacking the
+            # stimulus, such as if the user wants to pass in a 2D array as the input each round, but only wants one
+            # round, they may pass in stimuli as [[1, 2], [3, 4]] which shouldn't be interpreted as two rounds
+            # ([1, 2] and [3, 4]) like we're doing here
             if not iscompatible(np.atleast_2d(stim), mech.instance_defaults.variable):
                 err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
                     format(stim, mech.name, mech.instance_defaults.variable)
@@ -886,7 +888,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                     err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
                                         " to represent the outside stimulus for the inhibition input state, and " \
                                         "for systems, put your inputs"
-                raise RunError(err_msg)
+                # raise RunError(err_msg)
 
     stim_lists = list(stimuli.values())
     num_input_sets = len(stim_lists[EXECUTION_SET_DIM])
@@ -1041,16 +1043,16 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
             else:
                 raise RunError("PROGRAM ERROR: Unexpected shape of inputs: {}".format(inputs.shape))
 
-        if inputs.ndim != expected_dim:
-            raise RunError("inputs arg in call to {}.run() must be a {}d np.array or comparable list".
-                              format(object.name, expected_dim))
-
-        if np.size(inputs,PROCESSES_DIM) != len(object.origin_mechanisms):
-            raise RunError("The number of inputs for each execution ({}) in the call to {}.run() "
-                              "does not match the number of Processes in the System ({})".
-                              format(np.size(inputs,PROCESSES_DIM),
-                                     object.name,
-                                     len(object.origin_mechanisms)))
+        # if inputs.ndim != expected_dim:
+        #     raise RunError("inputs arg in call to {}.run() must be a {}d np.array or comparable list".
+        #                       format(object.name, expected_dim))
+        #
+        # if np.size(inputs,PROCESSES_DIM) != len(object.origin_mechanisms):
+        #     raise RunError("The number of inputs for each execution ({}) in the call to {}.run() "
+        #                       "does not match the number of Processes in the System ({})".
+        #                       format(np.size(inputs,PROCESSES_DIM),
+        #                              object.name,
+        #                              len(object.origin_mechanisms)))
 
         # Check that length of each input matches length of corresponding origin mechanism over all executions and phases
         if is_target:

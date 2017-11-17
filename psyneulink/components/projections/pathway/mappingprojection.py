@@ -247,11 +247,12 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import InitStatus, parameter_keywords
-from psyneulink.components.functions.function import AccumulatorIntegrator, LinearMatrix, get_matrix
+from psyneulink.components.functions.function import AccumulatorIntegrator, LinearMatrix, _get_matrix
 from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, SYSTEM_INPUT_STATE
+from psyneulink.globals.keywords import VALUE, AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, \
+    FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, SYSTEM_INPUT_STATE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock
@@ -348,21 +349,17 @@ class MappingProjection(PathwayProjection_Base):
         value of the `sender <MappingProjection.sender>` into a form suitable for the `variable <InputState.variable>`
         of its `receiver <MappingProjection.receiver>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default MappingProjection-<index>
-        a string used for the name of the MappingProjection.
-        If not is specified, a default is assigned by `ProjectionRegistry`
-        (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see MappingProjection `name <MappingProjection.name>`
+        specifies the name of the MappingProjection.
 
-    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
-        the `PreferenceSet` for the MappingProjection.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see `PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default State.classPreferences
+        specifies the `PreferenceSet` for the MappingProjection; see `prefs <MappingProjection.prefs>` for details.
 
     Attributes
     ----------
@@ -403,17 +400,20 @@ class MappingProjection(PathwayProjection_Base):
         `InputState` to determine that InputState's `variable <InputState.variable>` (see `description above
         <Mapping_Weight_Exponent>` for details).
 
-    name : str : default MappingProjection-<index>
-        the name of the MappingProjection.
-        Specified in the **name** argument of the constructor for the Projection;
-        if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the MappingProjection. If the MappingProjection's `initialization has been deferred
+        <Projection_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
+        status) until initialization is completed, at which time it is assigned its designated name.  If that is the
+        name of an existing MappingProjection, it is appended with an indexed suffix, incremented for each
+        MappingProjection with the same base name (see `Naming`). If the name is not  specified in the **name**
+        argument of its constructor, a default name is assigned using the following format:
+        'MappingProjection from <sender's name> to <receiver's name>'
+        (for example, ``'MappingProjection from my_mech_1 to my_mech2'``).
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for Projection.
-        Specified in the **prefs** argument of the constructor for the Projection;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the MappingProjection; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 
@@ -445,11 +445,11 @@ class MappingProjection(PathwayProjection_Base):
                  context=None):
 
         # if matrix is DEFAULT_MATRIX:
-        #     initializer = get_matrix(matrix)
+        #     initializer = _get_matrix(matrix)
         #     initial_rate = initializer * 0.0
         #     matrix={VALUE:DEFAULT_MATRIX,
         #             FUNCTION:ConstantIntegrator(owner=self._parameter_states[MATRIX],
-        #                                         initializer=get_matrix(DEFAULT_MATRIX),
+        #                                         initializer=_get_matrix(DEFAULT_MATRIX),
         #                                         rate=initial_rate)}
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -470,21 +470,14 @@ class MappingProjection(PathwayProjection_Base):
             self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
-        super(MappingProjection, self).__init__(sender=sender,
-                                                receiver=receiver,
-                                                weight=weight,
-                                                exponent=exponent,
-                                                params=params,
-                                                name=name,
-                                                prefs=prefs,
-                                                context=self)
-
-    # def _instantiate_sender(self, context=None):
-            # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
-            # #            - kwMATRIX NEEDS TO BE A 3D np.array, EACH 3D ITEM OF WHICH IS A 2D WEIGHT MATRIX
-            # #            - MAKE SURE len(self.sender.value) == len(self.receiver.input_states.items())
-            # # for i in range (len(self.sender.value)):
-            # #            - CHECK EACH MATRIX AND ASSIGN??
+        super().__init__(sender=sender,
+                         receiver=receiver,
+                         weight=weight,
+                         exponent=exponent,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=self)
 
     def _instantiate_parameter_states(self, context=None):
 
@@ -494,7 +487,7 @@ class MappingProjection(PathwayProjection_Base):
         # FIX: UPDATE WITH MODULATION_MODS
         # FIX: MOVE THIS TO MappingProjection.__init__;
         # FIX: AS IT IS, OVER-WRITES USER ASSIGNMENT OF FUNCTION IN params dict FOR MappingProjection
-        matrix = get_matrix(self._parameter_states[MATRIX].value)
+        matrix = _get_matrix(self._parameter_states[MATRIX].value)
         initial_rate = matrix * 0.0
 
         self._parameter_states[MATRIX].function_object = AccumulatorIntegrator(owner=self._parameter_states[MATRIX],
@@ -550,15 +543,22 @@ class MappingProjection(PathwayProjection_Base):
             else:
                 projection_string = 'projection'
 
+            if all(string in self.name for string in {'from', 'to'}):
+                states_string = ''
+            else:
+                states_string = "from \'{}\' OuputState of \'{}\' to \'{}\'".format(self.sender.name,
+                                                                                    self.sender.owner.name,
+                                                                                    self.receiver.owner.name)
             if not isinstance(self._matrix_spec, str):
-                raise ProjectionError("Width ({}) of \'{}{}\' from \'{}\' OuputState of \'{}\' to \'{}\'"
-                                      " does not match the length of its \'{}\' InputState ({})".
+                # if all(string in self.name for string in {'from', 'to'}):
+
+                raise ProjectionError("Width ({}) of the {} of \'{}{}\'{} "
+                                      "does not match the length of its \'{}\' InputState ({})".
                                       format(mapping_output_len,
+                                             VALUE,
                                              self.name,
                                              projection_string,
-                                             self.sender.name,
-                                             self.sender.owner.name,
-                                             self.receiver.owner.name,
+                                             states_string,
                                              self.receiver.name,
                                              receiver_len))
 
@@ -586,7 +586,7 @@ class MappingProjection(PathwayProjection_Base):
                                  receiver_len,
                                  self.receiver.owner.name))
 
-                self._matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
+                self._matrix = _get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
 
                 # Since matrix shape has changed, output of self.function may have changed, so update self.value
                 self._update_value()

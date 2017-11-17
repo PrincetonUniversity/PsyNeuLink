@@ -73,6 +73,7 @@ OTHER
 
 """
 
+import collections
 import inspect
 import numbers
 import warnings
@@ -84,7 +85,7 @@ import numpy as np
 from psyneulink.globals.keywords import DISTANCE_METRICS, MATRIX_KEYWORD_VALUES, NAME, VALUE
 
 __all__ = [
-    'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array', 'get_class_attributes',
+    'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array', 'convert_all_elements_to_np_array', 'get_class_attributes',
     'get_modulationOperation_name', 'get_value_from_array', 'is_distance_metric', 'is_matrix', 'is_matrix_spec',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
@@ -433,8 +434,6 @@ def iscompatible(candidate, reference=None, **kargs):
         if isinstance(candidate, numbers.Number):
             return True
         if number_only:
-            if isinstance(candidate, numbers.Number):
-                return True
             if isinstance(candidate, np.ndarray) and candidate.ndim ==0 and np.isreal(candidate):
                 return True
             if not isinstance(candidate, (list, tuple, np.ndarray, np.matrix)):
@@ -463,18 +462,22 @@ def iscompatible(candidate, reference=None, **kargs):
                 return True
             else:
                 if len(candidate) == match_length:
-                    # No reference,so item by item comparison is not relevant
+                    # No reference, so item by item comparison is not relevant
                     if reference is None:
                         return True
-                    # If reference was provided, compare element by element
-                    elif all(isinstance(c, type(r)) for c, r in zip(candidate,reference)):
+                    # Otherwise, carry out recursive elementwise comparison
+                    if isinstance(candidate, np.matrix):
+                        candidate = np.asarray(candidate)
+                    if isinstance(reference, np.matrix):
+                        reference = np.asarray(reference)
+                    cr = zip(candidate, reference)
+                    if all(iscompatible(c, r, **kargs) for c, r in cr):
                         return True
+                    # IMPLEMENTATION NOTE:  ??No longer needed given recursive call above
                     # Deal with ints in one and floats in the other
-                    elif all((isinstance(c, numbers.Number) and isinstance(r, numbers.Number))
-                             for c, r in zip(candidate,reference)):
-                        return True
-                    else:
-                        return False
+                    # # elif all((isinstance(c, numbers.Number) and isinstance(r, numbers.Number))
+                    # #          for c, r in cr):
+                    # #     return True
                 else:
                     return False
         else:
@@ -660,7 +663,7 @@ def get_value_from_array(array):
     :return:
     """
 
-def random_matrix(sender, receiver, range=1, offset=0):
+def random_matrix(sender, receiver, clip=1, offset=0):
     """Generate a random matrix
 
     Calls np.random.rand to generate a 2d np.array with random values.
@@ -683,7 +686,7 @@ def random_matrix(sender, receiver, range=1, offset=0):
     -------
     2d np.array
     """
-    return (range * np.random.rand(sender, receiver)) + offset
+    return (clip * np.random.rand(sender, receiver)) + offset
 
 def underscore_to_camelCase(item):
     item = item[1:]
@@ -828,8 +831,10 @@ class ContentAddressableList(UserList):
                                      .format(self.name, self.component_type.__name__))
         UserList.__init__(self, list, **kwargs)
 
-    def __repr__(self):
-        return '[\n\t{0}\n]'.format('\n\t'.join(['{0}\t{1}\t{2}'.format(i, self[i].name, repr(self[i].value)) for i in range(len(self))]))
+    # def __repr__(self):
+    #     return '[\n\t{0}\n]'.format('\n\t'.join(['{0}\t{1}\t{2}'.format(i, self[i].name,
+    #                                                                     repr(self[i].value))
+    #                                              for i in range(len(self))]))
 
     def __getitem__(self, key):
         if key is None:
@@ -1019,3 +1024,19 @@ def get_class_attributes(cls):
     return [item
             for item in inspect.getmembers(cls)
             if item[0] not in boring]
+
+
+def convert_all_elements_to_np_array(arr):
+    '''
+        Recursively converts all items in **arr** to numpy arrays
+    '''
+    if not isinstance(arr, collections.Iterable) or isinstance(arr, str):
+        return np.asarray(arr)
+
+    if isinstance(arr, np.matrix):
+        if arr.dtype == object:
+            return np.matrix([convert_all_elements_to_np_array(arr.item(i)) for i in range(arr.size)])
+        else:
+            return arr
+
+    return np.asarray([convert_all_elements_to_np_array(x) for x in arr])

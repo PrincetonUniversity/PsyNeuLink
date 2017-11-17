@@ -292,11 +292,15 @@ from psyneulink.components.functions.function import CombinationFunction, Expone
     LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
 from psyneulink.components.shellclasses import Function
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE
+from psyneulink.components.states.outputstate import PRIMARY, SEQUENTIAL
 from psyneulink.components.states.parameterstate import _get_parameter_state
 from psyneulink.components.states.state import State_Base
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, MECHANISM, MODULATION, NAME, OFF, ON, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, SEPARATOR_BAR, SLOPE, SUM, kwAssign
+from psyneulink.globals.keywords import \
+    ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, \
+    FUNCTION, FUNCTION_PARAMS, INTERCEPT, COMMAND_LINE, OFF, ON, \
+    PARAMETER_STATE, PARAMETER_STATES, OUTPUT_STATE_PARAMS, \
+    PROJECTION_TYPE, RECEIVER, SEPARATOR_BAR, SLOPE, SUM, kwAssign
 from psyneulink.globals.log import LogEntry, LogLevel
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -323,8 +327,6 @@ __all__ = [
 #     TEST_MODE = 240
 # defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
 DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.3)
-
-STATE_SPECIFIC_PARAMS = {ALLOCATION_SAMPLES, MODULATION}
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
@@ -408,6 +410,7 @@ class ControlSignal(ModulatorySignal):
     """
     ControlSignal(                                       \
         owner,                                           \
+\       index=SEQUENTIAL,                                \
         function=LinearCombination(operation=SUM),       \
         costs_options=ControlSignalCosts.DEFAULTS,       \
         intensity_cost_function=Exponential,             \
@@ -455,6 +458,10 @@ class ControlSignal(ModulatorySignal):
     owner : ControlMechanism
         specifies the `ControlMechanism <ControlMechanism>` to which to assign the ControlSignal.
 
+    index : int : default SEQUENTIAL
+        specifies the item of the owner ControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>`
+        used as the ControlSignal's `value <ControlSignal.value>`.
+
     function : Function or method : default Linear
         specifies the function used to determine the `intensity` of the ControlSignal from its `allocation`.
 
@@ -469,7 +476,7 @@ class ControlSignal(ModulatorySignal):
         specifies the function used to calculate the contribution of the change in the ControlSignal's `intensity`
         (from its `last_intensity` value) to its `cost <ControlSignal.cost>`.
 
-    duration_cost_function : Optional[IntegratorFunction] : default Integrator
+    duration_cost_function : IntegratorFunction : default Integrator
         specifies the function used to calculate the contribution of the ControlSignal's duration to its
         `cost <ControlSignal.cost>`.
 
@@ -490,20 +497,17 @@ class ControlSignal(ModulatorySignal):
         listed in its `efferents <ControlSignal.efferents>` attribute (see `ControlSignal_Projections` for additional
         details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default OutputState-<index>
-        a string used for the name of the OutputState.
-        If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
-        belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see ModulatorySignal `name <ModulatorySignal.name>`
+        specifies the name of the ControlSignal; see ControlSignal `name <ModulatorySignal.name>` for additional
+        details.
 
-    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the OutputState.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default State.classPreferences
+        specifies the `PreferenceSet` for the ControlSignal; see `prefs <ControlSignal.prefs>` for details.
 
 
     Attributes
@@ -541,6 +545,10 @@ class ControlSignal(ModulatorySignal):
 
     last_intensity : float
         the `intensity` of the ControlSignal on the previous execution of its `owner <ControlSignal.owner>`.
+
+    index : int
+        the item of the owner ControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>` used as the
+        ControlSignal's `value <ControlSignal.value>`.
 
     control_signal : float
         result of the ControlSignal's `function <ControlSignal.function>`; same as `intensity`.
@@ -587,23 +595,20 @@ class ControlSignal(ModulatorySignal):
     efferents : [List[ControlProjection]]
         a list of the `ControlProjections <ControlProjection>` assigned to (i.e., that project from) the ControlSignal.
 
-    name : str : default <State subclass>-<index>
-        name of the OutputState.
-        Specified in the **name** argument of the constructor for the OutputState.  If not is specified, a default is
-        assigned by the StateRegistry of the Mechanism to which the OutputState belongs
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        name of the ControlSignal; if it is not specified in the **name** argument of its constructor, a default name
+        is assigned (see `name <ModulatorySignal.name>`).
 
         .. note::
-            Unlike other PsyNeuLink components, state names are "scoped" within a Mechanism, meaning that states with
+            Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
-            Mechanism: states within a Mechanism with the same base name are appended an index in the order of their
+            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
-    prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the OutputState.
-        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
-        assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the ControlSignal; if it is not specified in the **prefs** argument of the constructor,
+        a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
+        details).
 
     """
 
@@ -611,6 +616,13 @@ class ControlSignal(ModulatorySignal):
 
     componentType = CONTROL_SIGNAL
     paramsType = OUTPUT_STATE_PARAMS
+
+    stateAttributes = ModulatorySignal.stateAttributes | {ALLOCATION_SAMPLES}
+
+    connectsWith = [PARAMETER_STATE]
+    connectsWithAttribute = [PARAMETER_STATES]
+    projectionSocket = RECEIVER
+    modulators = []
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -633,7 +645,7 @@ class ControlSignal(ModulatorySignal):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 index=PRIMARY_OUTPUT_STATE,
+                 index=None,
                  calculate=Linear,
                  function=LinearCombination(operation=SUM),
                  cost_options:tc.any(ControlSignalCosts, list)=ControlSignalCosts.DEFAULTS,
@@ -649,9 +661,20 @@ class ControlSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  context=None):
 
+        if context is None:
+            context = COMMAND_LINE
+        else:
+            context = self
+
         # Note index and calculate are not used by ControlSignal, but included here for consistency with OutputState
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
             allocation_samples =  params[ALLOCATION_SAMPLES]
+
+        # Note: calculate is not currently used by GatingSignal;
+        #       it is included here for consistency with OutputState and possible use by subclasses.
+
+        # If index has not been specified, but the owner has, allocation_policy has been determined, so use that
+        index = index or SEQUENTIAL
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -680,14 +703,14 @@ class ControlSignal(ModulatorySignal):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate allocation_samples and control_signal cost functions
 
         Checks if:
         - cost functions are all appropriate
-        - allocation_samples is a list with 2 numbers
+        - allocation_samples is a list or 1d np.array
         - all cost functions are references to valid ControlProjection costFunctions (listed in self.costFunctions)
         - IntensityFunction is identity function, in which case ignoreIntensityFunction flag is set (for efficiency)
 
@@ -975,8 +998,6 @@ class ControlSignal(ModulatorySignal):
                                                                             float(self.cost))
     #endregion
 
-# MODIFIED 9/30/17 NEW:
-# FIX: 10/3/17 - SHOULD BE ABLE TO PARE THIS DOWN
     def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
 
@@ -994,29 +1015,8 @@ class ControlSignal(ModulatorySignal):
 
         params_dict = {}
 
-        if PROJECTIONS in state_specific_params:
-            params_dict[PROJECTIONS] = state_specific_params[PROJECTIONS]
-        else:
-            params_dict[PROJECTIONS] = []
-
-        for param in STATE_SPECIFIC_PARAMS:
-            if param in state_specific_params:
-                params_dict[param] = state_specific_params[param]
-
         if isinstance(state_specific_params, dict):
-
-            # control_signal was a Control specification dictionary,
-            #     with the Mechanism to which the parameter belongs in the MECHANISM entry,
-            #     and the name of the parameter in the NAME entry
-            # if all(key in state_dict for key in {MECHANISM, NAME}):
-            if MECHANISM in state_dict:
-                mech = state_dict[MECHANISM]
-                param_name = state_dict[NAME]
-                # Delete MECHANISM entry as it is not a parameter of ControlSignal
-                #     (which will balk at it in ControlSignal._validate_params)
-                del state_dict[MECHANISM]
-                parameter_state = _get_parameter_state(owner, CONTROL_SIGNAL, param_name, mech)
-                params_dict[PROJECTIONS].append(parameter_state)
+            return state_specific_params
 
         elif isinstance(state_specific_params, tuple):
 
@@ -1035,7 +1035,7 @@ class ControlSignal(ModulatorySignal):
                                          "that is the name of a parameter of its second item ({})".
                                          format(ControlSignal.__name__, owner.name, param_name, mech.name))
             try:
-                parameter_state = mech._parameter_states[param_name]
+                parameter_state = mech.parameter_states[param_name]
             except KeyError:
                 raise ControlSignalError("No {} found for {} param of {} in {} specification tuple for {}".
                                          format(ParameterState.__name__, param_name, mech.name,
@@ -1048,7 +1048,6 @@ class ControlSignal(ModulatorySignal):
 
             # Assign connection specs to PROJECTIONS entry of params dict
             try:
-                # params_dict[CONNECTIONS] = _parse_connection_specs(self.__class__,
                 params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                    owner=owner,
                                                                    connections=parameter_state)
@@ -1066,8 +1065,6 @@ class ControlSignal(ModulatorySignal):
                                         format(CONTROL_SIGNAL, owner.name))
 
         return params_dict
-# MODIFIED 9/30/17 END
-
 
     @property
     def allocation_samples(self):

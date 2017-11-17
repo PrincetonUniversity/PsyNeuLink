@@ -65,16 +65,17 @@ __all__ = [
     'LINEAR_FUNCTION', 'LINEAR_MATRIX_FUNCTION', 'LOGISTIC_FUNCTION', 'LOW', 'MAKE_DEFAULT_GATING_MECHANISM',
     'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET',
     'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS', 'MatrixKeywords', 'MAX_INDICATOR', 'MAX_VAL', 'MEAN', 'MECHANISM',
-    'MECHANISM_TIME_SCALE', 'MechanismRoles', 'MEDIAN', 'MODULATION', 'MODULATORY_PROJECTION', 'MODULATORY_SIGNAL',
-    'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MUTUAL_ENTROPY', 'NAME', 'NO_CONTEXT', 'NOISE', 'NORMAL_DIST_FUNCTION',
-    'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT', 'OFF', 'OFFSET', 'ON', 'OPERATION',
-    'ORIGIN', 'ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION', 'OUTCOME_FUNCTION', 'OUTPUT_STATE', 'OUTPUT_STATE_PARAMS',
-    'OUTPUT_STATES', 'OUTPUT_TYPE', 'OWNER', 'PARAM_CLASS_DEFAULTS', 'PARAM_INSTANCE_DEFAULTS', 'PARAMETER_STATE',
-    'PARAMETER_STATE_PARAMS', 'PARAMETER_STATES', 'PARAMS', 'PARAMS_CURRENT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON',
-    'PREDICTION_MECHANISM', 'PREDICTION_MECHANISM_OUTPUT', 'PREDICTION_MECHANISM_PARAMS', 'PREDICTION_MECHANISM_TYPE',
-    'PREFS_ARG', 'PRIMARY', 'PROB', 'PROCESS', 'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING_MECHANISM',
-    'PRODUCT', 'PROJECTION', 'PROJECTION_PARAMS', 'PROJECTION_SENDER', 'PROJECTION_SENDER_VALUE', 'PROJECTION_TYPE',
-    'PROJECTIONS', 'QUOTIENT', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'RECEIVER', 'RECURRENT_TRANSFER_MECHANISM',
+    'MECHANISM_TIME_SCALE', 'MechanismRoles', 'MECHANISM_VALUE', 'MEDIAN', 'MODULATION', 'MODULATORY_PROJECTION',
+    'MODULATORY_SIGNAL', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MUTUAL_ENTROPY', 'NAME', 'NO_CONTEXT',
+    'NOISE', 'NORMAL_DIST_FUNCTION', 'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT',
+    'OFF', 'OFFSET', 'ON', 'OPERATION', 'ORIGIN', 'ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION', 'OUTCOME_FUNCTION',
+    'OUTPUT_STATE', 'OUTPUT_STATE_PARAMS', 'OUTPUT_STATES', 'OUTPUT_TYPE', 'OWNER', 'PARAM_CLASS_DEFAULTS',
+    'PARAM_INSTANCE_DEFAULTS', 'PARAMETER_STATE', 'PARAMETER_STATE_PARAMS', 'PARAMETER_STATES', 'PARAMS',
+    'PARAMS_CURRENT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON', 'PREDICTION_MECHANISM', 'PREDICTION_MECHANISM_OUTPUT',
+    'PREDICTION_MECHANISM_PARAMS', 'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PRIMARY', 'PROB', 'PROCESS',
+    'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING_MECHANISM', 'PRODUCT', 'PROJECTION',
+    'PROJECTION_PARAMS', 'PROJECTION_SENDER', 'PROJECTION_SENDER_VALUE', 'PROJECTION_TYPE', 'PROJECTIONS',
+    'QUOTIENT', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'RECEIVER', 'RECURRENT_TRANSFER_MECHANISM',
     'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'RESULT', 'RL_FUNCTION', 'RUN', 'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES',
     'SCALAR', 'SCALE', 'SCHEDULER', 'SENDER', 'SEPARATOR_BAR', 'SET_ATTRIBUTE', 'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION',
     'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP', 'SOFTMAX_FUNCTION', 'STABILITY_FUNCTION', 'STANDARD_ARGS',
@@ -113,7 +114,7 @@ class MechanismRoles:
         it is simply designated as such (since it will be assigned input and therefore be initialized in any event).
 
     INITIALIZE_CYCLE
-        A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection.Projection.sender>` of a
+        A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection_Base.sender>` of a
         `Projection <Projection>` that closes a loop in a `Process` or `System`, and that is not an `ORIGIN` Mechanism
         (since in that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be
         assigned to such Mechanisms, that will be used to initialize the Process or System when it is first run.  For
@@ -207,6 +208,7 @@ class MatrixKeywords:
     def _names(self):
         return list(self.__dict__)
 
+
 MATRIX = "matrix"
 IDENTITY_MATRIX = "IdentityMatrix"
 HOLLOW_MATRIX = "HollowMatrix"
@@ -220,8 +222,86 @@ MATRIX_KEYWORDS = MatrixKeywords()
 MATRIX_KEYWORD_SET = MATRIX_KEYWORDS._set()
 MATRIX_KEYWORD_VALUES = MATRIX_KEYWORDS._values()
 MATRIX_KEYWORD_NAMES = MATRIX_KEYWORDS._names()
-# MATRIX_KEYWORD_VALUES = list(MATRIX_KEYWORDS.__dict__.values())
-# MATRIX_KEYWORD_NAMES = list(MATRIX_KEYWORDS.__dict__)
+
+
+class DistanceMetrics:
+    """Distance between two arrays.
+
+    Each keyword specifies a metric for the distance between two arrays, :math:`a_1` and :math:`a_2`, of equal length
+    for which *len* is their length, :math:`\\bar{a}` is the mean of an array, :math:`\\sigma_{a}` the standard
+    deviation of an array, and :math:`w_{a_1a_2}` a coupling coefficient ("weight") between a pair of elements,
+    one from each array:
+
+    Attributes
+    ----------
+
+    DIFFERENCE
+        :math:`d = \\sum\limits^{len}(a_1-a_2)`
+
+    EUCLIDEAN
+        :math:`d = \\sum\limits^{len}\\sqrt{(a_1-a_2)^2}`
+
+    COMMENT:
+    ANGLE
+    COMMENT
+
+    CORRELATION
+        :math:`d = \\frac{\\sum\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{a_2}}`
+
+    COMMENT:
+    PEARSON
+        <Description>
+    COMMENT
+
+    ENTROPY and CROSS_ENTROPY
+        :math:`d = \\sum\limits^{len}a_1log(a_2)`
+
+    ENERGY:
+        :math:`d = -\\frac{1}{2}\\sum\limits_{i,j}a_{1_i}a_{2_j}w_{ij}`
+
+    """
+    def __init__(self):
+        self.DIFFERENCE = DIFFERENCE
+        self.EUCLIDEAN = EUCLIDEAN
+        self.ANGLE = ANGLE
+        self.CORRELATION = CORRELATION
+        self.PEARSON = PEARSON
+        self.ENTROPY = CROSS_ENTROPY
+        self.CROSS_ENTROPY = CROSS_ENTROPY
+        self.ENERGY = ENERGY
+
+    def _values(self):
+        return list(self.__dict__.values())
+
+    def _set(self):
+        return set(self.__dict__.values())
+
+    def _names(self):
+        return list(self.__dict__)
+
+    def _is_metric(metric):
+        if metric in DISTANCE_METRICS_SET:
+            return True
+        else:
+            return False
+
+
+DIFFERENCE = 'difference'
+EUCLIDEAN = 'euclidean'
+ANGLE = 'angle'
+CORRELATION = 'correlation'
+PEARSON = 'Pearson'
+ENTROPY = 'cross-entropy'
+CROSS_ENTROPY = 'cross-entropy'
+ENERGY = 'energy'
+
+DISTANCE_METRICS = DistanceMetrics()
+DISTANCE_METRICS_SET = DISTANCE_METRICS._set()
+DISTANCE_METRICS_VALUES = DISTANCE_METRICS._values()
+DISTANCE_METRICS_NAMES = DISTANCE_METRICS._names()
+
+ENERGY = 'energy'
+ENTROPY = 'entropy'
 
 
 # **********************************************************************************************************************
@@ -399,9 +479,11 @@ COMBINATION_FUNCTION_TYPE = "COMBINATION FUNCTION TYPE"
 DIST_FUNCTION_TYPE = "DIST FUNCTION TYPE"
 INTEGRATOR_FUNCTION_TYPE = "INTEGRATOR FUNCTION TYPE"
 TRANSFER_FUNCTION_TYPE = "TRANSFER FUNCTION TYPE"
+LEABRA_FUNCTION_TYPE = "LEABRA FUNCTION TYPE"
 DISTRIBUTION_FUNCTION_TYPE = "DISTRIBUTION FUNCTION TYPE"
 OBJECTIVE_FUNCTION_TYPE = "OBJECTIVE FUNCTION TYPE"
 LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
+NORMALIZING_FUNCTION_TYPE = "NORMALIZING FUNCTION TYPE"
 
 
 # Component SUBTYPES -----------------
@@ -416,6 +498,7 @@ COMPARATOR_MECHANISM = "ComparatorMechanism"
 
 # ProcessingMechanisms:
 TRANSFER_MECHANISM = "TransferMechanism"
+LEABRA_MECHANISM = "LeabraMechanism"
 RECURRENT_TRANSFER_MECHANISM = "RecurrentTransferMechanism"
 LCA = "LCA"
 KWTA = "KWTA"
@@ -430,6 +513,7 @@ REDUCE_FUNCTION = "Reduce Function"
 LINEAR_COMBINATION_FUNCTION = "LinearCombination Function"
 COMBINE_MEANS_FUNCTION = "CombineMeans Function"
 LINEAR_FUNCTION = "Linear Function"
+LEABRA_FUNCTION = "Leabra Function"
 EXPONENTIAL_FUNCTION = "Exponential Function"
 LOGISTIC_FUNCTION = "Logistic Function"
 SOFTMAX_FUNCTION = 'SoftMax Function'
@@ -462,16 +546,6 @@ WALD_DIST_FUNCTION = "Wald Distribution Function"
 STABILITY_FUNCTION = 'Stability Function'
 DISTANCE_FUNCTION = 'Distance Function'
 
-ENERGY = 'energy'
-ENTROPY = 'entropy'
-
-DIFFERENCE = 'difference'
-EUCLIDEAN = 'euclidean'
-ANGLE = 'angle'
-CORRELATION = 'correlation'
-PEARSON = 'Pearson'
-CROSS_ENTROPY = 'cross-entropy'
-DISTANCE_METRICS = {DIFFERENCE, EUCLIDEAN, ANGLE, CORRELATION, PEARSON, CROSS_ENTROPY}
 
 #endregion
 
@@ -534,6 +608,7 @@ RESULT = 'RESULT'
 MEAN = 'MEAN'
 MEDIAN = 'MEDIAN'
 VARIANCE = 'VARIANCE'
+MECHANISM_VALUE = 'MECHANISM_VALUE'
 SIZE = 'size'
 K_VALUE = 'k_value'
 THRESHOLD = 'threshold'
@@ -569,6 +644,11 @@ kwInitialPoint = 'initial_point'
 
 MODULATION = 'modulation'
 
+# LearningMechanism:
+LEARNING_SIGNALS = 'learning_signals'
+LEARNING_SIGNAL_SPECS = 'LEARNING_SIGNAL_SPECS'
+LEARNED_PARAM = 'learned_param'
+
 # ControlMechanism / EVCControlMechanism
 OBJECTIVE_MECHANISM = "objective_mechanism"
 MONITOR_FOR_CONTROL = "monitor_for_control"
@@ -576,9 +656,6 @@ PREDICTION_MECHANISM = "Prediction Mechanism"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
-LEARNING_SIGNALS = 'learning_signals'
-LEARNING_SIGNAL_SPECS = 'LEARNING_SIGNAL_SPECS'
-LEARNED_PARAM = 'learned_param'
 CONTROL_SIGNALS = 'control_signals'
 CONTROL_SIGNAL_SPECS = 'CONTROL_SIGNAL_SPECS'
 CONTROLLED_PARAMS = 'CONTROLLED_PARAMS'
@@ -592,11 +669,13 @@ SYSTEM_DEFAULT_CONTROLLER = "DefaultController"
 EVC_SIMULATION = 'SIMULATING'
 ALLOCATION_SAMPLES = "allocation_samples"
 
+
 # GatingMechanism
 MAKE_DEFAULT_GATING_MECHANISM = "make_default_gating_mechanism"
 GATING_SIGNALS = 'gating_signals'
 GATING_SIGNAL_SPECS = 'GATING_SIGNAL_SPECS'
 GATE = 'GATE'
+GATED_STATES = 'GATED_STATES'
 GATING_PROJECTIONS = 'GatingProjections'
 GATING_POLICY = 'gating_policy'
 
@@ -720,5 +799,7 @@ CONSTANT = 'constant'
 SIMPLE = 'scaled'
 ADAPTIVE = 'adaptive'
 DIFFUSION = 'diffusion'
+
+NETWORK = 'network'
 
 #endregion

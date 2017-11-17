@@ -127,13 +127,14 @@ Class Reference
 
 import numpy as np
 import typecheck as tc
+from collections import Iterable
 
 from psyneulink.components.functions.function import LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.states.outputstate import OutputState, PRIMARY_OUTPUT_STATE, StandardOutputStates
+from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates
 from psyneulink.components.states.state import _parse_state_spec
 from psyneulink.globals.keywords import CALCULATE, COMPARATOR_MECHANISM, INPUT_STATES, NAME, SAMPLE, TARGET, TIME_SCALE, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
@@ -184,7 +185,7 @@ class ComparatorMechanism(ObjectiveMechanism):
         target,                                         \
         input_states=[SAMPLE,TARGET]                    \
         function=LinearCombination(weights=[[-1],[1]],  \
-        output_states=[OUTCOME]                         \
+        output_states=OUTCOME                           \
         params=None,                                    \
         name=None,                                      \
         prefs=None)
@@ -242,15 +243,11 @@ class ComparatorMechanism(ObjectiveMechanism):
         the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name:  str : default ComparatorMechanism-<index>
-        a string used for the name of the Mechanism.
-        If not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <ComparatorMechanism.name>`
+        specifies the name of the ComparatorMechanism.
 
-    prefs :  Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for Mechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the ComparatorMechanism; see `prefs <ComparatorMechanism.prefs>` for details.
 
 
     Attributes
@@ -290,17 +287,14 @@ class ComparatorMechanism(ObjectiveMechanism):
     output_values : 2d np.array
         contains one item that is the value of the *OUTCOME* OutputState.
 
-    name : str : default ComparatorMechanism-<index>
-        the name of the Mechanism.
-        Specified in the **name** argument of the constructor for the Mechanism;
-        if not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the ComparatorMechanism; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for Mechanism.
-        Specified in the **prefs** argument of the constructor for the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the ComparatorMechanism; if it is not specified in the **prefs** argument of the 
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        <LINK>` for details).
 
 
     """
@@ -332,7 +326,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  sample: tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  target: tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  function=LinearCombination(weights=[[-1], [1]]),
-                 output_states: tc.optional(tc.any(list, dict))=[OUTCOME, MSE],
+                 output_states:tc.optional(tc.any(str, Iterable))=(OUTCOME, MSE),
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -342,6 +336,14 @@ class ComparatorMechanism(ObjectiveMechanism):
 
         input_states = self._merge_legacy_constructor_args(sample, target, input_states)
         print("Length of input states: {}".format(len(input_states)))
+
+
+        # Default output_states is specified in constructor as a tuple rather than a list
+        # to avoid "gotcha" associated with mutable default arguments
+        # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
+        if isinstance(output_states, (str, tuple)):
+            output_states = list(output_states)
+
         # IMPLEMENTATION NOTE: The following prevents the default from being updated by subsequent assignment
         #                     (in this case, to [OUTCOME, {NAME= MSE}]), but fails to expose default in IDE
         # output_states = output_states or [OUTCOME, MSE]
@@ -350,7 +352,7 @@ class ComparatorMechanism(ObjectiveMechanism):
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
-                                                               indices=PRIMARY_OUTPUT_STATE)
+                                                               indices=PRIMARY)
 
         super().__init__(# monitored_output_states=[sample, target],
                          monitored_output_states=input_states,

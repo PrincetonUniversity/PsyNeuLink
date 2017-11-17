@@ -71,8 +71,9 @@ InputState(s) and/or OutputState(s) it gates must be specified. This can take an
 
     The dictionary can also contain entries for any other GatingSignal attributes to be specified
     (e.g., a *MODULATION* entry, the value of which determines how the GatingSignal modulates the
-    `value <State_Base.value>` of the State(s) that it gates); see `below <GatingSignal_Structure>`
-    for a description of GatingSignal attributes.
+    `value <State_Base.value>` of the State(s) that it gates; or an *INDEX* entry specifying which item
+    of the GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` it should use as its `value
+    <GatingSignal,value>`).
 
 .. _GatingSignal_Structure:
 
@@ -229,15 +230,14 @@ Class Reference
 
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination, _is_modulation_param
-from psyneulink.components.shellclasses import Mechanism
-from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
-from psyneulink.components.states.outputstate import OutputState, PRIMARY_OUTPUT_STATE
-from psyneulink.components.states.state import State_Base
-from psyneulink.globals.keywords import GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, INPUT_STATE, MECHANISM, NAME, \
-    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION_TYPE, STATES, SUM, GATE
+from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.states.outputstate import OutputState, PRIMARY, SEQUENTIAL
+from psyneulink.components.states.state import State_Base, State
+from psyneulink.globals.keywords import \
+    COMMAND_LINE, GATING_PROJECTION, GATING_SIGNAL, GATE, RECEIVER, SUM, PROJECTION_TYPE, \
+    INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -261,6 +261,7 @@ class GatingSignal(ModulatorySignal):
     """
     GatingSignal(                                   \
         owner,                                      \
+        index=PRIMARY                  \
         function=LinearCombination(operation=SUM),  \
         modulation=ModulationParam.MULTIPLICATIVE,  \
         projections=None,                           \
@@ -302,6 +303,10 @@ class GatingSignal(ModulatorySignal):
     owner : GatingMechanism
         specifies the `GatingMechanism` to which to assign the GatingSignal.
 
+    index : int : default PRIMARY
+        specifies the item of the owner GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` used as the
+        GatingSignal's `value <GatingSignal.value>`.
+
     function : Function or method : default Linear
         specifies the function used to determine the value of the GatingSignal from the value of its
         `owner <GatingMechanism.owner>`.
@@ -316,20 +321,17 @@ class GatingSignal(ModulatorySignal):
         listed in its `efferents <GatingSignal.efferents>` attribute (see `GatingSignal_Projections` for additional
         details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default OutputState-<index>
-        a string used for the name of the OutputState.
-        If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
-        belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see ModulatorySignal `name <ModulatorySignal.name>`
+        specifies the name of the GatingSignal;  see GatingSignal `name <ModulatorySignal.name>` for additional
+        details.
 
-    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the OutputState.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default State.classPreferences
+        specifies the `PreferenceSet` for the GatingSignal; see `prefs <GatingSignal.prefs>` for details.
 
 
     Attributes
@@ -349,6 +351,10 @@ class GatingSignal(ModulatorySignal):
         result of the GatingSignal's `function <GatingSignal.function>`
         (same as its `gating_signal <GatingSignal.gating_signal>`).
 
+    index : int
+        the item of the owner GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` used as the
+        GatingSignal's `value <GatingSignal.value>`.
+
     gating_signal : number, list or np.ndarray
         result of the GatingSignal's `function <GatingSignal.function>` (same as its `value <GatingSignal.value>`).
 
@@ -361,11 +367,9 @@ class GatingSignal(ModulatorySignal):
     efferents : [List[GatingProjection]]
         a list of the `GatingProjections <GatingProjection>` assigned to (i.e., that project from) the GatingSignal.
 
-    name : str : default <State subclass>-<index>
-        name of the OutputState.
-        Specified in the **name** argument of the constructor for the OutputState.  If not is specified, a default is
-        assigned by the StateRegistry of the Mechanism to which the OutputState belongs
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        name of the GatingSignal; if not is specified in the **name** argument of its constructor, a default name
+        is assigned (see `name <ModulatorySignal.name>`).
 
         .. note::
             Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
@@ -373,11 +377,10 @@ class GatingSignal(ModulatorySignal):
             Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
-    prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the OutputState.
-        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
-        assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the GatingSignal; if it is not specified in the **prefs** argument of the constructor,
+        a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
+        details).
 
     """
 
@@ -386,6 +389,13 @@ class GatingSignal(ModulatorySignal):
     componentType = GATING_SIGNAL
     componentName = 'GatingSignal'
     paramsType = OUTPUT_STATE_PARAMS
+
+    stateAttributes = ModulatorySignal.stateAttributes | {GATE}
+
+    connectsWith = [INPUT_STATE, OUTPUT_STATE]
+    connectsWithAttribute = [INPUT_STATES, OUTPUT_STATES]
+    projectionSocket = RECEIVER
+    modulators = []
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -407,7 +417,7 @@ class GatingSignal(ModulatorySignal):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 index=PRIMARY_OUTPUT_STATE,
+                 index=None,
                  calculate=Linear,
                  function=LinearCombination(operation=SUM),
                  modulation:tc.optional(_is_modulation_param)=None,
@@ -417,8 +427,18 @@ class GatingSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  context=None):
 
-        # Note: index and calculate are not used by GatingSignal;
-        #       they are included here for consistency with OutputState and possible use by subclasses.
+        if context is None:
+            context = COMMAND_LINE
+        else:
+            context = self
+
+        # Note: calculate is not currently used by GatingSignal;
+        #       it is included here for consistency with OutputState and possible use by subclasses.
+        if index is None and owner is not None:
+            if len(owner.gating_policy)==1:
+                index = PRIMARY
+            else:
+                index = SEQUENTIAL
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -441,7 +461,7 @@ class GatingSignal(ModulatorySignal):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=context)
 
     def _execute(self, function_params, context):
         return float(super()._execute(function_params=function_params, context=context))
