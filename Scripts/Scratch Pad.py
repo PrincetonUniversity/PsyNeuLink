@@ -948,15 +948,25 @@ class ScratchPadError(Exception):
 
 #region TEST Naming
 
-D = pnl.DDM()
-T = pnl.TransferMechanism(input_states=['x'])
-
-T = pnl.TransferMechanism(input_states=['a','b','c'])
-print(T.variable)
-print(T.execute([[1],[2],[3]]))
+# D = pnl.DDM()
+# T = pnl.TransferMechanism(input_states=['x'],
+#                           output_states=pnl.MECHANISM_VALUE)
+#
+T = pnl.TransferMechanism(input_states=[[[0],[0]],'b','c'],
+# T = pnl.TransferMechanism(input_states=[[[[0],[0]],[[0],[0]]],'b','c'],
+#                           output_states=pnl.MECHANISM_VALUE
+                          )
+# print(T.variable)
+# assert T.output_states[MECHANISM_VALUE].value == WHAT IT DOES
+# GET NAME RIGHT FOR ALL AS WELL
+print(T.execute([[[1],[4]],[2],[3]]))
+# print(T.execute([[[[1],[4]],[[[5],[6]]]],[2],[3]]))
 print(T.output_states)
-print(T.output_values)
-print(T.value)
+for i, o in enumerate(T.output_states):
+    print("Output {}: {}".format(o.name, o.value))
+# print(T.output_states[0].value)
+# print(T.output_values)
+# print(T.value)
 
 # endregion
 

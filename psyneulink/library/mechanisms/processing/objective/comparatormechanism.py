@@ -184,7 +184,7 @@ class ComparatorMechanism(ObjectiveMechanism):
         target,                                         \
         input_states=[SAMPLE,TARGET]                    \
         function=LinearCombination(weights=[[-1],[1]],  \
-        output_states=[OUTCOME]                         \
+        output_states=OUTCOME                           \
         params=None,                                    \
         name=None,                                      \
         prefs=None)
