@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from psyneulink.components.functions.function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, Reduce, Reinforcement, _get_matrix
+from psyneulink.components.functions.function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
 from psyneulink.components.process import Process
@@ -157,7 +157,7 @@ class TestRecurrentTransferMechanismMatrix:
             )
             val = R.execute([10, 10, 10, 10])
             np.testing.assert_allclose(val, [[10., 10., 10., 10.]])
-            np.testing.assert_allclose(R.recurrent_projection.matrix, _get_matrix(m, R.size[0], R.size[0]))
+            np.testing.assert_allclose(R.recurrent_projection.matrix, get_matrix(m, R.size[0], R.size[0]))
 
     def test_recurrent_mech_matrix_other_spec(self):
 

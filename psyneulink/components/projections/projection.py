@@ -952,8 +952,8 @@ def _is_projection_spec(spec, include_matrix_spec=True):
     if include_matrix_spec:
         if isinstance(spec, str) and spec in MATRIX_KEYWORD_SET:
             return True
-        from psyneulink.components.functions.function import _get_matrix
-        if _get_matrix(spec) is not None:
+        from psyneulink.components.functions.function import get_matrix
+        if get_matrix(spec) is not None:
             return True
     if isinstance(spec, tuple) and len(spec) == 2:
         # Call recursively on first item, which should be a standard projection spec

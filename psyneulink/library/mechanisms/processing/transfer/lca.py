@@ -430,7 +430,7 @@ class LCA(RecurrentTransferMechanism):
 
         if matrix is not None:
             warnings.warn("Matrix arg for LCA is not used; matrix was assigned using inhibition arg")
-        # matrix = np.full((size[0], size[0]), -inhibition) * _get_matrix(HOLLOW_MATRIX,size[0],size[0])
+        # matrix = np.full((size[0], size[0]), -inhibition) * get_matrix(HOLLOW_MATRIX,size[0],size[0])
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,
