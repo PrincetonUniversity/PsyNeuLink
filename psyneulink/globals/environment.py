@@ -211,11 +211,11 @@ Shorthand - drop the remaining list on each input because **Mechanism a**'s vari
 
 * **Case 2: Only one input is provided for the mechanism**
 
-+--------------------------+--------------+
-| Trial #                  |1             |
-+--------------------------+--------------+
-| Input to **Mechanism a** |[1.0, 2.0]    |
-+--------------------------+--------------+
++--------------------------+------------------+
+| Trial #                  |1                 |
++--------------------------+------------------+
+| Input to **Mechanism a** |[[1.0], [2.0]]    |
++--------------------------+------------------+
 
 Complete input specification:
 
@@ -224,7 +224,7 @@ Complete input specification:
         import psyneulink as pnl
 
         a = pnl.TransferMechanism(name='a',
-                                  default_variable=[0.0,0.0])
+                                  default_variable=[[0.0], [0.0]])
         b = pnl.TransferMechanism(name='b')
 
         p1 = pnl.Process(pathway=[a, b])
@@ -236,7 +236,7 @@ Complete input specification:
         s.run(inputs=input_dictionary)
 ..
 
-Shorthand - drop the outer list on **Mechanism a** because there is only one trial:
+Shorthand - drop the outer list on **Mechanism a**'s input specification because there is only one trial:
 
 ::
 
@@ -245,13 +245,34 @@ Shorthand - drop the outer list on **Mechanism a** because there is only one tri
         s.run(inputs=input_dictionary)
 ..
 
-Shorthand - drop the outer list on **Mechanism a** because the same input should be used on all trials:
+* **Case 3: The same input is used on all trials **
 
-+--------------------------+--------------+--------------+--------------+--------------+--------------+
-| Trial #                  |1             |2             |3             |4             |5             |
-+--------------------------+--------------+--------------+--------------+--------------+--------------+
-| Input to **Mechanism a** |[1.0, 2.0]    |[1.0, 2.0]    |[1.0, 2.0]    |[1.0, 2.0]    |[1.0, 2.0]    |
-+--------------------------+--------------+--------------+--------------+--------------+--------------+
++--------------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
+| Trial #                  |1                  |2                  |3                  |4                  |5                  |
++--------------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
+| Input to **Mechanism a** ||[[1.0], [2.0]]    ||[[1.0], [2.0]]    ||[[1.0], [2.0]]    ||[[1.0], [2.0]]    ||[[1.0], [2.0]]    |
++--------------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
+
+Complete input specification:
+
+::
+
+        import psyneulink as pnl
+
+        a = pnl.TransferMechanism(name='a',
+                                  default_variable=[[0.0], [0.0]])
+        b = pnl.TransferMechanism(name='b')
+
+        p1 = pnl.Process(pathway=[a, b])
+
+        s = pnl.System(processes=[p1])
+
+        input_dictionary = {a: [[[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]]]}
+
+        s.run(inputs=input_dictionary)
+..
+
+Shorthand - drop the outer list on **Mechanism a**'s input specification and use `num_trials` to repeat the input value
 
 ::
 
@@ -260,7 +281,6 @@ Shorthand - drop the outer list on **Mechanism a** because the same input should
         s.run(inputs=input_dictionary,
               num_trials=5)
 ..
-
 
 .. _Run_Initial_Values:
 
@@ -583,6 +603,7 @@ def run(object,
                 elif object_type == SYSTEM:
                     object.current_targets = targets[input_num]
             # MODIFIED 3/16/17 END
+
             if RUN in context and not EVC_SIMULATION in context:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
                 object.execution_status = ExecutionStatus.EXECUTING
