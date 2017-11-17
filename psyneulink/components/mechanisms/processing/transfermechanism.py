@@ -419,11 +419,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                  context=componentType+INITIALIZING):
         """Assign type-level preferences and call super.__init__
         """
+
         # Default output_states is specified in constructor as a string rather than a list
         # to avoid "gotcha" associated with mutable default arguments
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if isinstance(output_states, str):
-            output_states = list(output_states)
+        if output_states is None or output_states is RESULT:
+            output_states = [RESULT]
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,

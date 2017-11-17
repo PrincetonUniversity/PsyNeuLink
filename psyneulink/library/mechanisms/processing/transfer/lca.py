@@ -421,8 +421,12 @@ class LCA(RecurrentTransferMechanism):
                  context=componentType+INITIALIZING):
         """Instantiate LCA
         """
-        if isinstance(output_states, str):
-            output_states = list(output_states)
+
+        # Default output_states is specified in constructor as a string rather than a list
+        # to avoid "gotcha" associated with mutable default arguments
+        # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
+        if output_states is None or output_states is RESULT:
+            output_states = [RESULT]
 
         if matrix is not None:
             warnings.warn("Matrix arg for LCA is not used; matrix was assigned using inhibition arg")
