@@ -864,10 +864,12 @@ class OutputState(State_Base):
                                                                                   owner.name,
                                                                                   tuple_spec,
                                                                                   MonitoredOutputStatesOption.__name__))
-                return tuple_spec[0], tuple_spec[0]
+                # MODIFIED 11/18/17 OLD:
+                # return tuple_spec[0], tuple_spec[0]
+                # MODIFIED 11/18/17 NEW:
+                return tuple_spec[0], None
+                # MODIFIED 11/18/17 END
 
-            # Note:  first item is assumed to be a specification for the OutputState itself, handled in _parse_state_spec()
-            # FIX: TEST FOR LEN OF TUPLE AND RAISE EXCEPTION OF < 2
             elif not len(tuple_spec) in {2,3} :
                 raise OutputStateError("Tuple provided in {} specification dictionary for {} ({}) must have "
                                        "either 2 ({} and {}) or 3 (optional additional {}) items, "
@@ -879,7 +881,6 @@ class OutputState(State_Base):
             # Get PROJECTIONS specification (efferents) from tuple
             try:
                 projections_spec = tuple_spec[PROJECTIONS_INDEX]
-                # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
             except IndexError:
                 projections_spec = None
             if projections_spec:

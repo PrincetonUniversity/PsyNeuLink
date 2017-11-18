@@ -844,11 +844,12 @@ class InputState(State_Base):
         elif isinstance(state_specific_params, tuple):
 
             tuple_spec = state_specific_params
-            state_spec = tuple_spec[0]
 
             if len(tuple_spec) == 2:
                 # FIX: 11/12/17 - ??GENERALIZE FOR ALL STATES AND MOVE TO _parse_state_spec
-                if is_numeric(state_spec):
+                # 1st item is a value, so treat as State spec (and return to _parse_state_spec to be parsed)
+                if is_numeric(tuple_spec[0]):
+                    state_spec = tuple_spec[0]
                     reference_value = state_dict[REFERENCE_VALUE]
                     # Assign value so sender_dim is skipped below
                     # (actual assignment is made in _parse_state_spec)
@@ -859,13 +860,21 @@ class InputState(State_Base):
                                          "is not compatible with its {} ({})".
                                          format(InputState.__name__, owner.name, state_spec,
                                                 REFERENCE_VALUE, reference_value))
-                if state_spec != self:
-                    # If state_spec is not the current state (self), treat as part of the projection specification
-                    projections_spec = tuple_spec
                 else:
-                    # Otherwise, just use 2nd item as projection spec
-                    projections_spec = tuple_spec[1]
+                    # Tuple is projection specification that is used to specify the State,
+                    #    so return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
+                    state_spec = None
+                    if tuple_spec[0] != self:
+                        # If 1st item is not the current state (self), treat as part of the projection specification
+                        projections_spec = tuple_spec
+                    else:
+                        # Otherwise, just use 2nd item as projection spec
+                        state_spec = None
+                        projections_spec = tuple_spec[1]
             elif len(tuple_spec) == 4:
+                # Tuple is projection specification that is used to specify the State,
+                #    so return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
+                state_spec = None
                 projections_spec = tuple_spec
 
             if projections_spec is not None:
@@ -907,6 +916,7 @@ class InputState(State_Base):
                                                  OutputState.__name__,
                                                  Projection.__name__))
 
+            # Get weights and exponents if specified
             if len(tuple_spec) == 2:
                 pass
 
