@@ -2676,6 +2676,7 @@ def _parse_state_spec(state_type=None,
     elif is_value_spec(state_specification):
         state_dict[REFERENCE_VALUE] = np.atleast_1d(state_specification)
 
+    # **************************************************************************************************************
     # State specification tuple
     #    Assume first item is the state specification, and use as state_spec in a recursive call to parse_state_spec.
     #    Call _parse_state_specific_params() with tuple to get state-specific params and assign to params entry.
@@ -2690,6 +2691,11 @@ def _parse_state_spec(state_type=None,
                                                                state_dict=state_dict,
                                                                state_specific_params=state_specification)
 
+        # FIX: SHOULD LET state_type._parse_state_specific_params DEDCIDE WHETHER state_specification[0]
+        # FIX: IS A state_spec OR NOT
+        # FIX: FOR ControlSignal and GatingSignal IT IS NOT (IT IS A PROJECTION SPEC-- TREAT IT THAT WAY?);
+        # FIX:   IF IT IS A SINGLE ITEM, ENDS UP GETTING TREATED AS NAME, OVERRIDING NAMING CONVENTIONS
+        # FIX:   IF IT IS A LIST, FAILS TO GET INTERPRETED AS A state_spec
         # Recurively parse standard_args using 1st item of tuple as the state_spec
         state_dict = _parse_state_spec(context=context, state_spec=state_specification[0], **standard_args)
 
@@ -2697,16 +2703,18 @@ def _parse_state_spec(state_type=None,
         if state_dict[PARAMS] is None:
             state_dict[PARAMS] = {}
         state_dict[PARAMS].update(state_params)
+    # **************************************************************************************************************
 
     # Unrecognized state_specification
-    elif state_specification:
-            if name and hasattr(owner, name):
-                owner_name = owner.name
-            else:
-                owner_name = owner.__class__.__name__
-            raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
-                             format(state_type_name, owner_name, state_spec))
+    # elif state_specification:
+    #         if name and hasattr(owner, name):
+    #             owner_name = owner.name
+    #         else:
+    #             owner_name = owner.__class__.__name__
+    #         raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
+    #                          format(state_type_name, owner_name, state_spec))
 
+    # **************************************************************************************************************
     # No state_specification in state_spec arg, so use state_dict from standard_args as State specification dictionary
     else:
 
@@ -2722,7 +2730,11 @@ def _parse_state_spec(state_type=None,
             params = state_type._parse_state_specific_params(state_type,
                                                              owner=owner,
                                                              state_dict=state_dict,
+                                                             # MODIFIED 11/18/17 OLD:
                                                              state_specific_params=params)
+                                                             # MODIFIED 11/18/17 NEW:
+                                                             # state_specific_params=state_specification)
+                                                             # MODIFIED 11/18/17 END
             # Move PROJECTIONS entry to params
             if PROJECTIONS in state_dict:
                 if not isinstance(state_dict[PROJECTIONS], list):
@@ -2801,6 +2813,7 @@ def _parse_state_spec(state_type=None,
             if state_dict[PARAMS] is None:
                 state_dict[PARAMS] = {}
             state_dict[PARAMS].update(params)
+    # **************************************************************************************************************
 
     # # If variable is none, use value:
     if state_dict[VARIABLE] is None:

@@ -966,7 +966,9 @@ class ContentAddressableList(UserList):
 
 
 def is_value_spec(spec):
-    if isinstance(spec, (int, float, list, np.ndarray)):
+    if isinstance(spec, (int, float, np.ndarray)):
+        return True
+    elif isinstance(spec, list) and is_numeric(spec):
         return True
     else:
         return False

@@ -1000,8 +1000,8 @@ class ControlSignal(ModulatorySignal):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
 
         Tuple specification can be:
-            (parameter_name, Mechanism)
-            [TBI:] (parameter_name, Mechanism, weight, exponent, projection_specs)
+            (parameter name, Mechanism)
+            [TBI:] (Mechanism, parameter name, weight, exponent, projection_specs)
 
         Returns params dict with CONNECTIONS entries if any of these was specified.
 
