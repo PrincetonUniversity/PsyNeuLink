@@ -460,7 +460,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         ControlSignal listed in the `control_signals` attribute;  the allocation_policy is the same as the
         ControlMechanism's `value <Mechanism_Base.value>` attribute).
 
-    control_signals : List[ControlSignal]
+    control_signals : ContentAddressableList[ControlSignal]
         list of the `ControlSignals <ControlSignals>` for the ControlMechanism, including any inherited from a
         `system <ControlMechanism.system>` for which it is a `controller <System.controller>` (same as
         ControlMechanism's `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`

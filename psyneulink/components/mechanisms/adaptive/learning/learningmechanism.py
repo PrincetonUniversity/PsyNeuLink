@@ -768,7 +768,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         from the LearningMechanism's `error_source`.  It is assigned as the value of the LearningMechanism's
         `LearningSignal(s) <LearningMechanism_LearningSignal>` and, in turn, its LearningProjection(s).
 
-    learning_signals : List[LearningSignal]
+    learning_signals : ContentAddressableList[LearningSignal]
         list of all of the `LearningSignals <LearningSignal>` for the LearningMechanism, each of which sends one or
         more `LearningProjections <LearningProjection>` to the `ParameterState(s) <ParameterState>` for the `matrix
         <MappingProjection.matrix>` parameter of the `MappingProjection(s) <MappingProjection>` trained by the
@@ -789,7 +789,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         <LearningMechanism_LearningSignal>`, and then any additional (user-specified) `OutputStates <OutputState>`.
 
     COMMENT:
-       #  FIX: THIS MAY NEED TO BE A 3d array (TO ACCOMDOATE 2d array (MATRICES) AS ENTRIES)\
+       #  FIX: THIS MAY NEED TO BE A 3d array (TO ACCOMDATE 2d array (MATRICES) AS ENTRIES)\
     COMMENT
 
     output_values : 2d np.array
