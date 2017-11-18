@@ -828,13 +828,18 @@ class InputState(State_Base):
         from psyneulink.components.projections.projection import Projection, _parse_connection_specs
 
         params_dict = {}
+        state_spec = state_specific_params
 
         if isinstance(state_specific_params, dict):
             # FIX: 10/3/17 - CHECK HERE THAT, IF MECHANISM ENTRY IS USED, A VARIABLE, WEIGHT AND/OR EXPONENT ENTRY
             # FIX:                       IS APPLIED TO ALL THE OutputStates SPECIFIED IN OUTPUT_STATES
             # FIX:                       UNLESS THEY THEMSELVES USE A State specification dict WITH ANY OF THOSE ENTRIES
             # FIX:           USE ObjectiveMechanism EXAMPLES
-            return state_specific_params
+            # MODIFIED 11/18/17 NEW:
+            return None, state_specific_params
+            # # MODIFIED 11/18/17 NEWER:
+            # return state_spec, params_dict
+            # # MODIFIED 11/18/17 END
 
         elif isinstance(state_specific_params, tuple):
 
@@ -932,7 +937,7 @@ class InputState(State_Base):
             raise InputStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
                                   format(self.__class__.__name__, state_specific_params))
 
-        return params_dict
+        return state_spec, params_dict
 
     @property
     def pathway_projections(self):

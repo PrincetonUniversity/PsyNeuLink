@@ -371,7 +371,7 @@ c = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[m.parameter_state
 #                                          pnl.NAME:pnl.DECISION_VARIABLE}])
 
 # FIX: WRITE TEST FOR THESE:
-g = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], m)])
+# g = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], m)])
 c = pnl.ControlMechanism(control_signals=[(pnl.DRIFT_RATE, m)])
 g = pnl.GatingMechanism(gating_signals=[(pnl.DECISION_VARIABLE, m)])
 

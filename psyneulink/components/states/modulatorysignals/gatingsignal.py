@@ -474,12 +474,20 @@ class GatingSignal(ModulatorySignal):
             from psyneulink.components.projections.projection import _parse_connection_specs
     
             params_dict = {}
+            state_spec = state_specific_params
     
             if isinstance(state_specific_params, dict):
-                return state_specific_params
-    
+                # MODIFIED 11/18/17 NEW:
+                return None, state_specific_params
+                # # MODIFIED 11/18/17 NEWER:
+                # return state_spec, params_dict
+                # # MODIFIED 11/18/17 END
+
             elif isinstance(state_specific_params, tuple):
-    
+
+                # In this format there is no explicit State spec;  it is the Projection (parsed below)
+                state_spec = None
+
                 try:
                     state_spec, mech = state_specific_params
                 except:
@@ -538,7 +546,7 @@ class GatingSignal(ModulatorySignal):
                                          "with specification of {}, {} or GatingProjection(s) to it".
                                             format(GATING_SIGNAL, INPUT_STATE, OUTPUT_STATE, owner.name))
     
-            return params_dict
+            return state_spec, params_dict
 
 
 

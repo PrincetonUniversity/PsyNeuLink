@@ -2676,34 +2676,34 @@ def _parse_state_spec(state_type=None,
     elif is_value_spec(state_specification):
         state_dict[REFERENCE_VALUE] = np.atleast_1d(state_specification)
 
-    # **************************************************************************************************************
-    # State specification tuple
-    #    Assume first item is the state specification, and use as state_spec in a recursive call to parse_state_spec.
-    #    Call _parse_state_specific_params() with tuple to get state-specific params and assign to params entry.
-    elif isinstance(state_specification, tuple):
-
-        # FIX: 10/3/17 - CONSOLIDATE W/ CALL TO _parse_state_specific_params FOR State specification dict BELOW
-        # FIX:           NEEDS TO MOVE REFERENCE_VALUE ENTRY FROM STATE_PARAMS INTO STATE_DICT
-
-        # Get state-specific params from tuple
-        state_params = state_type._parse_state_specific_params(state_type,
-                                                               owner=owner,
-                                                               state_dict=state_dict,
-                                                               state_specific_params=state_specification)
-
-        # FIX: SHOULD LET state_type._parse_state_specific_params DEDCIDE WHETHER state_specification[0]
-        # FIX: IS A state_spec OR NOT
-        # FIX: FOR ControlSignal and GatingSignal IT IS NOT (IT IS A PROJECTION SPEC-- TREAT IT THAT WAY?);
-        # FIX:   IF IT IS A SINGLE ITEM, ENDS UP GETTING TREATED AS NAME, OVERRIDING NAMING CONVENTIONS
-        # FIX:   IF IT IS A LIST, FAILS TO GET INTERPRETED AS A state_spec
-        # Recurively parse standard_args using 1st item of tuple as the state_spec
-        state_dict = _parse_state_spec(context=context, state_spec=state_specification[0], **standard_args)
-
-        # Add params to any params specified in first item of tuple
-        if state_dict[PARAMS] is None:
-            state_dict[PARAMS] = {}
-        state_dict[PARAMS].update(state_params)
-    # **************************************************************************************************************
+    # # **************************************************************************************************************
+    # # State specification tuple
+    # #    Assume first item is the state specification, and use as state_spec in a recursive call to parse_state_spec.
+    # #    Call _parse_state_specific_params() with tuple to get state-specific params and assign to params entry.
+    # elif isinstance(state_specification, tuple):
+    #
+    #     # FIX: 10/3/17 - CONSOLIDATE W/ CALL TO _parse_state_specific_params FOR State specification dict BELOW
+    #     # FIX:           NEEDS TO MOVE REFERENCE_VALUE ENTRY FROM STATE_PARAMS INTO STATE_DICT
+    #
+    #     # Get state-specific params from tuple
+    #     state_params = state_type._parse_state_specific_params(state_type,
+    #                                                            owner=owner,
+    #                                                            state_dict=state_dict,
+    #                                                            state_specific_params=state_specification)
+    #
+    #     # FIX: SHOULD LET state_type._parse_state_specific_params DEDCIDE WHETHER state_specification[0]
+    #     # FIX: IS A state_spec OR NOT
+    #     # FIX: FOR ControlSignal and GatingSignal IT IS NOT (IT IS A PROJECTION SPEC-- TREAT IT THAT WAY?);
+    #     # FIX:   IF IT IS A SINGLE ITEM, ENDS UP GETTING TREATED AS NAME, OVERRIDING NAMING CONVENTIONS
+    #     # FIX:   IF IT IS A LIST, FAILS TO GET INTERPRETED AS A state_spec
+    #     # Recurively parse standard_args using 1st item of tuple as the state_spec
+    #     state_dict = _parse_state_spec(context=context, state_spec=state_specification[0], **standard_args)
+    #
+    #     # Add params to any params specified in first item of tuple
+    #     if state_dict[PARAMS] is None:
+    #         state_dict[PARAMS] = {}
+    #     state_dict[PARAMS].update(state_params)
+    # # **************************************************************************************************************
 
     # Unrecognized state_specification
     # elif state_specification:
@@ -2723,18 +2723,34 @@ def _parse_state_spec(state_type=None,
         if VARIABLE not in state_dict and owner.prefs.verbosePref:
             print("{} missing from specification dict for {} of {};  default ({}) will be used".
                   format(VARIABLE, state_type, owner.name, state_dict))
-        if params is not None:
 
-            # FIX: 10/3/17 -
-            # FIX: CONSOLIDATE THIS W/ CALL TO _parse_state_specific_params FOR State specification dict ABOVE
-            params = state_type._parse_state_specific_params(state_type,
-                                                             owner=owner,
-                                                             state_dict=state_dict,
-                                                             # MODIFIED 11/18/17 OLD:
-                                                             state_specific_params=params)
-                                                             # MODIFIED 11/18/17 NEW:
-                                                             # state_specific_params=state_specification)
-                                                             # MODIFIED 11/18/17 END
+        # State specification is a tuple, so let State subclass handle it
+        if isinstance(state_specification, tuple):
+            state_specific_specs = state_specification
+        # Otherwise, just pass params to State subclass
+        else:
+            state_specific_specs = params
+
+        # MODIFIED 11/18/17 OLD:
+        # if params is not None:
+        # MODIFIED 11/18/17 NEWER:
+        # If there are any state_specific_specs, allow State subclass to handle them
+        if state_specific_specs:
+        # MODIFIED 11/18/17 END
+            state_spec, params = state_type._parse_state_specific_params(state_type,
+                                                                         owner=owner,
+                                                                         state_dict=state_dict,
+                                                                         # # MODIFIED 11/18/17 OLD:
+                                                                         # state_specific_params=params)
+                                                                         # MODIFIED 11/18/17 NEW:
+                                                                         # state_specific_params=state_specification)
+                                                                         # MODIFIED 11/18/17 NEWER:
+                                                                         state_specific_params = state_specific_specs)
+                                                                         # MODIFIED 11/18/17 END
+            # State subclass returned a state_spec, so call _parse_state_spec to parse it
+            if state_spec:
+                state_dict = _parse_state_spec(context=context, state_spec=state_spec, **standard_args)
+
             # Move PROJECTIONS entry to params
             if PROJECTIONS in state_dict:
                 if not isinstance(state_dict[PROJECTIONS], list):

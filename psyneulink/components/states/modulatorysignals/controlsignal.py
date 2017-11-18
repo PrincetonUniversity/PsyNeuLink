@@ -1012,11 +1012,19 @@ class ControlSignal(ModulatorySignal):
         from psyneulink.globals.keywords import PROJECTIONS
 
         params_dict = {}
+        state_spec = state_specific_params
 
         if isinstance(state_specific_params, dict):
-            return state_specific_params
+            # MODIFIED 11/18/17 NEW:
+            return None, state_specific_params
+            # # MODIFIED 11/18/17 NEWER:
+            # return state_spec, params_dict
+            # # MODIFIED 11/18/17 END
 
         elif isinstance(state_specific_params, tuple):
+
+            # In this format there is no explicit State spec;  it is the Projection (parsed below)
+            state_spec = None
 
             try:
                 param_name, mech = state_specific_params
@@ -1062,7 +1070,7 @@ class ControlSignal(ModulatorySignal):
                                      "with specification of parameter's Mechanism or ControlProjection(s) to it".
                                         format(CONTROL_SIGNAL, owner.name))
 
-        return params_dict
+        return state_spec, params_dict
 
     @property
     def allocation_samples(self):

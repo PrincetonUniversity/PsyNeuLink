@@ -577,7 +577,7 @@ class ParameterState(State_Base):
 
         self._instantiate_projections_to_state(projections=projections, context=context)
 
-    # MODIFIED 9/30/17 NEW:
+
     @tc.typecheck
     def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
         """Get connections specified in a ParameterState specification tuple
@@ -592,15 +592,19 @@ class ParameterState(State_Base):
         from psyneulink.components.projections.projection import _parse_connection_specs
 
         params_dict = {}
+        state_spec = state_specific_params
 
         if isinstance(state_specific_params, dict):
-            return state_specific_params
+            # MODIFIED 11/18/17 NEW:
+            return None, state_specific_params
+            # # MODIFIED 11/18/17 NEWER:
+            # return state_spec, params_dict
+            # # MODIFIED 11/18/17 END
 
         elif isinstance(state_specific_params, tuple):
 
             tuple_spec = state_specific_params
-
-            # Note: 1st item is assumed to be a specification for the ParameterState itself, handled in _parse_state_spec()
+            state_spec = tuple_spec[0]
 
             # Get connection (afferent Projection(s)) specification from tuple
             PROJECTIONS_INDEX = len(tuple_spec)-1
@@ -628,8 +632,7 @@ class ParameterState(State_Base):
             raise ParameterStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
                                   format(self.__class__.__name__, state_specific_params))
 
-        return params_dict
-# MODIFIED 9/30/17 END
+        return state_spec, params_dict
 
 
     def _execute(self, function_params, context):

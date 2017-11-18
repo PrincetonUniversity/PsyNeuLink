@@ -835,9 +835,14 @@ class OutputState(State_Base):
         from psyneulink.components.system import MonitoredOutputStatesOption
 
         params_dict = {}
+        state_spec = state_specific_params
 
         if isinstance(state_specific_params, dict):
-            return state_specific_params
+            # MODIFIED 11/18/17 NEW:
+            return None, state_specific_params
+            # # MODIFIED 11/18/17 NEWER:
+            # return state_spec, params_dict
+            # # MODIFIED 11/18/17 END
 
         elif isinstance(state_specific_params, ConnectionTuple):
             params_dict[PROJECTIONS] = _parse_connection_specs(self,
@@ -847,10 +852,11 @@ class OutputState(State_Base):
         elif isinstance(state_specific_params, tuple):
 
             tuple_spec = state_specific_params
+            state_spec = tuple_spec[0]
             INDEX_INDEX = 1
             PROJECTIONS_INDEX = len(tuple_spec)-1
 
-            # Specification is a MonitoredOutputStatesOptions (pass from System)
+            # Specification is a MonitoredOutputStatesOptions (passed from System)
             if len(tuple_spec)==1:
                 if not isinstance(tuple_spec[0], MonitoredOutputStatesOption):
                     raise OutputStateError("Tuple provided in {} specification dictionary for {} has a single item ({})"
@@ -858,7 +864,7 @@ class OutputState(State_Base):
                                                                                   owner.name,
                                                                                   tuple_spec,
                                                                                   MonitoredOutputStatesOption.__name__))
-                return tuple_spec[0]
+                return tuple_spec[0], tuple_spec[0]
 
             # Note:  first item is assumed to be a specification for the OutputState itself, handled in _parse_state_spec()
             # FIX: TEST FOR LEN OF TUPLE AND RAISE EXCEPTION OF < 2
@@ -908,7 +914,7 @@ class OutputState(State_Base):
             raise OutputStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
                                   format(self.__class__.__name__, state_specific_params))
 
-        return params_dict
+        return state_spec, params_dict
 
     @property
     def pathway_projections(self):
