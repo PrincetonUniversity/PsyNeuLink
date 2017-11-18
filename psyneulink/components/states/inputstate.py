@@ -844,8 +844,6 @@ class InputState(State_Base):
         elif isinstance(state_specific_params, tuple):
 
             tuple_spec = state_specific_params
-            # Note: 1s item is assumed to be a specification for the InputState itself, handled in _parse_state_spec()
-
             state_spec = tuple_spec[0]
 
             if len(tuple_spec) == 2:
