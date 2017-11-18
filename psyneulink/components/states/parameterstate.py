@@ -595,11 +595,7 @@ class ParameterState(State_Base):
         state_spec = state_specific_params
 
         if isinstance(state_specific_params, dict):
-            # MODIFIED 11/18/17 NEW:
             return None, state_specific_params
-            # # MODIFIED 11/18/17 NEWER:
-            # return state_spec, params_dict
-            # # MODIFIED 11/18/17 END
 
         elif isinstance(state_specific_params, tuple):
 

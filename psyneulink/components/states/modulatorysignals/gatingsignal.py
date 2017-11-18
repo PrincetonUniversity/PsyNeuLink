@@ -485,20 +485,20 @@ class GatingSignal(ModulatorySignal):
 
             elif isinstance(state_specific_params, tuple):
 
-                # In this format there is no explicit State spec;  it is the Projection (parsed below)
+                # Tuple is Projection specification that is used to specify the State,
+                #    so return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
                 state_spec = None
-
                 try:
-                    state_spec, mech = state_specific_params
+                    state_item, mech_item = state_specific_params
                 except:
                     raise GatingSignalError("Illegal {} specification tuple for {} ({});  "
                                              "it must contain two items: (<{} or {} name>, <{}>)".
                                              format(GatingSignal.__name__, owner.name, state_specific_params,
                                                     InputState.__name__, OutputState.__name__, Mechanism.__name__))
-                if not isinstance(mech, Mechanism):
+                if not isinstance(mech_item, Mechanism):
                     raise GatingSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
                                              format(GatingSignal.__name__, owner.name, mech, mech.name))
-                state_specs = state_spec if isinstance(state_spec, list) else [state_spec]
+                state_specs = state_item if isinstance(state_item, list) else [state_item]
                 state_list = []
                 for state_name in state_specs:
                     if not isinstance(state_name, str):
@@ -507,11 +507,11 @@ class GatingSignal(ModulatorySignal):
                                                  format(GatingSignal.__name__, owner.name, state_name,
                                                         InputState.__name__, OutputState.__name__, mech.name))
                     try:
-                        state_type = _parse_state_type(mech, state_name)
+                        state_type = _parse_state_type(mech_item, state_name)
                         if issubclass(state_type, InputState):
-                            state = mech.input_states[state_name]
+                            state = mech_item.input_states[state_name]
                         elif issubclass(state_type, OutputState):
-                            state = mech.output_states[state_name]
+                            state = mech_item.output_states[state_name]
                         else:
                             raise GatingSignalError("No {} named {} found for {} in {} tuple specification for {}".
                                                     format(state_type.__name__, state_name, mech.name,
@@ -525,7 +525,7 @@ class GatingSignal(ModulatorySignal):
                     except AttributeError:
                         raise GatingSignalError("{} does not have any {} specified, so can't"
                                                  "assign {} specified for {} ({})".
-                                                 format(mech.name, state_type.__name__, GatingSignal.__name__,
+                                                 format(mech_item.name, state_type.__name__, GatingSignal.__name__,
                                                         owner.name, state_specific_params))
 
                 # Assign connection specs to PROJECTIONS entry of params dict

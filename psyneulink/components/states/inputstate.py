@@ -835,11 +835,7 @@ class InputState(State_Base):
             # FIX:                       IS APPLIED TO ALL THE OutputStates SPECIFIED IN OUTPUT_STATES
             # FIX:                       UNLESS THEY THEMSELVES USE A State specification dict WITH ANY OF THOSE ENTRIES
             # FIX:           USE ObjectiveMechanism EXAMPLES
-            # MODIFIED 11/18/17 NEW:
             return None, state_specific_params
-            # # MODIFIED 11/18/17 NEWER:
-            # return state_spec, params_dict
-            # # MODIFIED 11/18/17 END
 
         elif isinstance(state_specific_params, tuple):
 
@@ -860,6 +856,7 @@ class InputState(State_Base):
                                          "is not compatible with its {} ({})".
                                          format(InputState.__name__, owner.name, state_spec,
                                                 REFERENCE_VALUE, reference_value))
+                    projections_spec = tuple_spec[1]
                 else:
                     # Tuple is projection specification that is used to specify the State,
                     #    so return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec

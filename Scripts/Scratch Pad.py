@@ -376,6 +376,11 @@ c = pnl.ControlMechanism(control_signals=[(pnl.DRIFT_RATE, m)])
 g = pnl.GatingMechanism(gating_signals=[(pnl.DECISION_VARIABLE, m)])
 
 assert True
+
+t = pnl.TransferMechanism()
+r = pnl.TransferMechanism(input_states=[([0,0],t)])
+assert True
+
 #
 # # my_mech = pnl.TransferMechanism(default_variable=[[0],[0]])
 # #
