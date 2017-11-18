@@ -224,6 +224,7 @@ class TRANSFER_OUTPUT():
     *MECHANISM_VALUE* : list
       TransferMechanism's `value <TransferMechanism.value>` used as OutputState's value.
 
+    COMMENT:
     *COMBINE* : scalar or numpy array
       linear combination of the `value <TransferMechanism.value>` of all items of the TransferMechanism's `value
       <TransferMechanism.value>` (requires that they all have the same dimensionality).

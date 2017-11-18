@@ -11,9 +11,9 @@
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <module name="PsyNeuLink (Dropbox)" />
+    <module name="PsyNeuLink" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" runner="coverage.py" sample_coverage="true" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Scripts/Examples/Stroop (Simple).py" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Scripts/TEST SCRIPTS/Stroop Model Learning Test Script.py" />
     <option name="PARAMETERS" value="" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />

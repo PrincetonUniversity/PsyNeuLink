@@ -593,7 +593,7 @@ from the States of a single Mechanism;  Projections involving other Mechanisms m
 
 .. _State_Create_State_Examples:
 
-*Create and Then Assign a State*
+*Create and then assign a state*
 
 Finally, a State can be created directly using its constructor, and then assigned to a Mechanism.
 The following creates an InputState ``my_input_state`` with a `MappingProjection` to it from the
@@ -633,7 +633,7 @@ when it was created, as shown by printing the `input_states <Mechanism_Base.inpu
 As a consequence, ``my_input_state`` is  **not** the `primary InputState <InputState_Primary>` for ``mech_B`` (i.e.,
 input_states[0]), but rather its second InputState (input_states[1]). This is differs from specifying the InputState
 as part of the constructor for the Mechanism, which suppresses generation of the default InputState,
-as in the first example above (see `note <Mechanism_Default_State_Suppression_Note_Note>`).
+as in the first example above (see `note <Mechanism_Default_State_Suppression_Note>`).
 
 COMMENT:
 

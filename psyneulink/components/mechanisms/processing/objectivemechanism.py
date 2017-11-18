@@ -81,7 +81,7 @@ COMMENT
 
 The list of OutputStates monitored by the ObjectiveMechanism are listed in its `monitored_output_states
 <ObjectiveMechanism.monitored_output_states>` attribute.  When an ObjectiveMechanism is created by a
-`ControlMechanism`, or a `System` for its `controller <System_Base.controller>`, these may pass a set of OutputStates
+`ControlMechanism`, or a `System` for its `controller <System.controller>`, these may pass a set of OutputStates
 to be monitored to the ObjectiveMechanism.  A ControlMechanism passes OutputState specifications listed in its
 **objective_mechanism** argument (see `ControlMechanism_ObjectiveMechanism`), and a System passes any listed in its
 **monitor_for_control** argument (see `System_Control_Specification`).
