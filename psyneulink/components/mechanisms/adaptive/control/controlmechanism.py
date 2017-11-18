@@ -757,7 +757,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
         super()._instantiate_output_states(context=context)
 
         # Reassign control_signals to capture any user_defined ControlSignals instantiated by in call to super
-        self._control_signals = [state for state in self.output_states if isinstance(state, ControlSignal)]
+        #    and assign to ContentAddressableList
+        self._control_signals = ContentAddressableList(component_type=ControlSignal,
+                                                       list=[state for state in self.output_states
+                                                             if isinstance(state, ControlSignal)])
 
         # If the ControlMechanism's allocation_policy has more than one item,
         #    warn if the number of items does not equal the number of its ControlSignals
