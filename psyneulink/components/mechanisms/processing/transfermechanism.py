@@ -29,7 +29,7 @@ Overview
 A TransferMechanism transforms its input using a simple mathematical function, that maintains the form (dimensionality)
 of its input.  The input can be a single scalar value, a multidimensional array (list or numpy array), or several
 independent ones.  The function used to carry out the transformation can be selected from a standard set of `Functions
-<Function>` (such as `Linear`, `Exponential`, `Logistic`, and `Softmax`) or specified using a user-defined custom
+<Function>` (such as `Linear`, `Exponential`, `Logistic`, and `SoftMax`) or specified using a user-defined custom
 function.  The transformation can be carried out instantaneously or in "time averaged" (integrated) manner, as described
 in `Transfer_Execution`.
 
@@ -85,8 +85,8 @@ OutputStates
 ~~~~~~~~~~~~
 
 By default, a TransferMechanism generates one `OutputState` for each of its `InputStates`.  The first (and `primary
-<OuputState_Primary>`) OutputState is named `RESULT`; subsequent ones use that as the base name, suffixed with an
-incrementing integer starting at '-1' for each additional OutputState (e.g., 'RESULT-1', 'RESULT-2', etc.; see
+<OutputState_Primary>`) OutputState is named *RESULT*; subsequent ones use that as the base name, suffixed with an
+incrementing integer starting at '-1' for each additional OutputState (e.g., *RESULT-1*, *RESULT-2*, etc.; see
 `Naming`).  The `value <OutputState.value>` of each OutputState is assigned the result of the Mechanism's `function
 <TransferMechanism.function>` applied to the `value <InputState.value>` of the corresponding InputState. Additional
 OutputStates can be assigned using the TransferMechanism's `Standard OutputStates

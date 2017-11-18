@@ -27,14 +27,14 @@ Overview
 Projections allow information to be passed between `Mechanisms <Mechanism>`.  A Projection takes its input from
 its `sender <Projection_Base.sender>` and transmits that information to its `receiver <Projection_Base.receiver>`.  The
 `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` of a Projection are always `States <State>`:
-the`sender <Projection_Base.sender>` is always the `OutputState` of a `Mechanism <Mechanism>`; the `receiver
+the `sender <Projection_Base.sender>` is always the `OutputState` of a `Mechanism <Mechanism>`; the `receiver
 <Projection_Base.receiver>` depends upon the type of Projection.  There are two broad categories of Projections,
 each of which has subtypes that differ in the type of information they transmit, how they do this, and the type of
 `State <State>` to which they project (i.e., of their `receiver <Projection_Base.receiver>`):
 
 * `PathwayProjection <PathwayProjection>`
     Used in conjunction with `ProcessingMechanisms <ProcessingMechanism>` to convey information along a processing
-    `pathway <Process.pathway`>.  There is currently one on type of PathwayProjection:
+    `pathway <Process.pathway>`.  There is currently one on type of PathwayProjection:
 
   * `MappingProjection`
       takes the `value <OutputState.value>` of an `OutputState` of a `ProcessingMechanism <ProcessingMechanism>`
@@ -46,7 +46,7 @@ each of which has subtypes that differ in the type of information they transmit,
 
 * `ModulatoryProjection <ModulatoryProjection>`
     takes the `value <OutputState.value>` of a `ModulatorySignal <ModulatorySignal>` of an `AdaptiveMechanism
-    <ProcessingMechanism>`, uses it to regulate modify the `value <State_Base.value>` of an `InputState,
+    <ProcessingMechanism>`, uses it to regulate modify the `value <State_Base.value>` of an `InputState`,
     `ParameterState` or `OutputState` of another Component.  ModulatorySignals are specialized types of `OutputState`,
     that are used to specify how to modify the `value <State_Base.value>` of the `State <State>` to which a
     ModulatoryProjection projects. There are three types of ModulatoryProjections, corresponding to the three types
@@ -181,8 +181,8 @@ Projection in context:
 
   * **ConnectionTuple** -- a 4-item tuple used in the context of a `State specification <State_Specification>` to
     create a Projection between it and another `State <State>`. It must have at least the first three of the following
-    items in order, and contain the fourth optional item:
-    (<`State specification <State_Specification>`>, <weight value>, <exponent value>, <projection specification>).
+    items in order, and contain the fourth optional item: (<`State specification <State_Specification>`>,
+    <weight value>, <exponent value>, <`projection specification <Projection_Specification>`>).
     The first item specifies the State to connect with (**not** the one being connected; that is known from context).
     The next two items specify a `weight <Projection_Base.weight>` and `exponent <Projection_Base.exponent>` for the
     Projection (note:  these are **not** for the State). The fourth item is optional, and can be any of the forms of
