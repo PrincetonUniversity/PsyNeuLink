@@ -846,6 +846,7 @@ class ContentAddressableList(UserList):
             if key_num is None:
                 # raise TypeError("\'{}\' is not a key in the {} being addressed".
                                 # format(key, self.__class__.__name__))
+                # raise KeyError("\'{}\' is not a key in {}".
                 raise TypeError("\'{}\' is not a key in {}".
                                 format(key, self.name))
             return self.data[key_num]

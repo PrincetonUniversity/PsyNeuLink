@@ -228,13 +228,14 @@ Class Reference
 import typecheck as tc
 
 from psyneulink.components.functions.function import Linear, LinearCombination, _is_modulation_param
-from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
+from psyneulink.components.mechanisms.mechanism import Mechanism
+from psyneulink.components.states.state import State_Base, _parse_state_type, _get_state_for_socket
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, SEQUENTIAL
-from psyneulink.components.states.state import State_Base, State
+from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
 from psyneulink.globals.keywords import \
     COMMAND_LINE, GATING_PROJECTION, GATING_SIGNAL, GATE, RECEIVER, SUM, PROJECTION_TYPE, \
-    INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS
+    INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -459,6 +460,113 @@ class GatingSignal(ModulatorySignal):
                          name=name,
                          prefs=prefs,
                          context=context)
+
+    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
+            """Get connections specified in a ParameterState specification tuple
+    
+            Tuple specification can be:
+                (state_spec, connections)
+    
+            Returns params dict with CONNECTIONS entries if any of these was specified.
+    
+            """
+            from psyneulink.components.projections.projection import _parse_connection_specs
+    
+            params_dict = {}
+    
+            if isinstance(state_specific_params, dict):
+                return state_specific_params
+    
+            # elif isinstance(state_specific_params, tuple):
+            # 
+            #     tuple_spec = state_specific_params
+            # 
+            #     # Note: first item is assumed to be specification for the InputState itself, handled in _parse_state_spec()
+            # 
+            #     # Get connection (afferent Projection(s)) specification from tuple
+            #     PROJECTIONS_INDEX = len(tuple_spec)-1
+            #     try:
+            #         projections_spec = tuple_spec[PROJECTIONS_INDEX]
+            #     except IndexError:
+            #         projections_spec = None
+            # 
+            #     if projections_spec:
+            #         try:
+            #             params_dict[PROJECTIONS] = _parse_connection_specs(self,
+            #                                                                owner=owner,
+            #                                                                connections={projections_spec})
+            #         except GatingSignalError:
+            #             raise GatingSignalError("Item {} of tuple specification in {} specification dictionary "
+            #                                         "for {} ({}) is not a recognized specification".
+            #                                         format(PROJECTIONS_INDEX,
+            #                                                GatingSignalError.__name__,
+            #                                                owner.name,
+            #                                                projections_spec))
+            # 
+            # elif state_specific_params is not None:
+            #     raise GatingSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
+            #                                 format(self.__class__.__name__, state_specific_params))
+            # return params_dict
+
+            elif isinstance(state_specific_params, tuple):
+    
+                try:
+                    state_name, mech = state_specific_params
+                except:
+                    raise GatingSignalError("Illegal {} specification tuple for {} ({});  "
+                                             "it must contain two items: (<{} or {} name>, <{}>)".
+                                             format(GatingSignal.__name__, owner.name, state_specific_params,
+                                                    InputState.__name__, OutputState.__name__, Mechanism.__name__))
+                if not isinstance(mech, Mechanism):
+                    raise GatingSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
+                                             format(GatingSignal.__name__, owner.name, mech, mech.name))
+                if not isinstance(state_name, str):
+                    raise GatingSignalError("First item of the {} specification tuple for {} ({}) must be a string "
+                                             "that is the name of a {} or {} of its second item ({})".
+                                             format(GatingSignal.__name__, owner.name, state_name,
+                                                    InputState.__name__, OutputState.__name__, mech.name))
+                try:
+                    state_type = _parse_state_type(mech, state_name)
+                    if issubclass(state_type, InputState):
+                        state = mech.input_states[state_name]
+                    elif issubclass(state_type, OutputState):
+                        state = mech.output_states[state_name]
+                    else:
+                        raise GatingSignalError("No {} named {} found for {} in {} tuple specification for {}".
+                                                format(state_type.__name__, state_name, mech.name,
+                                                       GatingSignal.__name__, owner.name))
+
+                # except KeyError:
+                #     raise GatingSignalError("No {} found for {} in {} specification tuple for {}".
+                #                              format(state_type.__name__, mech.name,
+                #                                     GatingSignal.__name__, owner.name))
+                except AttributeError:
+                    raise GatingSignalError("{} does not have any {} specified, so can't"
+                                             "assign {} specified for {} ({})".
+                                             format(mech.name, state_type.__name__, GatingSignal.__name__,
+                                                    owner.name, state_specific_params))
+    
+                # Assign connection specs to PROJECTIONS entry of params dict
+                try:
+                    params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
+                                                                       owner=owner,
+                                                                       connections=state)
+                except GatingSignalError:
+                    raise GatingSignalError("Unable to parse {} specification dictionary for {} ({})".
+                                                format(GatingSignal.__name__, owner.name, state_specific_params))
+    
+            elif state_specific_params is not None:
+                raise GatingSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
+                                      format(self.__class__.__name__, state_specific_params))
+    
+            if params_dict[PROJECTIONS] is None:
+                raise GatingSignalError("PROGRAM ERROR: No entry found in {} params dict for {} "
+                                         "with specification of {}, {} or GatingProjection(s) to it".
+                                            format(GATING_SIGNAL, INPUT_STATE, OUTPUT_STATE, owner.name))
+    
+            return params_dict
+
+
 
     def _execute(self, function_params, context):
         return float(super()._execute(function_params=function_params, context=context))

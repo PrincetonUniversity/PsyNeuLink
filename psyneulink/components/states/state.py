@@ -719,7 +719,7 @@ from psyneulink.components.shellclasses import Mechanism, Process_Base, Projecti
 from psyneulink.globals.keywords import DEFERRED_INITIALIZATION, \
     CONTEXT, COMMAND_LINE, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
     GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, \
-    LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
+    LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, INPUT_STATES, PARAMETER_STATES, OUTPUT_STATES,\
     MAPPING_PROJECTION_PARAMS, MECHANISM, MATRIX, AUTO_ASSIGN_MATRIX, WEIGHT, EXPONENT,\
     MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OWNER, PARAMS, PATHWAY_PROJECTIONS, \
     PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, \
@@ -2381,13 +2381,22 @@ def _parse_state_type(owner, state_spec):
     if isinstance(state_spec, State):
         return type(state_spec)
 
-    # keyword for a State or name of a standard_output_state
+    # keyword for a State or name of a standard_output_state or of State itself
     if isinstance(state_spec, str):
 
         # State keyword
         if state_spec in state_type_keywords:
             import sys
             return getattr(sys.modules['PsyNeuLink.Components.States.'+state_spec], state_spec)
+
+        # Try as name of State
+        for state_attr in [INPUT_STATES, PARAMETER_STATES, OUTPUT_STATES]:
+            state_list = getattr(owner, state_attr)
+            try:
+                state = state_list[state_spec]
+                return state.__class__
+            except TypeError:
+                pass
 
         # standard_output_state
         if hasattr(owner, STANDARD_OUTPUT_STATES):

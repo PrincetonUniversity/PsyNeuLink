@@ -358,7 +358,7 @@ class ScratchPadError(Exception):
 #region TEST State Specification Examples @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # print("TEST State Specification Examples")
 #
-# m = pnl.DDM(name='MY DDM')
+m = pnl.DDM(name='MY DDM')
 # # # c = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [m.parameter_states[pnl.DRIFT_RATE],
 # # #                                                              m.parameter_states[pnl.THRESHOLD]]}])
 # # # c = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[m.parameter_states[pnl.DRIFT_RATE],
@@ -369,7 +369,9 @@ class ScratchPadError(Exception):
 #                                                             m.output_states[pnl.RESPONSE_TIME]]}])
 # g = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM:m,
 #                                          pnl.NAME:pnl.DECISION_VARIABLE}])
-# assert True
+g = pnl.GatingMechanism(gating_signals=[(pnl.DECISION_VARIABLE, m)])
+
+assert True
 #
 # # my_mech = pnl.TransferMechanism(default_variable=[[0],[0]])
 # #
@@ -951,39 +953,6 @@ class ScratchPadError(Exception):
 # D = pnl.DDM()
 # T = pnl.TransferMechanism(input_states=['x'],
 #                           output_states=pnl.MECHANISM_VALUE)
-#
-T = pnl.TransferMechanism(input_states=[[[0],[0]],'b','c'],
-# T = pnl.TransferMechanism(input_states=[[[[0],[0]],[[0],[0]]],'b','c'],
-#                           output_states=pnl.MECHANISM_VALUE
-                          )
-# print(T.variable)
-# assert T.output_states[MECHANISM_VALUE].value == WHAT IT DOES
-# GET NAME RIGHT FOR ALL AS WELL
-print(T.execute([[[1],[4]],[2],[3]]))
-# print(T.execute([[[[1],[4]],[[[5],[6]]]],[2],[3]]))
-print(T.output_states)
-for i, o in enumerate(T.output_states):
-    print("Output {}: {}".format(o.name, o.value))
-# print(T.output_states[0].value)
-# print(T.output_values)
-# print(T.value)
-
-# endregion
-
-T1 = pnl.TransferMechanism(name='T1')
-T2 = pnl.TransferMechanism(name='T2', input_states=[T1])
-I1 = pnl.InputState(owner=T2)
-I2 = pnl.InputState(projections=[T1])
-assert I2.name == 'Deferred Init InputState'
-T2.add_states([I2])
-assert I1.name == 'InputState-1'
-assert I2.name == 'InputState-2'
-assert T2.input_states[0].path_afferents[0].name == \
-       'MappingProjection from T1[RESULT] to T2[InputState-0]'
-assert T2.input_states[2].path_afferents[0].name == \
-       'MappingProjection from T1[RESULT] to T2[InputState-2]'
-
-
 
 #region TEST Naming
 # print ('TEST Naming')

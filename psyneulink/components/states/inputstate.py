@@ -806,7 +806,6 @@ class InputState(State_Base):
     #                               format(context, NAME, InputState.__name__))
     #     return self.name
 
-# MODIFIED 9/30/17 NEW:
     @tc.typecheck
     def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
         """Get weights, exponents and/or any connections specified in an InputState specification tuple
@@ -934,7 +933,6 @@ class InputState(State_Base):
                                   format(self.__class__.__name__, state_specific_params))
 
         return params_dict
-# MODIFIED 9/30/17 END
 
     @property
     def pathway_projections(self):
@@ -945,7 +943,6 @@ class InputState(State_Base):
         self.path_afferents = assignment
 
 
-# def _instantiate_input_states(owner, input_states=None, context=None):
 def _instantiate_input_states(owner, input_states=None, reference_value=None, context=None):
     """Call State._instantiate_state_list() to instantiate ContentAddressableList of InputState(s)
 
