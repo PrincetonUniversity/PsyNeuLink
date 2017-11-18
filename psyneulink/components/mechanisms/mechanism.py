@@ -2264,7 +2264,7 @@ class Mechanism_Base(Mechanism):
         .. note::
             Adding InputStates to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,
             which may produce an incompatibility with its `function <Mechanism_Base.function>` (see
-            `Mechanism InputStates` for a more detailed explanation).
+            `Mechanism InputStates <Mechanism_InputStates>` for a more detailed explanation).
 
         Arguments
         ---------
