@@ -2686,7 +2686,7 @@ def _parse_state_spec(state_type=None,
     #     # FIX:           NEEDS TO MOVE REFERENCE_VALUE ENTRY FROM STATE_PARAMS INTO STATE_DICT
     #
     #     # Get state-specific params from tuple
-    #     state_params = state_type._parse_state_specific_params(state_type,
+    #     x, state_params = state_type._parse_state_specific_params(state_type,
     #                                                            owner=owner,
     #                                                            state_dict=state_dict,
     #                                                            state_specific_params=state_specification)
@@ -2703,6 +2703,7 @@ def _parse_state_spec(state_type=None,
     #     if state_dict[PARAMS] is None:
     #         state_dict[PARAMS] = {}
     #     state_dict[PARAMS].update(state_params)
+    #     TEMP = True
     # # **************************************************************************************************************
 
     # Unrecognized state_specification
