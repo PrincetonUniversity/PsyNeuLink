@@ -876,6 +876,10 @@ class InputState(State_Base):
                             else:
                                 raise InputStateError("Unrecognized Projection specification for {} of {} ({})".
                                                       format(self.name, owner.name, projection_spec))
+                            if matrix is None:
+                                # If matrix has not been specified, no worries;
+                                #    variable will be determined by value of sender
+                                continue
                             # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
                             proj_val_shape = matrix.shape[sender_dim :]
                             state_dict[VARIABLE] = np.zeros(proj_val_shape)
