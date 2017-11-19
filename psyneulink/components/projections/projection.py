@@ -1406,8 +1406,10 @@ def _parse_connection_specs(connectee_state_type,
             if len(connection) == 2:
                 item1, item2 = connection
                 if is_numeric(item1):
-                    # (<value>, <projection_spec>); ignore item1
+                    # (<value>, <projection_spec>)
                     projection_spec = item2
+                    # FIX: ??11/18/17 IS THIS NECESSARY:
+                    state_spec = item2
                 elif isinstance(item1, str):
 
 
