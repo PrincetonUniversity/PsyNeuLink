@@ -1426,7 +1426,7 @@ def _parse_connection_specs(connectee_state_type,
                 state_spec = projection_spec
 
             # (<state name or list of state names>, <Mechanism>)
-            elif isinstance(first_item, str):
+            elif isinstance(first_item, (str, list)):
                 state_item = first_item
                 mech_item = last_item
 
@@ -1438,7 +1438,7 @@ def _parse_connection_specs(connectee_state_type,
 
                 if isinstance(state_item, list):
                     # FIX: 11/18/17 HACK -- NEED TO DEAL WITH LIST HERE (OR IN _parse_state_spec??)
-                    state_item = state_item[0]
+                    # state_item = state_item[0]
 
                     # Recursively call _parse_connection_spec to assign each specified State its own connection spec
                     for state_name in state_item:
@@ -1447,7 +1447,11 @@ def _parse_connection_specs(connectee_state_type,
                                                    "the name of a {} of its 2nd item ({})".
                                                       format(connectee_state_type.__name__, owner.name, state_name,
                                                               connects_with, mech_item.name))
-
+                        c = _parse_connection_specs(connectee_state_type=connectee_state_type,
+                                                    owner=owner,
+                                                    connections=ConnectionTuple(state_name, weight, exponent, mech_item))
+                        connect_with_states.extend(c)
+                    continue
 
                 state_spec = state_item
                 projection_spec = None
