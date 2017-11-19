@@ -484,56 +484,61 @@ class GatingSignal(ModulatorySignal):
                 # Tuple is Projection specification that is used to specify the State,
                 #    so return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
                 state_spec = None
-                try:
-                    state_item, mech_item = state_specific_spec
-                except:
-                    raise GatingSignalError("Illegal {} specification tuple for {} ({});  "
-                                             "it must contain two items: (<{} or {} name>, <{}>)".
-                                             format(GatingSignal.__name__, owner.name, state_specific_spec,
-                                                    InputState.__name__, OutputState.__name__, Mechanism.__name__))
-                if not isinstance(mech_item, Mechanism):
-                    raise GatingSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
-                                             format(GatingSignal.__name__, owner.name, mech_item, mech_item.name))
+                # try:
+                #     state_item, mech_item = state_specific_spec
+                # except:
+                #     raise GatingSignalError("Illegal {} specification tuple for {} ({});  "
+                #                              "it must contain two items: (<{} or {} name>, <{}>)".
+                #                              format(GatingSignal.__name__, owner.name, state_specific_spec,
+                #                                     InputState.__name__, OutputState.__name__, Mechanism.__name__))
+                # if not isinstance(mech_item, Mechanism):
+                #     raise GatingSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
+                #                              format(GatingSignal.__name__, owner.name, mech_item, mech_item.name))
+                #
+                # state_specs = state_item if isinstance(state_item, list) else [state_item]
+                # state_list = []
+                # for state_name in state_specs:
+                #     if not isinstance(state_name, str):
+                #         raise GatingSignalError("First item of the {} specification tuple for {} ({}) must be a string "
+                #                                  "that is the name of a {} or {} of its second item ({})".
+                #                                  format(GatingSignal.__name__, owner.name, state_name,
+                #                                         InputState.__name__, OutputState.__name__, mech_item.name))
+                #     try:
+                #         state_type = _parse_state_type(mech_item, state_name)
+                #         if issubclass(state_type, InputState):
+                #             state = mech_item.input_states[state_name]
+                #         elif issubclass(state_type, OutputState):
+                #             state = mech_item.output_states[state_name]
+                #         else:
+                #             raise GatingSignalError("No {} named {} found for {} in {} tuple specification for {}".
+                #                                     format(state_type.__name__, state_name, mech_item.name,
+                #                                            GatingSignal.__name__, owner.name))
+                #         state_list.append(state)
+                #
+                #     # except KeyError:
+                #     #     raise GatingSignalError("No {} found for {} in {} specification tuple for {}".
+                #     #                              format(state_type.__name__, mech.name,
+                #     #                                     GatingSignal.__name__, owner.name))
+                #     except AttributeError:
+                #         raise GatingSignalError("{} does not have any {} specified, so can't"
+                #                                  "assign {} specified for {} ({})".
+                #                                  format(mech_item.name, state_type.__name__, GatingSignal.__name__,
+                #                                         owner.name, state_specific_spec))
+                #
+                # # Assign connection specs to PROJECTIONS entry of params dict
+                # try:
+                #     params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
+                #                                                        owner=owner,
+                #                                                        connections=state_list)
+                # except GatingSignalError:
+                #     raise GatingSignalError("Unable to parse {} specification dictionary for {} ({})".
+                #                                 format(GatingSignal.__name__, owner.name, state_specific_spec))
 
-                state_specs = state_item if isinstance(state_item, list) else [state_item]
-                state_list = []
-                for state_name in state_specs:
-                    if not isinstance(state_name, str):
-                        raise GatingSignalError("First item of the {} specification tuple for {} ({}) must be a string "
-                                                 "that is the name of a {} or {} of its second item ({})".
-                                                 format(GatingSignal.__name__, owner.name, state_name,
-                                                        InputState.__name__, OutputState.__name__, mech_item.name))
-                    try:
-                        state_type = _parse_state_type(mech_item, state_name)
-                        if issubclass(state_type, InputState):
-                            state = mech_item.input_states[state_name]
-                        elif issubclass(state_type, OutputState):
-                            state = mech_item.output_states[state_name]
-                        else:
-                            raise GatingSignalError("No {} named {} found for {} in {} tuple specification for {}".
-                                                    format(state_type.__name__, state_name, mech_item.name,
-                                                           GatingSignal.__name__, owner.name))
-                        state_list.append(state)
+                params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
+                                                                   owner=owner,
+                                                                   connections=state_specific_spec)
 
-                    # except KeyError:
-                    #     raise GatingSignalError("No {} found for {} in {} specification tuple for {}".
-                    #                              format(state_type.__name__, mech.name,
-                    #                                     GatingSignal.__name__, owner.name))
-                    except AttributeError:
-                        raise GatingSignalError("{} does not have any {} specified, so can't"
-                                                 "assign {} specified for {} ({})".
-                                                 format(mech_item.name, state_type.__name__, GatingSignal.__name__,
-                                                        owner.name, state_specific_spec))
 
-                # Assign connection specs to PROJECTIONS entry of params dict
-                try:
-                    params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
-                                                                       owner=owner,
-                                                                       connections=state_list)
-                except GatingSignalError:
-                    raise GatingSignalError("Unable to parse {} specification dictionary for {} ({})".
-                                                format(GatingSignal.__name__, owner.name, state_specific_spec))
-    
             elif state_specific_spec is not None:
                 raise GatingSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
                                       format(self.__class__.__name__, state_specific_spec))

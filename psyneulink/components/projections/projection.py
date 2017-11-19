@@ -1400,18 +1400,19 @@ def _parse_connection_specs(connectee_state_type,
 
         elif isinstance(connection, tuple):
 
-        # Notes:
-        #    - first item is assumed to always be a specification for the State being connected with
             # 2-item tuple: can be (<value>, <projection_spec>) or (<state name or list of state names>, <Mechanism>)
             if len(connection) == 2:
                 item1, item2 = connection
+
+                # (<value>, <projection_spec>)
                 if is_numeric(item1):
-                    # (<value>, <projection_spec>)
                     projection_spec = item2
                     # FIX: TRY DELETING THIS:
                     # Ignore item1 (assume it was processed by _parse_state_specific_specs),
                     #    and use projection_spec as state_spec
                     state_spec = projection_spec
+
+                # (<state name or list of state names>, <Mechanism>)
                 elif isinstance(item1, str):
                     state_item = item1
                     mech_item = item2
@@ -1433,16 +1434,23 @@ def _parse_connection_specs(connectee_state_type,
                                                       state_spec=state_name,
                                                       state_types=connects_with,
                                                       mech=mech_item,
+                                                      mech_state_attribute=connect_with_attr,
                                                       projection_socket=projection_socket)
                         state_list.append(state)
-                    state_spec = state_list
+                    # state_spec = state_list
+                    # Use projection_spec, since there may be several (in which case can't use state_spec)
+                    # projection_spec = state_list
+                    projection_spec = None
+                    # FIX: HACK -- NEED TO DEAL WITH LIST HERE
+                    state_spec = state_list[0]
                 weight = DEFAULT_WEIGHT
                 exponent = DEFAULT_EXPONENT
 
+            # ConnectionTuple
             elif len(connection) == 4:
                 state_spec, weight, exponent, projection_spec = connection
+
             else:
-                # FIX: FINISH ERROR MESSAGE
                 raise ProjectionError("{} specificaton tuple for {} ({}) must have either two or four items".
                                       format(connectee_state_type.__name__, owner.name, connection))
 
