@@ -1435,9 +1435,20 @@ def _parse_connection_specs(connectee_state_type,
                                           "Mechanism".
                                              format(connectee_state_type.__name__, owner.name, mech_item,
                                                     mech_item.name))
+
                 if isinstance(state_item, list):
                     # FIX: 11/18/17 HACK -- NEED TO DEAL WITH LIST HERE (OR IN _parse_state_spec??)
                     state_item = state_item[0]
+
+                    # Recursively call _parse_connection_spec to assign each specified State its own connection spec
+                    for state_name in state_item:
+                        if not isinstance(state_name, str):
+                             raise ProjectionError("Expected 1st item of the {} specification tuple for {} ({}) to be "
+                                                   "the name of a {} of its 2nd item ({})".
+                                                      format(connectee_state_type.__name__, owner.name, state_name,
+                                                              connects_with, mech_item.name))
+
+
                 state_spec = state_item
                 projection_spec = None
                 mech=mech_item
