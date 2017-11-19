@@ -1401,63 +1401,52 @@ def _parse_connection_specs(connectee_state_type,
         elif isinstance(connection, tuple):
 
             # 2-item tuple: can be (<value>, <projection_spec>) or (<state name or list of state names>, <Mechanism>)
+            mech=None
+
             if len(connection) == 2:
-                item1, item2 = connection
-
-                # (<value>, <projection_spec>)
-                if is_numeric(item1):
-                    projection_spec = item2
-                    # FIX: TRY DELETING THIS:
-                    # Ignore item1 (assume it was processed by _parse_state_specific_specs),
-                    #    and use projection_spec as state_spec
-                    state_spec = projection_spec
-
-                # (<state name or list of state names>, <Mechanism>)
-                elif isinstance(item1, str):
-                    state_item = item1
-                    mech_item = item2
-
-                    if not isinstance(mech_item, Mechanism):
-                        raise ProjectionError("Expected 2nd item of the {} specification tuple for {} ({}) to be a "
-                                              "Mechanism".
-                                                 format(connectee_state_type.__name__, owner.name, mech_item,
-                                                        mech_item.name))
-                    state_specs = state_item if isinstance(state_item, list) else [state_item]
-                    state_list = []
-                    for state_name in state_specs:
-                        if not isinstance(state_name, str):
-                            raise ProjectionError("Expected 1st item of the {} specification tuple for {} ({}) to be "
-                                                  "the name of a {} of its 2nd item ({})".
-                                                     format(connectee_state_type.__name__, owner.name, state_name,
-                                                             connects_with, mech_item.name))
-                        state = _get_state_for_socket(owner=owner,
-                                                      state_spec=state_name,
-                                                      state_types=connects_with,
-                                                      mech=mech_item,
-                                                      mech_state_attribute=connect_with_attr,
-                                                      projection_socket=projection_socket)
-                        state_list.append(state)
-                    # state_spec = state_list
-                    # Use projection_spec, since there may be several (in which case can't use state_spec)
-                    # projection_spec = state_list
-                    projection_spec = None
-                    # FIX: HACK -- NEED TO DEAL WITH LIST HERE (OR IN _parse_state_spec??)
-                    state_spec = state_list[0]
+                first_item, last_item = connection
                 weight = DEFAULT_WEIGHT
                 exponent = DEFAULT_EXPONENT
-
-            # ConnectionTuple
             elif len(connection) == 4:
-                state_spec, weight, exponent, projection_spec = connection
-
+                first_item, weight, exponent, last_item = connection
             else:
                 raise ProjectionError("{} specificaton tuple for {} ({}) must have either two or four items".
                                       format(connectee_state_type.__name__, owner.name, connection))
+
+            # Default assignments, possibly overridden below
+            state_spec = first_item
+            projection_spec = last_item
+
+            # (<value>, <projection_spec>)
+            if is_numeric(first_item):
+                projection_spec = first_item
+                # FIX: 11/18/17 TRY DELETING THIS:
+                # Ignore item1 (assume it was processed by _parse_state_specific_specs),
+                #    and use projection_spec as state_spec
+                state_spec = projection_spec
+
+            # (<state name or list of state names>, <Mechanism>)
+            elif isinstance(first_item, str):
+                state_item = first_item
+                mech_item = last_item
+
+                if not isinstance(mech_item, Mechanism):
+                    raise ProjectionError("Expected 2nd item of the {} specification tuple for {} ({}) to be a "
+                                          "Mechanism".
+                                             format(connectee_state_type.__name__, owner.name, mech_item,
+                                                    mech_item.name))
+                if isinstance(state_item, list):
+                    # FIX: 11/18/17 HACK -- NEED TO DEAL WITH LIST HERE (OR IN _parse_state_spec??)
+                    state_item = state_item[0]
+                state_spec = state_item
+                projection_spec = None
+                mech=mech_item
 
             # Validate state specification, and get actual state referenced if it has been instantiated
             state = _get_state_for_socket(owner=owner,
                                           state_spec=state_spec,
                                           state_types=connects_with,
+                                          mech=mech,
                                           mech_state_attribute=connect_with_attr,
                                           projection_socket=projection_socket)
 
