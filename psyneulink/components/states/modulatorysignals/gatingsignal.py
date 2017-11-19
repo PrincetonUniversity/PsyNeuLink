@@ -42,18 +42,17 @@ Specifying GatingSignals
 When a GatingSignal is specified in the **gating_signals** argument of the constructor for a `GatingMechanism`, the
 InputState(s) and/or OutputState(s) it gates must be specified. This can take any of the following forms:
 
-  * an **InputState** or **OutputState** of a Mechanism;
+  * **InputState** or **OutputState** of a Mechanism;
   ..
-  * a **Mechanism**, in which case its `primary `InputState <InputState_Primary>` or `OutputState <OutputState_Primary>`
-    is used;
+  * **Mechanism** -- the `primary `InputState <InputState_Primary>` or `OutputState <OutputState_Primary>` is used;
   ..
-  * a **tuple**, with the name of the state as the 1st item, and the Mechanism to which it belongs as the 2nd;
-    note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
-    but precludes specification of any `parameters <GatingSignal_Structure>` for the GatingSignal.
+  * **2-item tuple** -- the 1st time must be the name of the State (or list of State names), and the 2nd item the
+    Mechanism to which it (they) belong(s); this is a convenience format, which is simpler to use than a specification
+    dictionary (see below), but precludes specification of `parameters <GatingSignal_Structure>` for the GatingSignal.
   ..
-  * a **specification dictionary**, that can take either of the following two forms:
+  * **specification dictionary** -- can take either of the following two forms:
 
-    * for a single state, the dictionary must have the following two entries:
+    * for gating a single state, the dictionary can have the following two entries:
 
         * *NAME*: str
             the string must be the name of the State to be gated; the GatingSignal will named by appending
@@ -62,7 +61,7 @@ InputState(s) and/or OutputState(s) it gates must be specified. This can take an
         * *MECHANISM*: Mechanism
             the Mechanism must be the one to the which the State to be gated belongs.
 
-    * for multiple states, the dictionary must have the following entry:
+    * for gating multiple states, the dictionary can have the following entry:
 
         * <str>:list
             the string used as the key specifies the name to be used for the GatingSignal,
@@ -498,6 +497,7 @@ class GatingSignal(ModulatorySignal):
                 if not isinstance(mech_item, Mechanism):
                     raise GatingSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
                                              format(GatingSignal.__name__, owner.name, mech, mech.name))
+
                 state_specs = state_item if isinstance(state_item, list) else [state_item]
                 state_list = []
                 for state_name in state_specs:

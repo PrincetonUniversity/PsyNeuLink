@@ -71,3 +71,34 @@ class TestProjectionSpecificationFormats:
          for output_state in T.output_states:
              for projection in output_state.efferents:
                  assert projection.receiver.owner is R2
+
+    def test_gating_signal_using_2_item_tuple(self):
+        T = pnl.DDM(name='D')
+        # Single name
+        G = pnl.GatingMechanism(gating_signals=[(pnl.DECISION_VARIABLE, T)])
+        assert G.gating_signals[0].name == 'D[DECISION_VARIABLE] GatingSignal'
+        assert G.gating_signals[0].efferents[0].receiver.name == 'DECISION_VARIABLE'
+        # List of names
+        G = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], T)])
+        assert G.gating_signals[0].name == 'D[DECISION_VARIABLE, RESPONSE_TIME] GatingSignal'
+        assert G.gating_signals[0].efferents[0].receiver.name == 'DECISION_VARIABLE'
+        assert G.gating_signals[0].efferents[1].receiver.name == 'RESPONSE_TIME'
+
+    def test_control_signal_using_2_item_tuple(self):
+        T = pnl.DDM(name='D')
+        # Single name
+        C = pnl.GatingMechanism(gating_signals=[(pnl.DRIFT_RATE, T)])
+        assert C.control_signals[0].name == 'D[drift_rate] ControlSignal'
+        assert C.control_signals[0].efferents[0].receiver.name == 'drift_rate'
+        # List of names
+        C = pnl.GatingMechanism(gating_signals=[([pnl.DRIFT_RATE, pnl.THRESHOLD], T)])
+        assert C.control_signals[0].name == 'D[drift_rate, threshold] ControlSignal'
+        assert C.control_signals[0].efferents[0].receiver.name == 'drift_rate'
+        assert C.control_signals[0].efferents[1].receiver.name == 'threshold'
+
+# # ??COVERED ABOVE:
+# c = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [m.parameter_states[pnl.DRIFT_RATE],
+#                                                              m.parameter_states[pnl.THRESHOLD]]}])
+# c = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[m.parameter_states[pnl.DRIFT_RATE],
+#                                                                m.parameter_states[pnl.THRESHOLD]]}])
+

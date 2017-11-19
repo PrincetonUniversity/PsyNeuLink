@@ -361,8 +361,8 @@ class ScratchPadError(Exception):
 m = pnl.DDM(name='MY DDM')
 # # # c = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [m.parameter_states[pnl.DRIFT_RATE],
 # # #                                                              m.parameter_states[pnl.THRESHOLD]]}])
-c = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[m.parameter_states[pnl.DRIFT_RATE],
-                                                               m.parameter_states[pnl.THRESHOLD]]}])
+# c = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[m.parameter_states[pnl.DRIFT_RATE],
+#                                                                m.parameter_states[pnl.THRESHOLD]]}])
 # g = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS: [m.output_states[pnl.DECISION_VARIABLE],
 #                                                              m.output_states[pnl.RESPONSE_TIME]]}])
 # g = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[m.output_states[pnl.DECISION_VARIABLE],
@@ -371,14 +371,11 @@ c = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[m.parameter_state
 #                                          pnl.NAME:pnl.DECISION_VARIABLE}])
 
 # FIX: WRITE TEST FOR THESE:
-g = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], m)])
+# g = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], m)])
 c = pnl.ControlMechanism(control_signals=[(pnl.DRIFT_RATE, m)])
-g = pnl.GatingMechanism(gating_signals=[(pnl.DECISION_VARIABLE, m)])
+c = pnl.ControlMechanism(control_signals=[([pnl.DRIFT_RATE, pnl.THRESHOLD], m)])
+# g = pnl.GatingMechanism(gating_signals=[(pnl.DECISION_VARIABLE, m)])
 
-assert True
-
-t = pnl.TransferMechanism()
-r = pnl.TransferMechanism(input_states=[([0,0],t)])
 assert True
 
 #

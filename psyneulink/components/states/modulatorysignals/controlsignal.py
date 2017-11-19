@@ -42,24 +42,29 @@ Specifying ControlSignals
 When a ControlSignal is specified in the **control_signals** argument of the constructor for a `ControlMechanism
 <ControlMechanism>`, the parameter to be controlled must be specified.  This can take any of the following forms:
 
-  * a **ParameterState** of the Mechanism to which the parameter belongs;
+  * **ParameterState** -- of the Mechanism to which the parameter belongs;
   ..
-  * a **tuple**, with the name of the parameter as its 1st item and the *Mechanism* to which it belongs as the 2nd;
-    note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
-    but precludes specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
+  * **2-item tuple** -- the 1st time must be the name of the parameter (or list of parameter names), and the 2nd item
+    the Mechanism to which it (they) belong(s); this is a convenience format, which is simpler to use than a
+    specification dictionary (see below), but precludes specification of any `parameters <ControlSignal_Structure>`
+    for the ControlSignal.
   ..
-  * a **specification dictionary**, that must contain at least the following two entries:
+  * **specification dictionary** -- can take either of the following two forms:
 
-    * *NAME*: str
-        a string that is the name of the parameter to be controlled;
+    * for controlling a single parameter, the dictionary can have the following two entries:
 
-    * *MECHANISM*: Mechanism
-        the Mechanism must be the one to the which the parameter belongs.
-        (note: the Mechanism itself should be specified even if the parameter belongs to its function).
+        * *NAME*: str
+            the string must be the name of the parameter to be gated;
 
-    The dictionary can also contain entries for any other ControlSignal attributes to be specified
-    (e.g., a *MODULATION* and/or *ALLOCATION_SAMPLES* entry); see `below <ControlSignal_Structure>` for a
-    description of ControlSignal attributes.
+        * *MECHANISM*: Mechanism
+            the Mechanism must be the one to the which the parameter to be controlled belongs.
+
+    * for controlling multiple parameters, the dictionary can have the following entry:
+
+        * <str>:list
+            the string used as the key specifies the name to be used for the ControlSignal,
+            and each item of the list must be a `specification of a parameter <ParameterState_Specification>` to be
+            controlled by the ControlSignal (and that will receive a `ControlProjection` from it).
 
 .. _ControlSignal_Structure:
 
@@ -1036,6 +1041,11 @@ class ControlSignal(ModulatorySignal):
             if not isinstance(mech, Mechanism):
                 raise ControlSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
                                          format(ControlSignal.__name__, owner.name, mech, mech.name))
+
+            # # state_specs = state_item if isinstance(state_item, list) else [state_item]
+            # # state_list = []
+            # for state_name in state_specs:
+
             if not isinstance(param_name, str):
                 raise ControlSignalError("First item of the {} specification tuple for {} ({}) must be a string "
                                          "that is the name of a parameter of its second item ({})".

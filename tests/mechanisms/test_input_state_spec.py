@@ -224,6 +224,19 @@ class TestInputStateSpec:
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
+    # TEST 12.1
+    # 2-item tuple specification with value as first item (and no size specification for T)
+
+    def test_2_item_tuple_value_for_first_item(self):
+        R2 = TransferMechanism(size=3)
+        T = TransferMechanism(input_states=[([0,0], R2)])
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        assert len(T.input_states) == 1
+        assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
+        assert len(T.input_state.instance_defaults.variable) == 2
+        T.execute()
+
+    # ------------------------------------------------------------------------------------------------
     # TEST 13
     # ConnectionTuple Specification
 
