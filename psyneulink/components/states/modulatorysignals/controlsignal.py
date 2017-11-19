@@ -1067,6 +1067,7 @@ class ControlSignal(ModulatorySignal):
             # except ControlSignalError:
             #     raise ControlSignalError("Unable to parse {} specification dictionary for {} ({})".
             #                                 format(ControlSignal.__name__, owner.name, state_specific_spec))
+            state_spec = None
             params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
                                                                owner=owner,
                                                                connections=state_specific_spec)

@@ -599,33 +599,29 @@ class ParameterState(State_Base):
 
         elif isinstance(state_specific_spec, tuple):
 
-            # tuple_spec = state_specific_spec
-            # state_spec = tuple_spec[0]
-            #
-            # # Get connection (afferent Projection(s)) specification from tuple
-            # PROJECTIONS_INDEX = len(tuple_spec)-1
-            # # Get projection_spec and parse
-            # try:
-            #     projections_spec = tuple_spec[PROJECTIONS_INDEX]
-            #     # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
-            # except IndexError:
-            #     projections_spec = None
-            #
-            # if projections_spec:
-            #     try:
-            #         params_dict[PROJECTIONS] = _parse_connection_specs(self,
-            #                                                            owner=owner,
-            #                                                            connections=projections_spec)
-            #     except ParameterStateError:
-            #         raise ParameterStateError("Item {} of tuple specification in {} specification dictionary "
-            #                               "for {} ({}) is not a recognized specification".
-            #                               format(PROJECTIONS_INDEX,
-            #                                      ParameterState.__name__,
-            #                                      owner.name,
-            #                                      projections_spec))
-            params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
-                                                               owner=owner,
-                                                               connections=state_specific_spec)
+            tuple_spec = state_specific_spec
+            state_spec = tuple_spec[0]
+
+            # Get connection (afferent Projection(s)) specification from tuple
+            PROJECTIONS_INDEX = len(tuple_spec)-1
+            # Get projection_spec and parse
+            try:
+                projections_spec = tuple_spec[PROJECTIONS_INDEX]
+            except IndexError:
+                projections_spec = None
+
+            if projections_spec:
+                try:
+                    params_dict[PROJECTIONS] = _parse_connection_specs(self,
+                                                                       owner=owner,
+                                                                       connections=projections_spec)
+                except ParameterStateError:
+                    raise ParameterStateError("Item {} of tuple specification in {} specification dictionary "
+                                          "for {} ({}) is not a recognized specification".
+                                          format(PROJECTIONS_INDEX,
+                                                 ParameterState.__name__,
+                                                 owner.name,
+                                                 projections_spec))
 
 
         elif state_specific_spec is not None:

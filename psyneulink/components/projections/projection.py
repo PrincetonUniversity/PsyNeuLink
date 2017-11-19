@@ -1429,6 +1429,10 @@ def _parse_connection_specs(connectee_state_type,
             #     projection_spec = last_item
             #     state_spec = None
 
+            elif _is_projection_spec(last_item):
+                projection_spec = last_item
+                state_spec = first_item
+
             # (<state name or list of state names>, <Mechanism>)
             elif isinstance(first_item, (str, list)):
                 state_item = first_item

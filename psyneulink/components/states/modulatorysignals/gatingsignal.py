@@ -479,6 +479,7 @@ class GatingSignal(ModulatorySignal):
                 return None, state_specific_spec
 
             elif isinstance(state_specific_spec, tuple):
+                state_spec = None
                 params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
                                                                    owner=owner,
                                                                    connections=state_specific_spec)

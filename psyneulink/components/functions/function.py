@@ -3803,7 +3803,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     if type(specification) == str:
         try:
             return np.array(np.matrix(specification))
-        except (ValueError, NameError):
+        except (ValueError, NameError, TypeError):
             # np.matrix(specification) will give ValueError if specification is a bad value (e.g. 'abc', '1; 1 2')
             #                          [JDC] actually gives NameError if specification is a string (e.g., 'abc')
             pass
