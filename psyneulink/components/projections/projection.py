@@ -1435,12 +1435,9 @@ def _parse_connection_specs(connectee_state_type,
                                           "Mechanism".
                                              format(connectee_state_type.__name__, owner.name, mech_item,
                                                     mech_item.name))
-
+                # First item of tuple is a list of State names, so recursively process it
                 if isinstance(state_item, list):
-                    # FIX: 11/18/17 HACK -- NEED TO DEAL WITH LIST HERE (OR IN _parse_state_spec??)
-                    # state_item = state_item[0]
-
-                    # Recursively call _parse_connection_spec to assign each specified State its own connection spec
+                     # Call _parse_connection_spec for each State name, to generate a conection spec for each
                     for state_name in state_item:
                         if not isinstance(state_name, str):
                              raise ProjectionError("Expected 1st item of the {} specification tuple for {} ({}) to be "
@@ -1449,10 +1446,13 @@ def _parse_connection_specs(connectee_state_type,
                                                               connects_with, mech_item.name))
                         c = _parse_connection_specs(connectee_state_type=connectee_state_type,
                                                     owner=owner,
-                                                    connections=ConnectionTuple(state_name, weight, exponent, mech_item))
+                                                    connections=ConnectionTuple(state_name,
+                                                                                weight, exponent,
+                                                                                mech_item))
                         connect_with_states.extend(c)
+                    # Move on to other connections
                     continue
-
+                # Otherwise, go on to process (<State name>, Mechanism) spec
                 state_spec = state_item
                 projection_spec = None
                 mech=mech_item
