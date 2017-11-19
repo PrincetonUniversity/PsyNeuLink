@@ -493,7 +493,7 @@ class GatingSignal(ModulatorySignal):
                                                     InputState.__name__, OutputState.__name__, Mechanism.__name__))
                 if not isinstance(mech_item, Mechanism):
                     raise GatingSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
-                                             format(GatingSignal.__name__, owner.name, mech, mech.name))
+                                             format(GatingSignal.__name__, owner.name, mech_item, mech_item.name))
 
                 state_specs = state_item if isinstance(state_item, list) else [state_item]
                 state_list = []
@@ -502,7 +502,7 @@ class GatingSignal(ModulatorySignal):
                         raise GatingSignalError("First item of the {} specification tuple for {} ({}) must be a string "
                                                  "that is the name of a {} or {} of its second item ({})".
                                                  format(GatingSignal.__name__, owner.name, state_name,
-                                                        InputState.__name__, OutputState.__name__, mech.name))
+                                                        InputState.__name__, OutputState.__name__, mech_item.name))
                     try:
                         state_type = _parse_state_type(mech_item, state_name)
                         if issubclass(state_type, InputState):
@@ -511,7 +511,7 @@ class GatingSignal(ModulatorySignal):
                             state = mech_item.output_states[state_name]
                         else:
                             raise GatingSignalError("No {} named {} found for {} in {} tuple specification for {}".
-                                                    format(state_type.__name__, state_name, mech.name,
+                                                    format(state_type.__name__, state_name, mech_item.name,
                                                            GatingSignal.__name__, owner.name))
                         state_list.append(state)
 

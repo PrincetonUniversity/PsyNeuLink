@@ -1408,67 +1408,34 @@ def _parse_connection_specs(connectee_state_type,
                 if is_numeric(item1):
                     # (<value>, <projection_spec>)
                     projection_spec = item2
+                    # FIX: TRY DELETING THIS:
                     # Ignore item1 (assume it was processed by _parse_state_specific_specs),
                     #    and use projection_spec as state_spec
                     state_spec = projection_spec
                 elif isinstance(item1, str):
+                    state_item = item1
+                    mech_item = item2
 
-
-
-
-                if not isinstance(mech_item, Mechanism):
-                    raise GatingSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
-                                             format(GatingSignal.__name__, owner.name, mech, mech.name))
-
-                state_specs = state_item if isinstance(state_item, list) else [state_item]
-                state_list = []
-                for state_name in state_specs:
-                    if not isinstance(state_name, str):
-                        raise GatingSignalError("First item of the {} specification tuple for {} ({}) must be a string "
-                                                 "that is the name of a {} or {} of its second item ({})".
-                                                 format(GatingSignal.__name__, owner.name, state_name,
-                                                        InputState.__name__, OutputState.__name__, mech.name))
-                    try:
-                        state_type = _parse_state_type(mech_item, state_name)
-                        if issubclass(state_type, InputState):
-                            state = mech_item.input_states[state_name]
-                        elif issubclass(state_type, OutputState):
-                            state = mech_item.output_states[state_name]
-                        else:
-                            raise GatingSignalError("No {} named {} found for {} in {} tuple specification for {}".
-                                                    format(state_type.__name__, state_name, mech.name,
-                                                           GatingSignal.__name__, owner.name))
+                    if not isinstance(mech_item, Mechanism):
+                        raise ProjectionError("Expected 2nd item of the {} specification tuple for {} ({}) to be a "
+                                              "Mechanism".
+                                                 format(connectee_state_type.__name__, owner.name, mech_item,
+                                                        mech_item.name))
+                    state_specs = state_item if isinstance(state_item, list) else [state_item]
+                    state_list = []
+                    for state_name in state_specs:
+                        if not isinstance(state_name, str):
+                            raise ProjectionError("Expected 1st item of the {} specification tuple for {} ({}) to be "
+                                                  "the name of a {} of its 2nd item ({})".
+                                                     format(connectee_state_type.__name__, owner.name, state_name,
+                                                             connects_with, mech_item.name))
+                        state = _get_state_for_socket(owner=owner,
+                                                      state_spec=state_name,
+                                                      state_types=connects_with,
+                                                      mech=mech_item,
+                                                      projection_socket=projection_socket)
                         state_list.append(state)
-
-                    # except KeyError:
-                    #     raise GatingSignalError("No {} found for {} in {} specification tuple for {}".
-                    #                              format(state_type.__name__, mech.name,
-                    #                                     GatingSignal.__name__, owner.name))
-                    except AttributeError:
-                        raise GatingSignalError("{} does not have any {} specified, so can't"
-                                                 "assign {} specified for {} ({})".
-                                                 format(mech_item.name, state_type.__name__, GatingSignal.__name__,
-                                                        owner.name, state_specific_spec))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                    state_spec = state_list
                 weight = DEFAULT_WEIGHT
                 exponent = DEFAULT_EXPONENT
 
