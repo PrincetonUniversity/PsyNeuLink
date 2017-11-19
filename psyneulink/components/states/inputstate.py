@@ -879,10 +879,17 @@ class InputState(State_Base):
                             if matrix is None:
                                 # If matrix has not been specified, no worries;
                                 #    variable will be determined by value of sender
-                                continue
+                                sender_shape = projection_spec.state.value.shape
+                                variable = np.zeros(sender_shape)
+                                if VARIABLE not in state_dict or state_dict[VARIABLE] is None:
+                                    state_dict[VARIABLE] = variable
+                                elif state_dict[VARIABLE].shape != variable.shape:
+                                    state_dict[VARIABLE] = None
+
                             # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
-                            proj_val_shape = matrix.shape[sender_dim :]
-                            state_dict[VARIABLE] = np.zeros(proj_val_shape)
+                            else:
+                                proj_val_shape = matrix.shape[sender_dim :]
+                                state_dict[VARIABLE] = np.zeros(proj_val_shape)
 
                 except InputStateError:
                     raise InputStateError("Tuple specification in {} specification dictionary "

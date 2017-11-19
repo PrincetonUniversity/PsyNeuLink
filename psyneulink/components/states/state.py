@@ -2688,7 +2688,8 @@ def _parse_state_spec(state_type=None,
         # Standard state specification dict
         # Warn if VARIABLE was not in dict
         if VARIABLE not in state_dict and owner.prefs.verbosePref:
-            print("{} missing from specification dict for {} of {};  default ({}) will be used".
+            print("{} missing from specification dict for {} of {};  "
+                  "will be inferred from context or the default ({}) will be used".
                   format(VARIABLE, state_type, owner.name, state_dict))
 
         # State specification is a tuple, so let State subclass handle it

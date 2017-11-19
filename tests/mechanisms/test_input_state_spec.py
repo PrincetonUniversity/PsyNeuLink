@@ -7,7 +7,7 @@ from psyneulink.components.projections.projection import ProjectionError
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.state import StateError
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, VARIABLE
+from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, VARIABLE, RESULT
 
 mismatches_default_variable_error_text = 'not compatible with the specified default variable'
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
@@ -631,3 +631,24 @@ class TestInputStateSpec:
         T2 = TransferMechanism(input_states=[my_input_state])
         assert T2.input_states[0].name == 'InputState-0'
         assert T2.input_states[0].projections[0].sender.name == 'RESULTS'
+
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 33
+
+    def test_2_item_tuple_with_state_name_list_and_mechanism(self):
+        # T1 has OutputStates with different lengths,
+        #    so T2 should use its variable default to as format for its InputStates (since it is not otherwise specified
+        T1 = TransferMechanism(input_states=[[0,0],[0,0,0]])
+        T2 = TransferMechanism(input_states=[(['RESULT', 'RESULT-1'], T1)])
+        assert len(T2.input_states[0].value) == 1
+        assert T2.input_states[0].path_afferents[0].sender.name == 'RESULT'
+        assert T2.input_states[0].path_afferents[1].sender.name == 'RESULT-1'
+
+        # T1 has OutputStates of with same lengths,
+        #    so T2 should use that length for its InputState (since it is not otherwise specified
+        T1 = TransferMechanism(input_states=[[0,0],[0,0]])
+        T2 = TransferMechanism(input_states=[(['RESULT', 'RESULT-1'], T1)])
+        assert len(T2.input_states[0].value) == 2
+        assert T2.input_states[0].path_afferents[0].sender.name == 'RESULT'
+        assert T2.input_states[0].path_afferents[1].sender.name == 'RESULT-1'

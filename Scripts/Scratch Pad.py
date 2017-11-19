@@ -720,12 +720,17 @@ class ScratchPadError(Exception):
 print("TEST InputState")
 
 
-T1 = pnl.TransferMechanism(name='T1', default_variable=[0,0,0])
-# G = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], T1)])
-T2 = pnl.TransferMechanism(input_states=[(pnl.RESULTS, T1)])
-# assert T2.input_states[0].path_afferents[0].sender.owner.name == 'D'
-assert True
+# T1 = pnl.TransferMechanism(name='T1', default_variable=[0,0,0])
+# # G = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], T1)])
+# T2 = pnl.TransferMechanism(input_states=[(pnl.RESULT, RESULT-1, T1)])
+# # assert T2.input_states[0].path_afferents[0].sender.owner.name == 'D'
+# assert True
 
+T1 = pnl.TransferMechanism(input_states=[[0,0],[0,0]])
+T2 = pnl.TransferMechanism(input_states=[(['RESULT', 'RESULT-1'], T1)])
+assert len(T2.input_states[0].value) == 2
+assert T2.input_states[0].path_afferents[0].sender.name == 'RESULT'
+assert T2.input_states[0].path_afferents[1].sender.name == 'RESULT-1'
 
 
 
