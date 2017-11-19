@@ -371,10 +371,10 @@ m = pnl.DDM(name='MY DDM')
 #                                          pnl.NAME:pnl.DECISION_VARIABLE}])
 
 # FIX: WRITE TEST FOR THESE:
-# g = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], m)])
+g = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], m)])
 c = pnl.ControlMechanism(control_signals=[(pnl.DRIFT_RATE, m)])
 c = pnl.ControlMechanism(control_signals=[([pnl.DRIFT_RATE, pnl.THRESHOLD], m)])
-# g = pnl.GatingMechanism(gating_signals=[(pnl.DECISION_VARIABLE, m)])
+g = pnl.GatingMechanism(gating_signals=[(pnl.DECISION_VARIABLE, m)])
 
 assert True
 

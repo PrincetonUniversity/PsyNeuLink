@@ -87,12 +87,12 @@ class TestProjectionSpecificationFormats:
     def test_control_signal_using_2_item_tuple(self):
         T = pnl.DDM(name='D')
         # Single name
-        C = pnl.GatingMechanism(gating_signals=[(pnl.DRIFT_RATE, T)])
-        assert C.control_signals[0].name == 'D[drift_rate] ControlSignal'
+        C = pnl.ControlMechanism(control_signals=[(pnl.DRIFT_RATE, T)])
+        assert C.control_signals[0].name == 'D-1[drift_rate] ControlSignal'
         assert C.control_signals[0].efferents[0].receiver.name == 'drift_rate'
         # List of names
-        C = pnl.GatingMechanism(gating_signals=[([pnl.DRIFT_RATE, pnl.THRESHOLD], T)])
-        assert C.control_signals[0].name == 'D[drift_rate, threshold] ControlSignal'
+        C = pnl.ControlMechanism(control_signals=[([pnl.DRIFT_RATE, pnl.THRESHOLD], T)])
+        assert C.control_signals[0].name == 'D-1[drift_rate, threshold] ControlSignal'
         assert C.control_signals[0].efferents[0].receiver.name == 'drift_rate'
         assert C.control_signals[0].efferents[1].receiver.name == 'threshold'
 

@@ -1032,41 +1032,42 @@ class ControlSignal(ModulatorySignal):
             state_spec = None
 
             try:
-                param_name, mech = state_specific_params
+                param_item, mech_item = state_specific_params
             except:
                 raise ControlSignalError("Illegal {} specification tuple for {} ({});  "
                                          "it must contain two items: (<param_name>, <{}>)".
                                          format(ControlSignal.__name__, owner.name,
                                                 state_specific_params, Mechanism.__name__))
-            if not isinstance(mech, Mechanism):
+            if not isinstance(mech_item, Mechanism):
                 raise ControlSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
                                          format(ControlSignal.__name__, owner.name, mech, mech.name))
 
-            # # state_specs = state_item if isinstance(state_item, list) else [state_item]
-            # # state_list = []
-            # for state_name in state_specs:
+            param_specs = param_item if isinstance(param_item, list) else [param_item]
+            param_list = []
+            for param_name in param_specs:
 
-            if not isinstance(param_name, str):
-                raise ControlSignalError("First item of the {} specification tuple for {} ({}) must be a string "
-                                         "that is the name of a parameter of its second item ({})".
-                                         format(ControlSignal.__name__, owner.name, param_name, mech.name))
-            try:
-                parameter_state = mech.parameter_states[param_name]
-            except KeyError:
-                raise ControlSignalError("No {} found for {} param of {} in {} specification tuple for {}".
-                                         format(ParameterState.__name__, param_name, mech.name,
-                                                ControlSignal.__name__, owner.name))
-            except AttributeError:
-                raise ControlSignalError("{} does not have any {} specified, so can't"
-                                         "assign {} specified for {} ({})".
-                                         format(mech.name, ParameterState.__name__, ControlSignal.__name__,
-                                                owner.name, state_specific_params))
+                if not isinstance(param_name, str):
+                    raise ControlSignalError("First item of the {} specification tuple for {} ({}) must be a string "
+                                             "that is the name of a parameter of its second item ({})".
+                                             format(ControlSignal.__name__, owner.name, param_name, mech_item.name))
+                try:
+                    parameter_state = mech_item.parameter_states[param_name]
+                except KeyError:
+                    raise ControlSignalError("No {} found for {} param of {} in {} specification tuple for {}".
+                                             format(ParameterState.__name__, param_name, mech_item.name,
+                                                    ControlSignal.__name__, owner.name))
+                except AttributeError:
+                    raise ControlSignalError("{} does not have any {} specified, so can't"
+                                             "assign {} specified for {} ({})".
+                                             format(mech_item.name, ParameterState.__name__, ControlSignal.__name__,
+                                                    owner.name, state_specific_params))
+                param_list.append(parameter_state)
 
             # Assign connection specs to PROJECTIONS entry of params dict
             try:
                 params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                    owner=owner,
-                                                                   connections=parameter_state)
+                                                                   connections=param_list)
             except ControlSignalError:
                 raise ControlSignalError("Unable to parse {} specification dictionary for {} ({})".
                                             format(ControlSignal.__name__, owner.name, state_specific_params))
