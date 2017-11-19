@@ -2830,9 +2830,9 @@ def _get_state_for_socket(owner,
     from psyneulink.globals.utilities import is_matrix
     from collections import Iterable
 
-    # If the mech_state_attribute specified has more than one item, get the primary one
-    if isinstance(mech_state_attribute, list):
-        mech_state_attribute = mech_state_attribute[0]
+    # # If the mech_state_attribute specified has more than one item, get the primary one
+    # if isinstance(mech_state_attribute, list):
+    #     mech_state_attribute = mech_state_attribute[0]
 
     # state_types should be a list, and state_type its first (or only) item
     if isinstance(state_types, list):
@@ -2893,13 +2893,20 @@ def _get_state_for_socket(owner,
         if mech_state_attribute is None:
             raise StateError("PROGRAM ERROR: The attribute of {} that holds the requested State ({}) must be specified".
                              format(mech.name, state_spec))
-        try:
-            state_list_attribute = getattr(mech, mech_state_attribute)
-            state = state_list_attribute[state_spec]
-        except AttributeError:
-            raise StateError("PROGRAM ERROR: {} attribute not found on Mechanism ({})".
-                             format(mech_state_attribute, mech.name))
-        except KeyError:
+        for attr in mech_state_attribute:
+            try:
+                state_list_attribute = getattr(mech, attr)
+                state = state_list_attribute[state_spec]
+            except AttributeError:
+                state_list_attribute = None
+            except (KeyError, TypeError):
+                state = None
+            else:
+                break
+        if state_list_attribute is None:
+            raise StateError("PROGRAM ERROR: {} attribute(s) not found on {}'s type ({})".
+                             format(mech_state_attribute, mech.name, mech.__class__.__name__))
+        if state is None:
             raise StateError("{} does not have a State named {}".
                              format(mech.name, state_spec))
 
@@ -2918,6 +2925,16 @@ def _get_state_for_socket(owner,
                 except:
                     raise StateError("{} does not seem to have an {} attribute"
                                      .format(state_spec.name, mech_state_attribute))
+            for attr in mech_state_attribute:
+                try:
+                    state = getattr(state_spec, attr)[0]
+                except :
+                    state = None
+                else:
+                    break
+                if state is None:
+                    raise StateError("PROGRAM ERROR: {} attribute(s) not found on {}'s type ({})".
+                                     format(mech_state_attribute, mech.name, mech.__class__.__name__))
 
     # Get state from Projection specification (exclude matrix spec in test as it can't be used to determine the state)
     elif _is_projection_spec(state_spec, include_matrix_spec=False):

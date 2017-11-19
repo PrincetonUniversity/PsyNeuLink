@@ -1441,7 +1441,7 @@ def _parse_connection_specs(connectee_state_type,
                     # Use projection_spec, since there may be several (in which case can't use state_spec)
                     # projection_spec = state_list
                     projection_spec = None
-                    # FIX: HACK -- NEED TO DEAL WITH LIST HERE
+                    # FIX: HACK -- NEED TO DEAL WITH LIST HERE (OR IN _parse_state_spec??)
                     state_spec = state_list[0]
                 weight = DEFAULT_WEIGHT
                 exponent = DEFAULT_EXPONENT

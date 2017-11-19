@@ -719,19 +719,16 @@ class ScratchPadError(Exception):
 #region TEST InputState
 print("TEST InputState")
 
-
-
 T1 = pnl.DDM(name='D')
 G = pnl.GatingMechanism(gating_signals=[(pnl.DECISION_VARIABLE, T1)])
 # T2 = pnl.TransferMechanism(input_states=[(pnl.DECISION_VARIABLE, T1)])
 # assert T2.input_states[0].path_afferents[0].sender.owner.name == 'D'
-
+assert True
 # I = pnl.InputState(name='I', owner=T1)
 # # I = pnl.InputState(name='I')
 # # FIX: IMPLEMENT ASSIGNMENT TO OWNER WITH ASSIGNMENT OF OWNER
 # # I.owner = T1
 # assert T1.input_states[1].name == 'I'
-
 
 
 #endregion
