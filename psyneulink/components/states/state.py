@@ -180,9 +180,11 @@ A State can be specified using any of the following:
       (its first item), along with the weight, exponent, and/or Projection to use (its subsequent items; see
       `ConnectionTuple <Projection_ConnectionTuple>` for additional details).
     ..
-    * a **2-item tuple** - the first item must be a value, used as the default value for the State, and the second
-      item must be a specification for a `Projection <Projection_Specification>` to or from the State, depending on
-      the type of State and the context in which it is specified;
+    * a **2-item tuple** - convenience format that can be used to specify other States with which the State should
+      be connected, in which case the 1st item must be the name of a State or list of State names, and the 2nd item
+      must be the Mechanism to which they belong;  for an `InputState` it can also be used to specify the State's
+      `variable <State_Base.variable>` in the 1st item, and one or more `specifications for Projections
+      <Projection_Specification>` to it in the 2nd item.
 
 .. _State_Projections:
 
@@ -1815,12 +1817,24 @@ class State_Base(State):
         raise StateError("PROGRAM ERROR: {} does not implement _get_primary_state method".
                          format(self.__class__.__name__))
 
-    def _parse_state_specific_params(self, owner, state_spec_dict, state_specific_params):
-        # FIX: MODIFY THIS TO HANDLE STANDARD FORM (state_spec, projection_spec); SUBCLASSES SHOULD OVERRIDE
-        #       IF THEY ALLOW ANYTHING OR THAN IT, BUT SHOULD CALL THIS WHERE THEY WANT TO TRY THE STANDARD FORM
-        # FIX:  ??ADD VERSION OF THIS TO PROJECT (FOR _parse_projection_specific_tuple)??
+    def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
+        """Parse parameters in State specification tuple specific to each subclass
 
-        raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_params method".
+        Called by _parse_state_spec()
+        state_dict contains standard args for State constructor passed to _parse_state_spec
+        state_specific_spec is either a:
+            - tuple containing a specification for the State and/or Projections to/from it
+            - a dict containing state-specific parameters to be processed
+
+         Returns two values:
+         - state_spec:  specification for the State;
+                          - can be None (this is usually the case when state_specific_spec
+                            is a tuple specifying a Projection that will be used to specify the state)
+                          - if a value is returned, that is used by _parse_state_spec in a recursive call to
+                            parse the specified value as the State specification
+         - params: state-specific parameters that will be included in the PARAMS entry of the State specification dict
+         """
+        raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_specs method".
                          format(self.__class__.__name__))
 
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
@@ -1830,13 +1844,6 @@ class State_Base(State):
         Note: only update LearningSignals if context == LEARNING; otherwise, just get their value
         Call self.function (default: LinearCombination function) to combine their values
         Returns combined values of
-
-    Arguments:
-    - context (str)
-
-    :param context: (str)
-    :return: None
-
     """
 
         # region SET UP ------------------------------------------------------------------------------------------------
@@ -2676,20 +2683,7 @@ def _parse_state_spec(state_type=None,
     elif is_value_spec(state_specification):
         state_dict[REFERENCE_VALUE] = np.atleast_1d(state_specification)
 
-    # # **************************************************************************************************************
-
-    # Unrecognized state_specification
-    # elif state_specification:
-    #         if name and hasattr(owner, name):
-    #             owner_name = owner.name
-    #         else:
-    #             owner_name = owner.__class__.__name__
-    #         raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
-    #                          format(state_type_name, owner_name, state_spec))
-
-    # **************************************************************************************************************
-    # No state_specification in state_spec arg, so use state_dict from standard_args as State specification dictionary
-    else:
+    elif isinstance(state_specification, (tuple, dict)) or state_specification is None:
 
         # Standard state specification dict
         # Warn if VARIABLE was not in dict
@@ -2705,10 +2699,10 @@ def _parse_state_spec(state_type=None,
             state_specific_specs = params
 
         if state_specific_specs:
-            state_spec, params = state_type._parse_state_specific_params(state_type,
+            state_spec, params = state_type._parse_state_specific_specs(state_type,
                                                                          owner=owner,
                                                                          state_dict=state_dict,
-                                                                         state_specific_params = state_specific_specs)
+                                                                         state_specific_spec = state_specific_specs)
             # State subclass returned a state_spec, so call _parse_state_spec to parse it
             if state_spec:
                 state_dict = _parse_state_spec(context=context, state_spec=state_spec, **standard_args)
@@ -2760,7 +2754,7 @@ def _parse_state_spec(state_type=None,
 
             # FIX: 11/4/17 - MAY STILL NEED WORK:
             # FIX:   PROJECTIONS FROM UNRECOGNIZED KEY ENTRY MAY BE REDUNDANT OR CONFLICT WITH ONE ALREADY IN PARAMS
-            # FIX:   NEEDS TO BE BETTER COORDINATED WITH _parse_state_specific_params
+            # FIX:   NEEDS TO BE BETTER COORDINATED WITH _parse_state_specific_specs
             # FIX:   REGARDING WHAT IS IN state_specific_args VS params (see REF_VAL_NAME BRANCH)
             # FIX:   ALSO, ??DOES PROJECTIONS ENTRY BELONG IN param OR state_dict?
             # Check for single unrecognized key in params, used for {<STATE_NAME>:[<projection_spec>,...]} format
@@ -2791,9 +2785,12 @@ def _parse_state_spec(state_type=None,
             if state_dict[PARAMS] is None:
                 state_dict[PARAMS] = {}
             state_dict[PARAMS].update(params)
-    # **************************************************************************************************************
 
-    # # If variable is none, use value:
+    else:
+        raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
+                         format(state_type_name, owner.name, state_spec))
+
+    # If variable is none, use value:
     if state_dict[VARIABLE] is None:
         if state_dict[VALUE] is not None:
             state_dict[VARIABLE] = state_dict[VALUE]

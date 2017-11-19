@@ -1001,7 +1001,7 @@ class ControlSignal(ModulatorySignal):
                                                                             float(self.cost))
     #endregion
 
-    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
+    def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
 
         Tuple specification can be:
@@ -1017,27 +1017,23 @@ class ControlSignal(ModulatorySignal):
         from psyneulink.globals.keywords import PROJECTIONS
 
         params_dict = {}
-        state_spec = state_specific_params
+        state_spec = state_specific_spec
 
-        if isinstance(state_specific_params, dict):
-            # MODIFIED 11/18/17 NEW:
-            return None, state_specific_params
-            # # MODIFIED 11/18/17 NEWER:
-            # return state_spec, params_dict
-            # # MODIFIED 11/18/17 END
+        if isinstance(state_specific_spec, dict):
+            return None, state_specific_spec
 
-        elif isinstance(state_specific_params, tuple):
+        elif isinstance(state_specific_spec, tuple):
 
             # In this format there is no explicit State spec;  it is the Projection (parsed below)
             state_spec = None
 
             try:
-                param_item, mech_item = state_specific_params
+                param_item, mech_item = state_specific_spec
             except:
                 raise ControlSignalError("Illegal {} specification tuple for {} ({});  "
                                          "it must contain two items: (<param_name>, <{}>)".
                                          format(ControlSignal.__name__, owner.name,
-                                                state_specific_params, Mechanism.__name__))
+                                                state_specific_spec, Mechanism.__name__))
             if not isinstance(mech_item, Mechanism):
                 raise ControlSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
                                          format(ControlSignal.__name__, owner.name, mech, mech.name))
@@ -1060,7 +1056,7 @@ class ControlSignal(ModulatorySignal):
                     raise ControlSignalError("{} does not have any {} specified, so can't"
                                              "assign {} specified for {} ({})".
                                              format(mech_item.name, ParameterState.__name__, ControlSignal.__name__,
-                                                    owner.name, state_specific_params))
+                                                    owner.name, state_specific_spec))
                 param_list.append(parameter_state)
 
             # Assign connection specs to PROJECTIONS entry of params dict
@@ -1070,11 +1066,11 @@ class ControlSignal(ModulatorySignal):
                                                                    connections=param_list)
             except ControlSignalError:
                 raise ControlSignalError("Unable to parse {} specification dictionary for {} ({})".
-                                            format(ControlSignal.__name__, owner.name, state_specific_params))
+                                            format(ControlSignal.__name__, owner.name, state_specific_spec))
 
-        elif state_specific_params is not None:
+        elif state_specific_spec is not None:
             raise ControlSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
-                                  format(self.__class__.__name__, state_specific_params))
+                                  format(self.__class__.__name__, state_specific_spec))
 
         if params_dict[PROJECTIONS] is None:
             raise ControlSignalError("PROGRAM ERROR: No entry found in {} params dict for {} "

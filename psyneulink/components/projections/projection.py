@@ -1396,18 +1396,43 @@ def _parse_connection_specs(connectee_state_type,
         # Note:  this is NOT the same as the State specification tuple (which can have a similar format);
         #        the weights and exponents here specify *individual* Projections to a particular state,
         #            (vs. weights and exponents for an entire state, such as for InputState);
-        #        State specification tuple is handled in the _parse_state_specific_params() method of State subclasses
+        #        State specification tuple is handled in the _parse_state_specific_specs() method of State subclasses
 
         elif isinstance(connection, tuple):
 
         # Notes:
         #    - first item is assumed to always be a specification for the State being connected with
+            # 2-item tuple: can be (<value>, <projection_spec>) or (<state name or list of state names>, <Mechanism>)
             if len(connection) == 2:
-                state_spec, projection_spec = connection
-                if is_numeric(state_spec):
-                    state_spec = projection_spec
+                item1, item2 = connection
+                if is_numeric(item1):
+                    # (<value>, <projection_spec>)
+                    projection_spec = item2
+                    state_spec = item2
+                elif isinstance(item1, str):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 weight = DEFAULT_WEIGHT
                 exponent = DEFAULT_EXPONENT
+
             elif len(connection) == 4:
                 state_spec, weight, exponent, projection_spec = connection
             else:

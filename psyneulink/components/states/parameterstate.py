@@ -579,7 +579,7 @@ class ParameterState(State_Base):
 
 
     @tc.typecheck
-    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
+    def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get connections specified in a ParameterState specification tuple
 
         Tuple specification can be:
@@ -592,14 +592,14 @@ class ParameterState(State_Base):
         from psyneulink.components.projections.projection import _parse_connection_specs
 
         params_dict = {}
-        state_spec = state_specific_params
+        state_spec = state_specific_spec
 
-        if isinstance(state_specific_params, dict):
-            return None, state_specific_params
+        if isinstance(state_specific_spec, dict):
+            return None, state_specific_spec
 
-        elif isinstance(state_specific_params, tuple):
+        elif isinstance(state_specific_spec, tuple):
 
-            tuple_spec = state_specific_params
+            tuple_spec = state_specific_spec
             state_spec = tuple_spec[0]
 
             # Get connection (afferent Projection(s)) specification from tuple
@@ -624,9 +624,9 @@ class ParameterState(State_Base):
                                                  owner.name,
                                                  projections_spec))
 
-        elif state_specific_params is not None:
+        elif state_specific_spec is not None:
             raise ParameterStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
-                                  format(self.__class__.__name__, state_specific_params))
+                                  format(self.__class__.__name__, state_specific_spec))
 
         return state_spec, params_dict
 
@@ -819,7 +819,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                           "with the same name as a parameter of the component itself".
                                           format(function_name, owner.name, function_param_name))
 
-            # # FIX: 10/3/17 - ??MOVE THIS TO _parse_state_specific_params ----------------
+            # # FIX: 10/3/17 - ??MOVE THIS TO _parse_state_specific_specs ----------------
             # # Use function_param_value as constraint
             # # IMPLEMENTATION NOTE:  need to copy, since _instantiate_state() calls _parse_state_value()
             # #                       for constraints before state_spec, which moves items to subdictionaries,

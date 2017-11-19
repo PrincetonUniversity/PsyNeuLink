@@ -460,7 +460,7 @@ class GatingSignal(ModulatorySignal):
                          prefs=prefs,
                          context=context)
 
-    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
+    def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
             """Get connections specified in a ParameterState specification tuple
     
             Tuple specification can be:
@@ -473,22 +473,23 @@ class GatingSignal(ModulatorySignal):
             from psyneulink.components.projections.projection import _parse_connection_specs
     
             params_dict = {}
-            state_spec = state_specific_params
+            state_spec = state_specific_spec
     
-            if isinstance(state_specific_params, dict):
-                return None, state_specific_params
+            if isinstance(state_specific_spec, dict):
+                return None, state_specific_spec
 
-            elif isinstance(state_specific_params, tuple):
+            elif isinstance(state_specific_spec, tuple):
 
+                # FIX: 10/3/17 SHOULD BE ABLE TO HANDLE THIS AS CONTRACTION OF ConnectionTuple in _parse_connection_spec
                 # Tuple is Projection specification that is used to specify the State,
                 #    so return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
                 state_spec = None
                 try:
-                    state_item, mech_item = state_specific_params
+                    state_item, mech_item = state_specific_spec
                 except:
                     raise GatingSignalError("Illegal {} specification tuple for {} ({});  "
                                              "it must contain two items: (<{} or {} name>, <{}>)".
-                                             format(GatingSignal.__name__, owner.name, state_specific_params,
+                                             format(GatingSignal.__name__, owner.name, state_specific_spec,
                                                     InputState.__name__, OutputState.__name__, Mechanism.__name__))
                 if not isinstance(mech_item, Mechanism):
                     raise GatingSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
@@ -522,7 +523,7 @@ class GatingSignal(ModulatorySignal):
                         raise GatingSignalError("{} does not have any {} specified, so can't"
                                                  "assign {} specified for {} ({})".
                                                  format(mech_item.name, state_type.__name__, GatingSignal.__name__,
-                                                        owner.name, state_specific_params))
+                                                        owner.name, state_specific_spec))
 
                 # Assign connection specs to PROJECTIONS entry of params dict
                 try:
@@ -531,11 +532,11 @@ class GatingSignal(ModulatorySignal):
                                                                        connections=state_list)
                 except GatingSignalError:
                     raise GatingSignalError("Unable to parse {} specification dictionary for {} ({})".
-                                                format(GatingSignal.__name__, owner.name, state_specific_params))
+                                                format(GatingSignal.__name__, owner.name, state_specific_spec))
     
-            elif state_specific_params is not None:
+            elif state_specific_spec is not None:
                 raise GatingSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
-                                      format(self.__class__.__name__, state_specific_params))
+                                      format(self.__class__.__name__, state_specific_spec))
     
             if params_dict[PROJECTIONS] is None:
                 raise GatingSignalError("PROGRAM ERROR: No entry found in {} params dict for {} "

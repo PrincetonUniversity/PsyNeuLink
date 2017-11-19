@@ -94,23 +94,23 @@ specifications can be included in a list, or in a dictionary in which the key fo
 the name for the OutputState to be created, and the value is its specification.  Any of the following can be used to
 as the specification for each OutputState:
 
-    * An **existing OutputState object** or the name of one.  Its `variable <OutputState.variable>` must match (in the
+    * **existing OutputState object** or the name of one -- its `variable <OutputState.variable>` must match (in the
       number and type of its elements) the item of the owner Mechanism's `value <Mechanism_Base.value>` to
       which the OutputState is assigned (designated by its `index <OutputState_Index>` attribute).
     ..
-    * The **OutputState class**, keyword *OUTPUT_STATE*, or a string.  This creates a default OutputState using the
+    * **OutputState class**, keyword *OUTPUT_STATE*, or a string -- creates a default OutputState using the
       first item of the owner Mechanism's `value <Mechanism_Base.value>` as the OutputState's
       `variable <InputState.variable>`, and is assigned as the `primary OutputState <OutputState_Primary>` for the
       Mechanism. If the class name or *INPUT_STATE* keyword is used, a default name is assigned to the State;  if a
       string is used, it is assigned as the name of the InputState (see :ref:`naming conventions <LINK>`).
     ..
-    * A **value**.  This creates a default OutputState using the specified value as the OutputState's
+    * **value** -- creates a default OutputState using the specified value as the OutputState's
       `variable <OutputState.variable>`.  This must be compatible with (have the same number and type of elements as)
       the item of the owner Mechanism's `value <Mechanism_Base.value>` to which the OutputState is assigned
       (the first item by default, or the one designated by its `index <OutputState.index>` attribute).  A default
       name is assigned based on the name of the Mechanism (see :ref:`naming conventions <LINK>`).
     ..
-    * A **State specification dictionary**.  This creates the specified OutputState, and can use any of the standard
+    * **State specification dictionary** -- creates the specified OutputState, and can use any of the standard
       entries of a `State specification dictionary <State_Specification>`.  The *PROJECTIONS* or *MECHANISMS* entry can
       be used to specify one or more efferent `PathwayProjections <PathwayProjection>` from the OutputState, and/or
       `ModulatoryProjections <ModulatoryProjection>` for it to receive. In addition to the standard entries of a State
@@ -128,8 +128,8 @@ as the specification for each OutputState:
         <OutputState_Calculate>` for additional details).
 
     ..
-    * A **tuple**.  The first item must be any of the OutputState specifications above, the second item a
-      `ModulatoryProjection <ModulatoryProjection>` specification (or `None`), and the third (optional) item an integer
+    * **2-itemtuple** -- 1st item must be any of the OutputState specifications above, the 2nd item must be one or a
+      list of `Projection specifications <Projection_Specification>` (or `None`), and the 3rd (optional) item an integer
       specifying the `index <OutputState.index>` for the OutputState.
 
     .. note::
@@ -813,18 +813,20 @@ class OutputState(State_Base):
         return mechanism.output_state
 
     @tc.typecheck
-    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
+    def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get index and/or connections specified in an OutputState specification tuple
 
         Tuple specification can be:
             (state_spec, connections)
             (state_spec, index, connections)
 
-        Returns params dict with INDEX and/or CONNECTIONS entries if either of these was specified
+        See State._parse_state_specific_spec for additional info.
+
+        Returns:
+             - state_spec:  1st item of tuple
+             - params dict with INDEX and/or PROJECTIONS entries if either of them was specified
 
         """
-        # FIX: MAKE SURE IT IS OK TO USE DICT PASSED IN (as params) AND NOT INADVERTENTLY OVERWRITING STUFF HERE
-
         # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputState SPECS
         #      CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
         #      THESE CAN BE USED BY THE InputState's LinearCombination Function
@@ -835,42 +837,24 @@ class OutputState(State_Base):
         from psyneulink.components.system import MonitoredOutputStatesOption
 
         params_dict = {}
-        state_spec = state_specific_params
+        state_spec = state_specific_spec
 
-        if isinstance(state_specific_params, dict):
-            # MODIFIED 11/18/17 NEW:
-            return None, state_specific_params
-            # # MODIFIED 11/18/17 NEWER:
-            # return state_spec, params_dict
-            # # MODIFIED 11/18/17 END
+        if isinstance(state_specific_spec, dict):
+            return None, state_specific_spec
 
-        elif isinstance(state_specific_params, ConnectionTuple):
+        elif isinstance(state_specific_spec, ConnectionTuple):
             params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                owner=owner,
-                                                               connections=[state_specific_params])
+                                                               connections=[state_specific_spec])
 
-        elif isinstance(state_specific_params, tuple):
+        elif isinstance(state_specific_spec, tuple):
 
-            tuple_spec = state_specific_params
-            state_spec = tuple_spec[0]
+            tuple_spec = state_specific_spec
+            state_spec = None
             INDEX_INDEX = 1
             PROJECTIONS_INDEX = len(tuple_spec)-1
 
-            # Specification is a MonitoredOutputStatesOptions (passed from System)
-            if len(tuple_spec)==1:
-                if not isinstance(tuple_spec[0], MonitoredOutputStatesOption):
-                    raise OutputStateError("Tuple provided in {} specification dictionary for {} has a single item ({})"
-                                           "which should be a value of {}".format(OutputState.__name__,
-                                                                                  owner.name,
-                                                                                  tuple_spec,
-                                                                                  MonitoredOutputStatesOption.__name__))
-                # MODIFIED 11/18/17 OLD:
-                # return tuple_spec[0], tuple_spec[0]
-                # MODIFIED 11/18/17 NEW:
-                return tuple_spec[0], None
-                # MODIFIED 11/18/17 END
-
-            elif not len(tuple_spec) in {2,3} :
+            if not len(tuple_spec) in {2,3} :
                 raise OutputStateError("Tuple provided in {} specification dictionary for {} ({}) must have "
                                        "either 2 ({} and {}) or 3 (optional additional {}) items, "
                                        "or must be a {}".
@@ -885,7 +869,6 @@ class OutputState(State_Base):
                 projections_spec = None
             if projections_spec:
                 try:
-                    # params_dict[CONNECTIONS] = _parse_connection_specs(self.__class__,
                     params_dict[PROJECTIONS] = _parse_connection_specs(self.__class__,
                                                                              owner=owner,
                                                                              connections={projections_spec})
@@ -911,9 +894,9 @@ class OutputState(State_Base):
                                            "for {} must be a number".format(index, OutputState.__name__, owner.name))
                 params_dict[INDEX] = index
 
-        elif state_specific_params is not None:
+        elif state_specific_spec is not None:
             raise OutputStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
-                                  format(self.__class__.__name__, state_specific_params))
+                                  format(self.__class__.__name__, state_specific_spec))
 
         return state_spec, params_dict
 

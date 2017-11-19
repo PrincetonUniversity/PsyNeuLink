@@ -782,43 +782,21 @@ class InputState(State_Base):
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
 
-    # def _assign_default_state_name(self, context=None):
-    #     # """Assign 'InputState-n' to any InputStates with default name (i.e., name of State: 'InputState'),
-    #     #    where n is the next index of InputStates with the default name
-    #     # Returns name assigned to State
-    #     # """
-    #
-    #     # Call for State being instantiated in the context of constructing its owner
-    #     if isinstance(context,State_Base):
-    #         self.name = self.name.replace(self.componentName, 'INPUT_STATE')
-    #
-    #     # Call in the context of adding a state to an existing owner
-    #     elif any(key in context for key in {ADD_STATES, DEFERRED_INITIALIZATION}):
-    #         try:
-    #             i=len([input_state for input_state in self.owner.input_states if 'InputState-' in input_state.name])
-    #             self.name = 'InputState-'+str(i)
-    #         except TypeError:
-    #             i=0
-    #             self.name = 'InputState-'+str(i)
-    #
-    #     else:
-    #         raise InputStateError("PROGRAM ERROR: unrecognized context (\'{}\') for assigning default {} to {}".
-    #                               format(context, NAME, InputState.__name__))
-    #     return self.name
-
     @tc.typecheck
-    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
+    def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get weights, exponents and/or any connections specified in an InputState specification tuple
 
         Tuple specification can be:
             (state_spec, connections)
             (state_spec, weights, exponents, connections)
 
-        Returns params dict with WEIGHT, EXPONENT and/or CONNECTIONS entries if any of these was specified.
+        See State._parse_state_specific_spec for additional info.
+.
+        Returns:
+             - state_spec:  1st item of tuple if it is a numeric value;  otherwise None
+             - params dict with WEIGHT, EXPONENT and/or PROJECTIONS entries if any of these was specified.
 
         """
-        # FIX: MAKE SURE IT IS OK TO USE DICT PASSED IN (as params) AND NOT INADVERTENTLY OVERWRITING STUFF HERE
-
         # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputState SPECS
         #      CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
         #      THESE CAN BE USED BY THE InputState's LinearCombination Function
@@ -828,18 +806,18 @@ class InputState(State_Base):
         from psyneulink.components.projections.projection import Projection, _parse_connection_specs
 
         params_dict = {}
-        state_spec = state_specific_params
+        state_spec = state_specific_spec
 
-        if isinstance(state_specific_params, dict):
+        if isinstance(state_specific_spec, dict):
             # FIX: 10/3/17 - CHECK HERE THAT, IF MECHANISM ENTRY IS USED, A VARIABLE, WEIGHT AND/OR EXPONENT ENTRY
             # FIX:                       IS APPLIED TO ALL THE OutputStates SPECIFIED IN OUTPUT_STATES
             # FIX:                       UNLESS THEY THEMSELVES USE A State specification dict WITH ANY OF THOSE ENTRIES
             # FIX:           USE ObjectiveMechanism EXAMPLES
-            return None, state_specific_params
+            return None, state_specific_spec
 
-        elif isinstance(state_specific_params, tuple):
+        elif isinstance(state_specific_spec, tuple):
 
-            tuple_spec = state_specific_params
+            tuple_spec = state_specific_spec
 
             if len(tuple_spec) == 2:
                 # FIX: 11/12/17 - ??GENERALIZE FOR ALL STATES AND MOVE TO _parse_state_spec
@@ -938,9 +916,9 @@ class InputState(State_Base):
                 raise StateError("Tuple provided as state_spec for {} of {} ({}) must have either 2, 3 or 4 items".
                                  format(InputState.__name__, owner.name, tuple_spec))
 
-        elif state_specific_params is not None:
+        elif state_specific_spec is not None:
             raise InputStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
-                                  format(self.__class__.__name__, state_specific_params))
+                                  format(self.__class__.__name__, state_specific_spec))
 
         return state_spec, params_dict
 

@@ -707,57 +707,27 @@ class ScratchPadError(Exception):
 # endregion
 
 #region TEST Naming
-
-# D = pnl.DDM()
-# T = pnl.TransferMechanism(input_states=['x'],
-#                           output_states=pnl.MECHANISM_VALUE)
-
-#region TEST Naming
-# print ('TEST Naming')
-from psyneulink.components.mechanisms.mechanism import MechanismRegistry
-
+# print("TEST Naming")
+#
 # T1 = pnl.TransferMechanism()
 # print(T1.name)
 # T2 = pnl.TransferMechanism()
 # print(T2.name)
-# pnl.clear_registry(MechanismRegistry)
-# T3 = pnl.TransferMechanism()
-# print(T3.name)
 
-#
-# # I = pnl.InputState(name='I', owner=T)
-# I = pnl.InputState(name='I')
-# I.owner = T
-# assert T.input_states[1].name == 'I'
 #endregion
 
-#region TEST InputState SPECIFICATION
-# print ('TEST InputState SPECIFICATION')
-#
-# import numpy as np
-# from psyneulink.components.states.inputstate import InputState
-# from psyneulink.components.states.outputstate import OutputState
-# from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-# from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-# from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-# from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, RESPONSE_TIME
-# from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES, PROJECTIONS, NAME, INPUT_STATES, VARIABLE
-#
-# R1 = TransferMechanism(input_states=[OutputState])
+#region TEST InputState
+print("TEST InputState")
 
-#
-# # InputState specification tests:
-#
-# # NOT YET IMPLEMENTED [10/29/17]:
-# # MECHANISM/OUTPUT_STATES specification
-# # my_mech_2 = TransferMechanism(input_states=[{MECHANISM: my_mech_1,
-# #                                              OUTPUT_STATES: [DECISION_VARIABLE, RESPONSE_TIME]}])
-# # assert len(my_mech_2.input_states)==2
-# # assert all(name in my_mech_2.input_states.names for name in {DECISION_VARIABLE, RESPONSE_TIME})
-# # for input_state in my_mech_2.input_states:
-# #     for projection in input_state.path_afferents:
-# #         assert projection.sender.owner is my_mech_1
-#
+T1 = pnl.DDM(name='D')
+T2 = pnl.TransferMechanism(input_states=[(pnl.DECISION_VARIABLE, T1)])
+assert T2.input_states[0].path_afferents[0].sender.owner.name == 'D'
+
+# I = pnl.InputState(name='I', owner=T1)
+# # I = pnl.InputState(name='I')
+# # FIX: IMPLEMENT ASSIGNMENT TO OWNER WITH ASSIGNMENT OF OWNER
+# # I.owner = T1
+# assert T1.input_states[1].name == 'I'
 
 #endregion
 
