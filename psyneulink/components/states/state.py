@@ -2907,8 +2907,13 @@ def _get_state_for_socket(owner,
             raise StateError("PROGRAM ERROR: {} attribute(s) not found on {}'s type ({})".
                              format(mech_state_attribute, mech.name, mech.__class__.__name__))
         if state is None:
-            raise StateError("{} does not have a State named {}".
-                             format(mech.name, state_spec))
+            if len(mech_state_attribute)==1:
+                attr_name = mech_state_attribute[0] + " attribute."
+            else:
+                attr_name = " or ".join(", ".format(attr) for (attr) in mech_state_attribute) + " attributes."
+            raise StateError("{} does not have a {} named \'{}\' in its {}".
+                             format(mech.name, State.__name__, state_spec, attr_name))
+
 
     # Get primary State of specified type
     elif isinstance(state_spec, Mechanism):
