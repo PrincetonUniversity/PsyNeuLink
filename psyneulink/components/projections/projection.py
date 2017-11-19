@@ -1421,9 +1421,13 @@ def _parse_connection_specs(connectee_state_type,
             if is_numeric(first_item):
                 projection_spec = first_item
                 # FIX: 11/18/17 TRY DELETING THIS:
-                # Ignore item1 (assume it was processed by _parse_state_specific_specs),
+                # Ignore first_item (assume it was processed by _parse_state_specific_specs),
                 #    and use projection_spec as state_spec
                 state_spec = projection_spec
+
+            # elif is_matrix(first_item):
+            #     projection_spec = last_item
+            #     state_spec = None
 
             # (<state name or list of state names>, <Mechanism>)
             elif isinstance(first_item, (str, list)):
