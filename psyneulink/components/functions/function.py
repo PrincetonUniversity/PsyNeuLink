@@ -3040,13 +3040,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
 
-        try:
-            return_val = 1 / (1 + np.exp(-(gain * variable) + bias))
-        except (Warning):
-            # handle RuntimeWarning: overflow in exp
-            return_val = 0
-
-        return return_val
+        return 1 / (1 + np.exp(-(gain * variable) + bias))
 
     def derivative(self, output, input=None):
         """
@@ -6726,13 +6720,7 @@ class AGTUtilityIntegrator(
 
     def _logistic(self, variable, gain, bias):
 
-        try:
-            return_val = 1 / (1 + np.exp(-(gain * variable) + bias))
-        except (Warning):
-            # handle RuntimeWarning: overflow in exp
-            return_val = 0
-
-        return return_val
+        return 1 / (1 + np.exp(-(gain * variable) + bias))
 
     def function(self,
                  variable=None,
