@@ -11,9 +11,10 @@ except ImportError:
 from psyneulink.library.mechanisms.processing.leabramechanism import LeabraMechanism, build_network, train_network
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.functions.function import Linear
+from psyneulink.components.functions.function import Linear, Logistic
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
+from psyneulink.globals.keywords import LEARNING
 
 @pytest.mark.skipif(not leabra_available, reason='Leabra package is unavailable')
 class TestLeabraMechanismInit:
@@ -220,3 +221,16 @@ class TestLeabraMechanismPrecision:
             pnl_output_net = out_net[-1][0]
             diffs_net = np.abs(np.array(pnl_output_net) - np.array(leabra_output))
             assert all(diffs_spec < precision) and all(diffs_net < precision)
+#
+# class TestLeabraMechanismInSystem:
+#
+#     def test_leabra_mech_learning(self):
+#         T1 = TransferMechanism(size=5, function=Linear)
+#         T2 = TransferMechanism(size=3, function=Linear)
+#         L = LeabraMechanism(input_size=5, output_size=3, hidden_layers=2, hidden_sizes=[4, 4])
+#         train_data_proj = MappingProjection(sender=T2, receiver=L.input_states[1])
+#         out = TransferMechanism(size=3, function=Logistic(bias=2))
+#         p1 = Process(pathway=[T1, L, out], learning=LEARNING, learning_rate=1.0, target=[0, .1, .8])
+#         p2 = Process(pathway=[T2, train_data_proj, L, out])
+#         s = System(processes=[p1, p2])
+#         s.run(inputs = {T1: [1, 2, 3, 4, 5], T2: [0, .5, 1]})
