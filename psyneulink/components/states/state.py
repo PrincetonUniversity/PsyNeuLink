@@ -179,8 +179,6 @@ A State can be specified using any of the following:
     * **Tuple specification** -- this is a convenience format that can be used to compactly specify an InputState
       along with a Projection to it.  It can one of two forms:
 
-      .. _State_ProjectionTuple:
-
       * a **2-item tuple** - convenience format that can be used to specify Projections to or from other States
         (depending on the type of State);  generally, the 1st item is te name of a State or list of State names,
         and the 2nd item is the Mechanism to which they belong;  for some States it can also be used for other forms
@@ -188,7 +186,9 @@ A State can be specified using any of the following:
         <State_Base.variable>` (1st item) and `Projections to it <Projection_Specification>` (2nd item); and for
         a `parameter <_ParameterState_Value_Specification>` it can be used to specify its value (1st item) and
         `ModulatoryProjections <ModulatoryProjection>` it should receive (2nd item).
-      ..
+
+      .. _State_ProjectionTuple:
+
       * **ProjectionTuple** -- a 4-item tuple that specifies a `Projection <Projection>` to or from another State
         (its first item), along with the weight, exponent, and/or Projection to use (its subsequent items; see
         `ProjectionTuple <Projection_ProjectionTuple>` for additional details).
