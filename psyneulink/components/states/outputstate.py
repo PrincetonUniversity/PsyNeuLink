@@ -116,11 +116,12 @@ as the specification for each OutputState:
       `ModulatoryProjections <ModulatoryProjection>` for it to receive. In addition to the standard entries of a State
       specification dictionary, the dictionary can have any of the following *KEY*:<value> entries:
 
+      ..
       - *INDEX*:<int> - specifies the OutputState's value of the `index <OutputState.index>` attribute; if this is
         not included, the first item of the owner Mechanism's `value <Mechanism_Base.value>` is assigned as the
         the OutputState's `variable <OutputState.variable>` (see `description below <OutputState_Index>` for additional
         details).
-
+      |
       - *CALCULATE*:<function> - specifies the function assigned as the OutputState's `calculate
         <OutputState.calculate>` attribute;  if this is not included, and identity function is used to assign the
         OutputState's `variable <OutputState.variable>` as its `value <OutputState.value>` (see `description below

@@ -29,7 +29,7 @@ Overview
 A TransferMechanism transforms its input using a simple mathematical function, that maintains the form (dimensionality)
 of its input.  The input can be a single scalar value, a multidimensional array (list or numpy array), or several
 independent ones.  The function used to carry out the transformation can be selected from a standard set of `Functions
-<Function>` (such as `Linear`, `Exponential`, `Logistic`, and `Softmax`) or specified using a user-defined custom
+<Function>` (such as `Linear`, `Exponential`, `Logistic`, and `SoftMax`) or specified using a user-defined custom
 function.  The transformation can be carried out instantaneously or in "time averaged" (integrated) manner, as described
 in `Transfer_Execution`.
 
@@ -85,8 +85,8 @@ OutputStates
 ~~~~~~~~~~~~
 
 By default, a TransferMechanism generates one `OutputState` for each of its `InputStates`.  The first (and `primary
-<OuputState_Primary>`) OutputState is named `RESULT`; subsequent ones use that as the base name, suffixed with an
-incrementing integer starting at '-1' for each additional OutputState (e.g., 'RESULT-1', 'RESULT-2', etc.; see
+<OutputState_Primary>`) OutputState is named *RESULT*; subsequent ones use that as the base name, suffixed with an
+incrementing integer starting at '-1' for each additional OutputState (e.g., *RESULT-1*, *RESULT-2*, etc.; see
 `Naming`).  The `value <OutputState.value>` of each OutputState is assigned the result of the Mechanism's `function
 <TransferMechanism.function>` applied to the `value <InputState.value>` of the corresponding InputState. Additional
 OutputStates can be assigned using the TransferMechanism's `Standard OutputStates
@@ -224,6 +224,7 @@ class TRANSFER_OUTPUT():
     *MECHANISM_VALUE* : list
       TransferMechanism's `value <TransferMechanism.value>` used as OutputState's value.
 
+    COMMENT:
     *COMBINE* : scalar or numpy array
       linear combination of the `value <TransferMechanism.value>` of all items of the TransferMechanism's `value
       <TransferMechanism.value>` (requires that they all have the same dimensionality).
@@ -769,22 +770,26 @@ class TransferMechanism(ProcessingMechanism_Base):
                 current_input = variable
 
         if isinstance(self.function_object, TransferFunction):
+
             outputs = self.function(variable=current_input, params= runtime_params)
-            if clip is not None:
-                minCapIndices = np.where(outputs < clip[0])
-                maxCapIndices = np.where(outputs > clip[1])
-                outputs[minCapIndices] = np.min(clip)
-                outputs[maxCapIndices] = np.max(clip)
+            # if clip is not None:
+            #     print(clip)
+            #     minCapIndices = np.where(outputs < clip[0])
+            #     print(minCapIndices)
+            #     maxCapIndices = np.where(outputs > clip[1])
+            #     print(maxCapIndices)
+            #     outputs[minCapIndices] = np.min(clip)
+            #     outputs[maxCapIndices] = np.max(clip)
         else:
             # Apply TransferMechanism's function to each input state separately
             outputs = []
             for elem in current_input:
                 output_item = self.function(variable=elem, params=runtime_params)
-                if clip is not None:
-                    minCapIndices = np.where(output_item < clip[0])
-                    maxCapIndices = np.where(output_item > clip[1])
-                    output_item[minCapIndices] = np.min(clip)
-                    output_item[maxCapIndices] = np.max(clip)
+                # if clip is not None:
+                #     minCapIndices = np.where(output_item < clip[0])
+                #     maxCapIndices = np.where(output_item > clip[1])
+                #     output_item[minCapIndices] = np.min(clip)
+                #     output_item[maxCapIndices] = np.max(clip)
                 outputs.append(output_item)
 
         # outputs = []

@@ -8094,7 +8094,7 @@ COMMENT
         else:
             self._matrix = get_matrix(self.matrix, size, size)
 
-        self._hollow_matrix = get_matrix(HOLLOW_MATRIX,size, size)
+        self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
 
         # # MODIFIED 11/12/17 OLD:
         # if self.metric is ENTROPY:

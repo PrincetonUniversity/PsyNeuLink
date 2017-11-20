@@ -28,8 +28,9 @@ LearningMechanism can be used to train multiple MappingProjections, by assigning
 
 All of the MappingProjection(s) modified by a LearningMechanism must project from one `ProcessingMechanism
 <<<<<<< HEAD:PsyNeuLink/Components/Mechanisms/AdaptiveMechanisms/LearningMechanism/LearningMechanism.py
-<ProcessingMechanism>` to another in the same `System` or `Process`. The learning components of a System can be displayed
-using the System's `show_graph <System_Base.show_graph>` method with its **show_learning** argument assigned `True`.
+<ProcessingMechanism>` to another in the same `System` or `Process`. The learning components of a System can be
+displayed using the System's `show_graph <System.show_graph>` method with its **show_learning** argument assigned
+`True`.
 =======
 <ProcessingMechanism>` to another in same `System` or `Process`. The learning components of a System can be displayed
 using the System's `show_graph <System.show_graph>` method with its **show_learning** argument assigned `True`.

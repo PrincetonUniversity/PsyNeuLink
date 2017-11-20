@@ -433,17 +433,17 @@ be coordinated with the Mechanism's `function <Mechanism_Base.function>`, which 
 <Mechanism_Base.variable>` as its input (see `note <Mechanism_Add_InputStates_Note>`).
 
 The order in which `InputStates are specified <Mechanism_InputState_Specification>` in the Mechanism's constructor,
-and/or `added <Mechanism_Add_InputStates>` using its `Mechanism_Base.add_states` method,  determines the order of the
-items to which they are assigned assigned in he Mechanism's `variable  <Mechanism_Base.variable>`, and are listed in
-its `input_states <Mechanism_Base.input_states>` and input_values <Mechanism_Base.input_values>` attribute.  Note
-that a Mechanism's `input_value <Mechanism_Base.input_value>` attribute has the same information as the
-Mechanism's `variable <Mechanism_Base.variable>`, but in the form of a list rather than an ndarray.
+and/or `added <Mechanism_Add_InputStates>` using its `add_states <Mechanism_Base.add_states>` method,  determines the
+order of the items to which they are assigned assigned in he Mechanism's `variable  <Mechanism_Base.variable>`,
+and are listed in its `input_states <Mechanism_Base.input_states>` and `input_values <Mechanism_Base.input_values>`
+attribute.  Note that a Mechanism's `input_values <Mechanism_Base.input_values>` attribute has the same information as
+the Mechanism's `variable <Mechanism_Base.variable>`, but in the form of a list rather than an ndarray.
 
 .. _Mechanism_InputState_Specification:
 
 **Specifying InputStates and a Mechanism's** `variable <Mechanism_Base.variable>` **Attribute**
 
-When a `Mechanism is created, the number and format of the items in its `variable <Mechanism_Base.variable>`
+When a Mechanism is created, the number and format of the items in its `variable <Mechanism_Base.variable>`
 attribute, as well as the number of InputStates it has and their `variable <InputState.variable>` and `value
 <InputState.value>` attributes, are determined by one of the following arguments in the Mechanism's constructor:
 
@@ -457,7 +457,7 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   **default_variable** are used to specify the format of the `variable <InputState.variable>` or `value
   <InputState.value>` of the corresponding InputStates for any that are not explicitly specified in the
   **input_states** argument or *INPUT_STATES* entry (see below).
-
+..
 * **size** (int, list or ndarray) -- specifies the number and length of items in the Mechanism's variable,
   if **default_variable** is not specified. For example, the following mechanisms are equivalent::
     T1 = TransferMechanism(size = [3, 2])
@@ -465,7 +465,7 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   The relationship to any specifications in the **input_states** argument or
   *INPUT_STATES* entry of a **params** dictionary is the same as for the **default_variable** argument,
   with the latter taking precedence (see above).
-
+..
 * **input_states** (list) -- this can be used to explicitly `specify the InputStates <InputState_Specification>`
   created for the Mechanism. Each item must be an `InputState specification <InputState_Specification>`, and the number
   of items must match the number of items in the **default_variable** argument or **size** argument
@@ -489,7 +489,7 @@ COMMENT:
         a single InputState;  in that case, the `value <InputState.value>` of that InputState must have the same
         number of items as the Mechanisms's `variable <Mechanism_Base.variable>`.
 COMMENT
-
+..
 * *INPUT_STATES* entry of a params dict (list) -- specifications are treated in the same manner as those in the
   **input_states** argument, and take precedence over those.
 
@@ -504,8 +504,8 @@ InputState's `variable <InputState.variable>` is not specified, it is assigned t
 owner's `variable <Mechanism_Base.variable>` attribute. The InputStates are appended to the end of the list in the
 Mechanism's `input_states <Mechanism_Base.input_states>` attribute.  Adding in States in this manner does **not**
 replace any existing States, including any default States generated when the Mechanism was constructed (this is
-contrast to States specified in a Mechanism's constructor which *do* replace any default State(s) of the same type (see
-`note <Mechanism_Default_State_Suppression_Note>`).
+contrast to States specified in a Mechanism's constructor which **do** `replace any default State(s) of the same type
+<Mechanism_Default_State_Suppression_Note>`).
 
 .. _Mechanism_Add_InputStates_Note:
 
@@ -1120,69 +1120,6 @@ class Mechanism_Base(Mechanism):
         if context is None or (not isinstance(context, type(self)) and not VALIDATE in context):
             raise MechanismError("Direct call to abstract class Mechanism() is not allowed; "
                                  "use a subclass")
-
-        # TODO:
-        # this is a hack to accept input_states as a way to instantiate default_variable for this release
-        # should be cleaned ASAP in default_variable overhaul
-        default_variable_from_input_states = None
-
-        def spec_incompatible_with_default_error(spec_variable, default_variable):
-            return MechanismError(
-                'default variable determined from the specified input_states spec ({0}) '
-                'is not compatible with the specified default variable ({1})'.format(
-                    spec_variable, default_variable
-                )
-            )
-
-        # handle specifying through params dictionary
-        try:
-            default_variable_from_input_states, input_states_variable_was_specified = \
-                self._parse_arg_input_states(params[INPUT_STATES])
-        except (TypeError, KeyError):
-            pass
-
-        if default_variable_from_input_states is None:
-            # fallback to standard arg specification
-            default_variable_from_input_states, input_states_variable_was_specified = \
-                self._parse_arg_input_states(input_states)
-
-        if default_variable_from_input_states is not None:
-            if variable is None:
-                if size is None:
-                    variable = default_variable_from_input_states
-                else:
-                    if input_states_variable_was_specified:
-                        size_variable = self._handle_size(size, None)
-                        if iscompatible(size_variable, default_variable_from_input_states):
-                            variable = default_variable_from_input_states
-                        else:
-                            raise MechanismError(
-                                'default variable determined from the specified input_states spec ({0}) '
-                                'is not compatible with the default variable determined from size parameter ({1})'.
-                                    format(default_variable_from_input_states, size_variable,
-                                )
-                            )
-                    else:
-                        # do not pass input_states variable as default_variable, fall back to size specification
-                        pass
-            else:
-                compatible = iscompatible(self._parse_arg_variable(variable), default_variable_from_input_states)
-                if size is None:
-                    if input_states_variable_was_specified:
-                        if compatible:
-                            variable = default_variable_from_input_states
-                        else:
-                            raise spec_incompatible_with_default_error(default_variable_from_input_states, variable)
-                    else:
-                        pass
-                else:
-                    if input_states_variable_was_specified:
-                        if compatible:
-                            variable = default_variable_from_input_states
-                        else:
-                            raise spec_incompatible_with_default_error(default_variable_from_input_states, variable)
-                    else:
-                        pass
 
         # IMPLEMENT **kwargs (PER State)
 
@@ -2327,7 +2264,7 @@ class Mechanism_Base(Mechanism):
         .. note::
             Adding InputStates to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,
             which may produce an incompatibility with its `function <Mechanism_Base.function>` (see
-            `Mechanism InputStates` for a more detailed explanation).
+            `Mechanism InputStates <Mechanism_InputStates>` for a more detailed explanation).
 
         Arguments
         ---------
