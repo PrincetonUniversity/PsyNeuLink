@@ -177,13 +177,17 @@ Projection in context:
         method for a Mechanism directly, or where it is specified in the `pathway` of a Process.
       COMMENT
 
-  .. _Projection_ConnectionTuple:
+  .. _Projection_ProjectionTuple:
 
-  * **ConnectionTuple** -- a 4-item tuple used in the context of a `State specification <State_Specification>` to
+  * **ProjectionTuple** -- a 4-item tuple used in the context of a `State specification <State_Specification>` to
     create a Projection between it and another `State <State>`. It must have at least the first three of the following
-    items in order, and contain the fourth optional item: (<`State specification <State_Specification>`>,
+    items in order, and can include the fourth optional item:
+
+     * **State specification** -- specifies the `State <State_Specification>` to connect with (**not** the one being
+       connected; that is determined from context).
+
+     * **weight** --
     <weight value>, <exponent value>, <`projection specification <Projection_Specification>`>).
-    The first item specifies the State to connect with (**not** the one being connected; that is known from context).
     The next two items specify a `weight <Projection_Base.weight>` and `exponent <Projection_Base.exponent>` for the
     Projection (note:  these are **not** for the State). The fourth item is optional, and can be any of the forms of
     Projection specification described above or for any Projection subclass; it and can be used to provide additional
@@ -192,7 +196,14 @@ Projection in context:
     Projection specification (used to infer the State to be connected with).  If the Projection specification is
     `None` or absent, the State specification cannot be `None` (as it is then used to infer the type of Projection).
     If weight and/or exponent is `None`, it is ignored.  If both the State and Projection are specified, they must
-    be compatible  (see `examples <XXX>` below).
+    be compatible  (see `examples <State_Projections_Examples>` in State).
+
+    .. note::
+       A ProjectionTuple should not be confused with a `4-item InputState specification tuple <
+       InputState_Tuple_Specification>`, which also contains weight and exponent items.  In a ProjectionTuple, those
+       items specify the weight and/or exponent assigned to the *Projection* (see `Projection_Weight_Exponent`),
+       whereas in an InputState specification tuple they specify the weight and/or exponent of the **InputState**
+       (see `InputState_Weights_And_Exponents`).
 
 .. _Projection_Automatic_Creation:
 
@@ -352,7 +363,7 @@ COMMENT:
 
 GET FROM Scratch Pad
 
-for example, if a ConnectionTuple is used in the context of an
+for example, if a ProjectionTuple is used in the context of an
     `InputState specification
     <InputState_Specification>` to specify a MappingProjection to it from an `OutputState` that is specified
     in the first item of the tuple, and a Projection specification is included in the fourth, its sender (and/or the
@@ -403,7 +414,7 @@ PROJECTION_SPEC_KEYWORDS = {PATHWAY: MAPPING_PROJECTION,
                             }
 
 from collections import namedtuple
-ConnectionTuple = namedtuple("ConnectionTuple", "state, weight, exponent, projection")
+ProjectionTuple = namedtuple("ProjectionTuple", "state, weight, exponent, projection")
 
 
 class ProjectionError(Exception):
@@ -1032,11 +1043,11 @@ def _parse_projection_spec(projection_spec,
     # Projection object
     if isinstance(projection_spec, Projection):
         projection = projection_spec
-        # FIX: NOT SURE WHICH TO GIVE PRECEDENCE: SPEC IN ConnectionTuple OR INSTANTIATED Projection:
+        # FIX: NOT SURE WHICH TO GIVE PRECEDENCE: SPEC IN ProjectionTuple OR INSTANTIATED Projection:
         if ((proj_spec_dict[WEIGHT] is not None and projection.weight is not None) or
             (proj_spec_dict[EXPONENT] is not None and projection.exponent is not None)):
             raise ProjectionError("PROGRAM ERROR: Conflict in weight and/or exponent specs "
-                                  "between Projection and ConnectionTuple")
+                                  "between Projection and ProjectionTuple")
         projection._weight = proj_spec_dict[WEIGHT] or projection.weight
         projection._exponent = proj_spec_dict[EXPONENT] or projection.exponent
         if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
@@ -1077,7 +1088,7 @@ def _parse_projection_spec(projection_spec,
         if PROJECTION_PARAMS in proj_spec_dict:
             proj_spec_dict[PARAMS].update = proj_spec_dict[PROJECTION_PARAMS]
             # projection_spec[PARAMS].update(projection_params)
-            assert False, "PROJECTION_PARAMS ({}) passed in spec dict in ConnectionTuple for {}.".\
+            assert False, "PROJECTION_PARAMS ({}) passed in spec dict in ProjectionTuple for {}.".\
                            format(proj_spec_dict[PROJECTION_PARAMS], projection_spec, proj_spec_dict[NAME])
 
     # None
@@ -1136,7 +1147,7 @@ def _parse_projection_keyword(projection_spec:str):
 # def _parse_connection_specs(connectee_state_type:_is_state_class,
 def _parse_connection_specs(connectee_state_type,
                             owner,
-                            # connections:tc.any(State, Mechanism, dict, tuple, ConnectionTuple)):
+                            # connections:tc.any(State, Mechanism, dict, tuple, ProjectionTuple)):
                             connections):
     """Parse specification(s) for States to/from which the connectee_state_type should be connected
 
@@ -1185,7 +1196,7 @@ def _parse_connection_specs(connectee_state_type,
                                                    its name (or, for completeness, the State itself);
                                                    _parse_connections() is called recursively for each state_spec
                                                    (first replacing the name with the actual state);
-                                                   and returns a list of ConnectionTuples; any weights, exponents,
+                                                   and returns a list of ProjectionTuples; any weights, exponents,
                                                    or projections assigned in those tuples are left;  otherwise, any
                                                    values in the entries of the outer dict (below) are assigned;
                                                    note:  the dictionary can have multiple Mechanism entries
@@ -1220,7 +1231,7 @@ def _parse_connection_specs(connectee_state_type,
         #         - the fourth (optional) must resolve to an connectsWith specification
         #           (parsed in a recursive call to _parse_state_specific_entries)
 
-    Returns list of ConnectionTuples, each of which specifies:
+    Returns list of ProjectionTuples, each of which specifies:
         - the state to be connected with
         - weight and exponent for that connection (assigned to the projection)
         - projection specification
@@ -1266,14 +1277,14 @@ def _parse_connection_specs(connectee_state_type,
         # FIX:               ?? RETURN AS IS, AND/OR PARSE INTO DICT??
 
         # If a Mechanism, State, or State type is used to specify the connection on its own (i.e., w/o dict or tuple)
-        #     put in ConnectionTuple as both State spec and Projection spec (to get Projection for that State)
+        #     put in ProjectionTuple as both State spec and Projection spec (to get Projection for that State)
         #     along with defaults for weight and exponent, and call _parse_connection_specs recursively
-        #     to validate the state spec and append ConnectionTuple to connect_with_states
+        #     to validate the state spec and append ProjectionTuple to connect_with_states
         if isinstance(connection, (Mechanism, State, type)):
-            # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ConnectionTuple THAT HAS BOTH SENDER AND RECEIVER
+            # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ProjectionTuple THAT HAS BOTH SENDER AND RECEIVER
             projection_spec = connectee_state_type
-            connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
-            connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
+            projection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
+            connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, projection_tuple))
 
         # If a Projection specification is used to specify the connection:
         #  assign the Projection specification to the projection_specification item of the tuple,
@@ -1287,11 +1298,11 @@ def _parse_connection_specs(connectee_state_type,
             # FIX: 11/4/17 - IF connectee_state_type IS OutputState AND projection_spec is A GatingProjection
             # FIX:            THEN THE LATTER SHOULD BE TREATED AS A SOURCE RATHER THAN AN ACTUAL projection_spec
             # FIX:            OR connection SHOULD BE GatingSignal AND projection_spec SHOULD BE THE DESITNATION
-            connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
-            connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
+            projection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
+            connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, projection_tuple))
 
         # Dict of one or more Mechanism specifications, used to specify individual States of (each) Mechanism;
-        #   convert all entries to tuples and call _parse_connection_specs recursively to generate ConnectionTuples;
+        #   convert all entries to tuples and call _parse_connection_specs recursively to generate ProjectionTuples;
         #   main purpose of this is to resolve any str references to name of state (using context of owner Mechanism)
         elif isinstance(connection, dict):
 
@@ -1386,7 +1397,7 @@ def _parse_connection_specs(connectee_state_type,
                         # Reassign to new tuple
                         state_connect_spec = tuple(state_connect_spec_tuple_items)
 
-                    # Recusively call _parse_connection_specs to get ConnectionTuple and append to connect_with_states
+                    # Recusively call _parse_connection_specs to get ProjectionTuple and append to connect_with_states
                     connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, state_connect_spec))
 
         # Process tuple, including final validation of State specification
@@ -1454,7 +1465,7 @@ def _parse_connection_specs(connectee_state_type,
                                                               connects_with, mech_item.name))
                         c = _parse_connection_specs(connectee_state_type=connectee_state_type,
                                                     owner=owner,
-                                                    connections=ConnectionTuple(state_name,
+                                                    connections=ProjectionTuple(state_name,
                                                                                 weight, exponent,
                                                                                 mech_item))
                         connect_with_states.extend(c)
@@ -1519,14 +1530,14 @@ def _parse_connection_specs(connectee_state_type,
                                         connectee_state_type.__name__,
                                         owner.name))
 
-            connect_with_states.extend([ConnectionTuple(state, weight, exponent, projection_spec)])
+            connect_with_states.extend([ProjectionTuple(state, weight, exponent, projection_spec)])
 
         else:
             raise ProjectionError("Unrecognized, invalid or insufficient specification of connection for {}: \'{}\'".
                                   format(owner.name, connection))
 
-    if not all(isinstance(connection_tuple, ConnectionTuple) for connection_tuple in connect_with_states):
-        raise ProjectionError("PROGRAM ERROR: Not all items are ConnectionTuples for {}".format(owner.name))
+    if not all(isinstance(projection_tuple, ProjectionTuple) for projection_tuple in connect_with_states):
+        raise ProjectionError("PROGRAM ERROR: Not all items are ProjectionTuples for {}".format(owner.name))
 
     return connect_with_states
 

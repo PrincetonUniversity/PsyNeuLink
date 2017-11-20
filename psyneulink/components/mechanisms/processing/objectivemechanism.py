@@ -751,7 +751,7 @@ def _instantiate_monitoring_projections(owner,
 
     from psyneulink.components.states.outputstate import OutputState
     from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-    from psyneulink.components.projections.projection import ConnectionTuple
+    from psyneulink.components.projections.projection import ProjectionTuple
 
     receiver_projection_specs = receiver_projection_specs or [DEFAULT_MATRIX] * len(sender_list)
 
@@ -780,7 +780,7 @@ def _instantiate_monitoring_projections(owner,
         else:
             projection_spec = recvr_projs
 
-        if isinstance(projection_spec, ConnectionTuple):
+        if isinstance(projection_spec, ProjectionTuple):
             projection_spec = projection_spec.projection
 
         # IMPLEMENTATION NOTE:  This may not handle situations properly in which the OutputState is specified

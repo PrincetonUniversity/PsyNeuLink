@@ -834,7 +834,7 @@ class OutputState(State_Base):
         #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
         #      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
-        from psyneulink.components.projections.projection import _parse_connection_specs, ConnectionTuple
+        from psyneulink.components.projections.projection import _parse_connection_specs, ProjectionTuple
         from psyneulink.components.system import MonitoredOutputStatesOption
 
         params_dict = {}
@@ -843,7 +843,7 @@ class OutputState(State_Base):
         if isinstance(state_specific_spec, dict):
             return None, state_specific_spec
 
-        elif isinstance(state_specific_spec, ConnectionTuple):
+        elif isinstance(state_specific_spec, ProjectionTuple):
             params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                owner=owner,
                                                                connections=[state_specific_spec])
@@ -859,7 +859,7 @@ class OutputState(State_Base):
                                        "either 2 ({} and {}) or 3 (optional additional {}) items, "
                                        "or must be a {}".
                                        format(OutputState.__name__, owner.name, tuple_spec,
-                                              STATE, PROJECTION, INDEX, ConnectionTuple.__name__))
+                                              STATE, PROJECTION, INDEX, ProjectionTuple.__name__))
 
             projection_spec = state_specific_spec if len(state_specific_spec)==2 else (state_specific_spec[0],
                                                                                        state_specific_spec[-1])

@@ -2103,12 +2103,12 @@ class System(System_Base):
 
 
                 # Get OutputState(s), and matrix specified for Projection to each,
-                #    from the ConnectionTuple in the PROJECTIONS entry of the PARMS dict.
+                #    from the ProjectionTuple in the PROJECTIONS entry of the PARMS dict.
                 # However, use weight and exponent entries for InputState, rather than any specified for
                 #    for each Projection (in its projection_spec).
                 # The InputState weight and exponent are used in the MonitoredOutputStateTuple
                 #    as they specify the how the InputState should be weighted;
-                # Any weight(s) and/or exponent(s) specified in the projection_spec(s) (a ConnectionTuple)
+                # Any weight(s) and/or exponent(s) specified in the projection_spec(s) (a ProjectionTuple)
                 #    are used for individual Projections to the InputState when it is  actually instantiated.
                 for projection_spec in input_state_spec[PARAMS][PROJECTIONS]:
                     monitored_output_state_tuples.extend([MonitoredOutputStateTuple(

@@ -170,7 +170,7 @@ A State can be specified using any of the following:
             - *GATING_SIGNAL*.
          Each entry must contain a list States of the specified type, all of which belong to the Mechanism specified in
          the *MECHANISM* entry;  each item in the list must be the name of one the Mechanism's States, or a
-         `ConnectionTuple <State_ConnectionTuple>` the first item of which is the name of a State. The types of
+         `ProjectionTuple <State_ProjectionTuple>` the first item of which is the name of a State. The types of
          States that can be specified in this manner depends on the type of the Mechanism and context of the
          specification (see `examples <State_State_Name_Entry_Example>`).
 
@@ -179,7 +179,7 @@ A State can be specified using any of the following:
     * **Tuple specification** -- this is a convenience format that can be used to compactly specify an InputState
       along with a Projection to it.  It can one of two forms:
 
-      .. _State_ConnectionTuple:
+      .. _State_ProjectionTuple:
 
       * a **2-item tuple** - convenience format that can be used to specify Projections to or from other States
         (depending on the type of State);  generally, the 1st item is te name of a State or list of State names,
@@ -189,9 +189,9 @@ A State can be specified using any of the following:
         a `parameter <_ParameterState_Value_Specification>` it can be used to specify its value (1st item) and
         `ModulatoryProjections <ModulatoryProjection>` it should receive (2nd item).
       ..
-      * **ConnectionTuple** -- a 4-item tuple that specifies a `Projection <Projection>` to or from another State
+      * **ProjectionTuple** -- a 4-item tuple that specifies a `Projection <Projection>` to or from another State
         (its first item), along with the weight, exponent, and/or Projection to use (its subsequent items; see
-        `ConnectionTuple <Projection_ConnectionTuple>` for additional details).
+        `ProjectionTuple <Projection_ProjectionTuple>` for additional details).
 
 .. _State_Projections:
 
@@ -1326,7 +1326,7 @@ class State_Base(State):
     # FIX: 10/3/17 - MOVE THESE TO Projection, WITH self (State) AS ADDED ARG
     # FIX:           BOTH _instantiate_projections_to_state AND _instantiate_projections_to_state
     # FIX:               CAN USE self AS connectee STATE, since _parse_connection_specs USES SOCKET TO RESOLVE
-    # FIX:           ALTERNATIVE: BREAK STATE FIELD OF ConnectionTuple INTO sender AND receiver FIELDS, THEN COMBINE
+    # FIX:           ALTERNATIVE: BREAK STATE FIELD OF ProjectionTuple INTO sender AND receiver FIELDS, THEN COMBINE
     # FIX:               _instantiate_projections_to_state AND _instantiate_projections_to_state INTO ONE METHOD
     # FIX:               MAKING CORRESPONDING ASSIGNMENTS TO send AND receiver FIELDS (WOULD BE CLEARER)
 
@@ -1354,9 +1354,9 @@ class State_Base(State):
     def _instantiate_projections_to_state(self, projections, context=None):
         """Instantiate projections to a State and assign them to self.path_afferents
 
-        Parses specifications in projection_list into ConnectionTuples
+        Parses specifications in projection_list into ProjectionTuples
 
-        For projection_spec in ConnectionTuple:
+        For projection_spec in ProjectionTuple:
             - if it is a Projection specifiction dicionatry, instantiate it
             - assign self as receiver
             - assign sender
@@ -1365,10 +1365,10 @@ class State_Base(State):
             - if specs fail, instantiates a default Projection of type specified by self.params[PROJECTION_TYPE]
 
         Notes:
-            Calls _parse_connection_specs() to parse projection_list into a list of ConnectionTuples;
+            Calls _parse_connection_specs() to parse projection_list into a list of ProjectionTuples;
                  _parse_connection_specs, in turn, calls _parse_projection_spec for each spec in projection_list,
                  which returns either a Projection object or Projection specification dictionary for each spec;
-                 that is placed in projection_spec entry of ConnectionTuple (State, weight, exponent, projection_spec).
+                 that is placed in projection_spec entry of ProjectionTuple (State, weight, exponent, projection_spec).
             When the Projection is instantiated, it assigns itself to
                its receiver's .path_afferents attribute (in Projection_Base._instantiate_receiver) and
                its sender's .efferents attribute (in Projection_Base._instantiate_sender);
@@ -1390,14 +1390,14 @@ class State_Base(State):
         # Parse each Projection specification in projection_list using self as connectee_state:
         # - calls _parse_projection_spec for each projection_spec in list
         # - validates that Projection specification is compatible with its sender and self
-        # - returns ConnectionTuple with Projection specification dictionary for projection_spec
-        connection_tuples = _parse_connection_specs(self.__class__, self.owner, projection_list)
+        # - returns ProjectionTuple with Projection specification dictionary for projection_spec
+        projection_tuples = _parse_connection_specs(self.__class__, self.owner, projection_list)
 
-        # For Projection in each ConnectionTuple:
+        # For Projection in each ProjectionTuple:
         # - instantiate the Projection if necessary, and initialize if possible
         # - insure its value is compatible with self.value FIX: 10/3/17 ??and variable is compatible with sender's value
         # - assign it to self.path_afferents or .mod_afferents
-        for connection in connection_tuples:
+        for connection in projection_tuples:
 
             # Get sender State, weight, exponent and projection for each projection specification
             #    note: weight and exponent for connection have been assigned to Projection in _parse_connection_specs
@@ -1546,15 +1546,15 @@ class State_Base(State):
         Notes:
             # LIST VERSION:
             # If receivers is not specified, they must be assigned to projection specs in projection_list
-            # Calls _parse_connection_specs() to parse projection_list into a list of ConnectionTuples;
+            # Calls _parse_connection_specs() to parse projection_list into a list of ProjectionTuples;
             #    _parse_connection_specs, in turn, calls _parse_projection_spec for each spec in projection_list,
             #    which returns either a Projection object or Projection specification dictionary for each spec;
-            #    that is placed in projection_spec entry of ConnectionTuple (State, weight, exponent, projection_spec).
+            #    that is placed in projection_spec entry of ProjectionTuple (State, weight, exponent, projection_spec).
 
-            Calls _parse_connection_specs() to parse projection into a ConnectionTuple;
+            Calls _parse_connection_specs() to parse projection into a ProjectionTuple;
                _parse_connection_specs, in turn, calls _parse_projection_spec for the projection_spec,
                which returns either a Projection object or Projection specification dictionary for the spec;
-               that is placed in projection_spec entry of ConnectionTuple (State, weight, exponent, projection_spec).
+               that is placed in projection_spec entry of ProjectionTuple (State, weight, exponent, projection_spec).
 
             When the Projection is instantiated, it assigns itself to
                its self.path_afferents or .mod_afferents attribute (in Projection_Base._instantiate_receiver) and
@@ -1566,7 +1566,7 @@ class State_Base(State):
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-        from psyneulink.components.projections.projection import ConnectionTuple, _parse_connection_specs
+        from psyneulink.components.projections.projection import ProjectionTuple, _parse_connection_specs
 
         # FIX: 10/3/17 THIS NEEDS TO BE MADE SPECIFIC TO EFFERENT PROJECTIONS (I.E., FOR WHICH IT CAN BE A SENDER)
         # default_projection_type = ProjectionRegistry[self.paramClassDefaults[PROJECTION_TYPE]].subclass
@@ -1594,15 +1594,15 @@ class State_Base(State):
         # Parse Projection specification using self as connectee_state:
         # - calls _parse_projection_spec for projection_spec;
         # - validates that Projection specification is compatible with its receiver and self
-        # - returns ConnectionTuple with Projection specification dictionary for projection_spec
-        connection_tuples = _parse_connection_specs(self.__class__, self.owner, receiver_list)
+        # - returns ProjectionTuple with Projection specification dictionary for projection_spec
+        projection_tuples = _parse_connection_specs(self.__class__, self.owner, receiver_list)
 
-        # For Projection in ConnectionTuple:
+        # For Projection in ProjectionTuple:
         # - instantiate the Projection if necessary, and initialize if possible
         # - insure its variable is compatible with self.value and its value is compatible with receiver's variable
         # - assign it to self.path_efferents
 
-        for connection, receiver in zip(connection_tuples, receiver_list):
+        for connection, receiver in zip(projection_tuples, receiver_list):
 
             # VALIDATE CONNECTION AND RECEIVER SPECS
 
@@ -1611,8 +1611,8 @@ class State_Base(State):
 
             # Validate that State to be connected to specified in receiver is same as any one specified in connection
             def _get_receiver_state(spec):
-                """Get state specification from ConnectionTuple, which itself may be a ConnectionTuple"""
-                if isinstance(spec, ConnectionTuple):
+                """Get state specification from ProjectionTuple, which itself may be a ProjectionTuple"""
+                if isinstance(spec, ProjectionTuple):
                     spec = _parse_connection_specs(connectee_state_type=self.__class__,
                                                    owner=self.owner,
                                                    connections=receiver)
@@ -1627,13 +1627,13 @@ class State_Base(State):
                                  "be the same as the one specified in the connection {}.".
                                  format(receiver_state, connection_receiver_state))
 
-            if (not isinstance(connection, ConnectionTuple)
+            if (not isinstance(connection, ProjectionTuple)
                 and receiver
                 and not isinstance(receiver, (State, Mechanism))
                 and not (inspect.isclass(receiver) and issubclass(receiver, (State, Mechanism)))):
                 raise StateError("Receiver ({}) of {} from {} must be a {}, {}, a class of one, or a {}".
                                  format(receiver, projection_spec, self.name,
-                                        State.__name__, Mechanism.__name__, ConnectionTuple.__name__))
+                                        State.__name__, Mechanism.__name__, ProjectionTuple.__name__))
 
             if isinstance(receiver, Mechanism):
                 from psyneulink.components.states.inputstate import InputState
@@ -1713,7 +1713,7 @@ class State_Base(State):
                 # Note: if proj_recvr is None, it will be assigned under handling of deferred_init below
                 raise StateError("Receiver ({}) specified for Projection ({}) "
                                  "is not the same as the one specified in {} ({})".
-                                 format(proj_recvr, projection.name, ConnectionTuple.__name__, receiver))
+                                 format(proj_recvr, projection.name, ProjectionTuple.__name__, receiver))
 
             # ASSIGN REMAINING PARAMS
 
@@ -2507,7 +2507,7 @@ def _parse_state_spec(state_type=None,
     Return either State object or State specification dictionary
     """
     from psyneulink.components.projections.projection \
-        import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ConnectionTuple
+        import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple
 
     # Get all of the standard arguments passed from _instantiate_state (i.e., those other than state_spec) into a dict
     standard_args = get_args(inspect.currentframe())
@@ -2601,7 +2601,7 @@ def _parse_state_spec(state_type=None,
 
         else:
             # State is not the same as connectee's type, so assume it is for one to connect with
-            state_dict[PROJECTIONS] = ConnectionTuple(state=state_specification,
+            state_dict[PROJECTIONS] = ProjectionTuple(state=state_specification,
                                                       weight=None,
                                                       exponent=None,
                                                       projection=projection)

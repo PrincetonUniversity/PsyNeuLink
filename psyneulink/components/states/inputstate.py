@@ -227,8 +227,8 @@ these is described below:
 
    .. _InputState_Tuple_Specification:
 
-    * **Tuple specification** -- this is a convenience format that can be used to compactly specify an InputState
-      along with a Projection to it.  It can one of two forms:
+    * **InputState specification tuple** -- this is a convenience format that can be used to compactly specify an
+      InputState along with a Projection to it.  It can one of two forms:
 
         * **2-item tuple** -- the 1st item can be either a value (specifying the `variable <InputState.variable>` for
           the InputState, or a Mechanism or OutputState specification indicating an OutputState that should project to
@@ -243,14 +243,15 @@ these is described below:
           if necessary, the InputState is assigned as its `receiver <ModulatoryProjection.receiver>`, and the the
           Projection is assigned to the InputState's `mod_afferents <InputState>` attribute.
 
-        * **ConnectionTuple** -- this is an expanded version of the 2-item tuple that allows the specification of the
+        * **4-item tuple** -- this is an expanded version of the 2-item tuple that allows the specification of the
           `weight <InputState.weight>` and/or `exponent <InputState.exponent>` attributes of the InputState, as well as
           a Projection to it. Each tuple must have at least the three following items (in the order listed), and can
           include the fourth:
 
             * **State specification** -- specifies either the `variable <InputState.variable>` of the InputState, or a
               specification for an OutputState (see above) that should project to it, which must be consistent with
-              the Projection specified in the fourth item if that is included (see below);
+              the Projection specified in the fourth item if that is included (see `below
+              <InputState_Projection_Specification>`);
             |
             * **weight** -- must be an integer or a float; multiplies the `value <InputState.value>` of the InputState
               before it is combined with others by the Mechanism's `function <Mechanism.function>` (see
@@ -862,7 +863,7 @@ class InputState(State_Base):
                     for projection_spec in params_dict[PROJECTIONS]:
                         if state_dict[REFERENCE_VALUE] is None:
                             # FIX: 10/3/17 - PUTTING THIS HERE IS A HACK...
-                            # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ConnectionTuple SPEC
+                            # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ProjectionTuple SPEC
                             # FIX:           USING _get_state_for_socket
                             # from psyneulink.components.projections.projection import _parse_projection_spec
                             sender_dim = projection_spec.state.value.ndim

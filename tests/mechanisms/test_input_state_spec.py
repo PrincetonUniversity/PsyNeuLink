@@ -238,9 +238,9 @@ class TestInputStateSpec:
 
     # ------------------------------------------------------------------------------------------------
     # TEST 13
-    # ConnectionTuple Specification
+    # ProjectionTuple Specification
 
-    def test_connection_tuple_spec(self):
+    def test_projection_tuple_spec(self):
         R2 = TransferMechanism(size=3)
         T = TransferMechanism(size=2, input_states=[(R2, None, None, np.zeros((3, 2)))])
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
