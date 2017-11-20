@@ -1614,9 +1614,10 @@ class Mechanism_Base(Mechanism):
                 from psyneulink.components.states.outputstate import OutputState
                 # If not valid...
                 if not ((isclass(item) and issubclass(item, OutputState)) or # OutputState class ref
-                            isinstance(item, OutputState) or   # OutputState object
+                            isinstance(item, OutputState) or            # OutputState object
                             isinstance(item, dict) or                   # OutputState specification dict
                             isinstance(item, str) or                    # Name (to be used as key in OutputStates list)
+                            isinstance(item, tuple) or                  # Projection specification tuple
                             iscompatible(item, **{kwCompatibilityNumeric: True})):  # value
                     # set to None, so it is set to default (self.value) in instantiate_output_state
                     param_value[key] = None

@@ -71,6 +71,18 @@ class TestProjectionSpecificationFormats:
              for projection in output_state.efferents:
                  assert projection.receiver.owner is R2
 
+    def test_mapping_projection_using_2_item_tuple_with_list_of_state_names(self):
+
+        T1 = pnl.TransferMechanism(name='T1', input_states=[[0,0],[0,0,0]])
+        T2 = pnl.TransferMechanism(name='T2',
+                                   output_states=[(['InputState-0','InputState-1'], T1)])
+        assert len(T2.output_states)==1
+        assert T2.output_states[0].efferents[0].receiver.name == 'InputState-0'
+        assert T2.output_states[0].efferents[0].matrix.shape == (1,2)
+        assert T2.output_states[0].efferents[1].receiver.name == 'InputState-1'
+        assert T2.output_states[0].efferents[1].matrix.shape == (1,3)
+
+
     def test_gating_signal_using_2_item_tuple(self):
 
         T = pnl.DDM(name='D')

@@ -853,6 +853,7 @@ class OutputState(State_Base):
             state_spec = None
             INDEX_INDEX = 1
             PROJECTIONS_INDEX = len(tuple_spec)-1
+            projections_spec = tuple_spec[-1]
 
             if not len(tuple_spec) in {2,3} :
                 raise OutputStateError("Tuple provided in {} specification dictionary for {} ({}) must have "
@@ -862,27 +863,34 @@ class OutputState(State_Base):
                                               STATE, PROJECTION, INDEX, ConnectionTuple.__name__))
 
 
-            # Get PROJECTIONS specification (efferents) from tuple
-            try:
-                projections_spec = tuple_spec[PROJECTIONS_INDEX]
-            except IndexError:
-                projections_spec = None
-            if projections_spec:
-                try:
-                    params_dict[PROJECTIONS] = _parse_connection_specs(self.__class__,
-                                                                             owner=owner,
-                                                                             connections={projections_spec})
-                except OutputStateError:
-                    raise OutputStateError("Item {} of tuple specification in {} specification dictionary "
-                                          "for {} ({}) is not a recognized specification for one or more "
-                                          "{}s, {}s, or {}s that project from it".
-                                          format(PROJECTIONS_INDEX,
-                                                 OutputState.__name__,
-                                                 owner.name,
-                                                 projections_spec,
-                                                 Mechanism.__name__,
-                                                 OutputState.__name__,
-                                                 Projection.__name))
+            # # Get PROJECTIONS specification (efferents) from tuple
+            # try:
+            #     projections_spec = tuple_spec[PROJECTIONS_INDEX]
+            # except IndexError:
+            #     projections_spec = None
+            # if projections_spec is not None:
+            #     try:
+            #         params_dict[PROJECTIONS] = _parse_connection_specs(self.__class__,
+            #                                                                  owner=owner,
+            #                                                                  connections={projections_spec})
+            #
+            #
+            #     except OutputStateError:
+            #         raise OutputStateError("Item {} of tuple specification in {} specification dictionary "
+            #                               "for {} ({}) is not a recognized specification for one or more "
+            #                               "{}s, {}s, or {}s that project from it".
+            #                               format(PROJECTIONS_INDEX,
+            #                                      OutputState.__name__,
+            #                                      owner.name,
+            #                                      projections_spec,
+            #                                      Mechanism.__name__,
+            #                                      OutputState.__name__,
+            #                                      Projection.__name))
+
+            params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
+                                                               owner=owner,
+                                                               connections=state_specific_spec)
+
 
             # Get INDEX specification from (state_spec, index, connections) tuple:
             if len(tuple_spec) == 3:

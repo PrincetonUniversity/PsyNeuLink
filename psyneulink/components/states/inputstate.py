@@ -858,8 +858,8 @@ class InputState(State_Base):
                     params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                        owner=owner,
                                                                        connections=[projections_spec])
+                    # Parse the value of all of the Projections to get/validate variable for InputState
                     for projection_spec in params_dict[PROJECTIONS]:
-                        # Parse the value of all of the Projections to be comparable to variable of State
                         if state_dict[REFERENCE_VALUE] is None:
                             # FIX: 10/3/17 - PUTTING THIS HERE IS A HACK...
                             # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ConnectionTuple SPEC
@@ -878,17 +878,17 @@ class InputState(State_Base):
                                                       format(self.name, owner.name, projection_spec))
                             if matrix is None:
                                 # If matrix has not been specified, no worries;
-                                #    variable will be determined by value of sender
+                                #    variable can be determined by value of sender
                                 sender_shape = projection_spec.state.value.shape
                                 variable = np.zeros(sender_shape)
-                                # If variable hasn't been assigned, use sender's variable
+                                # If variable HASN'T been assigned, use sender's value
                                 if VARIABLE not in state_dict or state_dict[VARIABLE] is None:
                                     state_dict[VARIABLE] = variable
-                                # If variable has been assigned, make sure value is the same for this Projection
+                                # If variable HAS been assigned, make sure value is the same for this sender
                                 elif state_dict[VARIABLE].shape != variable.shape:
                                     # If values for senders differ, assign None so that State's default is used
                                     state_dict[VARIABLE] = None
-                                    # No need to check any mor Projections
+                                    # No need to check any more Projections
                                     break
 
                             # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
