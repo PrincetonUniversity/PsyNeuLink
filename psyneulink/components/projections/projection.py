@@ -1410,7 +1410,7 @@ def _parse_connection_specs(connectee_state_type,
             elif len(connection) == 4:
                 first_item, weight, exponent, last_item = connection
             else:
-                raise ProjectionError("{} specificaton tuple for {} ({}) must have either two or four items".
+                raise ProjectionError("{} specification tuple for {} ({}) must have either two or four items".
                                       format(connectee_state_type.__name__, owner.name, connection))
 
             # Default assignments, possibly overridden below

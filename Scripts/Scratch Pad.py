@@ -726,16 +726,17 @@ print("TEST InputState")
 # # assert T2.input_states[0].path_afferents[0].sender.owner.name == 'D'
 # assert True
 
-T1 = pnl.TransferMechanism(name='T1', input_states=[[0,0],[0,0]])
+T1 = pnl.TransferMechanism(name='T1', input_states=[[0,0],[0,0,0]])
 T2 = pnl.TransferMechanism(name='T2',
-                           input_states=[(['RESULT', 'RESULT-1'], T1)],
-                           output_states=[(['InputState-0','InputState-1'], T1)])
-assert len(T2.input_states[0].value) == 2
-assert T2.input_states[0].path_afferents[0].sender.name == 'RESULT'
-assert T2.input_states[0].path_afferents[1].sender.name == 'RESULT-1'
-assert len(T2.output_states)==1
+                           input_states=['a','b'],
+                           output_states=[(['InputState-0','InputState-1'], T1),
+                                          (['InputState-0','InputState-1'], 1, T1)])
+assert len(T2.output_states)==2
 assert T2.output_states[0].efferents[0].receiver.name == 'InputState-0'
+assert T2.output_states[0].efferents[0].matrix.shape == (1,2)
 assert T2.output_states[0].efferents[1].receiver.name == 'InputState-1'
+assert T2.output_states[0].efferents[1].matrix.shape == (1,3)
+assert T2.output_states[1].index == 1
 
 
 

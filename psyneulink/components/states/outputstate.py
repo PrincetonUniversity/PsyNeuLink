@@ -345,7 +345,7 @@ from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
 from psyneulink.globals.keywords import \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, INPUT_STATE, INPUT_STATES, RECEIVER, GATING_SIGNAL, \
-    COMMAND_LINE, STATE, OUTPUT_STATE, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, \
+    COMMAND_LINE, STATE, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, \
     CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, VARIANCE, ALL, MECHANISM_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -852,8 +852,6 @@ class OutputState(State_Base):
             tuple_spec = state_specific_spec
             state_spec = None
             INDEX_INDEX = 1
-            PROJECTIONS_INDEX = len(tuple_spec)-1
-            projections_spec = tuple_spec[-1]
 
             if not len(tuple_spec) in {2,3} :
                 raise OutputStateError("Tuple provided in {} specification dictionary for {} ({}) must have "
@@ -862,34 +860,12 @@ class OutputState(State_Base):
                                        format(OutputState.__name__, owner.name, tuple_spec,
                                               STATE, PROJECTION, INDEX, ConnectionTuple.__name__))
 
-
-            # # Get PROJECTIONS specification (efferents) from tuple
-            # try:
-            #     projections_spec = tuple_spec[PROJECTIONS_INDEX]
-            # except IndexError:
-            #     projections_spec = None
-            # if projections_spec is not None:
-            #     try:
-            #         params_dict[PROJECTIONS] = _parse_connection_specs(self.__class__,
-            #                                                                  owner=owner,
-            #                                                                  connections={projections_spec})
-            #
-            #
-            #     except OutputStateError:
-            #         raise OutputStateError("Item {} of tuple specification in {} specification dictionary "
-            #                               "for {} ({}) is not a recognized specification for one or more "
-            #                               "{}s, {}s, or {}s that project from it".
-            #                               format(PROJECTIONS_INDEX,
-            #                                      OutputState.__name__,
-            #                                      owner.name,
-            #                                      projections_spec,
-            #                                      Mechanism.__name__,
-            #                                      OutputState.__name__,
-            #                                      Projection.__name))
+            projection_spec = state_specific_spec if len(state_specific_spec)==2 else (state_specific_spec[0],
+                                                                                       state_specific_spec[-1])
 
             params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
                                                                owner=owner,
-                                                               connections=state_specific_spec)
+                                                               connections=projection_spec)
 
 
             # Get INDEX specification from (state_spec, index, connections) tuple:
@@ -898,8 +874,15 @@ class OutputState(State_Base):
                 index = tuple_spec[INDEX_INDEX]
 
                 if index is not None and not isinstance(index, numbers.Number):
-                    raise OutputStateError("Specification of the index ({}) in tuple of {} specification dictionary "
-                                           "for {} must be a number".format(index, OutputState.__name__, owner.name))
+                    raise OutputStateError("The {} (2nd) item of the {} specification tuple for {} ({}) "
+                                           "must be a number".format(INDEX, OutputState.__name__, owner.name, index))
+                try:
+                    owner.default_value[index]
+                except IndexError:
+                    raise OutputStateError("The {0} (2nd) item of the {1} specification tuple for {2} ({3}) is out "
+                                           "of bounds for the number of items in {4}'s value ({5}, max index: {6})".
+                                           format(INDEX, OutputState.__name__, owner.name, index,
+                                                  owner.name, owner.default_value, len(owner.default_value)-1))
                 params_dict[INDEX] = index
 
         elif state_specific_spec is not None:
