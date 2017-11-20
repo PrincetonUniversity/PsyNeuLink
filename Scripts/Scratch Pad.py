@@ -727,7 +727,8 @@ print("TEST InputState")
 # assert True
 
 T1 = pnl.TransferMechanism(input_states=[[0,0],[0,0]])
-T2 = pnl.TransferMechanism(input_states=[(['RESULT', 'RESULT-1'], T1)])
+T2 = pnl.TransferMechanism(input_states=[(['RESULT', 'RESULT-1'], T1)],
+                           output_states=[('InputState-0','InputState-1'), T1])
 assert len(T2.input_states[0].value) == 2
 assert T2.input_states[0].path_afferents[0].sender.name == 'RESULT'
 assert T2.input_states[0].path_afferents[1].sender.name == 'RESULT-1'
