@@ -881,10 +881,15 @@ class InputState(State_Base):
                                 #    variable will be determined by value of sender
                                 sender_shape = projection_spec.state.value.shape
                                 variable = np.zeros(sender_shape)
+                                # If variable hasn't been assigned, use sender's variable
                                 if VARIABLE not in state_dict or state_dict[VARIABLE] is None:
                                     state_dict[VARIABLE] = variable
+                                # If variable has been assigned, make sure value is the same for this Projection
                                 elif state_dict[VARIABLE].shape != variable.shape:
+                                    # If values for senders differ, assign None so that State's default is used
                                     state_dict[VARIABLE] = None
+                                    # No need to check any mor Projections
+                                    break
 
                             # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
                             else:
