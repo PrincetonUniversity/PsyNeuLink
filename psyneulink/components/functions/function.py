@@ -7029,8 +7029,7 @@ class BogaczEtAl(
                 y0tilde = -1 * (is_neg_drift == 1) * threshold + (is_neg_drift == 0) * threshold
             x0tilde = y0tilde / drift_rate_normed
 
-            import warnings
-            warnings.filterwarnings('error')
+            old_settings = np.seterr(over='raise', under='raise')
 
             try:
                 rt = ztilde * tanh(ztilde * atilde) + \
@@ -7039,7 +7038,7 @@ class BogaczEtAl(
                 er = 1 / (1 + exp(2 * ztilde * atilde)) - \
                      ((1 - exp(-2 * x0tilde * atilde)) / (exp(2 * ztilde * atilde) - exp(-2 * ztilde * atilde)))
 
-            except (Warning):
+            except FloatingPointError:
                 # Per Mike Shvartsman:
                 # If ±2*ztilde*atilde (~ 2*z*a/(c^2) gets very large, the diffusion vanishes relative to drift
                 # and the problem is near-deterministic. Without diffusion, error rate goes to 0 or 1
@@ -7047,6 +7046,8 @@ class BogaczEtAl(
                 # generates a "RuntimeWarning: overflow encountered in exp"
                 er = 0
                 rt = ztilde / atilde - x0tilde + t0
+
+            np.seterr(**old_settings)
 
             # This last line makes it report back in terms of a fixed reference point
             #    (i.e., closer to 1 always means higher p(upper boundary))
