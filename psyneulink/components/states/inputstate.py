@@ -228,9 +228,9 @@ these is described below:
    .. _InputState_Tuple_Specification:
 
     * **Tuple specification** -- this is a convenience format that can be used to compactly specify an InputState
-      along with a Projection to it.  It can take several forms:
+      along with a Projection to it.  It can one of two forms:
 
-        * **2-item tuple** -- the first item can be either a value (specifying the `variable <InputState.variable>` for
+        * **2-item tuple** -- the 1st item can be either a value (specifying the `variable <InputState.variable>` for
           the InputState, or a Mechanism or OutputState specification indicating an OutputState that should project to
           it (see above); the second item must be a `Projection specification <Projection_Specification>`. This creates
           an InputState and the specified Projection.  If the Projection is a `MappingProjection`, its `value

@@ -128,6 +128,7 @@ as the specification for each OutputState:
         <OutputState_Calculate>` for additional details).
 
     ..
+    XXX MENTION STATE/MECH SPEC HERE
     * **2-itemtuple** -- 1st item must be any of the OutputState specifications above, the 2nd item must be one or a
       list of `Projection specifications <Projection_Specification>` (or `None`), and the 3rd (optional) item an integer
       specifying the `index <OutputState.index>` for the OutputState.

@@ -174,25 +174,32 @@ A State can be specified using any of the following:
          States that can be specified in this manner depends on the type of the Mechanism and context of the
          specification (see `examples <State_State_Name_Entry_Example>`).
 
-    .. _State_ConnectionTuple:
+   .. _InputState_Tuple_Specification:
 
-    * **ConnectionTuple** -- a 4-item tuple that specifies a `Projection <Projection>` to or from another State
-      (its first item), along with the weight, exponent, and/or Projection to use (its subsequent items; see
-      `ConnectionTuple <Projection_ConnectionTuple>` for additional details).
-    ..
-    * a **2-item tuple** - convenience format that can be used to specify other States with which the State should
-      be connected, in which case the 1st item must be the name of a State or list of State names, and the 2nd item
-      must be the Mechanism to which they belong;  for an `InputState` it can also be used to specify the State's
-      `variable <State_Base.variable>` in the 1st item, and one or more `specifications for Projections
-      <Projection_Specification>` to it in the 2nd item.
+    * **Tuple specification** -- this is a convenience format that can be used to compactly specify an InputState
+      along with a Projection to it.  It can one of two forms:
+
+      .. _State_ConnectionTuple:
+
+      * a **2-item tuple** - convenience format that can be used to specify Projections to or from other States
+        (depending on the type of State);  generally, the 1st item is te name of a State or list of State names,
+        and the 2nd item is the Mechanism to which they belong;  for some States it can also be used for other forms
+        of specification.  For example, for an `InputState` it can be used to specify the State's `variable
+        <State_Base.variable>` (1st item) and `Projections to it <Projection_Specification>` (2nd item); and for
+        a `parameter <_ParameterState_Value_Specification>` it can be used to specify its value (1st item) and
+        `ModulatoryProjections <ModulatoryProjection>` it should receive (2nd item).
+      ..
+      * **ConnectionTuple** -- a 4-item tuple that specifies a `Projection <Projection>` to or from another State
+        (its first item), along with the weight, exponent, and/or Projection to use (its subsequent items; see
+        `ConnectionTuple <Projection_ConnectionTuple>` for additional details).
 
 .. _State_Projections:
 
 Projections
 ~~~~~~~~~~~
 
-When a State is created, it can be assigned one or more `Projections <Projection>`, using either the **projections**
-argument of its constructor, or in the *PROJECTIONS* entry of a `State specification dictionary
+When a State is created, it can be assigned one or more `Projections <Projection>`, in either the **projections**
+argument of its constructor, or a *PROJECTIONS* entry of a `State specification dictionary
 <State_Specification_Dictionary>` (or a dictionary assigned to the **params** argument of the State's constructor).
 The following types of Projections can be specified for each type of State:
 
