@@ -227,26 +227,44 @@ these is described below:
 
    .. _InputState_Tuple_Specification:
 
-    * **InputState specification tuple** -- this is a convenience format that can be used to compactly specify an
-      InputState along with a Projection to it.  It can one of two forms:
+    * **InputState specification tuples** -- these are convenience formats that can be used to compactly specify an
+      InputState in a variety of ways:
 
-        * **2-item tuple** -- the 1st item can be either a value (specifying the `variable <InputState.variable>` for
-          the InputState, or a Mechanism or OutputState specification indicating an OutputState that should project to
-          it (see above); the second item must be a `Projection specification <Projection_Specification>`. This creates
-          an InputState and the specified Projection.  If the Projection is a `MappingProjection`, its `value
-          <Projection_Base.value>` is used to format of the InputState's `variable <InputState.variable>` (see `note
-          <InputState_Projection_Specification>` below); if this occurs within the constructor for a Mechanism, it must
-          be compatible with the corresponding item of the Mechanism's `variable <Mechanism_Base.variable>`.  The
-          InputState is assigned as the Projection's `receiver <Projection_Base.receiver>` and, if the first item
+        ***XXX CHECK THIS; REFERENCE OR IMPLEMENT EXAMPLE XXX***
+        * **2-item (value, Projection) tuple** -- 1st item specifies the `variable <InputState.variable>` for the
+          InputState;  it must be compatible with the corresponding item of **default_variable** argument in the owner
+          Mechanism's constructor, if that is specified (see `Mechanism_InputState_Specification).  The 2nd item
+          `specifies a Projection <Projection_Specification>` to the InputState.  If it is a `MappingProjection`
+          with a specified `matrix <MappingProjection.matrix>` parameter, then the the value specified in the 1st item
+          of the tuple need not be compatible with the value of the Projection's `value <Projection_Base.value>`;
+          if the `matrix <MappingProjection.matrix>` parameter has not been specified, then they need not be
+          compatible:  if they are, an `IDENTITY_MATRIX` is used as the default;  if they are not compatible, a
+          `FULL_CONNECTIVITY_MATRIX` with the appropriate dimensions is assigned that maps from the Projection's
+          `sender <Projection_Base.sender>` to the InputState.
+
+        * **2-item (State name, Mechanism) tuple** -- 1st item must be the name of an `OutputState` or
+        `ModulatorySignal` belonging to the Mechanism specified as the 2nd item.  A Projection of the relevant type is
+        created (see `Projection_Table`).
+
+        * **2-item (State or Mechanism, Projection) tuple** -- this is a contracted form of the 4-item tuple
+          described below
+
+        ***XXX ADD TO 4-item tuple below XXX***
+        If it is a MappingProjection its `value <Projection_Base.value>` is used to format of the
+          InputState's `variable <InputState.variable>` (see `note <InputState_Projection_Specification>` below); if
+          this occurs within the constructor for a Mechanism, it must
+          be compatible with the corresponding item of the Mechanism's `variable <Mechanism_Base.variable>`.
+
+          The InputState is assigned as the Projection's `receiver <Projection_Base.receiver>` and, if the first item
           specifies an  OutputState, that is assigned as the Projection's `sender <Projection_Base.sender>`.  If the
           specification is for `ModulatoryProjection`, it is created (along with a corresponding `ModulatorySignal`)
           if necessary, the InputState is assigned as its `receiver <ModulatoryProjection.receiver>`, and the the
           Projection is assigned to the InputState's `mod_afferents <InputState>` attribute.
 
-        * **4-item tuple** -- this is an expanded version of the 2-item tuple that allows the specification of the
-          `weight <InputState.weight>` and/or `exponent <InputState.exponent>` attributes of the InputState, as well as
-          a Projection to it. Each tuple must have at least the three following items (in the order listed), and can
-          include the fourth:
+        * **4-item (State or Mechanism, weight, exponent, Projection) tuple** -- this is an expanded version of the
+          2-item tuple that allows the specification of the `weight <InputState.weight>` and/or `exponent
+          <InputState.exponent>` attributes of the InputState, as well as a Projection to it. Each tuple must have
+          at least the three following items (in the order listed), and can include the fourth:
 
             * **State specification** -- specifies either the `variable <InputState.variable>` of the InputState, or a
               specification for an OutputState (see above) that should project to it, which must be consistent with

@@ -127,16 +127,27 @@ as the specification for each OutputState:
         OutputState's `variable <OutputState.variable>` as its `value <OutputState.value>` (see `description below
         <OutputState_Calculate>` for additional details).
 
-    ..
-    XXX MENTION STATE/MECH SPEC HERE
-    * **2-itemtuple** -- 1st item must be any of the OutputState specifications above, the 2nd item must be one or a
-      list of `Projection specifications <Projection_Specification>` (or `None`), and the 3rd (optional) item an integer
-      specifying the `index <OutputState.index>` for the OutputState.
+      ..
+      XXX MENTION STATE/MECH SPEC HERE
+
+   .. _OutputState_Tuple_Specification:
+
+    * **InputState specification tuple** -- this is a convenience format that can be used to compactly specify an
+      OutputState along with a Projection to it.  It can one of two forms:
+
+    * **2-item (State or Mechanism, Projection) tuple** -- this is a contracted form of the 4-item tuple
+          described below
+
+    * **3-item (State or Mechanism, index, Projection) tuple** -- 1st item must be any of the OutputState
+      specifications above, the 2nd item must be one or a list of `Projection specifications
+      <Projection_Specification>` (or `None`), and the 3rd (optional) item an integer specifying the `index
+      <OutputState.index>` for the OutputState.
 
     .. note::
        In all cases, the `variable <OutputState.variable>` of the OutputState must match (have the same number and
        type of elements) as the item of its owner Mechanism's `value <Mechanism_Base.value>` to which it is
        assigned (i.e., specified by its `index <OutputState.index>` attribute).
+
 
 The values of a Mechanism's OutputStates are assigned as items in its `output_values <Mechanism_Base.output_values>`
 attribute, in the order in which they are assigned in the **output_states** argument of its constructor, and listed in

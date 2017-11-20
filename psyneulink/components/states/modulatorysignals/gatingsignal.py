@@ -46,10 +46,6 @@ InputState(s) and/or OutputState(s) it gates must be specified. This can take an
   ..
   * **Mechanism** -- the `primary `InputState <InputState_Primary>` or `OutputState <OutputState_Primary>` is used;
   ..
-  * **2-item tuple** -- the 1st time must be the name of the State (or list of State names), and the 2nd item the
-    Mechanism to which it (they) belong(s); this is a convenience format, which is simpler to use than a specification
-    dictionary (see below), but precludes specification of `parameters <GatingSignal_Structure>` for the GatingSignal.
-  ..
   * **specification dictionary** -- can take either of the following two forms:
 
     * for gating a single state, the dictionary can have the following two entries:
@@ -73,6 +69,10 @@ InputState(s) and/or OutputState(s) it gates must be specified. This can take an
     `value <State_Base.value>` of the State(s) that it gates; or an *INDEX* entry specifying which item
     of the GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` it should use as its `value
     <GatingSignal,value>`).
+  ..
+  * **2-item tuple** -- the 1st item must be the name of the State (or list of State names), and the 2nd item the
+    Mechanism to which it (they) belong(s); this is a convenience format, which is simpler to use than a specification
+    dictionary (see below), but precludes specification of `parameters <GatingSignal_Structure>` for the GatingSignal.
 
 .. _GatingSignal_Structure:
 
