@@ -177,22 +177,25 @@ A State can be specified using any of the following:
    .. _State_Tuple_Specification:
 
     * **Tuple specifications** -- these are convenience format that can be used to compactly specify a State
-      along with a Projection to it.  Different States support different forms, but all support the following three
-      forms:
+      along with a Projection to it, and in some cases parameters for the State.  Different States support different
+      forms, but all support the following two forms:
 
-      * a **2-item (State or Mechanism, Projection) tuple** - convenience format that can be used to specify
-        Projections to or from other States;  generally, the 1st item is the name of a State or list of State names,
-        and the 2nd item is the Mechanism to which they belong;  for some States it can also be used for other forms
-        of specification.  For example, for an `InputState` it can be used to specify the State's `variable
-        <State_Base.variable>` (1st item) and `Projections to it <Projection_Specification>` (2nd item); and for
-        a `parameter <_ParameterState_Value_Specification>` it can be used to specify its value (1st item) and
-        `ModulatoryProjections <ModulatoryProjection>` it should receive (2nd item).
+      .. _State_2_Item_Tuple:
+
+      * **2-item (State name or list of State names, Mechanism) tuple** - 1st item is the name of a State or list of
+        State names, and the 2nd item is the Mechanism to which they belong; a Projection is created to or from each
+        of the States specified.  This allows Projections to be specified for one or more States of a given Mechanism
+        by referring to their names.  The type of Projection depends on the type of State being created, and the
+        type of States specified in the tuple  (see `Projection_Table`).  For example, if the State being created is
+        an InputState, and the States specified in the tuple are OutputStates, then `MappingProjections
+        <MappingProjection>` are used; if `ModulatorySignals <ModulatorySignal>` are specified, then the corresponding
+        type of `ModulatoryProjections <ModulatoryProjection>` are used.  See State subclasses for additional
+        details and compatibility requirements.
 
       .. _State_ProjectionTuple:
 
-      * **ProjectionTuple** -- a 4-item tuple that specifies a `Projection <Projection>` to or from another State
-        (its first item), along with the weight, exponent, and/or Projection to use (its subsequent items; see
-        `ProjectionTuple <Projection_ProjectionTuple>` for additional details).
+      * **ProjectionTuple** -- a 4-item tuple that specifies one or more `Projections <Projection>` to or from other
+        State(s), along with its weight and exponent (see `ProjectionTuple <Projection_ProjectionTuple>` for details).
 
 .. _State_Projections:
 
