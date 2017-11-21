@@ -9,15 +9,17 @@
 
 """
 
+.. _Leabra_Mechanism_Overview:
+
 Overview
 --------
 A LeabraMechanism is a subclass of `ProcessingMechanism` that wraps a leabra network. Leabra is an artificial neural
-network algorithm (`O'Reilly, 1996 <ftp://grey.colorado.edu/pub/oreilly/thesis/oreilly_thesis.all.pdf>`). For more
+network algorithm (`O'Reilly, 1996 <ftp://grey.colorado.edu/pub/oreilly/thesis/oreilly_thesis.all.pdf>`_). For more
 info about leabra, please see `O'Reilly and Munakata, 2016 <https://grey.colorado.edu/emergent/index.php/Leabra>`_.
 
 .. note::
     The LeabraMechanism uses the leabra Python package, which can be found
-    `here <https://github.com/benureau/leabra>` at Github. While the LeabraMechanism should always match the output
+    `here <https://github.com/benureau/leabra>`_ at Github. While the LeabraMechanism should always match the output
     of an equivalent network in the leabra package, the leabra package itself is still in development, so it is not
     guaranteed to be correct yet.
 
@@ -47,18 +49,18 @@ determine whether the network is currently learning.
     If the training_flag is True, the network will learn using the Leabra learning algorithm. Other algorithms may be
     added later.
 
-The LeabraMechanism has two `InputState`s: the *MAIN_INPUT* InputState and the *LEARNING_TARGET* InputState. The
+The LeabraMechanism has two InputStates: the *MAIN_INPUT* `InputState` and the *LEARNING_TARGET* InputState. The
 *MAIN_INPUT* InputState is the input to the leabra network, while the *LEARNING_TARGET* InputState is the learning
 target for the LeabraMechanism. The input to the *MAIN_INPUT* InputState should have length equal to
 `input_size <LeabraMechanism.input_size>` and the input to the *LEARNING_TARGET* InputState should have length equal to
 `output_size <LeabraMechanism.output_size>`.
 
 .. note::
-    Currently, there is a bug where LeabraMechanism (and other `Mechanism`s with multiple input states) cannot be
+    Currently, there is a bug where LeabraMechanism (and other Mechanisms with multiple input states) cannot be
     used as `ORIGIN Mechanisms <System_Mechanisms>` for a `System`. If you desire to use a LeabraMechanism as an ORIGIN
-    Mechanism, you can work around this bug by creating two `TransferMechanism`s as ORIGIN Mechanisms instead, and have
-    these two TransferMechanisms pass their output to the InputStates of the LeabraMechanism. Here is an example of
-    how to do this::
+    Mechanism, you can work around this bug by creating two `TransferMechanisms <Transfer_Overview>` as ORIGIN
+    Mechanisms instead, and have these two TransferMechanisms pass their output to the InputStates of the
+    LeabraMechanism. Here is an example of how to do this::
         L = LeabraMechanism(input_size=input_size, output_size=output_size)
         T1 = TransferMechanism(name='T1', size=input_size, function=Linear)
         T2 = TransferMechanism(name='T2', size=output_size, function=Linear)
@@ -75,8 +77,8 @@ Execution
 
 The LeabraMechanism passes input and training data to the leabra Network it wraps, and the LeabraMechanism passes its
 leabra Network's output (after one "trial", default 200 cycles in PsyNeuLink) to its primary `OutputState`. For details
-on Leabra, please see `O'Reilly and Munakata, 2016 <https://grey.colorado.edu/emergent/index.php/Leabra>` and
-the `leabra code on Github <https://github.com/benureau/leabra>`.
+on Leabra, please see `O'Reilly and Munakata, 2016 <https://grey.colorado.edu/emergent/index.php/Leabra>`_ and
+the `leabra code on Github <https://github.com/benureau/leabra>`_.
 
 .. _Leabra_Mechanism_Reference:
 
@@ -136,7 +138,8 @@ class LeabraFunction(Function_Base):
 
     .. _LeabraFunction:
 
-    Transform variable by providing it as input to the leabra network inside the LeabraFunction.
+    LeabraFunction is a custom function that lives inside the LeabraMechanism. As a function, it transforms the
+    variable by providing it as input to the leabra network inside the LeabraFunction.
 
     Arguments
     ---------
@@ -576,42 +579,3 @@ def train_leabra_network(network, input_pattern, output_pattern):
 
     network.trial()
     return [unit.act_m for unit in network.layers[-1].units]
-
-# FIX: add/test compatibility with the np.matrix data type
-# def convert_to_2d_input(array_like, num_input_states = None):
-#     if isinstance(array_like, numbers.Number) or (isinstance(array_like, np.ndarray) and np.ndim(array_like) == 0):
-#         return [np.atleast_1d([array_like])]
-#     elif isinstance(array_like, (np.ndarray, list)):
-#         if isinstance(array_like[0], (np.ndarray, list)):
-#             if isinstance(array_like[0][0], (np.ndarray, list)) and not isinstance(array_like[0][0], np.matrix):
-#                 print("WARNING: array_like ({}) is at least 3D, which may cause conversion errors".format(array_like))
-#             if num_input_states is None or num_input_states == len(array_like):
-#                 out = []
-#                 for a in array_like:
-#                     out.append(np.atleast_1d(a))
-#                 return out
-#             elif num_input_states == 1:
-#                 return [np.atleast_2d(array_like)]
-#             else:
-#                 print("WARNING: The number of input states ({}) does not seem compatible with the input ({}).".
-#                               format(num_input_states, array_like))
-#                 out = []
-#                 for a in array_like:
-#                     out.append(np.atleast_1d(a))
-#                 return out
-#         elif isinstance(array_like[0], numbers.Number):
-#             if num_input_states is None or num_input_states == 1:
-#                 return [np.atleast_1d(array_like)]
-#             elif num_input_states == len(array_like):
-#                 out = []
-#                 for a in array_like:
-#                     out.append(np.atleast_1d(a))
-#                 return out
-#             else:
-#                 print("WARNING: The number of input states ({}) does not seem compatible with the input ({}).".
-#                               format(num_input_states, array_like))
-#                 return [np.atleast_1d(array_like)]
-#         else:
-#             return np.atleast_2d(array_like)  # this is hacky; mainly for supporting legacy code
-#     else:
-#         return np.atleast_2d(array_like)  # this is hacky; mainly for supporting legacy code
