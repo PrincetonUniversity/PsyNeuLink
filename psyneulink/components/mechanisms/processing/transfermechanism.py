@@ -861,9 +861,9 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_output_states(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputStates
         # then assign one OutputState (with the default name, indexed by the number of them) per item of variable
-        if len(self.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULTS:
+        if len(self.instance_defaults.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULTS:
             self.output_states = []
-            for i, item in enumerate(self.variable):
+            for i, item in enumerate(self.instance_defaults.variable):
                 self.output_states.append({NAME: RESULT, INDEX: i})
         super()._instantiate_output_states(context=context)
 
