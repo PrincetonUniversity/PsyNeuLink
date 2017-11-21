@@ -255,7 +255,7 @@ class LeabraFunction(Function_Base):
 
         if (not hasattr(self, "owner")) or (not hasattr(self.owner, "training_flag")) or self.owner.training_flag is False:
             variable = convert_to_2d_input(variable)[0]  # FIX: buggy, doesn't handle lists well. hacky conversion from 2D arrays into 1D arrays
-            return test_network(self.network, input_pattern=variable)  # potentially append an array of zeros to make output format consistent
+            return test_leabra_network(self.network, input_pattern=variable)  # potentially append an array of zeros to make output format consistent
 
         else:
             variable = convert_to_2d_input(variable)  # FIX: buggy, doesn't handle lists well
@@ -268,7 +268,7 @@ class LeabraFunction(Function_Base):
                                   "containing two vectors, corresponding to the input (which should be length {}) and "
                                   "the training target (which should be length {})".
                                   format(variable, self.network.layers[0], len(self.network.layers[-1].units)))
-            return train_network(self.network, input_pattern=variable[0], output_pattern=variable[1])
+            return train_leabra_network(self.network, input_pattern=variable[0], output_pattern=variable[1])
 
 class LeabraMechanism(ProcessingMechanism_Base):
     """
@@ -443,7 +443,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
                 hidden_sizes = input_size
             if training_flag is None:
                 training_flag = False
-            leabra_network = build_network(input_size, output_size, hidden_layers, hidden_sizes, training_flag)
+            leabra_network = build_leabra_network(input_size, output_size, hidden_layers, hidden_sizes, training_flag)
 
         function = LeabraFunction(network=leabra_network)
 
@@ -511,7 +511,7 @@ def convert_to_2d_input(array_like):
         return [np.array([array_like])]
 
 
-def build_network(n_input, n_output, n_hidden, hidden_sizes=None, training_flag=None):
+def build_leabra_network(n_input, n_output, n_hidden, hidden_sizes=None, training_flag=None):
 
     # specifications
     if training_flag is True:
@@ -551,7 +551,7 @@ def build_network(n_input, n_output, n_hidden, hidden_sizes=None, training_flag=
     return network
 
 
-def test_network(network, input_pattern):
+def test_leabra_network(network, input_pattern):
     assert len(network.layers[0].units) == len(input_pattern)
     network.set_inputs({'input_layer': input_pattern})
 
@@ -559,7 +559,7 @@ def test_network(network, input_pattern):
     return [unit.act_m for unit in network.layers[-1].units]
 
 
-def train_network(network, input_pattern, output_pattern):
+def train_leabra_network(network, input_pattern, output_pattern):
     """Run one trial on the network"""
     assert len(network.layers[0].units) == len(input_pattern)
 

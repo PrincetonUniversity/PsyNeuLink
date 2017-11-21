@@ -23,7 +23,7 @@ import random
 # with warnings.catch_warnings():
 #     warnings.simplefilter("ignore")
 #     import leabra
-from psyneulink.library.mechanisms.processing.leabramechanism import LeabraMechanism, build_network, train_network
+from psyneulink.library.mechanisms.processing.leabramechanism import LeabraMechanism, build_leabra_network, train_leabra_network
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.functions.function import Linear
@@ -78,13 +78,13 @@ print('LeabraMechanism Final Output: ', outputs[-1], type(outputs[-1]))
 
 
 random.seed(random_seed_value)
-leabra_net = build_network(n_input=input_size, n_output=output_size, n_hidden=hidden_layers, hidden_sizes=hidden_sizes,
-                           training_flag=train_flag)
+leabra_net = build_leabra_network(n_input=input_size, n_output=output_size, n_hidden=hidden_layers, hidden_sizes=hidden_sizes,
+                                  training_flag=train_flag)
 
 print('\nRunning Leabra in Leabra...')
 start_time = time.process_time()
 for i in range(num_trials):
-    train_network(leabra_net, input_pattern[i].copy(), training_pattern[i].copy())
+    train_leabra_network(leabra_net, input_pattern[i].copy(), training_pattern[i].copy())
 end_time = time.process_time()
 print('Time to run Leabra on its own: ', end_time - start_time, "seconds")
 print('Leabra Output: ', [unit.act_m for unit in leabra_net.layers[-1].units], type([unit.act_m for unit in leabra_net.layers[-1].units][0]))
