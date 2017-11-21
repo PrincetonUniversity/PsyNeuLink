@@ -8,7 +8,7 @@ try:
 except ImportError:
     leabra_available = False
 
-from psyneulink.library.mechanisms.processing.leabramechanism import LeabraMechanism, build_network, train_network
+from psyneulink.library.mechanisms.processing.leabramechanism import LeabraMechanism, build_leabra_network, train_leabra_network
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.functions.function import Linear, Logistic
@@ -53,7 +53,7 @@ class TestLeabraMechanismInit:
         assert L.hidden_sizes[0] == 4
         assert len(val[0]) == 4
 
-# identical to test_network; but run_network has a different name to avoid pytest collisions
+# identical to test_leabra_network; but run_network has a different name to avoid pytest collisions
 @pytest.mark.skipif(not leabra_available, reason='Leabra package is unavailable')
 def run_network(network, input_pattern):
     assert len(network.layers[0].units) == len(input_pattern)
@@ -78,7 +78,7 @@ class TestLeabraMechanismPrecision:
         random.seed(random_seed)
         L_spec = LeabraMechanism(input_size=in_size, output_size=out_size, hidden_layers=num_hidden, training_flag=train)
         random.seed(random_seed)
-        leabra_net = build_network(in_size, out_size, num_hidden, None, train)
+        leabra_net = build_leabra_network(in_size, out_size, num_hidden, None, train)
         leabra_net2 = copy.deepcopy(leabra_net)
         L_net = LeabraMechanism(leabra_net2)
         # leabra_net should be identical to the network inside L_net
@@ -129,7 +129,7 @@ class TestLeabraMechanismPrecision:
         random.seed(random_seed)
         L_spec = LeabraMechanism(input_size=in_size, output_size=out_size, hidden_layers=num_hidden, training_flag=train)
         random.seed(random_seed)
-        leabra_net = build_network(in_size, out_size, num_hidden, None, train)
+        leabra_net = build_leabra_network(in_size, out_size, num_hidden, None, train)
         leabra_net2 = copy.deepcopy(leabra_net)
         L_net = LeabraMechanism(leabra_net2)
         # leabra_net should be identical to the network inside L_net
@@ -151,7 +151,7 @@ class TestLeabraMechanismPrecision:
         for i in range(num_trials):
             out_spec = s_spec.run(inputs={T1_spec: inputs[i], T2_spec: train_data[i]})
             pnl_output_spec = out_spec[-1][0]
-            leabra_output = train_network(leabra_net, inputs[i], train_data[i])
+            leabra_output = train_leabra_network(leabra_net, inputs[i], train_data[i])
             diffs_spec = np.abs(np.array(pnl_output_spec) - np.array(leabra_output))
             out_net = s_net.run(inputs={T1_net: inputs[i], T2_net: train_data[i]})
             pnl_output_net = out_net[-1][0]
@@ -160,7 +160,7 @@ class TestLeabraMechanismPrecision:
         out_spec = s_spec.run(inputs={T1_spec: inputs, T2_spec: train_data})
         pnl_output_spec = np.array(out_spec[-1][0])
         for i in range(len(inputs)):
-            leabra_output = np.array(train_network(leabra_net, inputs[i], train_data[i]))
+            leabra_output = np.array(train_leabra_network(leabra_net, inputs[i], train_data[i]))
         diffs_spec = np.abs(pnl_output_spec - leabra_output)
         out_net = s_net.run(inputs={T1_net: inputs, T2_net: train_data})
         pnl_output_net = np.array(out_net[-1][0])
@@ -181,7 +181,7 @@ class TestLeabraMechanismPrecision:
         random.seed(random_seed)
         L_spec = LeabraMechanism(input_size=in_size, output_size=out_size, hidden_layers=num_hidden, training_flag=train)
         random.seed(random_seed)
-        leabra_net = build_network(in_size, out_size, num_hidden, None, train)
+        leabra_net = build_leabra_network(in_size, out_size, num_hidden, None, train)
         leabra_net2 = copy.deepcopy(leabra_net)
         L_net = LeabraMechanism(leabra_net2)
         # leabra_net should be identical to the network inside L_net
@@ -203,7 +203,7 @@ class TestLeabraMechanismPrecision:
         for i in range(num_trials):  # training round
             out_spec = s_spec.run(inputs={T1_spec: inputs[i], T2_spec: train_data[i]})
             pnl_output_spec = out_spec[-1][0]
-            leabra_output = train_network(leabra_net, inputs[i], train_data[i])
+            leabra_output = train_leabra_network(leabra_net, inputs[i], train_data[i])
             diffs_spec = np.abs(np.array(pnl_output_spec) - np.array(leabra_output))
             out_net = s_net.run(inputs={T1_net: inputs[i], T2_net: train_data[i]})
             pnl_output_net = out_net[-1][0]
