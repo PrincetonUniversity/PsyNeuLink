@@ -174,13 +174,14 @@ A State can be specified using any of the following:
          States that can be specified in this manner depends on the type of the Mechanism and context of the
          specification (see `examples <State_State_Name_Entry_Example>`).
 
-   .. _InputState_Tuple_Specification:
+   .. _State_Tuple_Specification:
 
-    * **Tuple specification** -- this is a convenience format that can be used to compactly specify an InputState
-      along with a Projection to it.  It can one of two forms:
+    * **Tuple specifications** -- these are convenience format that can be used to compactly specify a State
+      along with a Projection to it.  Different States support different forms, but all support the following three
+      forms:
 
-      * a **2-item tuple** - convenience format that can be used to specify Projections to or from other States
-        (depending on the type of State);  generally, the 1st item is te name of a State or list of State names,
+      * a **2-item (State or Mechanism, Projection) tuple** - convenience format that can be used to specify
+        Projections to or from other States;  generally, the 1st item is the name of a State or list of State names,
         and the 2nd item is the Mechanism to which they belong;  for some States it can also be used for other forms
         of specification.  For example, for an `InputState` it can be used to specify the State's `variable
         <State_Base.variable>` (1st item) and `Projections to it <Projection_Specification>` (2nd item); and for
