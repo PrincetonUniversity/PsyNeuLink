@@ -106,6 +106,11 @@ from psyneulink.globals.preferences.preferenceset import PreferenceEntry, Prefer
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
+__all__ = [
+    'build_leabra_network', 'convert_to_2d_input', 'input_state_names', 'LeabraError', 'LeabraFunction', 'LeabraMechanism',
+    'LEARNING_TARGET', 'MAIN_INPUT', 'MAIN_OUTPUT', 'output_state_name', 'test_leabra_network', 'train_leabra_network',
+]
+
 # Used to name input_states and output_states:
 MAIN_INPUT = 'main_input'
 LEARNING_TARGET = 'learning_target'
