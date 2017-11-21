@@ -734,6 +734,7 @@ print("TEST InputState")
 #                            input_states=[P])
 # print(T2.input_states[0].path_afferents)
 
+# ADD TEST:
 G = pnl.GatingMechanism(gating_signals=['a','b'])
 T = pnl.TransferMechanism(input_states=[G])
 print(G.gating_signals)
@@ -742,24 +743,6 @@ print(T.input_states[0].mod_afferents)
 # T2 = pnl.TransferMechanism(name='T2',
 #                            input_states=[(None, T1)])
 # print(T2.input_states[0].path_afferents)
-
-# T0 = pnl.TransferMechanism()
-# T1 = pnl.TransferMechanism(name='T1', input_states=[[0,0],[0,0,0]])
-# # ADD TEST ONCE IT WORKS
-# # T2 = pnl.TransferMechanism(name='T2', input_states=[[T1.output_states[0], T1.output_states[1]]])
-# # T2 = pnl.TransferMechanism(name='T2', input_states=[[T0, T1]])
-# T2 = pnl.TransferMechanism(name='T2', input_states=[[T0,T1]])
-# # T2 = pnl.TransferMechanism(name='T2', input_states=[([T0,T1],None, None, pnl.InputState)])
-# assert True
-# print (T2.input_states[0].path_afferents)
-
-# assert len(T2.output_states)==2
-# assert T2.output_states[0].efferents[0].receiver.name == 'InputState-0'
-# assert T2.output_states[0].efferents[0].matrix.shape == (1,2)
-# assert T2.output_states[0].efferents[1].receiver.name == 'InputState-1'
-# assert T2.output_states[0].efferents[1].matrix.shape == (1,3)
-# assert T2.output_states[1].index == 1
-
 
 
 # I = pnl.InputState(name='I', owner=T1)
