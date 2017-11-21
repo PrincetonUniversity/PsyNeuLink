@@ -163,43 +163,6 @@ Projections to it). Each of these is described below:
       `Mechanism InputState specification <Mechanism_InputState_Specification>` and `example
       <State_Value_Spec_Example>`).
 
-    .. _InputState_Projection_Source_Specification:
-
-    **Specification by Projection(s)**
-
-    An InputState can also be specified by specifying one or Projections (or their sources) that should project to it.
-    In this case, the InputState is created, as well as the Projections to it.  When an InputState is specified in this
-    way, its `variable <InputState.variable>` is formatted to be compatible with the value of the Projections and/or
-    their sources; however, this can interact with the `variable <Mechanism_Base.variable>` of Mechanmism to which
-    the InputState is assigned -- this is discussed in detailed `below <XXX>`.  An InputState can be specified by
-    Projections to it, or their sources, in any of the following ways:
-
-    * **OutputState, Mechanism, or list of these** -- creates an InputState and MappingProjections to it from the
-      specified OutputStates and/or Mechanisms.  By default, the OutputState's `value <OutputState.value>`
-      is used to format the InputState's `variable <InputState.variable>`, and an `IDENTITY_MATRIX` is used for the
-      MappingProjection.  However, if **default_variable** argument is specified in the constructor for the InputState's
-      owner Mechanism, then the corresponding item of its value is used as the format for the InputState's `variable
-      <InputState.variable>`, and `AUTO_ASSIGN_MATRIX` is used for the MappingProjection, which adjusts its `value
-      <Projection_Base.value>` to match the InputState's `variable <InputState.variable>`.
-    ..
-    * **Mechanism** -- the Mechanism's `primary OutputState <OutputState_Primary>` is used, and the InputState
-      (and MappingProjection to it) are created as for an OutputState specification (see above).
-    ..
-    * **Projection object**.  this creates a default InputState and assigns it as the `Projection's <Projection>`
-      `receiver <Projection_Base.receiver>`;  the Projection's `value <Projection_Base.value>` must be compatible with
-      the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState is assigned.
-    ..
-    * **Projection subclass** -- this creates a default InputState, formatting its `variable <InputState.variable>`
-      in the same manner as an InputState class, keyword or string (see above), and using this as the format for the
-      Projection's `value <Projection_Base.value>`.  Since the Projection's `sender <Projection_Base.sender>` is
-      unspecified, its `initialization is deferred <Projection_Deferred_Initialization>`.  In some cases, initialization
-      can happen automatically -- for example, when a `ControlProjection` is created for the parameter of a Mechanism
-      that is included in a `System`, a `ControlSignal` is created as the Projection's `sender <Projection_Base.sender>`
-      that is added to the System's `controller <System.controller>` (see `System Control <System_Control>`).  However,
-      for cases in which `deferred initialization <Component_Deferred_Init>` is not automatically completed,
-      the Projection will not be operational until its `sender <Projection_Base.sender>` has been specified and its
-      initialization completed.
-
     .. _InputState_Specification_Dictionary:
 
     **InputState Specification Dictionary or Tuple**
@@ -224,13 +187,48 @@ Projections to it). Each of these is described below:
       If the dictionary is used to specify an InputState in the constructor for a Mechanism, and it includes a
       *VARIABLE* and/or *VALUE* or entry, the value must be compatible with the item of the owner Mechanism's `variable
       <Mechanism_Base.variable>` to which the InputState is assigned (see  `Mechanism InputState specification
-      <Mechanism_InputState_Specification>`). If a *PROJECTIONS* entry is included, it can include one or more
-      `OutputState` and/or `MappingProjection` specifications for OutputStates that should project to it, as well one
-      or more `ModulatorySignal` and/or `ModulatoryProjection` specifications for ModulatorySignals that should
-      project to it (see `examples <State_Projections_Examples>` in State).  If these are used to specify the
-      InputState's `variable <InputState.variable>` (see `note below <InputState_Projection_Specification>`) within
-      the constructor for a Mechanism, then again this must be compatible with the corresponding item of the
-      Mechanism's `variable <Mechanism_Base.variable>`.
+      <Mechanism_InputState_Specification>`). A *PROJECTIONS* entry can include specifications for one or more
+      States, Mechanisms or Projections that should project to the InputState (described in the next section); however,
+      this may be constrained by or have consequences for the InputState's `variable <InputState.variable>` (see
+      `below <_InputState_Projections>`).
+
+    .. _InputState_Projection_Source_Specification:
+
+    **Specification by Projection(s)**
+
+    COMMENT:
+    `examples
+      <State_Projections_Examples>` in State)
+      Mention Mapping or Gating
+    COMMENT
+
+    An InputState can be specified by specifying one or more States, Mechanisms or Projections that should project
+    to it, in any of the following ways:
+
+    * **OutputState, GatingSignal, Mechanism, or list of these** -- creates an InputState with the specified Projections
+      and/or ones from the specified sources.  If a Mechanism is specified, its `primary OutputState
+      <OutputState_Primary>` (or GatingSignal) is used.  dBy default, the Projection or source's value is used to
+      specify the
+      format for the InputState's `variable <InputState.variable>`;  however, this is subject to various considerations
+      and constraints discussed `below <InputState_Projections>`.
+
+    * **Mechanism** -- the Mechanism's `primary OutputState <OutputState_Primary>` is used, and the InputState
+      (and MappingProjection to it) are created as for an OutputState specification (see above).
+    ..
+    * **Projection object**.  this creates a default InputState and assigns it as the `Projection's <Projection>`
+      `receiver <Projection_Base.receiver>`;  the Projection's `value <Projection_Base.value>` must be compatible with
+      the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState is assigned.
+    ..
+    * **Projection subclass** -- this creates a default InputState, formatting its `variable <InputState.variable>`
+      in the same manner as an InputState class, keyword or string (see above), and using this as the format for the
+      Projection's `value <Projection_Base.value>`.  Since the Projection's `sender <Projection_Base.sender>` is
+      unspecified, its `initialization is deferred <Projection_Deferred_Initialization>`.  In some cases, initialization
+      can happen automatically -- for example, when a `ControlProjection` is created for the parameter of a Mechanism
+      that is included in a `System`, a `ControlSignal` is created as the Projection's `sender <Projection_Base.sender>`
+      that is added to the System's `controller <System.controller>` (see `System Control <System_Control>`).  However,
+      for cases in which `deferred initialization <Component_Deferred_Init>` is not automatically completed,
+      the Projection will not be operational until its `sender <Projection_Base.sender>` has been specified and its
+      initialization completed.
 
    .. _InputState_Tuple_Specification:
 
@@ -306,6 +304,16 @@ If any MappingProjections are specified, and the InputState's **variable** argum
 However, if the latter is *not* specified, then the value and/or sender of the Mapping rpojections can be used to
 specify the InputState's variable (howeer they must all be consistent) or an error will be generated XXXX CHECK THIS.
 
+--------
+      MOVE TO BELOW
+      by default, the OutputState's `value <OutputState.value>`
+      is used to format the InputState's `variable <InputState.variable>`, and an `IDENTITY_MATRIX` is used for the
+      MappingProjection.  However, if **default_variable** argument is specified in the constructor for the InputState's
+      owner Mechanism, then the corresponding item of its value is used as the format for the InputState's `variable
+      <InputState.variable>`, and `AUTO_ASSIGN_MATRIX` is used for the MappingProjection, which adjusts its `value
+      <Projection_Base.value>` to match the InputState's `variable <InputState.variable>`.
+    ..
+---------------
 
 If , then that that is used to determine the format of the InputState's `variable
 <InputState.variable>`, and the value or sender of any MappingProjections specified must be compatible with the

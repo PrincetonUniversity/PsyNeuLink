@@ -653,3 +653,40 @@ class TestInputStateSpec:
         assert len(T2.input_states[0].value) == 1
         assert T2.input_states[0].path_afferents[0].sender.name == 'RESULT'
         assert T2.input_states[0].path_afferents[1].sender.name == 'RESULT-1'
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 34
+
+    def test_lists_of_mechanisms_and_output_states(self):
+
+        # Test "bare" list of Mechanisms
+        T0 = TransferMechanism(name='T0')
+        T1 = TransferMechanism(name='T1', input_states=[[0,0],[0,0,0]])
+        T2 = TransferMechanism(name='T2', input_states=[[T0, T1]])
+        assert len(T2.input_states[0].path_afferents)==2
+        assert T2.input_states[0].path_afferents[0].sender.owner.name=='T0'
+        assert T2.input_states[0].path_afferents[1].sender.owner.name=='T1'
+        assert T2.input_states[0].path_afferents[1].matrix.shape == (2,1)
+
+        # Test list of Mechanisms in ProjectionTuple
+        T3 = TransferMechanism(name='T3', input_states=[([T0, T1],None,None,InputState)])
+        assert len(T3.input_states[0].path_afferents)==2
+        assert T3.input_states[0].path_afferents[0].sender.owner.name=='T0'
+        assert T3.input_states[0].path_afferents[1].sender.owner.name=='T1'
+        assert T3.input_states[0].path_afferents[1].matrix.shape == (2,1)
+
+        # Test "bare" list of OutputStates
+        T4= TransferMechanism(name='T4', input_states=[[T0.output_states[0], T1.output_states[1]]])
+        assert len(T4.input_states[0].path_afferents)==2
+        assert T4.input_states[0].path_afferents[0].sender.owner.name=='T0'
+        assert T4.input_states[0].path_afferents[1].sender.owner.name=='T1'
+        assert T4.input_states[0].path_afferents[1].matrix.shape == (3,1)
+
+        # Test list of OutputStates in ProjectionTuple
+        T5 = TransferMechanism(name='T5', input_states=[([T0.output_states[0], T1.output_states[1]],
+                                                         None,None,
+                                                         InputState)])
+        assert len(T5.input_states[0].path_afferents)==2
+        assert T5.input_states[0].path_afferents[0].sender.owner.name=='T0'
+        assert T5.input_states[0].path_afferents[1].sender.owner.name=='T1'
+        assert T5.input_states[0].path_afferents[1].matrix.shape == (3,1)

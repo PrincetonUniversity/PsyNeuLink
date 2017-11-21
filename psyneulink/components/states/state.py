@@ -180,8 +180,8 @@ A State can be specified using any of the following:
 
    .. _State_Tuple_Specification:
 
-    * **Tuple specifications** -- these are convenience format that can be used to compactly specify a State
-      along with a Projection to it, and in some cases parameters for the State.  Different States support different
+    * **Tuple specifications** -- these are convenience formats that can be used to compactly specify a State
+      Projection(s) to/from it, and in some cases parameters for the State.  Different States support different
       forms, but all support the following two forms:
 
       .. _State_2_Item_Tuple:
@@ -199,7 +199,8 @@ A State can be specified using any of the following:
       .. _State_ProjectionTuple:
 
       * **ProjectionTuple** -- a 4-item tuple that specifies one or more `Projections <Projection>` to or from other
-        State(s), along with its weight and exponent (see `ProjectionTuple <Projection_ProjectionTuple>` for details).
+        State(s), along with a weight and/or exponent for each (see `ProjectionTuple <Projection_ProjectionTuple>` for
+        details).
 
 .. _State_Projections:
 
