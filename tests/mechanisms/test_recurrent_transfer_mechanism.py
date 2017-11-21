@@ -400,14 +400,14 @@ class TestRecurrentTransferMechanismFunction:
         R = RecurrentTransferMechanism(
             name='R',
             size=10,
-            function=Logistic(gain=2, bias=1)
+            function=Logistic(gain=2, offset=1)
         )
         val = R.execute(np.ones(10))
         np.testing.assert_allclose(val, [np.full(10, 0.7310585786300049)])
 
     def test_recurrent_mech_function_psyneulink(self):
 
-        a = Logistic(gain=2, bias=1)
+        a = Logistic(gain=2, offset=1)
 
         R = RecurrentTransferMechanism(
             name='R',
