@@ -1072,23 +1072,39 @@ def get_class_attributes(cls):
             if item[0] not in boring]
 
 
-def convert_all_elements_to_np_array(arr):
+def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
     '''
-        Recursively converts all items in **arr** to numpy arrays
+        Recursively converts all items in **arr** to numpy arrays, optionally casting
+        items of type/dtype **cast_from** to type/dtype **cast_to**
+
+        Arguments
+        ---------
+            cast_from - type, numpy.dtype - type when encountered to cast to **cast_to**
+            cast_to - type, numpy.dtype - type to cast **cast_from** to
+
+        Returns
+        -------
+        a numpy array containing the converted **arr**
     '''
     if isinstance(arr, np.ndarray) and arr.ndim == 0:
-        return arr
+        if cast_from is not None and isinstance(arr.item(0), cast_from):
+            return np.asarray(arr, dtype=cast_to)
+        else:
+            return arr
+
+    if cast_from is not None and isinstance(arr, cast_from):
+        return np.asarray(arr, dtype=cast_to)
 
     if not isinstance(arr, collections.Iterable) or isinstance(arr, str):
         return np.asarray(arr)
 
     if isinstance(arr, np.matrix):
         if arr.dtype == object:
-            return np.matrix([convert_all_elements_to_np_array(arr.item(i)) for i in range(arr.size)])
+            return np.matrix([convert_all_elements_to_np_array(arr.item(i), cast_from, cast_to) for i in range(arr.size)])
         else:
             return arr
 
-    subarr = [convert_all_elements_to_np_array(x) for x in arr]
+    subarr = [convert_all_elements_to_np_array(x, cast_from, cast_to) for x in arr]
     try:
         return np.array(subarr)
     except ValueError:
