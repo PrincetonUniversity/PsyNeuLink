@@ -85,26 +85,23 @@ Class Reference
 
 """
 
-import warnings
 import numbers
 import numpy as np
-import typecheck as tc
+
 try:
     import leabra
     leabra_available = True
 except ImportError:
     leabra_available = False
 
-from psyneulink.components.component import Component, function_type, method_type, parameter_keywords
-from psyneulink.components.functions.function import AdaptiveIntegrator, Function_Base, Linear
-from psyneulink.components.mechanisms.mechanism import MechanismError, Mechanism_Base
+from psyneulink.components.functions.function import Function_Base
+from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates, standard_output_states
-from psyneulink.globals.keywords import FUNCTION, GAIN, INITIALIZER, INITIALIZING, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, MEAN, MEDIAN, NETWORK, NOISE, OUTPUT_STATES, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
+from psyneulink.globals.keywords import FUNCTION, INITIALIZING, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_STATES, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.globals.utilities import append_type_to_name, iscompatible
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.timescale import TimeScale
 
 __all__ = [
     'build_leabra_network', 'convert_to_2d_input', 'input_state_names', 'LeabraError', 'LeabraFunction', 'LeabraMechanism',
@@ -118,12 +115,15 @@ MAIN_OUTPUT = 'main_output'
 input_state_names = [MAIN_INPUT, LEARNING_TARGET]
 output_state_name = [MAIN_OUTPUT]
 
+
 class LeabraError(Exception):
+
     def __init__(self, error_value):
         self.error_value = error_value
 
     def __str__(self):
         return repr(self.error_value)
+
 
 class LeabraFunction(Function_Base):
     """
@@ -172,8 +172,8 @@ class LeabraFunction(Function_Base):
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the LeabraMechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the LeabraMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
     """
@@ -194,7 +194,6 @@ class LeabraFunction(Function_Base):
 
     class ClassDefaults(Function_Base.ClassDefaults):
         variable = [0]
-
 
     def __init__(self,
                  default_variable=None,
@@ -274,6 +273,7 @@ class LeabraFunction(Function_Base):
                                   "the training target (which should be length {})".
                                   format(variable, self.network.layers[0], len(self.network.layers[-1].units)))
             return train_leabra_network(self.network, input_pattern=variable[0], output_pattern=variable[1])
+
 
 class LeabraMechanism(ProcessingMechanism_Base):
     """
@@ -499,8 +499,10 @@ class LeabraMechanism(ProcessingMechanism_Base):
     @network.setter
     def network(self, value):
         self.function_object.network = value
-#assumes that within lists and arrays, all elements are the same type
+# assumes that within lists and arrays, all elements are the same type
 # also this is written sub-optimally: some cases should be broken off into more if statements for speed
+
+
 def convert_to_2d_input(array_like):
     if isinstance(array_like, (np.ndarray, list)):
         if isinstance(array_like[0], (np.ndarray, list)):
@@ -523,12 +525,12 @@ def build_leabra_network(n_input, n_output, n_hidden, hidden_sizes=None, trainin
         learning_rule = 'leabra'
     else:
         learning_rule = None
-    unit_spec  = leabra.UnitSpec(adapt_on=True, noisy_act=True)
+    unit_spec = leabra.UnitSpec(adapt_on=True, noisy_act=True)
     layer_spec = leabra.LayerSpec(lay_inhib=True)
-    conn_spec  = leabra.ConnectionSpec(proj='full', rnd_type='uniform', rnd_mean=0.75, rnd_var=0.2, lrule=learning_rule)
+    conn_spec = leabra.ConnectionSpec(proj='full', rnd_type='uniform', rnd_mean=0.75, rnd_var=0.2, lrule=learning_rule)
 
     # input/outputs
-    input_layer  = leabra.Layer(n_input, spec=layer_spec, unit_spec=unit_spec, name='input_layer')
+    input_layer = leabra.Layer(n_input, spec=layer_spec, unit_spec=unit_spec, name='input_layer')
     output_layer = leabra.Layer(n_output, spec=layer_spec, unit_spec=unit_spec, name='output_layer')
 
     # creating the required numbers of hidden layers and connections
@@ -542,7 +544,7 @@ def build_leabra_network(n_input, n_output, n_hidden, hidden_sizes=None, trainin
         else:
             hidden_size = n_input
         hidden_layer = leabra.Layer(hidden_size, spec=layer_spec, unit_spec=unit_spec, name='hidden_layer_{}'.format(i))
-        hidden_conn  = leabra.Connection(layers[-1],  hidden_layer, spec=conn_spec)
+        hidden_conn = leabra.Connection(layers[-1],  hidden_layer, spec=conn_spec)
         layers.append(hidden_layer)
         connections.append(hidden_conn)
 
