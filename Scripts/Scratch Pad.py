@@ -726,27 +726,26 @@ print("TEST InputState")
 # # assert T2.input_states[0].path_afferents[0].sender.owner.name == 'D'
 # assert True
 
-# T1 = pnl.TransferMechanism(name='T1', input_states=[[0,0],[0,0,0]])
-# # FIX: P SHOULD NOT IMPLEMENT DEFAULT OUTPUTSTATE
+T1 = pnl.TransferMechanism(name='T1', input_states=[[0,0],[0,0,0]])
+# FIX: P SHOULD NOT IMPLEMENT DEFAULT OUTPUTSTATE
 # ADD TEST ONCE IT WORKS
-# P = pnl.MappingProjection()
-# T2 = pnl.TransferMechanism(name='T2',
-#                            input_states=[P])
-# print(T2.input_states[0].path_afferents)a
+P = pnl.MappingProjection()
+T2 = pnl.TransferMechanism(name='T2',
+                           input_states=[P])
+print(T2.input_states[0].path_afferents)
 # T2 = pnl.TransferMechanism(name='T2',
 #                            input_states=[(None, T1)])
 # print(T2.input_states[0].path_afferents)
 
-T0 = pnl.TransferMechanism()
-T1 = pnl.TransferMechanism(name='T1', input_states=[[0,0],[0,0,0]])
-# FIX: SHOULD GENERATE ONE INPUTSTATE WITH PROJECTIONS FROM THE TWO OUTPUTSTATES SPECIFIED:
-# ADD TEST ONCE IT WORKS
-# T2 = pnl.TransferMechanism(name='T2', input_states=[[T1.output_states[0], T1.output_states[1]]])
-# T2 = pnl.TransferMechanism(name='T2', input_states=[[T0, T1]])
+# T0 = pnl.TransferMechanism()
+# T1 = pnl.TransferMechanism(name='T1', input_states=[[0,0],[0,0,0]])
+# # ADD TEST ONCE IT WORKS
+# # T2 = pnl.TransferMechanism(name='T2', input_states=[[T1.output_states[0], T1.output_states[1]]])
+# # T2 = pnl.TransferMechanism(name='T2', input_states=[[T0, T1]])
 # T2 = pnl.TransferMechanism(name='T2', input_states=[[T0,T1]])
-T2 = pnl.TransferMechanism(name='T2', input_states=[([T0,T1],None, None, pnl.InputState)])
-assert True
-print (T2.input_states[0].path_afferents)
+# # T2 = pnl.TransferMechanism(name='T2', input_states=[([T0,T1],None, None, pnl.InputState)])
+# assert True
+# print (T2.input_states[0].path_afferents)
 
 # assert len(T2.output_states)==2
 # assert T2.output_states[0].efferents[0].receiver.name == 'InputState-0'
