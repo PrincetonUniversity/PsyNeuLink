@@ -1004,7 +1004,7 @@ class Component(object):
 
         # fixes a problem where we would have list objects within numpy arrays, and so multiplying them by a scalar
         # wouldn't do an arithmetic operation, but rather a list-size operation
-        default_variable = convert_all_elements_to_np_array(default_variable)
+        default_variable = convert_all_elements_to_np_array(default_variable, cast_from=numbers.Number, cast_to=float)
 
         self._default_variable_handled = True
         return np.asarray(default_variable)
