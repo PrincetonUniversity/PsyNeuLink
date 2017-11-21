@@ -1512,6 +1512,7 @@ def _parse_connection_specs(connectee_state_type,
                 raise ProjectionError("Unrecognized specification for {} ({}) in {} specification ({}) for {}".
                                       format(State.__name__, state_spec, Projection.__name__, connection, owner.name))
 
+
             # Check compatibility with any State(s) returned by _get_state_for_socket
 
             if isinstance(state, list):
@@ -1535,6 +1536,12 @@ def _parse_connection_specs(connectee_state_type,
                                                  connectee_state_type.__name__,
                                                  owner.name,
                                                  ", ".join([c.__name__ for c in connects_with])))
+
+            # FIX: 11/21/17 HACK TO FIX PROBLEM USING GatingMechanism TO SPECIFY PROJECTION *TO* InputState:
+            # FIX:          THIS "FLIPS DIRECTIONALITY" WHEN SPECIFYING PROJECTION FROM-TO, RATHER THAN TO-FROM
+            # If the projection_spec was used to specify connectee_state, reassign it to state to connect to:
+            if projection_spec is connectee_state_type and projection_socket is SENDER:
+                projection_spec = state
 
             # Parse projection specification into Projection specification dictionary
             # Validate projection specification
