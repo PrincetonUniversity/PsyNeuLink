@@ -1020,6 +1020,9 @@ def convert_all_elements_to_np_array(arr):
     '''
         Recursively converts all items in **arr** to numpy arrays
     '''
+    if isinstance(arr, np.ndarray) and arr.ndim == 0:
+        return arr
+
     if not isinstance(arr, collections.Iterable) or isinstance(arr, str):
         return np.asarray(arr)
 
