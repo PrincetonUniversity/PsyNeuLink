@@ -579,8 +579,6 @@ class KWTA(RecurrentTransferMechanism):
         new_input = list(new_input)
         for i in range(1, len(current_input)):
             new_input.append(current_input[i])
-        print('current_input: ', current_input)
-        print('new_input: ', new_input)
         return np.atleast_2d(new_input)
 
     def _validate_params(self, request_set, target_set=None, context=None):

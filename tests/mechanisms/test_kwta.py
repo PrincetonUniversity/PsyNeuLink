@@ -92,7 +92,7 @@ class TestKWTAInputs:
 class TestKWTAFunction:
 
     def test_kwta_function_various_spec(self):
-        specs = [Logistic, Linear, Linear(slope=3), Logistic(gain=2, bias=-4.2)]
+        specs = [Logistic, Linear, Linear(slope=3), Logistic(gain=2, offset=-4.2)]
         for s in specs:
             K = KWTA(
                 name='K',
@@ -112,22 +112,22 @@ class TestKWTAFunction:
         val = K.execute(input = [1, 2, 3])
         assert np.allclose(val, [[0.2689414213699951, 0.7310585786300049, 0.9525741268224334]])
 
-    def test_kwta_log_bias(self):
+    def test_kwta_log_offset(self):
         K = KWTA(
             name='K',
             size=3,
-            function=Logistic(bias=-.2),
+            function=Logistic(offset=-.2),
             k_value=2
         )
         val = K.execute(input=[1, 2, 3])
         assert np.allclose(val, [[0.425557483188341, 0.6681877721681662, 0.84553473491646523]])
 
     # the inhibition would have to be positive in order to get the desired activity level: thus, inhibition is set to 0
-    def test_kwta_log_gain_bias(self):
+    def test_kwta_log_gain_offset(self):
         K = KWTA(
             name='K',
             size=2,
-            function=Logistic(gain=-.2, bias=4),
+            function=Logistic(gain=-.2, offset=4),
             k_value=1
         )
         val = K.execute(input = [.1, -4])
