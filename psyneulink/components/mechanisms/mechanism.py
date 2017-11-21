@@ -474,7 +474,7 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   *INPUT_STATES* entry of a **params** dictionary, it must be compatible with the value of the corresponding
   item **default_variable**; otherwise, the format of the item in **default_variable** corresponding to the
   InputState is used to specify the format of its `variable <InputState.variable>` (e.g., the InputState is
-  `specified using an OutputState <InputState_OutputState_Specification>` to project to it;).  If
+  `specified using an OutputState <InputState_Projection_Source_Specification>` to project to it;).  If
   **default_variable** is not specified, a default value is specified by the Mechanism.
 
 COMMENT:

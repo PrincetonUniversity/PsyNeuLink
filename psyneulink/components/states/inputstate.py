@@ -137,7 +137,7 @@ Forms of Specification
 ^^^^^^^^^^^^^^^^^^^^^^
 
 InputStates can be specified in a variety of ways, that fall into three broad categories:  specifying an InputState
-directly; by an `OutputState` or `Projection <Projection>` that should project to it; or by using a `State
+directly; by a `Projection <Projection>` (or its source) that should project to it; or by using a `State
 specification dictionary <State_Specification>` or tuple format to specify attributes for the InputState (including
 Projections to it). Each of these is described below:
 
@@ -163,12 +163,19 @@ Projections to it). Each of these is described below:
       `Mechanism InputState specification <Mechanism_InputState_Specification>` and `example
       <State_Value_Spec_Example>`).
 
-    .. _InputState_OutputState_Specification:
+    .. _InputState_Projection_Source_Specification:
 
-    **OutputState or Projection Specification**
+    **Specification by Projection(s)**
 
-    * **OutputState** -- a reference to an existing `OutputState`;  this creates an InputState and a
-      MappingProjection to it from the specified OutputState.  By default, the OutputState's `value <OutputState.value>`
+    An InputState can also be specified by specifying one or Projections (or their sources) that should project to it.
+    In this case, the InputState is created, as well as the Projections to it.  When an InputState is specified in this
+    way, its `variable <InputState.variable>` is formatted to be compatible with the value of the Projections and/or
+    their sources; however, this can interact with the `variable <Mechanism_Base.variable>` of Mechanmism to which
+    the InputState is assigned -- this is discussed in detailed `below <XXX>`.  An InputState can be specified by
+    Projections to it, or their sources, in any of the following ways:
+
+    * **OutputState, Mechanism, or list of these** -- creates an InputState and MappingProjections to it from the
+      specified OutputStates and/or Mechanisms.  By default, the OutputState's `value <OutputState.value>`
       is used to format the InputState's `variable <InputState.variable>`, and an `IDENTITY_MATRIX` is used for the
       MappingProjection.  However, if **default_variable** argument is specified in the constructor for the InputState's
       owner Mechanism, then the corresponding item of its value is used as the format for the InputState's `variable
@@ -228,7 +235,7 @@ Projections to it). Each of these is described below:
    .. _InputState_Tuple_Specification:
 
     * **InputState specification tuples** -- these are convenience formats that can be used to compactly specify an
-      InputState in a variety of ways:
+      InputState and Projection(s) to it in a variety of ways:
 
         * **2-item (State name or list of State names, Mechanism) tuple** -- 1st item must be the name of an
           `OutputState` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to

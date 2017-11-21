@@ -174,6 +174,10 @@ A State can be specified using any of the following:
          States that can be specified in this manner depends on the type of the Mechanism and context of the
          specification (see `examples <State_State_Name_Entry_Example>`).
 
+    * **State, Mechanism, or list of these** -- creates a default State with Projection(s) to/from the specified
+      States;  the type of State being created determines the type and directionality of the Projection(s) and,
+      if Mechanism(s) are specified, which of their primary States are used (see State subclasses for specifics).
+
    .. _State_Tuple_Specification:
 
     * **Tuple specifications** -- these are convenience format that can be used to compactly specify a State
