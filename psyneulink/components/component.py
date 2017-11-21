@@ -2711,16 +2711,12 @@ class Component(object):
             Used to mirror assignments to local variable in an attribute
             Knowingly not threadsafe
         '''
-        self.variable = value
+        self._variable = value
         return value
 
-    # @property
-    # def variable(self):
-    #     return self._variable
-    #
-    # @variable.setter
-    # def variable(self, value):
-    #     self._variable = value
+    @property
+    def variable(self):
+        return self._variable
 
     def _change_function(self, to_function):
         pass
