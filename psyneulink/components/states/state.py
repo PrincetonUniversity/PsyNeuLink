@@ -721,6 +721,7 @@ Class Reference
 import inspect
 import numbers
 import warnings
+from collections import Iterable
 
 import numpy as np
 import typecheck as tc
@@ -2589,6 +2590,7 @@ def _parse_state_spec(state_type=None,
             else:
                 state_specification = mech
                 projection = state_type
+
         # Specified State is same as connectee's type (state_type),
         #    so assume it is a reference to the State itself that is being (or has been) instantiated
         if isinstance(state_specification, state_type):
@@ -2622,7 +2624,6 @@ def _parse_state_spec(state_type=None,
     elif _is_projection_spec(state_specification, include_matrix_spec=False):
 
         # FIX: 11/12/17 - HANDLE SITUATION IN WHICH projection_spec IS A MATRIX (AND SENDER IS SOMEHOW KNOWN)
-
         # Parse to determine whether Projection's value is specified
         projection_spec = _parse_projection_spec(state_specification, owner=owner, state_type=state_dict[STATE_TYPE])
 
@@ -2694,7 +2695,18 @@ def _parse_state_spec(state_type=None,
     elif is_value_spec(state_specification):
         state_dict[REFERENCE_VALUE] = np.atleast_1d(state_specification)
 
-    elif isinstance(state_specification, (tuple, dict)) or state_specification is None:
+    # elif isinstance(state_specification, list):
+    #     if not all(isinstance(item, (State_Base, Mechanism)) for item in state_specification):
+    #         raise StateError("One or more items in the list used to specify a(n) {} for {} ({}) is not a {} or {}".
+    #                          format(state_type.__name__, owner.name, state_specification,
+    #                                 State.__name__, Mechanism.__name__))
+    #
+    #     state_dict[PROJECTIONS] = ProjectionTuple(state=state_specification,
+    #                                       weight=None,
+    #                                       exponent=None,
+    #                                       projection=state_type)
+
+    elif isinstance(state_specification, Iterable) or state_specification is None:
 
         # Standard state specification dict
         # Warn if VARIABLE was not in dict
@@ -2703,8 +2715,15 @@ def _parse_state_spec(state_type=None,
                   "will be inferred from context or the default ({}) will be used".
                   format(VARIABLE, state_type, owner.name, state_dict))
 
+        if isinstance(state_specification, (list, set)):
+            state_specific_specs = ProjectionTuple(state=state_specification,
+                                              weight=None,
+                                              exponent=None,
+                                              projection=state_type)
+
+
         # State specification is a tuple, so let State subclass handle it
-        if isinstance(state_specification, tuple):
+        elif isinstance(state_specification, tuple):
             state_specific_specs = state_specification
         # Otherwise, just pass params to State subclass
         else:

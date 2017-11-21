@@ -387,6 +387,7 @@ import warnings
 
 from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
+from psyneulink.components.states.state import StateError
 from psyneulink.globals.keywords import \
     CONTEXT, CONTROL, CONTROL_PROJECTION, EXPONENT, GATING, GATING_PROJECTION, DEFERRED_INITIALIZATION, \
     INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
@@ -1447,8 +1448,27 @@ def _parse_connection_specs(connectee_state_type,
             #     state_spec = None
 
             elif _is_projection_spec(last_item):
-                projection_spec = last_item
+
+                # If specification is a list of States and/or Mechanisms, get Projection spec for each
+                if isinstance(first_item, list):
+                     # Call _parse_connection_spec for each State or Mechanism, to generate a conection spec for each
+                    for connect_with_spec in first_item:
+                        if not isinstance(connect_with_spec, (State, Mechanism)):
+                              raise StateError("Item in the list used to specify a(n) {} for {} ({}) is not a {} or {}".
+                                             format(state_type.__name__, owner.name, connect_with_spec,
+                                                    State.__name__, Mechanism.__name__))
+                        c = _parse_connection_specs(connectee_state_type=connectee_state_type,
+                                                    owner=owner,
+                                                    connections=ProjectionTuple(connect_with_spec,
+                                                                                weight, exponent,
+                                                                                last_item))
+                        connect_with_states.extend(c)
+                    # Move on to other connections
+                    continue
+                # Otherwise, go on to process this Projection specification
                 state_spec = first_item
+                projection_spec = last_item
+
 
             # (<state name or list of state names>, <Mechanism>)
             elif isinstance(first_item, (str, list)):
@@ -1457,9 +1477,7 @@ def _parse_connection_specs(connectee_state_type,
 
                 if not isinstance(mech_item, Mechanism):
                     raise ProjectionError("Expected 2nd item of the {} specification tuple for {} ({}) to be a "
-                                          "Mechanism".
-                                             format(connectee_state_type.__name__, owner.name, mech_item,
-                                                    mech_item.name))
+                                          "Mechanism".format(connectee_state_type.__name__, owner.name, mech_item))
                 # First item of tuple is a list of State names, so recursively process it
                 if isinstance(state_item, list):
                      # Call _parse_connection_spec for each State name, to generate a conection spec for each
@@ -1483,12 +1501,16 @@ def _parse_connection_specs(connectee_state_type,
                 mech=mech_item
 
             # Validate state specification, and get actual state referenced if it has been instantiated
-            state = _get_state_for_socket(owner=owner,
-                                          state_spec=state_spec,
-                                          state_types=connects_with,
-                                          mech=mech,
-                                          mech_state_attribute=connect_with_attr,
-                                          projection_socket=projection_socket)
+            try:
+                state = _get_state_for_socket(owner=owner,
+                                              state_spec=state_spec,
+                                              state_types=connects_with,
+                                              mech=mech,
+                                              mech_state_attribute=connect_with_attr,
+                                              projection_socket=projection_socket)
+            except StateError:
+                raise ProjectionError("Unrecognized specification for {} ({}) in {} specification ({}) for {}".
+                                      format(State.__name__, state_spec, Projection.__name__, connection, owner.name))
 
             # Check compatibility with any State(s) returned by _get_state_for_socket
 

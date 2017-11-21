@@ -137,9 +137,9 @@ Forms of Specification
 ^^^^^^^^^^^^^^^^^^^^^^
 
 InputStates can be specified in a variety of ways, that fall into three broad categories:  specifying an InputState
-directly; by an `OutputState` or `Projection` that should project to it; or by using a `State specification dictionary
-<State_Specification>` or tuple format to specify attributes for the InputState (including Projections to it). Each of
-these is described below:
+directly; by an `OutputState` or `Projection <Projection>` that should project to it; or by using a `State
+specification dictionary <State_Specification>` or tuple format to specify attributes for the InputState (including
+Projections to it). Each of these is described below:
 
     .. _InputState_Direct_Specification:
 
@@ -174,7 +174,7 @@ these is described below:
       owner Mechanism, then the corresponding item of its value is used as the format for the InputState's `variable
       <InputState.variable>`, and `AUTO_ASSIGN_MATRIX` is used for the MappingProjection, which adjusts its `value
       <Projection_Base.value>` to match the InputState's `variable <InputState.variable>`.
-
+    ..
     * **Mechanism** -- the Mechanism's `primary OutputState <OutputState_Primary>` is used, and the InputState
       (and MappingProjection to it) are created as for an OutputState specification (see above).
     ..
@@ -239,17 +239,17 @@ these is described below:
           the InputState's `variable <InputState.variable>`.  Otherwise, the InputState's `variable
           <InputState.variable>` is formatted using the corresponding item of its owner Mechanism's `variable
           <Mechanism_Base.variable>` (see `example <XXX>  -- also ObjectiveMechanism??`).
-
+        ..
         * **2-item (value, `Projection specification <Projection_Specification>`) tuple** -- 1st item specifies the
           `variable <InputState.variable>` for the InputState;  it must be compatible with the corresponding item of
           **default_variable** argument in the owner Mechanism's constructor, if that is specified (see
           `Mechanism_InputState_Specification).  The 2nd item specifies one or more MappingProjections
           <MappingProjection>` and/or `GatingProjections <GatingProjection>` to the InputState (see below
           `InputState_Projections` for compatibility requirements).
-
+        ..
         * **2-item (State or Mechanism, Projection) tuple** -- this is a contracted form of the 4-item tuple
           described below
-
+        ..
         * **4-item (State or Mechanism, weight, exponent, Projection) tuple** -- this is an expanded version of the
           2-item tuple that allows the specification of the `weight <InputState.weight>` and/or `exponent
           <InputState.exponent>` attributes of the InputState, as well as a Projection to it.  Note that is different
@@ -277,21 +277,39 @@ these is described below:
 
 .. _InputState_Projections:
 
-Projection Specification
-~~~~~~~~~~~~~~~~~~~~~~~~
+Specifying Projections to an InputState
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When an InputState is created or specified, it can be specified to receive `MappingProjection(s) <MappingProjection>`
-from the OutputState(s) of other `ProcessingMechanism(s) <ProcessingMechanism>`, and/or `GatingProjection(s)
-<GatingProjection>` from one or more `GatingMechanism(s) <GatingMechanism>`. MappingProjections are assigned to the
-InputState's `path_afferents <InputState.path_afferents>` attribute, and GatingProjections to its `mod_afferents
-<InputState.mod_afferents>` attribute.
+When an InputState is created, it can be specified to receive `MappingProjection(s) <MappingProjection>` from the
+OutputState(s) of other `ProcessingMechanism(s) <ProcessingMechanism>`, and/or `GatingProjection(s) <GatingProjection>`
+from one or more `GatingMechanism(s) <GatingMechanism>`. MappingProjections are assigned to the InputState's
+`path_afferents <InputState.path_afferents>` attribute, and GatingProjections to its `mod_afferents
+<InputState.mod_afferents>` attribute.  Projections can be specified either as attributes, in a constructor for the
+InputState, or used to specify the InputState itself (using one of the `InputState_Forms_of_Specification` described
+above. Each of these have different consequences for the InputState's `variable <InputState.variable>`, as described
+below.
 
-*Specification in the constructor*.  Projections can be specified using the **projections** argument of the
-InputState's constructor, or an entry of a dictionary assigned to the **params** argument with the key *PROJECTIONS*.
-If the InputState's **default_variable**
+Relationship to InputState and Mechanism :ref:`variable`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If any MappingProjections have a specified `value <MappingProjection.value>` and/or `sender <MappingProjection.sender>`
-then their values must be compatible with the InputState's `variable <InputState.varible>` if that is specified
+*Specification in an InputState's constructor*.  Projections can be specified using the **projections** argument, or a
+*PROJECTIONS* entry in a specifciation dictionary assigned to the **params** argument.
+If any MappingProjections are specified, and the InputState's **variable** argument is also specified,
+.then any value or sender specified for those Mappoing projedctions must be consisten with the variable specification.
+However, if the latter is *not* specified, then the value and/or sender of the Mapping rpojections can be used to
+specify the InputState's variable (howeer they must all be consistent) or an error will be generated XXXX CHECK THIS.
+
+
+If , then that that is used to determine the format of the InputState's `variable
+<InputState.variable>`, and the value or sender of any MappingProjections specified must be compatible with the
+specification for the InputState's **variable**.  However, if the latter is not specified,
+then the MappingProjection's value, or that of its sender, is used to determine the format for the InputState's
+variable.
+
+
+any MappingProjections thjat have a specified `value <MappingProjection.value>` and/or
+`sender <MappingProjection.sender>` must be compatible with the specification in the **variable** argument
+of the InputState's constructor.  If that is not specified, then the
 
 
 , or using one of the `InputState_Forms_of_Specification` described above. The Projections
@@ -960,7 +978,7 @@ class InputState(State_Base):
                 try:
                     params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                        owner=owner,
-                                                                       connections=[projections_spec])
+                                                                       connections=projections_spec)
                     # Parse the value of all of the Projections to get/validate variable for InputState
                     for projection_spec in params_dict[PROJECTIONS]:
                         if state_dict[REFERENCE_VALUE] is None:
