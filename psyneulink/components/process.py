@@ -2032,7 +2032,8 @@ class Process(Process_Base):
 
             target = np.atleast_1d(target)
 
-            print("target mech target variable = {}".format(target_mech_target.instance_defaults.variable))
+            print("target mech target name = {}".format(target_mech_target.name))
+            print("target = {}".format(target))
 
             # Check that length of process' target input matches length of TARGET Mechanism's target input
             if len(target) != len(target_mech_target.instance_defaults.variable):
@@ -2528,6 +2529,7 @@ class Process(Process_Base):
     @property
     def numPhases(self):
         return self._phaseSpecMax + 1
+
 
 class ProcessInputState(OutputState):
     """Represents inputs and targets specified in a call to the Process' `execute <Process.execute>` and `run

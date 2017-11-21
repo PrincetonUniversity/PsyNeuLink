@@ -12,12 +12,6 @@
 
 import inspect
 
-<<<<<<< HEAD:PsyNeuLink/Globals/Preferences/ComponentPreferenceSet.py
-from psyneulink.globals.Keywords import NAME, kwDefaultPreferenceSetOwner, kwPrefLevel, kwPreferenceSetName, kwPrefs, kwPrefsOwner
-from psyneulink.globals.Log import LogLevel
-from psyneulink.globals.preferences.PreferenceSet import PreferenceEntry, PreferenceLevel, PreferenceSet
-from psyneulink.globals.Utilities import Modulation
-=======
 from psyneulink.globals.keywords import NAME, kwDefaultPreferenceSetOwner, kwPrefLevel, kwPreferenceSetName, kwPrefs, kwPrefsOwner
 from psyneulink.globals.log import LogLevel
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
@@ -31,7 +25,6 @@ __all__ = [
     'RUNTIME_PARAM_STICKY_ASSIGNMENT_PREF', 'SubtypeDefaultPreferencesDict', 'SystemDefaultPreferencesDict',
     'TypeDefaultPreferencesDict', 'VERBOSE_PREF',
 ]
->>>>>>> devel:psyneulink/globals/preferences/componentpreferenceset.py
 
 # Keypaths for preferences:
 REPORT_OUTPUT_PREF = kpReportOutputPref = '_report_output_pref'
@@ -290,20 +283,12 @@ class ComponentPreferenceSet(PreferenceSet):
 
         # If baseClass has not been assigned, do so here:
         if self.baseClass is None:
-<<<<<<< HEAD:PsyNeuLink/Globals/Preferences/ComponentPreferenceSet.py
-            from psyneulink.components.Component import Component
-=======
             from psyneulink.components.component import Component
->>>>>>> devel:psyneulink/globals/preferences/componentpreferenceset.py
             self.baseClass = Component
 
         # If owner is not specified, assign DefaultProcessingMechanism_Base as default owner
         if owner is None:
-<<<<<<< HEAD:PsyNeuLink/Globals/Preferences/ComponentPreferenceSet.py
-            from psyneulink.components.mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
-=======
             from psyneulink.components.mechanisms.processing.defaultprocessingmechanism import DefaultProcessingMechanism_Base
->>>>>>> devel:psyneulink/globals/preferences/componentpreferenceset.py
             DefaultPreferenceSetOwner = DefaultProcessingMechanism_Base(name=kwDefaultPreferenceSetOwner)
             owner = DefaultPreferenceSetOwner
 

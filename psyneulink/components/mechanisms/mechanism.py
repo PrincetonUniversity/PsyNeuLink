@@ -1773,6 +1773,8 @@ class Mechanism_Base(Mechanism):
             or process InputStates before and/or after call to _instantiate_input_states
         """
         from psyneulink.components.states.inputstate import _instantiate_input_states
+        print("input states (mechanism.py) = {}".format(input_states))
+        print("self.input_states (mechanism.py) = {}".format(self.input_states))
         return _instantiate_input_states(owner=self, input_states=input_states or self.input_states, context=context)
 
     def _instantiate_parameter_states(self, context=None):

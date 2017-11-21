@@ -201,4 +201,7 @@ ENV/
 # mkdocs documentation
 /site
 
+# merge files
+*.orig
+
 # End of https://www.gitignore.io/api/osx,python,pycharm

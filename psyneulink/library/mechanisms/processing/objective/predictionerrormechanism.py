@@ -7,27 +7,25 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations under
 # the License.
+from typing import Iterable
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink import CentralClock
-from psyneulink.components.functions.Function import AdaptiveIntegrator, \
-    LinearCombination
-from psyneulink.components.mechanisms.Mechanism import Mechanism_Base
-from psyneulink.components.mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-    import OUTCOME
-from psyneulink.components.states.OutputState import OutputState
-from psyneulink.globals.Keywords import INITIALIZING, INPUT_STATES, \
-    PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET, kwPreferenceSetName
-from psyneulink.globals.preferences.ComponentPreferenceSet import is_pref_set, \
+from psyneulink.components.functions.function import LinearCombination
+from psyneulink.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.components.mechanisms.processing.objectivemechanism import \
+    OUTCOME
+from psyneulink.components.states.outputstate import OutputState
+from psyneulink.globals.keywords import INITIALIZING, PREDICTION_ERROR_MECHANISM
+from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, \
     kpReportOutputPref
-from psyneulink.globals.preferences.PreferenceSet import PreferenceEntry, \
-    PreferenceLevel
-from psyneulink.globals.Utilities import is_numeric
-from psyneulink.library.mechanisms.ProcessingMechanisms.ObjectiveMechanisms \
-    .ComparatorMechanism import ComparatorMechanism, ComparatorMechanismError, \
-    MSE
+from psyneulink.globals.preferences.preferenceset import PreferenceEntry, \
+    PreferenceLevel, kwPreferenceSetName
+from psyneulink.globals.utilities import is_numeric
+from psyneulink.library.mechanisms.processing.objective.comparatormechanism \
+    import ComparatorMechanism, ComparatorMechanismError, MSE
+from psyneulink.scheduling.timescale import CentralClock
 
 
 class PredictionErrorMechanismError(ComparatorMechanismError):
@@ -64,19 +62,18 @@ class PredictionErrorMechanism(ComparatorMechanism):
         variable = None
 
     paramClassDefaults = ComparatorMechanism.paramClassDefaults.copy()
+    standard_output_states = ComparatorMechanism.standard_output_states.copy()
 
     @tc.typecheck
     def __init__(self,
                  sample: tc.optional(tc.any(OutputState, Mechanism_Base, dict,
                                             is_numeric,
                                             str)) = None,
-                 target: tc.optional(
-                         tc.any(OutputState, Mechanism_Base, dict, is_numeric,
-                                str)) = None,
-                 input_states=[SAMPLE, TARGET],
+                 target: tc.optional(tc.any(OutputState, Mechanism_Base, dict,
+                                            is_numeric,
+                                            str)) = None,
                  function=LinearCombination(weights=[[-1], [1]]),
-                 output_states: tc.optional(tc.any(list, dict)) = [OUTCOME,
-                                                                   MSE],
+                 output_states: tc.optional(tc.any(str, Iterable)) = OUTCOME,
                  learning_rate=0.3,
                  gamma=.99,
                  max_time_steps=0,
@@ -84,10 +81,11 @@ class PredictionErrorMechanism(ComparatorMechanism):
                  name=None,
                  prefs: is_pref_set = None,
                  context=componentType + INITIALIZING):
+        # input_states = [sample, target]
         params = self._assign_args_to_param_dicts(sample=sample,
                                                   target=target,
                                                   function=function,
-                                                  input_states=input_states,
+                                                  # input_states=input_states,
                                                   output_states=output_states,
                                                   learning_rate=learning_rate,
                                                   gamma=gamma,
@@ -96,13 +94,15 @@ class PredictionErrorMechanism(ComparatorMechanism):
 
         super().__init__(sample=sample,
                          target=target,
-                         input_states=input_states,
+                         # input_states=input_states,
                          function=function,
                          output_states=output_states,
                          params=params,
                          name=name,
                          prefs=prefs,
                          context=context)
+
+        print("input state for PEM = {}".format(self.input_state))
 
         # self.integrator_function = AdaptiveIntegrator(
         #         initializer=0,
@@ -126,6 +126,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
                  time_scale=None, context=None):
         # TODO: update to take sample/reward from variable
         # sample = x(t) in Montague
+        from globals.keywords import SAMPLE, TARGET, INITIALIZING, INPUT_STATES
 
         if INITIALIZING in context:
             return 0

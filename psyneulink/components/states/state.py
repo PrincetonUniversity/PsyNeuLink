@@ -2160,6 +2160,8 @@ def _instantiate_state_list(owner,
             comparison_string = 'more'
         else:
             comparison_string = 'fewer'
+            print("state list = {}".format(state_list))
+            print("reference value = {}".format(reference_value))
         raise StateError("There are {} {}s specified ({}) than the number of items ({}) "
                              "in the {} of the function for \'{}\'".
                              format(comparison_string,
@@ -2350,7 +2352,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     state_type = state_spec_dict.pop(STATE_TYPE, None)
     if REFERENCE_VALUE_NAME in state_spec_dict:
         del state_spec_dict[REFERENCE_VALUE_NAME]
-    if state_spec_dict[PARAMS] and  REFERENCE_VALUE_NAME in state_spec_dict[PARAMS]:
+    if state_spec_dict[PARAMS] and REFERENCE_VALUE_NAME in state_spec_dict[PARAMS]:
         del state_spec_dict[PARAMS][REFERENCE_VALUE_NAME]
 
     # Implement default State

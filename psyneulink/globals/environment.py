@@ -71,25 +71,25 @@ list of 2d lists/arrays, though `some shorthand notations are allowed <Input_Spe
 
 ::
 
-        import psyneulink as pnl
+        >>> import psyneulink as pnl
 
-        a = pnl.TransferMechanism(name='a',
-                                  default_variable=[[0.0, 0.0]])
-        b = pnl.TransferMechanism(name='b',
-                                  default_variable=[[0.0], [0.0]])
-        c = pnl.TransferMechanism(name='c')
+        >>> a = pnl.TransferMechanism(name='a',
+        ...                          default_variable=[[0.0, 0.0]])
+        >>> b = pnl.TransferMechanism(name='b',
+        ...                          default_variable=[[0.0], [0.0]])
+        >>> c = pnl.TransferMechanism(name='c')
 
-        p1 = pnl.Process(pathway=[a, c],
-                         name='p1')
-        p2 = pnl.Process(pathway=[b, c],
-                         name='p2')
+        >>>p1 = pnl.Process(pathway=[a, c],
+        ...                 name='p1')
+        >>> p2 = pnl.Process(pathway=[b, c],
+        ...                 name='p2')
 
-        s = pnl.System(processes=[p1, p2])
+        >>> s = pnl.System(processes=[p1, p2])
 
-        input_dictionary = {a: [[[1.0, 1.0]], [[1.0, 1.0]]],
-                            b: [[[2.0], [3.0]], [[2.0], [3.0]]]}
+        >>> input_dictionary = {a: [[[1.0, 1.0]], [[1.0, 1.0]]],
+        ...                    b: [[[2.0], [3.0]], [[2.0], [3.0]]]}
 
-        s.run(inputs=input_dictionary)
+        >>> s.run(inputs=input_dictionary)
 
 .. _Run_Inputs_Fig:
 
@@ -123,18 +123,18 @@ five inputs are provided for each origin mechanism, and num_trials is not specif
 
 ::
 
-        import psyneulink as pnl
+        >>> import psyneulink as pnl
 
-        a = pnl.TransferMechanism(name='a')
-        b = pnl.TransferMechanism(name='b')
+        >>> a = pnl.TransferMechanism(name='a')
+        >>> b = pnl.TransferMechanism(name='b')
 
-        p1 = pnl.Process(pathway=[a, b])
+        >>> p1 = pnl.Process(pathway=[a, b])
 
-        s = pnl.System(processes=[p1])
+        >>> s = pnl.System(processes=[p1])
 
-        input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
 
-        s.run(inputs=input_dictionary)
+        >>> s.run(inputs=input_dictionary)
 
 If num_trials is in use, `run` will iterate over the inputs until num_trials is reached. For example, if five inputs
 are provided for each `ORIGIN` mechanism, and num_trials = 7, the system will execute seven times. The first two
@@ -563,9 +563,14 @@ def run(object,
 
     inputs, num_inputs_sets = _adjust_stimulus_dict(object, inputs)
 
-    num_trials = num_trials or num_inputs_sets  # num_trials may be provided by user, otherwise = # of input sets
+    if num_trials is not None:
+        num_trials = num_trials
+    else:
+        num_trials = num_inputs_sets
 
-    if targets:
+    # num_trials = num_trials or num_inputs_sets  # num_trials may be provided by user, otherwise = # of input sets
+
+    if targets is not None:
         if isinstance(targets, dict):
             targets = _adjust_target_dict(object, targets)
         elif not isinstance(targets, function_type):
@@ -954,8 +959,9 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             # If inputs to processes of system are homogeneous, inputs.ndim should be 3:
             expected_dim = 2 + process_structure
             if targets.ndim != expected_dim:
-                raise RunError("targets arg in call to {}.run() must be a {}D np.array or comparable list".
-                                  format(object.name, expected_dim))
+                raise RunError("targets arg in call to {}.run() must be a {}D "
+                               "np.array or comparable list (currently {}D)".
+                               format(object.name, expected_dim, targets.ndim))
 
             # FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
             # # MODIFIED 2/16/17 OLD:
@@ -982,15 +988,23 @@ def _validate_targets(object, targets, num_input_sets, context=None):
 
             for target, targetMechanism in zip(targets, object.target_mechanisms):
                 target_len = np.size(target)
+                print("size of target mech instance defaults var = {}".format(np.size(targetMechanism.input_states[TARGET].instance_defaults.variable)))
+                print("target = {}".format(target))
+                print("length of target mech instance defaults var = {}".format(len(targetMechanism.input_states[TARGET].instance_defaults.variable)))
                 if target_len != np.size(targetMechanism.input_states[TARGET].instance_defaults.variable):
                     if num_targets_per_set > 1:
                         plural = 's'
                     else:
                         plural = ''
-                    raise RunError("Length ({}) of target{} specified for run of {}"
-                                       " does not match expected target length of {}".
-                                       format(target_len, plural, append_type_to_name(object),
-                                              np.size(targetMechanism.input_states[TARGET].instance_defaults.variable)))
+                    raise RunError("Length ({}) of target{} specified for run "
+                                   "of {} does not match expected target "
+                                   "length of {} for target mechanism {}".
+                                   format(target_len,
+                                          plural,
+                                          append_type_to_name(object),
+                                          np.size(targetMechanism.input_states[
+                                                      TARGET].instance_defaults.variable),
+                                          targetMechanism.name))
 
                 if any(np.size(target) != target_len for target in target_array):
                     raise RunError("Not all of the targets specified for {} are of the same length".

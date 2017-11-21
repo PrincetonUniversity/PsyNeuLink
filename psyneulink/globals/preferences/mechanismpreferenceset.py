@@ -12,14 +12,11 @@
 
 import inspect
 
-<<<<<<< HEAD:PsyNeuLink/Globals/Preferences/MechanismPreferenceSet.py
-from psyneulink.globals.Keywords import NAME
-from psyneulink.globals.preferences.ComponentPreferenceSet import kpReportOutputPref, kpRuntimeParamStickyAssignmentPref, kpVerbosePref
-from psyneulink.globals.preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from psyneulink.globals.Utilities import Modulation
-=======
-from psyneulink.globals.keywords import NAME
-from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref, kpVerbosePref
+from psyneulink.globals.keywords import NAME, kwPrefsOwner, kwPrefLevel
+from psyneulink.globals.preferences.componentpreferenceset import \
+    ComponentPreferenceSet, kpReportOutputPref, \
+    kpRuntimeParamStickyAssignmentPref, kpVerbosePref, \
+    kpRuntimeParamModulationPref, kpLogPref, kpParamValidationPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import Modulation
 
@@ -28,7 +25,6 @@ __all__ = [
     'runtimeParamModulationPrefTypeDefault', 'runtimeParamStickyAssignmentPrefCategoryDefault',
     'runtimeParamStickyAssignmentPrefInstanceDefault', 'runtimeParamStickyAssignmentPrefTypeDefault',
 ]
->>>>>>> devel:psyneulink/globals/preferences/mechanismpreferenceset.py
 
 # MODIFIED 11/29/16 OLD:
 # # Keypaths for preferences:

@@ -355,11 +355,12 @@ class ObjectiveMechanismError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-
+# monitored_output_states is an alias to input_states argument, which can
+# still be used in a spec dict
 class ObjectiveMechanism(ProcessingMechanism_Base):
     """
     ObjectiveMechanism(               \
-        monitored_output_states,      \   # alias to input_states argument, which can still be used in a spec dict
+        monitored_output_states,      \
         default_variable,             \
         size,                         \
         function=LinearCombination,   \

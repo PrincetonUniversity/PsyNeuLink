@@ -187,23 +187,39 @@ from numpy import abs, exp, tanh
 from psyneulink.components.component import ComponentError, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
 from psyneulink.globals.keywords import \
-    VARIABLE, ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, \
-    ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, \
-    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, \
-    DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DistanceMetrics,\
-    DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, \
-    EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, \
-    FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, \
-    HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, \
-    INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, \
-    LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, \
-    MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, \
-    OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, \
-    PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, \
-    RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, \
-    SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, \
-    USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, NORMALIZING_FUNCTION_TYPE,\
-    kwComponentCategory, kwPreferenceSetName
+    VARIABLE, ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, \
+    ALL, \
+    ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, \
+    BACKPROPAGATION_FUNCTION, BETA, BIAS, \
+    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, \
+    CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, \
+    DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, \
+    DIST_MEAN, DistanceMetrics, \
+    DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, \
+    EXAMPLE_FUNCTION_TYPE, EXECUTING, \
+    EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, \
+    FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, \
+    FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
+    FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, \
+    HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, \
+    INITIALIZER, \
+    INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
+    INTERCEPT, LEARNING_FUNCTION_TYPE, \
+    LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
+    LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, \
+    MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, \
+    NORMAL_DIST_FUNCTION, \
+    OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, \
+    ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, \
+    PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, \
+    RATE, RECEIVER, REDUCE_FUNCTION, \
+    RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, \
+    STABILITY_FUNCTION, STANDARD_DEVIATION, \
+    SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, \
+    USER_DEFINED_FUNCTION, \
+    USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, \
+    WEIGHTS, NORMALIZING_FUNCTION_TYPE, \
+    kwComponentCategory, kwPreferenceSetName, TDLEARNING_FUNCTION
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -211,20 +227,30 @@ from psyneulink.globals.utilities import AutoNumber, is_distance_metric, is_matr
 from psyneulink.scheduling.timescale import TimeScale
 
 __all__ = [
-    'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM', 'AdditiveParam', 'AGTUtilityIntegrator',
-    'ArgumentTherapy', 'AUTOASSOCIATIVE', 'BackPropagation', 'BogaczEtAl', 'BOUNDS', 'CombinationFunction', 'CombineMeans',
-    'ConstantIntegrator', 'DISABLE', 'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
-    'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON', 'ERROR_MATRIX', 'Exponential', 'ExponentialDist',
-    'FHNIntegrator', 'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
-    'GammaDist', 'get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword', 'Hebbian', 'Integrator',
-    'IntegratorFunction', 'is_Function', 'is_function_type', 'kwBogaczEtAl', 'kwNavarrosAndFuss', 'LCAIntegrator',
-    'LEARNING_ACTIVATION_FUNCTION', 'LEARNING_ACTIVATION_INPUT', 'LEARNING_ACTIVATION_OUTPUT', 'LEARNING_ERROR_OUTPUT',
-    'LearningFunction', 'Linear', 'LinearCombination', 'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next',
-    'ModulatedParam', 'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MultiplicativeParam', 'NavarroAndFuss',
-    'NF_Results', 'NON_DECISION_TIME', 'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator', 'OVERRIDE',
-    'OVERRIDE_PARAM', 'PERTINACITY', 'PROPENSITY', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator', 'SoftMax',
-    'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY', 'THRESHOLD', 'TransferFunction', 'TRESHOLD_VARIABILITY',
-    'UniformDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM', 'WT_MATRIX_SENDERS_DIM'
+    'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
+    'AdditiveParam', 'AGTUtilityIntegrator', 'ArgumentTherapy',
+    'AUTOASSOCIATIVE', 'BackPropagation', 'BogaczEtAl', 'BOUNDS',
+    'CombinationFunction', 'CombineMeans', 'ConstantIntegrator', 'DISABLE',
+    'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
+    'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON',
+    'ERROR_MATRIX', 'Exponential', 'ExponentialDist', 'FHNIntegrator',
+    'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType',
+    'FunctionRegistry', 'GammaDist', 'get_matrix', 'get_param_value_for_function',
+    'get_param_value_for_keyword', 'Hebbian', 'Integrator',
+    'IntegratorFunction', 'is_Function', 'is_function_type', 'kwBogaczEtAl',
+    'kwNavarrosAndFuss', 'LCAIntegrator', 'LEARNING_ACTIVATION_FUNCTION',
+    'LEARNING_ACTIVATION_INPUT', 'LEARNING_ACTIVATION_OUTPUT',
+    'LEARNING_ERROR_OUTPUT', 'LearningFunction', 'Linear', 'LinearCombination',
+    'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next', 'ModulatedParam',
+    'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM',
+    'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
+    'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator',
+    'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PROPENSITY', 'Reduce',
+    'Reinforcement', 'ReturnVal', 'SimpleIntegrator', 'SoftMax', 'Stability',
+    'STARTING_POINT', 'STARTING_POINT_VARIABILITY', 'TDLearning', 'THRESHOLD',
+    'TransferFunction', 'THRESHOLD_VARIABILITY', 'UniformDist',
+    'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM',
+    'WT_MATRIX_SENDERS_DIM'
 ]
 
 EPSILON = np.finfo(float).eps
@@ -3612,8 +3638,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         :return matrix: (2D list)
         """
-
-        print("specification = {}".format(specification))
         # Matrix provided (and validated in _validate_params); convert to np.array
         if isinstance(specification, np.matrix):
             return np.array(specification)
@@ -3671,7 +3695,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         # Note: this calls _validate_variable and _validate_params which are overridden above;
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
+        print("self.name = {}".format(self.name))
         return np.dot(variable, self.matrix)
 
     def keyword(self, keyword):
@@ -6781,7 +6805,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
 THRESHOLD = 'threshold'
-TRESHOLD_VARIABILITY = 'DDM_ThresholdRateVariability'
+THRESHOLD_VARIABILITY = 'DDM_ThresholdRateVariability'
 STARTING_POINT = 'starting_point'
 STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
 # NOISE = 'noise' -- Defined in Keywords
@@ -7857,19 +7881,19 @@ COMMENT:
 
     *ENTROPY*:
 
-       :math:`s = -\\sum\limits^{len}(i*log(j))`
+       :math:`s = -\\sum\\limits^{len}(i*log(j))`
 
     *DIFFERENCE*:
 
-       :math:`s = \\sum\limits^{len}(i-j)`
+       :math:`s = \\sum\\limits^{len}(i-j)`
 
     *EUCLIDEAN*:
 
-       :math:`s = \\sum\limits^{len}\\sqrt{(i-j)^2}`
+       :math:`s = \\sum\\limits^{len}\\sqrt{(i-j)^2}`
 
     *CORRELATION*:
 
-       :math:`s = \\frac{\\sum\limits^{len}(i-\\bar{i})(j-\\bar{j})}{(len-1)\\sigma_{i}\\sigma_{j}}`
+       :math:`s = \\frac{\\sum\\limits^{len}(i-\\bar{i})(j-\\bar{j})}{(len-1)\\sigma_{i}\\sigma_{j}}`
 
     **normalize**:
 
@@ -9220,8 +9244,6 @@ class TDLearning(Reinforcement):
 
     class ClassDefaults(Reinforcement.ClassDefaults):
         variable = [[0], [0]]
-        
-        
 
     def __init__(self,
                  default_variable=Reinforcement.ClassDefaults.variable,

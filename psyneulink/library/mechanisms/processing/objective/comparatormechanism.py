@@ -149,6 +149,7 @@ __all__ = [
 SSE = 'SSE'
 MSE = 'MSE'
 
+
 class COMPARATOR_OUTPUT():
     """
     .. _ComparatorMechanism_Standard_OutputStates:
@@ -315,26 +316,29 @@ class ComparatorMechanism(ObjectiveMechanism):
     paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
 
     standard_output_states = ObjectiveMechanism.standard_output_states.copy()
-    standard_output_states.extend([{NAME:SSE,
-                                    CALCULATE:lambda x: np.sum(x*x)},
-                                   {NAME:MSE,
-                                    CALCULATE:lambda x: np.sum(x*x)/len(x)}])
+    standard_output_states.extend([{NAME: SSE,
+                                    CALCULATE: lambda x: np.sum(x*x)},
+                                   {NAME: MSE,
+                                    CALCULATE: lambda x: np.sum(x*x)/len(x)}])
 
     # MODIFIED 10/10/17 OLD:
     @tc.typecheck
     def __init__(self,
-                 sample:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
-                 target:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
+                 sample: tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
+                 target: tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  function=LinearCombination(weights=[[-1], [1]]),
-                 output_states:tc.optional(tc.any(str, Iterable))=(OUTCOME, MSE),
+                 output_states: tc.optional(tc.any(str, Iterable))=(OUTCOME, MSE),
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs: is_pref_set=None,
                  context=None,
                  **input_states # IMPLEMENTATION NOTE: this is for backward compatibility
                  ):
 
         input_states = self._merge_legacy_constructor_args(sample, target, input_states)
+        print("input states = {}".format(input_states))
+        print("sample = {}".format(sample))
+        print("target = {}".format(target))
 
         # Default output_states is specified in constructor as a tuple rather than a list
         # to avoid "gotcha" associated with mutable default arguments
@@ -388,8 +392,10 @@ class ComparatorMechanism(ObjectiveMechanism):
                 lengths = [len(list(input_state_dict.values())[0][VARIABLE]) for input_state_dict in input_states]
 
             if lengths[0] != lengths[1]:
-                raise ComparatorMechanismError("Length of value specified for {} InputState of {} ({}) must be "
-                                               "same as length of value specified for {} ({})".
+                raise ComparatorMechanismError("Length of value specified for "
+                                               "{} InputState of {} ({}) must "
+                                               "be the same as length of value "
+                                               "specified for {} ({})".
                                                format(SAMPLE,
                                                       self.__class__.__name__,
                                                       lengths[0],
@@ -421,12 +427,13 @@ class ComparatorMechanism(ObjectiveMechanism):
             if sample is not None and target is not None:
                 if not iscompatible(sample, target, **{kwCompatibilityLength: True,
                                                        kwCompatibilityNumeric: True}):
-                    raise ComparatorMechanismError("The length of the sample ({}) must be the same as for the target ({})"
-                                                   "for {} {}".
-                                                   format(len(sample),
-                                                          len(target),
-                                                          self.__class__.__name__,
-                                                          self.name))
+                    raise ComparatorMechanismError("The length of the sample "
+                                                   "({}) must be the same as "
+                                                   "for the target ({}) for {} "
+                                                   "{}".format(len(sample),
+                                                               len(target),
+                                                               self.__class__.__name__,
+                                                               self.name))
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
@@ -448,13 +455,19 @@ class ComparatorMechanism(ObjectiveMechanism):
                                         state_spec=target,
                                         name=TARGET)
 
-        # If input_states arg is provided, parse it and use it to upate sample and target dicts
+        # If input_states arg is provided, parse it and use it to
+        # update sample and target dicts
         if input_states:
+            if isinstance(input_states, dict):
+                input_states = input_states['input_states']
 
             if len(input_states) != 2:
-                raise ComparatorMechanismError("If an \'input_states\' arg is included in the constructor for a {}"
-                                               "it must be a list with exactly two items (not {})".
-                                               format(ComparatorMechanism.__name__, len(input_states)))
+                raise ComparatorMechanismError("If an 'input_states' arg is "
+                                               "included in the constructor "
+                                               "for a {} it must be a list "
+                                               "with exactly two items (not "
+                                               "{})".format(ComparatorMechanism.__name__,
+                                                            len(input_states)))
 
             sample_input_state_dict = _parse_state_spec(owner=self,
                                                         state_type=InputState,

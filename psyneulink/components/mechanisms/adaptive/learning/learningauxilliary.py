@@ -133,20 +133,29 @@ import warnings
 
 import numpy as np
 
+from library.mechanisms.processing.objective.predictionerrormechanism import \
+    PredictionErrorMechanism
 from psyneulink.components.component import function_type, method_type
-from psyneulink.components.functions.function import BackPropagation, Hebbian, Linear, Reinforcement
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import _is_projection_spec
+from psyneulink.components.functions.function import BackPropagation, Hebbian, \
+    Linear, Reinforcement, TDLearning
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
+    ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import \
+    ObjectiveMechanism
+from psyneulink.components.mechanisms.processing.processingmechanism import \
+    ProcessingMechanism_Base
+from psyneulink.components.projections.modulatory.learningprojection import \
+    LearningProjection
+from psyneulink.components.projections.pathway.mappingprojection import \
+    MappingProjection
 from psyneulink.components.shellclasses import Function
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.globals.keywords import \
-    BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, \
-    MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, WEIGHT, PROJECTIONS
+    BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, \
+    IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, \
+    MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, \
+    WEIGHT, PROJECTIONS, TDLEARNING_FUNCTION, PREDICTION_ERROR_MECHANISM
 
 __all__ = [
     'LearningAuxilliaryError'
@@ -423,7 +432,9 @@ def _instantiate_learning_components(learning_projection, context=None):
         error_signal = np.array([0])
         learning_rate = learning_projection.learning_function.learning_rate
 
-        print("TDLearning variable = {}".format([activation_input, activation_output, error_signal]))
+        print("TDLearning variable = {}".format([activation_input,
+                                                 activation_output,
+                                                 error_signal]))
 
         learning_function = TDLearning(default_variable=[activation_input,
                                                          activation_output,
@@ -442,9 +453,10 @@ def _instantiate_learning_components(learning_projection, context=None):
         try:
             activation_derivative = lc.activation_mech_fct.derivative
         except AttributeError:
-            raise LearningAuxilliaryError("Function for activation_mech of {} must have a derivative "
-                                          "to be used with {}".
-                                          format(learning_projection.name, BackPropagation.componentName))
+            raise LearningAuxilliaryError("Function for activation_mech of {} "
+                                          "must have a derivative to be used "
+                                          "with {}".format(learning_projection.name,
+                                                           BackPropagation.componentName))
 
         # Get error_mech values
         if is_target:
@@ -501,7 +513,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             # Assign derivative of Linear to lc.error_derivative (as default, until TARGET projection is assigned);
             #    this will induce a simple subtraction of target-sample (i.e., implement a comparator)
             sample_input = target_input = error_output
-
+            print("length of target_input = {}".format(target_input))
             # MODIFIED 10/10/17 OLD:
             # objective_mechanism = ComparatorMechanism(sample=lc.activation_mech_output,
             #                                           target=TARGET,
@@ -523,29 +535,43 @@ def _instantiate_learning_components(learning_projection, context=None):
             #                                                               COMPARATOR_MECHANISM),
             #                                           context=context)
             # MODIFIED 10/10/17 NEW:
-            objective_mechanism = ComparatorMechanism(sample={NAME:SAMPLE,
-                                                              VARIABLE:sample_input,
-                                                              PROJECTIONS:[lc.activation_mech_output],
-                                                              WEIGHT:-1},
-                                                      target={NAME:TARGET,
-                                                              VARIABLE:target_input},
-                                                      # input_states=[sample_input, target_input],
-                                                      # FOR TESTING: ALTERNATIVE specifications of input_states arg:
-                                                      # input_states=[(sample_input, FULL_CONNECTIVITY_MATRIX),
-                                                      # input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
-                                                      #               target_input],
-                                                      # input_states=[{NAME:SAMPLE,
-                                                      #                VARIABLE:sample_input,
-                                                      #                WEIGHT:-1
-                                                      #                },
-                                                      #               {NAME:TARGET,
-                                                      #                VARIABLE:target_input,
-                                                      #                # WEIGHT:1
-                                                      #                }],
-                                                      name="{} {}".format(lc.activation_mech.name,
-                                                                          COMPARATOR_MECHANISM),
-                                                      context=context)
-            # MODIFIED 10/10/17 END
+            if learning_function.componentName == TDLEARNING_FUNCTION:
+
+                objective_mechanism = PredictionErrorMechanism(
+                    sample={NAME: SAMPLE,
+                            VARIABLE: sample_input,
+                            PROJECTIONS: [lc.activation_mech_output]},
+                    target={NAME: TARGET,
+                            VARIABLE: target_input,
+                            PROJECTIONS: [lc.activation_mech_output]},
+                    name="{} {}".format(lc.activation_mech.name,
+                                        PREDICTION_ERROR_MECHANISM),
+                    context=context)
+            else:
+
+                objective_mechanism = ComparatorMechanism(sample={NAME:SAMPLE,
+                                                                  VARIABLE:sample_input,
+                                                                  PROJECTIONS:[lc.activation_mech_output],
+                                                                  WEIGHT:-1},
+                                                          target={NAME:TARGET,
+                                                                  VARIABLE:target_input},
+                                                          # input_states=[sample_input, target_input],
+                                                          # FOR TESTING: ALTERNATIVE specifications of input_states arg:
+                                                          # input_states=[(sample_input, FULL_CONNECTIVITY_MATRIX),
+                                                          # input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
+                                                          #               target_input],
+                                                          # input_states=[{NAME:SAMPLE,
+                                                          #                VARIABLE:sample_input,
+                                                          #                WEIGHT:-1
+                                                          #                },
+                                                          #               {NAME:TARGET,
+                                                          #                VARIABLE:target_input,
+                                                          #                # WEIGHT:1
+                                                          #                }],
+                                                          name="{} {}".format(lc.activation_mech.name,
+                                                                              COMPARATOR_MECHANISM),
+                                                          context=context)
+                # MODIFIED 10/10/17 END
 
             # # FOR TESTING: ALTERNATIVE to Direct call to ObjectiveMechanism
             # #              (should produce identical result to use of ComparatorMechanism above)
