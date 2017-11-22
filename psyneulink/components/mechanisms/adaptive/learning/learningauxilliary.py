@@ -599,9 +599,12 @@ def _instantiate_learning_components(learning_projection, context=None):
                                           format(lc.activation_mech.name, learning_projection.name))
         else:
             if not lc.error_matrix:
-                raise LearningAuxilliaryError("PROGRAM ERROR: problem assigning error_matrix for projection to "
-                                              "ObjectiveMechanism for {} when instantiating {}".
-                                              format(lc.activation_mech.name, learning_projection.name))
+                raise LearningAuxilliaryError("PROGRAM ERROR: problem "
+                                              "assigning error_matrix for "
+                                              "projection to "
+                                              "ObjectiveMechanism for {} when "
+                                              "instantiating {}".format(lc.activation_mech.name,
+                                                                        learning_projection.name))
 
         # INSTANTIATE LearningMechanism
 
@@ -1107,8 +1110,9 @@ class LearningComponents(object):
                 (isinstance(assignment, ObjectiveMechanism) and assignment._role is LEARNING)):
             self._error_signal_mech = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_signal_mech; "
-                                          "it must be a LearningMechanism.")
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment "
+                                          "to error_signal_mech; it must be a "
+                                          "LearningMechanism.")
 
     # ---------------------------------------------------------------------------------------------------------------
     # FIX: MODIFY TO RETURN EITHER outputState if it is an ObjectiveMechanism or
@@ -1124,26 +1128,35 @@ class LearningComponents(object):
                 try:
                     self.error_signal_mech_output = self.error_signal_mech.output_state
                 except AttributeError:
-                    raise LearningAuxilliaryError("error_signal_mech_output not identified: error_signal_mech ({})"
-                                                  "does not appear to have an outputState".
+                    raise LearningAuxilliaryError("error_signal_mech_output "
+                                                  "not identified: "
+                                                  "error_signal_mech ({}) does "
+                                                  "not appear to have an "
+                                                  "OutputState".
                                                   format(self.error_signal_mech.name))
                 if not isinstance(self.error_signal_mech_output, OutputState):
-                    raise LearningAuxilliaryError("error_signal_mech_output found ({}) for {} but it does not "
-                                                  "appear to be an OutputState".
+                    raise LearningAuxilliaryError("error_signal_mech_output "
+                                                  "found ({}) for {} but it "
+                                                  "does not appear to be an "
+                                                  "OutputState".
                                                   format(self.error_signal_mech.name,
                                                          self.error_signal_mech_output.name))
             elif isinstance(self.error_signal_mech, LearningMechanism):
                 try:
                     self.error_signal_mech_output = self.error_signal_mech.output_states[ERROR_SIGNAL]
                 except AttributeError:
-                    raise LearningAuxilliaryError("error_signal_mech_output not identified: error_signal_mech ({})"
-                                                  "does not appear to have an ERROR_SIGNAL outputState".
+                    raise LearningAuxilliaryError("error_signal_mech_output "
+                                                  "not identified: "
+                                                  "error_signal_mech ({}) does "
+                                                  "not appear to have an "
+                                                  "ERROR_SIGNAL outputState".
                                                   format(self.error_signal_mech))
                 if not isinstance(self.error_signal_mech_output, OutputState):
-                    raise LearningAuxilliaryError("error_signal_mech_output found ({}) for {} but it does not "
-                                                  "appear to be an OutputState".
-                                                  format(self.error_signal_mech.name,
-                                                         self.error_signal_mech_output.name))
+                    raise LearningAuxilliaryError("error_signal_mech_output "
+                                                  "found ({}) for {} but it "
+                                                  "does not appear to be an "
+                                                  "OutputState".format(self.error_signal_mech.name,
+                                                                       self.error_signal_mech_output.name))
             return self.error_signal_mech.output_state
         return self._error_signal_mech_output or _get_err_sig_mech_out()
 
@@ -1152,8 +1165,9 @@ class LearningComponents(object):
         if isinstance(assignment, (OutputState)):
             self._error_signal_mech_output = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_signal_mech_output; "
-                                          "it must be an OutputState.")
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment "
+                                          "to error_signal_mech_output; it "
+                                          "must be an OutputState.")
 
     # # ---------------------------------------------------------------------------------------------------------------
     # # error_objective_mech:  TARGET objective mechanism for error_mech (ObjectiveMechanism)

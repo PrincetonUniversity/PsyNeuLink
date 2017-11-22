@@ -2731,14 +2731,18 @@ def _parse_state_spec(state_type=None,
 
                 mech = state_specific_args[MECHANISM]
                 if not isinstance(mech, Mechanism):
-                    raise StateError("Value of the {} entry ({}) in the specification dictionary "
-                                     "for {} of {} is not a {}".
-                                     format(MECHANISM, mech, state_type.__name__, owner.name, Mechanism.__name__))
+                    raise StateError("Value of the {} entry ({}) in the "
+                                     "specification dictionary for {} of {} is "
+                                     "not a {}".format(MECHANISM,
+                                                       mech,
+                                                       state_type.__name__,
+                                                       owner.name,
+                                                       Mechanism.__name__))
 
                 # For States with which the one being specified can connect:
                 for STATES in state_type.connectsWithAttribute:
 
-                   if STATES in state_specific_args:
+                    if STATES in state_specific_args:
                         state_specs = state_specific_args[STATES]
                         state_specs = state_specs if isinstance(state_specs, list) else [state_specs]
                         for state_spec in state_specs:
@@ -2749,8 +2753,13 @@ def _parse_state_spec(state_type=None,
                                 state = state_attr[state]
                             except:
                                 name = owner.name if not 'unnamed' in owner.name else 'a ' + owner.__class__.__name__
-                                raise StateError("Unrecognized name ({}) for {} of {} in specification of {} for {}".
-                                                 format(state, STATES, mech.name, state_type.__name__, name))
+                                raise StateError("Unrecognized name ({}) for {} "
+                                                 "of {} in specification of {} "
+                                                 "for {}".format(state,
+                                                                 STATES,
+                                                                 mech.name,
+                                                                 state_type.__name__,
+                                                                 name))
                             # If state_spec was a tuple, put state back in as its first item and use as projection spec
                             if isinstance(state_spec, tuple):
                                 state = (state,) + state_spec[1:]
@@ -2775,10 +2784,13 @@ def _parse_state_spec(state_type=None,
                     params[PROJECTIONS] = state_specific_args[key]
                     del state_specific_args[key]
                 else:
-                    raise StateError("There is more than one entry of the {} specification dictionary for {} ({}) "
-                                     "that is not a keyword; there should be only one (used to name the State, "
-                                     "with a list of Projection specifications".
-                                     format(state_type.__name__, owner.name,
+                    raise StateError("There is more than one entry of the {} "
+                                     "specification dictionary for {} ({}) "
+                                     "that is not a keyword; there should be "
+                                     "only one (used to name the State, with a "
+                                     "list of Projection specifications".
+                                     format(state_type.__name__,
+                                            owner.name,
                                             ", ".join([s for s in list(state_specific_args.keys())])))
 
             for param in state_type.stateAttributes:
@@ -2857,33 +2869,48 @@ def _get_state_for_socket(owner,
     #    - a projection keyword (e.g., 'LEARNING' or 'CONTROL', and it is consistent with projection_socket
     # Otherwise, return list of allowable State types for projection_socket (if state_spec is a Projection type)
     if _is_projection_spec(state_spec):
-        # These specifications require that a particular State be specified to assign its default Projection type
-        if ((is_matrix(state_spec) or (isinstance(state_spec, dict) and not PROJECTION_TYPE in state_spec))
-            and state_type is 'MULTIPLE'):
-            raise StateError("PROGRAM ERROR: Projection specified ({}) for object "
-                             "that has multiple possible States {}) for the specified socket ({}).".
-                             format(state_spec, state_types, projection_socket))
-        proj_spec = _parse_projection_spec(state_spec, owner=owner, state_type=state_type)
+        # These specifications require that a particular State be specified
+        # to assign its default Projection type
+        if ((is_matrix(state_spec) or (isinstance(state_spec,
+                                                  dict) and not
+                                       PROJECTION_TYPE in state_spec))
+                and state_type is 'MULTIPLE'):
+            raise StateError(
+                "PROGRAM ERROR: Projection specified ({}) for object "
+                "that has multiple possible States {}) for the specified "
+                "socket ({}).".
+                format(state_spec, state_types, projection_socket))
+        proj_spec = _parse_projection_spec(state_spec, owner=owner,
+                                           state_type=state_type)
         if isinstance(proj_spec, Projection):
             proj_type = proj_spec.__class__
         else:
             proj_type = proj_spec[PROJECTION_TYPE]
 
-        # Get State type if it is appropriate for the specified socket of the Projection's type
-        s = next((s for s in state_types if s.__name__ in getattr(proj_type.sockets, projection_socket)), None)
+        # Get State type if it is appropriate for the specified socket of the
+        #  Projection's type
+        s = next((s for s in state_types if
+                  s.__name__ in getattr(proj_type.sockets, projection_socket)),
+                 None)
         if s:
             try:
-                # Return State associated with projection_socket if proj_spec is an actual Projection
+                # Return State associated with projection_socket if proj_spec
+                #  is an actual Projection
                 return getattr(proj_spec, projection_socket)
             except AttributeError:
                 # Otherwise, return first state_type (s)
                 return s
 
-        # FIX: 10/3/17 - ??IS THE FOLLOWING NECESSARY?  ??HOW IS IT DIFFERENT FROM ABOVE?
-        # Otherwise, get State types that are allowable for that projection_socket
+        # FIX: 10/3/17 - ??IS THE FOLLOWING NECESSARY?  ??HOW IS IT DIFFERENT
+        #  FROM ABOVE?
+        # Otherwise, get State types that are allowable for that
+        # projection_socket
         elif inspect.isclass(proj_type) and issubclass(proj_type, Projection):
-            projection_socket_state_names = getattr(proj_type.sockets, projection_socket)
-            projection_socket_state_types = [StateRegistry[name].subclass for name in projection_socket_state_names]
+            projection_socket_state_names = getattr(proj_type.sockets,
+                                                    projection_socket)
+            projection_socket_state_types = [StateRegistry[name].subclass for
+                                             name in
+                                             projection_socket_state_names]
             return projection_socket_state_types
         else:
             assert False
@@ -2896,14 +2923,16 @@ def _get_state_for_socket(owner,
             raise StateError("PROGRAM ERROR: A {} must be specified to specify its {} ({}) by name".
                              format(Mechanism.__name__, State.__name__, state_spec))
         if mech_state_attribute is None:
-            raise StateError("PROGRAM ERROR: The attribute of {} that holds the requested State ({}) must be specified".
+            raise StateError("PROGRAM ERROR: The attribute of {} that holds "
+                             "the requested State ({}) must be specified".
                              format(mech.name, state_spec))
         try:
             state_list_attribute = getattr(mech, mech_state_attribute)
             state = state_list_attribute[state_spec]
         except AttributeError:
-            raise StateError("PROGRAM ERROR: {} attribute not found on Mechanism ({})".
-                             format(mech_state_attribute, mech.name))
+            raise StateError("PROGRAM ERROR: {} attribute not found on "
+                             "Mechanism ({})".format(mech_state_attribute,
+                                                     mech.name))
         except KeyError:
             raise StateError("{} does not have a State named {}".
                              format(mech.name, state_spec))
@@ -2912,8 +2941,8 @@ def _get_state_for_socket(owner,
     elif isinstance(state_spec, Mechanism):
 
         if state_type is None:
-            raise StateError("PROGRAM ERROR: The type of State requested for {} must be specified "
-                             "to get its primary State".format(state_spec.name))
+            raise StateError("PROGRAM ERROR: The type of State requested for "
+                             "{} must be specified to get its primary State".format(state_spec.name))
         try:
             state = state_type._get_primary_state(state_type, state_spec)
         except StateError:
@@ -2924,7 +2953,8 @@ def _get_state_for_socket(owner,
                     raise StateError("{} does not seem to have an {} attribute"
                                      .format(state_spec.name, mech_state_attribute))
 
-    # Get state from Projection specification (exclude matrix spec in test as it can't be used to determine the state)
+    # Get state from Projection specification (exclude matrix spec in test as
+    # it can't be used to determine the state)
     elif _is_projection_spec(state_spec, include_matrix_spec=False):
         _validate_connection_request(owner=owner,
                                      connect_with_states=state_type,

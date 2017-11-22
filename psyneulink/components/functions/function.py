@@ -1644,7 +1644,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".
             #     format(operation))
 
-
     def function(self,
                  variable=None,
                  params=None,
@@ -2208,6 +2207,7 @@ class NormalizingFunction(Function_Base):
     @additive.setter
     def additive(self, val):
         setattr(self, self.additive_param, val)
+
 
 class SoftMax(NormalizingFunction):
     """
@@ -9292,10 +9292,6 @@ class TDLearning(Reinforcement):
                                 "element for {}".format(self.name, self.error_signal))
 
         return variable
-
-
-
-
 
     def function(self, variable=None, params=None, time_scale=TimeScale.TRIAL,
                  context=None):

@@ -17,10 +17,7 @@ def test_td_learning(capsys):
 
         action_selection = TransferMechanism(
                 default_variable=np.zeros(60),
-                function=SoftMax(
-                        output=PROB,
-                        gain=1.0
-                ),
+                # function=SoftMax(output=PROB, gain=1.0),
                 name='Action Selection',
         )
 
@@ -72,6 +69,7 @@ def test_td_learning(capsys):
         }
 
         s = System(processes=[p], targets=[0])
+        s.show_graph(show_learning=True)
 
         print(s.mechanisms)
 
@@ -79,7 +77,6 @@ def test_td_learning(capsys):
 
         # for i in range(50):
         results = s.run(
-                num_trials=5,
                 # num_trials=5,
                 inputs=input_list,
                 targets=target_list,

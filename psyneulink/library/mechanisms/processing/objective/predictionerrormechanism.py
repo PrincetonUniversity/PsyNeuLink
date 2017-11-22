@@ -81,11 +81,11 @@ class PredictionErrorMechanism(ComparatorMechanism):
                  name=None,
                  prefs: is_pref_set = None,
                  context=componentType + INITIALIZING):
-        # input_states = [sample, target]
+        input_states = [sample, target]
         params = self._assign_args_to_param_dicts(sample=sample,
                                                   target=target,
                                                   function=function,
-                                                  # input_states=input_states,
+                                                  input_states=input_states,
                                                   output_states=output_states,
                                                   learning_rate=learning_rate,
                                                   gamma=gamma,
@@ -94,7 +94,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
 
         super().__init__(sample=sample,
                          target=target,
-                         # input_states=input_states,
+                         input_states=input_states,
                          function=function,
                          output_states=output_states,
                          params=params,
