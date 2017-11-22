@@ -9,7 +9,7 @@ class TestProjectionSpecificationFormats:
                                                                      M.parameter_states[pnl.THRESHOLD]]}])
         G = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS: [M.output_states[pnl.DECISION_VARIABLE],
                                                                      M.output_states[pnl.RESPONSE_TIME]]}])
-        
+
         assert len(C.control_signals)==1
         assert len(C.control_signals[0].efferents)==2
         assert M.parameter_states[pnl.DRIFT_RATE].mod_afferents[0]==C.control_signals[0].efferents[0]
@@ -20,7 +20,7 @@ class TestProjectionSpecificationFormats:
         assert M.output_states[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
 
     def test_multiple_modulatory_projections_with_state_name(self):
-        
+
         M = pnl.DDM(name='MY DDM')
         C = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[M.parameter_states[pnl.DRIFT_RATE],
                                                                        M.parameter_states[pnl.THRESHOLD]]}])

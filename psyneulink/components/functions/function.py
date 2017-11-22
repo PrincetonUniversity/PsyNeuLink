@@ -542,7 +542,7 @@ class Function_Base(Function):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -1158,7 +1158,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -1392,7 +1392,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -1854,7 +1854,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2250,7 +2250,7 @@ class SoftMax(NormalizingFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2549,7 +2549,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2774,7 +2774,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2933,7 +2933,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -3356,7 +3356,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -3862,7 +3862,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4168,7 +4168,7 @@ class SimpleIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4379,7 +4379,7 @@ class LCAIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4594,7 +4594,7 @@ class ConstantIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4811,7 +4811,7 @@ class AdaptiveIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -5094,7 +5094,7 @@ class DriftDiffusionIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -5326,7 +5326,7 @@ class OrnsteinUhlenbeckIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -5735,7 +5735,7 @@ class FHNIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -6161,7 +6161,7 @@ class AccumulatorIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -6504,7 +6504,7 @@ class AGTUtilityIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -6857,7 +6857,7 @@ class BogaczEtAl(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7157,7 +7157,7 @@ class NavarroAndFuss(IntegratorFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7328,7 +7328,7 @@ class NormalDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7351,7 +7351,7 @@ class NormalDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7431,7 +7431,7 @@ class ExponentialDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7451,7 +7451,7 @@ class ExponentialDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7531,7 +7531,7 @@ class UniformDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7554,7 +7554,7 @@ class UniformDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7637,7 +7637,7 @@ class GammaDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7660,7 +7660,7 @@ class GammaDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7908,7 +7908,7 @@ COMMENT
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     Attributes
@@ -8171,7 +8171,7 @@ class Distance(ObjectiveFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -8444,7 +8444,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     Attributes
@@ -8667,7 +8667,7 @@ class Reinforcement(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -8924,7 +8924,7 @@ class BackPropagation(LearningFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
