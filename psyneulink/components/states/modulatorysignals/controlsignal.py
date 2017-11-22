@@ -219,7 +219,8 @@ In the example below, this is changed by specifying the `modulation <ControlSign
 ControlSignal adds to, rather than multiplies, the value of the `gain <Logistic.gain>` parameter of the Logistic
 function::
 
-    >>> my_mech = pnl.TransferMechanism(function=pnl.Logistic(gain=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))))
+    >>> my_mech = pnl.TransferMechanism(function=pnl.Logistic(gain=(1.0,
+    ...                                                             pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))))
 
 Note that the `ModulationParam` specified for the `ControlSignal` pertains to the function of a *ParameterState*
 for the *Logistic* Function (in this case, its `gain <Logistic.gain>` parameter), and *not* the Logistic function
@@ -410,7 +411,7 @@ class ControlSignal(ModulatorySignal):
     """
     ControlSignal(                                       \
         owner,                                           \
-\       index=SEQUENTIAL,                                \
+        index=SEQUENTIAL,                                \
         function=LinearCombination(operation=SUM),       \
         costs_options=ControlSignalCosts.DEFAULTS,       \
         intensity_cost_function=Exponential,             \

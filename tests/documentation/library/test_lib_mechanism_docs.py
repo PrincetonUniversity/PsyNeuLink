@@ -17,7 +17,7 @@ def test_lc_mechanism_docs():
 
 def test_ddm_docs():
     # FIXME: Does this run outside of the test directory?
-    os.chdir('../../../Matlab/DDMFunctions')
+    os.chdir('../../Matlab/DDMFunctions')
     print("current dir = {}".format(os.getcwd()))
     # ALSO FIXME: ValueError cannot convert float NaN integer
     fail, total = doctest.testmod(

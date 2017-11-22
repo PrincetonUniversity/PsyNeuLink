@@ -491,7 +491,6 @@ class LCMechanism(ControlMechanism):
                               method should be implemented that also implements an _instantiate_monitored_output_states
                               method, and that can be used to add OutputStates/Mechanisms to be monitored.
         """
-        print("LC objective mechanism name = {}".format(self._objective_mechanism.name))
         self.monitored_output_states = []
 
         if not hasattr(self, INPUT_STATES):

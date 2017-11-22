@@ -193,7 +193,7 @@ OutputState, as in the following example::
     ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
     ...                                  {pnl.NAME: 'DECISION ENTROPY',
     ...                                   pnl.INDEX: 2,
-    ...                                   pnl.CALCULATE: pnl.Stability(metric=pnl.ENTROPY).function }])
+    ...                                   pnl.CALCULATE: Entropy().function }])
 
 COMMENT:
     what is this Entropy() class???

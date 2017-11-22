@@ -193,10 +193,12 @@ The example below shows how to specify the parameters in the first example using
     >>> my_mechanism = pnl.RecurrentTransferMechanism(
     ...                          size=5,
     ...                          params={pnl.NOISE: 5,
-    ...                                  'size': pnl.ControlSignal,
+    ...                                  pnl.SIZE: pnl.ControlSignal,
     ...                                  pnl.FUNCTION: pnl.Logistic,
-    ...                                  pnl.FUNCTION_PARAMS:{pnl.GAIN:(0.5, pnl.ControlSignal),
-    ...                                                       pnl.BIAS:(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))}})
+    ...                                  pnl.FUNCTION_PARAMS:{pnl.GAIN:(0.5,
+    ...                                                                 pnl.ControlSignal),
+    ...                                                       pnl.BIAS:(1.0,
+    ...                                                                 pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))}})
 
 There are several things to note here.  First, the parameter specification dictionary must be assigned to the
 **params** argument of the constructor.  Second, both methods for specifying a parameter -- directly in an argument
