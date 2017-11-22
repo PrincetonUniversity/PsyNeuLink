@@ -1537,17 +1537,14 @@ def _parse_connection_specs(connectee_state_type,
                                                  owner.name,
                                                  ", ".join([c.__name__ for c in connects_with])))
 
-            # FIX: 11/21/17 HACK TO FIX PROBLEM USING GatingMechanism TO SPECIFY PROJECTION *TO* InputState:
-            # FIX:          THIS "FLIPS DIRECTIONALITY" WHEN SPECIFYING PROJECTION FROM-TO, RATHER THAN TO-FROM
-            # If the projection_spec was used to specify connectee_state, reassign it to state to connect to:
-            if projection_spec is connectee_state_type and projection_socket is SENDER:
-                projection_spec = state
-
             # Parse projection specification into Projection specification dictionary
             # Validate projection specification
             if _is_projection_spec(projection_spec) or projection_spec is None:
 
-                # FIX: 10/3/17 - NEED TO SPECIFY Projection Type HERE OR IN CALL FROM _parse_state_spec
+                # If connectee is receiver (i.e., projection_socket is sender), then state should be projection_spec
+                if projection_spec is connectee_state_type and projection_socket is SENDER:
+                    projection_spec = state
+
                 projection_spec = _parse_projection_spec(projection_spec,
                                                          owner=owner,
                                                          state_type=connectee_state_type)
