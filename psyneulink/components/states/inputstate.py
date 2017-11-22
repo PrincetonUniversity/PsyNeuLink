@@ -264,19 +264,37 @@ Compatibility and Constraint Considerations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The `variable <InputState.variable>` of an InputState must be compatible with the item of its owner Mechanism's
-`variable <Mechanism_Base.variable>` to which it is assigned (see `Mechanism_Variable_and_InputStates>`).
+`variable <Mechanism_Base.variable>` to which it is assigned (see `Mechanism_Variable_and_InputStates>`). This may
+have consequences that must be taken into account when `specifying an InputState by Components that project to it
+<InputState_Projection_Source_Specification>`.  These depend on the context in which the specification is made,
+most significantly whether the InputState is `specified in the constructor of a
+Mechanism <Mechanism_InputState_Specification>` or on its own.  These considerations and how they are handled are
+described below, starting with highest precedence of constraint:
 
-This has consequences for
-When an InputState is `specified by a Component that projects to it <InputState_Projection_Source_Specification>`,
+* **Specification within a Mechanism's constructor**
 
+  * If the InputState is specified in the
 
-If the `value` of the State(s) and/or Projection(s) used to
+If the
+
+By default, the value of such components are used to specify the variable of the InputState
+`value` of the State(s) and/or Projection(s) used to
     specify the InputState all have the same format, that is used to determine the format for the InputState's
     `variable <InputState.variable>`; if they do not, the InputState's `variable <InputState.variable` is determined
     by the `variable <Mechanism_Base.variable>` of the `Mechanism <Mechanism_InputStates>` to which it is being
     assigned.  If the InputState's `variable <InputState.variable>` is otherwise specified or constrained (e.g.,
     by its owner Mechanism), then the `value` of any Components used to specify it must be compatible with the
     InputState's `variable <InputState>` (see `discussion <InputState_Compatability_and_Constraints>` below.
+
+
+
+Therefore, if an InputState is specified by a is `specified by a Component that projects to it
+<InputState_Projection_Source_Specification>`,
+
+When an InputState is `specified by a Component that projects to it <InputState_Projection_Source_Specification>`,
+
+
+If the
 
   Projections can be specified either as attributes, in a constructor for the
 InputState, or used to specify the InputState itself (using one of the `InputState_Forms_of_Specification` described
