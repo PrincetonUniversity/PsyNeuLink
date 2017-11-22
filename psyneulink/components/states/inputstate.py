@@ -214,11 +214,11 @@ Projections to it). Each of these is described below:
     * **OutputState, GatingSignal, Mechanism, or list of any of these** -- creates an InputState with Projection(s)
       to it from the specified State(s) or Mechanism(s).  If any Mechanisms are specified, their `primary OutputStates
       <OutputState_Primary>` (or GatingSignals) are used.
-
+    ..
     * **Projection** -- any form of `Projection specification <Projection_Specification>` can be
       used;  creates an InputState and assigns it as the Projection's `receiver <Projection_Base.receiver>`.
 
-   .. _InputState_Tuple_Specification:
+    .. _InputState_Tuple_Specification:
 
     * **InputState specification tuples** -- these are convenience formats that can be used to compactly specify an
       InputState and Projection(s) to it in a variety of ways, as described below.  As with a Projection specification,
@@ -228,14 +228,14 @@ Projections to it). Each of these is described below:
           `OutputState` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified States
           (see `State 2-item tuple <State_2_Item_Tuple>` for additional details).
-        ..
+        |
         * **2-item (value, `Projection specification <Projection_Specification>`) tuple** -- 1st item specifies the
           `variable <InputState.variable>` for the InputState; the 2nd item specifies one or more MappingProjections
           <MappingProjection>` and/or `GatingProjections <GatingProjection>` to the InputState.
-        ..
+        |
         * **2-item (State or Mechanism, Projection) tuple** -- this is a contracted form of the 4-item tuple
           described below
-        ..
+        |
         * **4-item (State or Mechanism, weight, exponent, Projection) tuple** -- this is an expanded version of the
           2-item tuple that allows the specification of the `weight <InputState.weight>` and/or `exponent
           <InputState.exponent>` attributes of the InputState, as well as a Projection to it.  Note that is different
@@ -276,7 +276,7 @@ starting with constraints that are given the highest precedence:
     **default_variable** argument for the Mechanism is also specified, then the item of the variable to which the
     `InputState is assigned <Mechanism_Variable_and_InputStates>` is used to determine the InputState's `variable must
     <InputState.variable>`.  Any other specifications of the InputState relevant to its `variable <InputState.variable>`
-    be compatible with this (for example, `specifying it by value <InputState_Specification_by_Value>` or by a
+    must be compatible with this (for example, `specifying it by value <InputState_Specification_by_Value>` or by a
     `MappingProjection` or `OutputState` that projects to it (see `above <InputState_Projection_Source_Specification>`).
 
     COMMENT:
@@ -288,7 +288,7 @@ starting with constraints that are given the highest precedence:
     determine its format (e.g., `specifying it by value <InputState_Specification_by_Value>`, or a *VARIABLE* entry
     in an `InputState specification dictionary <InputState_Specification_Dictionary>`.  In this case, the value of any
     `Components used to specify the InputState <InputState_Projection_Source_Specification>` that are relevant to its
-    `variable <InputState.variable>` must be compatible with it.
+    `variable <InputState.variable>` must be compatible with it (see below).
 
     COMMENT:
     ***XXX EXAMPLE HERE
@@ -299,165 +299,53 @@ starting with constraints that are given the highest precedence:
 
     * If more than one Component is specified, and the value of all of them have the same format, then that is used to
       determine the format of the InputState's `variable <InputState.variable>`.  If they differ, then the InputState's
-      `variable <InputState.variable` is determined by item of the default `variable <Mechanism_Base.variable>` for the
-      class of its owner Mechanism.
-
+      `variable <InputState.variable>` is determined by item of the default `variable <Mechanism_Base.variable>` for
+      the class of its owner Mechanism.
+    |
     * If a single Component is specified, then its value is used to determine the format of the InputState's `variable
-      <InputState.variable>`;  if the Component is:
+      <InputState.variable>`;  if the Component is a(n):
 
-      * `MappingProjection`, it can by specified as the Projection itself, or a `matrix specification
-        <Mapping_Matrix_Specification>`.  If it is a Projection, then its `value <Projection_Base.value>` is used to
-        determine the InputState's `variable <InputState.variable>`; if it is a matrix, then its receiver dimensionality
-        determines the format of the InputState's `variable <InputState.variable>`. For a standard 2d weight matrix
-        (i.e., one that maps a 1d array from its `sender <Projection_Base.sender>` to a 1d array of its `receiver
-        <Projection_Base.receiver>`), the receiver dimensionality is its outer dimension (axis 1, or its number of
-        columns).  However, if the `sender <Projection_Base.sender>` has more than one dimension, then the
-        dimensionality of the receiver (used for the InputState's `variable <InputState.variable>`) is the
-        dimensionality of the matrix minus the dimensionality of the sender's `value <OutputState.value>`.
+      * `MappingProjection` -- can be specified by its class, an existing MappingProjection, or a matrix:
 
-      * `OutputState` or `ProcessingMechanism` -> value determines variable
-
-      * `GatingProjection`, `GatingSignal` or `GatingMechanism` -> don't constrain variable, but must match parameter
-        of InputState's function
+        * If the `class <MappingProjection>` is used, a default value is used both the for the InputState's `variable
+          <InputState.variable>` and the Projection's `value <Projection_Base.value>` (since the Projection's
+          `sender <Projection_Base.sender>` is unspecified, its `initialization is deferred
+          <Projection_Deferred_Initialization>`.
+        |
+        * If an existing MappingProjection is used, then its `value <Projection_Base.value>` determines the
+          InputState's `variable <InputState.variable>`.
+        |
+        * If a `matrix specification <Mapping_Matrix_Specification>` is used, then its receiver dimensionality
+          determines the format of the InputState's `variable <InputState.variable>`. For a standard 2d weight matrix
+          (i.e., one that maps a 1d array from its `sender <Projection_Base.sender>` to a 1d array of its `receiver
+          <Projection_Base.receiver>`), the receiver dimensionality is its outer dimension (axis 1, or its number of
+          columns).  However, if the `sender <Projection_Base.sender>` has more than one dimension, then the
+          dimensionality of the receiver (used for the InputState's `variable <InputState.variable>`) is the
+          dimensionality of the matrix minus the dimensionality of the sender's `value <OutputState.value>`.
+      |
+      * `OutputState` or `ProcessingMechanism` -- the `value <OutputState.value>` of the OutputState (if it is a
+        Mechanism, then its `primary OutputState <OutputState_Primary>`) determines the format of the InputState's
+        `variable <InputState.variable`, and a MappingProjection is created from the OutputState to the InputState
+        using an `IDENTITY_MATRIX`.  If the InputState's `variable <InputState.variable>` is constrained (as in some
+        of the cases above), then a `FULL_CONNECTIVITY_MATRIX` is used which maps the shape of the OutputState's `value
+        <OutputState.value>` to that of the InputState's `variable <InputState.variable>`.
+      |
+      * `GatingProjection`, `GatingSignal` or `GatingMechanism` -- any of these can be used to specify an InputState;
+        their `value` does not need to be compatible with the InputState's `variable <InputState.variable>`, however
+        it does have to be compatible with the `modulatory parameter <Function_Modulatory_Params>` of the InputState's
+        `function <InputState.function>`.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 PUT SOMEWHERE:
-Projections can be specified either as attributes, in a constructor for the
-InputState, or used to specify the InputState itself (using one of the `InputState_Forms_of_Specification` described
-above. Each of these have different consequences for the InputState's `variable <InputState.variable>`, as described
-below.
-
-*Specification in an InputState's constructor*.  Projections can be specified using the **projections** argument, or a
-*PROJECTIONS* entry in a specifciation dictionary assigned to the **params** argument.
-If any MappingProjections are specified, and the InputState's **variable** argument is also specified,
-.then any value or sender specified for those Mappoing projedctions must be consisten with the variable specification.
-However, if the latter is *not* specified, then the value and/or sender of the Mapping rpojections can be used to
-specify the InputState's variable (howeer they must all be consistent) or an error will be generated XXXX CHECK THIS.
-
---------
-
-      MOVE TO BELOW
-      by default, the OutputState's `value <OutputState.value>`
-      is used to format the InputState's `variable <InputState.variable>`, and an `IDENTITY_MATRIX` is used for the
-      MappingProjection.  However, if **default_variable** argument is specified in the constructor for the InputState's
-      owner Mechanism, then the corresponding item of its value is used as the format for the InputState's `variable
-      <InputState.variable>`, and `AUTO_ASSIGN_MATRIX` is used for the MappingProjection, which adjusts its `value
-      <Projection_Base.value>` to match the InputState's `variable <InputState.variable>`.
-    ..
----------------
-    * **Projection subclass** -- this creates a default InputState, formatting its `variable <InputState.variable>`
-      in the same manner as an InputState class, keyword or string (see above), and using this as the format for the
-      Projection's `value <Projection_Base.value>`.  Since the Projection's `sender <Projection_Base.sender>` is
-      unspecified, its `initialization is deferred <Projection_Deferred_Initialization>`.  In some cases, initialization
-      can happen automatically -- for example, when a `ControlProjection` is created for the parameter of a Mechanism
-      that is included in a `System`, a `ControlSignal` is created as the Projection's `sender <Projection_Base.sender>`
-      that is added to the System's `controller <System.controller>` (see `System Control <System_Control>`).  However,
-      for cases in which `deferred initialization <Component_Deferred_Init>` is not automatically completed,
-      the Projection will not be operational until its `sender <Projection_Base.sender>` has been specified and its
-      initialization completed.
-----------------
-If the **default_variable** argument
-          in the owner Mechanism's constructor is not specified, and the States specified in the tuple are
-          OutputStates that all have the same `value <OutputState.value>` format, then that is used as the format for
-          the InputState's `variable <InputState.variable>`.  Otherwise, the InputState's `variable
-          <InputState.variable>` is formatted using the corresponding item of its owner Mechanism's `variable
-          <Mechanism_Base.variable>` (see `example <XXX>  -- also ObjectiveMechanism??`).
-----------------
-
-        If the Projection's `value <Projection_Base.value>` is specified (i.e., by its `sender
-      <Projection_Base.sender>` or `matrix <MappingProjection.matrix>` parameter), that is used to determine the
-      format of the InputState's `variable <InputState.variable>` unless that is otherwise specified or constrained;
-      if it is, then the `value <State_Base.value>` of the specified State must be compatible with the InputState's
-      `variable <InputState.variable>` (see `below <InputState_Compatability_and_Constraints>`).
------------------
-
-If , then that that is used to determine the format of the InputState's `variable
-<InputState.variable>`, and the value or sender of any MappingProjections specified must be compatible with the
-specification for the InputState's **variable**.  However, if the latter is not specified,
-then the MappingProjection's value, or that of its sender, is used to determine the format for the InputState's
-variable.
-
-
-any MappingProjections thjat have a specified `value <MappingProjection.value>` and/or
-`sender <MappingProjection.sender>` must be compatible with the specification in the **variable** argument
-of the InputState's constructor.  If that is not specified, then the
-
-
-, or using one of the `InputState_Forms_of_Specification` described above. The Projections
-specified can be either
-
-
-If the InputState is being constructed on its own, then the value of the MappingProjection,
-
-When a MappingProjection is specified, its `value <MappingProjection.value>, its `matrix <MappingProjection.matrix>`,
-or the `value <OuputState.value>` of its `sender <MappingProjection.sender>` can be used to determine the `variable
-<InputState.variable>` of the InputState.  This occurs, using the following considerations when the InpuTstate
-
-
-
-State value specified:
-          with a specified `matrix <MappingProjection.matrix>` parameter, then the the value specified in the 1st item
-          of the tuple must be compatible with the Projection's `value <Projection_Base.value>` (xxx).  If the `matrix
-          <MappingProjection.matrix>` parameter has not been specified, than an `IDENTITY_MATRIX` is used if they are
-          compatible, and a `FULL_CONNECTIVITY_MATRIX` with the appropriate dimensions is used if they are not.
-
-Xxxxx
-Projecoin value/matrix specified:
-
-              it's `sender <Projection_Base.sender>`
-              must be compatible with the specification in the first item (i.e., for either the `variable
-              <InputState.variable>` of the InputState, or the `value <OutputState.value>` of the OutputState
-              specified to project to it.
-
-          If a `MappingProjection` is specified, its `value <Projection_Base.value>` is used to format of the
-              InputState's `variable <InputState.variable>` (see `note <InputState_Projection_Specification>` below); if
-              this occurs within the constructor for a Mechanism, it must
-              be compatible with the corresponding item of the **default_variable** argument in the constructor.
-
-              The InputState is assigned as the Projection's `receiver <Projection_Base.receiver>` and, if the first item
-              specifies an  OutputState, that is assigned as the Projection's `sender <Projection_Base.sender>`.  If the
-              specification is for `ModulatoryProjection`, it is created (along with a corresponding `ModulatorySignal`)
-              if necessary, the InputState is assigned as its `receiver <ModulatoryProjection.receiver>`, and the the
-              Projection is assigned to the InputState's `mod_afferents <InputState>` attribute.
-
-
-              .. _InputState_Projection_Specification:
-
-              .. note::
-                 If a Projection specification is for a `MappingProjection`, it can use the Projection itself or a
-                 `matrix specification <Mapping_Matrix_Specification>`.  If it is a Projection, then its `value
-                 <Projection_Base.value>` is used to determine the InputState's `variable <InputState.variable>`; if
-                 it is a matrix, then its receiver dimensionality determines the format of the InputState's `variable
-                 <InputState.variable>`. For a standard 2d weight matrix (i.e., one that maps a 1d array from its
-                 `sender <Projection_Base.sender>` to a 1d array of its `receiver <Projection_Base.receiver>`), the
-                 receiver dimensionality is its outer dimension (axis 1, or its number of columns).  However, if
-                 the `sender <Projection_Base.sender>` has more than one dimension, then the dimensionality of the
-                 receiver (used for the InputState's `variable <InputState.variable>`) is the dimensionality of the
-                 matrix minus the dimensionality of the sender's `value <OutputState.value>`.
-
-                 If a Projection specification is for at
-
-Gating Projection and Parameter targeted
-
-xxxxx
-
-
-
-
-
-
-
-
-
-
-
+Projections to an InputState can be specified either as attributes, in the constructor for an
+InputState (in its **projections** argument or in the *PROJECTIONS* entry of an `InputState specification dictionary
+<InputState_Specification_Dictionary>`), or used to specify the InputState itself (using one of the
+`InputState_Forms_of_Specification` described above.
 -----------
 See `State Projections <State_Projections>` for additional details concerning the specification of
 Projections when creating a State.
-
-
-
+-----------
 
 
 
