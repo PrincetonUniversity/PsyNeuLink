@@ -103,6 +103,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
                          context=context)
 
         print("input state for PEM = {}".format(self.input_state))
+        # self.standard_output_states[OUTCOME].
 
         # self.integrator_function = AdaptiveIntegrator(
         #         initializer=0,

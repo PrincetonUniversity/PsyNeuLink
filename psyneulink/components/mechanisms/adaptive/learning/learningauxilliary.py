@@ -428,8 +428,8 @@ def _instantiate_learning_components(learning_projection, context=None):
         print("activation_mech_input name = {}".format(lc.activation_mech_input.owner.name))
         print("activation_mech_output name = {}".format(lc.activation_mech_output.owner.name))
 
-        error_output = np.array([0])
-        error_signal = np.array([0])
+        error_output = np.ones_like(lc.activation_mech_output.value)
+        error_signal = np.zeros_like(lc.activation_mech_output.value)
         learning_rate = learning_projection.learning_function.learning_rate
 
         print("TDLearning variable = {}".format([activation_input,

@@ -9286,10 +9286,9 @@ class TDLearning(Reinforcement):
         self.activation_output = variable[LEARNING_ACTIVATION_OUTPUT]
         self.error_signal = variable[LEARNING_ERROR_OUTPUT]
 
-        if len(self.error_signal) != 1:
-            raise ComponentError("Error term for {} (the third item of its "
-                                "variable arg) must be an array with a single "
-                                "element for {}".format(self.name, self.error_signal))
+        if len(self.error_signal) != len(self.activation_output):
+            raise ComponentError("Error term does not match the length of the"
+                                 "sample sequence")
 
         return variable
 

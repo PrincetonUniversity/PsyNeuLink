@@ -1185,9 +1185,9 @@ def _instantiate_error_signal_projection(sender, receiver):
     elif isinstance(sender, LearningMechanism):
         sender = sender.output_states[ERROR_SIGNAL]
     else:
-        raise LearningMechanismError("Sender of the error signal Projection {} must be either "
-                                     "an ObjectiveMechanism or a LearningMechanism".
-                                     format(sender))
+        raise LearningMechanismError("Sender of the error signal Projection {} "
+                                     "must be either an ObjectiveMechanism or "
+                                     "a LearningMechanism".format(sender))
 
     if isinstance(receiver, LearningMechanism):
         receiver = receiver.input_states[ERROR_SIGNAL]
@@ -1195,14 +1195,20 @@ def _instantiate_error_signal_projection(sender, receiver):
         raise LearningMechanismError("Receiver of the error signal Projection {} must be a LearningMechanism".
                                      format(receiver))
 
+    print("receiver value = {}".format(receiver.value))
+    print("sender name = {}".format(sender.name))
+    print("sender value = {}".format(sender.value))
     if len(sender.value) != len(receiver.value):
-        raise LearningMechanismError("The length of the OutputState ({}) for the sender ({}) of "
-                                     "the error signal Projection does not match "
-                                     "the length of the InputState ({}) for the receiver ({})".
-                                     format(len(sender.value), sender.owner.name,
-                                            len(receiver.value),receiver.owner.name))
+        raise LearningMechanismError("The length of the OutputState ({}) for "
+                                     "the sender ({}) of the error signal "
+                                     "Projection does not match the length of "
+                                     "the InputState ({}) for the receiver "
+                                     "({})".format(len(sender.value),
+                                                   sender.owner.name,
+                                                   len(receiver.value),
+                                                   receiver.owner.name))
 
     return MappingProjection(sender=sender,
                              receiver=receiver,
                              matrix=IDENTITY_MATRIX,
-                             name = sender.owner.name + ' ' + OUTCOME)
+                             name=sender.owner.name + ' ' + OUTCOME)
