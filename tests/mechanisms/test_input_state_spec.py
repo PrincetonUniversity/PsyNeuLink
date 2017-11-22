@@ -3,6 +3,7 @@ import pytest
 
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
 from psyneulink.components.projections.projection import ProjectionError
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.state import StateError
@@ -690,3 +691,14 @@ class TestInputStateSpec:
         assert T5.input_states[0].path_afferents[0].sender.owner.name=='T0'
         assert T5.input_states[0].path_afferents[1].sender.owner.name=='T1'
         assert T5.input_states[0].path_afferents[1].matrix.shape == (3,1)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 35
+
+    def test_list_of_mechanisms_with_gating_mechanism(self):
+
+        T1 = TransferMechanism(name='T6')
+        G = GatingMechanism(gating_signals=['a','b'])
+        T2 = TransferMechanism(input_states=[[T1, G]])
+        assert T2.input_states[0].path_afferents[0].sender.owner.name=='T6'
+        assert T2.input_states[0].mod_afferents[0].sender.name=='a'
