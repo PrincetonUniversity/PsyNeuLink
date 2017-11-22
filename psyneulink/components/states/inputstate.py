@@ -203,12 +203,22 @@ Projections to it). Each of these is described below:
       <State_Projections_Examples>` in State)
     COMMENT
 
+    COMMENT:
+    Projections to an InputState can be specified either as attributes, in the constructor for an
+    InputState (in its **projections** argument or in the *PROJECTIONS* entry of an `InputState specification dictionary
+    <InputState_Specification_Dictionary>`), or used to specify the InputState itself (using one of the
+    `InputState_Forms_of_Specification` described above. See `State Projections <State_Projections>` for additional
+    details concerning the specification of
+    Projections when creating a State.
+    COMMENT
+
     An InputState can also be specified by specifying one or more States, Mechanisms or Projections that should project
-    to it, as described below.  Specifying an InputState in this way creates both the InputState and any of the specified or implied Projection(s)
-    to it (if they don't already exist). `MappingProjections <MappingProjection>` are assigned to the InputState's
-    `path_afferents <InputState.path_afferents>` attribute, and `GatingProjections <GatingProjection>` to its
-    `mod_afferents <InputState.mod_afferents>` attribute. Any of the following can be used to specify it an InputState
-    by the Components that projection to it (see `below <InputState_Compatability_and_Constraints>` for a discussion
+    to it, as described below.  Specifying an InputState in this way creates both the InputState and any of the
+    specified or implied Projection(s) to it (if they don't already exist). `MappingProjections <MappingProjection>`
+    are assigned to the InputState's `path_afferents <InputState.path_afferents>` attribute, and `GatingProjections
+    <GatingProjection>` to its `mod_afferents <InputState.mod_afferents>` attribute. Any of the following can be used
+    to specify it an InputState by the Components that projection to it (see `below
+    <InputState_Compatability_and_Constraints>` for a discussion
     of the relationship between the `value` of these Components and the InputState's `variable <InputState.variable>`):
 
     * **OutputState, GatingSignal, Mechanism, or list of any of these** -- creates an InputState with Projection(s)
@@ -334,21 +344,6 @@ starting with constraints that are given the highest precedence:
         their `value` does not need to be compatible with the InputState's `variable <InputState.variable>`, however
         it does have to be compatible with the `modulatory parameter <Function_Modulatory_Params>` of the InputState's
         `function <InputState.function>`.
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-PUT SOMEWHERE:
-Projections to an InputState can be specified either as attributes, in the constructor for an
-InputState (in its **projections** argument or in the *PROJECTIONS* entry of an `InputState specification dictionary
-<InputState_Specification_Dictionary>`), or used to specify the InputState itself (using one of the
-`InputState_Forms_of_Specification` described above.
------------
-See `State Projections <State_Projections>` for additional details concerning the specification of
-Projections when creating a State.
------------
-
-
-
 
 .. _InputState_Structure:
 
