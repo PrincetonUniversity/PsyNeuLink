@@ -94,7 +94,7 @@ __all__ = [
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
     'MODULATION_OVERRIDE', 'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'parameter_spec',
-    'random_matrix', 'ReadOnlyOrderedDict', 'TEST_CONDTION', 'type_match', 'underscore_to_camelCase', 'UtilitiesError',
+    'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'TEST_CONDTION', 'type_match', 'underscore_to_camelCase', 'UtilitiesError',
 ]
 
 
@@ -1134,3 +1134,15 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
 def insert_list(list1, position, list2):
     """Insert list2 into list1 at position"""
     return list1[:position] + list2 + list1[position:]
+
+
+def safe_len(arr, fallback=1):
+    '''
+    Returns
+    -------
+        len(**arr**) if possible, otherwise **fallback**
+    '''
+    try:
+        return len(arr)
+    except TypeError:
+        return fallback
