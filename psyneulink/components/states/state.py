@@ -2596,6 +2596,7 @@ def _parse_state_spec(state_type=None,
                 state_specification = mech
                 projection = state_type
 
+        # MODIFIED 11/21/17 OLD:
         # Specified State is same as connectee's type (state_type),
         #    so assume it is a reference to the State itself that is being (or has been) instantiated
         if isinstance(state_specification, state_type):
@@ -2604,18 +2605,42 @@ def _parse_state_spec(state_type=None,
                 state_owner = state_specification.init_args[OWNER]
             else:
                 state_owner = state_specification.owner
-            if owner is not None and state_owner is not None and not state_owner is owner:
+            if owner is not None and state_owner is not None and state_owner is not owner:
                 raise StateError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
                                  format(State.__name__, state_specification.name, owner.name,
                                         Mechanism.__name__, state_owner.name))
             return state_specification
-
         else:
             # State is not the same as connectee's type, so assume it is for one to connect with
             state_dict[PROJECTIONS] = ProjectionTuple(state=state_specification,
                                                       weight=None,
                                                       exponent=None,
                                                       projection=projection)
+        # MODIFIED 11/21/17 NEW:
+        # # Specified State is one with which connectee can connect, so assume it is a Projection specification
+        # if state_specification.__class__.__name__ in state_type.connectsWith + state_type.modulators:
+        #     projection = state_type
+        #
+        # # Specified State is same as connectee's type (state_type),
+        # #    so assume it is a reference to the State itself that is being (or has been) instantiated
+        # elif isinstance(state_specification, state_type):
+        #     # Make sure that the specified State belongs to the Mechanism passed in the owner arg
+        #     if state_specification.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        #         state_owner = state_specification.init_args[OWNER]
+        #     else:
+        #         state_owner = state_specification.owner
+        #     if owner is not None and state_owner is not None and state_owner is not owner:
+        #         raise StateError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
+        #                          format(State.__name__, state_specification.name, owner.name,
+        #                                 Mechanism.__name__, state_owner.name))
+        #     return state_specification
+
+        # # State is not the same as connectee's type, so assume it is for one to connect with
+        # state_dict[PROJECTIONS] = ProjectionTuple(state=state_specification,
+        #                                           weight=None,
+        #                                           exponent=None,
+        #                                           projection=projection)
+        # MODIFIED 11/21/17 END
 
     # State class
     elif (inspect.isclass(state_specification) and issubclass(state_specification, State)):

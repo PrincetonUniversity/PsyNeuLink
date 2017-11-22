@@ -986,6 +986,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     if output_states:
         for i, output_state in enumerate(output_states):
 
+              # parse output_state
             from psyneulink.components.states.state import _parse_state_spec
             output_state = _parse_state_spec(state_type=OutputState, owner=owner, state_spec=output_state)
 
