@@ -49,10 +49,10 @@ OutputState.  In general, the `value <OutputState.value>` of each specified Outp
 `variable <InputState.variable>` of the InputState that is created for it by the ObjectiveMechanism. However, this can
 be overridden using the ObjectiveMechanism's `default_variable <ObjectiveMechanism.default_variable>` or `size
 <ObjectiveMechanism.size>` attributes (see `Mechanism_InputState_Specification`), or by specifying a Projection from
-the OutputState to the InputState (see `InputState_Projection_Source_Specification`).  If an item in the
-**monitored_output_states** argument specifies an InputState for the ObjectiveMechanism, but not the OutputState to
-be monitored, the InputState is created but will be ignored until an OutputState (and MappingProjection from it) are
-specified for that InputState.
+the OutputState to the InputState (see `Input Source Specification <InputState_Projection_Source_Specification>`).
+If an item in the **monitored_output_states** argument specifies an InputState for the ObjectiveMechanism, but not
+the OutputState to be monitored, the InputState is created but will be ignored until an OutputState (and
+MappingProjection from it) are specified for that InputState.
 
 
 COMMENT:

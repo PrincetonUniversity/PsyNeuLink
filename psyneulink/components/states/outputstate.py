@@ -783,12 +783,19 @@ class OutputState(State_Base):
         from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
         from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.components.projections.projection import ProjectionTuple
+
 
         # Treat as ModulatoryProjection spec if it is a ModulatoryProjection, ModulatorySignal or AdaptiveMechanism
+        # or one of those is the first or last item of a ProjectionTuple
         modulatory_projections = [proj for proj in projections
-                                  if isinstance(proj, (ModulatoryProjection_Base,
+                                  if (isinstance(proj, (ModulatoryProjection_Base,
                                                        ModulatorySignal,
-                                                       AdaptiveMechanism_Base))]
+                                                       AdaptiveMechanism_Base)) or
+                                      (isinstance(proj, ProjectionTuple) and
+                                       any(isinstance(item, (ModulatoryProjection_Base,
+                                                           ModulatorySignal,
+                                                           AdaptiveMechanism_Base)) for item in proj)))]
         self._instantiate_projections_to_state(projections=modulatory_projections, context=context)
 
         # Treat all remaining specifications in projections as ones for outgoing MappingProjections

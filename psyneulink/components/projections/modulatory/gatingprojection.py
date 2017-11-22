@@ -24,7 +24,7 @@ Creating a GatingProjection
 ----------------------------
 
 A GatingProjection can be created using any of the standard ways to `create a projection <Projection_Creation>`,
-or by including it in the specification of an `InputState <InputState_Projections>` or `OutputState
+or by including it in the specification of an `InputState <InputState_Projection_Source_Specification>` or `OutputState
 <OutputState_Projections>` .  If a GatingProjection is created explicitly (using its constructor), its **receiver**
 argument can be specified as a particular InputState or OutputState of a designated `Mechanism <Mechanism>`, or simply
 as the Mechanism.  In the latter case, the Mechanism's `primary InputState <InputState_Primary>` will be used. If the

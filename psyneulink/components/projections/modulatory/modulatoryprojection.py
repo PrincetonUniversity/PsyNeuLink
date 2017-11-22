@@ -233,6 +233,7 @@ class ModulatoryProjection_Base(Projection_Base):
 
         elif self.init_status is InitStatus.DEFERRED_INITIALIZATION:
             projection_name = self.className + " for " + state.owner.name + " " + state.name
+            # projection_name = "{} for {}[{}]".format(self.className, state.owner.name, state.name)
             self.init_args[NAME] = self.init_args[NAME] or projection_name
 
         else:

@@ -692,9 +692,9 @@ class TestInputStateSpec:
         assert T5.input_states[0].path_afferents[1].sender.owner.name=='T1'
         assert T5.input_states[0].path_afferents[1].matrix.shape == (3,1)
 
-    # ------------------------------------------------------------------------------------------------
-    # TEST 35
-
+    # # ------------------------------------------------------------------------------------------------
+    # # TEST 35
+    #
     # def test_list_of_mechanisms_with_gating_mechanism(self):
     #
     #     T1 = TransferMechanism(name='T6')

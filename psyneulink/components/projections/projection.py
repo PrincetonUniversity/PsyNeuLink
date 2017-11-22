@@ -126,11 +126,12 @@ Projection in context:
         as its the ControlProjection's `sender <ControlProjection.sender>`.  See `ControlMechanism_Control_Signals` for
         additional details.
       |
-      * *GATING_PROJECTION* (or *GATING*) -- this can be used when specifying an `InputState <InputState_Projections>`
-        or an `OutputState <OutputState_Projections>`, to create a default `GatingProjection` to the `State <State>`.
-        If the GatingProjection's `sender <GatingProjection.sender>` cannot be inferred from the context in which this
-        specification occurs, then its `initialization is deferred <GatingProjection_Deferred_Initialization>` until
-        it can be determined (e.g., a `GatingMechanism` or `GatingSignal` is created to which it is assigned).
+      * *GATING_PROJECTION* (or *GATING*) -- this can be used when specifying an `InputState
+        <InputState_Projection_Source_Specification>` or an `OutputState <OutputState_Projections>`, to create a
+        default `GatingProjection` to the `State <State>`. If the GatingProjection's `sender <GatingProjection.sender>`
+        cannot be inferred from the context in which this specification occurs, then its `initialization is deferred
+        <GatingProjection_Deferred_Initialization>` until it can be determined (e.g., a `GatingMechanism` or
+        `GatingSignal` is created to which it is assigned).
   ..
   * **value** -- creates a Projection of a type determined by the context of the specification, and using the
     specified value as the `value <Projection_Base.value>` of the Projection, which must be compatible with the
@@ -389,11 +390,11 @@ from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.components.states.state import StateError
 from psyneulink.globals.keywords import \
-    CONTEXT, CONTROL, CONTROL_PROJECTION, EXPONENT, GATING, GATING_PROJECTION, DEFERRED_INITIALIZATION, \
+    CONTEXT, CONTROL, CONTROL_PROJECTION, EXPONENT, GATING, GATING_PROJECTION, \
     INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
-    MECHANISM, NAME, OUTPUT_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, \
+    MECHANISM, NAME, OUTPUT_STATE, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, \
     PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, \
-    STANDARD_ARGS, STATE, STATES, WEIGHT, CONTROLLED_PARAMS, LEARNED_PARAM, GATED_STATES, \
+    STANDARD_ARGS, STATE, STATES, WEIGHT, GATING_SIGNAL, \
     kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -1541,9 +1542,14 @@ def _parse_connection_specs(connectee_state_type,
             # Validate projection specification
             if _is_projection_spec(projection_spec) or projection_spec is None:
 
-                # If connectee is receiver (i.e., projection_socket is sender), then state should be projection_spec
+                # FIX: 11/21/17 THIS IS A HACK TO DEAL WITH GatingSignal PROJECTION TO InputState or OutputState
                 if projection_spec is connectee_state_type and projection_socket is SENDER:
                     projection_spec = state
+                # from psyneulink.components.states.inputstate import InputState
+                # from psyneulink.components.states.outputstate import OutputState
+                # from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
+                # if isinstance(state, GatingSignal) and connectee_state_type in {InputState, OutputState}:
+                #     projection_spec = state
 
                 projection_spec = _parse_projection_spec(projection_spec,
                                                          owner=owner,
