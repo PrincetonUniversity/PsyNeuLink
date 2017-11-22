@@ -20,6 +20,7 @@ please contact psyneulinkhelp@princeton.edu.
 '''
 
 import logging as _logging
+import numpy as _numpy
 
 # starred imports to allow user imports from top level
 from . import components
@@ -39,6 +40,9 @@ __all__.extend(composition.__all__)
 __all__.extend(globals.__all__)
 __all__.extend(library.__all__)
 __all__.extend(scheduling.__all__)
+
+# suppress numpy overflow and underflow errors
+_numpy.seterr(over='ignore', under='ignore')
 
 # https://stackoverflow.com/a/17276457/3131666
 class _Whitelist(_logging.Filter):
