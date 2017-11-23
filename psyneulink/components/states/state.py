@@ -2727,16 +2727,6 @@ def _parse_state_spec(state_type=None,
     elif is_value_spec(state_specification):
         state_dict[REFERENCE_VALUE] = np.atleast_1d(state_specification)
 
-    # elif isinstance(state_specification, list):
-    #     if not all(isinstance(item, (State_Base, Mechanism)) for item in state_specification):
-    #         raise StateError("One or more items in the list used to specify a(n) {} for {} ({}) is not a {} or {}".
-    #                          format(state_type.__name__, owner.name, state_specification,
-    #                                 State.__name__, Mechanism.__name__))
-    #
-    #     state_dict[PROJECTIONS] = ProjectionTuple(state=state_specification,
-    #                                       weight=None,
-    #                                       exponent=None,
-    #                                       projection=state_type)
 
     elif isinstance(state_specification, Iterable) or state_specification is None:
 

@@ -146,7 +146,7 @@ should project to the InputState. Each of these is described below:
 
     .. _InputState_Direct_Specification:
 
-    **Directly Specifying an InputState**
+    **Direct Specification of an InputState**
 
     * existing **InputState object** or the name of one -- it can not already belong to another Mechanism and, if used
       to specify an InputState in the constructor for a Mechanism, its `value <InputState.value>` must be compatible
@@ -173,34 +173,34 @@ should project to the InputState. Each of these is described below:
 
     **InputState Specification Dictionary**
 
-    * **InputState specification dictionary** -- this can be used to specify the attributes of an InputState,
-      using any of the entries that can be included in a `State specification dictionary <State_Specification>`
-      (see `examples <State_Specification_Dictionary_Examples>` in State), as well as well as the following entries
-      specific to an InputState:
+    * **InputState specification dictionary** -- this can be used to specify the attributes of an InputState, using
+      any of the entries that can be included in a `State specification dictionary <State_Specification>` (see
+      `examples <State_Specification_Dictionary_Examples>` in State).  If the dictionary is used to specify an
+      InputState in the constructor for a Mechanism, and it includes a *VARIABLE* and/or *VALUE* or entry, the value
+      must be compatible with the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the
+      InputState is assigned (see `Mechanism InputState specification <Mechanism_InputState_Specification>`).
+
+      The *PROJECTIONS* entry can include specifications for one or more States, Mechanisms and/or Projections that
+      should project to the InputState (including both `MappingProjections <MappingProjection>` and/or
+      `ModulatoryProjections <ModulatoryProjection>`; however, this may be constrained by or have consequences for the
+      InputState's `variable <InputState.variable>` (see `InputState_Compatability_and_Constraints`).
+
+      In addition to the standard entries of a `State specification dictionary <State_Specification>`, the dictionary
+      can also include either or both of the following entries specific to InputStates:
 
       * *WEIGHT*:<number>
           the value must be an integer or float, and is assigned as the value of the InputState's `weight
           <InputState.weight>` attribute (see `weight and exponent <InputState_Weights_And_Exponents>`);
           this takes precedence over any specification in the **weight** argument of the InputState's constructor.
-      ..
+      |
       * *EXPONENT*:<number>
           the value must be an integer or float, and is assigned as the value of the InputState's `exponent
           <InputState.exponent>` attribute (see `weight and exponent <InputState_Weights_And_Exponents>`);
           this takes precedence over any specification in the **exponent** argument of the InputState's constructor.
 
-      .. _InputState_Projections_Specification:
-
-      If the dictionary is used to specify an InputState in the constructor for a Mechanism, and it includes a
-      *VARIABLE* and/or *VALUE* or entry, the value must be compatible with the item of the owner Mechanism's `variable
-      <Mechanism_Base.variable>` to which the InputState is assigned (see  `Mechanism InputState specification
-      <Mechanism_InputState_Specification>`). A *PROJECTIONS* entry can include specifications for one or more
-      States, Mechanisms or Projections that should project to the InputState (described in the next section); however,
-      this may be constrained by or have consequences for the InputState's `variable <InputState.variable>` (see
-      `below <InputState_Compatability_and_Constraints>`).
-
     .. _InputState_Projection_Source_Specification:
 
-    **Specifying an Input by Component that Project to It**
+    **Specification of an InputState by Components that Project to It**
 
     COMMENT:
     `examples

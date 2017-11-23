@@ -145,23 +145,6 @@ the name for the OutputState to be created, and the value is its specification. 
 as the specification for each OutputState:
 
 !!!!!!!!!!!!!!!!
-    * **State specification dictionary** -- creates the specified OutputState, and can use any of the standard
-      entries of a `State specification dictionary <State_Specification>`.  The *PROJECTIONS* or *MECHANISMS* entry can
-      be used to specify one or more efferent `PathwayProjections <PathwayProjection>` from the OutputState, and/or
-      `ModulatoryProjections <ModulatoryProjection>` for it to receive. In addition to the standard entries of a State
-      specification dictionary, the dictionary can have any of the following *KEY*:<value> entries:
-
-      ..
-      - *INDEX*:<int> - specifies the OutputState's value of the `index <OutputState.index>` attribute; if this is
-        not included, the first item of the owner Mechanism's `value <Mechanism_Base.value>` is assigned as the
-        the OutputState's `variable <OutputState.variable>` (see `description below <OutputState_Index>` for additional
-        details).
-      |
-      - *CALCULATE*:<function> - specifies the function assigned as the OutputState's `calculate
-        <OutputState.calculate>` attribute;  if this is not included, and identity function is used to assign the
-        OutputState's `variable <OutputState.variable>` as its `value <OutputState.value>` (see `description below
-        <OutputState_Calculate>` for additional details).
-
       ..
       XXX MENTION STATE/MECH SPEC HERE
 
@@ -196,7 +179,7 @@ which it should project. Each of these is described below:
 
     .. _OutputState_Direct_Specification:
 
-    **Directly Specifying an OutputState**
+    **Direct Specification of an OutputState**
 
     * existing **OutputState object** or the name of one -- it cannot belong to another Mechanism, and the format of
       its `variable <OutputState.variable>` must be compatible with the `indexed item
@@ -226,36 +209,37 @@ which it should project. Each of these is described below:
       name is assigned based on the name of the Mechanism (see `Naming`).
     ..
 
+    .. _OutputState_Specification_Dictionary:
+
     **OutputState Specification Dictionary**
 
-    * **InputState specification dictionary** -- this can be used to specify the attributes of an InputState,
+    * **OutputState specification dictionary** -- this can be used to specify the attributes of an OutputState,
       using any of the entries that can be included in a `State specification dictionary <State_Specification>`
-      (see `examples <State_Specification_Dictionary_Examples>` in State), as well as well as the following entries
-      specific to an InputState:
+      (see `examples <State_Specification_Dictionary_Examples>` in State).  If the dictionary includes a *VARIABLE*
+      entry, its value must be compatible with the item of the owner Mechanism's `value <Mechanism_Base.value>`
+      specified for its `index <OutputState.index>` attribute ('0' by default; see `
+      OutputState_Variable_Value_Mechanism_Value`)
 
-      * *WEIGHT*:<number>
-          the value must be an integer or float, and is assigned as the value of the InputState's `weight
-          <InputState.weight>` attribute (see `weight and exponent <InputState_Weights_And_Exponents>`);
-          this takes precedence over any specification in the **weight** argument of the InputState's constructor.
-      ..
-      * *EXPONENT*:<number>
-          the value must be an integer or float, and is assigned as the value of the InputState's `exponent
-          <InputState.exponent>` attribute (see `weight and exponent <InputState_Weights_And_Exponents>`);
-          this takes precedence over any specification in the **exponent** argument of the InputState's constructor.
+      The *PROJECTIONS* or *MECHANISMS* entry can be used to specify one or more efferent `MappingProjections
+      <MappingProjection>` from the OutputState, and/or `ModulatoryProjections <ModulatoryProjection>` for it to
+      receive; however, this may be constrained by or have consequences for the OutState's `variable
+      <InputState.variable>` and/or its `value <OutputState.value>` `OutputState_Compatability_and_Constraints`).
 
-      .. _InputState_Projections_Specification:
+      In addition to the standard entries of a `State specification dictionary <State_Specification>`, the dictionary
+      can also include either or both of the following entries specific to OutputStates:
 
-      If the dictionary is used to specify an InputState in the constructor for a Mechanism, and it includes a
-      *VARIABLE* and/or *VALUE* or entry, the value must be compatible with the item of the owner Mechanism's `variable
-      <Mechanism_Base.variable>` to which the InputState is assigned (see  `Mechanism InputState specification
-      <Mechanism_InputState_Specification>`). A *PROJECTIONS* entry can include specifications for one or more
-      States, Mechanisms or Projections that should project to the InputState (described in the next section); however,
-      this may be constrained by or have consequences for the InputState's `variable <InputState.variable>` (see
-      `below <InputState_Compatability_and_Constraints>`).
+      * *INDEX*:<int> - specifies the OutputState's `index <OutputState.index>` attribute; if this is not included,
+        the first item of the owner Mechanism's `value <Mechanism_Base.value>` is assigned as the the OutputState's
+        `variable <OutputState.variable>` (see `description below <OutputState_Index>` for additional details).
+      |
+      * *CALCULATE*:<function> - specifies the function assigned as the OutputState's `calculate
+        <OutputState.calculate>` attribute;  if this is not included, an identity function is used to assign the
+        OutputState's `variable <OutputState.variable>` as its `value <OutputState.value>` (see `description below
+        <OutputState_Calculate>` for additional details).
 
-    .. _InputState_Projection_Source_Specification:
+    .. _OutputState_Projection_Destination_Specification:
 
-    **Specifying an Input by Component that Project to It**
+    **Specifying an OutputState by Components to which it Projects**
 
     COMMENT:
     `examples
@@ -328,8 +312,6 @@ which it should project. Each of these is described below:
             |
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` in the
               same manner as the second item of a 2-item tuple (see above);
-
-
 
 
 
