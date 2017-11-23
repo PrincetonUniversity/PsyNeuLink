@@ -692,15 +692,15 @@ class TestInputStateSpec:
         assert T5.input_states[0].path_afferents[1].sender.owner.name=='T1'
         assert T5.input_states[0].path_afferents[1].matrix.shape == (3,1)
 
-    # # ------------------------------------------------------------------------------------------------
-    # # TEST 35
-    #
-    # def test_list_of_mechanisms_with_gating_mechanism(self):
-    #
-    #     T1 = TransferMechanism(name='T6')
-    #     G = GatingMechanism(gating_signals=['a','b'])
-    #     T2 = TransferMechanism(input_states=[[T1, G]],
-    #                            output_states=[G.gating_signals['b']])
-    #     assert T2.input_states[0].path_afferents[0].sender.owner.name=='T6'
-    #     assert T2.input_states[0].mod_afferents[0].sender.name=='a'
-    #     assert T2.output_states[0].mod_afferents[0].sender.name=='b'
+    # ------------------------------------------------------------------------------------------------
+    # TEST 35
+
+    def test_list_of_mechanisms_with_gating_mechanism(self):
+
+        T1 = TransferMechanism(name='T6')
+        G = GatingMechanism(gating_signals=['a','b'])
+        T2 = TransferMechanism(input_states=[[T1, G]],
+                               output_states=[G.gating_signals['b']])
+        assert T2.input_states[0].path_afferents[0].sender.owner.name=='T6'
+        assert T2.input_states[0].mod_afferents[0].sender.name=='a'
+        assert T2.output_states[0].mod_afferents[0].sender.name=='b'

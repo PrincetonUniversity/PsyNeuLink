@@ -143,7 +143,7 @@ Projections to it). Each of these is described below:
 
     .. _InputState_Direct_Specification:
 
-    **Direct Specification**
+    **Directly Specifying an InputState**
 
     * existing **InputState object** or the name of one -- if used to specify an InputState in the constructor for a
       Mechanism, its `value <InputState.value>` must be compatible with the corresponding item of the owner Mechanism's
@@ -167,7 +167,7 @@ Projections to it). Each of these is described below:
 
     .. _InputState_Specification_Dictionary:
 
-    **InputState Specification Dictionary or Tuple**
+    **InputState Specification Dictionary**
 
     * **InputState specification dictionary** -- this can be used to specify the attributes of an InputState,
       using any of the entries that can be included in a `State specification dictionary <State_Specification>`
@@ -196,7 +196,7 @@ Projections to it). Each of these is described below:
 
     .. _InputState_Projection_Source_Specification:
 
-    **Specification by Projection(s)**
+    **Specifying an Input by a Component that Projects to It**
 
     COMMENT:
     `examples
@@ -234,19 +234,19 @@ Projections to it). Each of these is described below:
       InputState and Projection(s) to it in a variety of ways, as described below.  As with a Projection specification,
       if the Projection's `value <Projection_Base.value>` is specified, that is used to
 
-        * **2-item (State name or list of State names, Mechanism) tuple** -- 1st item must be the name of an
+        * **2-item tuple: (State name or list of State names, Mechanism)** -- 1st item must be the name of an
           `OutputState` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified States
           (see `State 2-item tuple <State_2_Item_Tuple>` for additional details).
         |
-        * **2-item (value, `Projection specification <Projection_Specification>`) tuple** -- 1st item specifies the
+        * **2-item tupe: (value, `Projection specification <Projection_Specification>`)** -- 1st item specifies the
           `variable <InputState.variable>` for the InputState; the 2nd item specifies one or more MappingProjections
           <MappingProjection>` and/or `GatingProjections <GatingProjection>` to the InputState.
         |
-        * **2-item (State or Mechanism, Projection) tuple** -- this is a contracted form of the 4-item tuple
+        * **2-item tuple: (State or Mechanism, Projection)** -- this is a contracted form of the 4-item tuple
           described below
         |
-        * **4-item (State or Mechanism, weight, exponent, Projection) tuple** -- this is an expanded version of the
+        * **4-item tuple: (State or Mechanism, weight, exponent, Projection)** -- this is an expanded version of the
           2-item tuple that allows the specification of the `weight <InputState.weight>` and/or `exponent
           <InputState.exponent>` attributes of the InputState, as well as a Projection to it.  Note that is different
           from a `ProjectionTuple`;  here, the `weight and exponent specifications <InputState_Weights_And_Exponents>`
@@ -270,10 +270,10 @@ Projections to it). Each of these is described below:
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` in the
               same manner as the second item of a 2-item tuple (see above);
 
-.. _InputState_Compatability_and_Constraints
+.. _InputState_Compatability_and_Constraints:
 
-Compatibility and Constraint Considerations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+InputState `variable <InputState.variable>`: Compatibility and Constraints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The `variable <InputState.variable>` of an InputState must be compatible with the item of its owner Mechanism's
 `variable <Mechanism_Base.variable>` to which it is assigned (see `Mechanism_Variable_and_InputStates>`). This may
@@ -335,7 +335,7 @@ starting with constraints that are given the highest precedence:
       |
       * `OutputState` or `ProcessingMechanism` -- the `value <OutputState.value>` of the OutputState (if it is a
         Mechanism, then its `primary OutputState <OutputState_Primary>`) determines the format of the InputState's
-        `variable <InputState.variable`, and a MappingProjection is created from the OutputState to the InputState
+        `variable <InputState.variable>`, and a MappingProjection is created from the OutputState to the InputState
         using an `IDENTITY_MATRIX`.  If the InputState's `variable <InputState.variable>` is constrained (as in some
         of the cases above), then a `FULL_CONNECTIVITY_MATRIX` is used which maps the shape of the OutputState's `value
         <OutputState.value>` to that of the InputState's `variable <InputState.variable>`.

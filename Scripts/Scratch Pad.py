@@ -719,7 +719,6 @@ class ScratchPadError(Exception):
 #region TEST InputState
 print("TEST InputState")
 
-
 # T1 = pnl.TransferMechanism(name='T1', default_variable=[0,0,0])
 # # G = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], T1)])
 # T2 = pnl.TransferMechanism(input_states=[(pnl.RESULT, RESULT-1, T1)])
@@ -734,11 +733,15 @@ print("TEST InputState")
 #                            input_states=[P])
 # print(T2.input_states[0].path_afferents)
 
+T1 = pnl.TransferMechanism()
 G = pnl.GatingMechanism(gating_signals=['a','b'])
 T2 = pnl.TransferMechanism(
+        # input_states=[T1.output_states[pnl.RESULTS]],
         input_states=[G.gating_signals['a']],
         # output_states=[G.gating_signals['b']]
-                           )
+)
+
+print("INPUT PATH_AFFERENTS: ", T2.input_states[0].path_afferents)
 print("INPUT MOD_AFFERENTS: ", T2.input_states[0].mod_afferents)
 print("OUTPUT MOD_AFFERENTS: ", T2.output_states[0].mod_afferents)
 
