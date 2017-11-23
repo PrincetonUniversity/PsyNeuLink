@@ -76,7 +76,6 @@ and also to the first entry of the Mechanism's `output_states <Mechanism_Base.ou
 OutputState Specification
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 Specifying OutputStates when a Mechanism is created
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -145,22 +144,7 @@ specifications can be included in a list, or in a dictionary in which the key fo
 the name for the OutputState to be created, and the value is its specification.  Any of the following can be used to
 as the specification for each OutputState:
 
-    * **existing OutputState object** or the name of one -- its `variable <OutputState.variable>` must match (in the
-      number and type of its elements) the item of the owner Mechanism's `value <Mechanism_Base.value>` to
-      which the OutputState is assigned (designated by its `index <OutputState_Index>` attribute).
-    ..
-    * **OutputState class**, keyword *OUTPUT_STATE*, or a string -- creates a default OutputState using the
-      first item of the owner Mechanism's `value <Mechanism_Base.value>` as the OutputState's
-      `variable <InputState.variable>`, and is assigned as the `primary OutputState <OutputState_Primary>` for the
-      Mechanism. If the class name or *INPUT_STATE* keyword is used, a default name is assigned to the State;  if a
-      string is used, it is assigned as the name of the InputState (see :ref:`naming conventions <LINK>`).
-    ..
-    * **value** -- creates a default OutputState using the specified value as the OutputState's
-      `variable <OutputState.variable>`.  This must be compatible with (have the same number and type of elements as)
-      the item of the owner Mechanism's `value <Mechanism_Base.value>` to which the OutputState is assigned
-      (the first item by default, or the one designated by its `index <OutputState.index>` attribute).  A default
-      name is assigned based on the name of the Mechanism (see :ref:`naming conventions <LINK>`).
-    ..
+!!!!!!!!!!!!!!!!
     * **State specification dictionary** -- creates the specified OutputState, and can use any of the standard
       entries of a `State specification dictionary <State_Specification>`.  The *PROJECTIONS* or *MECHANISMS* entry can
       be used to specify one or more efferent `PathwayProjections <PathwayProjection>` from the OutputState, and/or
@@ -183,14 +167,15 @@ as the specification for each OutputState:
 
    .. _OutputState_Tuple_Specification:
 
-    * **InputState specification tuple** -- this is a convenience format that can be used to compactly specify an
-      OutputState along with a Projection to it.  It can one of two forms:
+    * **OutputState specification tuple** -- this is a convenience format that can be used to compactly specify an
+      OutputState along with Projections to one or more InputStates belonging to one or more other Mechanisms.  It
+      can take one of two forms:
 
-    * **2-item (State or Mechanism, Projection) tuple** -- this is a contracted form of the 4-item tuple
-          described below
+    * **2-item tuple: (State or Mechanism or list of them, Projection)** -- this is a contracted form of the 4-item
+      tuple described below
 
-    * **3-item (State or Mechanism, index, Projection) tuple** -- 1st item must be any of the OutputState
-      specifications above, the 2nd item must be one or a list of `Projection specifications
+    * **3-item tuple: (State or Mechanism or list of them, index, Projection)** -- 1st item can be any of the
+      OutputState specifications above, the 2nd item must be one or a list of `Projection specifications
       <Projection_Specification>` (or `None`), and the 3rd (optional) item an integer specifying the `index
       <OutputState.index>` for the OutputState.
 
@@ -199,6 +184,157 @@ as the specification for each OutputState:
        type of elements) as the item of its owner Mechanism's `value <Mechanism_Base.value>` to which it is
        assigned (i.e., specified by its `index <OutputState.index>` attribute).
 
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+OutputStates can be specified in a variety of ways, that fall into three broad categories:  specifying an OutputState
+directly; use of a `State specification dictionary <State_Specification>`; or by specifying one or more Components to
+which it should project. Each of these is described below:
+
+    .. _OutputState_Direct_Specification:
+
+    **Directly Specifying an OutputState**
+
+    * existing **OutputState object** or the name of one -- it cannot belong to another Mechanism, and the format of
+      its `variable <OutputState.variable>` must be compatible with the `indexed item
+      <OutputState_Variable_Value_Mechanism_Value>` of the owner Mechanism's `value <Mechanism_Base.value>`.
+    ..
+    * **OutputState class**, **keyword** *OUTPUT_STATE*, or a **string** -- creates a default OutputState that is
+      assigned an `index <OutputState.index>` of '0', uses the first item of the owner Mechanism's `value
+      <Mechanism_Base.value>` to format the OutputState's `variable <OutputState.variable>`, and assigns it as the
+      `primary OutputState <OutputState_Primary>` for the Mechanism. If the class name or *INPUT_STATE* keyword is used,
+      a default name is assigned to the State; if a string is specified, it is used as the `name <OutputState.name>` of
+      the OutputState  (see `Naming`).
+
+    .. _InputState_Specification_by_Value:
+
+    COMMENT:
+    TBI
+    * **integer** -- this creates an OutputState using the specified value as the OutputState's `index
+      <OutputState.index>` attribute, and formats its `variable <OutputState.variable>` using the indexed item of the
+      Mechanism's `value <Mechanism_Base.value>`.
+    COMMENT
+
+    * **value** -- creates a default OutputState using the specified value as the OutputState's
+
+      `variable <OutputState.variable>`.  This must be compatible with (have the same number and type of elements as)
+      the item of the owner Mechanism's `value <Mechanism_Base.value>` to which the OutputState is assigned
+      (the first item by default, or the one designated by its `index <OutputState.index>` attribute).  A default
+      name is assigned based on the name of the Mechanism (see `Naming`).
+    ..
+
+    **OutputState Specification Dictionary**
+
+    * **InputState specification dictionary** -- this can be used to specify the attributes of an InputState,
+      using any of the entries that can be included in a `State specification dictionary <State_Specification>`
+      (see `examples <State_Specification_Dictionary_Examples>` in State), as well as well as the following entries
+      specific to an InputState:
+
+      * *WEIGHT*:<number>
+          the value must be an integer or float, and is assigned as the value of the InputState's `weight
+          <InputState.weight>` attribute (see `weight and exponent <InputState_Weights_And_Exponents>`);
+          this takes precedence over any specification in the **weight** argument of the InputState's constructor.
+      ..
+      * *EXPONENT*:<number>
+          the value must be an integer or float, and is assigned as the value of the InputState's `exponent
+          <InputState.exponent>` attribute (see `weight and exponent <InputState_Weights_And_Exponents>`);
+          this takes precedence over any specification in the **exponent** argument of the InputState's constructor.
+
+      .. _InputState_Projections_Specification:
+
+      If the dictionary is used to specify an InputState in the constructor for a Mechanism, and it includes a
+      *VARIABLE* and/or *VALUE* or entry, the value must be compatible with the item of the owner Mechanism's `variable
+      <Mechanism_Base.variable>` to which the InputState is assigned (see  `Mechanism InputState specification
+      <Mechanism_InputState_Specification>`). A *PROJECTIONS* entry can include specifications for one or more
+      States, Mechanisms or Projections that should project to the InputState (described in the next section); however,
+      this may be constrained by or have consequences for the InputState's `variable <InputState.variable>` (see
+      `below <InputState_Compatability_and_Constraints>`).
+
+    .. _InputState_Projection_Source_Specification:
+
+    **Specifying an Input by Component that Project to It**
+
+    COMMENT:
+    `examples
+      <State_Projections_Examples>` in State)
+    COMMENT
+
+    COMMENT:
+    Projections to an InputState can be specified either as attributes, in the constructor for an
+    InputState (in its **projections** argument or in the *PROJECTIONS* entry of an `InputState specification dictionary
+    <InputState_Specification_Dictionary>`), or used to specify the InputState itself (using one of the
+    `InputState_Forms_of_Specification` described above. See `State Projections <State_Projections>` for additional
+    details concerning the specification of
+    Projections when creating a State.
+    COMMENT
+
+    An InputState can also be specified by specifying one or more States, Mechanisms or Projections that should project
+    to it, as described below.  Specifying an InputState in this way creates both the InputState and any of the
+    specified or implied Projection(s) to it (if they don't already exist). `MappingProjections <MappingProjection>`
+    are assigned to the InputState's `path_afferents <InputState.path_afferents>` attribute, and `GatingProjections
+    <GatingProjection>` to its `mod_afferents <InputState.mod_afferents>` attribute. Any of the following can be used
+    to specify it an InputState by the Components that projection to it (see `below
+    <InputState_Compatability_and_Constraints>` for a discussion
+    of the relationship between the `value` of these Components and the InputState's `variable <InputState.variable>`):
+
+    * **OutputState, GatingSignal, Mechanism, or list of any of these** -- creates an InputState with Projection(s)
+      to it from the specified State(s) or Mechanism(s).  If any Mechanisms are specified, their `primary OutputStates
+      <OutputState_Primary>` (or GatingSignals) are used.
+    ..
+    * **Projection** -- any form of `Projection specification <Projection_Specification>` can be
+      used;  creates an InputState and assigns it as the Projection's `receiver <Projection_Base.receiver>`.
+
+    .. _InputState_Tuple_Specification:
+
+    * **InputState specification tuples** -- these are convenience formats that can be used to compactly specify an
+      InputState and Projection(s) to it in a variety of ways, as described below.  As with a Projection specification,
+      if the Projection's `value <Projection_Base.value>` is specified, that is used to
+
+        * **2-item tuple: (State name or list of State names, Mechanism)** -- 1st item must be the name of an
+          `OutputState` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
+          which they all belong.  Projections of the relevant types are created for each of the specified States
+          (see `State 2-item tuple <State_2_Item_Tuple>` for additional details).
+        |
+        * **2-item tupe: (value, `Projection specification <Projection_Specification>`)** -- 1st item specifies the
+          `variable <InputState.variable>` for the InputState; the 2nd item specifies one or more MappingProjections
+          <MappingProjection>` and/or `GatingProjections <GatingProjection>` to the InputState.
+        |
+        * **2-item tuple: (State or Mechanism, Projection)** -- this is a contracted form of the 4-item tuple
+          described below
+        |
+        * **4-item tuple: (State or Mechanism, weight, exponent, Projection)** -- this is an expanded version of the
+          2-item tuple that allows the specification of the `weight <InputState.weight>` and/or `exponent
+          <InputState.exponent>` attributes of the InputState, as well as a Projection to it.  Note that is different
+          from a `ProjectionTuple`;  here, the `weight and exponent specifications <InputState_Weights_And_Exponents>`
+          are for attributes of the *State*, *not* the Projection. Each tuple must have at least the following first
+          three items (in the order listed), and can include the fourth:
+
+            * **State specification** -- specifies either the `variable <InputState.variable>` of the InputState, or a
+              specification for an OutputState (see above) that should project to it, which must be consistent with
+              the Projection specified in the fourth item if that is included (see `below
+              <InputState_Projection_Specification>`);
+            |
+            * **weight** -- must be an integer or a float; multiplies the `value <InputState.value>` of the InputState
+              before it is combined with others by the Mechanism's `function <Mechanism.function>` (see
+              ObjectiveMechanism for `examples <ObjectiveMechanism_Weights_and_Exponents_Example>`);
+            |
+            * **exponent** -- must be an integer or float; exponentiates the `value <InputState.value>` of the
+              InputState before it is combined with others by the ObjectiveMechanism's `function
+              <ObjectiveMechanism.function>` (see ObjectiveMechanism for `examples
+              <ObjectiveMechanism_Weights_and_Exponents_Example>`);
+            |
+            * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` in the
+              same manner as the second item of a 2-item tuple (see above);
+
+
+
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 .. _OutputState_Standard:
 

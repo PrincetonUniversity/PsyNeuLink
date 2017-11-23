@@ -2718,6 +2718,11 @@ def _parse_state_spec(state_type=None,
             raise StateError("PROGRAM ERROR: state_spec for {} of {} is a function ({}), but failed to return a value".
                              format(state_type_name, owner.name, state_specification))
 
+    # FIX: THIS SHOULD REALLY BE PARSED IN A STATE-SPECIFIC WAY:
+    #      FOR InputState: variable
+    #      FOR ParameterState: default (base) parameter value
+    #      FOR OutputState: index
+    #      FOR ModulatorySignal: default value of ModulatorySignal (e.g, allocation or gating policy)
     # value, so use as variable of State
     elif is_value_spec(state_specification):
         state_dict[REFERENCE_VALUE] = np.atleast_1d(state_specification)

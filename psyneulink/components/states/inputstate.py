@@ -141,18 +141,18 @@ Forms of Specification
 ^^^^^^^^^^^^^^^^^^^^^^
 
 InputStates can be specified in a variety of ways, that fall into three broad categories:  specifying an InputState
-directly; by a `Projection <Projection>` (or its source) that should project to it; or by using a `State
-specification dictionary <State_Specification>` or tuple format to specify attributes for the InputState (including
-Projections to it). Each of these is described below:
+directly; use of a `State specification dictionary <State_Specification>`; or by specifying one or more Components that
+should project to the InputState. Each of these is described below:
 
     .. _InputState_Direct_Specification:
 
     **Directly Specifying an InputState**
 
-    * existing **InputState object** or the name of one -- if used to specify an InputState in the constructor for a
-      Mechanism, its `value <InputState.value>` must be compatible with the corresponding item of the owner Mechanism's
-      `variable <Mechanism_Base.variable>` (see `Mechanism InputState specification
-      <Mechanism_InputState_Specification>` and discussion `below <InputState_Compatability_and_Constraints>`).
+    * existing **InputState object** or the name of one -- it can not already belong to another Mechanism and, if used
+      to specify an InputState in the constructor for a Mechanism, its `value <InputState.value>` must be compatible
+      with the corresponding item of the owner Mechanism's `variable <Mechanism_Base.variable>` (see `Mechanism
+      InputState specification <Mechanism_InputState_Specification>` and `InputState_Compatability_and_Constraints`
+      below).
     ..
     * **InputState class**, **keyword** *INPUT_STATE*, or a **string** -- this creates a default InputState; if used
       to specify an InputState in the constructor for a Mechanism, the item of the owner Mechanism's `variable
@@ -200,7 +200,7 @@ Projections to it). Each of these is described below:
 
     .. _InputState_Projection_Source_Specification:
 
-    **Specifying an Input by a Component that Projects to It**
+    **Specifying an Input by Component that Project to It**
 
     COMMENT:
     `examples
