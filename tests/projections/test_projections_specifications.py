@@ -98,7 +98,7 @@ class TestProjectionSpecificationFormats:
         assert T2.output_states[1].index == 2
         assert T2.output_states[2].index == 1
 
-    def test_gating_signal_using_2_item_tuple(self):
+    def test_2_item_tuple_from_gating_signal_to_output_states(self):
 
         T = pnl.DDM(name='D')
 
@@ -113,7 +113,7 @@ class TestProjectionSpecificationFormats:
         assert G.gating_signals[0].efferents[0].receiver.name == 'DECISION_VARIABLE'
         assert G.gating_signals[0].efferents[1].receiver.name == 'RESPONSE_TIME'
 
-    def test_control_signal_using_2_item_tuple(self):
+    def test_2_item_tuple_from_control_signal_to_paramter_state(self):
 
         T = pnl.DDM(name='D')
 
@@ -127,3 +127,12 @@ class TestProjectionSpecificationFormats:
         assert C.control_signals[0].name == 'D-1[drift_rate, threshold] ControlSignal'
         assert C.control_signals[0].efferents[0].receiver.name == 'drift_rate'
         assert C.control_signals[0].efferents[1].receiver.name == 'threshold'
+
+    def test_2_item_tuple_from_parameter_state_to_control_signals(self):
+        C = pnl.ControlMechanism(control_signals=['a','b'])
+        D = pnl.DDM(name='D3',
+                     function=pnl.BogaczEtAl(drift_rate=(3,C),
+                                             threshold=(2,C.control_signals['b']))
+                    )
+        assert D.parameter_states[pnl.DRIFT_RATE].mod_afferents[0].sender==C.control_signals[0]
+        assert D.parameter_states[pnl.THRESHOLD].mod_afferents[0].sender==C.control_signals[1]

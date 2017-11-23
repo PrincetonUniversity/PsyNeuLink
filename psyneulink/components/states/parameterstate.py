@@ -825,8 +825,10 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             # # IMPLEMENTATION NOTE:  need to copy, since _instantiate_state() calls _parse_state_value()
             # #                       for constraints before state_spec, which moves items to subdictionaries,
             # #                       which would make them inaccessible to the subsequent parse of state_spec
+            from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
+            from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
             if (isinstance(function_param_value, Iterable)
-                and any(isinstance(item, State_Base) for item in function_param_value)):
+                and any(isinstance(item, (ModulatorySignal, AdaptiveMechanism_Base)) for item in function_param_value)):
                 reference_value = function_param_value
             else:
                 from copy import deepcopy

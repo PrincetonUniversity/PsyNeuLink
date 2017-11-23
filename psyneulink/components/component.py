@@ -2233,22 +2233,17 @@ class Component(object):
     def _get_param_value_from_tuple(self, param_spec):
         """Returns param value (first item) of a (value, projection) tuple
         """
+        from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
         ALLOWABLE_TUPLE_SPEC_KEYWORDS = {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING}
-        ALLOWABLE_TUPLE_SPEC_CLASSES = (ModulatoryProjection_Base, ModulatorySignal)
+        ALLOWABLE_TUPLE_SPEC_CLASSES = (ModulatoryProjection_Base, ModulatorySignal, AdaptiveMechanism_Base)
 
         # If the 2nd item is a CONTROL or LEARNING SPEC, return the first item as the value
         if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
-                # # MODIFIED 6/19/17 OLD:
-                # (param_spec[1] in {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING} or
-                #      isinstance(param_spec[1], Projection) or
-                #      (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
-                # MODIFIED 6/19/17 NEW:
                 (param_spec[1] in ALLOWABLE_TUPLE_SPEC_KEYWORDS or
                      isinstance(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES) or
                          (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES)))
-                # MODIFIED 6/19/17 END
             ):
             value =  param_spec[0]
 

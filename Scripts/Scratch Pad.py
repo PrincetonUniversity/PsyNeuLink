@@ -732,21 +732,14 @@ print("TEST InputState")
 # # I.owner = T1
 # assert T1.input_states[1].name == 'I'
 
-D1 = pnl.DDM(name='D1')
-D2 = pnl.DDM(name='D2')
+C = pnl.ControlMechanism(control_signals=['a','b'])
+D = pnl.DDM(name='D3',
+             function=pnl.BogaczEtAl(drift_rate=(3,C),
+                                     threshold=(2,C.control_signals['b']))
+            )
+assert D.parameter_states[pnl.DRIFT_RATE].mod_afferents[0].sender==C.control_signals[0]
+assert D.parameter_states[pnl.THRESHOLD].mod_afferents[0].sender==C.control_signals[1]
 
-C3 = pnl.ControlMechanism(control_signals=['a','b'])
-
-# FIX:  ADD ABILITY FOR PARAMETERSTATE TO TAKE LIST OF CONTROL SIGNALS AS ITS SPECIFICATION
-# GatingProjections to ProcessingMechanism from GatingSignals of existing GatingMechanism
-# D3 = pnl.DDM(name='D3',
-#              function=pnl.BogaczEtAl(drift_rate=[C3.control_signals['a']],
-#                                      threshold=[C3.control_signals['b']]))
-
-# FIX: BUG
-D3 = pnl.DDM(name='D3',
-             function=pnl.BogaczEtAl(drift_rate=(3,C3.control_signals['a']),
-                                     threshold=(2,C3.control_signals['b'])))
 
 assert True
 
