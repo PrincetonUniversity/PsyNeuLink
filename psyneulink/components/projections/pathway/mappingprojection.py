@@ -401,14 +401,18 @@ class MappingProjection(PathwayProjection_Base):
         <Mapping_Weight_Exponent>` for details).
 
     name : str
-        the name of the MappingProjection. If the MappingProjection's `initialization has been deferred
-        <Projection_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
-        status) until initialization is completed, at which time it is assigned its designated name.  If that is the
-        name of an existing MappingProjection, it is appended with an indexed suffix, incremented for each
-        MappingProjection with the same base name (see `Naming`). If the name is not  specified in the **name**
-        argument of its constructor, a default name is assigned using the following format: 'MappingProjection from
-        <sender Mechanism name>[<OutputState name>] to <receiver Mechanism name>[InputState name]'
+        the name of the MappingProjection. If the specified name is the name of an existing MappingProjection,
+        it is appended with an indexed suffix, incremented for each MappingProjection with the same base name (see
+        `Naming`). If the name is not specified in the **name** argument of its constructor, a default name is
+        assigned using the following format:
+        'MappingProjection from <sender Mechanism>[<OutputState>] to <receiver Mechanism>[InputState]'
         (for example, ``'MappingProjection from my_mech_1[OutputState-0] to my_mech2[InputState-0]'``).
+        If either the `sender <MappingProjection.sender>` or `receiver <MappingProjection.receiver>` has not yet been
+        assigned (the MappingProjection is in `deferred initialization <MappingProjection_Deferred_Initialization>`),
+        then the parenthesized name of class is used in place of the unassigned attribute
+        (for example, if the `sender <MappingProjection.sender>` has not yet been specified:
+        ``'MappingProjection from (OutputState-0) to my_mech2[InputState-0]'``).
+
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the MappingProjection; if it is not specified in the **prefs** argument of the

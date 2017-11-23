@@ -748,7 +748,7 @@ D3 = pnl.DDM(name='D3',
              function=pnl.BogaczEtAl(drift_rate=(3,C3.control_signals['a']),
                                      threshold=(2,C3.control_signals['b'])))
 
-
+assert True
 
 #endregion
 

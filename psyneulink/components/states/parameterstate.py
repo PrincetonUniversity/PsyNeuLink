@@ -279,6 +279,7 @@ Class Reference
 """
 
 import inspect
+from collections import Iterable
 
 import numpy as np
 import typecheck as tc
@@ -824,8 +825,12 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             # # IMPLEMENTATION NOTE:  need to copy, since _instantiate_state() calls _parse_state_value()
             # #                       for constraints before state_spec, which moves items to subdictionaries,
             # #                       which would make them inaccessible to the subsequent parse of state_spec
-            from copy import deepcopy
-            reference_value = deepcopy(function_param_value)
+            if (isinstance(function_param_value, Iterable)
+                and any(isinstance(item, State_Base) for item in function_param_value)):
+                reference_value = function_param_value
+            else:
+                from copy import deepcopy
+                reference_value = deepcopy(function_param_value)
             # # FIX: ----------------------------------------------------------------------
 
             # Assign parameterState for function_param to the component

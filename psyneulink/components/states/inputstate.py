@@ -34,8 +34,8 @@ Creating an InputState
 
 An InputState can be created by calling its constructor, but in general this is not necessary as a Mechanism can
 usually automatically create the InputState(s) it needs when it is created.  For example, if the Mechanism is
-being created within the `pathway <Process.pathway` of a `Process`, its InputState will be created and  assigned
-as the `receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding `Mechanism <Mechanism>` in
+being created within the `pathway <Process.pathway` of a `Process`, its InputState is created and  assigned as the
+`receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding `Mechanism <Mechanism>` in
 the `pathway <Process.pathway>`.  If it is created using its constructor, and a Mechanism is specified in the
 **owner** argument, it is automatically assigned to that Mechanism.  Note that its `value <InputState.value>` must
 be compatible (in number and type of elements) with the item of its owner's `variable <Mechanism_Base.variable>` to
@@ -131,9 +131,9 @@ method (see `examples <State_Create_State_Examples>` in State).
        Mechanism's `variable <Mechanism_Base.variable>` to its `function <Mechanism_Base.function>`, as well as the
        number of its `OutputStates <OutputState>` (see `note <Mechanism_Add_InputStates_Note>`).
 
-If the name of an InputState added to a Mechanism is the same as one that already exists, its name will be suffixed
-with a numerical index (incremented for each InputState with that name; see `Naming`), and the InputState will be
-added to the list (that is, it will *not* replace ones that already exist).
+If the name of an InputState added to a Mechanism is the same as one that already exists, its name is suffixed with a
+numerical index (incremented for each InputState with that name; see `Naming`), and the InputState is added to the
+list (that is, it will *not* replace ones that already exist).
 
 .. _InputState_Forms_of_Specification:
 
@@ -157,8 +157,8 @@ should project to the InputState. Each of these is described below:
     * **InputState class**, **keyword** *INPUT_STATE*, or a **string** -- this creates a default InputState; if used
       to specify an InputState in the constructor for a Mechanism, the item of the owner Mechanism's `variable
       <Mechanism_Base.variable>` to which the InputState is assigned is used as the format for the InputState`s
-      `variable <InputState.variable>`; otherwise, the default for the InputState will be used.  If a string is
-      specified, it is used as the `name <InputState.name>` of the InputState (see `example
+      `variable <InputState.variable>`; otherwise, the default for the InputState is used.  If a string is specified,
+      it is used as the `name <InputState.name>` of the InputState (see `example
       <State_Constructor_Argument_Examples>`).
 
     .. _InputState_Specification_by_Value:
@@ -221,13 +221,13 @@ should project to the InputState. Each of these is described below:
     specified or implied Projection(s) to it (if they don't already exist). `MappingProjections <MappingProjection>`
     are assigned to the InputState's `path_afferents <InputState.path_afferents>` attribute, and `GatingProjections
     <GatingProjection>` to its `mod_afferents <InputState.mod_afferents>` attribute. Any of the following can be used
-    to specify it an InputState by the Components that projection to it (see `below
-    <InputState_Compatability_and_Constraints>` for a discussion
-    of the relationship between the `value` of these Components and the InputState's `variable <InputState.variable>`):
+    to specify an InputState by the Components that projection to it (see `below
+    <InputState_Compatability_and_Constraints>` for an explanation of the relationship between the `value` of these
+    Components and the InputState's `variable <InputState.variable>`):
 
-    * **OutputState, GatingSignal, Mechanism, or list of any of these** -- creates an InputState with Projection(s)
-      to it from the specified State(s) or Mechanism(s).  If any Mechanisms are specified, their `primary OutputStates
-      <OutputState_Primary>` (or GatingSignals) are used.
+    * **OutputState, GatingSignal, Mechanism, or list with any of these** -- creates an InputState with Projection(s)
+      to it from the specified State(s) or Mechanism(s).  For each Mechanism specified, its `primary OutputState
+      <OutputState_Primary>` (or GatingSignal) is used.
     ..
     * **Projection** -- any form of `Projection specification <Projection_Specification>` can be
       used;  creates an InputState and assigns it as the Projection's `receiver <Projection_Base.receiver>`.
@@ -235,32 +235,30 @@ should project to the InputState. Each of these is described below:
     .. _InputState_Tuple_Specification:
 
     * **InputState specification tuples** -- these are convenience formats that can be used to compactly specify an
-      InputState and Projection(s) to it in a variety of ways, as described below.  As with a Projection specification,
-      if the Projection's `value <Projection_Base.value>` is specified, that is used to
+      InputState and Projections to it any of the following ways:
 
-        * **2-item tuple: (State name or list of State names, Mechanism)** -- 1st item must be the name of an
+        * **2-item tuple: (<State name or list of State names>, Mechanism)** -- 1st item must be the name of an
           `OutputState` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified States
           (see `State 2-item tuple <State_2_Item_Tuple>` for additional details).
         |
-        * **2-item tupe: (value, `Projection specification <Projection_Specification>`)** -- 1st item specifies the
-          `variable <InputState.variable>` for the InputState; the 2nd item specifies one or more MappingProjections
-          <MappingProjection>` and/or `GatingProjections <GatingProjection>` to the InputState.
+        * **2-item tuple: (<value, State specification, or list of State specs>, Projection specification)** -- this
+          is a contracted form of the 4-item tuple described below;
         |
-        * **2-item tuple: (State or Mechanism, Projection)** -- this is a contracted form of the 4-item tuple
-          described below
-        |
-        * **4-item tuple: (State or Mechanism, weight, exponent, Projection)** -- this is an expanded version of the
-          2-item tuple that allows the specification of the `weight <InputState.weight>` and/or `exponent
-          <InputState.exponent>` attributes of the InputState, as well as a Projection to it.  Note that is different
-          from a `ProjectionTuple`;  here, the `weight and exponent specifications <InputState_Weights_And_Exponents>`
-          are for attributes of the *State*, *not* the Projection. Each tuple must have at least the following first
+        * **4-item tuple: (<value, State spec, or list of State specs>, weight, exponent, Projection specification)**
+          -- this allows the specification of State(s) that should project to the InputState, together with a
+          specification of the InputState's `weight <InputState.weight>` and/or `exponent <InputState.exponent>`
+          attributes of the InputState, and (optionally) the Projection(s) to it.  This can be used to compactly
+          specify a set of States that project the InputState, while using the 4th item to determine its variable
+          (e.g., using the matrix of the Projection specification).  Each tuple must have at least the following first
           three items (in the order listed), and can include the fourth:
 
-            * **State specification** -- specifies either the `variable <InputState.variable>` of the InputState, or a
-              specification for an OutputState (see above) that should project to it, which must be consistent with
-              the Projection specified in the fourth item if that is included (see `below
-              <InputState_Projection_Specification>`);
+            * **value, State specification, or list of State specifications** -- specifies either the `variable
+            <InputState.variable>` of the InputState, or one or more States that should project to it.  The State
+            specification(s) can include Mechanisms, in which case their `primary OutputState <OutputStatePrimary>`
+            is used.  All of the State specifications must be consistent with (that is, their `value <State_Base.value>`
+            must be compatible with the `variable <Projection_Base.variable>` of) the Projection specified in the fourth
+            item if that is included;
             |
             * **weight** -- must be an integer or a float; multiplies the `value <InputState.value>` of the InputState
               before it is combined with others by the Mechanism's `function <Mechanism.function>` (see
@@ -271,8 +269,8 @@ should project to the InputState. Each of these is described below:
               <ObjectiveMechanism.function>` (see ObjectiveMechanism for `examples
               <ObjectiveMechanism_Weights_and_Exponents_Example>`);
             |
-            * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` in the
-              same manner as the second item of a 2-item tuple (see above);
+            * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` that
+              must be compatible with the State specification(s) in the 1st item;
 
 .. _InputState_Compatability_and_Constraints:
 
@@ -549,10 +547,10 @@ class InputState(State_Base):
         item of its owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState has been assigned.
 
     projections : list of Projection specifications
-        species the `MappingProjection(s) <MappingProjection>` and/or `GatingProjection(s) <GatingProjection>` to be
-        received by the InputState, and that will be listed in its `path_afferents <InputState.path_afferents>` and
-        `mod_afferents <InputState.mod_afferents>` attributes, respectively (see `InputState_Compatability_and_Constraints` for additional
-        details).
+        specifies the `MappingProjection(s) <MappingProjection>` and/or `GatingProjection(s) <GatingProjection>` to be
+        received by the InputState, and that are listed in its `path_afferents <InputState.path_afferents>` and
+        `mod_afferents <InputState.mod_afferents>` attributes, respectively (see
+        `InputState_Compatability_and_Constraints` for additional details).
 
     weight : number : default 1
         specifies the value of the `weight <InputState.weight>` attribute of the InputState.
