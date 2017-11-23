@@ -34,21 +34,29 @@ Creating an OutputState
 An OutputState can be created by calling its constructor. However, in general this is not necessary, as a Mechanism
 automatically creates a default OutputState if none is explicitly specified, that contains the primary result of its
 `function <Mechanism_Base.function>`.  For example, if the Mechanism is created within the `pathway` of a
-`Process <Process>`, an OutputState will be created and assigned as the
-`sender <MappingProjection.MappingProjection.sender>` of a `MappingProjection` to the next Mechanism in the pathway,
+`Process <Process>`, an OutputState will be created and assigned as the `sender
+<MappingProjection.MappingProjection.sender>` of a `MappingProjection` to the next Mechanism in the pathway,
 or to the Process' `output <Process_Input_And_Output>` if the Mechanism is a `TERMINAL` Mechanism for that Process.
 Other configurations can also easily be specified using a Mechanism's **output_states** argument (see
-`OutputState_Specification` below).
+`OutputState_Specification` below).  If it is created using its constructor, and a Mechanism is specified in the
+**owner** argument, it is automatically assigned to that Mechanism. Note that its `variable <OutputState.variable>` must
+be compatible (in number and type of elements) with the item of its owner's `value <Mechanism_Base.value>` specified by
+the OutputState's `index <OutputState.index>` attribute. If its **owner* is not specified, `initialization is deferred.
+
+.. _OutputState_Deferred_Initialization:
+
+Owner Assignment and Deferred Initialization
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An OutputState must be owned by a `Mechanism <Mechanism>`.  When OutputState is specified in the constructor for a
 `Mechanism <Mechanism>` (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as
 its owner. If the OutputState is created directly, its `owner <OutputState.owner>` Mechanism can specified in the
-**owner** argument of its constructor, in which case it is assigned to the specified Mechanism.  Note that its
-`variable <OutputState.variable>` must be compatible (in number and type of elements) with the item of its owner's
-`value <Mechanism_Base.value>` specified by the OutputState's `index <OutputState.index>` attrbute. If an
-OutputState's owner is not specified when it is constructed, its initialization will be `deferred
-<State_Deferred_Initialization>` until it is assigned to an owner using the owner's `add_states
-<Mechanism_Base.add_states>` method.
+**owner** argument of its constructor, in which case it is assigned to the specified Mechanism.  Otherwise, its
+initialization is `deferred <State_Deferred_Initialization>` until
+COMMENT:
+TBI: its `owner <State_Base.owner>` attribute is assigned or
+COMMENT
+the OutputState is assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method.
 
 .. _OutputState_Primary:
 
@@ -59,27 +67,38 @@ Every Mechanism has at least one OutputState, referred to as its *primary Output
 `explicitly specified <OutputState_Specification>` for a Mechanism, a primary OutputState is automatically created
 and assigned to its `output_state <Mechanism_Base.output_state>` attribute (note the singular),
 and also to the first entry of the Mechanism's `output_states <Mechanism_Base.output_states>` attribute
-(note the plural).  The `value <OutputState.value>` of the primary OutputState is assigned as the first (and often
-only) item of the Mechanism's `output_values <Mechanism_Base.output_values>` attribute, which is the result
-of the Mechanism's `function <Mechanism_Base.function>`.
+(note the plural).  The primary OutputState is assigned an `index <OutputState.index>` of '0', and therefore its
+`value <OutputState.value>` is assigned as the first (and often only) item of the Mechanism's `value
+<Mechanism_Base.value>` attribute.
 
 .. _OutputState_Specification:
 
 OutputState Specification
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The OutputState(s) for a Mechanism can be specified explicitly using the **output_states** argument of the
-`Mechanism's constructor <Mechanism_OutputStates>`, or in an *OUTPUT_STATES* entry of a parameter dictionary
-assigned to the constructor's **params** argument.  The latter takes precedence over the former (that is, if
-OutputStates are specified in the parameter dictionary, any specified in the **output_states** argument are ignored).
 
-.. note::
-    Assigning OutputStates to a Mechanism in its constructor **replaces** any that are automatically generated for that
-    Mechanism (i.e., those that it creates for itself by default).  If any of those need to be retained, they must be
-    explicitly specified in the list assigned to the **output_states** argument or the *OUTPUT_STATES* entry of
-    the parameter dictionary in the **params** argument).  In particular, if the default OutputState -- that usually
-    contains the result of the Mechanism's `function <Mechanism_Base.function>` -- is to be retained, it too must be
-    specified along with any additional OutputStates desired.
+Specifying OutputStates when a Mechanism is created
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+OutputStates can be specified for a `Mechanism <Mechanism>` when it is created, in the **output_states** argument of the
+Mechanism's constructor (see `examples <State_Constructor_Argument_Examples>` in State), or in an *OUTPUT_STATES* entry
+of a parameter dictionary assigned to the constructor's **params** argument.  The latter takes precedence over the
+former (that is, if an *OUTPUT_STATES* entry is included in the parameter dictionary, any specified in the
+**output_states** argument are ignored).
+
+    .. _OutputState_Replace_Default_Note:
+
+    .. note::
+        Assigning OutputStates to a Mechanism in its constructor **replaces** any that are automatically generated for
+        that Mechanism (i.e., those that it creates for itself by default).  If any of those need to be retained, they
+        must be explicitly specified in the list assigned to the **output_states** argument or the *OUTPUT_STATES* entry
+        of the parameter dictionary in the **params** argument).  In particular, if the default OutputState -- that
+        usually contains the result of the Mechanism's `function <Mechanism_Base.function>` -- is to be retained,
+        it too must be specified along with any additional OutputStates desired.
+
+
+Adding OutputStates to a Mechanism after it is created
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 OutputStates can also be added* to a Mechanism, using the Mechanism's `add_states <Mechanism_Base.add_methods>` method.
 Unlike specification in the constructor, this **does not** replace any OutpuStates already assigned to the Mechanism.
@@ -88,6 +107,38 @@ attribute, and their values are appended to its `output_values <Mechanism_Base.o
 of an OutputState added to a Mechanism is the same as one that already exists, its name will be suffixed with a
 numerical index (incremented for each OutputState with that name), and the OutputState will be added to the list (that
 is, it will *not* replace ones that were already created).
+
+
+.. _OutputState_Variable_Value_Mechanism_Value:
+
+OutputState's `variable <OutputState.variable>` and Mechanism's `value <Mechanism_Base.value>`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Each OutputState specified in the **output_states** argument of a Mechanism's constructor must reference one or more
+items its owner Mechanism's `value <Mechanism_Base.value>` attribute (see `XXX>`), that it uses to generate its own
+`value <OutputState.value>`.  The item(s) referenced are specified by its `index <OutputState.index>` attribute.  The
+OutputState's `variable <OutputState.variable>` must be compatible (in number and type of elements) with the item(s)
+of the Mechanism's `value <Mechanism_Base.value>` referenced by its `index <OutputState.index>`;  by default this is
+'0', referring to the first item of the Mechanism's `value <Mechanism_Base.value>`.  The OutputState's `variable
+<OutputState.variable>` is used as the input to its `function <OutputState.function>`, which may modify the value
+under the influence of a `GatingSignal`.  The result may be further modified by the OutputState's `calculate
+<OutputState.calculate>` function (e.g., to combine, compare, or otherwise evaluate the index items of the Mechanism's
+`value <Mechanism_Base.value>`), before being assigned to its `value <OutputState.value>`. See
+`OutputState_Customization` for additional details.
+
+The `value <OutputState.value>` of each OutputState of a Mechanism is assigned to a corresponding item of the
+Mechanism's `output_values <Mechanism_Base.output_values>` attribute, in the order in which they are assigned in the
+**output_states** argument of its constructor, and listed in its `output_states <Mechanism_Base.output_states>`
+attribute.  Note that the `output_values <Mechanism_Base.output_values>` attribute of a Mechanism is **not the same**
+as its `value <Mechanism_Base.value>` attribute, which contains the full and unmodified results of the Mechanism's
+`function <Mechanism_Base.function>` (since, as noted above, OutputStates  may modify the item of the Mechanism`s
+`value <Mechanism_Base.value>` to which they refer).
+
+
+.. _OutputState_Forms_of_Specification:
+
+Forms of Specification
+^^^^^^^^^^^^^^^^^^^^^^
 
 Specifying an OutputState can be done in any of the ways listed below.  To create multiple OutputStates, their
 specifications can be included in a list, or in a dictionary in which the key for each entry is a string specifying
@@ -147,15 +198,6 @@ as the specification for each OutputState:
        In all cases, the `variable <OutputState.variable>` of the OutputState must match (have the same number and
        type of elements) as the item of its owner Mechanism's `value <Mechanism_Base.value>` to which it is
        assigned (i.e., specified by its `index <OutputState.index>` attribute).
-
-
-The values of a Mechanism's OutputStates are assigned as items in its `output_values <Mechanism_Base.output_values>`
-attribute, in the order in which they are assigned in the **output_states** argument of its constructor, and listed in
-its `output_states <Mechanism_Base.output_states>` attribute.  Note that the `output_values
-<Mechanism_Base.output_values>` attribute of a Mechanism is distinct from its `value <Mechanism_Base.value>` attribute,
-which contains the full and unmodified results of its `function <Mechanism_Base.function>` (this is because
-OutputStates  may modify the item of the Mechanism`s `value <Mechanism_Base.value>` to which they refer -- see `below
-<OutputState_Customization>`).
 
 
 .. _OutputState_Standard:
@@ -270,13 +312,12 @@ and/or of a System.  It has the following attributes, that includes ones specifi
 
 .. _OutputState_Index:
 
-* `index <OutputState.index>`: this determines the item of its owner Mechanism's
-  `value <Mechanism_Base.value>` to which it is assigned.  By default, this is set to 0, which assigns it to
-  the first item of the Mechanism's `value <Mechanism_Base.value>`.  The `index <Mechanism_Base.index>` must be
-  equal to or less than one minus the number of OutputStates listed in the Mechanism's
-  `output_states <Mechanism_Base.output_states>` attribute.  The `variable <OutputState.variable>` of the
-  OutputState must also match (in the number and type of its elements) the item of the Mechanism's
-  `value <Mechanism_Base.value>` designated by the `index <OutputState.index>`.
+* `index <OutputState.index>`: this determines the item of its owner Mechanism's `value <Mechanism_Base.value>` to
+  which it is assigned.  By default, this is set to 0, which assigns it to the first item of the Mechanism's `value
+  <Mechanism_Base.value>`.  The `index <Mechanism_Base.index>` must be equal to or less than one minus the number of
+  OutputStates listed in the Mechanism's `output_states <Mechanism_Base.output_states>` attribute.  The `variable
+  <OutputState.variable>` of the OutputState must also match (in the number and type of its elements) the item of the
+  Mechanism's `value <Mechanism_Base.value>` designated by the `index <OutputState.index>`.
 
 .. _OutputState_Calculate:
 
@@ -528,15 +569,16 @@ class OutputState(State_Base):
         OutputState's `index <OutputState.index>` attribute.
 
     index : int
-        the item of the owner Mechanism's `value <Mechanism_Base.value>` used as input for the function
-        specified by its `calculate <OutputState.calculate>` attribute.
+        the item of the owner Mechanism's `value <Mechanism_Base.value>` used as input for the function specified by
+        its `calculate <OutputState.calculate>` attribute (see `index <OutputState_Index>` for additional details).
 
     calculate : function or method : default Linear(slope=1, intercept=0))
         function used to convert the item of the owner Mechanism's `value <Mechanism_Base.value>` specified by
         the OutputState's `index <OutputState.index>` attribute.  The result is combined with the result of the
         OutputState's `function <OutputState.function>` to determine both the `value <OutputState.value>` of the
         OutputState, as well as the value of the corresponding item of the owner Mechanism's `output_values
-        <Mechanism_Base.output_values>`. The default (`Linear`) transfers the value unmodified.
+        <Mechanism_Base.output_values>`. The default (`Linear`) transfers the value unmodified  (see `calculate
+        <OutputState_Calculate>` for additional details)
 
     function : TransferFunction : default Linear(slope=1, intercept=0))
         function used to assign the result of the OutputState's `calculate <OutputState.calculate>` function,

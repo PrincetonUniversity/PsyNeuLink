@@ -725,19 +725,29 @@ print("TEST InputState")
 # # assert T2.input_states[0].path_afferents[0].sender.owner.name == 'D'
 # assert True
 
-T1 = pnl.TransferMechanism(name='T1', input_states=[[0,0],[0,0,0]])
-# FIX: P SHOULD NOT IMPLEMENT DEFAULT OUTPUTSTATE
-# ADD TEST ONCE IT WORKS
-P = pnl.MappingProjection()
-T2 = pnl.TransferMechanism(name='T2',
-                           input_states=[P])
-print(T2.input_states[0].path_afferents)
 
 # I = pnl.InputState(name='I', owner=T1)
 # # I = pnl.InputState(name='I')
 # # FIX: IMPLEMENT ASSIGNMENT TO OWNER WITH ASSIGNMENT OF OWNER
 # # I.owner = T1
 # assert T1.input_states[1].name == 'I'
+
+D1 = pnl.DDM(name='D1')
+D2 = pnl.DDM(name='D2')
+
+C3 = pnl.ControlMechanism(control_signals=['a','b'])
+
+# FIX:  ADD ABILITY FOR PARAMETERSTATE TO TAKE LIST OF CONTROL SIGNALS AS ITS SPECIFICATION
+# GatingProjections to ProcessingMechanism from GatingSignals of existing GatingMechanism
+# D3 = pnl.DDM(name='D3',
+#              function=pnl.BogaczEtAl(drift_rate=[C3.control_signals['a']],
+#                                      threshold=[C3.control_signals['b']]))
+
+# FIX: BUG
+D3 = pnl.DDM(name='D3',
+             function=pnl.BogaczEtAl(drift_rate=(3,C3.control_signals['a']),
+                                     threshold=(2,C3.control_signals['b'])))
+
 
 
 #endregion

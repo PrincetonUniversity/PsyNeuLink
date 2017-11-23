@@ -406,9 +406,9 @@ class MappingProjection(PathwayProjection_Base):
         status) until initialization is completed, at which time it is assigned its designated name.  If that is the
         name of an existing MappingProjection, it is appended with an indexed suffix, incremented for each
         MappingProjection with the same base name (see `Naming`). If the name is not  specified in the **name**
-        argument of its constructor, a default name is assigned using the following format:
-        'MappingProjection from <sender's name> to <receiver's name>'
-        (for example, ``'MappingProjection from my_mech_1 to my_mech2'``).
+        argument of its constructor, a default name is assigned using the following format: 'MappingProjection from
+        <sender Mechanism name>[<OutputState name>] to <receiver Mechanism name>[InputState name]'
+        (for example, ``'MappingProjection from my_mech_1[OutputState-0] to my_mech2[InputState-0]'``).
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the MappingProjection; if it is not specified in the **prefs** argument of the

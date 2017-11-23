@@ -37,8 +37,10 @@ usually automatically create the InputState(s) it needs when it is created.  For
 being created within the `pathway <Process.pathway` of a `Process`, its InputState will be created and  assigned
 as the `receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding `Mechanism <Mechanism>` in
 the `pathway <Process.pathway>`.  If it is created using its constructor, and a Mechanism is specified in the
-**owner** argument, it is automatically assigned to that Mechanism.  If the **owner* is not specified, `initialization
-is deferred.
+**owner** argument, it is automatically assigned to that Mechanism.  Note that its `value <InputState.value>` must
+be compatible (in number and type of elements) with the item of its owner's `variable <Mechanism_Base.variable>` to
+which it is assigned (see `below <InputState_Variable_and_Value>` and `Mechanism <Mechanism_Variable_and_InputStates>`).
+If the **owner* is not specified, `initialization is deferred.
 
 .. _InputState_Deferred_Initialization:
 
@@ -48,12 +50,14 @@ Owner Assignment and Deferred Initialization
 An InputState must be owned by a `Mechanism <Mechanism>`.  When InputState is specified in the constructor for a
 Mechanism (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as its owner. If
 the InputState is created directly, its `owner <InputState.owner>` can specified in the **owner**  argument of its
-constructor, in which case it will be assigned to that Mechanism. Otherwise, its initialization will be
-`deferred <State_Deferred_Initialization>` until
+constructor, in which case it is assigned to that Mechanism. Otherwise, its initialization is `deferred
+<State_Deferred_Initialization>` until
 COMMENT:
 TBI: its `owner <State_Base.owner>` attribute is assigned or
 COMMENT
 the InputState is assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method.
+
+ If its **owner* is not specified, `initialization is deferred.
 
 .. _InputState_Primary:
 
@@ -92,10 +96,10 @@ former (that is, if an *INPUT_STATES* entry is included in the parameter diction
 
 .. _InputState_Variable_and_Value:
 
-Each InputState specified in the **input_states** argument must correspond to an item of the Mechanism's `variable
-<Mechanism_Base.variable>` attribute (see `Mechanism InputStates <Mechanism_InputStates>`), and the `value
-<InputState.value>` of the InputState must be compatible with that item (that is, have the same number and type of
-elements).  By default, this is also true of the InputState's `variable <InputState.variable>` attribute,
+Each InputState specified in the **input_states** argument of a Mechanism's constructor must correspond to an item of
+the Mechanism's `variable <Mechanism_Base.variable>` attribute (see `Mechanism <Mechanism_Variable_and_InputStates>`),
+and the `value <InputState.value>` of the InputState must be compatible with that item (that is, have the same number
+and type of elements).  By default, this is also true of the InputState's `variable <InputState.variable>` attribute,
 since the default `function <InputState.function>` for an InputState is a `LinearCombination`, the purpose of which
 is to combine the inputs it receives and possibly modify the combined value (under the influence of any
 `ModulatoryProjections <ModulatoryProjection>` it receives), but **not mutate its form**. Therefore, under most
