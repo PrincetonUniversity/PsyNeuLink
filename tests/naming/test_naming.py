@@ -204,3 +204,8 @@ class TestNaming:
         assert G3.gating_signals[0].efferents[0].name == 'GatingProjection for T3[InputState-0]'
         assert G3.gating_signals[0].efferents[1].name == 'GatingProjection for T4[First State]'
 
+        # GatingProjections to ProcessingMechanism from GatingSignals of existing GatingMechanism
+        T5 = pnl.TransferMechanism(name='T5',
+                                   input_states=[T3.output_states[pnl.RESULTS],
+                                                 G3.gating_signals['GatingSignal-0 divergent GatingSignal']],
+                                   output_states=[G3.gating_signals['GatingSignal-0 divergent GatingSignal']])

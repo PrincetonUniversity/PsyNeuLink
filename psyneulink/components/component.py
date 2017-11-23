@@ -1097,9 +1097,9 @@ class Component(object):
 
             # If name is None, mark as deferred so that name can be customized
             #    using info that has become available at time of deferred init
-            self.init_args[NAME] = (self.init_args[NAME] or
-                                      (DEFERRED_INITIALIZATION + ' ' + self.className) or
-                                    DEFERRED_DEFAULT_NAME)
+            self.init_args[NAME] = self.name or (self.init_args[NAME] or
+                                                 (DEFERRED_INITIALIZATION + ' ' + self.className) or
+                                                 DEFERRED_DEFAULT_NAME)
 
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)

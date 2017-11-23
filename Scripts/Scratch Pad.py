@@ -736,9 +736,9 @@ print("TEST InputState")
 T1 = pnl.TransferMechanism()
 G = pnl.GatingMechanism(gating_signals=['a','b'])
 T2 = pnl.TransferMechanism(
-        input_states=[T1.output_states[pnl.RESULTS]],
-        # input_states=[G.gating_signals['a']],
-        # output_states=[G.gating_signals['b']]
+        # input_states=[T1.output_states[pnl.RESULTS]],
+        input_states=[G.gating_signals['a']],
+        output_states=[G.gating_signals['b']]
 )
 
 print("INPUT PATH_AFFERENTS: ", T2.input_states[0].path_afferents)
