@@ -191,8 +191,8 @@ class ModulatoryProjection_Base(Projection_Base):
         name of an existing ModulatoryProjection, it is appended with an indexed suffix, incremented for each
         ModulatoryProjection with the same base name (see `Naming`). If the name is not  specified in the **name**
         argument of its constructor, a default name is assigned using the following format:
-        '<ModualatorySignal type> for <receiver's name> to <receiver owner Mechanism's name>'
-        (for example, ``'GatingSignal for InputState-0 of my_mech'``).
+        '<ModualatorySignal type> for <receiver owner Mechanism's name>[<receiver's name>]'
+        (for example, ``'GatingSignal for my_mech[InputState-0]'``).
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the ModulatoryProjection; if it is not specified in the **prefs** argument of the

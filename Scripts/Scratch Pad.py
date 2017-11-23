@@ -725,26 +725,13 @@ print("TEST InputState")
 # # assert T2.input_states[0].path_afferents[0].sender.owner.name == 'D'
 # assert True
 
-# T1 = pnl.TransferMechanism(name='T1', input_states=[[0,0],[0,0,0]])
-# # FIX: P SHOULD NOT IMPLEMENT DEFAULT OUTPUTSTATE
-# # ADD TEST ONCE IT WORKS
-# P = pnl.MappingProjection()
-# T2 = pnl.TransferMechanism(name='T2',
-#                            input_states=[P])
-# print(T2.input_states[0].path_afferents)
-
-T1 = pnl.TransferMechanism()
-G = pnl.GatingMechanism(gating_signals=['a','b'])
-T2 = pnl.TransferMechanism(
-        # input_states=[T1.output_states[pnl.RESULTS]],
-        input_states=[G.gating_signals['a']],
-        output_states=[G.gating_signals['b']]
-)
-
-print("INPUT PATH_AFFERENTS: ", T2.input_states[0].path_afferents)
-print("INPUT MOD_AFFERENTS: ", T2.input_states[0].mod_afferents)
-print("OUTPUT MOD_AFFERENTS: ", T2.output_states[0].mod_afferents)
-
+T1 = pnl.TransferMechanism(name='T1', input_states=[[0,0],[0,0,0]])
+# FIX: P SHOULD NOT IMPLEMENT DEFAULT OUTPUTSTATE
+# ADD TEST ONCE IT WORKS
+P = pnl.MappingProjection()
+T2 = pnl.TransferMechanism(name='T2',
+                           input_states=[P])
+print(T2.input_states[0].path_afferents)
 
 # I = pnl.InputState(name='I', owner=T1)
 # # I = pnl.InputState(name='I')
