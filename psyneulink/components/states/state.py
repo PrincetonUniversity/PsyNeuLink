@@ -2577,6 +2577,10 @@ def _parse_state_spec(state_type=None,
     # Determine whether specified State is one to be instantiated or to be connected with,
     #    and validate that it is consistent with any standard_args specified in call to _instantiate_state
 
+    # # function; try to resolve to a value
+    # if isinstance(state_specification, function_type):
+    #     state_specification = state_specification()
+
     # State or Mechanism object specification:
     if isinstance(state_specification, (Mechanism, State)):
 
@@ -2593,27 +2597,6 @@ def _parse_state_spec(state_type=None,
                 state_specification = mech
                 projection = state_type
 
-        # # MODIFIED 11/21/17 OLD:
-        # # Specified State is same as connectee's type (state_type),
-        # #    so assume it is a reference to the State itself that is being (or has been) instantiated
-        # if isinstance(state_specification, state_type):
-        #     # Make sure that the specified State belongs to the Mechanism passed in the owner arg
-        #     if state_specification.init_status is InitStatus.DEFERRED_INITIALIZATION:
-        #         state_owner = state_specification.init_args[OWNER]
-        #     else:
-        #         state_owner = state_specification.owner
-        #     if owner is not None and state_owner is not None and state_owner is not owner:
-        #         raise StateError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
-        #                          format(State.__name__, state_specification.name, owner.name,
-        #                                 Mechanism.__name__, state_owner.name))
-        #     return state_specification
-        # else:
-        #     # State is not the same as connectee's type, so assume it is for one to connect with
-        #     state_dict[PROJECTIONS] = ProjectionTuple(state=state_specification,
-        #                                               weight=None,
-        #                                               exponent=None,
-        #                                               projection=projection)
-        # MODIFIED 11/21/17 NEW:
         # Specified State is one with which connectee can connect, so assume it is a Projection specification
         if state_specification.__class__.__name__ in state_type.connectsWith + state_type.modulators:
             projection = state_type
@@ -2637,7 +2620,6 @@ def _parse_state_spec(state_type=None,
                                                   weight=None,
                                                   exponent=None,
                                                   projection=projection)
-        # MODIFIED 11/21/17 END
 
     # State class
     elif (inspect.isclass(state_specification) and issubclass(state_specification, State)):
@@ -2725,8 +2707,13 @@ def _parse_state_spec(state_type=None,
     #      FOR ModulatorySignal: default value of ModulatorySignal (e.g, allocation or gating policy)
     # value, so use as variable of State
     elif is_value_spec(state_specification):
-        state_dict[REFERENCE_VALUE] = np.atleast_1d(state_specification)
-
+        state_spec, params = state_type._parse_state_specific_specs(state_type,
+                                                                     owner=owner,
+                                                                     state_dict=state_dict,
+                                                                     state_specific_spec = state_specification)
+        # If State fails to handle value, assign to REFERENCE_VALUE by default
+        if state_spec is None:
+            state_dict[REFERENCE_VALUE] = np.atleast_1d(state_specification)
 
     elif isinstance(state_specification, Iterable) or state_specification is None:
 

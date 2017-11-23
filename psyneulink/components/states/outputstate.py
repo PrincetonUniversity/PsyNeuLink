@@ -520,7 +520,7 @@ from psyneulink.globals.keywords import \
     CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, VARIANCE, ALL, MECHANISM_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import UtilitiesError, iscompatible, type_match
+from psyneulink.globals.utilities import UtilitiesError, iscompatible, type_match, is_value_spec
 
 __all__ = [
     'make_readonly_property', 'OUTPUTS', 'OutputState', 'OutputStateError', 'PRIMARY', 'SEQUENTIAL',
@@ -1017,6 +1017,15 @@ class OutputState(State_Base):
 
         params_dict = {}
         state_spec = state_specific_spec
+
+        # If state_specific_spec is a value, assign as INDEX for OutputState
+        if is_value_spec(state_specific_spec):
+            if not isinstance(state_specific_spec, int):
+                raise OutputStateError("Value used in specification of {} for {} ({}) "
+                                       "should be an integer specifying its {} attribute".
+                                       format(OutputState.__name__, owner.name, state_specific_spec, INDEX))
+            state_dict[INDEX] = state_specific_spec
+            return state_spec, params_dict
 
         if isinstance(state_specific_spec, dict):
             return None, state_specific_spec

@@ -449,7 +449,7 @@ from psyneulink.globals.keywords import \
     OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE, LEARNING_SIGNAL, GATING_SIGNAL, SENDER, COMMAND_LINE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import append_type_to_name, iscompatible, is_numeric
+from psyneulink.globals.utilities import append_type_to_name, iscompatible, is_numeric, is_value_spec
 
 __all__ = [
     'InputState', 'InputStateError', 'state_type_keywords',
@@ -838,7 +838,7 @@ class InputState(State_Base):
 
     @tc.typecheck
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
-        """Get weights, exponents and/or any connections specified in an InputState specification tuple
+        """Assign variable, weights, exponents and/or any connections specified in an InputState specification tuple
 
         Tuple specification can be:
             (state_spec, connections)
@@ -847,6 +847,7 @@ class InputState(State_Base):
         See State._parse_state_specific_spec for additional info.
 .
         Returns:
+             - VARIABLE = state_specifc_spec if it is a value; state_spec is None
              - state_spec:  1st item of tuple if it is a numeric value;  otherwise None
              - params dict with WEIGHT, EXPONENT and/or PROJECTIONS entries if any of these was specified.
 
@@ -862,7 +863,13 @@ class InputState(State_Base):
         params_dict = {}
         state_spec = state_specific_spec
 
-        if isinstance(state_specific_spec, dict):
+        # If state_specific_spec is a value, assign as VARIABLE for InputState
+        if is_value_spec(state_specific_spec):
+            state_dict[VARIABLE] = np.atleast_1d(state_specific_spec)
+            # FIX: ??ALSO ASSIGN TO REFERENCE_VALUE??  OR RETURN None TO ALLOW THAT TO HAPPEN IN _parse_state_specs
+            return state_spec, params_dict
+
+        elif isinstance(state_specific_spec, dict):
             # FIX: 10/3/17 - CHECK HERE THAT, IF MECHANISM ENTRY IS USED, A VARIABLE, WEIGHT AND/OR EXPONENT ENTRY
             # FIX:                       IS APPLIED TO ALL THE OutputStates SPECIFIED IN OUTPUT_STATES
             # FIX:                       UNLESS THEY THEMSELVES USE A State specification dict WITH ANY OF THOSE ENTRIES
