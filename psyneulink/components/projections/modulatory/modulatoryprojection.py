@@ -223,18 +223,18 @@ class ModulatoryProjection_Base(Projection_Base):
 
     def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
 
+        template = "{} for {}[{}]"
+
         if self.init_status in {InitStatus.INITIALIZED, InitStatus.UNSET}:
             # If the name is not a default name for the class, return
             if not self.className + '-' in self.name:
                 return self.name
-            self.name = self.className + " for " + \
-                              self.receiver.name + " of " + \
-                              self.receiver.owner.name
+            self.name = template.format(self.className, self.receiver.owner.name, self.receiver.name)
 
         elif self.init_status is InitStatus.DEFERRED_INITIALIZATION:
-            projection_name = self.className + " for " + state.owner.name + " " + state.name
-            # projection_name = "{} for {}[{}]".format(self.className, state.owner.name, state.name)
-            self.init_args[NAME] = self.init_args[NAME] or projection_name
+            projection_name = template.format(self.className, state.owner.name, state.name)
+            # self.init_args[NAME] = self.init_args[NAME] or projection_name
+            self.name = self.init_args[NAME] or projection_name
 
         else:
             raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized InitStatus ({})".
