@@ -1545,11 +1545,12 @@ def _parse_connection_specs(connectee_state_type,
                 # FIX: 11/21/17 THIS IS A HACK TO DEAL WITH GatingSignal PROJECTION TO InputState or OutputState
                 # if projection_spec is connectee_state_type and projection_socket is SENDER:
                 #     projection_spec = state
-                # from psyneulink.components.states.inputstate import InputState
-                # from psyneulink.components.states.outputstate import OutputState
-                # from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
-                # if isinstance(state, GatingSignal) and connectee_state_type in {InputState, OutputState}:
-                #     projection_spec = state
+                from psyneulink.components.states.inputstate import InputState
+                from psyneulink.components.states.outputstate import OutputState
+                from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
+                from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
+                if isinstance(state, GatingSignal) and connectee_state_type in {InputState, OutputState}:
+                    projection_spec = projection_spec if isinstance(projection_spec, GatingProjection) else state
 
                 projection_spec = _parse_projection_spec(projection_spec,
                                                          owner=owner,
