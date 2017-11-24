@@ -732,13 +732,18 @@ print("TEST InputState")
 # # I.owner = T1
 # assert T1.input_states[1].name == 'I'
 
-G = pnl.GatingMechanism(gating_signals=['a','b'])
-T = pnl.TransferMechanism(name='T',
-             input_states=[(3,G)],
-             output_states=[(2,G.gating_signals['b'])])
+T = pnl.DDM(name='D')
 
-assert T.input_states[0].mod_afferents[0].sender==G.gating_signals[0]
-assert T.output_states[0].mod_afferents[0].sender==G.gating_signals[1]
+# Single name
+G = pnl.GatingMechanism(gating_signals=[(pnl.DECISION_VARIABLE, T)])
+assert G.gating_signals[0].name == 'D[DECISION_VARIABLE] GatingSignal'
+assert G.gating_signals[0].efferents[0].receiver.name == 'DECISION_VARIABLE'
+
+# List of names
+G = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], T)])
+assert G.gating_signals[0].name == 'D[DECISION_VARIABLE, RESPONSE_TIME] GatingSignal'
+assert G.gating_signals[0].efferents[0].receiver.name == 'DECISION_VARIABLE'
+assert G.gating_signals[0].efferents[1].receiver.name == 'RESPONSE_TIME'
 
 
 assert True

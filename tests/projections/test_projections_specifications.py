@@ -125,16 +125,16 @@ class TestProjectionSpecificationFormats:
 
     def test_2_item_tuple_from_gating_signal_to_output_states(self):
 
-        T = pnl.DDM(name='D')
+        D4 = pnl.DDM(name='D4')
 
         # Single name
-        G = pnl.GatingMechanism(gating_signals=[(pnl.DECISION_VARIABLE, T)])
-        assert G.gating_signals[0].name == 'D[DECISION_VARIABLE] GatingSignal'
+        G = pnl.GatingMechanism(gating_signals=[(pnl.DECISION_VARIABLE, D4)])
+        assert G.gating_signals[0].name == 'D4[DECISION_VARIABLE] GatingSignal'
         assert G.gating_signals[0].efferents[0].receiver.name == 'DECISION_VARIABLE'
 
         # List of names
-        G = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], T)])
-        assert G.gating_signals[0].name == 'D[DECISION_VARIABLE, RESPONSE_TIME] GatingSignal'
+        G = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], D4)])
+        assert G.gating_signals[0].name == 'D4[DECISION_VARIABLE, RESPONSE_TIME] GatingSignal'
         assert G.gating_signals[0].efferents[0].receiver.name == 'DECISION_VARIABLE'
         assert G.gating_signals[0].efferents[1].receiver.name == 'RESPONSE_TIME'
 
