@@ -162,6 +162,19 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
   `receiver <MappingProjection.receiver>`. It can be specified in a variety of ways, as described `above
   <Mapping_Matrix_Specification>`.
 
+  .. _Mapping_Matrix_Dimensionality
+
+  * **Matrix Dimensionality** -- this must match the dimensionality of the MappingProjection's `sender
+    <MappingProjection.sender>` and `receiver <MappingProjection.reciever>.`  For a standard 2d "weight" matrix (i.e.,
+    one that maps a 1d array from its `sender <MappingProjection.sender>` to a 1d array of its `receiver
+    <MappingProjection.receiver>`), the dimensionality of the sender is the number of rows and of the receiver
+    the number of columns.  More generally, the sender dimensionality is the number of outer dimensions (i.e.,
+    starting with axis 0 of numpy array) equal to the number of dimensions of its `sender <MappingProjection.sender>`'s
+    `value <State_Base.value>`, and the receiver dimensionality is the number of inner dimensions equal to its
+    `receiver <MappingProjection.receiver>`'s `variable <MappingProjection.variable>` (equal to the dimensionality of
+    the matrix minus its sender dimensionality).
+
+
 .. _Mapping_Matrix_ParameterState:
 
 * *MATRIX* `ParameterState` - this receives any `LearningProjections <LearningProjection>` that are assigned to the
@@ -272,14 +285,14 @@ class MappingError(Exception):
 
 class MappingProjection(PathwayProjection_Base):
     """
-    MappingProjection(                                      \
-        sender=None,                                        \
-        receiver=None,                                      \
-        matrix=DEFAULT_MATRIX,                              \
+    MappingProjection(             \
+        sender=None,               \
+        receiver=None,             \
+        matrix=DEFAULT_MATRIX,     \
         weight=None,               \
         exponent=None,             \
-        params=None,                                        \
-        name=None,                                          \
+        params=None,               \
+        name=None,                 \
         prefs=None)
 
     Implements a Projection that transmits the output of one Mechanism to the input of another.
@@ -401,14 +414,18 @@ class MappingProjection(PathwayProjection_Base):
         <Mapping_Weight_Exponent>` for details).
 
     name : str
-        the name of the MappingProjection. If the MappingProjection's `initialization has been deferred
-        <Projection_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
-        status) until initialization is completed, at which time it is assigned its designated name.  If that is the
-        name of an existing MappingProjection, it is appended with an indexed suffix, incremented for each
-        MappingProjection with the same base name (see `Naming`). If the name is not  specified in the **name**
-        argument of its constructor, a default name is assigned using the following format:
-        'MappingProjection from <sender's name> to <receiver's name>'
-        (for example, ``'MappingProjection from my_mech_1 to my_mech2'``).
+        the name of the MappingProjection. If the specified name is the name of an existing MappingProjection,
+        it is appended with an indexed suffix, incremented for each MappingProjection with the same base name (see
+        `Naming`). If the name is not specified in the **name** argument of its constructor, a default name is
+        assigned using the following format:
+        'MappingProjection from <sender Mechanism>[<OutputState>] to <receiver Mechanism>[InputState]'
+        (for example, ``'MappingProjection from my_mech_1[OutputState-0] to my_mech2[InputState-0]'``).
+        If either the `sender <MappingProjection.sender>` or `receiver <MappingProjection.receiver>` has not yet been
+        assigned (the MappingProjection is in `deferred initialization <MappingProjection_Deferred_Initialization>`),
+        then the parenthesized name of class is used in place of the unassigned attribute
+        (for example, if the `sender <MappingProjection.sender>` has not yet been specified:
+        ``'MappingProjection from (OutputState-0) to my_mech2[InputState-0]'``).
+
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the MappingProjection; if it is not specified in the **prefs** argument of the

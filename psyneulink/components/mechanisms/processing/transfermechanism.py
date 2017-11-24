@@ -473,7 +473,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states:tc.optional(tc.any(list, dict, Mechanism, OutputState, InputState))=None,
+                 input_states:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
                  function=Linear,
                  initial_value=None,
                  noise=0.0,

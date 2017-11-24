@@ -42,18 +42,13 @@ Specifying GatingSignals
 When a GatingSignal is specified in the **gating_signals** argument of the constructor for a `GatingMechanism`, the
 InputState(s) and/or OutputState(s) it gates must be specified. This can take any of the following forms:
 
-  * an **InputState** or **OutputState** of a Mechanism;
+  * **InputState** or **OutputState** of a Mechanism;
   ..
-  * a **Mechanism**, in which case its `primary `InputState <InputState_Primary>` or `OutputState <OutputState_Primary>`
-    is used;
+  * **Mechanism** -- the `primary `InputState <InputState_Primary>` or `OutputState <OutputState_Primary>` is used;
   ..
-  * a **tuple**, with the name of the state as the 1st item, and the Mechanism to which it belongs as the 2nd;
-    note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
-    but precludes specification of any `parameters <GatingSignal_Structure>` for the GatingSignal.
-  ..
-  * a **specification dictionary**, that can take either of the following two forms:
+  * **specification dictionary** -- can take either of the following two forms:
 
-    * for a single state, the dictionary must have the following two entries:
+    * for gating a single state, the dictionary can have the following two entries:
 
         * *NAME*: str
             the string must be the name of the State to be gated; the GatingSignal will named by appending
@@ -62,7 +57,7 @@ InputState(s) and/or OutputState(s) it gates must be specified. This can take an
         * *MECHANISM*: Mechanism
             the Mechanism must be the one to the which the State to be gated belongs.
 
-    * for multiple states, the dictionary must have the following entry:
+    * for gating multiple states, the dictionary can have the following entry:
 
         * <str>:list
             the string used as the key specifies the name to be used for the GatingSignal,
@@ -74,6 +69,10 @@ InputState(s) and/or OutputState(s) it gates must be specified. This can take an
     `value <State_Base.value>` of the State(s) that it gates; or an *INDEX* entry specifying which item
     of the GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` it should use as its `value
     <GatingSignal,value>`).
+  ..
+  * **2-item tuple** -- the 1st item must be the name of the State (or list of State names), and the 2nd item the
+    Mechanism to which it (they) belong(s); this is a convenience format, which is simpler to use than a specification
+    dictionary (see below), but precludes specification of `parameters <GatingSignal_Structure>` for the GatingSignal.
 
 .. _GatingSignal_Structure:
 
@@ -228,13 +227,14 @@ Class Reference
 import typecheck as tc
 
 from psyneulink.components.functions.function import Linear, LinearCombination, _is_modulation_param
-from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
+from psyneulink.components.mechanisms.mechanism import Mechanism
+from psyneulink.components.states.state import State_Base, _parse_state_type, _get_state_for_socket
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, SEQUENTIAL
-from psyneulink.components.states.state import State_Base, State
+from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
 from psyneulink.globals.keywords import \
     COMMAND_LINE, GATING_PROJECTION, GATING_SIGNAL, GATE, RECEIVER, SUM, PROJECTION_TYPE, \
-    INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS
+    INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -459,6 +459,39 @@ class GatingSignal(ModulatorySignal):
                          name=name,
                          prefs=prefs,
                          context=context)
+
+    def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
+            """Get connections specified in a ParameterState specification tuple
+    
+            Tuple specification can be:
+                (State name, Mechanism)
+            [TBI:] (Mechanism, State name, weight, exponent, projection_specs)
+
+            Returns params dict with CONNECTIONS entries if any of these was specified.
+    
+            """
+            from psyneulink.components.projections.projection import _parse_connection_specs
+    
+            params_dict = {}
+            state_spec = state_specific_spec
+    
+            if isinstance(state_specific_spec, dict):
+                return None, state_specific_spec
+
+            elif isinstance(state_specific_spec, tuple):
+                state_spec = None
+                params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
+                                                                   owner=owner,
+                                                                   connections=state_specific_spec)
+            elif state_specific_spec is not None:
+                raise GatingSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
+                                      format(self.__class__.__name__, state_specific_spec))
+    
+            if params_dict[PROJECTIONS] is None:
+                raise GatingSignalError("PROGRAM ERROR: No entry found in {} params dict for {} "
+                                         "with specification of {}, {} or GatingProjection(s) to it".
+                                            format(GATING_SIGNAL, INPUT_STATE, OUTPUT_STATE, owner.name))
+            return state_spec, params_dict
 
     def _execute(self, function_params, context):
         return float(super()._execute(function_params=function_params, context=context))

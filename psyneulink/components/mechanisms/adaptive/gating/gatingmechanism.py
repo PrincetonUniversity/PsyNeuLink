@@ -173,6 +173,7 @@ from psyneulink.globals.keywords import \
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.globals.utilities import ContentAddressableList
 
 __all__ = [
     'GatingMechanism', 'GatingMechanismError', 'GatingMechanismRegistry'
@@ -275,7 +276,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         to a `gating_policy`;  the default is an identity function that simply assigns
         `variable <GatingMechanism.variable>` as the `gating_policy <GatingMechanism.gating_policy>`.
 
-    gating_signals : List[GatingSignal]
+    gating_signals : ContentAddressableList[GatingSignal]
         list of `GatingSignals <GatingSignals>` for the GatingMechanism, each of which sends
         `GatingProjection(s) <GatingProjection>` to the `InputState(s) <InputState>` and/or `OutputStates <OutputState>`
         that it gates; same as GatingMechanism `output_states <Mechanism_Base.output_states>` attribute.
@@ -374,7 +375,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         if GATING_SIGNALS in target_set and target_set[GATING_SIGNALS]:
             if not isinstance(target_set[GATING_SIGNALS], list):
-                target_set[GATING_SIGNALS] = [target_set[GATING_SIGNALS]]
+                target_set[g] = [target_set[GATING_SIGNALS]]
             for gating_signal in target_set[GATING_SIGNALS]:
                 _parse_state_spec(state_type=GatingSignal, owner=self, state_spec=gating_signal)
 
@@ -397,8 +398,11 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         super()._instantiate_output_states(context=context)
 
-        # Reassign gating_signals to capture any user_defined GatingSignals (OutputStates) instantiated in call to super
-        self._gating_signals = [state for state in self.output_states if isinstance(state, GatingSignal)]
+        # Reassign gating_signals to capture any user_defined GatingSignals instantiated in call to super
+        #    and assign to ContentAddressableList
+        self._gating_signals = ContentAddressableList(component_type=GatingSignal,
+                                                      list=[state for state in self.output_states
+                                                            if isinstance(state, GatingSignal)])
 
         # If the GatingMechanism's policy has more than one item,
         #    warn if the number of items does not equal the number of its GatingSignals

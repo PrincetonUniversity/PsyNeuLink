@@ -837,6 +837,7 @@ class ContentAddressableList(UserList):
             if key_num is None:
                 # raise TypeError("\'{}\' is not a key in the {} being addressed".
                                 # format(key, self.__class__.__name__))
+                # raise KeyError("\'{}\' is not a key in {}".
                 raise TypeError("\'{}\' is not a key in {}".
                                 format(key, self.name))
             return self.data[key_num]
@@ -956,7 +957,9 @@ class ContentAddressableList(UserList):
 
 
 def is_value_spec(spec):
-    if isinstance(spec, (int, float, list, np.ndarray)):
+    if isinstance(spec, (int, float, np.ndarray)):
+        return True
+    elif isinstance(spec, list) and is_numeric(spec):
         return True
     else:
         return False
