@@ -100,30 +100,32 @@ Adding OutputStates to a Mechanism after it is created
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 OutputStates can also be added* to a Mechanism, using the Mechanism's `add_states <Mechanism_Base.add_methods>` method.
-Unlike specification in the constructor, this **does not** replace any OutpuStates already assigned to the Mechanism.
+Unlike specification in the constructor, this **does not** replace any OutputStates already assigned to the Mechanism.
 Doing so appends them to the list of OutputStates in the Mechanism's `output_states <Mechanism_Base.output_states>`
 attribute, and their values are appended to its `output_values <Mechanism_Base.output_values>` attribute.  If the name
 of an OutputState added to a Mechanism is the same as one that already exists, its name is suffixed with a numerical
-index (incremented for each OutputState with that name), and the OutputState is added to the list (that is, it does
-*not* replace ones that were already created).
+index (incremented for each OutputState with that name; see `Naming`), and the OutputState is added to the list (that
+is, it does *not* replace ones that were already created).
 
 
-.. _OutputState_Variable_Value_Mechanism_Value:
+.. _OutputState_Variable_and_Value:
 
-OutputState's `variable <OutputState.variable>` and Mechanism's `value <Mechanism_Base.value>`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*OutputState's* `variable <OutputState.variable>`, `value <OutputState.value>`, *and Mechanism's* `value
+<Mechanism_Base.value>`
 
-Each OutputState specified in the **output_states** argument of a Mechanism's constructor must reference one or more
-items its owner Mechanism's `value <Mechanism_Base.value>` attribute (see `XXX>`), that it uses to generate its own
-`value <OutputState.value>`.  The item(s) referenced are specified by its `index <OutputState.index>` attribute.  The
-OutputState's `variable <OutputState.variable>` must be compatible (in number and type of elements) with the item(s)
-of the Mechanism's `value <Mechanism_Base.value>` referenced by its `index <OutputState.index>`;  by default this is
-'0', referring to the first item of the Mechanism's `value <Mechanism_Base.value>`.  The OutputState's `variable
+Each OutputState created with or assigned to a Mechanism must reference one or more items of the Mechanism's
+`value <Mechanism_Base.value>` attribute, that it uses to generate its own `value <OutputState.value>`.  The item(s)
+referenced are specified by its `index <OutputState.index>` attribute.  The OutputState's `variable
+<OutputState.variable>` must be compatible (in number and type of elements) with the item(s) of the Mechanism's
+`value <Mechanism_Base.value>` referenced by its `index <OutputState.index>`;  by default this is '0', referring to
+the first item of the Mechanism's `value <Mechanism_Base.value>`.  The OutputState's `variable
 <OutputState.variable>` is used as the input to its `function <OutputState.function>`, which may modify the value
-under the influence of a `GatingSignal`.  The result may be further modified by the OutputState's `calculate
+under the influence of a `GatingSignal`; the result may be further modified by the OutputState's `calculate
 <OutputState.calculate>` function (e.g., to combine, compare, or otherwise evaluate the index items of the Mechanism's
-`value <Mechanism_Base.value>`), before being assigned to its `value <OutputState.value>`. See
-`OutputState_Customization` for additional details.
+`value <Mechanism_Base.value>`), before being assigned to its `value <OutputState.value>` (see
+`OutputState_Customization` for additional details).  The OutputState's `value <OutputState.value>` must, in turn,
+be compatible with any Projections that are assigned to it, or `used to specify it
+<OutputState_Projection_Destination_Specification>`.
 
 The `value <OutputState.value>` of each OutputState of a Mechanism is assigned to a corresponding item of the
 Mechanism's `output_values <Mechanism_Base.output_values>` attribute, in the order in which they are assigned in the
@@ -139,17 +141,6 @@ as its `value <Mechanism_Base.value>` attribute, which contains the full and unm
 Forms of Specification
 ^^^^^^^^^^^^^^^^^^^^^^
 
-!!!!!!!!!!!!!!!!
-      ..
-
-Specifying an OutputState can be done in any of the ways listed below.  To create multiple OutputStates, their
-specifications can be included in a list, or in a dictionary in which the key for each entry is a string specifying
-the name for the OutputState to be created, and the value is its specification.  Any of the following can be used to
-as the specification for each OutputState:
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
 OutputStates can be specified in a variety of ways, that fall into three broad categories:  specifying an OutputState
 directly; use of a `State specification dictionary <State_Specification>`; or by specifying one or more Components to
 which it should project. Each of these is described below:
@@ -159,8 +150,8 @@ which it should project. Each of these is described below:
     **Direct Specification of an OutputState**
 
     * existing **OutputState object** or the name of one -- it cannot belong to another Mechanism, and the format of
-      its `variable <OutputState.variable>` must be compatible with the `indexed item
-      <OutputState_Variable_Value_Mechanism_Value>` of the owner Mechanism's `value <Mechanism_Base.value>`.
+      its `variable <OutputState.variable>` must be compatible with the `indexed item <OutputState_Variable_and_Value>`
+      of the owner Mechanism's `value <Mechanism_Base.value>`.
     ..
     * **OutputState class**, **keyword** *OUTPUT_STATE*, or a **string** -- creates a default OutputState that is
       assigned an `index <OutputState.index>` of '0', uses the first item of the owner Mechanism's `value
@@ -185,8 +176,8 @@ which it should project. Each of these is described below:
       using any of the entries that can be included in a `State specification dictionary <State_Specification>`
       (see `examples <State_Specification_Dictionary_Examples>` in State).  If the dictionary includes a *VARIABLE*
       entry, its value must be compatible with the item of the owner Mechanism's `value <Mechanism_Base.value>`
-      specified for its `index <OutputState.index>` attribute ('0' by default; see `
-      OutputState_Variable_Value_Mechanism_Value`)
+      specified for its `index <OutputState.index>` attribute ('0' by default; see
+      `above <OutputState_Variable_and_Value>`)
 
       The *PROJECTIONS* or *MECHANISMS* entry can be used to specify one or more efferent `MappingProjections
       <MappingProjection>` from the OutputState, and/or `ModulatoryProjections <ModulatoryProjection>` for it to
@@ -215,6 +206,8 @@ which it should project. Each of these is described below:
     COMMENT
 
     COMMENT:
+    ------------------------------------------------------------------------------------------------------------------
+    ?? PUT IN ITS OWN SECTION ABOVE OR BELOW??
     Projections from an OutputState can be specified either as attributes, in the constructor for an OutputState (in
     its **projections** argument or in the *PROJECTIONS* entry of an `OutputState specification dictionary
     <OutputState_Specification_Dictionary>`), or used to specify the OutputState itself (using one of the
@@ -233,7 +226,7 @@ which it should project. Each of these is described below:
     attribute and GatingProjections to its `mod_afferents <OutputState.mod_afferents>` attribute.  See
     `State Projections <State_Projections>` for additional details concerning the specification of Projections when
     creating a State.
-
+    ------------------------------------------------------------------------------------------------------------------
     COMMENT
 
     An OutputState can also be specified by specifying one or more Components to or from which it should be assigned
@@ -264,22 +257,15 @@ which it should project. Each of these is described below:
           which they all belong.  Projections of the relevant types are created for each of the specified States
           (see `State 2-item tuple <State_2_Item_Tuple>` for additional details).
         |
-        * **2-item tuple: (State or Mechanism or list of them, Projection)** -- this is a contracted form of the 3-item
-          tuple described below
+        * **2-item tuple: (<State, Mechanism, or list of them>, Projection specification)** -- this is a contracted
+          form of the 3-item tuple described below
         |
-        * **3-item tuple: (State or Mechanism or list of them, index, Projection)** -- 1st item can be any of the
-          OutputState specifications above, the 2nd item must be one or a list of `Projection specifications
-          <Projection_Specification>` (or `None`), and the 3rd (optional) item an integer specifying the `index
-          <OutputState.index>` for the OutputState.
-
-XXXXXXXXX
-        * **4-item tuple: (<value, State spec, or list of State specs>, index, Projection specification)**
-          -- this allows the specification of State(s) that should project to the InputState, together with a
-          specification of the InputState's `weight <InputState.weight>` and/or `exponent <InputState.exponent>`
-          attributes of the InputState, and (optionally) the Projection(s) to it.  This can be used to compactly
-          specify a set of States that project the InputState, while using the 4th item to determine its variable
-          (e.g., using the matrix of the Projection specification).  Each tuple must have at least the following first
-          three items (in the order listed), and can include the fourth:
+        * **3-item tuple: (<value, State spec, or list of State specs>, index, Projection specification)** -- this
+          allows the specification of State(s) to which the OutputState should project, together with a
+          specification of its `index <OutputState.index>` attribute, and (optionally) parameters of the
+          Projection(s) to use (e.g., their `weight <Projection_Base.weight>` and/or `exponent
+          <Projection_Base.exponent>` attributes.  Each tuple must have at least the first two items (in the
+          order listed), and can include the third:
 
             * **value, State specification, or list of State specifications** -- specifies either the `variable
             <InputState.variable>` of the InputState, or one or more States that should project to it.  The State
@@ -288,19 +274,73 @@ XXXXXXXXX
             must be compatible with the `variable <Projection_Base.variable>` of) the Projection specified in the fourth
             item if that is included;
             |
-            * **weight** -- must be an integer or a float; multiplies the `value <InputState.value>` of the InputState
-              before it is combined with others by the Mechanism's `function <Mechanism.function>` (see
-              ObjectiveMechanism for `examples <ObjectiveMechanism_Weights_and_Exponents_Example>`);
-            |
-            * **exponent** -- must be an integer or float; exponentiates the `value <InputState.value>` of the
-              InputState before it is combined with others by the ObjectiveMechanism's `function
-              <ObjectiveMechanism.function>` (see ObjectiveMechanism for `examples
-              <ObjectiveMechanism_Weights_and_Exponents_Example>`);
+            * **index** -- must be an integer; specifies the `index <OutputState.index>` for the OutputState;
             |
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` that
-              must be compatible with the State specification(s) in the 1st item;
+              must be compatible with the State specification(s) in the 1st item; if there is more than one
+              State specified, and the Projection specification is used, all of the States
+              must be of the same type (i.e.,either InputStates or GatingSignals), and the `Projection
+              Specification <Projection_Specification>` cannot be an instantiated Projection (since a
+              Projection cannot be assigned more than one `receiver <Projection_Base.receiver>`).
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+.. _OutputState_Compatability_and_Constraints:
+
+OutputState `value <OutputState.value>`: Compatibility and Constraints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The `variable <OutputState.variable>` of an OutputState must be compatible with the item of its owner Mechanism's
+`value <Mechanism_Base.value>` referenced by its `index <Mechanism_Base.index>` attribute.  This may have consequences that must be taken into account when `specifying an OutputState by
+Components to which it projects <_OutputState_Projection_Destination_Specification>`.  These depend on the context in
+which the specification is made, and possibly the value of other specifications.  These considerations and how they
+are handled are described below, starting with constraints that are given the highest precedence:
+
+  * If the OutputState is specified in a Mechanism's constructor, then the item of the Mechanism's `value
+    <Mechanism_Base.value>` `indexed by the OutputState <OutputState_Index>`)>` is used to determine the OutputState's
+    `variable <OutputState.variable>`.  This, together with the OutputState's `function <OutputState.function>` and
+    possibly its `calculate <OutputState.calculate>` attribute, determine the OutputState's `value <OutputState.value>`
+    (see `above <OutputState_Variable_and_Value>`).  Therefore, any specifications of the OutputState relevant to its
+    `value <OutputState.value>` must be compatible with these factors (for example, `specifying it by value
+    <OutputState_Specification_by_Value>` or by a `MappingProjection` or an `InputState` to which it should project
+    (see `above <OutputState_Projection_Destination_Specification>`).
+
+    COMMENT:
+    ***XXX EXAMPLE HERE
+    COMMENT
+  ..
+  * If the OutputState is specified on its own, then any direct specification of the OutputState's `variable
+    <OutputState.variable>` is used to determine its format (e.g., `specifying it by value
+    <OutputState_Specification_by_Value>`, or a *VARIABLE* entry in an `OutputState specification dictionary
+    <OutputState_Specification_Dictionary>`.  In this case, the value of any `Components used to specify the
+    OutputState <OutputState_Projection_Destination_Specification>` must be compatible with the specification of its
+    `variable <OutputState.variable>` and the consequences this has for its `value <OutputState.value>` (see below).
+
+    COMMENT:
+    ***XXX EXAMPLE HERE
+    COMMENT
+  ..
+  * If the OutputState's `value <OutputState.value>` is not constrained by any of the conditions above,
+    then its `variable <OutputState.variable>` is determined by the default for an OutputState (1d array of length 1).
+    If it is `specified to project to any other Components <OutputState_Projection_Destination_Specification>`, then if
+    the Component is a:
+
+    * **InputState or Mechanism** (for which its `primary InputState <InputState_Primary>` is used) -- if its
+      `variable <State_Base.variable>` matches the format of the OutputState's `value <OutputState.value>`, a
+      `MappingProjection` is created using an `IDENTITY_MATRIX`;  otherwise, a `FULL_CONNECTIVITY_MATRIX` is used
+      that maps the OutputState's `value <OutputState.value>` to the InputState's `variable <State_Base.variable>`.
+
+    * **MappingProjection** -- if its `matrix <MappingProjection.matrix>` is specified, then the `sender
+      dimensionality <XXX>` of the matrix must be the same as that of the OutputState's `value <OutputState.value>`;
+      if its `receiver <MappingProjection.receiver>` is specified, but not its `matrix
+      <MappingProjection.matrix>`, then a matrix is chosen that appropriately maps from the OutputState to the
+      receiver (as described just above);  if neither its `matrix <MappingProjection.matrix>` or its `receiver
+      <MappingProjection.receiver>` are specified, then the Projection's `initialization is deferred
+      <MappingProjection_Deferred_Initialization>` until its `receiver <MappingProjection.receiver>` is specified.
+
+    * **GatingProjection, GatingSignal or GatingMechanism** -- any of these can be used to specify an OutputState;
+      their `value` does not need to be compatible with the OutputState's `variable <InputState.variable>` or
+      `value <OutputState.value>`, however it does have to be compatible with the `modulatory parameter
+      <Function_Modulatory_Params>` of the OutputState's `function <OutputState.function>`.
+
 
 .. _OutputState_Standard:
 
