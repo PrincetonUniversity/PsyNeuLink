@@ -162,6 +162,12 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
   `receiver <MappingProjection.receiver>`. It can be specified in a variety of ways, as described `above
   <Mapping_Matrix_Specification>`.
 
+  .. _Mapping_Matrix_Dimensionality
+
+  * **Matrix Dimensionality** -- this must match the dimensionality of the MappingProjection's `sender
+    <MappingProjection.sender>` and `receiver <MappingProjection.reciever>.`
+
+
 .. _Mapping_Matrix_ParameterState:
 
 * *MATRIX* `ParameterState` - this receives any `LearningProjections <LearningProjection>` that are assigned to the
