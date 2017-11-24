@@ -116,7 +116,7 @@ The specification of the initial value of a parameter can take any of the follow
     ..
     .. _ParameterState_Tuple_Specification:
 
-    * **2-item tuple** (value, Modulatory specification) -- this creates a default ParameterState, uses the value
+    * **2-item tuple:** *(value, Modulatory specification)* -- this creates a default ParameterState, uses the value
       specification (1st item) as parameter's `value assignment <ParameterState_Value_Assignment>`, and assigns the
       parameter's name as the name of the ParameterState.  The Modulatory specification (2nd item) is used as the
       ParameterState's `modulatory assignment <ParameterState_Modulatory_Specification>`, and the ParameterState

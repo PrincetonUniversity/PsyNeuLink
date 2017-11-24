@@ -44,11 +44,6 @@ When a ControlSignal is specified in the **control_signals** argument of the con
 
   * **ParameterState** -- of the Mechanism to which the parameter belongs;
   ..
-  * **2-item tuple** -- the 1st time must be the name of the parameter (or list of parameter names), and the 2nd item
-    the Mechanism to which it (they) belong(s); this is a convenience format, which is simpler to use than a
-    specification dictionary (see below), but precludes specification of any `parameters <ControlSignal_Structure>`
-    for the ControlSignal.
-  ..
   * **specification dictionary** -- can take either of the following two forms:
 
     * for controlling a single parameter, the dictionary can have the following two entries:
@@ -65,6 +60,12 @@ When a ControlSignal is specified in the **control_signals** argument of the con
             the string used as the key specifies the name to be used for the ControlSignal,
             and each item of the list must be a `specification of a parameter <ParameterState_Specification>` to be
             controlled by the ControlSignal (and that will receive a `ControlProjection` from it).
+  ..
+  * **2-item tuple** -- the 1st time must be the name of the parameter (or list of parameter names), and the 2nd item
+    the Mechanism to which it (they) belong(s); this is a convenience format, which is simpler to use than a
+    specification dictionary (see below), but precludes specification of any `parameters <ControlSignal_Structure>`
+    for the ControlSignal.
+  ..
 
 .. _ControlSignal_Structure:
 
