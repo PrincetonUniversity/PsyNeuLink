@@ -278,14 +278,14 @@ class MappingError(Exception):
 
 class MappingProjection(PathwayProjection_Base):
     """
-    MappingProjection(                                      \
-        sender=None,                                        \
-        receiver=None,                                      \
-        matrix=DEFAULT_MATRIX,                              \
+    MappingProjection(             \
+        sender=None,               \
+        receiver=None,             \
+        matrix=DEFAULT_MATRIX,     \
         weight=None,               \
         exponent=None,             \
-        params=None,                                        \
-        name=None,                                          \
+        params=None,               \
+        name=None,                 \
         prefs=None)
 
     Implements a Projection that transmits the output of one Mechanism to the input of another.
