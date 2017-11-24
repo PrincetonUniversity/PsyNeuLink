@@ -339,12 +339,13 @@ starting with constraints that are given the highest precedence:
           InputState's `variable <InputState.variable>`.
         |
         * `Matrix specification <Mapping_Matrix_Specification>` -- its receiver dimensionality determines the format
-          of the InputState's `variable <InputState.variable>`. For a standard 2d weight matrix (i.e., one that maps
+          of the InputState's `variable <InputState.variable>`. For a standard 2d "weight" matrix (i.e., one that maps
           a 1d array from its `sender <Projection_Base.sender>` to a 1d array of its `receiver
           <Projection_Base.receiver>`), the receiver dimensionality is its outer dimension (axis 1, or its number of
           columns).  However, if the `sender <Projection_Base.sender>` has more than one dimension, then the
           dimensionality of the receiver (used for the InputState's `variable <InputState.variable>`) is the
-          dimensionality of the matrix minus the dimensionality of the sender's `value <OutputState.value>`.
+          dimensionality of the matrix minus the dimensionality of the sender's `value <OutputState.value>`
+          (see `matrix dimensionality <Mapping_Matrix_Dimensionality>`).
       |
       * **OutputState or ProcessingMechanism** -- the `value <OutputState.value>` of the OutputState (if it is a
         Mechanism, then its `primary OutputState <OutputState_Primary>`) determines the format of the InputState's

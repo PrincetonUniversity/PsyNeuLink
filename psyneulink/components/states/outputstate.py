@@ -328,9 +328,9 @@ are handled are described below, starting with constraints that are given the hi
       `MappingProjection` is created using an `IDENTITY_MATRIX`;  otherwise, a `FULL_CONNECTIVITY_MATRIX` is used
       that maps the OutputState's `value <OutputState.value>` to the InputState's `variable <State_Base.variable>`.
 
-    * **MappingProjection** -- if its `matrix <MappingProjection.matrix>` is specified, then the `sender
-      dimensionality <XXX>` of the matrix must be the same as that of the OutputState's `value <OutputState.value>`;
-      if its `receiver <MappingProjection.receiver>` is specified, but not its `matrix
+    * **MappingProjection** -- if its `matrix <MappingProjection.matrix>` is specified, then the `sender dimensionality
+      <Mapping_Matrix_Dimensionality>` of the matrix must be the same as that of the OutputState's `value
+      <OutputState.value>`; if its `receiver <MappingProjection.receiver>` is specified, but not its `matrix
       <MappingProjection.matrix>`, then a matrix is chosen that appropriately maps from the OutputState to the
       receiver (as described just above);  if neither its `matrix <MappingProjection.matrix>` or its `receiver
       <MappingProjection.receiver>` are specified, then the Projection's `initialization is deferred
@@ -396,8 +396,8 @@ COMMENT
 
 In this example, ``my_mech`` is configured with three OutputStates.  The first two are `Standard OutputStates
 <OutputState_Standard>` that represent the decision variable of the DDM and the probability of it crossing of the
-upper (vs. lower) threshold.  the third is a custom OutputState, that computes the entropy of the probability of
-crossing the upper threshold.  It uses the `Entropy` Function for its `calculate <OutputState.calculate>` attribute,
+upper (vs. lower) threshold. The third is a custom OutputState, that computes the entropy of the probability of
+crossing the upper threshold. It uses the `Entropy` Function for its `calculate <OutputState.calculate>` attribute,
 and *INDEX* is assigned ``2`` to reference the third item of the DDM's `value <DDM.value>` attribute (items are
 indexed starting with 0), which contains the probability of crossing the upper threshold.  The three OutputStates
 will be assigned to the `output_states <Mechanism_Base.output_states>` attribute of ``my_mech``, and their values

@@ -167,13 +167,12 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
   * **Matrix Dimensionality** -- this must match the dimensionality of the MappingProjection's `sender
     <MappingProjection.sender>` and `receiver <MappingProjection.reciever>.`  For a standard 2d "weight" matrix (i.e.,
     one that maps a 1d array from its `sender <MappingProjection.sender>` to a 1d array of its `receiver
-          <MappingProjection.receiver>`), the dimensionality of the sender is the number of rows and of the receiver
-          the number of columns.  However...XXXX
-          the receiver
-          receiver dimensionality is its outer dimension (axis 1, or its number of
-          columns).  However, if the `sender <Projection_Base.sender>` has more than one dimension, then the
-          dimensionality of the receiver (used for the InputState's `variable <InputState.variable>`) is the
-          dimensionality of the matrix minus the dimensionality of the sender's `value <OutputState.value>`.
+    <MappingProjection.receiver>`), the dimensionality of the sender is the number of rows and of the receiver
+    the number of columns.  More generally, the sender dimensionality is the number of outer dimensions (i.e.,
+    starting with axis 0 of numpy array) equal to the number of dimensions of its `sender <MappingProjection.sender>`'s
+    `value <State_Base.value>`, and the receiver dimensionality is the number of inner dimensions equal to its
+    `receiver <MappingProjection.receiver>`'s `variable <MappingProjection.variable>` (equal to the dimensionality of
+    the matrix minus its sender dimensionality).
 
 
 .. _Mapping_Matrix_ParameterState:
