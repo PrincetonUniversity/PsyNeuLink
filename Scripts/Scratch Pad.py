@@ -732,13 +732,13 @@ print("TEST InputState")
 # # I.owner = T1
 # assert T1.input_states[1].name == 'I'
 
-C = pnl.ControlMechanism(control_signals=['a','b'])
-D = pnl.DDM(name='D3',
-             function=pnl.BogaczEtAl(drift_rate=(3,C),
-                                     threshold=(2,C.control_signals['b']))
-            )
-assert D.parameter_states[pnl.DRIFT_RATE].mod_afferents[0].sender==C.control_signals[0]
-assert D.parameter_states[pnl.THRESHOLD].mod_afferents[0].sender==C.control_signals[1]
+G = pnl.GatingMechanism(gating_signals=['a','b'])
+T = pnl.TransferMechanism(name='T',
+             input_states=[(3,G)],
+             output_states=[(2,G.gating_signals['b'])])
+
+assert T.input_states[0].mod_afferents[0].sender==G.gating_signals[0]
+assert T.output_states[0].mod_afferents[0].sender==G.gating_signals[1]
 
 
 assert True

@@ -486,11 +486,11 @@ from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
 from psyneulink.globals.keywords import \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, INPUT_STATE, INPUT_STATES, RECEIVER, GATING_SIGNAL, \
-    COMMAND_LINE, STATE, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, \
+    COMMAND_LINE, STATE, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, REFERENCE_VALUE,\
     CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, VARIANCE, ALL, MECHANISM_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import UtilitiesError, iscompatible, type_match
+from psyneulink.globals.utilities import UtilitiesError, iscompatible, type_match, is_numeric
 
 __all__ = [
     'make_readonly_property', 'OUTPUTS', 'OutputState', 'OutputStateError', 'PRIMARY', 'SEQUENTIAL',
@@ -1002,6 +1002,27 @@ class OutputState(State_Base):
             state_spec = None
             INDEX_INDEX = 1
 
+            # MODIFIED 11/23/17 NEW:
+            if is_numeric(tuple_spec[0]):
+                state_spec = tuple_spec[0]
+                reference_value = state_dict[REFERENCE_VALUE]
+                # Assign value so sender_dim is skipped below
+                # (actual assignment is made in _parse_state_spec)
+                if reference_value is None:
+                    state_dict[REFERENCE_VALUE]=state_spec
+                elif  not iscompatible(state_spec, reference_value):
+                    raise OutputStateError("Value in first item of 2-item tuple specification for {} of {} ({}) "
+                                     "is not compatible with its {} ({})".
+                                     format(OutputState.__name__, owner.name, state_spec,
+                                            REFERENCE_VALUE, reference_value))
+                projection_spec = tuple_spec[1]
+            # MODIFIED 11/23/17 END
+
+            # MODIFIED 11/23/17 NEW: ADDED ELSE AND INDENTED
+            else:
+                projection_spec = state_specific_spec if len(state_specific_spec)==2 else (state_specific_spec[0],
+                                                                                           state_specific_spec[-1])
+
             if not len(tuple_spec) in {2,3} :
                 raise OutputStateError("Tuple provided in {} specification dictionary for {} ({}) must have "
                                        "either 2 ({} and {}) or 3 (optional additional {}) items, "
@@ -1009,8 +1030,6 @@ class OutputState(State_Base):
                                        format(OutputState.__name__, owner.name, tuple_spec,
                                               STATE, PROJECTION, INDEX, ProjectionTuple.__name__))
 
-            projection_spec = state_specific_spec if len(state_specific_spec)==2 else (state_specific_spec[0],
-                                                                                       state_specific_spec[-1])
 
             params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
                                                                owner=owner,

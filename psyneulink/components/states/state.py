@@ -2725,7 +2725,7 @@ def _parse_state_spec(state_type=None,
                                               exponent=None,
                                               projection=state_type)
 
-
+        # FIX: HANDLE VALUE AS FIRST ITEM OF TUPLE HERE
         # State specification is a tuple, so let State subclass handle it
         elif isinstance(state_specification, tuple):
             state_specific_specs = state_specification
