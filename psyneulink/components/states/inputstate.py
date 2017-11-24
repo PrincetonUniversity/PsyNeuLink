@@ -241,15 +241,15 @@ should project to the InputState. Each of these is described below:
     * **InputState specification tuples** -- these are convenience formats that can be used to compactly specify an
       InputState and Projections to it any of the following ways:
 
-        * **2-item tuple: (<State name or list of State names>, Mechanism)** -- 1st item must be the name of an
+        * **2-item tuple:** *(<State name or list of State names>, Mechanism)* -- 1st item must be the name of an
           `OutputState` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified States
           (see `State 2-item tuple <State_2_Item_Tuple>` for additional details).
         |
-        * **2-item tuple: (<value, State specification, or list of State specs>, Projection specification)** -- this
+        * **2-item tuple:** *(<value, State specification, or list of State specs>, Projection specification)* -- this
           is a contracted form of the 4-item tuple described below;
         |
-        * **4-item tuple: (<value, State spec, or list of State specs>, weight, exponent, Projection specification)**
+        * **4-item tuple:** *(<value, State spec, or list of State specs>, weight, exponent, Projection specification)*
           -- this allows the specification of State(s) that should project to the InputState, together with a
           specification of the InputState's `weight <InputState.weight>` and/or `exponent <InputState.exponent>`
           attributes of the InputState, and (optionally) the Projection(s) to it.  This can be used to compactly
@@ -257,6 +257,7 @@ should project to the InputState. Each of these is described below:
           (e.g., using the matrix of the Projection specification) and/or attributes of the Projection(s) to it. Each
           tuple must have at least the following first three items (in the order listed), and can include the fourth:
 
+            |
             * **value, State specification, or list of State specifications** -- specifies either the `variable
               <InputState.variable>` of the InputState, or one or more States that should project to it.  The State
               specification(s) can include Mechanisms, in which case their `primary OutputState <OutputStatePrimary>`
