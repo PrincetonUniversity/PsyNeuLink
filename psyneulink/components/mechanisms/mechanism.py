@@ -1278,8 +1278,11 @@ class Mechanism_Base(Mechanism):
         if not isinstance(input_states, Iterable):
             input_states = [input_states]
 
-        for s in input_states:
-            parsed_spec = _parse_state_spec(owner=self, variable=default_variable, state_type=InputState, state_spec=s)
+        for i, s in enumerate(input_states):
+            variable = default_variable[i] if default_variable else None
+            parsed_spec = _parse_state_spec(owner=self, variable=variable,
+                                            state_type=InputState,
+                                            state_spec=s)
 
             if isinstance(parsed_spec, dict):
                 try:
@@ -2309,7 +2312,7 @@ class Mechanism_Base(Mechanism):
         # _instantiate_state_list(self, input_states, InputState)
         if input_states:
             # FIX: 11/9/17
-            added_variable, added_input_state = self._parse_arg_input_states(input_states)
+            added_variable, added_input_state = self._parse_arg_input_states(self.variable, input_states)
             if added_input_state:
                 old_variable = self.instance_defaults.variable.tolist()
                 old_variable.extend(added_variable)

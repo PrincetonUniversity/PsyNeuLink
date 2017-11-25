@@ -10,7 +10,8 @@ from psyneulink.components.states.state import StateError
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, VARIABLE, RESULT
 
-mismatches_default_variable_error_text = 'not compatible with the specified default variable'
+# mismatches_default_variable_error_text = 'not compatible with the specified default variable'
+mismatches_default_variable_error_text = 'is not compatible with its expected format'
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
 belongs_to_another_mechanism_error_text = 'that belongs to another Mechanism'
 
@@ -241,7 +242,7 @@ class TestInputStateSpec:
     # TEST 13
     # 4-item tuple Specification
 
-    def test_projection_tuple_spec(self):
+    def test_projection_tuple_with_matrix_spec(self):
         R2 = TransferMechanism(size=3)
         T = TransferMechanism(size=2, input_states=[(R2, None, None, np.zeros((3, 2)))])
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))

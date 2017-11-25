@@ -770,9 +770,8 @@ class InputState(State_Base):
         """
         if reference_value is not None and not iscompatible(reference_value, self.value):
             name = self.name or ""
-            raise InputStateError("Value specified for {} {} of {} ({}) is not compatible "
-                                  "with its expected format ({})".
-                                  format(name, self.componentName, self.owner.name, self.value, reference_value))
+            raise InputStateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})"
+                                  .format(name, self.componentName, self.owner.name, self.value, reference_value))
 
     def _instantiate_function(self, context=None):
         """Insure that function is LinearCombination and that output is compatible with owner.instance_defaults.variable
