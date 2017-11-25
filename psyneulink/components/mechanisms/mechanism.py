@@ -434,17 +434,17 @@ be coordinated with the Mechanism's `function <Mechanism_Base.function>`, which 
 <Mechanism_Base.variable>` as its input (see `note <Mechanism_Add_InputStates_Note>`).
 
 The order in which `InputStates are specified <Mechanism_InputState_Specification>` in the Mechanism's constructor,
-and/or `added <Mechanism_Add_InputStates>` using its `Mechanism_Base.add_states` method,  determines the order of the
-items to which they are assigned assigned in he Mechanism's `variable  <Mechanism_Base.variable>`, and are listed in
-its `input_states <Mechanism_Base.input_states>` and input_values <Mechanism_Base.input_values>` attribute.  Note
-that a Mechanism's `input_value <Mechanism_Base.input_value>` attribute has the same information as the
-Mechanism's `variable <Mechanism_Base.variable>`, but in the form of a list rather than an ndarray.
+and/or `added <Mechanism_Add_InputStates>` using its `add_states <Mechanism_Base.add_states>` method,  determines the
+order of the items to which they are assigned assigned in he Mechanism's `variable  <Mechanism_Base.variable>`,
+and are listed in its `input_states <Mechanism_Base.input_states>` and `input_values <Mechanism_Base.input_values>`
+attribute.  Note that a Mechanism's `input_values <Mechanism_Base.input_values>` attribute has the same information as
+the Mechanism's `variable <Mechanism_Base.variable>`, but in the form of a list rather than an ndarray.
 
 .. _Mechanism_InputState_Specification:
 
 **Specifying InputStates and a Mechanism's** `variable <Mechanism_Base.variable>` **Attribute**
 
-When a `Mechanism is created, the number and format of the items in its `variable <Mechanism_Base.variable>`
+When a Mechanism is created, the number and format of the items in its `variable <Mechanism_Base.variable>`
 attribute, as well as the number of InputStates it has and their `variable <InputState.variable>` and `value
 <InputState.value>` attributes, are determined by one of the following arguments in the Mechanism's constructor:
 
@@ -458,7 +458,7 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   **default_variable** are used to specify the format of the `variable <InputState.variable>` or `value
   <InputState.value>` of the corresponding InputStates for any that are not explicitly specified in the
   **input_states** argument or *INPUT_STATES* entry (see below).
-
+..
 * **size** (int, list or ndarray) -- specifies the number and length of items in the Mechanism's variable,
   if **default_variable** is not specified. For example, the following mechanisms are equivalent::
     T1 = TransferMechanism(size = [3, 2])
@@ -466,7 +466,7 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   The relationship to any specifications in the **input_states** argument or
   *INPUT_STATES* entry of a **params** dictionary is the same as for the **default_variable** argument,
   with the latter taking precedence (see above).
-
+..
 * **input_states** (list) -- this can be used to explicitly `specify the InputStates <InputState_Specification>`
   created for the Mechanism. Each item must be an `InputState specification <InputState_Specification>`, and the number
   of items must match the number of items in the **default_variable** argument or **size** argument
@@ -475,7 +475,7 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   *INPUT_STATES* entry of a **params** dictionary, it must be compatible with the value of the corresponding
   item **default_variable**; otherwise, the format of the item in **default_variable** corresponding to the
   InputState is used to specify the format of its `variable <InputState.variable>` (e.g., the InputState is
-  `specified using an OutputState <InputState_OutputState_Specification>` to project to it;).  If
+  `specified using an OutputState <InputState_Projection_Source_Specification>` to project to it;).  If
   **default_variable** is not specified, a default value is specified by the Mechanism.
 
 COMMENT:
@@ -490,7 +490,7 @@ COMMENT:
         a single InputState;  in that case, the `value <InputState.value>` of that InputState must have the same
         number of items as the Mechanisms's `variable <Mechanism_Base.variable>`.
 COMMENT
-
+..
 * *INPUT_STATES* entry of a params dict (list) -- specifications are treated in the same manner as those in the
   **input_states** argument, and take precedence over those.
 
@@ -505,8 +505,8 @@ InputState's `variable <InputState.variable>` is not specified, it is assigned t
 owner's `variable <Mechanism_Base.variable>` attribute. The InputStates are appended to the end of the list in the
 Mechanism's `input_states <Mechanism_Base.input_states>` attribute.  Adding in States in this manner does **not**
 replace any existing States, including any default States generated when the Mechanism was constructed (this is
-contrast to States specified in a Mechanism's constructor which *do* replace any default State(s) of the same type (see
-`note <Mechanism_Default_State_Suppression_Note>`).
+contrast to States specified in a Mechanism's constructor which **do** `replace any default State(s) of the same type
+<Mechanism_Default_State_Suppression_Note>`).
 
 .. _Mechanism_Add_InputStates_Note:
 
@@ -1615,9 +1615,10 @@ class Mechanism_Base(Mechanism):
                 from psyneulink.components.states.outputstate import OutputState
                 # If not valid...
                 if not ((isclass(item) and issubclass(item, OutputState)) or # OutputState class ref
-                            isinstance(item, OutputState) or   # OutputState object
+                            isinstance(item, OutputState) or            # OutputState object
                             isinstance(item, dict) or                   # OutputState specification dict
                             isinstance(item, str) or                    # Name (to be used as key in OutputStates list)
+                            isinstance(item, tuple) or                  # Projection specification tuple
                             iscompatible(item, **{kwCompatibilityNumeric: True})):  # value
                     # set to None, so it is set to default (self.value) in instantiate_output_state
                     param_value[key] = None
@@ -2265,7 +2266,7 @@ class Mechanism_Base(Mechanism):
         .. note::
             Adding InputStates to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,
             which may produce an incompatibility with its `function <Mechanism_Base.function>` (see
-            `Mechanism InputStates` for a more detailed explanation).
+            `Mechanism InputStates <Mechanism_InputStates>` for a more detailed explanation).
 
         Arguments
         ---------

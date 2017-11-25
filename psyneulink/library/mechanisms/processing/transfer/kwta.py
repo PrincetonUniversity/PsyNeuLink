@@ -579,8 +579,6 @@ class KWTA(RecurrentTransferMechanism):
         new_input = list(new_input)
         for i in range(1, len(current_input)):
             new_input.append(current_input[i])
-        print('current_input: ', current_input)
-        print('new_input: ', new_input)
         return np.atleast_2d(new_input)
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -799,7 +797,7 @@ class KWTA(RecurrentTransferMechanism):
     #
     #     if isinstance(matrix, str):
     #         size = len(mech.instance_defaults.variable[0])
-    #         matrix = _get_matrix(matrix, size, size)
+    #         matrix = get_matrix(matrix, size, size)
     #
     #     return AutoAssociativeProjection(sender=mech,
     #                                      receiver=mech.input_states[mech.indexOfInhibitionInputState],

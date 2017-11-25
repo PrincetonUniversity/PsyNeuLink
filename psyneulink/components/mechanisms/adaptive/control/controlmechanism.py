@@ -466,7 +466,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         ControlSignal listed in the `control_signals` attribute;  the allocation_policy is the same as the
         ControlMechanism's `value <Mechanism_Base.value>` attribute).
 
-    control_signals : List[ControlSignal]
+    control_signals : ContentAddressableList[ControlSignal]
         list of the `ControlSignals <ControlSignals>` for the ControlMechanism, including any inherited from a
         `system <ControlMechanism.system>` for which it is a `controller <System.controller>` (same as
         ControlMechanism's `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`
@@ -766,7 +766,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
         super()._instantiate_output_states(context=context)
 
         # Reassign control_signals to capture any user_defined ControlSignals instantiated by in call to super
-        self._control_signals = [state for state in self.output_states if isinstance(state, ControlSignal)]
+        #    and assign to ContentAddressableList
+        self._control_signals = ContentAddressableList(component_type=ControlSignal,
+                                                       list=[state for state in self.output_states
+                                                             if isinstance(state, ControlSignal)])
 
         # If the ControlMechanism's allocation_policy has more than one item,
         #    warn if the number of items does not equal the number of its ControlSignals

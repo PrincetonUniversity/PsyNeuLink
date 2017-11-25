@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from psyneulink.components.functions.function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, Reduce, Reinforcement, _get_matrix
+from psyneulink.components.functions.function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
 from psyneulink.components.process import Process
@@ -38,7 +38,7 @@ class TestLCA:
             print()
             print()
 
-        s.run(inputs={L: [1.0, 2.0, 3.0]}, num_trials=5, call_after_trial=after_trial)
+        s.run(inputs={L: [[1.0, 2.0, 3.0]]}, num_trials=5, call_after_trial=after_trial)
 
 class TestRecurrentTransferMechanismInputs:
 
@@ -157,7 +157,7 @@ class TestRecurrentTransferMechanismMatrix:
             )
             val = R.execute([10, 10, 10, 10])
             np.testing.assert_allclose(val, [[10., 10., 10., 10.]])
-            np.testing.assert_allclose(R.recurrent_projection.matrix, _get_matrix(m, R.size[0], R.size[0]))
+            np.testing.assert_allclose(R.recurrent_projection.matrix, get_matrix(m, R.size[0], R.size[0]))
 
     def test_recurrent_mech_matrix_other_spec(self):
 
@@ -400,14 +400,14 @@ class TestRecurrentTransferMechanismFunction:
         R = RecurrentTransferMechanism(
             name='R',
             size=10,
-            function=Logistic(gain=2, bias=1)
+            function=Logistic(gain=2, offset=1)
         )
         val = R.execute(np.ones(10))
         np.testing.assert_allclose(val, [np.full(10, 0.7310585786300049)])
 
     def test_recurrent_mech_function_psyneulink(self):
 
-        a = Logistic(gain=2, bias=1)
+        a = Logistic(gain=2, offset=1)
 
         R = RecurrentTransferMechanism(
             name='R',
@@ -538,8 +538,8 @@ def run_twice_in_system(mech, input1, input2=None):
     simple_process = Process(size=mech.size[0], pathway=[mech], name='simple_process')
     simple_system = System(processes=[simple_process], name='simple_system', prefs=simple_prefs)
 
-    first_output = simple_system.run(inputs={mech: input1})
-    second_output = simple_system.run(inputs={mech: input2})
+    first_output = simple_system.run(inputs={mech: [input1]})
+    second_output = simple_system.run(inputs={mech: [input2]})
     return second_output[1][0]
 
 
@@ -559,13 +559,13 @@ class TestRecurrentTransferMechanismInProcess:
             function=Linear
         )
         p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
-        p.run(inputs=[[[1, 2, 3, 4]]])
+        p.run(inputs={R: [[1, 2, 3, 4]]})
         np.testing.assert_allclose(R.value, [[1., 2., 3., 4.]])
         np.testing.assert_allclose(T.value, [[10., 10., 10.]])
-        p.run(inputs=[[[5, 6, 7, 8]]])
+        p.run(inputs={R: [[5, 6, 7, 8]]})
         np.testing.assert_allclose(R.value, [[-4, -2, 0, 2]])
         np.testing.assert_allclose(T.value, [[-4, -4, -4]])
-        p.run(inputs=[[[-1, 2, -2, 5.5]]])
+        p.run(inputs={R: [[-1, 2, -2, 5.5]]})
         np.testing.assert_allclose(R.value, [[-1.0, 4.0, 2.0, 11.5]])
         np.testing.assert_allclose(T.value, [[16.5, 16.5, 16.5]])
 
@@ -579,10 +579,10 @@ class TestRecurrentTransferMechanismInProcess:
             function=Linear)
         p = Process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         R.matrix = [[2, 0, 1, 3]] * 4
-        p.run(inputs=[[[1, 2, 3, 4]]])
+        p.run(inputs={T: [[1, 2, 3, 4]]})
         np.testing.assert_allclose(T.value, [[1, 2, 3, 4]])
         np.testing.assert_allclose(R.value, [[1, 2, 3, 4]])
-        p.run(inputs={T: [1, 3, 2, 5]})
+        p.run(inputs={T: [[1, 3, 2, 5]]})
         np.testing.assert_allclose(R.recurrent_projection.matrix, [[2, 0, 1, 3]] * 4)
         np.testing.assert_allclose(T.value, [[1, 3, 2, 5]])
         np.testing.assert_allclose(R.value, [[21, 3, 12, 35]])
@@ -598,10 +598,10 @@ class TestRecurrentTransferMechanismInProcess:
             function=Linear)
         p = Process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         R.recurrent_projection.matrix = [[2, 0, 1, 3]] * 4
-        p.run(inputs=[[[1, 2, 3, 4]]])
+        p.run(inputs={T: [[1, 2, 3, 4]]})
         np.testing.assert_allclose(T.value, [[1, 2, 3, 4]])
         np.testing.assert_allclose(R.value, [[1, 2, 3, 4]])
-        p.run(inputs={T: [1, 3, 2, 5]})
+        p.run(inputs={T: [[1, 3, 2, 5]]})
         np.testing.assert_allclose(R.recurrent_projection.matrix, [[2, 0, 1, 3]] * 4)
         np.testing.assert_allclose(T.value, [[1, 3, 2, 5]])
         np.testing.assert_allclose(R.value, [[21, 3, 12, 35]])
@@ -622,13 +622,13 @@ class TestRecurrentTransferMechanismInSystem:
             function=Linear)
         p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = System(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
-        s.run(inputs={R: [1, 2, 3, 4]})
+        s.run(inputs={R: [[1, 2, 3, 4]]})
         np.testing.assert_allclose(R.value, [[1., 2., 3., 4.]])
         np.testing.assert_allclose(T.value, [[10., 10., 10.]])
-        s.run(inputs={R: [5, 6, 7, 8]})
+        s.run(inputs={R: [[5, 6, 7, 8]]})
         np.testing.assert_allclose(R.value, [[-4, -2, 0, 2]])
         np.testing.assert_allclose(T.value, [[-4, -4, -4]])
-        s.run(inputs={R: [-1, 2, -2, 5.5]})
+        s.run(inputs={R: [[-1, 2, -2, 5.5]]})
         np.testing.assert_allclose(R.value, [[-1.0, 4.0, 2.0, 11.5]])
         np.testing.assert_allclose(T.value, [[16.5, 16.5, 16.5]])
 
@@ -642,15 +642,15 @@ class TestRecurrentTransferMechanismInSystem:
             function=Linear)
         p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = System(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
-        s.run(inputs={R: [1, 2, 3, 4]})
+        s.run(inputs={R: [[1, 2, 3, 4]]})
         np.testing.assert_allclose(R.value, [[1., 2., 3., 4.]])
         np.testing.assert_allclose(T.value, [[10., 10., 10.]])
         R.auto = 0
-        s.run(inputs={R: [5, 6, 7, 8]})
+        s.run(inputs={R: [[5, 6, 7, 8]]})
         np.testing.assert_allclose(R.value, [[-4, -2, 0, 2]])
         np.testing.assert_allclose(T.value, [[-4, -4, -4]])
         R.recurrent_projection.auto = [1, 1, 2, 4]
-        s.run(inputs={R: [12, 11, 10, 9]})
+        s.run(inputs={R: [[12, 11, 10, 9]]})
         np.testing.assert_allclose(R.value, [[8, 11, 14, 23]])
         np.testing.assert_allclose(T.value, [[56, 56, 56]])
 
@@ -664,15 +664,15 @@ class TestRecurrentTransferMechanismInSystem:
             function=Linear)
         p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = System(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
-        s.run(inputs={R: [1, 2, 3, -0.5]})
+        s.run(inputs={R: [[1, 2, 3, -0.5]]})
         np.testing.assert_allclose(R.value, [[1., 2., 3., -0.5]])
         np.testing.assert_allclose(T.value, [[5.5, 5.5, 5.5, 5.5, 5.5]])
         R.hetero = 0
-        s.run(inputs={R: [-1.5, 0, 1, 2]})
+        s.run(inputs={R: [[-1.5, 0, 1, 2]]})
         np.testing.assert_allclose(R.value, [[-.5, 4, 10, 0]])
         np.testing.assert_allclose(T.value, [[13.5, 13.5, 13.5, 13.5, 13.5]])
         R.hetero = [[-1, 2, 3, 1.5]] * 4
-        s.run(inputs={R: [12, 11, 10, 9]})
+        s.run(inputs={R: [[12, 11, 10, 9]]})
         np.testing.assert_allclose(R.value, [[-2.5, 38, 50.5, 29.25]])
         np.testing.assert_allclose(T.value, [[115.25, 115.25, 115.25, 115.25, 115.25]])
 
@@ -686,15 +686,15 @@ class TestRecurrentTransferMechanismInSystem:
             function=Linear)
         p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = System(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
-        s.run(inputs={R: [1, 2, 3, -0.5]})
+        s.run(inputs={R: [[1, 2, 3, -0.5]]})
         np.testing.assert_allclose(R.value, [[1., 2., 3., -0.5]])
         np.testing.assert_allclose(T.value, [[5.5, 5.5, 5.5, 5.5, 5.5]])
         R.hetero = 0
-        s.run(inputs={R: [-1.5, 0, 1, 2]})
+        s.run(inputs={R: [[-1.5, 0, 1, 2]]})
         np.testing.assert_allclose(R.value, [[-.5, 4, 10, 0]])
         np.testing.assert_allclose(T.value, [[13.5, 13.5, 13.5, 13.5, 13.5]])
         R.auto = [0, 0, 0, 0]
-        s.run(inputs={R: [12, 11, 10, 9]})
+        s.run(inputs={R: [[12, 11, 10, 9]]})
         np.testing.assert_allclose(R.value, [[12, 11, 10, 9]])
         np.testing.assert_allclose(T.value, [[42, 42, 42, 42, 42]])
 
@@ -709,10 +709,10 @@ class TestRecurrentTransferMechanismInSystem:
         p = Process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = System(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         R.matrix = [[2, 0, 1, 3]] * 4
-        s.run(inputs={T: [1, 2, 3, 4]})
+        s.run(inputs={T: [[1, 2, 3, 4]]})
         np.testing.assert_allclose(T.value, [[1, 2, 3, 4]])
         np.testing.assert_allclose(R.value, [[1, 2, 3, 4]])
-        s.run(inputs={T: [1, 3, 2, 5]})
+        s.run(inputs={T: [[1, 3, 2, 5]]})
         np.testing.assert_allclose(R.recurrent_projection.matrix, [[2, 0, 1, 3]] * 4)
         np.testing.assert_allclose(T.value, [[1, 3, 2, 5]])
         np.testing.assert_allclose(R.value, [[21, 3, 12, 35]])
@@ -784,7 +784,7 @@ class TestRecurrentTransferMechanismInSystem:
 #         p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismControl.simple_prefs)
 #         s = System(processes=[p], prefs=TestRecurrentTransferMechanismControl.simple_prefs, controller = EVCControlMechanism,
 #            enable_controller = True, monitor_for_control = [T.output_state], control_signals=[('auto', R), ('hetero', R)])
-#         s.run(inputs = {R: [1, 3, 2, 5]})
+#         s.run(inputs = {R: [[1, 3, 2, 5]]})
 #         print('T.value: ', T.value)
 #         np.testing.assert_allclose(T.value, [[-.09645391388158941, -.09645391388158941, -.09645391388158941]])
 #         s.run(inputs = {})

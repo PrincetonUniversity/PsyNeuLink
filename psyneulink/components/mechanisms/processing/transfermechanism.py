@@ -29,7 +29,7 @@ Overview
 A TransferMechanism transforms its input using a simple mathematical function, that maintains the form (dimensionality)
 of its input.  The input can be a single scalar value, a multidimensional array (list or numpy array), or several
 independent ones.  The function used to carry out the transformation can be selected from a standard set of `Functions
-<Function>` (such as `Linear`, `Exponential`, `Logistic`, and `Softmax`) or specified using a user-defined custom
+<Function>` (such as `Linear`, `Exponential`, `Logistic`, and `SoftMax`) or specified using a user-defined custom
 function.  The transformation can be carried out instantaneously or in "time averaged" (integrated) manner, as described
 in `Transfer_Execution`.
 
@@ -86,8 +86,8 @@ OutputStates
 ~~~~~~~~~~~~
 
 By default, a TransferMechanism generates one `OutputState` for each of its `InputStates`.  The first (and `primary
-<OuputState_Primary>`) OutputState is named `RESULT`; subsequent ones use that as the base name, suffixed with an
-incrementing integer starting at '-1' for each additional OutputState (e.g., 'RESULT-1', 'RESULT-2', etc.; see
+<OutputState_Primary>`) OutputState is named *RESULT*; subsequent ones use that as the base name, suffixed with an
+incrementing integer starting at '-1' for each additional OutputState (e.g., *RESULT-1*, *RESULT-2*, etc.; see
 `Naming`).  The `value <OutputState.value>` of each OutputState is assigned the result of the Mechanism's `function
 <TransferMechanism.function>` applied to the `value <InputState.value>` of the corresponding InputState. Additional
 OutputStates can be assigned using the TransferMechanism's `Standard OutputStates
@@ -159,7 +159,9 @@ from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
-from psyneulink.globals.keywords import NAME, INDEX, FUNCTION, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NOISE, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, NORMALIZING_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
+from psyneulink.globals.keywords import NAME, INDEX, FUNCTION, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NOISE, RATE, \
+    RESULT, RESULTS, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, NORMALIZING_FUNCTION_TYPE, TRANSFER_MECHANISM, \
+    VARIANCE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
@@ -192,7 +194,13 @@ class TRANSFER_OUTPUT():
     .. _TRANSFER_MECHANISM_RESULT:
 
     *RESULT* : 1d np.array
-      result of `function <TransferMechanism.function>` (same as `value <TransferMechanism.value>`).
+      first item of TransferMechanism's `value <TransferMechanism.value>` (corresponding to input from its
+      first InputState)
+
+    *RESULTS* : 2d np.array
+      each item of TransferMechanism's `value <TransferMechanism.value>` (corresponding to input from each
+      of its `input_states <TransferMechanism.input_states>`) is assigned as the `value <OutputState.value>`
+      of a corresponding OutputState of its `output_states <TransferMechanism.output_states>`.
 
     .. _TRANSFER_MECHANISM_MEAN:
 
@@ -214,11 +222,10 @@ class TRANSFER_OUTPUT():
     *VARIANCE* : float
       variance of `output_state.value`.
 
-    COMMENT:
-    *ALL* : list
-      a list of all of the items of the TransferMechanism's `value <TransferMechanism.value>` (that is, of the result
-      of its `function <TransferMechanism.function>` applied to the `value <InputState>` of each of its InputStates).
+    *MECHANISM_VALUE* : list
+      TransferMechanism's `value <TransferMechanism.value>` used as OutputState's value.
 
+    COMMENT:
     *COMBINE* : scalar or numpy array
       linear combination of the `value <TransferMechanism.value>` of all items of the TransferMechanism's `value
       <TransferMechanism.value>` (requires that they all have the same dimensionality).
@@ -226,6 +233,7 @@ class TRANSFER_OUTPUT():
 
     """
 
+    RESULTS=RESULTS
     RESULT=RESULT
     MEAN=MEAN
     MEDIAN=MEDIAN
@@ -256,7 +264,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     time_constant=1.0,           \
     integrator_mode=False,       \
     clip=(float:min, float:max), \
-    output_states=RESULT         \
+    output_states=RESULTS        \
     params=None,                 \
     name=None,                   \
     prefs=None)
@@ -339,7 +347,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         any element of the result that exceeds the specified minimum or maximum value is set to the value of
         `clip <TransferMechanism.clip>` that it exceeds.
 
-    output_states : str, list or np.ndarray : default RESULT
+    output_states : str, list or np.ndarray : default RESULTS
         specifies the OutputStates for the TransferMechanism; by default, one is created for each InputState
         specified in **input_states**;  see `note <TransferMechanism_OutputStates_Note>`, and `output_states
         <TransferMechanism.output_states>` for additional details).
@@ -374,8 +382,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         COMMENT
 
     input_states : *ContentAddressableList[InputState]*
-        list of Mechanism's `OutputStates <OutputStates>`.  By default there is one OutputState for each InputState,
-        with the base name `RESULT` (see `TransferMechanism_InputStates` for additional details).
+        list of Mechanism's `InputStates <InputStates>` (see `TransferMechanism_InputStates` for additional details).
 
     function : Function
         the Function used to transform the input.
@@ -467,14 +474,14 @@ class TransferMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states:tc.optional(tc.any(list, dict, Mechanism, OutputState, InputState))=None,
+                 input_states:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
                  function=Linear,
                  initial_value=None,
                  noise=0.0,
                  time_constant=1.0,
                  integrator_mode=False,
                  clip=None,
-                 output_states:tc.optional(tc.any(str, Iterable))=RESULT,
+                 output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
@@ -486,8 +493,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Default output_states is specified in constructor as a string rather than a list
         # to avoid "gotcha" associated with mutable default arguments
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if output_states is None or output_states is RESULT:
-            output_states = [RESULT]
+        if output_states is None or output_states is RESULTS:
+            output_states = [RESULTS]
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
@@ -664,7 +671,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_output_states(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputStates
         # then assign one OutputState (with the default name, indexed by the number of them) per item of variable
-        if len(self.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULT:
+        if len(self.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULTS:
             self.output_states = []
             for i, item in enumerate(self.variable):
                 self.output_states.append({NAME: RESULT, INDEX: i})
@@ -764,22 +771,26 @@ class TransferMechanism(ProcessingMechanism_Base):
                 current_input = variable
 
         if isinstance(self.function_object, TransferFunction):
+
             outputs = self.function(variable=current_input, params= runtime_params)
-            if clip is not None:
-                minCapIndices = np.where(outputs < clip[0])
-                maxCapIndices = np.where(outputs > clip[1])
-                outputs[minCapIndices] = np.min(clip)
-                outputs[maxCapIndices] = np.max(clip)
+            # if clip is not None:
+            #     print(clip)
+            #     minCapIndices = np.where(outputs < clip[0])
+            #     print(minCapIndices)
+            #     maxCapIndices = np.where(outputs > clip[1])
+            #     print(maxCapIndices)
+            #     outputs[minCapIndices] = np.min(clip)
+            #     outputs[maxCapIndices] = np.max(clip)
         else:
             # Apply TransferMechanism's function to each input state separately
             outputs = []
             for elem in current_input:
                 output_item = self.function(variable=elem, params=runtime_params)
-                if clip is not None:
-                    minCapIndices = np.where(output_item < clip[0])
-                    maxCapIndices = np.where(output_item > clip[1])
-                    output_item[minCapIndices] = np.min(clip)
-                    output_item[maxCapIndices] = np.max(clip)
+                # if clip is not None:
+                #     minCapIndices = np.where(output_item < clip[0])
+                #     maxCapIndices = np.where(output_item > clip[1])
+                #     output_item[minCapIndices] = np.min(clip)
+                #     output_item[maxCapIndices] = np.max(clip)
                 outputs.append(output_item)
 
         # outputs = []

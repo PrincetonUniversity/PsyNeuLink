@@ -94,9 +94,6 @@ __all__ = [
     'random_matrix', 'ReadOnlyOrderedDict', 'TEST_CONDTION', 'type_match', 'underscore_to_camelCase', 'UtilitiesError',
 ]
 
-# THE FOLLOWING CAUSES ALL WARNINGS TO GENERATE AN EXCEPTION:
-warnings.filterwarnings("error")
-
 
 class UtilitiesError(Exception):
     def __init__(self, error_value):
@@ -317,22 +314,16 @@ def iscompatible(candidate, reference=None, **kargs):
 
     # If the two are equal, can settle it right here
     # IMPLEMENTATION NOTE: remove the duck typing when numpy supports a direct comparison of iterables
-
-    with warnings.catch_warnings():
-        warnings.filterwarnings("error")
-        try:
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter(action='ignore', category=FutureWarning)
             if reference and (candidate == reference):
                 return True
-        except Warning:
-            # IMPLEMENTATION NOTE: np.array generates the following warning:
-            # FutureWarning: elementwise comparison failed; returning scalar instead,
-            #     but in the future will perform elementwise comparison
-            pass
-        except ValueError:
-            # raise UtilitiesError("Could not compare {0} and {1}".format(candidate, reference))
-            # IMPLEMENTATION NOTE: np.array generates the following error:
-            # ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
-            pass
+    except ValueError:
+        # raise UtilitiesError("Could not compare {0} and {1}".format(candidate, reference))
+        # IMPLEMENTATION NOTE: np.array generates the following error:
+        # ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+        pass
 
     # If args not provided, assign to default values
     # if not specified in args, use these:
@@ -846,6 +837,7 @@ class ContentAddressableList(UserList):
             if key_num is None:
                 # raise TypeError("\'{}\' is not a key in the {} being addressed".
                                 # format(key, self.__class__.__name__))
+                # raise KeyError("\'{}\' is not a key in {}".
                 raise TypeError("\'{}\' is not a key in {}".
                                 format(key, self.name))
             return self.data[key_num]
@@ -966,7 +958,9 @@ class ContentAddressableList(UserList):
 
 
 def is_value_spec(spec):
-    if isinstance(spec, (int, float, list, np.ndarray)):
+    if isinstance(spec, (int, float, np.ndarray)):
+        return True
+    elif isinstance(spec, list) and is_numeric(spec):
         return True
     else:
         return False
@@ -1030,6 +1024,9 @@ def convert_all_elements_to_np_array(arr):
     '''
         Recursively converts all items in **arr** to numpy arrays
     '''
+    if isinstance(arr, np.ndarray) and arr.ndim == 0:
+        return arr
+
     if not isinstance(arr, collections.Iterable) or isinstance(arr, str):
         return np.asarray(arr)
 

@@ -135,9 +135,9 @@ class TestNaming:
         assert I1.name == 'InputState-1'
         assert I2.name == 'InputState-2'
         assert T2.input_states[0].path_afferents[0].name == \
-               'MappingProjection from T1[RESULT] to T2[InputState-0]'
+               'MappingProjection from T1[RESULTS] to T2[InputState-0]'
         assert T2.input_states[2].path_afferents[0].name == \
-               'MappingProjection from T1[RESULT] to T2[InputState-2]'
+               'MappingProjection from T1[RESULTS] to T2[InputState-2]'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 10
@@ -163,21 +163,21 @@ class TestNaming:
         # ControlSignal with one ControlProjection
         C1 = pnl.ControlMechanism(control_signals=[D1.parameter_states[pnl.DRIFT_RATE]])
         assert C1.control_signals[0].name == 'D1[drift_rate] ControlSignal'
-        assert C1.control_signals[0].efferents[0].name == 'ControlProjection for drift_rate of D1'
+        assert C1.control_signals[0].efferents[0].name == 'ControlProjection for D1[drift_rate]'
 
         # ControlSignal with two ControlProjection to two parameters of same Mechanism
         C2 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_states[pnl.DRIFT_RATE],
                                                                      D1.parameter_states[pnl.THRESHOLD]]}])
         assert C2.control_signals[0].name == 'D1[drift_rate, threshold] ControlSignal'
-        assert C2.control_signals[0].efferents[0].name == 'ControlProjection for drift_rate of D1'
-        assert C2.control_signals[0].efferents[1].name == 'ControlProjection for threshold of D1'
+        assert C2.control_signals[0].efferents[0].name == 'ControlProjection for D1[drift_rate]'
+        assert C2.control_signals[0].efferents[1].name == 'ControlProjection for D1[threshold]'
 
         # ControlSignal with two ControlProjection to two parameters of different Mechanisms
         C3 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_states[pnl.DRIFT_RATE],
                                                                      D2.parameter_states[pnl.DRIFT_RATE]]}])
         assert C3.control_signals[0].name == 'ControlSignal-0 divergent ControlSignal'
-        assert C3.control_signals[0].efferents[0].name == 'ControlProjection for drift_rate of D1'
-        assert C3.control_signals[0].efferents[1].name == 'ControlProjection for drift_rate of D2'
+        assert C3.control_signals[0].efferents[0].name == 'ControlProjection for D1[drift_rate]'
+        assert C3.control_signals[0].efferents[1].name == 'ControlProjection for D2[drift_rate]'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 12
@@ -190,17 +190,22 @@ class TestNaming:
         # GatingSignal with one GatingProjection
         G1 = pnl.GatingMechanism(gating_signals=[T3])
         assert G1.gating_signals[0].name == 'T3[InputState-0] GatingSignal'
-        assert G1.gating_signals[0].efferents[0].name == 'GatingProjection for InputState-0 of T3'
+        assert G1.gating_signals[0].efferents[0].name == 'GatingProjection for T3[InputState-0]'
 
         # GatingSignal with two GatingProjections to two States of same Mechanism
         G2 = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS:[T4.input_states[0], T4.input_states[1]]}])
         assert G2.gating_signals[0].name == 'T4[First State, Second State] GatingSignal'
-        assert G2.gating_signals[0].efferents[0].name == 'GatingProjection for First State of T4'
-        assert G2.gating_signals[0].efferents[1].name == 'GatingProjection for Second State of T4'
+        assert G2.gating_signals[0].efferents[0].name == 'GatingProjection for T4[First State]'
+        assert G2.gating_signals[0].efferents[1].name == 'GatingProjection for T4[Second State]'
 
         # GatingSignal with two GatingProjections to two States of different Mechanisms
         G3 = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS:[T3, T4]}])
         assert G3.gating_signals[0].name == 'GatingSignal-0 divergent GatingSignal'
-        assert G3.gating_signals[0].efferents[0].name == 'GatingProjection for InputState-0 of T3'
-        assert G3.gating_signals[0].efferents[1].name == 'GatingProjection for First State of T4'
+        assert G3.gating_signals[0].efferents[0].name == 'GatingProjection for T3[InputState-0]'
+        assert G3.gating_signals[0].efferents[1].name == 'GatingProjection for T4[First State]'
 
+        # GatingProjections to ProcessingMechanism from GatingSignals of existing GatingMechanism
+        T5 = pnl.TransferMechanism(name='T5',
+                                   input_states=[T3.output_states[pnl.RESULTS],
+                                                 G3.gating_signals['GatingSignal-0 divergent GatingSignal']],
+                                   output_states=[G3.gating_signals['GatingSignal-0 divergent GatingSignal']])

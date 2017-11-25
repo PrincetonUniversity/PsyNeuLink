@@ -49,10 +49,10 @@ OutputState.  In general, the `value <OutputState.value>` of each specified Outp
 `variable <InputState.variable>` of the InputState that is created for it by the ObjectiveMechanism. However, this can
 be overridden using the ObjectiveMechanism's `default_variable <ObjectiveMechanism.default_variable>` or `size
 <ObjectiveMechanism.size>` attributes (see `Mechanism_InputState_Specification`), or by specifying a Projection from
-the OutputState to the InputState (see `InputState_OutputState_Specification`).  If an item in the
-**monitored_output_states** argument specifies an InputState for the ObjectiveMechanism, but not the OutputState to
-be monitored, the InputState is created but will be ignored until an OutputState (and MappingProjection from it) are
-specified for that InputState.
+the OutputState to the InputState (see `Input Source Specification <InputState_Projection_Source_Specification>`).
+If an item in the **monitored_output_states** argument specifies an InputState for the ObjectiveMechanism, but not
+the OutputState to be monitored, the InputState is created but will be ignored until an OutputState (and
+MappingProjection from it) are specified for that InputState.
 
 
 COMMENT:
@@ -81,7 +81,7 @@ COMMENT
 
 The list of OutputStates monitored by the ObjectiveMechanism are listed in its `monitored_output_states
 <ObjectiveMechanism.monitored_output_states>` attribute.  When an ObjectiveMechanism is created by a
-`ControlMechanism`, or a `System` for its `controller <System_Base.controller>`, these may pass a set of OutputStates
+`ControlMechanism`, or a `System` for its `controller <System.controller>`, these may pass a set of OutputStates
 to be monitored to the ObjectiveMechanism.  A ControlMechanism passes OutputState specifications listed in its
 **objective_mechanism** argument (see `ControlMechanism_ObjectiveMechanism`), and a System passes any listed in its
 **monitor_for_control** argument (see `System_Control_Specification`).
@@ -761,7 +761,7 @@ def _instantiate_monitoring_projections(owner,
 
     from psyneulink.components.states.outputstate import OutputState
     from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-    from psyneulink.components.projections.projection import ConnectionTuple
+    from psyneulink.components.projections.projection import ProjectionTuple
 
     receiver_projection_specs = receiver_projection_specs or [DEFAULT_MATRIX] * len(sender_list)
 
@@ -790,7 +790,7 @@ def _instantiate_monitoring_projections(owner,
         else:
             projection_spec = recvr_projs
 
-        if isinstance(projection_spec, ConnectionTuple):
+        if isinstance(projection_spec, ProjectionTuple):
             projection_spec = projection_spec.projection
 
         # IMPLEMENTATION NOTE:  This may not handle situations properly in which the OutputState is specified
