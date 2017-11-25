@@ -884,9 +884,11 @@ class InputState(State_Base):
 
             tuple_spec = state_specific_spec
 
+            # 2-item tuple specification
             if len(tuple_spec) == 2:
-                # FIX: 11/12/17 - ??GENERALIZE FOR ALL STATES AND MOVE TO _parse_state_spec
+
                 # 1st item is a value, so treat as State spec (and return to _parse_state_spec to be parsed)
+                #   and treat 2nd item as Projection specification
                 if is_numeric(tuple_spec[0]):
                     state_spec = tuple_spec[0]
                     reference_value = state_dict[REFERENCE_VALUE]
@@ -900,9 +902,10 @@ class InputState(State_Base):
                                          format(InputState.__name__, owner.name, state_spec,
                                                 REFERENCE_VALUE, reference_value))
                     projections_spec = tuple_spec[1]
+
+                # Tuple is Projection specification that is used to specify the State,
                 else:
-                    # Tuple is projection specification that is used to specify the State,
-                    #    so return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
+                    # return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
                     state_spec = None
                     if tuple_spec[0] != self:
                         # If 1st item is not the current state (self), treat as part of the projection specification
@@ -911,18 +914,23 @@ class InputState(State_Base):
                         # Otherwise, just use 2nd item as projection spec
                         state_spec = None
                         projections_spec = tuple_spec[1]
-            elif len(tuple_spec) == 4:
+
+            # 3- or 4-item tuple specification
+            elif len(tuple_spec) in {3,4}:
                 # Tuple is projection specification that is used to specify the State,
                 #    so return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
                 state_spec = None
-                projections_spec = tuple_spec
+                # Reduce to 2-item tuple Projection specification
+                projection_item = tuple_spec[3] if len(tuple_spec)==4 else None
+                projections_spec = (tuple_spec[0],projection_item)
+
+            # GET PROJECTION(S) IF SPECIFIED ***************************************************************
 
             try:
                 projections_spec
             except UnboundLocalError:
                 pass
             else:
-
                 try:
                     params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                        owner=owner,
@@ -954,7 +962,7 @@ class InputState(State_Base):
                                 if VARIABLE not in state_dict or state_dict[VARIABLE] is None:
                                     state_dict[VARIABLE] = variable
                                 # If variable HAS been assigned, make sure value is the same for this sender
-                                elif state_dict[VARIABLE].shape != variable.shape:
+                                elif np.array(state_dict[VARIABLE]).shape != variable.shape:
                                     # If values for senders differ, assign None so that State's default is used
                                     state_dict[VARIABLE] = None
                                     # No need to check any more Projections
@@ -976,7 +984,8 @@ class InputState(State_Base):
                                                  OutputState.__name__,
                                                  Projection.__name__))
 
-            # Get weights and exponents if specified
+            # GET WEIGHT AND EXPONENT IF SPECIFIED ***************************************************************
+
             if len(tuple_spec) == 2:
                 pass
 

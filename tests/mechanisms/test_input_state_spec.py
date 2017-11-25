@@ -239,7 +239,7 @@ class TestInputStateSpec:
 
     # ------------------------------------------------------------------------------------------------
     # TEST 13
-    # ProjectionTuple Specification
+    # 4-item tuple Specification
 
     def test_projection_tuple_spec(self):
         R2 = TransferMechanism(size=3)
@@ -669,7 +669,7 @@ class TestInputStateSpec:
         assert T2.input_states[0].path_afferents[1].sender.owner.name=='T1'
         assert T2.input_states[0].path_afferents[1].matrix.shape == (2,1)
 
-        # Test list of Mechanisms in ProjectionTuple
+        # Test list of Mechanisms in 4-item tuple specification
         T3 = TransferMechanism(name='T3', input_states=[([T0, T1],None,None,InputState)])
         assert len(T3.input_states[0].path_afferents)==2
         assert T3.input_states[0].path_afferents[0].sender.owner.name=='T0'
@@ -683,7 +683,7 @@ class TestInputStateSpec:
         assert T4.input_states[0].path_afferents[1].sender.owner.name=='T1'
         assert T4.input_states[0].path_afferents[1].matrix.shape == (3,1)
 
-        # Test list of OutputStates in ProjectionTuple
+        # Test list of OutputStates in 4-item tuple specification
         T5 = TransferMechanism(name='T5', input_states=[([T0.output_states[0], T1.output_states[1]],
                                                          None,None,
                                                          InputState)])

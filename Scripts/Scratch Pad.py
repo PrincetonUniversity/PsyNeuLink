@@ -716,38 +716,55 @@ class ScratchPadError(Exception):
 
 #endregion
 
-#region TEST InputState
-print("TEST InputState")
 
-# T1 = pnl.TransferMechanism(name='T1', default_variable=[0,0,0])
-# # G = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], T1)])
-# T2 = pnl.TransferMechanism(input_states=[(pnl.RESULT, RESULT-1, T1)])
-# # assert T2.input_states[0].path_afferents[0].sender.owner.name == 'D'
-# assert True
+#region ObjectiveMechanism Example
+print ("TEST ObjectiveMechanism Example")
+
+t = pnl.TransferMechanism(size=3)
+p = pnl.MappingProjection(sender=t)
+T = pnl.TransferMechanism(
+        default_variable=[0, 0],
+        # input_states=[t])
+        input_states=[(t,None)])
+        # input_states=[(t,1,1)])
+        # input_states=[(t,1,1,None)])
+assert len(T.input_states[0].variable)==2
+
+# #TEST:
+# t = pnl.TransferMechanism(size=3)
+# p = pnl.MappingProjection(sender=t)
+# T = pnl.TransferMechanism(
+#         input_states=[t])
+#         # input_states=[(t,None)])
+#         # input_states=[(t,1,1)])
+#         # input_states=[(t,1,1,None)])
+# assert len(T.input_states[0].variable)==3
 
 
-# I = pnl.InputState(name='I', owner=T1)
-# # I = pnl.InputState(name='I')
-# # FIX: IMPLEMENT ASSIGNMENT TO OWNER WITH ASSIGNMENT OF OWNER
-# # I.owner = T1
-# assert T1.input_states[1].name == 'I'
 
 
-G = pnl.GatingMechanism(gating_signals=['a','b'])
-T = pnl.TransferMechanism(name='T',
-             input_states=(3,G),
-             output_states=(2,G.gating_signals['b']))
-
-assert T.input_states[0].mod_afferents[0].sender==G.gating_signals[0]
-assert T.output_states[0].mod_afferents[0].sender==G.gating_signals[1]
 
 
-assert True
+# import psyneulink as pnl
+# my_action_select_mech = pnl.TransferMechanism(default_variable=[0, 0, 0],
+#                                               function=pnl.SoftMax(output=pnl.PROB),
+#                                               name='Action Selection Mech')
+#
+# my_reward_mech = pnl.TransferMechanism(default_variable=[0],
+#                                        name='Reward Mech')
+#
+# # my_objective_mech = pnl.ObjectiveMechanism(default_variable=[[0],[0]],
+# #                                            monitored_output_states=[my_action_select_mech,
+# #                                                                     my_reward_mech])
+#
+# my_objective_mech = pnl.ObjectiveMechanism(default_variable = [[0],[0]],
+#                                            monitored_output_states = [(my_action_select_mech, -1, 1),
+#                                                                       my_reward_mech])
 
 #endregion
 
 #region TEST INPUT FORMATS
-
+# print ("TEST INPUT FORMATS")
 #
 # x = TransferMechanism([0,0,0],
 #              name='x')

@@ -218,7 +218,7 @@ the **monitored_output_states** argument of ``my_objective_mech``, as follows::
     ...                                                                     my_reward_mech])
 
 Note that the *VARIABLE* entry here specifies the `variable <InputState.variable>` for the InputState of the
-ObjectiveMechanism created to receive a Projection from ``my_action_selcect_mech``, and not ``my_action_selcect_mech``
+ObjectiveMechanism created to receive a Projection from ``my_action_select_mech``, and not ``my_action_select_mech``
 itself (see `ObjectiveMechanism_Input` for a full explanation).
 
 .. _ObjectiveMechanism_Projection_Example:

@@ -1258,7 +1258,7 @@ class Mechanism_Base(Mechanism):
 
         return variable
 
-    def _parse_arg_input_states(self, input_states):
+    def _parse_arg_input_states(self, default_variable, input_states):
         '''
         Takes user-inputted argument **input_states** and returns an instance_defaults.variable-like
         object that it represents
@@ -1279,7 +1279,7 @@ class Mechanism_Base(Mechanism):
             input_states = [input_states]
 
         for s in input_states:
-            parsed_spec = _parse_state_spec(owner=self, state_type=InputState, state_spec=s)
+            parsed_spec = _parse_state_spec(owner=self, variable=default_variable, state_type=InputState, state_spec=s)
 
             if isinstance(parsed_spec, dict):
                 try:
@@ -1329,13 +1329,15 @@ class Mechanism_Base(Mechanism):
 
         # handle specifying through params dictionary
         try:
-            default_variable_from_input_states, input_states_variable_was_specified = self._parse_arg_input_states(params[INPUT_STATES])
+            default_variable_from_input_states, input_states_variable_was_specified = \
+                self._parse_arg_input_states(default_variable, params[INPUT_STATES])
         except (TypeError, KeyError):
             pass
 
         if default_variable_from_input_states is None:
             # fallback to standard arg specification
-            default_variable_from_input_states, input_states_variable_was_specified = self._parse_arg_input_states(input_states)
+            default_variable_from_input_states, input_states_variable_was_specified = \
+                self._parse_arg_input_states(default_variable, input_states)
 
         if default_variable_from_input_states is not None:
             if default_variable is None:
@@ -1349,9 +1351,8 @@ class Mechanism_Base(Mechanism):
                         else:
                             raise MechanismError(
                                 'default variable determined from the specified input_states spec ({0}) '
-                                'is not compatible with the default variable determined from size parameter ({1})'.format(
-                                    default_variable_from_input_states,
-                                    size_variable,
+                                'is not compatible with the default variable determined from size parameter ({1})'.
+                                    format(default_variable_from_input_states, size_variable,
                                 )
                             )
                     else:
@@ -1362,10 +1363,9 @@ class Mechanism_Base(Mechanism):
                     if iscompatible(self._parse_arg_variable(default_variable), default_variable_from_input_states):
                         default_variable = default_variable_from_input_states
                     else:
-                        raise MechanismError(
-                            'default variable determined from the specified input_states spec ({0}) '
-                            'is not compatible with the specified default variable ({1})'.format(
-                                default_variable_from_input_states, default_variable
+                        raise MechanismError('default variable determined from the specified input_states spec ({0}) '
+                                             'is not compatible with the specified default variable ({1})'.
+                                             format(default_variable_from_input_states, default_variable
                             )
                         )
                 else:
