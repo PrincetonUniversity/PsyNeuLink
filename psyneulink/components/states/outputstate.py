@@ -1038,6 +1038,9 @@ class OutputState(State_Base):
             return None, state_specific_spec
 
         elif isinstance(state_specific_spec, ProjectionTuple):
+            # MODIFIED 11/25/17 NEW:
+            state_spec = None
+            # MODIFIED 11/25/17 END:
             params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                owner=owner,
                                                                connections=[state_specific_spec])

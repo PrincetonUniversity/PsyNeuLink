@@ -1009,14 +1009,14 @@ def _is_projection_subclass(spec, keyword):
         return True
     # Get projection subclass specified by keyword
     try:
-        type = ProjectionRegistry[keyword]
+        proj_type = ProjectionRegistry[keyword].subclass
     except KeyError:
         pass
     else:
         # Check if spec is either the name of the subclass or an instance of it
-        if inspect.isclass(spec) and issubclass(spec, type):
+        if inspect.isclass(spec) and issubclass(spec, proj_type):
             return True
-        if isinstance(spec, type):
+        if isinstance(spec, proj_type):
             return True
     # spec is a specification dict for an instance of the projection subclass
     if isinstance(spec, dict) and keyword in spec:

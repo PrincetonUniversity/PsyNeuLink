@@ -720,29 +720,79 @@ class ScratchPadError(Exception):
 #region ObjectiveMechanism Example
 print ("TEST ObjectiveMechanism Example")
 
-# # TEST: MOVE TO test_input_state_spec.py
-# t = pnl.TransferMechanism(size=3)
-# p = pnl.MappingProjection(sender=t)
+# TEST: MOVE TO test_input_state_spec.py
+t = pnl.TransferMechanism(size=3)
+p = pnl.MappingProjection(sender=t)
+
+# default_variable, mech
+T = pnl.TransferMechanism(
+        default_variable=[0, 0],
+        input_states=[t])
+assert len(T.input_states[0].variable)==2
+
+# # default_variable, 2-item tuple
 # T = pnl.TransferMechanism(
-#         # default_variable=[0, 0],
-#         size=2,  # <- FIXED
-#         # input_states=[t])
-#         # input_states=[(t,None)])
-#         # input_states=[(t,1,1)])
+#         default_variable=[0, 0],
+#         input_states=[(t,None)])
+# assert len(T.input_states[0].variable)==2
+#
+# # default_variable, 3-item tuple
+# T = pnl.TransferMechanism(
+#         default_variable=[0, 0],
+#         input_states=[(t,1,1)])
+# assert len(T.input_states[0].variable)==2
+#
+# # default_variable, 4-item tuple
+# T = pnl.TransferMechanism(
+#         default_variable=[0, 0],
 #         input_states=[(t,1,1,None)])
 # assert len(T.input_states[0].variable)==2
 
-# #TEST:
-t = pnl.TransferMechanism(size=3)
-# p = pnl.MappingProjection(sender=t)
+# size, mech
 T = pnl.TransferMechanism(
-        input_states=[t]) # <- FIXED: DOESN'T WORK;  NEED TO GET t.output_state.value
-#         # # input_states=[(t,None)])
-#         # # input_states=[(t,1,1)])
-#         # input_states=[(t,1,1,None)])
-assert len(T.input_states[0].variable)==3
+        size=2,
+        input_states=[t])
+assert len(T.input_states[0].variable)==2
 
+# # size, 2-item tuple
+# T = pnl.TransferMechanism(
+#         size=2,
+#         input_states=[(t,None)])
+# assert len(T.input_states[0].variable)==2
+#
+# # size, 3-item tuple
+# T = pnl.TransferMechanism(
+#         size=2,
+#         input_states=[(t,1,1)])
+# assert len(T.input_states[0].variable)==2
+#
+# # size, 4-item tuple
+# T = pnl.TransferMechanism(
+#         size=2,
+#         input_states=[(t,1,1,None)])
+# assert len(T.input_states[0].variable)==2
+#
+# # no variable spec, mech
+# T = pnl.TransferMechanism(
+#         input_states=[t])
+# assert len(T.input_states[0].variable)==3
+#
+# # no variable spec, 2-item tuple
+# T = pnl.TransferMechanism(
+#         input_states=[(t,None)])
+# assert len(T.input_states[0].variable)==3
+#
+# # no variable spec, 3-item tuple
+# T = pnl.TransferMechanism(
+#         input_states=[(t,1,1)])
+# assert len(T.input_states[0].variable)==3
+#
+# # no variable spec, 4-item tuple
+# T = pnl.TransferMechanism(
+#         input_states=[(t,1,1,None)])
+# assert len(T.input_states[0].variable)==3
 
+# p = pnl.MappingProjection(sender=t)
 
 
 
