@@ -2739,19 +2739,18 @@ def _parse_state_spec(state_type=None,
                                               exponent=None,
                                               projection=state_type)
 
-        # FIX: HANDLE VALUE AS FIRST ITEM OF TUPLE HERE
-        # State specification is a tuple, so let State subclass handle it
+        # State specification is a tuple
         elif isinstance(state_specification, tuple):
 
-            # First item of tuple is a tuple:  assumed to be (State name, Mechanism) tuple
+            # 1st item of tuple is a tuple (presumably a (State name, Mechanism) tuple),
+            #    so parse to get specified State (any projection spec should be included as 4th item of outer tuple)
             if isinstance(state_specification[0],tuple):
-                state_name = state_specification[0][0]
-                mech = state_specification[0][1]
-                state_spec = _get_state_for_socket(owner=owner,
-                                                   state_spec=state_name,
-                                                   mech=mech)
-                state_specification = (state_spec, state_specification[1:])
+                proj_spec = _parse_connection_specs(connectee_state_type=state_type,
+                                                    owner=owner,
+                                                    connections=state_specification[0])
+                state_specification = (proj_spec[0].state,) + state_specification[1:]
 
+            # Reassign tuple for handling by _parse_state_specific_specs
             state_specific_specs = state_specification
 
         # Otherwise, just pass params to State subclass
