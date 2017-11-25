@@ -754,13 +754,12 @@ my_decision_mech = pnl.DDM(output_states=[pnl.RESPONSE_TIME,
 #                                               my_decision_mech.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
 #                                               (my_decision_mech.output_states[pnl.RESPONSE_TIME], 1, -1)])
 
+# FIX: ADD SUPPORT IN _parse_state_spec FOR FOLLOWING FORMAT [(STATE_NAME, MECH) TUPLE INSIDE 3-ITEM AND 4-ITEM TUPLES]
 # FIX: ADD TO Examples:
 my_objective_mech = pnl.ObjectiveMechanism(monitored_output_states=[
                                               my_reward_mech,
                                               (pnl.PROBABILITY_UPPER_THRESHOLD, my_decision_mech),
                                               ((pnl.RESPONSE_TIME, my_decision_mech), 1, -1)])
-
-
 
 
 #endregion

@@ -2742,7 +2742,18 @@ def _parse_state_spec(state_type=None,
         # FIX: HANDLE VALUE AS FIRST ITEM OF TUPLE HERE
         # State specification is a tuple, so let State subclass handle it
         elif isinstance(state_specification, tuple):
+
+            # First item of tuple is a tuple:  assumed to be (State name, Mechanism) tuple
+            if isinstance(state_specification[0],tuple):
+                state_name = state_specification[0][0]
+                mech = state_specification[0][1]
+                state_spec = _get_state_for_socket(owner=owner,
+                                                   state_spec=state_name,
+                                                   mech=mech)
+                state_specification = (state_spec, state_specification[1:])
+
             state_specific_specs = state_specification
+
         # Otherwise, just pass params to State subclass
         else:
             state_specific_specs = params
