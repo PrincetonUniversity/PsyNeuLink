@@ -720,95 +720,21 @@ class ScratchPadError(Exception):
 #region ObjectiveMechanism Example
 print ("TEST ObjectiveMechanism Example")
 
-# TEST: MOVE TO test_input_state_spec.py
-t = pnl.TransferMechanism(size=3)
-p = pnl.MappingProjection(sender=t)
-
-# default_variable, mech
-T = pnl.TransferMechanism(
-        default_variable=[0, 0],
-        input_states=[t])
-assert len(T.input_states[0].variable)==2
-
-# # default_variable, 2-item tuple
-# T = pnl.TransferMechanism(
-#         default_variable=[0, 0],
-#         input_states=[(t,None)])
-# assert len(T.input_states[0].variable)==2
-#
-# # default_variable, 3-item tuple
-# T = pnl.TransferMechanism(
-#         default_variable=[0, 0],
-#         input_states=[(t,1,1)])
-# assert len(T.input_states[0].variable)==2
-#
-# # default_variable, 4-item tuple
-# T = pnl.TransferMechanism(
-#         default_variable=[0, 0],
-#         input_states=[(t,1,1,None)])
-# assert len(T.input_states[0].variable)==2
-
-# size, mech
-T = pnl.TransferMechanism(
-        size=2,
-        input_states=[t])
-assert len(T.input_states[0].variable)==2
-
-# # size, 2-item tuple
-# T = pnl.TransferMechanism(
-#         size=2,
-#         input_states=[(t,None)])
-# assert len(T.input_states[0].variable)==2
-#
-# # size, 3-item tuple
-# T = pnl.TransferMechanism(
-#         size=2,
-#         input_states=[(t,1,1)])
-# assert len(T.input_states[0].variable)==2
-#
-# # size, 4-item tuple
-# T = pnl.TransferMechanism(
-#         size=2,
-#         input_states=[(t,1,1,None)])
-# assert len(T.input_states[0].variable)==2
-#
-# # no variable spec, mech
-# T = pnl.TransferMechanism(
-#         input_states=[t])
-# assert len(T.input_states[0].variable)==3
-#
-# # no variable spec, 2-item tuple
-# T = pnl.TransferMechanism(
-#         input_states=[(t,None)])
-# assert len(T.input_states[0].variable)==3
-#
-# # no variable spec, 3-item tuple
-# T = pnl.TransferMechanism(
-#         input_states=[(t,1,1)])
-# assert len(T.input_states[0].variable)==3
-#
-# # no variable spec, 4-item tuple
-# T = pnl.TransferMechanism(
-#         input_states=[(t,1,1,None)])
-# assert len(T.input_states[0].variable)==3
-
 # p = pnl.MappingProjection(sender=t)
 
 
+import psyneulink as pnl
+my_action_select_mech = pnl.TransferMechanism(default_variable=[0, 0, 0],
+                                              function=pnl.SoftMax(output=pnl.PROB),
+                                              name='Action Selection Mech')
 
+my_reward_mech = pnl.TransferMechanism(default_variable=[0],
+                                       name='Reward Mech')
 
-# import psyneulink as pnl
-# my_action_select_mech = pnl.TransferMechanism(default_variable=[0, 0, 0],
-#                                               function=pnl.SoftMax(output=pnl.PROB),
-#                                               name='Action Selection Mech')
-#
-# my_reward_mech = pnl.TransferMechanism(default_variable=[0],
-#                                        name='Reward Mech')
-#
-# # my_objective_mech = pnl.ObjectiveMechanism(default_variable=[[0],[0]],
-# #                                            monitored_output_states=[my_action_select_mech,
-# #                                                                     my_reward_mech])
-#
+my_objective_mech = pnl.ObjectiveMechanism(default_variable=[[0],[0]],
+                                           monitored_output_states=[my_action_select_mech,
+                                                                    my_reward_mech])
+
 # my_objective_mech = pnl.ObjectiveMechanism(default_variable = [[0],[0]],
 #                                            monitored_output_states = [(my_action_select_mech, -1, 1),
 #                                                                       my_reward_mech])

@@ -2619,15 +2619,22 @@ def _parse_state_spec(state_type=None,
                                         Mechanism.__name__, state_owner.name))
             return state_specification
 
-        # State is not the same as connectee's type, so assume it is for one to connect with
-        state_dict[PROJECTIONS] = ProjectionTuple(state=state_specification,
-                                                  weight=None,
-                                                  exponent=None,
-                                                  projection=projection)
-        # MODIFIED 11/25/17 NEW:
+        # # FIX: 11/25/17 DELETE THE FOLLOWING (TAKEN CARE OF IN CALL TO _parse_state_spec BELOW)
+        # # State is not the same as connectee's type, so assume it is for one to connect with
+        # state_dict[PROJECTIONS] = ProjectionTuple(state=state_specification,
+        #                                           weight=None,
+        #                                           exponent=None,
+        #                                           projection=projection)
+        # # MODIFIED 11/25/17 NEW:
         # Re-process with Projection specified
         state_dict = _parse_state_spec(state_type=state_type,
                                        owner=owner,
+                                       variable=variable,
+                                       value=value,
+                                       reference_value=reference_value,
+                                       params=params,
+                                       prefs=prefs,
+                                       context=context,
                                        state_spec=ProjectionTuple(state=state_specification,
                                                                   weight=None,
                                                                   exponent=None,
