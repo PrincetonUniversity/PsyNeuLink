@@ -789,6 +789,7 @@ class StateError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
+
     def __str__(self):
         return repr(self.error_value)
 
@@ -2834,6 +2835,17 @@ def _parse_state_spec(state_type=None,
             state_dict[VARIABLE] = state_dict[VALUE]
         else:
             state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
+    elif state_dict[REFERENCE_VALUE] is not None:
+        if not iscompatible(state_dict[VARIABLE], state_dict[REFERENCE_VALUE]):
+            if context in '_parse_arg_input_states':
+                from psyneulink.components.mechanisms.mechanism import MechanismError
+                raise MechanismError('default variable determined from the specified input_states spec ({0}) '
+                                     'is not compatible with the specified default variable ({1})'.
+                                     format(state_dict[VARIABLE], state_dict[REFERENCE_VALUE]))
+            else:
+                raise StateError("Specification of {} for {} of {} ({}) is not compatible with its {} ({})".
+                                 format(VARIABLE, state_dict[NAME], owner.name,
+                                        state_dict[VARIABLE], REFERENCE_VALUE, state_dict[REFERENCE_VALUE]))
 
     return state_dict
 

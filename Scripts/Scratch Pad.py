@@ -725,7 +725,7 @@ t = pnl.TransferMechanism(size=3)
 p = pnl.MappingProjection(sender=t)
 T = pnl.TransferMechanism(
         # default_variable=[0, 0],
-        size=2,  # <- FIX: DOESN'T WORK
+        size=2,  # <- FIXED
         # input_states=[t])
         # input_states=[(t,None)])
         # input_states=[(t,1,1)])
@@ -734,9 +734,9 @@ assert len(T.input_states[0].variable)==2
 
 # # #TEST:
 # t = pnl.TransferMechanism(size=3)
-# p = pnl.MappingProjection(sender=t)
+# # p = pnl.MappingProjection(sender=t)
 # T = pnl.TransferMechanism(
-#         input_states=[t]) # <- FIX: DOESN'T WORK
+#         input_states=[t]) # <- FIXED: DOESN'T WORK;  NEED TO GET t.output_state.value
 # #         # # input_states=[(t,None)])
 # #         # # input_states=[(t,1,1)])
 # #         # input_states=[(t,1,1,None)])

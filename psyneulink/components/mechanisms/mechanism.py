@@ -1258,7 +1258,7 @@ class Mechanism_Base(Mechanism):
 
         return variable
 
-    def _parse_arg_input_states(self, default_variable, input_states):
+    def _parse_arg_input_states(self, default_variable, size, input_states):
         '''
         Takes user-inputted argument **input_states** and returns an instance_defaults.variable-like
         object that it represents
@@ -1269,6 +1269,7 @@ class Mechanism_Base(Mechanism):
             A is an instance_defaults.variable-like object
             B is True if **input_states** contained an explicit variable specification, False otherwise
         '''
+
         if input_states is None:
             return None, False
 
@@ -1278,11 +1279,18 @@ class Mechanism_Base(Mechanism):
         if not isinstance(input_states, Iterable):
             input_states = [input_states]
 
+        # Pass default_variable or one based on size to _parse_state_spe as default
+        # FIX: THIS REALLY ISN'T RIGHT:  NEED TO BASE IT ON SHAPE REQUESTED IN SIZE
+        # dv = [0]*size if default_variable is None and size is not None else default_variable
+        dv = np.zeros(size) if default_variable is None and size is not None else default_variable
+        dv = convert_to_np_array(dv,2).tolist() if dv is not None else None
+        # dv = convert_to_np_array(default_variable,2).tolist() if default_variable is not None else None
         for i, s in enumerate(input_states):
-            variable = default_variable[i] if default_variable else None
-            parsed_spec = _parse_state_spec(owner=self, variable=variable,
+            parsed_spec = _parse_state_spec(owner=self,
+                                            variable=dv[i] if dv is not None else None,
                                             state_type=InputState,
-                                            state_spec=s)
+                                            state_spec=s,
+                                            context='_parse_arg_input_states')
 
             if isinstance(parsed_spec, dict):
                 try:
@@ -1333,14 +1341,14 @@ class Mechanism_Base(Mechanism):
         # handle specifying through params dictionary
         try:
             default_variable_from_input_states, input_states_variable_was_specified = \
-                self._parse_arg_input_states(default_variable, params[INPUT_STATES])
+                self._parse_arg_input_states(default_variable, size, params[INPUT_STATES])
         except (TypeError, KeyError):
             pass
 
         if default_variable_from_input_states is None:
             # fallback to standard arg specification
             default_variable_from_input_states, input_states_variable_was_specified = \
-                self._parse_arg_input_states(default_variable, input_states)
+                self._parse_arg_input_states(default_variable, size, input_states)
 
         if default_variable_from_input_states is not None:
             if default_variable is None:
@@ -2312,7 +2320,7 @@ class Mechanism_Base(Mechanism):
         # _instantiate_state_list(self, input_states, InputState)
         if input_states:
             # FIX: 11/9/17
-            added_variable, added_input_state = self._parse_arg_input_states(self.variable, input_states)
+            added_variable, added_input_state = self._parse_arg_input_states(self.variable, self.size, input_states)
             if added_input_state:
                 old_variable = self.instance_defaults.variable.tolist()
                 old_variable.extend(added_variable)

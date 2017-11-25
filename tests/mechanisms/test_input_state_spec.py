@@ -10,8 +10,7 @@ from psyneulink.components.states.state import StateError
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, VARIABLE, RESULT
 
-# mismatches_default_variable_error_text = 'not compatible with the specified default variable'
-mismatches_default_variable_error_text = 'is not compatible with its expected format'
+mismatches_default_variable_error_text = 'not compatible with the specified default variable'
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
 belongs_to_another_mechanism_error_text = 'that belongs to another Mechanism'
 
