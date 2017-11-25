@@ -720,27 +720,27 @@ class ScratchPadError(Exception):
 #region ObjectiveMechanism Example
 print ("TEST ObjectiveMechanism Example")
 
-# TEST: MOVE TO test_input_state_spec.py
-t = pnl.TransferMechanism(size=3)
-p = pnl.MappingProjection(sender=t)
-T = pnl.TransferMechanism(
-        # default_variable=[0, 0],
-        size=2,  # <- FIXED
-        # input_states=[t])
-        # input_states=[(t,None)])
-        # input_states=[(t,1,1)])
-        input_states=[(t,1,1,None)])
-assert len(T.input_states[0].variable)==2
-
-# # #TEST:
+# # TEST: MOVE TO test_input_state_spec.py
 # t = pnl.TransferMechanism(size=3)
-# # p = pnl.MappingProjection(sender=t)
+# p = pnl.MappingProjection(sender=t)
 # T = pnl.TransferMechanism(
-#         input_states=[t]) # <- FIXED: DOESN'T WORK;  NEED TO GET t.output_state.value
-# #         # # input_states=[(t,None)])
-# #         # # input_states=[(t,1,1)])
-# #         # input_states=[(t,1,1,None)])
-# assert len(T.input_states[0].variable)==3
+#         # default_variable=[0, 0],
+#         size=2,  # <- FIXED
+#         # input_states=[t])
+#         # input_states=[(t,None)])
+#         # input_states=[(t,1,1)])
+#         input_states=[(t,1,1,None)])
+# assert len(T.input_states[0].variable)==2
+
+# #TEST:
+t = pnl.TransferMechanism(size=3)
+# p = pnl.MappingProjection(sender=t)
+T = pnl.TransferMechanism(
+        input_states=[t]) # <- FIXED: DOESN'T WORK;  NEED TO GET t.output_state.value
+#         # # input_states=[(t,None)])
+#         # # input_states=[(t,1,1)])
+#         # input_states=[(t,1,1,None)])
+assert len(T.input_states[0].variable)==3
 
 
 

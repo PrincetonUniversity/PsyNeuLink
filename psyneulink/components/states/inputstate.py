@@ -944,7 +944,13 @@ class InputState(State_Base):
                             sender_dim = projection_spec.state.value.ndim
                             projection = projection_spec.projection
                             if isinstance(projection, dict):
-                                matrix = projection[MATRIX]
+                                # Don't try to get MATRIX from projection without checking,
+                                #    since projection is a defaultDict,
+                                #    which will add a matrix entry and assign it to None if it is not there
+                                if MATRIX in projection:
+                                    matrix = projection[MATRIX]
+                                else:
+                                    matrix = None
                             elif isinstance(projection, Projection):
                                 if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
                                     continue

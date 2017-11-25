@@ -2624,6 +2624,15 @@ def _parse_state_spec(state_type=None,
                                                   weight=None,
                                                   exponent=None,
                                                   projection=projection)
+        # MODIFIED 11/25/17 NEW:
+        # Re-process with Projection specified
+        state_dict = _parse_state_spec(state_type=state_type,
+                                       owner=owner,
+                                       state_spec=ProjectionTuple(state=state_specification,
+                                                                  weight=None,
+                                                                  exponent=None,
+                                                                  projection=projection))
+        # MODIFIED 11/25/17 END
 
     # State class
     elif (inspect.isclass(state_specification) and issubclass(state_specification, State)):
