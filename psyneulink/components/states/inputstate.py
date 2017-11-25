@@ -877,6 +877,8 @@ class InputState(State_Base):
             # FIX:                       IS APPLIED TO ALL THE OutputStates SPECIFIED IN OUTPUT_STATES
             # FIX:                       UNLESS THEY THEMSELVES USE A State specification dict WITH ANY OF THOSE ENTRIES
             # FIX:           USE ObjectiveMechanism EXAMPLES
+            # if MECHANISM in state_specific_spec:
+            #     if OUTPUT_STATES in state_specific_spec
             return None, state_specific_spec
 
         elif isinstance(state_specific_spec, tuple):

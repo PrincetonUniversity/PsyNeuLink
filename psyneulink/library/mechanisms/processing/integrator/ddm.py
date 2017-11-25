@@ -297,7 +297,7 @@ from psyneulink.components.component import method_type
 from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, STARTING_POINT, THRESHOLD
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.components.states.outputstate import SEQUENTIAL
+from psyneulink.components.states.outputstate import StandardOutputStates, SEQUENTIAL
 from psyneulink.globals.keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, TIME_SCALE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -637,6 +637,10 @@ class DDM(ProcessingMechanism_Base):
                  context=componentType + INITIALIZING
     ):
 
+        self.standard_output_states = StandardOutputStates(self,
+                                                           DDM_standard_output_states,
+                                                           indices=SEQUENTIAL)
+
         # Default output_states is specified in constructor as a tuple rather than a list
         # to avoid "gotcha" associated with mutable default arguments
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
@@ -660,9 +664,6 @@ class DDM(ProcessingMechanism_Base):
         # # Conflict with above
         # self.size = size
         self.threshold = thresh
-
-        from psyneulink.components.states.outputstate import StandardOutputStates
-        self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states, SEQUENTIAL)
 
         super(DDM, self).__init__(variable=default_variable,
                                   output_states=output_states,

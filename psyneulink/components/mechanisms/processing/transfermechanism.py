@@ -512,8 +512,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
-                                                               indices=PRIMARY
-                                                               )
+                                                               indices=PRIMARY)
 
         super(TransferMechanism, self).__init__(
             variable=default_variable,

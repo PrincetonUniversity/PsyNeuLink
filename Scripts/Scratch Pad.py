@@ -724,10 +724,11 @@ print ("TEST ObjectiveMechanism Example")
 
 
 import psyneulink as pnl
-my_action_select_mech = pnl.TransferMechanism(default_variable=[0, 0, 0],
-                                              function=pnl.SoftMax(output=pnl.PROB),
-                                              name='Action Selection Mech')
 
+# my_action_select_mech = pnl.TransferMechanism(default_variable=[0, 0, 0],
+#                                               function=pnl.SoftMax(output=pnl.PROB),
+#                                               name='Action Selection Mech')
+#
 my_reward_mech = pnl.TransferMechanism(default_variable=[0],
                                        name='Reward Mech')
 
@@ -735,15 +736,25 @@ my_reward_mech = pnl.TransferMechanism(default_variable=[0],
 #                                            monitored_output_states=[my_action_select_mech,
 #                                                                     my_reward_mech])
 
-my_decision_mech = pnl.DDM(output_states=[pnl.DDM.RESPONSE_TIME,
-                                          pnl.DDM.PROBABILITY_UPPER_THRESHOLD])
-my_objective_mech = pnl.ObjectiveMechanism(monitored_output_states=[my_reward_mech,
-                                                                    {pnl.MECHANISM:my_decision_mech,
-                                                                     pnl.OUTPUT_STATES:[pnl.PROBABILITY_UPPER_THRESHOLD,
-                                                                                        (pnl.RESPONSE_TIME, 1, -1)],
-                                                                     pnl.NAME: 'DDM Mechanism'}])
+my_decision_mech = pnl.DDM(output_states=[pnl.RESPONSE_TIME,
+                                          pnl.PROBABILITY_UPPER_THRESHOLD])
 
+# my_objective_mech = pnl.ObjectiveMechanism(monitored_output_states=[my_reward_mech,
+#                                                                     {pnl.MECHANISM:my_decision_mech,
+#                                                                      pnl.OUTPUT_STATES:[
+#                                                                          pnl.PROBABILITY_UPPER_THRESHOLD,
+#                                                                          (pnl.RESPONSE_TIME, 1, -1)],
+#                                                                      pnl.NAME: 'DDM Mechanism'}])
 
+# my_objective_mech = pnl.ObjectiveMechanism(monitored_output_states=[
+#                                               my_reward_mech,
+#                                               my_decision_mech.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
+#                                               (my_decision_mech.output_states[pnl.RESPONSE_TIME], 1, -1)])
+
+my_objective_mech = pnl.ObjectiveMechanism(monitored_output_states=[
+                                              my_reward_mech,
+                                              (pnl.PROBABILITY_UPPER_THRESHOLD, my_decision_mech),
+                                              ((pnl.RESPONSE_TIME, my_decision_mech), 1, -1)])
 
 
 
