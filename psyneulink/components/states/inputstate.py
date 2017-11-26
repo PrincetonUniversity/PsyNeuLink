@@ -885,6 +885,8 @@ class InputState(State_Base):
 
         elif isinstance(state_specific_spec, tuple):
 
+            # GET STATE_SPEC AND ASSIGN PROJECTIONS_SPEC **********************************************************
+
             tuple_spec = state_specific_spec
 
             # 2-item tuple specification
@@ -927,7 +929,7 @@ class InputState(State_Base):
                 projection_item = tuple_spec[3] if len(tuple_spec)==4 else None
                 projections_spec = (tuple_spec[0],projection_item)
 
-            # GET PROJECTION(S) IF SPECIFIED ***************************************************************
+            # GET PROJECTIONS IF SPECIFIED *************************************************************************
 
             try:
                 projections_spec

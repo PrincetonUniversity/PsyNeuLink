@@ -722,10 +722,11 @@ print ("TEST test_parameter_state_docs")
 
 import psyneulink as pnl
 my_mechanism = pnl.RecurrentTransferMechanism(size=5,
-                              noise=pnl.ControlSignal(),
-                              function=pnl.Logistic(
-                                      gain=(0.5, pnl.ControlSignal),
-                                      bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))))
+                              noise=(1,pnl.ControlSignal()),
+                              # function=pnl.Logistic(
+                              #         gain=(0.5, pnl.ControlSignal),
+                              #         bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE)))
+                                              )
 
 
 

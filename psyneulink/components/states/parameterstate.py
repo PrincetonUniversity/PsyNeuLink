@@ -295,13 +295,15 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, function_type, method_type, parameter_keywords
+from psyneulink.components.component import Component, function_type, method_type, parameter_keywords, InitStatus
 from psyneulink.components.functions.function import Linear, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
-from psyneulink.globals.keywords import CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, \
-    PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, VALUE, \
-    CONTROL_SIGNAL, CONTROL_SIGNALS, LEARNING_SIGNAL, LEARNING_SIGNALS, SENDER
+from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
+from psyneulink.globals.keywords import \
+    NAME, CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, \
+    PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
+    VALUE, REFERENCE_VALUE, CONTROL_SIGNAL, CONTROL_SIGNALS, LEARNING_SIGNAL, LEARNING_SIGNALS, SENDER, STATE_TYPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities \
@@ -611,7 +613,7 @@ class ParameterState(State_Base):
             return None, state_specific_spec
 
         elif isinstance(state_specific_spec, tuple):
-
+            #
             # # MODIFIED 11/25/17 OLD:
             # tuple_spec = state_specific_spec
             # state_spec = tuple_spec[0]
@@ -636,35 +638,123 @@ class ParameterState(State_Base):
             #                                      ParameterState.__name__,
             #                                      owner.name,
             #                                      projections_spec))
+
             # MODIFIED 11/25/17 NEW:
-
-            # FIX: TEST FOR NUMERIC VALUE (AS IN InputState) AND ASSIGN TO STATE_SPEC IF PRESENT
-
-            state_spec = None
             tuple_spec = state_specific_spec
 
-            # Get connection (afferent Projection(s)) specification from tuple
-            PROJECTIONS_INDEX = len(tuple_spec)-1
-            # Get projection_spec and parse
+            # GET STATE_SPEC (PARAM VALUE) AND ASSIGN PROJECTIONS_SPEC **********************************************
+
+            # 2-item tuple specification
+            if len(tuple_spec) == 2:
+
+                # 1st item is a value, so treat as State spec (and return to _parse_state_spec to be parsed)
+                #   and treat 2nd item as Projection specification
+                if is_numeric(tuple_spec[0]):
+                    state_spec = tuple_spec[0]
+                    reference_value = state_dict[REFERENCE_VALUE]
+                    # Assign value so sender_dim is skipped below
+                    # (actual assignment is made in _parse_state_spec)
+                    if reference_value is None:
+                        state_dict[REFERENCE_VALUE]=state_spec
+                    elif  not iscompatible(state_spec, reference_value):
+                        raise StateError("Value in first item of 2-item tuple specification for {} of {} ({}) "
+                                         "is not compatible with its {} ({})".
+                                         format(ParameterState.__name__, owner.name, state_spec,
+                                                REFERENCE_VALUE, reference_value))
+                    projections_spec = tuple_spec[1]
+
+                # Tuple is Projection specification that is used to specify the State,
+                else:
+                    # return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
+                    state_spec = None
+                    if tuple_spec[0] != self:
+                        # If 1st item is not the current state (self), treat as part of the projection specification
+                        projections_spec = tuple_spec
+                    else:
+                        # Otherwise, just use 2nd item as projection spec
+                        state_spec = None
+                        projections_spec = tuple_spec[1]
+
+            # 3- or 4-item tuple specification
+            elif len(tuple_spec) in {3,4}:
+                # Tuple is projection specification that is used to specify the State,
+                #    so return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
+                state_spec = None
+                # Reduce to 2-item tuple Projection specification
+                projection_item = tuple_spec[3] if len(tuple_spec)==4 else None
+                projections_spec = (tuple_spec[0],projection_item)
+
+            # GET PROJECTIONS IF SPECIFIED *************************************************************************
+
             try:
-                projections_spec = tuple_spec[PROJECTIONS_INDEX]
-            except IndexError:
-                projections_spec = None
-
-            if projections_spec:
+                projections_spec
+            except UnboundLocalError:
+                pass
+            else:
                 try:
-                    params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
+                    params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                        owner=owner,
-                                                                       connections=tuple_spec)
-                except ParameterStateError:
-                    raise ParameterStateError("Item {} of tuple specification in {} specification dictionary "
-                                          "for {} ({}) is not a recognized specification".
-                                          format(PROJECTIONS_INDEX,
-                                                 ParameterState.__name__,
-                                                 owner.name,
-                                                 projections_spec))
-            # MODIFIED 11/25/17 END
+                                                                       connections=projections_spec)
 
+                    # Parse the value of all of the Projections to get/validate parameter value
+                    from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+                    for projection_spec in params_dict[PROJECTIONS]:
+                        if state_dict[REFERENCE_VALUE] is None:
+                            # FIX: 10/3/17 - PUTTING THIS HERE IS A HACK...
+                            # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ProjectionTuple SPEC
+                            # FIX:           USING _get_state_for_socket
+                            # from psyneulink.components.projections.projection import _parse_projection_spec
+                            ctl_signal_value = projection_spec.state.value
+                            ctl_projection = projection_spec.projection
+                            if isinstance(ctl_projection, dict):
+                                if ctl_projection[STATE_TYPE] is not CONTROL_PROJECTION:
+                                    raise ParameterStateError("PROGRAM ERROR: {} other than {} ({}) found "
+                                                              "in specification tuple for {} param of {}".
+                                                              format(Projection.__name__, ControlProjection.__name__,
+                                                                     ctl_projection, state_dict[NAME], owner.name))
+                                elif VALUE in ctl_projection:
+                                    ctl_proj_value = ctl_projection[VALUE]
+                                else:
+                                    ctl_proj_value = None
+                            elif isinstance(ctl_projection, Projection):
+                                if not isinstance(ctl_projection, ControlProjection):
+                                    raise ParameterStateError("PROGRAM ERROR: {} other than {} ({}) found "
+                                                              "in specification tuple for {} param of {}".
+                                                              format(Projection.__name__, ControlProjection.__name__,
+                                                                     ctl_projection, state_dict[NAME], owner.name))
+                                elif ctl_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                                    continue
+                                ctl_proj_value = ctl_projection.value
+                            else:
+                                raise ParameterStateError("Unrecognized Projection specification for {} of {} ({})".
+                                                      format(self.name, owner.name, projection_spec))
+                            if ctl_proj_value is None:
+                                # If ControlProjection's value has not been specified, no worries;
+                                #    use ControlSignal's value
+                                if VALUE not in state_dict or state_dict[VALUE] is None:
+                                    state_dict[VALUE] = ctl_signal_value
+                                # If value HAS been assigned, make sure value is the same for this sender
+                                elif state_dict[VALUE] != ctl_signal_value:
+                                    # If values for senders differ, assign None so that State's default is used
+                                    state_dict[VALUE] = None
+                                    # No need to check any more Projections
+                                    break
+
+                            # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
+                            else:
+                                state_dict[VALUE] = ctl_proj_value
+
+                except ParameterStateError:
+                    raise ParameterStateError("Tuple specification in {} specification dictionary "
+                                          "for {} ({}) is not a recognized specification for one or more "
+                                          "{}s, {}s, or {}s that project to it".
+                                          format(ParameterState.__name__,
+                                                 owner.name,
+                                                 projections_spec,
+                                                 Mechanism.__name__,
+                                                 ModulatorySignal.__name__,
+                                                 Projection.__name__))
+            # MODIFIED 11/25/17 END
 
         elif state_specific_spec is not None:
             raise ParameterStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
