@@ -2519,6 +2519,8 @@ def _parse_state_spec(state_type=None,
     """
     from psyneulink.components.projections.projection \
         import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple
+    from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
+
 
     # Get all of the standard arguments passed from _instantiate_state (i.e., those other than state_spec) into a dict
     standard_args = get_args(inspect.currentframe())
@@ -2585,9 +2587,6 @@ def _parse_state_spec(state_type=None,
     if isinstance(state_specification, function_type):
         state_specification = state_specification()
 
-    if _is_modulatory_spec(state_specification):
-        projection = state_type
-
     # State or Mechanism object specification:
     if isinstance(state_specification, (Mechanism, State)):
 
@@ -2636,13 +2635,13 @@ def _parse_state_spec(state_type=None,
                                                                   exponent=None,
                                                                   projection=projection))
 
-    # State class
-    elif (inspect.isclass(state_specification) and issubclass(state_specification, State)):
-        # Specified type of State is same as connectee's type (state_type),
-        #    so assume it is a reference to the State itself to be instantiated
-        if state_specification is not state_type:
-            raise StateError("Specification of {} for {} (\'{}\') is insufficient to instantiate the {}".
-                format(state_type_name, owner.name, state_specification.__name__, State.__name__))
+    # # State class
+    # elif (inspect.isclass(state_specification) and issubclass(state_specification, State)):
+    #     # Specified type of State is same as connectee's type (state_type),
+    #     #    so assume it is a reference to the State itself to be instantiated
+    #     if state_specification is not state_type:
+    #         raise StateError("Specification of {} for {} (\'{}\') is insufficient to instantiate the {}".
+    #             format(state_type_name, owner.name, state_specification.__name__, State.__name__))
 
     # Projection specification (class, object, or matrix value (matrix keyword processed below):
     elif _is_projection_spec(state_specification, include_matrix_spec=False):
@@ -2844,6 +2843,22 @@ def _parse_state_spec(state_type=None,
             if state_dict[PARAMS] is None:
                 state_dict[PARAMS] = {}
             state_dict[PARAMS].update(params)
+
+    elif _is_modulatory_spec(state_specification):
+        projection = state_type
+        # Re-process with Projection specified
+        state_dict = _parse_state_spec(state_type=state_type,
+                                       owner=owner,
+                                       variable=variable,
+                                       value=value,
+                                       reference_value=reference_value,
+                                       params=params,
+                                       prefs=prefs,
+                                       context=context,
+                                       state_spec=ProjectionTuple(state=state_specification,
+                                                                  weight=None,
+                                                                  exponent=None,
+                                                                  projection=projection))
 
     else:
         if owner.verbosePref:
