@@ -1509,13 +1509,9 @@ def _parse_connection_specs(connectee_state_type,
                                               mech=mech,
                                               mech_state_attribute=connect_with_attr,
                                               projection_socket=projection_socket)
-                assert True
             except StateError as e:
-                assert True
                 raise ProjectionError("Problem with specification for {} in {} specification for {}: ".
                                       format(State.__name__, Projection.__name__, owner.name) + e.error_value)
-            except AttributeError:
-                assert True
 
 
             # Check compatibility with any State(s) returned by _get_state_for_socket

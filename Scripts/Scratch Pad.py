@@ -722,13 +722,31 @@ print ("TEST test_parameter_state_docs")
 
 import psyneulink as pnl
 my_mechanism = pnl.RecurrentTransferMechanism(size=5,
-                              noise=pnl.ControlSignal(),
-                              # function=pnl.Logistic(
-                              #         gain=(0.5, pnl.ControlSignal),
-                              #         bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE)))
+                                                    # FIX: NONE OF THE NOISE SPECS GENERATE AN ACTUAL CONTROL SIGNAL:
+                              # noise=pnl.CONTROL,  # <- FIX: DOESN'T WORK
+                              noise=(1, pnl.CONTROL),
+                              # noise=(1, pnl.CONTROL_SIGNAL),  # <- FIX: DOESN'T WORK
+                              # noise=(1, pnl.ControlSignal),
+                              # noise=(1, pnl.ControlSignal()),
+                              # noise=(1, pnl.ControlProjection),
+                              # noise=(1, pnl.ControlProjection()),
+                              # noise=(1, pnl.ControlMechanism),  # <- FIX: DOESN'T WORK
+                              # noise=(1, pnl.ControlMechanism()),  # <- FIX: DOESN'T WORK
+                              function=pnl.Logistic(
+                                      # gain=pnl.CONTROL,  # <- FIX: DOESN'T WORK
+                                      gain=(0.5, pnl.CONTROL),
+                                      # gain=(0.5, pnl.CONTROL_SIGNAL),  # <- FIX: DOESN'T WORK
+                                      # gain=(0.5, pnl.ControlSignal),
+                                      # gain=(0.5, pnl.ControlSignal()),
+                                      # gain=(0.5, pnl.ControlProjection),
+                                      # gain=(0.5, pnl.ControlProjection()),
+                                      # gain=(0.5, pnl.ControlMechanism),  # <- FIX: DOESN'T WORK
+                                      # gain=(0.5, pnl.ControlMechanism()),  # <- FIX: DOESN'T WORK
+                                      bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE)))
                                               )
-
-
+print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.NOISE].mod_afferents)
+print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.GAIN].mod_afferents)
+print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.BIAS].mod_afferents)
 
 
 
