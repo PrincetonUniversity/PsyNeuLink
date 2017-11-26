@@ -314,8 +314,9 @@ from psyneulink.components.states.modulatorysignals.controlsignal import Control
 from psyneulink.components.shellclasses import System_Base
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import \
-    AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, \
-    NAME, OBJECTIVE_MECHANISM, PRODUCT, PROJECTIONS, SYSTEM, VARIABLE, WEIGHT
+    AUTO_ASSIGN_MATRIX,  INIT__EXECUTE__METHOD_ONLY, \
+    CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
+    NAME, OBJECTIVE_MECHANISM, PRODUCT, PROJECTIONS, SYSTEM, VARIABLE, WEIGHT, EXPONENT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -335,6 +336,10 @@ def _is_control_spec(spec):
     if isinstance(spec, tuple):
         return _is_control_spec(spec[1])
     elif isinstance(spec, (ControlMechanism, ControlSignal, ControlProjection)):
+        return True
+    elif isinstance(spec, type) and issubclass(spec, ControlSignal):
+        return True
+    elif isinstance(spec, str) and spec in {CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL}:
         return True
     else:
         return False

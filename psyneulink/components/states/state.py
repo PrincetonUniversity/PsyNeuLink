@@ -2585,6 +2585,9 @@ def _parse_state_spec(state_type=None,
     if isinstance(state_specification, function_type):
         state_specification = state_specification()
 
+    if _is_modulatory_spec(state_specification):
+        projection = state_type
+
     # State or Mechanism object specification:
     if isinstance(state_specification, (Mechanism, State)):
 
