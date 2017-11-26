@@ -712,6 +712,9 @@ class ParameterState(State_Base):
 
                             mod_signal_value = projection_spec.state.value \
                                 if isinstance(projection_spec.state, State_Base) else None
+
+
+                            # MODIFIED 11/25/17 OLD:
                             mod_projection = projection_spec.projection
                             if isinstance(mod_projection, dict):
                                 if mod_projection[PROJECTION_TYPE] not in {ControlProjection, LearningProjection}:
@@ -722,9 +725,9 @@ class ParameterState(State_Base):
                                                                      LearningProjection.__name__,
                                                                      mod_projection, state_dict[NAME], owner.name))
                                 elif VALUE in mod_projection:
-                                    ctl_proj_value = mod_projection[VALUE]
+                                    mod_proj_value = mod_projection[VALUE]
                                 else:
-                                    ctl_proj_value = None
+                                    mod_proj_value = None
                             elif isinstance(mod_projection, Projection):
                                 if not isinstance(mod_projection, (ControlProjection, LearningProjection)):
                                     raise ParameterStateError("PROGRAM ERROR: {} other than {} or {} ({}) found "
@@ -735,25 +738,27 @@ class ParameterState(State_Base):
                                                                      mod_projection, state_dict[NAME], owner.name))
                                 elif mod_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
                                     continue
-                                ctl_proj_value = mod_projection.value
+                                mod_proj_value = mod_projection.value
                             else:
                                 raise ParameterStateError("Unrecognized Projection specification for {} of {} ({})".
                                                       format(self.name, owner.name, projection_spec))
-                            if ctl_proj_value is None:
-                                # If ControlProjection's value has not been specified, no worries;
-                                #    use ControlSignal's value
+
+                            # FIX: 11/25/17 THIS IS A MESS:  CHECK WHAT IT'S ACTUALLY DOING
+                            # If ModulatoryProjection's value is not specified, try to assign one
+                            if mod_proj_value is None:
+                                # If not specified for State, assign that
                                 if VALUE not in state_dict or state_dict[VALUE] is None:
                                     state_dict[VALUE] = mod_signal_value
-                                # If value HAS been assigned, make sure value is the same for this sender
+                                # If value has been assigned, make sure value is the same for ModulatorySignal
                                 elif state_dict[VALUE] != mod_signal_value:
-                                    # If values for senders differ, assign None so that State's default is used
+                                    # If the values differ, assign None so that State's default is used
                                     state_dict[VALUE] = None
-                                    # No need to check any more Projections
+                                    # No need to check any more ModulatoryProjections
                                     break
 
-                            # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
+                            #
                             else:
-                                state_dict[VALUE] = ctl_proj_value
+                                state_dict[VALUE] = mod_proj_value
 
                 except ParameterStateError:
                     raise ParameterStateError("Tuple specification in {} specification dictionary "
