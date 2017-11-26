@@ -723,8 +723,8 @@ print ("TEST test_parameter_state_docs")
 import psyneulink as pnl
 my_mechanism = pnl.RecurrentTransferMechanism(size=5,
                                                     # FIX: NONE OF THE NOISE SPECS GENERATE AN ACTUAL CONTROL SIGNAL:
-                              # noise=pnl.CONTROL,  # <- FIX: DOESN'T WORK
-                              noise=(1, pnl.CONTROL),
+                              noise=pnl.CONTROL,  # <- FIX: DOESN'T WORK
+                              # noise=(1, pnl.CONTROL),
                               # noise=(1, pnl.CONTROL_SIGNAL),  # <- FIX: DOESN'T WORK
                               # noise=(1, pnl.ControlSignal),
                               # noise=(1, pnl.ControlSignal()),

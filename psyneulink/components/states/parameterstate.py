@@ -996,6 +996,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
         state = _instantiate_state(owner=owner,
                                   state_type=ParameterState,
                                   name=param_name,
+                                  state_spec=param_value,
                                   reference_value=param_value,
                                   reference_value_name=param_name,
                                   params=None,

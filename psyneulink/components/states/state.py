@@ -2624,7 +2624,7 @@ def _parse_state_spec(state_type=None,
                                        owner=owner,
                                        variable=variable,
                                        value=value,
-                                       reference_value=reference_value or state_specification,
+                                       reference_value=reference_value,
                                        params=params,
                                        prefs=prefs,
                                        context=context,
@@ -2966,10 +2966,7 @@ def _get_state_for_socket(owner,
                 return state
             except AttributeError:
                 # Otherwise, return first state_type (s)
-                # return s
-                pass
-            assert True
-            return s
+                return s
 
         # FIX: 10/3/17 - ??IS THE FOLLOWING NECESSARY?  ??HOW IS IT DIFFERENT FROM ABOVE?
         # Otherwise, get State types that are allowable for that projection_socket
