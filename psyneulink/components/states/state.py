@@ -2619,7 +2619,6 @@ def _parse_state_spec(state_type=None,
                                         Mechanism.__name__, state_owner.name))
             return state_specification
 
-        # MODIFIED 11/25/17 NEW:
         # Re-process with Projection specified
         state_dict = _parse_state_spec(state_type=state_type,
                                        owner=owner,
@@ -2633,7 +2632,6 @@ def _parse_state_spec(state_type=None,
                                                                   weight=None,
                                                                   exponent=None,
                                                                   projection=projection))
-        # MODIFIED 11/25/17 END
 
     # State class
     elif (inspect.isclass(state_specification) and issubclass(state_specification, State)):
@@ -2846,8 +2844,12 @@ def _parse_state_spec(state_type=None,
             state_dict[PARAMS].update(params)
 
     else:
-        raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
+        if owner.verbosePref:
+            warnings.warn("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
                          format(state_type_name, owner.name, state_spec))
+        return
+        # raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
+        #                  format(state_type_name, owner.name, state_spec))
 
     # If variable is none, use value:
     if state_dict[VARIABLE] is None:

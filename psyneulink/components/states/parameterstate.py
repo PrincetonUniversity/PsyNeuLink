@@ -610,8 +610,36 @@ class ParameterState(State_Base):
 
         elif isinstance(state_specific_spec, tuple):
 
+            # # MODIFIED 11/25/17 OLD:
+            # tuple_spec = state_specific_spec
+            # state_spec = tuple_spec[0]
+            #
+            # # Get connection (afferent Projection(s)) specification from tuple
+            # PROJECTIONS_INDEX = len(tuple_spec)-1
+            # # Get projection_spec and parse
+            # try:
+            #     projections_spec = tuple_spec[PROJECTIONS_INDEX]
+            # except IndexError:
+            #     projections_spec = None
+            #
+            # if projections_spec:
+            #     try:
+            #         params_dict[PROJECTIONS] = _parse_connection_specs(self,
+            #                                                            owner=owner,
+            #                                                            connections=projections_spec)
+            #     except ParameterStateError:
+            #         raise ParameterStateError("Item {} of tuple specification in {} specification dictionary "
+            #                               "for {} ({}) is not a recognized specification".
+            #                               format(PROJECTIONS_INDEX,
+            #                                      ParameterState.__name__,
+            #                                      owner.name,
+            #                                      projections_spec))
+            # MODIFIED 11/25/17 NEW:
+
+            # FIX: TEST FOR NUMERIC VALUE (AS IN InputState) AND ASSIGN TO STATE_SPEC IF PRESENT
+
+            state_spec = None
             tuple_spec = state_specific_spec
-            state_spec = tuple_spec[0]
 
             # Get connection (afferent Projection(s)) specification from tuple
             PROJECTIONS_INDEX = len(tuple_spec)-1
@@ -623,9 +651,9 @@ class ParameterState(State_Base):
 
             if projections_spec:
                 try:
-                    params_dict[PROJECTIONS] = _parse_connection_specs(self,
+                    params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
                                                                        owner=owner,
-                                                                       connections=projections_spec)
+                                                                       connections=tuple_spec)
                 except ParameterStateError:
                     raise ParameterStateError("Item {} of tuple specification in {} specification dictionary "
                                           "for {} ({}) is not a recognized specification".
@@ -633,6 +661,7 @@ class ParameterState(State_Base):
                                                  ParameterState.__name__,
                                                  owner.name,
                                                  projections_spec))
+            # MODIFIED 11/25/17 END
 
 
         elif state_specific_spec is not None:
@@ -730,7 +759,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
         ParameterState that already exists (e.g., in case of a call from Component.assign_params)
         non-numeric value (including NotImplemented, False or True)
             unless it is:
-                a tuple (could be on specifying ControlProjection, LearningProjection or Modulation)
+                a tuple (could be one specifying Modulatory Component)
                 a dict with the name FUNCTION_PARAMS (otherwise exclude)
         function or method
             IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
@@ -741,7 +770,9 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     If param_name is FUNCTION_PARAMS and param is a matrix (presumably for a MappingProjection)
         modify ParameterState's function to be LinearCombination (rather Linear which is the default)
     """
-
+    from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
+    from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+    from psyneulink.components.states.state import _parse_state_spec
 
     # EXCLUSIONS:
 
@@ -757,24 +788,20 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     # Only allow a FUNCTION_PARAMS dict
     elif isinstance(param_value, ReadOnlyOrderedDict) and param_name is FUNCTION_PARAMS:
         pass
-    # FIX: UPDATE WITH MODULATION_MODS
-    # WHAT ABOUT GatingProjection??
-    # Allow ControlProjection, LearningProjection
+    # Allow ModulatoryProjection
     elif isinstance(param_value, Projection):
-        from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-        from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-        if isinstance(param_value, (ControlProjection, LearningProjection)):
+        if isinstance(param_value, ModulatoryProjection_Base):
             pass
         else:
             return
     # Allow Projection class
     elif inspect.isclass(param_value) and issubclass(param_value, Projection):
-        from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-        from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-        if issubclass(param_value, (ControlProjection, LearningProjection)):
+        if issubclass(param_value, (ModulatoryProjection_Base)):
             pass
         else:
             return
+    elif _is_modulatory_spec(param_value):
+        pass
     # Allow tuples (could be spec that includes a Projection or Modulation)
     elif isinstance(param_value, tuple):
         # # MODIFIED 4/18/17 NEW:
@@ -871,6 +898,10 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
 
 def _is_legal_param_value(owner, value):
 
+    from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
+    from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
+    from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
+
     # LEGAL PARAMETER VALUES:
 
     # # lists, arrays or numeric values
@@ -886,6 +917,11 @@ def _is_legal_param_value(owner, value):
 
     if isinstance(value, dict) and VALUE in value:
         return True
+
+    # MODIFIED 11/25/17 NEW:
+    if _is_control_spec(value) or _is_gating_spec(value):
+        return True
+    # MODIFIED 11/25/17 END
 
     # keyword that resolves to one of the above
     if get_param_value_for_keyword(owner, value) is not None:

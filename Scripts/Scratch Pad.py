@@ -717,49 +717,18 @@ class ScratchPadError(Exception):
 #endregion
 
 
-#region ObjectiveMechanism Example
-print ("TEST ObjectiveMechanism Example")
-
-# p = pnl.MappingProjection(sender=t)
-
+#region test_parameter_state_docs Example
+print ("TEST test_parameter_state_docs")
 
 import psyneulink as pnl
+my_mechanism = pnl.RecurrentTransferMechanism(size=5,
+                              noise=pnl.ControlSignal(),
+                              function=pnl.Logistic(
+                                      gain=(0.5, pnl.ControlSignal),
+                                      bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))))
 
-# my_action_select_mech = pnl.TransferMechanism(default_variable=[0, 0, 0],
-#                                               function=pnl.SoftMax(output=pnl.PROB),
-#                                               name='Action Selection Mech')
-#
-my_reward_mech = pnl.TransferMechanism(default_variable=[0],
-                                       name='Reward Mech')
 
-# my_objective_mech = pnl.ObjectiveMechanism(default_variable=[[0],[0]],
-#                                            monitored_output_states=[my_action_select_mech,
-#                                                                     my_reward_mech])
 
-# FIX: ADD TO Examples:
-my_decision_mech = pnl.DDM(output_states=[pnl.RESPONSE_TIME,
-                                          pnl.PROBABILITY_UPPER_THRESHOLD])
-
-# FIX: DELETE FROM Examples:
-# my_objective_mech = pnl.ObjectiveMechanism(monitored_output_states=[my_reward_mech,
-#                                                                     {pnl.MECHANISM:my_decision_mech,
-#                                                                      pnl.OUTPUT_STATES:[
-#                                                                          pnl.PROBABILITY_UPPER_THRESHOLD,
-#                                                                          (pnl.RESPONSE_TIME, 1, -1)],
-#                                                                      pnl.NAME: 'DDM Mechanism'}])
-
-# FIX: ADD TO Examples:
-# my_objective_mech = pnl.ObjectiveMechanism(monitored_output_states=[
-#                                               my_reward_mech,
-#                                               my_decision_mech.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
-#                                               (my_decision_mech.output_states[pnl.RESPONSE_TIME], 1, -1)])
-
-# FIX: ADD SUPPORT IN _parse_state_spec FOR FOLLOWING FORMAT [(STATE_NAME, MECH) TUPLE INSIDE 3-ITEM AND 4-ITEM TUPLES]
-# FIX: ADD TO Examples:
-my_objective_mech = pnl.ObjectiveMechanism(monitored_output_states=[
-                                              my_reward_mech,
-                                              (pnl.PROBABILITY_UPPER_THRESHOLD, my_decision_mech),
-                                              ((pnl.RESPONSE_TIME, my_decision_mech), 1, -1)])
 
 
 #endregion

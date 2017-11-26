@@ -116,6 +116,7 @@ class GatingProjectionError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
+
 class GatingProjection(ModulatoryProjection_Base):
     """
     GatingProjection(           \

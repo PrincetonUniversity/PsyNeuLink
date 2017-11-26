@@ -8,7 +8,7 @@ from psyneulink.components.projections.projection import ProjectionError
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.state import StateError
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, VARIABLE, RESULT
+from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, VARIABLE, RESULTS
 
 mismatches_default_variable_error_text = 'not compatible with the specified default variable'
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
@@ -614,7 +614,7 @@ class TestInputStateSpec:
     # ------------------------------------------------------------------------------------------------
     # TEST 31
 
-    def test_multiple_states_specified_using_STATE_NAME_format_error(self):
+    def test_multiple_states_specified_using_state_name_format_error(self):
         with pytest.raises(StateError) as error_text:
             # Don't bother to specify anything as the value for each entry in the dict, since doesn't get there
             TransferMechanism(input_states=[{'MY STATE A':{},
@@ -711,10 +711,12 @@ class TestInputStateSpec:
         
     def test_mech_and_tuple_specifications_with_and_without_default_variable_or_size(self):
 
-        # TEST: MOVE TO test_input_state_spec.py
         t = TransferMechanism(size=3)
-        p = MappingProjection(sender=t)
-        
+
+        # ADD TESTING WITH THIS IN PLACE OF t:
+        # p = MappingProjection(sender=t)
+
+
         # Specification of default_variable or size (constrain InputState variable)
         
         # default_variable, mech
@@ -734,14 +736,19 @@ class TestInputStateSpec:
                 default_variable=[0, 0],
                 input_states=[(t,1,1)])
         assert len(T.input_states[0].variable)==2
-        
+
+        # default_variable, 3-item tuple with embedded (State name, Mechanism) tuple
+        T = TransferMechanism(
+                default_variable=[0, 0],
+                input_states=[((RESULTS, t),1,1)])
+        assert len(T.input_states[0].variable)==2
+
         # default_variable, 4-item tuple
         T = TransferMechanism(
                 default_variable=[0, 0],
                 input_states=[(t,1,1,None)])
         assert len(T.input_states[0].variable)==2
         
-        # TEST:
         # size, mech
         T = TransferMechanism(
                 size=2,

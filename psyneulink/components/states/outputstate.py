@@ -269,10 +269,10 @@ which it should project. Each of these is described below:
 
             * **value, State specification, or list of State specifications** -- specifies either the `variable
               <InputState.variable>` of the InputState, or one or more States that should project to it.  The State
-              specification(s) can include Mechanisms, in which case their `primary OutputState <OutputStatePrimary>`
-              is used.  All of the State specifications must be consistent with (that is, their `value
-              <State_Base.value>` must be compatible with the `variable <Projection_Base.variable>` of) the
-              Projection specified in the fourth item if that is included.
+              specification(s) can be a (State name, Mechanism) tuple (see above), and/or include Mechanisms, in which
+              case their `primary InputState <InputStatePrimary>` is used.  All of the State specifications must be
+              consistent with (that is, their `value <State_Base.value>` must be compatible with the `variable
+              <Projection_Base.variable>` of) the Projection specified in the fourth item if that is included.
             |
             * **index** -- must be an integer; specifies the `index <OutputState.index>` for the OutputState.
             |
