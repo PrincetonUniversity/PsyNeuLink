@@ -151,10 +151,12 @@ In the following example, a Mechanism is created by specifying two of its parame
 `function <Component.function>` and two of that function's parameters, each using a different specification format::
 
     >>> import psyneulink as pnl
-    >>> my_mechanism = pnl.RecurrentTransferMechanism(size=5,
-    ...                                               noise=pnl.ControlSignal(),
-    ...                                               function=pnl.Logistic(gain=(0.5, pnl.ControlSignal),
-    ...                                                                     bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))))
+    >>> my_mechanism = pnl.RecurrentTransferMechanism(
+    ...                         size=5,
+    ...                         noise=pnl.ControlSignal(),
+    ...                         function=pnl.Logistic(
+    ...                                         gain=(0.5, pnl.ControlSignal),
+    ...                                         bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))))
 
 COMMENT:
     If assigning a default ControlSignal makes the noise value the same as the
@@ -191,14 +193,13 @@ In the following example, a `MappingProjection` is created, and its
 The example below shows how to specify the parameters in the first example using a parameter specification dictionary::
 
     >>> my_mechanism = pnl.RecurrentTransferMechanism(
-    ...                          size=5,
-    ...                          params={pnl.NOISE: 5,
-    ...                                  pnl.SIZE: pnl.ControlSignal,
-    ...                                  pnl.FUNCTION: pnl.Logistic,
-    ...                                  pnl.FUNCTION_PARAMS:{pnl.GAIN:(0.5,
-    ...                                                                 pnl.ControlSignal),
-    ...                                                       pnl.BIAS:(1.0,
-    ...                                                                 pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))}})
+    ...                      size=5,
+    ...                      params={pnl.NOISE: 5,
+    ...                              pnl.SIZE: pnl.ControlSignal,
+    ...                              pnl.FUNCTION: pnl.Logistic,
+    ...                              pnl.FUNCTION_PARAMS:{
+    ...                                     pnl.GAIN:(0.5,pnl.ControlSignal),
+    ...                                     pnl.BIAS:(1.0,pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))}})
 
 There are several things to note here.  First, the parameter specification dictionary must be assigned to the
 **params** argument of the constructor.  Second, both methods for specifying a parameter -- directly in an argument
@@ -303,7 +304,8 @@ from psyneulink.globals.keywords import CONTROL_PROJECTION, FUNCTION, FUNCTION_P
     CONTROL_SIGNAL, CONTROL_SIGNALS, LEARNING_SIGNAL, LEARNING_SIGNALS, SENDER
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, is_numeric, is_value_spec, iscompatible
+from psyneulink.globals.utilities \
+    import ContentAddressableList, ReadOnlyOrderedDict, is_numeric, is_value_spec, iscompatible
 
 __all__ = [
     'ParameterState', 'ParameterStateError', 'state_type_keywords',
