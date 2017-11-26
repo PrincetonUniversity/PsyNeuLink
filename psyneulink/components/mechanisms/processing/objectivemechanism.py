@@ -263,19 +263,32 @@ included, even though it is the default value;  when a tuple is used, the weight
 specified.  Notice also that ``my_reward_mech`` does not use a tuple, so it will be assigned defaults for both the
 weight and exponent parameters.
 
-Tuples can also be included in a specification dictionary for the **monitored_output_states** argument, which
-allow several OutputStates for the same Mechanism to be specified more easily, each by name rather than by full
-reference (which is required if they are specified on their own or in a tuple)::
+.. _ObjectiveMechanism_Multiple_OutputStates_Example:
 
-    >>> my_objective_mech = pnl.ObjectiveMechanism(monitored_output_states=[my_reward_mech,
-    ...                                                        {pnl.MECHANISM: pnl.DDM_MECHANISM,
-    ...                                                         pnl.OUTPUT_STATES: [pnl.PROBABILITY_UPPER_THRESHOLD,
-    ...                                                                         (pnl.RESPONSE_TIME, 1, -1)],
-    ...                                                         pnl.NAME: 'DDM Mechanism'}])
+An ObjectiveMechanism can also be configured to monitor multiple OutputStates of the same Mechanism.  In the following
+example, an ObjectiveMechanism is configured to calculate the reward rate for a `DDM` Mechanism, by specifying
+OutputStates for the DDM that report its response time and accuracy::
 
-Note that, as shown in this example, the tuple format can still be used for each individual OutputState in the list
-assigned to the *OUTPUT_STATES* entry.
-COMMENT
+    >>> my_decision_mech = pnl.DDM(output_states=[pnl.RESPONSE_TIME,
+    ...                                           pnl.PROBABILITY_UPPER_THRESHOLD])
+
+    >>> my_objective_mech = pnl.ObjectiveMechanism(monitored_output_states=[
+    ...                                              my_reward_mech,
+    ...                                              my_decision_mech.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
+    ...                                              (my_decision_mech.output_states[pnl.RESPONSE_TIME], 1, -1)])
+
+This specifies that the ObjectiveMechanism should multiply the `value <OutputState.value>` of ``my_reward_mech``'s
+`primary OutputState <OutputState_Primary>` by the `value <OutpuState.value>` of ``my_decision_mech``'s
+*PROBABILITY_UPPER_THRESHOLD*, and divide the result by ``my_decision_mech``'s *RESPONSE_TIME* `value
+<OutputState.value>`.  The two OutputStates of ``my_decision_mech`` are referenced as items in the `output_states
+<Mechanism_Base.output_states>` list of ``my_decision_mech``.  However, a `2-item (State name, Mechanism) tuple
+<InputState_State_Mechanism_Tuple>` can be used to reference them more simply, as follows::
+
+    >>> my_objective_mech = pnl.ObjectiveMechanism(monitored_output_states=[
+    ...                                           my_reward_mech,
+    ...                                           (pnl.PROBABILITY_UPPER_THRESHOLD, my_decision_mech),
+    ...                                           ((pnl.RESPONSE_TIME, my_decision_mech), 1, -1)])
+
 
 *Customizing the ObjectiveMechanism's function*
 

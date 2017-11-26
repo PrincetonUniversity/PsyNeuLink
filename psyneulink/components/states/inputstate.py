@@ -241,6 +241,8 @@ should project to the InputState. Each of these is described below:
     * **InputState specification tuples** -- these are convenience formats that can be used to compactly specify an
       InputState and Projections to it any of the following ways:
 
+        .. _InputState_State_Mechanism_Tuple:
+
         * **2-item tuple:** *(<State name or list of State names>, Mechanism)* -- 1st item must be the name of an
           `OutputState` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified States
@@ -260,10 +262,10 @@ should project to the InputState. Each of these is described below:
             |
             * **value, State specification, or list of State specifications** -- specifies either the `variable
               <InputState.variable>` of the InputState, or one or more States that should project to it.  The State
-              specification(s) can include Mechanisms, in which case their `primary OutputState <OutputStatePrimary>`
-              is used.  All of the State specifications must be consistent with (that is, their `value
-              <State_Base.value>` must be compatible with the `variable <Projection_Base.variable>` of) the
-              Projection specified in the fourth item if that is included;
+              specification(s) can be a (State name, Mechanism) tuple (see above), and/or include Mechanisms (in which
+              case their `primary OutputState <OutputStatePrimary>` is used.  All of the State specifications must be
+              consistent with (that is, their `value <State_Base.value>` must be compatible with the `variable
+              <Projection_Base.variable>` of) the Projection specified in the fourth item if that is included;
             |
             * **weight** -- must be an integer or a float; multiplies the `value <InputState.value>` of the InputState
               before it is combined with others by the Mechanism's `function <Mechanism.function>` (see

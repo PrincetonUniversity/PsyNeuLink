@@ -543,6 +543,7 @@ __all__ = [
 
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 
+
 def _is_learning_spec(spec):
     """Evaluate whether spec is a valid learning specification
 
@@ -552,10 +553,13 @@ def _is_learning_spec(spec):
     """
     from psyneulink.components.projections.projection import _is_projection_spec
 
-    if spec in {LEARNING, ENABLED}:
-        return True
-    else:
-        return _is_projection_spec(spec)
+    try:
+        if spec in {LEARNING, ENABLED}:
+            return True
+        else:
+            return _is_projection_spec(spec)
+    except:
+        return False
 
 
 # Used to index variable:

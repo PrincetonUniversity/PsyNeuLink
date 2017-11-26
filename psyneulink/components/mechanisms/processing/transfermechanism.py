@@ -157,6 +157,7 @@ from psyneulink.components.component import Component, function_type, method_typ
 from psyneulink.components.functions.function import AdaptiveIntegrator, Linear, TransferFunction
 from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
+from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.globals.keywords import NAME, INDEX, FUNCTION, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NOISE, RATE, \
@@ -618,6 +619,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                         raise MechanismError(
                             "The elements of a noise list or array must be floats or functions. {} is not a valid noise"
                             " element for {}".format(noise_item, self.name))
+
+        elif _is_control_spec(noise):
+            pass
 
         # Otherwise, must be a float, int or function
         elif not isinstance(noise, (float, int)) and not callable(noise):

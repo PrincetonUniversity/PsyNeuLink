@@ -182,6 +182,16 @@ __all__ = [
 GatingMechanismRegistry = {}
 
 
+def _is_gating_spec(spec):
+    from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
+    if isinstance(spec, tuple):
+        return _is_gating_spec(spec[1])
+    elif isinstance(spec, (GatingMechanism, GatingSignal, GatingProjection)):
+        return True
+    else:
+        return False
+
+
 class GatingMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
