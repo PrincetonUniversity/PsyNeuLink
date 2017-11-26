@@ -2295,9 +2295,6 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                                           context=context,
                                           **state_spec)
 
-    # if isinstance(parsed_state_spec, dict) and parsed_state_spec[NAME] is None:
-    #     parsed_state_spec[NAME] = state_type.__name__
-
     # STATE SPECIFICATION IS A State OBJECT ***************************************
     # Validate and return
 
@@ -2443,27 +2440,6 @@ def _parse_state_type(owner, state_spec):
                                  "is not a State or type of State".
                                  format(owner.name, state_spec[STATE]))
             return state_spec[STATE_TYPE]
-
-    # # Mechanism specification (State inferred from context)
-    # if isinstance(state_spec, Mechanism):
-
-    # # Projection specification (State inferred from context)
-    # if isinstance(state_spec, Projection):
-
-    # # 2-item specification (State inferred from context)
-    # if isinstance(state_spec, tuple):
-    #     _is_legal_state_spec_tuple(owner, state_spec)
-    #     tuple_spec = state_spec[1]
-    #     if isinstance(tuple_spec, State):
-    #         # InputState specified as 2nd item of tuple must be a destination, so choose State based on owner:
-    #         if isinstance(owner, ProcessingMechanism)
-    #             if isinstance(tuple_spec, InputState):
-    #                 return OutputState
-    #             if isinstance(tuple_spec, OutputState):
-    #                 return InputState
-    #     else:
-    #         # Call recursively to handle other types of specs
-    #         return _parse_state_type(owner, tuple_spec)
 
     raise StateError("{} is not a legal State specification for {}".format(state_spec, owner.name))
 
@@ -2642,6 +2618,13 @@ def _parse_state_spec(state_type=None,
     #     if state_specification is not state_type:
     #         raise StateError("Specification of {} for {} (\'{}\') is insufficient to instantiate the {}".
     #             format(state_type_name, owner.name, state_specification.__name__, State.__name__))
+
+    # # MODIFIED 11/25/17 NEW:
+    # # State class
+    # if (inspect.isclass(state_specification) and issubclass(state_specification, State)):
+    #     state_specification = (state_type.variableClassDefaule, state_specification)
+    # # MODIFIED 11/25/17 END:
+
 
     # Projection specification (class, object, or matrix value (matrix keyword processed below):
     elif _is_projection_spec(state_specification, include_matrix_spec=False):
@@ -2844,26 +2827,28 @@ def _parse_state_spec(state_type=None,
                 state_dict[PARAMS] = {}
             state_dict[PARAMS].update(params)
 
-    elif _is_modulatory_spec(state_specification):
-        projection = state_type
-        # Re-process with Projection specified
-        state_dict = _parse_state_spec(state_type=state_type,
-                                       owner=owner,
-                                       variable=variable,
-                                       value=value,
-                                       reference_value=reference_value,
-                                       params=params,
-                                       prefs=prefs,
-                                       context=context,
-                                       state_spec=ProjectionTuple(state=state_specification,
-                                                                  weight=None,
-                                                                  exponent=None,
-                                                                  projection=projection))
+    # elif _is_modulatory_spec(state_specification):
+    #     projection = state_type
+    #     # Re-process with Projection specified
+    #     state_dict = _parse_state_spec(state_type=state_type,
+    #                                    owner=owner,
+    #                                    variable=variable,
+    #                                    value=value,
+    #                                    reference_value=reference_value,
+    #                                    params=params,
+    #                                    prefs=prefs,
+    #                                    context=context,
+    #                                    state_spec=ProjectionTuple(state=state_specification,
+    #                                                               weight=None,
+    #                                                               exponent=None,
+    #                                                               projection=projection))
 
     else:
+        # MODIFIED 11/25/17 OLD:
         if owner.verbosePref:
             warnings.warn("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
                          format(state_type_name, owner.name, state_spec))
+        # MODIFIED 11/25/17 END:
         return
         # raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
         #                  format(state_type_name, owner.name, state_spec))

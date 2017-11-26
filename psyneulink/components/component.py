@@ -1220,8 +1220,11 @@ class Component(object):
                                              format(arg, self.__class__.__name__))
                     self.paramClassDefaults[arg] = default_arg
 
-            # param corresponding to arg IS already in paramClassDefaults, so ignore
+            # param corresponding to arg IS already in paramClassDefaults
             else:
+                # param has a value but paramClassDefaults is None, so assign param's value to paramClassDefaults
+                if self.paramClassDefaults[arg] is None and arg in defaults_dict and defaults_dict[arg] is not None:
+                    self.paramClassDefaults[arg] = defaults_dict[arg]
                 continue
 
         # ASSIGN ARG VALUES TO params dicts
