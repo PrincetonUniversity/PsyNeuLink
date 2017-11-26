@@ -2924,27 +2924,52 @@ def _get_state_for_socket(owner,
     #    - a projection keyword (e.g., 'LEARNING' or 'CONTROL', and it is consistent with projection_socket
     # Otherwise, return list of allowable State types for projection_socket (if state_spec is a Projection type)
     if _is_projection_spec(state_spec):
+
+        # # MODIFIED 11/25/17 OLD:
+        # # These specifications require that a particular State be specified to assign its default Projection type
+        # if ((is_matrix(state_spec) or (isinstance(state_spec, dict) and not PROJECTION_TYPE in state_spec))
+        #     and state_type is 'MULTIPLE'):
+        #     raise StateError("PROGRAM ERROR: Projection specified ({}) for object "
+        #                      "that has multiple possible States {}) for the specified socket ({}).".
+        #                      format(state_spec, state_types, projection_socket))
+        # proj_spec = _parse_projection_spec(state_spec, owner=owner, state_type=state_type)
+        # if isinstance(proj_spec, Projection):
+        #     proj_type = proj_spec.__class__
+        # else:
+        #     proj_type = proj_spec[PROJECTION_TYPE]
+        # MODIFIED 11/25/17 NEW:
         # These specifications require that a particular State be specified to assign its default Projection type
-        if ((is_matrix(state_spec) or (isinstance(state_spec, dict) and not PROJECTION_TYPE in state_spec))
-            and state_type is 'MULTIPLE'):
-            raise StateError("PROGRAM ERROR: Projection specified ({}) for object "
-                             "that has multiple possible States {}) for the specified socket ({}).".
-                             format(state_spec, state_types, projection_socket))
-        proj_spec = _parse_projection_spec(state_spec, owner=owner, state_type=state_type)
-        if isinstance(proj_spec, Projection):
-            proj_type = proj_spec.__class__
+        if ((is_matrix(state_spec) or (isinstance(state_spec, dict) and not PROJECTION_TYPE in state_spec))):
+            for st in state_types:
+                try:
+                    proj_spec = _parse_projection_spec(state_spec, owner=owner, state_type=st)
+                    if isinstance(proj_spec, Projection):
+                        proj_type = proj_spec.__class__
+                    else:
+                        proj_type = proj_spec[PROJECTION_TYPE]
+                except:
+                    continue
         else:
-            proj_type = proj_spec[PROJECTION_TYPE]
+            proj_spec = _parse_projection_spec(state_spec, owner=owner, state_type=state_type)
+            if isinstance(proj_spec, Projection):
+                proj_type = proj_spec.__class__
+            else:
+                proj_type = proj_spec[PROJECTION_TYPE]
+        # MODIFIED 11/25/17 END:
 
         # Get State type if it is appropriate for the specified socket of the Projection's type
         s = next((s for s in state_types if s.__name__ in getattr(proj_type.sockets, projection_socket)), None)
         if s:
             try:
                 # Return State associated with projection_socket if proj_spec is an actual Projection
-                return getattr(proj_spec, projection_socket)
+                state = getattr(proj_spec, projection_socket)
+                return state
             except AttributeError:
                 # Otherwise, return first state_type (s)
-                return s
+                # return s
+                pass
+            assert True
+            return s
 
         # FIX: 10/3/17 - ??IS THE FOLLOWING NECESSARY?  ??HOW IS IT DIFFERENT FROM ABOVE?
         # Otherwise, get State types that are allowable for that projection_socket

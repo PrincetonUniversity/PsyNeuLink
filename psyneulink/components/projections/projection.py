@@ -1069,14 +1069,14 @@ def _parse_projection_spec(projection_spec,
     elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
         proj_spec_dict[PROJECTION_TYPE] = projection_spec
 
-    # Projection keyword
-    elif isinstance(projection_spec, str):
-        proj_spec_dict[PROJECTION_TYPE] = _parse_projection_keyword(projection_spec)
-
     # Matrix
     elif is_matrix(projection_spec):
         is_matrix(projection_spec)
         proj_spec_dict[MATRIX] = projection_spec
+
+    # Projection keyword
+    elif isinstance(projection_spec, str):
+        proj_spec_dict[PROJECTION_TYPE] = _parse_projection_keyword(projection_spec)
 
     # State object
     elif isinstance(projection_spec, State):
@@ -1509,9 +1509,13 @@ def _parse_connection_specs(connectee_state_type,
                                               mech=mech,
                                               mech_state_attribute=connect_with_attr,
                                               projection_socket=projection_socket)
+                assert True
             except StateError as e:
+                assert True
                 raise ProjectionError("Problem with specification for {} in {} specification for {}: ".
                                       format(State.__name__, Projection.__name__, owner.name) + e.error_value)
+            except AttributeError:
+                assert True
 
 
             # Check compatibility with any State(s) returned by _get_state_for_socket

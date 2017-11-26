@@ -301,9 +301,10 @@ from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.globals.keywords import \
-    NAME, CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, \
+    NAME, CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, SENDER, STATE_TYPE, \
     PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
-    VALUE, REFERENCE_VALUE, CONTROL_SIGNAL, CONTROL_SIGNALS, LEARNING_SIGNAL, LEARNING_SIGNALS, SENDER, STATE_TYPE
+    VALUE, REFERENCE_VALUE, CONTROL_SIGNAL, CONTROL_SIGNALS, \
+    LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities \
@@ -698,6 +699,8 @@ class ParameterState(State_Base):
 
                     # Parse the value of all of the Projections to get/validate parameter value
                     from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+                    from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
+
                     for projection_spec in params_dict[PROJECTIONS]:
                         if state_dict[REFERENCE_VALUE] is None:
                             # FIX: 10/3/17 - PUTTING THIS HERE IS A HACK...
@@ -707,20 +710,24 @@ class ParameterState(State_Base):
                             ctl_signal_value = projection_spec.state.value
                             ctl_projection = projection_spec.projection
                             if isinstance(ctl_projection, dict):
-                                if ctl_projection[STATE_TYPE] is not CONTROL_PROJECTION:
-                                    raise ParameterStateError("PROGRAM ERROR: {} other than {} ({}) found "
+                                if ctl_projection[PROJECTION_TYPE] not in {ControlProjection, LearningProjection}:
+                                    raise ParameterStateError("PROGRAM ERROR: {} other than {} or {} ({}) found "
                                                               "in specification tuple for {} param of {}".
-                                                              format(Projection.__name__, ControlProjection.__name__,
+                                                              format(Projection.__name__,
+                                                                     ControlProjection.__name__,
+                                                                     LearningProjection.__name__,
                                                                      ctl_projection, state_dict[NAME], owner.name))
                                 elif VALUE in ctl_projection:
                                     ctl_proj_value = ctl_projection[VALUE]
                                 else:
                                     ctl_proj_value = None
                             elif isinstance(ctl_projection, Projection):
-                                if not isinstance(ctl_projection, ControlProjection):
-                                    raise ParameterStateError("PROGRAM ERROR: {} other than {} ({}) found "
+                                if not isinstance(ctl_projection, (ControlProjection, LearningProjection)):
+                                    raise ParameterStateError("PROGRAM ERROR: {} other than {} or {} ({}) found "
                                                               "in specification tuple for {} param of {}".
-                                                              format(Projection.__name__, ControlProjection.__name__,
+                                                              format(Projection.__name__,
+                                                                     ControlProjection.__name__,
+                                                                     LearningProjection.__name__,
                                                                      ctl_projection, state_dict[NAME], owner.name))
                                 elif ctl_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
                                     continue
