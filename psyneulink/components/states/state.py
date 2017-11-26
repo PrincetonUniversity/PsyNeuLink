@@ -2721,7 +2721,6 @@ def _parse_state_spec(state_type=None,
     elif is_value_spec(state_specification):
         state_dict[REFERENCE_VALUE] = np.atleast_1d(state_specification)
 
-
     elif isinstance(state_specification, Iterable) or state_specification is None:
 
         # Standard state specification dict
@@ -2859,14 +2858,15 @@ def _parse_state_spec(state_type=None,
             state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
     elif state_dict[REFERENCE_VALUE] is not None:
         if not iscompatible(state_dict[VARIABLE], state_dict[REFERENCE_VALUE]):
-            if context in '_parse_arg_input_states':
+            if context is not None and context in '_parse_arg_input_states':
                 from psyneulink.components.mechanisms.mechanism import MechanismError
                 raise MechanismError('default variable determined from the specified input_states spec ({0}) '
                                      'is not compatible with the specified default variable ({1})'.
                                      format(state_dict[VARIABLE], state_dict[REFERENCE_VALUE]))
             else:
+                name = state_dict[NAME] or state_type.__name__
                 raise StateError("Specification of {} for {} of {} ({}) is not compatible with its {} ({})".
-                                 format(VARIABLE, state_dict[NAME], owner.name,
+                                 format(VARIABLE, name, owner.name,
                                         state_dict[VARIABLE], REFERENCE_VALUE, state_dict[REFERENCE_VALUE]))
 
     return state_dict
