@@ -17,7 +17,8 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import \
     OUTCOME
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import INITIALIZING, PREDICTION_ERROR_MECHANISM
+from psyneulink.globals.keywords import INITIALIZING, \
+    PREDICTION_ERROR_MECHANISM, VARIABLE, SAMPLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, \
     kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, \
@@ -102,6 +103,8 @@ class PredictionErrorMechanism(ComparatorMechanism):
                          prefs=prefs,
                          context=context)
 
+        self.function.variable = np.zeros_like(self.input_state[SAMPLE].variable)
+
         print("input state for PEM = {}".format(self.input_state))
         # self.standard_output_states[OUTCOME].
 
@@ -137,9 +140,20 @@ class PredictionErrorMechanism(ComparatorMechanism):
 
             delta = np.zeros_like(sample)
 
+            # FIXME: correct the value size
+            # -- call function with sample[0:t-1], sample[1:t]
+            # -- add reward to returned value
+            sample_prev_t = sample[0:len(sample) - 1]
+            sample_next_t = sample[1:len(sample)]
+
+            new_sample = self.function(variable=[sample_next_t, sample_prev_t])
+
             for t in range(0, len(sample) - 1):
-                delta[t] = reward[t + 1] + self.function(sample[t + 1],
-                                                         sample[t])
+                delta[t] = reward[t + 1] + new_sample[t]
+
+            # for t in range(0, len(sample) - 1):
+            #     delta[t] = reward[t + 1] + self.function(sample[t + 1],
+            #                                              sample[t])
 
             # v_t = sample
             # if self.t == 0:

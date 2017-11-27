@@ -42,11 +42,8 @@ Temporary Items
 .idea/dictionaries
 .idea/codeStyles
 .idea/other.xml
-<<<<<<< HEAD
 .idea/codeStyleSettings.xml
-=======
 .idea/inspectionProfiles/Project_Default.xml
->>>>>>> devel
 
 # Sensitive or high-churn files:
 .idea/**/dataSources/
@@ -69,6 +66,8 @@ cmake-build-debug/
 
 ## File-based project format:
 *.iws
+*.sublime-project
+*.sublime-workspace
 
 ## Plugin-specific files:
 

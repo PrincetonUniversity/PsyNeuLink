@@ -133,8 +133,8 @@ import warnings
 
 import numpy as np
 
-from library.mechanisms.processing.objective.predictionerrormechanism import \
-    PredictionErrorMechanism
+from psyneulink.library.mechanisms.processing.objective.predictionerrormechanism \
+    import PredictionErrorMechanism
 from psyneulink.components.component import function_type, method_type
 from psyneulink.components.functions.function import BackPropagation, Hebbian, \
     Linear, Reinforcement, TDLearning
@@ -544,8 +544,6 @@ def _instantiate_learning_components(learning_projection, context=None):
                     target={NAME: TARGET,
                             VARIABLE: target_input,
                             PROJECTIONS: [lc.activation_mech_output]},
-                    output_states={OUTCOME: np.zeros_like(sample_input)},
-
                     name="{} {}".format(lc.activation_mech.name,
                                         PREDICTION_ERROR_MECHANISM),
                     context=context)
@@ -596,9 +594,11 @@ def _instantiate_learning_components(learning_projection, context=None):
             lc.error_projection = objective_mechanism.input_state.path_afferents[0]
             # FIX: THIS IS TO FORCE ASSIGNMENT (SINCE IT DOESN'T SEEM TO BE ASSIGNED BY TEST BELOW)
         except AttributeError:
-            raise LearningAuxilliaryError("PROGRAM ERROR: problem finding projection to TARGET ObjectiveMechanism "
-                                          "from {} when instantiating {}".
-                                          format(lc.activation_mech.name, learning_projection.name))
+            raise LearningAuxilliaryError("PROGRAM ERROR: problem finding "
+                                          "projection to TARGET "
+                                          "ObjectiveMechanism from {} when "
+                                          "instantiating {}".format(lc.activation_mech.name,
+                                                                    learning_projection.name))
         else:
             if not lc.error_matrix:
                 raise LearningAuxilliaryError("PROGRAM ERROR: problem "
