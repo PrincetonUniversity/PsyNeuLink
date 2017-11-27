@@ -267,9 +267,10 @@ Tuples can also be included in a specification dictionary for the **monitored_ou
 allow several OutputStates for the same Mechanism to be specified more easily, each by name rather than by full
 reference (which is required if they are specified on their own or in a tuple)::
 
+    >>> my_DDM = pnl.DDM()
     >>> my_objective_mech = pnl.ObjectiveMechanism(monitored_output_states=[my_reward_mech,
-    ...                                                        {pnl.MECHANISM: pnl.DDM_MECHANISM,
-    ...                                                         pnl.OUTPUT_STATES: [pnl.PROBABILITY_UPPER_THRESHOLD,
+    ...                                                        {pnl.MECHANISM: my_DDM,
+    ...                                                         pnl.OUTPUT_STATES: [pnl.DECISION_VARIABLE,
     ...                                                                         (pnl.RESPONSE_TIME, 1, -1)],
     ...                                                         pnl.NAME: 'DDM Mechanism'}])
 

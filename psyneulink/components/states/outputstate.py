@@ -218,7 +218,7 @@ the ``DECISION ENTROPY`` OutputState could be created as follows::
 
     >>> decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
     ...                                                 index=2,
-    ...                                                 calculate=pnl.Stability(metric=pnl.ENTROPY).function)
+    ...                                                 calculate=pnl.Entropy().function)
 
 and then assigned either as::
 
