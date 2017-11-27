@@ -22,7 +22,7 @@ coeruleus-norepinephrine (LC-NE) system.
 .. _AGTControlMechanism_Creation:
 
 Creating an AGTControlMechanism
------------------------
+-------------------------------
 
 An AGTControlMechanism can be created in any of the ways used to `create a ControlMechanism <ControlMechanism_Creation>`.
 

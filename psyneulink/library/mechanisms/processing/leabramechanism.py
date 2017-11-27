@@ -19,9 +19,9 @@ info about leabra, please see `O'Reilly and Munakata, 2016 <https://grey.colorad
 
 .. note::
     The LeabraMechanism uses the leabra Python package, which can be found
-    `here <https://github.com/benureau/leabra>`_ at Github. While the LeabraMechanism should always match the output
-    of an equivalent network in the leabra package, the leabra package itself is still in development, so it is not
-    guaranteed to be correct yet.
+    `here <https://github.com/benureau/leabra>`_ at Github. You may need to install the Python leabra package in order
+    to use the LeabraMechanism. While the LeabraMechanism should always match the output of an equivalent network in
+    the leabra package, the leabra package itself is still in development, so it is not guaranteed to be correct yet.
 
 .. _Leabra_Mechanism_Creation:
 
@@ -34,8 +34,8 @@ of the output layer (**output_size**), number of hidden layers (**hidden_layers*
 0.55 and 0.95. Alternatively, users can provide a leabra Network object from the leabra package as an argument
 (**leabra_net**), in which case the **leabra_net** will be used as the network wrapped by the LeabraMechanism.
 This option requires users to be familiar with the leabra package, but allows more flexibility in specifying parameters.
-In either method of creating a LeabraMechanism, the **training_flag** argument specifies whether the network should be
-learning (updating its weights) or not.
+In the former method of creating a LeabraMechanism, the **training_flag** argument specifies whether the network should
+be learning (updating its weights) or not.
 
 .. _Leabra_Mechanism_Structure:
 
@@ -43,7 +43,8 @@ Structure
 ---------
 
 The LeabraMechanism has an attribute `training_flag <LeabraMechanism.training_flag>` which can be set to True/False to
-determine whether the network is currently learning.
+determine whether the network is currently learning. The `training_flag <LeabraMechanism.training_flag>` can also be
+changed after creation of the LeabraMechanism, causing it to start/stop learning.
 
 .. note::
     If the training_flag is True, the network will learn using the Leabra learning algorithm. Other algorithms may be
@@ -60,7 +61,8 @@ target for the LeabraMechanism. The input to the *MAIN_INPUT* InputState should 
     used as `ORIGIN Mechanisms <System_Mechanisms>` for a `System`. If you desire to use a LeabraMechanism as an ORIGIN
     Mechanism, you can work around this bug by creating two `TransferMechanisms <Transfer_Overview>` as ORIGIN
     Mechanisms instead, and have these two TransferMechanisms pass their output to the InputStates of the
-    LeabraMechanism. Here is an example of how to do this::
+    LeabraMechanism. Here is an example of how to do this. In the example, T2 passes the training_data to the
+    *LEARNING_TARGET* InputState of L (L.input_states[1])::
         L = LeabraMechanism(input_size=input_size, output_size=output_size)
         T1 = TransferMechanism(name='T1', size=input_size, function=Linear)
         T2 = TransferMechanism(name='T2', size=output_size, function=Linear)
@@ -77,8 +79,8 @@ Execution
 
 The LeabraMechanism passes input and training data to the leabra Network it wraps, and the LeabraMechanism passes its
 leabra Network's output (after one "trial", default 200 cycles in PsyNeuLink) to its primary `OutputState`. For details
-on Leabra, please see `O'Reilly and Munakata, 2016 <https://grey.colorado.edu/emergent/index.php/Leabra>`_ and
-the `leabra code on Github <https://github.com/benureau/leabra>`_.
+on Leabra, see `O'Reilly and Munakata, 2016 <https://grey.colorado.edu/emergent/index.php/Leabra>`_ and the
+`leabra Python package on Github <https://github.com/benureau/leabra>`_.
 
 .. _Leabra_Mechanism_Reference:
 
@@ -312,7 +314,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
 
     hidden_sizes : int or List[int] : default input_size
         if specified, this should be a list of integers, specifying the size of each hidden layer. If **hidden_sizes**
-        if a list, the number of integers in **hidden_sizes** should be equal to the number of hidden layers. If not
+        is a list, the number of integers in **hidden_sizes** should be equal to the number of hidden layers. If not
         specified, hidden layers will default to the same size as the input layer.
 
     training_flag : boolean : default None
@@ -409,6 +411,8 @@ class LeabraMechanism(ProcessingMechanism_Base):
 
     componentType = LEABRA_MECHANISM
 
+    is_self_learner = True  # CW 11/27/17: a flag; "True" if the mechanism learns on its own. Declared in ProcessingMechanism
+
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
@@ -431,13 +435,14 @@ class LeabraMechanism(ProcessingMechanism_Base):
                  output_size=1,
                  hidden_layers=0,
                  hidden_sizes=None,
-                 training_flag=False,
+                 training_flag=None,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
                  context=componentType + INITIALIZING):
         if not leabra_available:
-            raise LeabraError('leabra python module is not installed')
+            raise LeabraError('leabra python module is not installed. Please install it from '
+                              'https://github.com/benureau/leabra')
 
         if leabra_net is not None:
             leabra_network = leabra_net
@@ -502,6 +507,14 @@ class LeabraMechanism(ProcessingMechanism_Base):
     @network.setter
     def network(self, value):
         self.function_object.network = value
+
+    def _self_learner_function(self, self_learn_value):
+        if self_learn_value is True:
+            pass
+        elif self_learn_value is False:
+            pass
+        else:
+            pass
 
 
 def convert_to_2d_input(array_like):
@@ -568,7 +581,6 @@ def test_leabra_network(network, input_pattern):
 
 
 def train_leabra_network(network, input_pattern, output_pattern):
-    """Run one trial on the network"""
     assert len(network.layers[0].units) == len(input_pattern)
 
     assert len(network.layers[-1].units) == len(output_pattern)
