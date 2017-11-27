@@ -616,8 +616,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
                             self.system._validate_monitored_state_in_system([spec], context=context)
 
             if not isinstance(target_set[OBJECTIVE_MECHANISM], (ObjectiveMechanism, list)):
-                raise ControlMechanismError("Specification of {} arg for {} ({}) must be an {}"
-                                            "or a list of Mechanisms and/or OutputStates to be monitored for control".
+                raise ControlMechanismError("Specification of {} arg for {} "
+                                            "({}) must be an {} or a list of "
+                                            "Mechanisms and/or OutputStates to "
+                                            "be monitored for control".
                                             format(OBJECTIVE_MECHANISM,
                                                    self.name, target_set[OBJECTIVE_MECHANISM],
                                                    ObjectiveMechanism.componentName))

@@ -1412,7 +1412,8 @@ def _parse_connection_specs(connectee_state_type,
                 state_spec, weight, exponent, projection_spec = connection
             else:
                 # FIX: FINISH ERROR MESSAGE
-                raise ProjectionError("{} specificaton tuple for {} ({}) must have either two or four items".
+                raise ProjectionError("{} specification tuple for {} ({}) must "
+                                      "have either two or four items".
                                       format(connectee_state_type.__name__, owner.name, connection))
 
             # Validate state specification, and get actual state referenced if it has been instantiated

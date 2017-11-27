@@ -632,9 +632,9 @@ class LCMechanism(ControlMechanism):
         and the `multiplicative parameters <Function_Modulatory_Params>` modulated by the LCMechanism.
         """
 
-        print ("\n---------------------------------------------------------")
+        print("\n---------------------------------------------------------")
 
-        print ("\n{0}".format(self.name))
+        print("\n{0}".format(self.name))
         print("\n\tMonitoring the following Mechanism OutputStates:")
         if self.monitoring_mechanism is None:
             print ("\t\tNone")
@@ -648,14 +648,14 @@ class LCMechanism(ControlMechanism):
                     weight = self.monitor_for_control_weights_and_exponents[monitored_state_index][0]
                     exponent = self.monitor_for_control_weights_and_exponents[monitored_state_index][1]
 
-                    print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
+                    print("\t\t{0}: {1} (exp: {2}; wt: {3})".
                            format(monitored_state_mech.name, monitored_state.name, weight, exponent))
 
-        print ("\n\tModulating the following parameters:".format(self.name))
+        print("\n\tModulating the following parameters:".format(self.name))
         # Sort for consistency of output:
         state_names_sorted = sorted(self.output_states.names)
         for state_name in state_names_sorted:
             for projection in self.output_states[state_name].efferents:
-                print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+                print("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
 
-        print ("\n---------------------------------------------------------")
+        print("\n---------------------------------------------------------")
