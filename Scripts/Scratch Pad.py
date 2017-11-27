@@ -756,18 +756,40 @@ print ("TEST test_parameter_state_docs")
 
 import psyneulink as pnl
 
-control_spec_list = [
-    pnl.CONTROL,
-    pnl.CONTROL_SIGNAL,
-    pnl.ControlSignal,
-    pnl.ControlSignal(),
-    (0.3, pnl.CONTROL),
-    (0.3, pnl.CONTROL_SIGNAL),
-    (0.3, pnl.ControlSignal),
-    (0.3, pnl.ControlSignal()),
-    (0.3, pnl.ControlProjection),
-    (0.3, pnl.ControlProjection())
-]
+# control_spec_list = [
+#     pnl.CONTROL,
+#     pnl.CONTROL_SIGNAL,
+#     pnl.ControlSignal,
+#     pnl.ControlSignal(),
+#     (0.3, pnl.CONTROL),
+#     (0.3, pnl.CONTROL_SIGNAL),
+#     (0.3, pnl.ControlSignal),
+#     (0.3, pnl.ControlSignal()),
+#     (0.3, pnl.ControlProjection),
+#     (0.3, pnl.ControlProjection())
+# ]
+
+
+# for i, ctl_tuple in enumerate([i for i in zip(control_spec_list, reversed(control_spec_list))]):
+#     c1, c2 = ctl_tuple
+#     m = pnl.RecurrentTransferMechanism(noise=c1,
+#                                        function=pnl.Logistic(gain=c2))
+#     assert m.parameter_states[pnl.NOISE].mod_afferents[0].name in \
+#            'ControlProjection for RecurrentTransferMechanism-{}[noise]'.format(i)
+#     assert m.parameter_states[pnl.GAIN].mod_afferents[0].name in \
+#            'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)
+
+# for c1, c2 in ctl_signals:
+#     print("-------\n{}\n{}".format(c1, c2))
+# print("--------------\n--------------")
+
+# for c1, c2 in ctl_signals:
+#     m = pnl.RecurrentTransferMechanism(noise=c1,
+#                                        function=pnl.Logistic(gain=c2))
+#     print('-------------\nSIGNAL: {}\nMOD_AFFERENTS: {}\nSIGNAL: {}\nMOD_AFFERENTS: {}'
+#           .format(c2, m.parameter_states[pnl.NOISE].mod_afferents,
+#                   c1, m.parameter_states[pnl.GAIN].mod_afferents))
+
 
 gating_spec_list = [
     pnl.GATING,
@@ -782,18 +804,29 @@ gating_spec_list = [
     (0.3, pnl.GatingProjection())
 ]
 
-ctl_signals = [i for i in zip(control_spec_list, reversed(control_spec_list))]
+T = pnl.TransferMechanism(output_states=[
+    # pnl.GATING,  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+    # pnl.GATING_SIGNAL,  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+    # pnl.GatingSignal,  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+    pnl.GatingSignal(),  # <- FIX DOESN"T WORK FOR INPUT_STATES BUT DOES FOR OUTPUT_STATES
+    # (0.3, pnl.GATING),  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+    # (0.3, pnl.GATING_SIGNAL),  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+    # (0.3, pnl.GatingSignal),  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+    # (0.3, pnl.GatingSignal()),
+    # (0.3, pnl.GatingProjection),  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+    # (0.3, pnl.GatingProjection())
+])
 
-for c1, c2 in ctl_signals:
-    print("-------\n{}\n{}".format(c1, c2))
-print("--------------\n--------------")
 
-for c1, c2 in ctl_signals:
-    m = pnl.RecurrentTransferMechanism(noise=c1,
-                                       function=pnl.Logistic(gain=c2))
-    print('-------------\nSIGNAL: {}\nMOD_AFFERENTS: {}\nSIGNAL: {}\nMOD_AFFERENTS: {}'
-          .format(c2, m.parameter_states[pnl.NOISE].mod_afferents,
-                  c1, m.parameter_states[pnl.GAIN].mod_afferents))
+# for i, gating_tuple in enumerate([i for i in zip(gating_spec_list, reversed(gating_spec_list))]):
+#     G1, G2 = gating_tuple
+#     T = pnl.TransferMechanism(input_states=[G1],
+#                               output_states=[G2])
+#     assert T.input_states[0].mod_afferents[0].name in \
+#            'GatingProjection for TransferMechanism-0[InputState-{}]'.format(i)
+#
+#     assert T.output_states[0].mod_afferents[0].name in \
+#            'GatingProjection for TransferMechanism-0[OutputState-{}]'.format(i)
 
 
 # decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',

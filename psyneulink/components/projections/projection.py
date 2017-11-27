@@ -1666,12 +1666,14 @@ def _validate_connection_request(
                 return _validate_projection_type(projection_spec.__class__)
                     # Projection's socket has been assigned to a State
             else:
-                if projection_socket_state:
+                # if both SENDER and RECEIVER are specified:
+                if projection_spec.init_args[SENDER] and projection_spec.init_args[RECEIVER]:
                     # Validate that the State is a class in connect_with_states
                     if (isinstance(projection_socket_state, connect_with_states) or
                             (inspect.isclass(projection_socket_state)
                              and issubclass(projection_socket_state, connect_with_states))):
                         return True
+                # Otherwise, revert again to validating Projection's type
                 else:
                     return _validate_projection_type(projection_spec.__class__)
 

@@ -1463,7 +1463,8 @@ class State_Base(State):
                         sender = _get_state_for_socket(owner=self.owner,
                                                        state_spec=proj_sender,
                                                        state_types=state)
-                    projection.init_args[SENDER] = proj_sender
+                    else:
+                        sender = proj_sender
                 else:
                     sender = state
                 projection.init_args[SENDER] = sender
