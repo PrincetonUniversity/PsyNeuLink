@@ -390,11 +390,14 @@ from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.components.states.state import StateError
 from psyneulink.globals.keywords import \
-    CONTEXT, CONTROL, CONTROL_PROJECTION, EXPONENT, GATING, GATING_PROJECTION, \
-    INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
-    MECHANISM, NAME, OUTPUT_STATE, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, \
+    NAME, PARAMS, CONTEXT, PATHWAY, \
+    MECHANISM, INPUT_STATE, OUTPUT_STATE, PARAMETER_STATE_PARAMS, \
+    STANDARD_ARGS, STATE, STATES, WEIGHT, EXPONENT, \
     PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, \
-    STANDARD_ARGS, STATE, STATES, WEIGHT, GATING_SIGNAL, \
+    MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
+    LEARNING, LEARNING_SIGNAL, LEARNING_PROJECTION, \
+    CONTROL, CONTROL_SIGNAL, CONTROL_PROJECTION, \
+    GATING, GATING_SIGNAL, GATING_PROJECTION, \
     kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -414,10 +417,13 @@ PROJECTION_ARGS = {PROJECTION_TYPE, SENDER, RECEIVER, WEIGHT, EXPONENT} | STANDA
 
 PROJECTION_SPEC_KEYWORDS = {PATHWAY: MAPPING_PROJECTION,
                             LEARNING: LEARNING_PROJECTION,
+                            LEARNING_SIGNAL: LEARNING_PROJECTION,
                             LEARNING_PROJECTION: LEARNING_PROJECTION,
                             CONTROL: CONTROL_PROJECTION,
+                            CONTROL_SIGNAL: CONTROL_PROJECTION,
                             CONTROL_PROJECTION: CONTROL_PROJECTION,
                             GATING: GATING_PROJECTION,
+                            GATING_SIGNAL: GATING_PROJECTION,
                             GATING_PROJECTION: GATING_PROJECTION
                             }
 

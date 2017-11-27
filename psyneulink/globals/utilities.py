@@ -206,16 +206,22 @@ def parameter_spec(param):
     from psyneulink.components.functions.function import function_type
     from psyneulink.components.shellclasses import Projection
     from psyneulink.components.component import parameter_keywords
+    from psyneulink.globals.keywords import MODULATORY_SPEC_KEYWORDS
+    from psyneulink.components.component import Component
 
+    if inspect.isclass(param):
+        param = param.__name__
+    elif isinstance(param, Component):
+        param = param.__class__.__name__
     if (isinstance(param, (numbers.Number,
                            np.ndarray,
                            list,
                            tuple,
                            dict,
                            function_type,
-                           Projection)) or
-        (inspect.isclass(param) and issubclass(param, Projection)) or
-        param in parameter_keywords):
+                           Projection))
+        or param in MODULATORY_SPEC_KEYWORDS
+        or param in parameter_keywords):
         return True
     return False
 

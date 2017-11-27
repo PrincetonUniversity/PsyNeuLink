@@ -2295,9 +2295,6 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                                           context=context,
                                           **state_spec)
 
-    # if isinstance(parsed_state_spec, dict) and parsed_state_spec[NAME] is None:
-    #     parsed_state_spec[NAME] = state_type.__name__
-
     # STATE SPECIFICATION IS A State OBJECT ***************************************
     # Validate and return
 
@@ -2444,27 +2441,6 @@ def _parse_state_type(owner, state_spec):
                                  format(owner.name, state_spec[STATE]))
             return state_spec[STATE_TYPE]
 
-    # # Mechanism specification (State inferred from context)
-    # if isinstance(state_spec, Mechanism):
-
-    # # Projection specification (State inferred from context)
-    # if isinstance(state_spec, Projection):
-
-    # # 2-item specification (State inferred from context)
-    # if isinstance(state_spec, tuple):
-    #     _is_legal_state_spec_tuple(owner, state_spec)
-    #     tuple_spec = state_spec[1]
-    #     if isinstance(tuple_spec, State):
-    #         # InputState specified as 2nd item of tuple must be a destination, so choose State based on owner:
-    #         if isinstance(owner, ProcessingMechanism)
-    #             if isinstance(tuple_spec, InputState):
-    #                 return OutputState
-    #             if isinstance(tuple_spec, OutputState):
-    #                 return InputState
-    #     else:
-    #         # Call recursively to handle other types of specs
-    #         return _parse_state_type(owner, tuple_spec)
-
     raise StateError("{} is not a legal State specification for {}".format(state_spec, owner.name))
 
 
@@ -2519,6 +2495,8 @@ def _parse_state_spec(state_type=None,
     """
     from psyneulink.components.projections.projection \
         import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple
+    from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
+
 
     # Get all of the standard arguments passed from _instantiate_state (i.e., those other than state_spec) into a dict
     standard_args = get_args(inspect.currentframe())
@@ -2585,10 +2563,6 @@ def _parse_state_spec(state_type=None,
     if isinstance(state_specification, function_type):
         state_specification = state_specification()
 
-    if _is_modulatory_spec(state_specification):
-        projection = state_typelennon9
-
-
     # State or Mechanism object specification:
     if isinstance(state_specification, (Mechanism, State)):
 
@@ -2637,13 +2611,26 @@ def _parse_state_spec(state_type=None,
                                                                   exponent=None,
                                                                   projection=projection))
 
-    # State class
-    elif (inspect.isclass(state_specification) and issubclass(state_specification, State)):
-        # Specified type of State is same as connectee's type (state_type),
-        #    so assume it is a reference to the State itself to be instantiated
-        if state_specification is not state_type:
-            raise StateError("Specification of {} for {} (\'{}\') is insufficient to instantiate the {}".
-                format(state_type_name, owner.name, state_specification.__name__, State.__name__))
+    # # State class
+    # elif (inspect.isclass(state_specification) and issubclass(state_specification, State)):
+    #     # Specified type of State is same as connectee's type (state_type),
+    #     #    so assume it is a reference to the State itself to be instantiated
+    #     if state_specification is not state_type:
+    #         raise StateError("Specification of {} for {} (\'{}\') is insufficient to instantiate the {}".
+    #             format(state_type_name, owner.name, state_specification.__name__, State.__name__))
+
+    # # MODIFIED 11/25/17 NEW:
+    # # State class
+    # if (inspect.isclass(state_specification) and issubclass(state_specification, State)):
+    #     try:
+    #         state_specification = (owner.paramClassDefaults[name], state_specification)
+    #     except:
+    #         pass
+    #     else:
+    #         state_dict = _parse_state_spec(state_spec=state_specification,
+    #                                        **state_dict)
+    # # MODIFIED 11/25/17 END:
+
 
     # Projection specification (class, object, or matrix value (matrix keyword processed below):
     elif _is_projection_spec(state_specification, include_matrix_spec=False):

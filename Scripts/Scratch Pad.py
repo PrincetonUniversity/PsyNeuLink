@@ -720,13 +720,15 @@ class ScratchPadError(Exception):
 #region test_parameter_state_docs Example
 print ("TEST test_parameter_state_docs")
 
+# ADD TO TEST:
 import psyneulink as pnl
 my_mechanism = pnl.RecurrentTransferMechanism(size=5,
-                                                    # FIX: NONE OF THE NOISE SPECS GENERATE AN ACTUAL CONTROL SIGNAL:
-                              # noise=pnl.CONTROL,  # <- FIX: DOESN'T WORK
-                              noise=pnl.ControlSignal, # <- FIX: DOESN'T WORK
+                              noise=(pnl.CONTROL),
+                              # noise=pnl.CONTROL_SIGNAL,
+                              # noise=pnl.ControlSignal,
+                              # noise=pnl.ControlSignal(),
                               # noise=(1, pnl.CONTROL),
-                              # noise=(1, pnl.CONTROL_SIGNAL),  # <- FIX: DOESN'T WORK
+                              # noise=(1, pnl.CONTROL_SIGNAL),
                               # noise=(1, pnl.ControlSignal),
                               # noise=(1, pnl.ControlSignal()),
                               # noise=(1, pnl.ControlProjection),
@@ -734,9 +736,12 @@ my_mechanism = pnl.RecurrentTransferMechanism(size=5,
                               # noise=(1, pnl.ControlMechanism),  # <- FIX: DOESN'T WORK
                               # noise=(1, pnl.ControlMechanism()),  # <- FIX: DOESN'T WORK
                               function=pnl.Logistic(
-                                      # gain=pnl.CONTROL,  # <- FIX: DOESN'T WORK
-                                      gain=(0.5, pnl.CONTROL),
-                                      # gain=(0.5, pnl.CONTROL_SIGNAL),  # <- FIX: DOESN'T WORK
+                                      # gain=pnl.CONTROL,
+                                      # gain=pnl.CONTROL_SIGNAL,
+                                      # gain=pnl.ControlSignal,
+                                      gain=pnl.ControlSignal(),
+                                      # gain=(0.5, pnl.CONTROL),
+                                      # gain=(0.5, pnl.CONTROL_SIGNAL),
                                       # gain=(0.5, pnl.ControlSignal),
                                       # gain=(0.5, pnl.ControlSignal()),
                                       # gain=(0.5, pnl.ControlProjection),
@@ -748,6 +753,24 @@ my_mechanism = pnl.RecurrentTransferMechanism(size=5,
 print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.NOISE].mod_afferents)
 print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.GAIN].mod_afferents)
 print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.BIAS].mod_afferents)
+
+
+
+decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
+                                                index=2,
+                                                calculate=pnl.Stability(metric=pnl.ENTROPY).function)
+
+my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
+                     output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
+                                    pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
+                                    decision_entropy_output_state])
+
+    #
+    # >>> my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
+    # ...              output_states=[ pnl.DDM_OUTPUT.DECISION_VARIABLE,
+    # ...                              pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
+    #
+    # >>> my_mech.add_states(decision_entropy_output_state)
 
 
 
