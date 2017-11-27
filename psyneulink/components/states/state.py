@@ -730,7 +730,7 @@ import typecheck as tc
 
 from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, function_type
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, \
-    get_matrix, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
+    _get_modulated_param, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.keywords import DEFERRED_INITIALIZATION, \
     CONTEXT, COMMAND_LINE, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
@@ -1575,6 +1575,7 @@ class State_Base(State):
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
         from psyneulink.components.projections.projection import ProjectionTuple, _parse_connection_specs
 
         # FIX: 10/3/17 THIS NEEDS TO BE MADE SPECIFIC TO EFFERENT PROJECTIONS (I.E., FOR WHICH IT CAN BE A SENDER)
@@ -1626,8 +1627,11 @@ class State_Base(State):
                                                    owner=self.owner,
                                                    connections=receiver)
                     return _get_receiver_state(spec[0].state)
-                if isinstance(spec, Projection):
+                elif isinstance(spec, Projection):
                     return spec.receiver
+                # FIX: 11/25/17 -- NEEDS TO CHECK WHETHER PRIMARY SHOULD BE INPUT_STATE OR PARAMETER_STATE
+                elif isinstance(spec, Mechanism):
+                    return spec.input_state
                 return spec
             receiver_state = _get_receiver_state(receiver)
             connection_receiver_state = _get_receiver_state(connection)
@@ -1650,7 +1654,7 @@ class State_Base(State):
 
                 # If receiver is a Mechanism and Projection is a MappingProjection,
                 #    use primary InputState (and warn if verbose is set)
-                if isinstance(default_projection_type, MappingProjection):
+                if isinstance(default_projection_type, (MappingProjection, GatingProjection)):
                     if self.owner.verbosePref:
                         warnings.warn("Receiver {} of {} from {} is a {} and {} is a {}, "
                                       "so its primary {} will be used".
@@ -1659,7 +1663,6 @@ class State_Base(State):
                                              InputState.__name__))
                     receiver = receiver.input_state
 
-                else:
                     raise StateError("Receiver {} of {} from {} is a {}, but the specified {} is a {} so "
                                      "target {} can't be determined".
                                       format(receiver, projection_spec, self.name, Mechanism.__name__,

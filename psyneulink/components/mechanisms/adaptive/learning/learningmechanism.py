@@ -520,7 +520,9 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import InitStatus, parameter_keywords
-from psyneulink.components.functions.function import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.components.functions.function import BackPropagation, ModulationParam, _is_modulation_param, \
+    is_function_type
+from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
 from psyneulink.components.shellclasses import Mechanism
@@ -823,6 +825,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
     suffix = " " + className
 
     output_state_type = LearningSignal
+
+    state_list_attr = Mechanism_Base.state_list_attr.copy()
+    state_list_attr.update({LearningSignal:LEARNING_SIGNALS})
 
     classPreferenceLevel = PreferenceLevel.TYPE
 

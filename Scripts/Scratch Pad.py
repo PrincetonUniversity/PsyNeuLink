@@ -834,23 +834,34 @@ class ScratchPadError(Exception):
 print ("TEST DOCUMENTATION")
 
 
-my_mech_a = pnl.TransferMechanism(function=pnl.Logistic)
-my_mech_b = pnl.TransferMechanism(function=pnl.Linear,
-                                  output_states=[pnl.RESULT, pnl.MEAN])
+my_input_layer = pnl.TransferMechanism(name='INPUT_LAYER', size=3)
+my_hidden_layer = pnl.TransferMechanism(name='HIDDEN_LAYER', size=5)
+my_output_layer = pnl.TransferMechanism(name='OUTPUT_LAYER', size=2)
 
-process_a = pnl.Process(pathway=[my_mech_a])
-process_b = pnl.Process(pathway=[my_mech_b])
+# my_gating_mechanism = pnl.GatingMechanism(gating_signals=[{pnl.NAME: 'GATE_ALL',
+#                                                            pnl.PROJECTIONS: [my_input_layer,
+#                                                                              my_hidden_layer,
+#                                                                              my_output_layer]}],
+#                                           modulation=pnl.ModulationParam.ADDITIVE)
+#
+#
+# my_gating_mechanism = pnl.GatingMechanism(gating_signals=[{pnl.NAME: 'GATING_SIGNAL_A',
+#                                                            pnl.MODULATION: pnl.ModulationParam.ADDITIVE,
+#                                                            pnl.PROJECTIONS: my_input_layer},
+#                                                           {pnl.NAME: 'GATING_SIGNAL_B',
+#                                                            pnl.PROJECTIONS: [my_hidden_layer,
+#                                                                              my_output_layer]}])
 
-my_system = pnl.System(processes=[process_a, process_b],
-                       monitor_for_control=[my_mech_a.output_states[pnl.RESULT],
-                                            my_mech_b.output_states[pnl.MEAN]],
-                       control_signals=[(pnl.GAIN, my_mech_a),
-                                        {pnl.NAME: pnl.INTERCEPT,
-                                         pnl.MECHANISM: my_mech_b,
-                                         pnl.MODULATION: pnl.ModulationParam.ADDITIVE}],
-                       name='My Test System')
+my_gating_signal_A = pnl.GatingSignal(name='GATING_SIGNAL_A',
+                                      modulation=pnl.ModulationParam.ADDITIVE,
+                                      projections=my_input_layer)
+my_gating_signal_B = pnl.GatingSignal(name='GATING_SIGNAL_B',
+                                      projections=[my_hidden_layer,
+                                                   my_output_layer])
 
-
+my_gating_mechanism = pnl.GatingMechanism(name='MY_GATING_MECH',
+                                          gating_signals=[my_gating_signal_A,
+                                                          my_gating_signal_B])
 
 
 #endregion

@@ -331,6 +331,10 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
     output_state_type = GatingSignal
 
+    state_list_attr = Mechanism_Base.state_list_attr.copy()
+    state_list_attr.update({GatingSignal:GATING_SIGNALS})
+
+
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically

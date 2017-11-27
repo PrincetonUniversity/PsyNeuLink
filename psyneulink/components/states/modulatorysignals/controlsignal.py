@@ -270,7 +270,7 @@ the `gain <Logistic.gain>` parameter of the `Logistic` function for ``My_Mech_A`
     >>> process_b = pnl.Process(pathway=[my_mech_b])
 
     >>> my_system = pnl.System(processes=[process_a, process_b],
-    ...                        monitor_for_control=[my_mech_a.output_states[pnl.RESULT],
+    ...                        monitor_for_control=[my_mech_a.output_states[pnl.RESULTS],
     ...                                             my_mech_b.output_states[pnl.MEAN]],
     ...                        control_signals=[(pnl.GAIN, my_mech_a),
     ...                                         {pnl.NAME: pnl.INTERCEPT,
