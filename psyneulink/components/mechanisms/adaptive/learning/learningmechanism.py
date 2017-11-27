@@ -544,7 +544,7 @@ __all__ = [
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 
 
-def _is_learning_spec(spec):
+def _is_learning_spec(spec, include_matrix_spec=True):
     """Evaluate whether spec is a valid learning specification
 
     Return `True` if spec is LEARNING or a valid projection_spec (see Projection_Base._is_projection_spec)
@@ -557,7 +557,8 @@ def _is_learning_spec(spec):
         if spec in {LEARNING, ENABLED}:
             return True
         else:
-            return _is_projection_spec(spec)
+            return _is_projection_spec(spec=spec,
+                                       include_matrix_spec=include_matrix_spec)
     except:
         return False
 

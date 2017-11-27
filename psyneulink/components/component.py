@@ -351,7 +351,7 @@ from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, D
     CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, \
     INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, \
     PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, \
-    SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+    SIZE, USER_PARAMS, VALUE, VARIABLE, MODULATORY_SPEC_KEYWORDS, kwComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
@@ -2233,13 +2233,19 @@ class Component(object):
                 raise ComponentError("Value of {} param for {} ({}) is not compatible with {}".
                                     format(param_name, self.name, param_value, type_name))
 
+    # MODIFIED 11/25/17 NEW:
+    def _get_param_value_for_modulatory_spec(self, param_spec):
+        self._get_param_value_from_tuple(param_spec)
+    # MODIFIED 11/25/17 END:
+
     def _get_param_value_from_tuple(self, param_spec):
-        """Returns param value (first item) of a (value, projection) tuple
+        """Returns param value (first item) of a (value, projection) tuple;
         """
         from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-        ALLOWABLE_TUPLE_SPEC_KEYWORDS = {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING}
+
+        ALLOWABLE_TUPLE_SPEC_KEYWORDS = MODULATORY_SPEC_KEYWORDS
         ALLOWABLE_TUPLE_SPEC_CLASSES = (ModulatoryProjection_Base, ModulatorySignal, AdaptiveMechanism_Base)
 
         # If the 2nd item is a CONTROL or LEARNING SPEC, return the first item as the value

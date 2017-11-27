@@ -681,6 +681,10 @@ GATED_STATES = 'GATED_STATES'
 GATING_PROJECTIONS = 'GatingProjections'
 GATING_POLICY = 'gating_policy'
 
+MODULATORY_SPEC_KEYWORDS = {LEARNING, LEARNING_SIGNAL, LEARNING_PROJECTION,
+                            CONTROL, CONTROL_SIGNAL, CONTROL_PROJECTION,
+                            GATING, GATING_SIGNAL, GATING_PROJECTION}
+
 #endregion
 
 #region ----------------------------------------------    STATES  ------------------------------------------------------

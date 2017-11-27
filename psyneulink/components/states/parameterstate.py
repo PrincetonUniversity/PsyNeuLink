@@ -908,8 +908,29 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             pass
         else:
             return
-    elif _is_modulatory_spec(param_value):
-        pass
+    elif _is_modulatory_spec(param_value, include_matrix_spec=False):
+        # If parameter is a single Modulatory specification (e.g., ControlSignal, or CONTROL, etc.)
+        #   (note: exclude matrix since it is allowed as a value specification vs. a projection reference)
+        if not isinstance(param_value, tuple):
+            # Try to place it in a tuple (for interpretation by _parse_state_spec) using default value as 1st item
+            try:
+                param_default_value = owner.paramClassDefaults[param_name]
+                # Only assign default value if it is not None
+                if param_default_value is not None:
+                    param_value = (param_default_value, param_value)
+                    try:
+                        # Set actual param (ownner's attribute) to assigned value
+                        setattr(owner, param_name, param_default_value)
+                    except:
+                        raise ParameterStateError("Unable to assign {} as value for {} paramater of {}".
+                                                  format(param_value, param_name, owner.name))
+            except ParameterStateError as e:
+                raise ParameterStateError(e)
+            except:
+                raise ParameterStateError("Unrecognized specification for {} paramater of {} ({})".
+                                          format(param_name, owner.name, param_value))
+        # MODIFIED 11/25/17 END:
+
     # Allow tuples (could be spec that includes a Projection or Modulation)
     elif isinstance(param_value, tuple):
         # # MODIFIED 4/18/17 NEW:
@@ -965,6 +986,34 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                           "with the same name as a parameter of the component itself".
                                           format(function_name, owner.name, function_param_name))
 
+
+
+
+            # # FIX: 11/25/17 DEAL WITH MODULATORY PARAM SPEC -- CONSOLIDATE WITH ABOVE (PUT IN ITS OWN FUNCTION?)
+            if _is_modulatory_spec(function_param_value, include_matrix_spec=False):
+                # If parameter is a single Modulatory specification (e.g., ControlSignal, or CONTROL, etc.)
+                #   (note: exclude matrix since it is allowed as a value specification vs. a projection reference)
+                if not isinstance(function_param_value, tuple):
+                    # Try to place it in a tuple (for interpretation by _parse_state_spec) using default value as 1st item
+                    try:
+                        param_default_value = owner.paramClassDefaults[param_name]
+                        # Only assign default value if it is not None
+                        if param_default_value is not None:
+                            param_value = (param_default_value, param_value)
+                            try:
+                                # Set actual param (ownner's attribute) to assigned value
+                                setattr(owner, param_name, param_default_value)
+                            except:
+                                raise ParameterStateError("Unable to assign {} as value for {} paramater of {}".
+                                                          format(param_value, param_name, owner.name))
+                    except ParameterStateError as e:
+                        raise ParameterStateError(e)
+                    except:
+                        raise ParameterStateError("Unrecognized specification for {} paramater of {} ({})".
+                                                  format(param_name, owner.name, param_value))
+
+
+
             # # FIX: 10/3/17 - ??MOVE THIS TO _parse_state_specific_specs ----------------
             # # Use function_param_value as constraint
             # # IMPLEMENTATION NOTE:  need to copy, since _instantiate_state() calls _parse_state_value()
@@ -978,6 +1027,10 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             else:
                 from copy import deepcopy
                 reference_value = deepcopy(function_param_value)
+
+
+
+
             # # FIX: ----------------------------------------------------------------------
 
             # Assign parameterState for function_param to the component
@@ -1064,3 +1117,26 @@ def _get_parameter_state(sender_owner, sender_type, param_name, component):
                                         "specified in {} for {}".
                                         format(param_name, component.name, sender_type, sender_owner.name))
 
+# def _assign_default_value():
+#
+#     elif _is_modulatory_spec(param_value, include_matrix_spec=False):
+#     # If parameter is a single Modulatory specification (e.g., ControlSignal, or CONTROL, etc.)
+#     #   (note: exclude matrix since it is allowed as a value specification vs. a projection reference)
+#     if not isinstance(param_value, tuple):
+#         # Try to place it in a tuple (for interpretation by _parse_state_spec) using default value as 1st item
+#         try:
+#             param_default_value = owner.paramClassDefaults[param_name]
+#             # Only assign default value if it is not None
+#             if param_default_value is not None:
+#                 param_value = (param_default_value, param_value)
+#                 try:
+#                     # Set actual param (ownner's attribute) to assigned value
+#                     setattr(owner, param_name, param_default_value)
+#                 except:
+#                     raise ParameterStateError("Unable to assign {} as value for {} paramater of {}".
+#                                               format(param_value, param_name, owner.name))
+#         except ParameterStateError as e:
+#             raise ParameterStateError(e)
+#         except:
+#             raise ParameterStateError("Unrecognized specification for {} paramater of {} ({})".
+#                                       format(param_name, owner.name, param_value))

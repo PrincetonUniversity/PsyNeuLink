@@ -2622,7 +2622,13 @@ def _parse_state_spec(state_type=None,
     # # MODIFIED 11/25/17 NEW:
     # # State class
     # if (inspect.isclass(state_specification) and issubclass(state_specification, State)):
-    #     state_specification = (state_type.variableClassDefaule, state_specification)
+    #     try:
+    #         state_specification = (owner.paramClassDefaults[name], state_specification)
+    #     except:
+    #         pass
+    #     else:
+    #         state_dict = _parse_state_spec(state_spec=state_specification,
+    #                                        **state_dict)
     # # MODIFIED 11/25/17 END:
 
 
@@ -2827,28 +2833,10 @@ def _parse_state_spec(state_type=None,
                 state_dict[PARAMS] = {}
             state_dict[PARAMS].update(params)
 
-    # elif _is_modulatory_spec(state_specification):
-    #     projection = state_type
-    #     # Re-process with Projection specified
-    #     state_dict = _parse_state_spec(state_type=state_type,
-    #                                    owner=owner,
-    #                                    variable=variable,
-    #                                    value=value,
-    #                                    reference_value=reference_value,
-    #                                    params=params,
-    #                                    prefs=prefs,
-    #                                    context=context,
-    #                                    state_spec=ProjectionTuple(state=state_specification,
-    #                                                               weight=None,
-    #                                                               exponent=None,
-    #                                                               projection=projection))
-
     else:
-        # MODIFIED 11/25/17 OLD:
         if owner.verbosePref:
             warnings.warn("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
                          format(state_type_name, owner.name, state_spec))
-        # MODIFIED 11/25/17 END:
         return
         # raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
         #                  format(state_type_name, owner.name, state_spec))

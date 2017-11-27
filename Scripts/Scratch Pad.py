@@ -722,11 +722,12 @@ print ("TEST test_parameter_state_docs")
 
 import psyneulink as pnl
 my_mechanism = pnl.RecurrentTransferMechanism(size=5,
-                                                    # FIX: NONE OF THE NOISE SPECS GENERATE AN ACTUAL CONTROL SIGNAL:
-                              # noise=pnl.CONTROL,  # <- FIX: DOESN'T WORK
-                              noise=pnl.ControlSignal, # <- FIX: DOESN'T WORK
+                              # noise=(0, pnl.CONTROL),
+                              # noise=pnl.CONTROL_SIGNAL,
+                              # noise=pnl.ControlSignal,
+                              # noise=pnl.ControlSignal(),
                               # noise=(1, pnl.CONTROL),
-                              # noise=(1, pnl.CONTROL_SIGNAL),  # <- FIX: DOESN'T WORK
+                              noise=(1, pnl.CONTROL_SIGNAL),
                               # noise=(1, pnl.ControlSignal),
                               # noise=(1, pnl.ControlSignal()),
                               # noise=(1, pnl.ControlProjection),
@@ -734,9 +735,12 @@ my_mechanism = pnl.RecurrentTransferMechanism(size=5,
                               # noise=(1, pnl.ControlMechanism),  # <- FIX: DOESN'T WORK
                               # noise=(1, pnl.ControlMechanism()),  # <- FIX: DOESN'T WORK
                               function=pnl.Logistic(
-                                      # gain=pnl.CONTROL,  # <- FIX: DOESN'T WORK
-                                      gain=(0.5, pnl.CONTROL),
-                                      # gain=(0.5, pnl.CONTROL_SIGNAL),  # <- FIX: DOESN'T WORK
+                                      gain=pnl.CONTROL,  # <- FIX: DOESN'T WORK
+                                      # gain=pnl.CONTROL_SIGNAL,  # <- FIX: DOESN'T WORK
+                                      # gain=pnl.ControlSignal,  # <- FIX: DOESN'T WORK
+                                      # gain=pnl.ControlSignal(),  # <- FIX: DOESN'T WORK
+                                      # gain=(0.5, pnl.CONTROL),
+                                      # gain=(0.5, pnl.CONTROL_SIGNAL),
                                       # gain=(0.5, pnl.ControlSignal),
                                       # gain=(0.5, pnl.ControlSignal()),
                                       # gain=(0.5, pnl.ControlProjection),
