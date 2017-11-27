@@ -19,7 +19,7 @@ from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechan
 
 # Weights & Biases:
 b_decision = 0.00   # Bias on decision units (not biased)
-b_response = -2.00  # Bias on response unit --- NOTE: Gilzenrat has negative signs in his logistic equation
+b_response = 2.00  # Bias on response unit --- NOTE: Gilzenrat has negative signs in his logistic equation
 w_XiIi = 1.00       # Connection weight from input units I1 and I2 to respective decision units X1 and X2
 w_XiIj = 0.33       # Cross talk weight from input unit to opposite decision unit
 w_XiXi = 1.00       # Recurrent self-connection weight for both decision units
@@ -33,7 +33,7 @@ a = 0.50        # Parameter describing shape of the FitzHugh–Nagumo cubic null
 d = 0.50        # Baseline level of intrinsic, uncorrelated LC activity
 G = 0.50        # Base level of gain applied to decision and response units
 k = 3.00        # Scaling factor for transforming NE release (u) to gain (g) on potentiated units
-SD = 0.0        # Standard deviation of Gaussian noise distributions | NOTE: 0.22 in Gilzenrat paper 
+SD = 0.0        # Standard deviation of Gaussian noise distributions | NOTE: 0.22 in Gilzenrat paper
 tau_v = 0.05    # Time constant for fast LC excitation variable v | NOTE: tau_v is misstated in the Gilzenrat paper(0.5)
 tau_u = 5.00    # Time constant for slow LC recovery variable (‘NE release’) u
 dt = 0.02       # Time step size for numerical integration
@@ -97,9 +97,12 @@ decision_process = Process(pathway=[input_layer,
 # Monitor decision layer in order to modulate gain --------------------------------------------------------------------
 
 LC = LCControlMechanism(integration_method="EULER",
+                        threshold_FHN=a,
+                        uncorrelated_activity_FHN=d,
+                        base_level_gain=G,
+                        scaling_factor_gain=k,
                         time_step_size_FHN=dt,
                         mode_FHN=C,
-                        uncorrelated_activity_FHN=d,
                         time_constant_v_FHN=tau_v,
                         time_constant_w_FHN=tau_u,
                         a_v_FHN=-1.0,
@@ -114,7 +117,6 @@ LC = LCControlMechanism(integration_method="EULER",
                         t_0_FHN=0.0,
                         initial_v_FHN=initial_v,
                         initial_w_FHN=initial_u,
-                        threshold_FHN=a,
                         objective_mechanism=ObjectiveMechanism(function=Linear,
                                                                monitored_output_states=[(decision_layer,
                                                                                         None,
@@ -124,7 +126,6 @@ LC = LCControlMechanism(integration_method="EULER",
                                                                name='LC ObjectiveMechanism'),
                         modulated_mechanisms=[decision_layer, response],   # Modulate gain of decision & response layers
                         name='LC')
-
 task = System(processes=[decision_process])
 
 # Create Stimulus -----------------------------------------------------------------------------------------------------
@@ -175,10 +176,11 @@ task.run(inputs=stimulus_dictionary,
          call_after_trial=record_trial)
 
 # Plot results of all units into one figure ---------------------------------------------------------------------------
-
+# import matplotlib
+# matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import numpy as np
-
+beingsaved = plt.figure()
 # Create x axis "t" for plotting
 t = np.arange(0.0, 20.02, 0.02)
 
@@ -213,7 +215,7 @@ x_values = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
 plt.xticks(x_values)
 plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
 plt.show()
-
+beingsaved.savefig('gilzenrat_pnl.svg', format='svg', dpi=1000)
 task.show()
 
 # This displays a diagram of the System

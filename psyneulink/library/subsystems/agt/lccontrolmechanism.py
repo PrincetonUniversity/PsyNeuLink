@@ -527,6 +527,8 @@ class LCControlMechanism(ControlMechanism):
                  time_constant_w_FHN=12.5,
                  mode_FHN=1.0,
                  uncorrelated_activity_FHN=0.0,
+                 base_level_gain=0.5,
+                 scaling_factor_gain=3.0,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -556,6 +558,8 @@ class LCControlMechanism(ControlMechanism):
                                                   mode_FHN=mode_FHN,
                                                   uncorrelated_activity_FHN=uncorrelated_activity_FHN,
                                                   time_constant_w_FHN=time_constant_w_FHN,
+                                                  base_level_gain=base_level_gain,
+                                                  scaling_factor_gain=scaling_factor_gain,
                                                   params=params)
 
         super().__init__(system=system,
@@ -678,7 +682,7 @@ class LCControlMechanism(ControlMechanism):
                              params=runtime_params,
                              time_scale=time_scale,
                              context=context)
-        gain_t = 3*output_values[1] + 0.5
+        gain_t = self.scaling_factor_gain*output_values[1] + self.base_level_gain
         return gain_t, gain_t, output_values[0], output_values[1], output_values[2]
 
 
