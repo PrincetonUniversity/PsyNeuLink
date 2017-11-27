@@ -1123,8 +1123,9 @@ class StandardOutputStates():
         # Validate that all items in output_state_dicts are dicts
         for item in output_state_dicts:
             if not isinstance(item, dict):
-                raise StandardOutputStatesError("All items of {} for {} must be dicts (but {} is not)".
-                                     format(self.__class__.__name__, owner.componentName, item))
+                raise StandardOutputStatesError(
+                    "All items of {} for {} must be dicts (but {} is not)".
+                    format(self.__class__.__name__, owner.componentName, item))
         self.data = output_state_dicts.copy()
 
         # Assign indices
@@ -1132,21 +1133,28 @@ class StandardOutputStates():
         # List was provided, so check that:
         # - it has the appropriate number of items
         # - they are all ints
-        # and then assign each int to the INDEX entry in the corresponding dict in output_state_dicts
+        # and then assign each int to the INDEX entry in the corresponding dict
+        # in output_state_dicts
         # OutputState
         if isinstance(indices, list):
             if len(indices) != len(output_state_dicts):
-                raise StandardOutputStatesError("Length of the list of indices provided to {} for {} ({}) "
-                                       "must equal the number of OutputStates dicts provided ({})"
-                                       "length".format(self.__class__.__name__,
-                                                       owner.name,
-                                                       len(indices),
-                                                       len(output_state_dicts)))
+                raise StandardOutputStatesError("Length of the list of indices "
+                                                "provided to {} for {} ({}) "
+                                                "must equal the number of "
+                                                "OutputStates dicts provided "
+                                                "({}) length".format(
+                        self.__class__.__name__,
+                        owner.name,
+                        len(indices),
+                        len(output_state_dicts)))
 
             if not all(isinstance(item, int) for item in indices):
-                raise StandardOutputStatesError("All the items in the list of indices provided to {} for {} of {}) "
-                                               "must be ints".
-                                               format(self.__class__.__name__, self.name, owner.name))
+                raise StandardOutputStatesError("All the items in the list of "
+                                                "indices provided to {} for {} "
+                                                "of {}) must be ints".
+                                                format(self.__class__.__name__,
+                                                       self.name,
+                                                       owner.name))
 
             for index, state_dict in zip(indices, self.data):
                 state_dict[INDEX] = index

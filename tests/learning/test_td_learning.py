@@ -46,7 +46,7 @@ def test_td_learning(capsys):
         trial = 0
 
         def print_header():
-            print("\n\n**** EPISODE: {}".format(CentralClock.trial))
+            print("\n\n*** EPISODE: {}".format(CentralClock.trial))
 
         def show_weights():
             nonlocal timestep

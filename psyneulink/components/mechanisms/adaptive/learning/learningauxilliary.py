@@ -141,7 +141,7 @@ from psyneulink.components.functions.function import BackPropagation, Hebbian, \
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import \
-    ObjectiveMechanism
+    ObjectiveMechanism, OUTCOME
 from psyneulink.components.mechanisms.processing.processingmechanism import \
     ProcessingMechanism_Base
 from psyneulink.components.projections.modulatory.learningprojection import \
@@ -544,6 +544,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                     target={NAME: TARGET,
                             VARIABLE: target_input,
                             PROJECTIONS: [lc.activation_mech_output]},
+                    output_states={OUTCOME: np.zeros_like(sample_input)},
+
                     name="{} {}".format(lc.activation_mech.name,
                                         PREDICTION_ERROR_MECHANISM),
                     context=context)

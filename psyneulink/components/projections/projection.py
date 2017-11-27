@@ -1259,7 +1259,6 @@ def _parse_connection_specs(connectee_state_type,
         connections = [connections]
     connect_with_states = []
 
-
     for connection in connections:
 
         # FIX: 10/3/17 - IF IT IS ALREADY A PROJECTION OF THE CORRECT TYPE FOR THE CONNECTEE:
@@ -1272,7 +1271,7 @@ def _parse_connection_specs(connectee_state_type,
         if isinstance(connection, (Mechanism, State, type)):
             # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ConnectionTuple THAT HAS BOTH SENDER AND RECEIVER
             projection_spec = connectee_state_type
-            connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
+            connection_tuple = (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
 
         # If a Projection specification is used to specify the connection:
