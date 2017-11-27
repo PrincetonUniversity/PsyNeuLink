@@ -304,7 +304,7 @@ class LCA(RecurrentTransferMechanism):
         COMMENT
 
     noise : float or function : default 0.0
-        a stochastically-sampled value added to the output of the `function <TransferMechahnism.function>`:
+        a stochastically-sampled value added to the output of the `function <LCA.function>`:
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
@@ -312,7 +312,7 @@ class LCA(RecurrentTransferMechanism):
         the time constant for exponential time averaging of input when `integrator_mode <LCA.integrator_mode>` is set
         to True::
 
-          result = (beta * current input) + (1-beta * result on previous time_step)
+          integrated_input = previous_input + (beta*previous_input + new_input)*time_step_size + noise*sqrt(time_step_size**0.5)
 
     clip : Tuple[float, float]
         determines the allowable range of the result: the first value specifies the minimum allowable value
@@ -408,7 +408,7 @@ class LCA(RecurrentTransferMechanism):
                  initial_value=None,
                  decay:tc.optional(tc.any(int, float))=1.0,
                  inhibition:tc.optional(tc.any(int, float))=1.0,
-                 noise:is_numeric_or_none=0.0,
+                 noise=0.0,
                  beta=1.0,
                  integrator_mode=True,
                  time_step_size=0.1,
@@ -561,24 +561,14 @@ class LCA(RecurrentTransferMechanism):
             else:
 
                 current_input = variable[0]
-        print("==================================================")
-        print(context)
-        print("variable = ", variable)
-        print("after integrator = ", current_input)
-        # self.previous_input = current_input
 
         # Apply TransferMechanism function
         output_vector = self.function(variable=current_input, params=runtime_params)
-        # # MODIFIED  OLD:
-        # if list(clip):
-        # MODIFIED  NEW:
+
         if clip is not None:
-        # MODIFIED  END
-            minCapIndices = np.where(output_vector < clip[0])
-            maxCapIndices = np.where(output_vector > clip[1])
-            output_vector[minCapIndices] = np.min(clip)
-            output_vector[maxCapIndices] = np.max(clip)
-        print("output_vector = ", output_vector)
+            output_vector = np.where(output_vector > np.min(clip), output_vector, np.min(clip))
+            output_vector = np.where(output_vector < np.max(clip), output_vector, np.max(clip))
+
         return output_vector
     @property
     def inhibition(self):
