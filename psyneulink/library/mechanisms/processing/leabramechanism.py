@@ -127,6 +127,157 @@ class LeabraError(Exception):
         return repr(self.error_value)
 
 
+class LeabraFunction(Function_Base):
+    """
+    LeabraFunction(             \
+        default_variable=None,  \
+        network=None,           \
+        params=None,            \
+        owner=None,             \
+        prefs=None)
+
+    .. _LeabraFunction:
+
+    LeabraFunction is a custom function that lives inside the LeabraMechanism. As a function, it transforms the
+    variable by providing it as input to the leabra network inside the LeabraFunction.
+
+    Arguments
+    ---------
+
+    default_variable : number or np.array : default np.zeros() (array of zeros)
+        specifies a template for the input to the leabra network.
+
+    network : leabra.Network
+        specifies the leabra network to be used.
+
+    params : Dict[param keyword, param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the LeabraMechanism; see `prefs <LeabraMechanism.prefs>` for details.
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        contains value to be transformed.
+
+    network : leabra.Network
+        the leabra network that is being used
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the LeabraMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+
+    """
+
+    componentType = LEABRA_FUNCTION_TYPE
+    componentName = LEABRA_FUNCTION
+
+    multiplicative_param = NotImplemented
+    additive_param = NotImplemented  # very hacky
+
+    classPreferences = {
+        kwPreferenceSetName: 'LeabraFunctionClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    class ClassDefaults(Function_Base.ClassDefaults):
+        variable = [0]
+
+    def __init__(self,
+                 default_variable=None,
+                 network=None,
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 context=componentName + INITIALIZING):
+
+        if not leabra_available:
+            raise LeabraError('leabra python module is not installed')
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(network=network,
+                                                  params=params)
+
+        if default_variable is None:
+            input_size = len(self.network.layers[0].units)
+            default_variable = np.zeros(input_size)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+    def _validate_variable(self, variable, context=None):
+        if not isinstance(variable, (list, np.ndarray, numbers.Number)):
+            raise LeabraError("Input Error: the input variable ({}) was of type {}, but instead should be a list, "
+                              "numpy array, or number.".format(variable, type(variable)))
+
+        input_size = len(self.network.layers[0].units)
+        output_size = len(self.network.layers[-1].units)
+        if (not hasattr(self, "owner")) or (not hasattr(self.owner, "training_flag")) or self.owner.training_flag is False:
+            if len(convert_to_2d_input(variable)[0]) != input_size:
+                # convert_to_2d_input(variable[0]) is just in case variable is a 2D array rather than a vector
+                raise LeabraError("Input Error: the input was {}, which was of an incompatible length with the "
+                                  "input_size, which should be {}.".format(convert_to_2d_input(variable)[0], input_size))
+        else:
+            if len(convert_to_2d_input(variable)[0]) != input_size or len(convert_to_2d_input(variable)[1]) != output_size:
+                raise LeabraError("Input Error: the input variable was {}, which was of an incompatible length with "
+                                  "the input_size or output_size, which should be {} and {} respectively.".
+                                  format(variable, input_size, output_size))
+        return variable
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        if not isinstance(request_set[NETWORK], leabra.Network):
+            raise LeabraError("Error: the network given ({}) was of type {}, but instead must be a leabra Network.".
+                              format(request_set[NETWORK], type(request_set[NETWORK])))
+        super()._validate_params(request_set, target_set, context)
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        # HACK: otherwise the INITIALIZING function executions affect aspects of the leabra learning algorithm
+        if INITIALIZING in context:
+            output_size = len(self.network.layers[-1].units)
+            return np.zeros(output_size)
+
+        if (not hasattr(self, "owner")) or (not hasattr(self.owner, "training_flag")) or self.owner.training_flag is False:
+            variable = convert_to_2d_input(variable)[0]  # FIX: buggy, doesn't handle lists well. hacky conversion from 2D arrays into 1D arrays
+            return test_leabra_network(self.network, input_pattern=variable)  # potentially append an array of zeros to make output format consistent
+
+        else:
+            variable = convert_to_2d_input(variable)  # FIX: buggy, doesn't handle lists well
+            if len(variable) != 2:
+                raise LeabraError("Input Error: the input given ({}) for training was not the right format: the input "
+                                  "should be a 2D array containing two vectors, corresponding to the input and the "
+                                  "training target.".format(variable))
+            if len(variable[0]) != len(self.network.layers[0].units) or len(variable[1]) != len(self.network.layers[-1].units):
+                raise LeabraError("Input Error: the input given ({}) was not the right format: it should be a 2D array "
+                                  "containing two vectors, corresponding to the input (which should be length {}) and "
+                                  "the training target (which should be length {})".
+                                  format(variable, self.network.layers[0], len(self.network.layers[-1].units)))
+            return train_leabra_network(self.network, input_pattern=variable[0], output_pattern=variable[1])
+
+
 class LeabraMechanism(ProcessingMechanism_Base):
     """
     LeabraMechanism(                \
@@ -351,157 +502,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
     @network.setter
     def network(self, value):
         self.function_object.network = value
-
-
-class LeabraFunction(Function_Base):
-    """
-    LeabraFunction(             \
-        default_variable=None,  \
-        network=None,           \
-        params=None,            \
-        owner=None,             \
-        prefs=None)
-
-    .. _LeabraFunction:
-
-    LeabraFunction is a custom function that lives inside the LeabraMechanism. As a function, it transforms the
-    variable by providing it as input to the leabra network inside the LeabraFunction.
-
-    Arguments
-    ---------
-
-    default_variable : number or np.array : default np.zeros() (array of zeros)
-        specifies a template for the input to the leabra network.
-
-    network : leabra.Network
-        specifies the leabra network to be used.
-
-    params : Dict[param keyword, param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the LeabraMechanism; see `prefs <LeabraMechanism.prefs>` for details.
-
-
-    Attributes
-    ----------
-
-    variable : number or np.array
-        contains value to be transformed.
-
-    network : leabra.Network
-        the leabra network that is being used
-
-    owner : Mechanism
-        `component <Component>` to which the Function has been assigned.
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the LeabraMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-
-    """
-
-    componentType = LEABRA_FUNCTION_TYPE
-    componentName = LEABRA_FUNCTION
-
-    multiplicative_param = NotImplemented
-    additive_param = NotImplemented  # very hacky
-
-    classPreferences = {
-        kwPreferenceSetName: 'LeabraFunctionClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
-    }
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
-    class ClassDefaults(Function_Base.ClassDefaults):
-        variable = [0]
-
-    def __init__(self,
-                 default_variable=None,
-                 network=None,
-                 params=None,
-                 owner=None,
-                 prefs=None,
-                 context=componentName + INITIALIZING):
-
-        if not leabra_available:
-            raise LeabraError('leabra python module is not installed')
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(network=network,
-                                                  params=params)
-
-        if default_variable is None:
-            input_size = len(self.network.layers[0].units)
-            default_variable = np.zeros(input_size)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
-    def _validate_variable(self, variable, context=None):
-        if not isinstance(variable, (list, np.ndarray, numbers.Number)):
-            raise LeabraError("Input Error: the input variable ({}) was of type {}, but instead should be a list, "
-                              "numpy array, or number.".format(variable, type(variable)))
-
-        input_size = len(self.network.layers[0].units)
-        output_size = len(self.network.layers[-1].units)
-        if (not hasattr(self, "owner")) or (not hasattr(self.owner, "training_flag")) or self.owner.training_flag is False:
-            if len(convert_to_2d_input(variable)[0]) != input_size:
-                # convert_to_2d_input(variable[0]) is just in case variable is a 2D array rather than a vector
-                raise LeabraError("Input Error: the input was {}, which was of an incompatible length with the "
-                                  "input_size, which should be {}.".format(convert_to_2d_input(variable)[0], input_size))
-        else:
-            if len(convert_to_2d_input(variable)[0]) != input_size or len(convert_to_2d_input(variable)[1]) != output_size:
-                raise LeabraError("Input Error: the input variable was {}, which was of an incompatible length with "
-                                  "the input_size or output_size, which should be {} and {} respectively.".
-                                  format(variable, input_size, output_size))
-        return variable
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-        if not isinstance(request_set[NETWORK], leabra.Network):
-            raise LeabraError("Error: the network given ({}) was of type {}, but instead must be a leabra Network.".
-                              format(request_set[NETWORK], type(request_set[NETWORK])))
-        super()._validate_params(request_set, target_set, context)
-
-    def function(self,
-                 variable=None,
-                 params=None,
-                 time_scale=TimeScale.TRIAL,
-                 context=None):
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
-        # HACK: otherwise the INITIALIZING function executions affect aspects of the leabra learning algorithm
-        if INITIALIZING in context:
-            output_size = len(self.network.layers[-1].units)
-            return np.zeros(output_size)
-
-        if (not hasattr(self, "owner")) or (not hasattr(self.owner, "training_flag")) or self.owner.training_flag is False:
-            variable = convert_to_2d_input(variable)[0]  # FIX: buggy, doesn't handle lists well. hacky conversion from 2D arrays into 1D arrays
-            return test_leabra_network(self.network, input_pattern=variable)  # potentially append an array of zeros to make output format consistent
-
-        else:
-            variable = convert_to_2d_input(variable)  # FIX: buggy, doesn't handle lists well
-            if len(variable) != 2:
-                raise LeabraError("Input Error: the input given ({}) for training was not the right format: the input "
-                                  "should be a 2D array containing two vectors, corresponding to the input and the "
-                                  "training target.".format(variable))
-            if len(variable[0]) != len(self.network.layers[0].units) or len(variable[1]) != len(self.network.layers[-1].units):
-                raise LeabraError("Input Error: the input given ({}) was not the right format: it should be a 2D array "
-                                  "containing two vectors, corresponding to the input (which should be length {}) and "
-                                  "the training target (which should be length {})".
-                                  format(variable, self.network.layers[0], len(self.network.layers[-1].units)))
-            return train_leabra_network(self.network, input_pattern=variable[0], output_pattern=variable[1])
 
 
 def convert_to_2d_input(array_like):
