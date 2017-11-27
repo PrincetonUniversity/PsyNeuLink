@@ -16,7 +16,7 @@ Overview
 An LCControlMechanism is a `ControlMechanism <ControlMechanism>` that multiplicatively modulates the `function
 <Mechanism_Base.function>` of one or more `Mechanisms <Mechanism>` (usually `TransferMechanisms <TransferMechanism>`).
 It implements an abstract model of the `locus coeruleus (LC)  <https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that
-uses an `FHNIntegrator` Function to generate its output.  This is modulated by a `mode <LCControlMechanisms.mode>`
+uses an `FHNIntegrator` Function to generate its output.  This is modulated by a `mode <LCControlMechanism.mode_FHN>`
 parameter that regulates its functioning between `"tonic" and "phasic" modes of operation
 <LCControlMechanism_Modes_Of_Operation>`.  The Mechanisms modulated by an LCControlMechanism can be listed using
 its `show <LCControlMechanism.show>` method.  When used with an `AGTControlMechanism` to regulate the `mode
@@ -39,7 +39,7 @@ Mechanisms that it controls.
 ObjectiveMechanism and Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Like all ControlMechanisms, an LCControlMechanism it receives its `input <LCControlMechanism_Input>` from an
+Like all ControlMechanisms, an LCControlMechanism receives its `input <LCControlMechanism_Input>` from an
 `ObjectiveMechanism` that, in turn, receives its input from a specified list of `OutputStates <OutputState>`.  These
 are used to drive the `phasic response <LCControlMechanism_Modes_Of_Operation>` of the LCControlMechanism.  The
 ObjectiveMechanism and/or the OutputStates from which it gets its input can be `specified in the standard way for a
@@ -178,13 +178,16 @@ LCControlMechanism's `show <LCControlMechanism.show>` method.
 Function
 ~~~~~~~~
 
+COMMENT:
 XXX ADD MENTION OF allocation_policy HERE
+COMMENT
 
 An LCControlMechanism uses the `FHNIntegrator` as its `function <LCControlMechanism.function`; this implements a `FitzHugh-Nagumo
 model <https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ often used to describe the spiking of a neuron,
 but in this case the population activity of the LC (see `Gilzenrat et al., 2002
 <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_). The `FHNIntegrator` Function
-takes the `input <LCControlMechanism_Input>` to the LCControlMechanism as its `variable <FHNIntegrator.variable>`.
+takes the `input <LCControlMechanism_Input>` to the LCControlMechanism as its `variable <FHNIntegrator.variable>`. All
+of the `FHNIntegrator` function parameters are exposed on the LCControlMechanism.
 
 .. _LCControlMechanism_Modes_Of_Operation:
 
@@ -634,7 +637,7 @@ class LCControlMechanism(ControlMechanism):
         from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 
         # *ALL* is specified for modulated_mechanisms:
-        #    assign all Processing Mechanisms in the LCControlMechanism's Composition(s) to its modulated_mechanisms attribute
+        # assign all Processing Mechanisms in the LCControlMechanism's Composition(s) to its modulated_mechanisms attribute
         if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
             self.modulated_mechanisms = []
             for system in self.systems:

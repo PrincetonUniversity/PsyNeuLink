@@ -127,7 +127,9 @@ LC = LCControlMechanism(integration_method="EULER",
                         modulated_mechanisms=[decision_layer, response],   # Modulate gain of decision & response layers
                         name='LC')
 task = System(processes=[decision_process])
-
+print()
+print("OUTPUT STATES")
+print(LC.output_states)
 # Create Stimulus -----------------------------------------------------------------------------------------------------
 
 # number of trials
