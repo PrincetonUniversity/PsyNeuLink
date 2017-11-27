@@ -834,65 +834,21 @@ class ScratchPadError(Exception):
 print ("TEST DOCUMENTATION")
 
 
-# import psyneulink as pnl
-# my_mech = pnl.TransferMechanism(default_variable=[0,0],
-#                                 function=pnl.Logistic(),
-#                                 output_states=[pnl.TRANSFER_OUTPUT.RESULT,
-#                                                pnl.TRANSFER_OUTPUT.MEAN,
-#                                                pnl.TRANSFER_OUTPUT.VARIANCE])
+my_mech_a = pnl.TransferMechanism(function=pnl.Logistic)
+my_mech_b = pnl.TransferMechanism(function=pnl.Linear,
+                                  output_states=[pnl.RESULT, pnl.MEAN])
 
+process_a = pnl.Process(pathway=[my_mech_a])
+process_b = pnl.Process(pathway=[my_mech_b])
 
-# import psyneulink as pnl
-#
-# my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
-#                   output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
-#                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
-#                                  {pnl.NAME: 'DECISION ENTROPY',
-#                                   pnl.INDEX: 2,
-#                                   pnl.CALCULATE: pnl.Stability(metric=pnl.ENTROPY).function }])
-
-# decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
-#                                                 index=2,
-#                                                 calculate=pnl.Stability(metric=pnl.ENTROPY).function)
-
-# decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
-#                                                 index=2,
-#                                                 calculate=pnl.Stability(metric=pnl.ENTROPY).function)
-#
-# my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
-#                      output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
-#                                     pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
-#                                     decision_entropy_output_state])
-#
-# decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
-#                                                 index=2,
-#                                                 calculate=pnl.Stability(metric=pnl.ENTROPY).function)
-#
-# my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
-#                    output_states=[ pnl.DDM_OUTPUT.DECISION_VARIABLE,
-#                                    pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
-#
-# my_mech.add_states(decision_entropy_output_state)
-
-
-decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
-                                                index=2,
-                                                calculate=pnl.Stability(metric=pnl.ENTROPY).function)
-
-
-my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
-                     output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
-                                    pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
-                                    decision_entropy_output_state])
-
-another_decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
-                                               index=2,
-                                               calculate=pnl.Stability(metric=pnl.ENTROPY).function)
-my_mech2 = pnl.DDM(function=pnl.BogaczEtAl(),
-              output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
-                             pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
-
-print(my_mech.add_states(another_decision_entropy_output_state))
+my_system = pnl.System(processes=[process_a, process_b],
+                       monitor_for_control=[my_mech_a.output_states[pnl.RESULT],
+                                            my_mech_b.output_states[pnl.MEAN]],
+                       control_signals=[(pnl.GAIN, my_mech_a),
+                                        {pnl.NAME: pnl.INTERCEPT,
+                                         pnl.MECHANISM: my_mech_b,
+                                         pnl.MODULATION: pnl.ModulationParam.ADDITIVE}],
+                       name='My Test System')
 
 
 

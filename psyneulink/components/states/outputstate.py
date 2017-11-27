@@ -913,13 +913,21 @@ class OutputState(State_Base):
                 try:
                     index = target_set[INDEX]
                 except KeyError:
+                    # Assign default value for index if it was not specified
                     index = self.index
+                # Default index is an index keyword (e.g., SEQUENTIAL) so can't evaluate at present
+                if isinstance(index, str):
+                    if not index in StandardOutputStates.keywords:
+                        raise OutputStateError("Illegal keyword ({}) found in specification of index for {} of {}".
+                                               format(index, self.name, self.owner.name))
+                    return
 
+                default_value_item_str = self.owner.default_value[index] if isinstance(index, int) else index
                 error_msg = ("Item {} of value for {} ({}) is not compatible with "
                              "the function specified for the {} parameter of {} ({})".
                              format(index,
                                     self.owner.name,
-                                    self.owner.default_value[index],
+                                    default_value_item_str,
                                     CALCULATE,
                                     self.name,
                                     target_set[CALCULATE]))
@@ -930,6 +938,9 @@ class OutputState(State_Base):
                         function(self.owner.default_value[index])
                     except:
                         raise OutputStateError(error_msg)
+                # except IndexError:
+                #     # This handles cases in which index has not yet been assigned
+                #     pass
                 except:
                     raise OutputStateError(error_msg)
             except KeyError:
@@ -1299,7 +1310,8 @@ class StandardOutputStates():
     output_state_dicts : list of dicts
         list of dictionaries specifying OutputStates for the Component specified by `owner`
 
-    indices : PRIMARY, SEQUENTIAL, list of ints
+    indices : PRIMARY,
+    SEQUENTIAL, list of ints
         specifies how to assign the INDEX entry for each dict listed in `output_state_dicts`;
 
         The effects of each value of indices are as follows:
@@ -1331,6 +1343,8 @@ class StandardOutputStates():
     get_state_dict(name)
         returns a copy of the designated OutputState specification dictionary
     """
+
+    keywords = {PRIMARY, SEQUENTIAL, ALL}
 
     @tc.typecheck
     def __init__(self,
