@@ -390,7 +390,7 @@ the OutputState is assigned to a Mechanism, by including *INDEX* and *CALCULATE*
     ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
     ...                                  {pnl.NAME: 'DECISION ENTROPY',
     ...                                   pnl.INDEX: 2,
-    ...                                   pnl.CALCULATE: Entropy().function }])
+    ...                                   pnl.CALCULATE: pnl.Stability(metric=pnl.ENTROPY).function }])
 
 COMMENT:
     what is this Entropy() class???

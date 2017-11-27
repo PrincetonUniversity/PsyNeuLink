@@ -720,6 +720,7 @@ class ScratchPadError(Exception):
 #region test_parameter_state_docs Example
 print ("TEST test_parameter_state_docs")
 
+# ADD TO TEST:
 import psyneulink as pnl
 my_mechanism = pnl.RecurrentTransferMechanism(size=5,
                               noise=(pnl.CONTROL),
@@ -752,6 +753,24 @@ my_mechanism = pnl.RecurrentTransferMechanism(size=5,
 print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.NOISE].mod_afferents)
 print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.GAIN].mod_afferents)
 print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.BIAS].mod_afferents)
+
+
+
+decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
+                                                index=2,
+                                                calculate=pnl.Stability(metric=pnl.ENTROPY).function)
+
+my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
+                     output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
+                                    pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
+                                    decision_entropy_output_state])
+
+    #
+    # >>> my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
+    # ...              output_states=[ pnl.DDM_OUTPUT.DECISION_VARIABLE,
+    # ...                              pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
+    #
+    # >>> my_mech.add_states(decision_entropy_output_state)
 
 
 

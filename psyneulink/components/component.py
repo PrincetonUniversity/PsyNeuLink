@@ -1823,7 +1823,6 @@ class Component(object):
                 elif isinstance(param_value, (str, Component, type)):
                     old_param_value = request_set[param_name]
                     param_value = self._get_param_value_for_modulatory_spec(param_name, param_value)
-                    assert True
                 else:
                     continue
                 request_set[param_name] = param_value

@@ -193,9 +193,8 @@ In the following example, a `MappingProjection` is created, and its
 The example below shows how to specify the parameters in the first example using a parameter specification dictionary::
 
     >>> my_mechanism = pnl.RecurrentTransferMechanism(
-    ...                      size=5,
-    ...                      params={pnl.NOISE: 5,
-    ...                              pnl.SIZE: pnl.ControlSignal,
+    ...                      noise=5,
+    ...                      params={pnl.NOISE: pnl.CONTROL,
     ...                              pnl.FUNCTION: pnl.Logistic,
     ...                              pnl.FUNCTION_PARAMS:{
     ...                                     pnl.GAIN:(0.5,pnl.ControlSignal),
@@ -204,11 +203,11 @@ The example below shows how to specify the parameters in the first example using
 There are several things to note here.  First, the parameter specification dictionary must be assigned to the
 **params** argument of the constructor.  Second, both methods for specifying a parameter -- directly in an argument
 for the parameter, or in an entry of a parameter specification dictionary -- can be used within the same constructor.
-If a particular parameter is specified in both ways (as is the case for **size** in the example), the value in the
+If a particular parameter is specified in both ways (as is the case for **noise** in the example), the value in the
 parameter specification dictionary takes priority (i.e., it is the value that will be assigned to the parameter).  If
 the parameter is specified in a parameter specification dictionary, the key for the parameter must be a string that is
 the same as the name of parameter (i.e., identical to how it appears as an arg in the constructor; as is shown
-for **size** in the example), or using a keyword that resolves to such a string (as shown for *NOISE* in the
+for **noise** in the example), or using a keyword that resolves to such a string (as shown for *NOISE* in the
 example).  Finally, the keyword *FUNCTION_PARAMS* can be used in a parameter specification dictionary to specify
 parameters of the Component's `function <Component.function>`, as shown for the **gain** and **bias** parameters of
 the Logistic function in the example.
