@@ -1658,7 +1658,7 @@ def _validate_connection_request(
             # Try to get the State to which the Projection will be connected when fully initialized
             #     as confirmation that it is the correct type for state_type
             try:
-                projection_socket_state = projection_spec.socket_assignments[RECEIVER]
+                projection_socket_state = projection_spec.socket_assignments[projection_socket]
             # State for projection's socket couldn't be determined
             except KeyError:
                 # Use Projection's type for validation
