@@ -882,6 +882,20 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
     from psyneulink.components.states.state import _parse_state_spec
 
+    def _get_tuple_for_single_item_modulatory_spec(obj, name, value):
+        """Return (<default param value>, <modulatory spec>) for modulatory spec
+        """
+        try:
+            param_default_value = obj.paramClassDefaults[name]
+            # Only assign default value if it is not None
+            if param_default_value is not None:
+                return (param_default_value, value)
+            else:
+                return value
+        except:
+            raise ParameterStateError("Unrecognized specification for {} paramater of {} ({})".
+                                      format(param_name, owner.name, param_value))
+
     # EXCLUSIONS:
 
     # # Skip if ParameterState already exists (e.g., in case of call from Component.assign_params)
@@ -908,28 +922,14 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             pass
         else:
             return
-    elif _is_modulatory_spec(param_value, include_matrix_spec=False):
+
+    # MODIFIED 11/25/17 NEW:
+    elif _is_modulatory_spec(param_value, include_matrix_spec=False) and not isinstance(param_value, tuple):
         # If parameter is a single Modulatory specification (e.g., ControlSignal, or CONTROL, etc.)
         #   (note: exclude matrix since it is allowed as a value specification vs. a projection reference)
-        if not isinstance(param_value, tuple):
-            # Try to place it in a tuple (for interpretation by _parse_state_spec) using default value as 1st item
-            try:
-                param_default_value = owner.paramClassDefaults[param_name]
-                # Only assign default value if it is not None
-                if param_default_value is not None:
-                    param_value = (param_default_value, param_value)
-                    try:
-                        # Set actual param (ownner's attribute) to assigned value
-                        setattr(owner, param_name, param_default_value)
-                    except:
-                        raise ParameterStateError("Unable to assign {} as value for {} paramater of {}".
-                                                  format(param_value, param_name, owner.name))
-            except ParameterStateError as e:
-                raise ParameterStateError(e)
-            except:
-                raise ParameterStateError("Unrecognized specification for {} paramater of {} ({})".
-                                          format(param_name, owner.name, param_value))
-        # MODIFIED 11/25/17 END:
+        # Try to place it in a tuple (for interpretation by _parse_state_spec) using default value as 1st item
+        param_value = _get_tuple_for_single_item_modulatory_spec(owner, param_name, param_value)
+    # MODIFIED 11/25/17 END:
 
     # Allow tuples (could be spec that includes a Projection or Modulation)
     elif isinstance(param_value, tuple):
@@ -986,32 +986,16 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                           "with the same name as a parameter of the component itself".
                                           format(function_name, owner.name, function_param_name))
 
-
-
-
-            # # FIX: 11/25/17 DEAL WITH MODULATORY PARAM SPEC -- CONSOLIDATE WITH ABOVE (PUT IN ITS OWN FUNCTION?)
-            if _is_modulatory_spec(function_param_value, include_matrix_spec=False):
+            # MODIFIED 11/25/17 NEW:
+            elif (_is_modulatory_spec(function_param_value, include_matrix_spec=False)
+                  and not isinstance(function_param_value, tuple)):
                 # If parameter is a single Modulatory specification (e.g., ControlSignal, or CONTROL, etc.)
                 #   (note: exclude matrix since it is allowed as a value specification vs. a projection reference)
-                if not isinstance(function_param_value, tuple):
-                    # Try to place it in a tuple (for interpretation by _parse_state_spec) using default value as 1st item
-                    try:
-                        param_default_value = owner.paramClassDefaults[param_name]
-                        # Only assign default value if it is not None
-                        if param_default_value is not None:
-                            param_value = (param_default_value, param_value)
-                            try:
-                                # Set actual param (ownner's attribute) to assigned value
-                                setattr(owner, param_name, param_default_value)
-                            except:
-                                raise ParameterStateError("Unable to assign {} as value for {} paramater of {}".
-                                                          format(param_value, param_name, owner.name))
-                    except ParameterStateError as e:
-                        raise ParameterStateError(e)
-                    except:
-                        raise ParameterStateError("Unrecognized specification for {} paramater of {} ({})".
-                                                  format(param_name, owner.name, param_value))
-
+                # Try to place it in a tuple (for interpretation by _parse_state_spec) using default value as 1st item
+                function_param_value = _get_tuple_for_single_item_modulatory_spec(owner.function,
+                                                                                  function_param_name,
+                                                                                  function_param_value)
+            # MODIFIED 11/25/17 END:
 
 
             # # FIX: 10/3/17 - ??MOVE THIS TO _parse_state_specific_specs ----------------

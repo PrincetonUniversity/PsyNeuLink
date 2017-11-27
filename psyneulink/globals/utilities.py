@@ -207,9 +207,12 @@ def parameter_spec(param):
     from psyneulink.components.shellclasses import Projection
     from psyneulink.components.component import parameter_keywords
     from psyneulink.globals.keywords import MODULATORY_SPEC_KEYWORDS
+    from psyneulink.components.component import Component
 
     if inspect.isclass(param):
         param = param.__name__
+    elif isinstance(param, Component):
+        param = param.__class__.__name__
     if (isinstance(param, (numbers.Number,
                            np.ndarray,
                            list,

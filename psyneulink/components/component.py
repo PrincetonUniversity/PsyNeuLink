@@ -1805,16 +1805,30 @@ class Component(object):
 
         # if request_set has been passed or created then validate and, if OK, assign params to target_set
         if request_set:
-            # For params that are a 2-item tuple, extract the value
-            #    both for validation and assignment (tuples are left intact in user_params_for_instantiation dict
-            #    which is used it instantiate the specified Components in the 2nd item of the tuple)
+            # For params that are a 2-item tuple, extract the value; and get value of single item modulatory specs
+            # Do this both for validation and assignment;
+            #   tuples and modulatory specs are left intact in user_params_for_instantiation dict
+            #   which are used to instantiate the specified Components
             # IMPLEMENTATION NOTE:  Do this here rather than in _validate_params, as it needs to be done before
             #                       any override of _validate_params, which (should not, but) may process params
             #                       before calling super()._validate_params
             for param_name, param_value in request_set.items():
+                # # MODIFIED 11/25/17 OLD:
+                # if isinstance(param_value, tuple):
+                #     param_value = self._get_param_value_from_tuple(param_value)
+                #     request_set[param_name] = param_value
+                # MODIFIED 11/25/17 NEW:
                 if isinstance(param_value, tuple):
                     param_value = self._get_param_value_from_tuple(param_value)
-                    request_set[param_name] = param_value
+                elif isinstance(param_value, (str, Component, type)):
+                    old_param_value = request_set[param_name]
+                    param_value = self._get_param_value_for_modulatory_spec(param_name, param_value)
+                    assert True
+                else:
+                    continue
+                request_set[param_name] = param_value
+                # MODIFIED 11/25/17 END:
+
             try:
                 self._validate_params(variable=variable,
                                       request_set=request_set,
@@ -2234,8 +2248,31 @@ class Component(object):
                                     format(param_name, self.name, param_value, type_name))
 
     # MODIFIED 11/25/17 NEW:
-    def _get_param_value_for_modulatory_spec(self, param_spec):
-        self._get_param_value_from_tuple(param_spec)
+    def _get_param_value_for_modulatory_spec(self, param_name, param_value):
+        from psyneulink.globals.keywords import MODULATORY_SPEC_KEYWORDS
+        if isinstance(param_value, str):
+            param_spec = param_value
+        elif isinstance(param_value, Component):
+            param_spec = param_value.__class__.__name__
+        elif isinstance(param_value, type):
+            param_spec = param_value.__name__
+        else:
+            raise ComponentError("PROGRAM ERROR: got {} instead of string, Component, or Class".format(param_value))
+
+        if not param_spec in MODULATORY_SPEC_KEYWORDS:
+            return(param_value)
+
+        try:
+            param_default_value = self.paramClassDefaults[param_name]
+            # Only assign default value if it is not None
+            if param_default_value is not None:
+                return param_default_value
+            else:
+                return param_value
+        except:
+            raise ComponentError("PROGRAM ERROR: Could not get default value for {} of {} (to replace spec as {})".
+                                 format(param_name, self.name, param_value))
+
     # MODIFIED 11/25/17 END:
 
     def _get_param_value_from_tuple(self, param_spec):
