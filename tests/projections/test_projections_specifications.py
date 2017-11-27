@@ -147,3 +147,26 @@ class TestProjectionSpecificationFormats:
 
         assert T.input_states[0].mod_afferents[0].sender==G.gating_signals[0]
         assert T.output_states[0].mod_afferents[0].sender==G.gating_signals[1]
+
+    def test_formats_for_control_specification(self):
+
+        control_spec_list = [
+            pnl.CONTROL,
+            pnl.CONTROL_SIGNAL,
+            pnl.ControlSignal,
+            pnl.ControlSignal(),
+            (0.3, pnl.CONTROL),
+            (0.3, pnl.CONTROL_SIGNAL),
+            (0.3, pnl.ControlSignal),
+            (0.3, pnl.ControlSignal()),
+            (0.3, pnl.ControlProjection),
+            (0.3, pnl.ControlProjection())
+        ]
+        for i, ctl_tuple in enumerate([i for i in zip(control_spec_list, reversed(control_spec_list))]):
+            C1, C2 = ctl_tuple
+            R = pnl.RecurrentTransferMechanism(noise=C1,
+                                               function=pnl.Logistic(gain=C2))
+            assert R.parameter_states[pnl.NOISE].mod_afferents[0].name in \
+                   'ControlProjection for RecurrentTransferMechanism-{}[noise]'.format(i)
+            assert R.parameter_states[pnl.GAIN].mod_afferents[0].name in \
+                   'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)

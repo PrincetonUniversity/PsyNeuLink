@@ -1658,7 +1658,7 @@ def _validate_connection_request(
             # Try to get the State to which the Projection will be connected when fully initialized
             #     as confirmation that it is the correct type for state_type
             try:
-                projection_socket_state = projection_spec.socket_assignments[RECEIVER]
+                projection_socket_state = projection_spec.socket_assignments[projection_socket]
             # State for projection's socket couldn't be determined
             except KeyError:
                 # Use Projection's type for validation
@@ -1666,12 +1666,14 @@ def _validate_connection_request(
                 return _validate_projection_type(projection_spec.__class__)
                     # Projection's socket has been assigned to a State
             else:
-                if projection_socket_state:
+                # if both SENDER and RECEIVER are specified:
+                if projection_spec.init_args[SENDER] and projection_spec.init_args[RECEIVER]:
                     # Validate that the State is a class in connect_with_states
                     if (isinstance(projection_socket_state, connect_with_states) or
                             (inspect.isclass(projection_socket_state)
                              and issubclass(projection_socket_state, connect_with_states))):
                         return True
+                # Otherwise, revert again to validating Projection's type
                 else:
                     return _validate_projection_type(projection_spec.__class__)
 
