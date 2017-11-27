@@ -65,6 +65,8 @@ cmake-build-debug/
 
 ## File-based project format:
 *.iws
+*.sublime-project
+*.sublime-workspace
 
 ## Plugin-specific files:
 

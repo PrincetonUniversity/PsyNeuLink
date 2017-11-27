@@ -150,10 +150,10 @@ class AutoNumber(IntEnum):
         ...    FIRST_ITEM = ()
         ...    SECOND_ITEM = ()
 
-        >>> NumberedList.FIRST_ITEM.value
-         0
-        >>> NumberedList.SECOND_ITEM.value
-         1
+        >>> NumberedList.FIRST_ITEM.value # doctest: +ELLIPSIS
+        [...]
+        >>> NumberedList.SECOND_ITEM.value # doctest: +ELLIPSIS
+        [...]
 
     Adapted from AutoNumber example for Enum at https://docs.python.org/3/library/enum.html#enum.IntEnum:
     Notes:

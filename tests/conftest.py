@@ -23,6 +23,8 @@ def pytest_addoption(parser):
 
 
 def pytest_runtest_setup(item):
+    import doctest
+    doctest.ELLIPSIS_MARKER = "[...]"
     for m in marks_default_skip:
         if getattr(item.obj, m, None) and not item.config.getvalue(m):
             pytest.skip('{0} tests not requested'.format(m))
