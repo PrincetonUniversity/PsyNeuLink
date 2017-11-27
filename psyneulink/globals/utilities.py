@@ -275,6 +275,19 @@ def is_distance_metric(s):
         return False
 
 
+def is_iterable(x):
+    '''
+    Returns
+    -------
+        True - if **x** can be iterated on
+        False - otherwise
+    '''
+    if isinstance(x, np.ndarray) and x.ndim == 0:
+        return False
+    else:
+        return isinstance(x, collections.Iterable)
+
+
 kwCompatibilityType = "type"
 kwCompatibilityLength = "length"
 kwCompatibilityNumeric = "numeric"
