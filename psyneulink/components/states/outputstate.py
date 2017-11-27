@@ -829,6 +829,12 @@ class OutputState(State_Base):
 
         self.reference_value = reference_value
 
+        if variable is None:
+            if reference_value is None:
+                variable = owner.instance_defaults.value[0]
+            else:
+                variable = reference_value
+
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
         # Consider adding self to owner.output_states here (and removing from ControlProjection._instantiate_sender)
@@ -957,12 +963,6 @@ class OutputState(State_Base):
             raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible "
                                    "with its expected format ({})".
                                    format(name, self.componentName, self.owner.name, self.instance_defaults.variable, reference_value))
-
-    # MODIFIED 11/15/17 NEW:
-    def _instantiate_attributes_before_function(self, context=None):
-        if self.variable is None and self.reference_value is None:
-            self.instance_defaults.variable = self.owner.instance_defaults.value[0]
-    # MODIFIED 11/15/17 END
 
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate calculate function
