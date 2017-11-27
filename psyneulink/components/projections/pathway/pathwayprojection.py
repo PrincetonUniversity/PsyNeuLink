@@ -90,16 +90,21 @@ class PathwayProjection_Base(Projection_Base):
 
         from psyneulink.components.mechanisms.mechanism import Mechanism
 
+        name_template = "{}[{}]"
+        projection_name_template = "{} from {} to {}"
+
         if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
             if self.init_args[SENDER]:
                 sender = self.init_args[SENDER]
-                if isinstance(sender.owner, Mechanism):
-                    sender_name = "{}[{}]".format(sender.owner.name, sender_name)
+                if isinstance(sender, type):
+                    sender_name = "({})".format(sender.__name__)
+                elif isinstance(sender.owner, Mechanism):
+                    sender_name = name_template.format(sender.owner.name, sender_name)
             if self.init_args[RECEIVER]:
                 receiver = self.init_args[RECEIVER]
                 if isinstance(receiver.owner, Mechanism):
-                    receiver_name = "{}[{}]".format(receiver.owner.name, receiver_name)
-            projection_name = self.className + " from " + sender_name + " to " + receiver_name
+                    receiver_name = name_template.format(receiver.owner.name, receiver_name)
+            projection_name = projection_name_template.format(self.className, sender_name, receiver_name)
             self.init_args[NAME] = self.init_args[NAME] or projection_name
             self.name = self.init_args[NAME]
 
@@ -109,10 +114,10 @@ class PathwayProjection_Base(Projection_Base):
 
         elif self.init_status is InitStatus.INITIALIZED:
             if self.sender.owner:
-                sender_name = "{}[{}]".format(self.sender.owner.name, sender_name)
+                sender_name = name_template.format(self.sender.owner.name, sender_name)
             if self.receiver.owner:
-                receiver_name = "{}[{}]".format(self.receiver.owner.name, receiver_name)
-            self.name = self.className + " from " + sender_name + " to " + receiver_name
+                receiver_name = name_template.format(self.receiver.owner.name, receiver_name)
+            self.name = projection_name_template.format(self.className, sender_name, receiver_name)
 
         else:
             raise PathwayProjectionError("PROGRAM ERROR: {} has unrecognized InitStatus ({})".

@@ -355,246 +355,6 @@ class ScratchPadError(Exception):
 #endregion
 
 
-#region TEST State Specification Examples @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# print("TEST State Specification Examples")
-#
-# m = pnl.DDM(name='MY DDM')
-# # # c = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [m.parameter_states[pnl.DRIFT_RATE],
-# # #                                                              m.parameter_states[pnl.THRESHOLD]]}])
-# # # c = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[m.parameter_states[pnl.DRIFT_RATE],
-# # #                                                                m.parameter_states[pnl.THRESHOLD]]}])
-# g = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS: [m.output_states[pnl.DECISION_VARIABLE],
-#                                                              m.output_states[pnl.RESPONSE_TIME]]}])
-# g = pnl.GatingMechanism(gating_signals=[{'DDM_OUTPUT_GATE':[m.output_states[pnl.DECISION_VARIABLE],
-#                                                             m.output_states[pnl.RESPONSE_TIME]]}])
-# g = pnl.GatingMechanism(gating_signals=[{pnl.MECHANISM:m,
-#                                          pnl.NAME:pnl.DECISION_VARIABLE}])
-# assert True
-#
-# # my_mech = pnl.TransferMechanism(default_variable=[[0],[0]])
-# #
-# # print(my_mech.input_states)
-# #
-# # print(my_mech.parameter_states)
-# # print(my_mech.output_states)
-#
-# # mech_A = pnl.TransferMechanism(input_states=['MY INPUT'])
-# # print(mech_A.input_states)
-# # print(mech_A.input_states.names)
-# # print(mech_A.parameter_states.names)
-# # print(mech_A.output_states.names)
-# # # my_input_state = pnl.InputState(projections=[mech_A])
-# # # mech_B = pnl.TransferMechanism(input_states=[my_input_state])
-# #
-# # my_mech = pnl.TransferMechanism(default_variable=[0,0],
-# #                                 input_states=[[0,0]])
-# # print(my_mech.input_states[0].variable)
-# # print (my_mech.input_states[0].value)
-# # print (my_mech.variable)
-# #
-# # my_mech = pnl.TransferMechanism(default_variable=[[0],[0]],
-# #                                 input_states=['MY FIRST INPUT', 'MY SECOND INPUT'])
-# # print(my_mech.input_states)
-# #
-# # source_mech_1 = pnl.TransferMechanism(name='SOURCE_1')
-# # source_mech_2 = pnl.TransferMechanism(name='SOURCE_2')
-# # destination_mech = pnl.TransferMechanism(name='DEST')
-# # my_mech = pnl.TransferMechanism(name='MY_MECH',
-# #                                 input_states=[{pnl.NAME: 'MY INPUT',
-# #                                                pnl.PROJECTIONS:[source_mech_1, source_mech_2]}],
-# #                                 output_states=[{pnl.NAME: 'RESULT',
-# #                                                 pnl.PROJECTIONS:[destination_mech]}])
-# # # Print names of Projections to the first (and, in this case, only) InputState of my_mech:
-# # for projection in my_mech.input_states[0].path_afferents:
-# #     print(projection.name)
-# # # Print names of Projections from the first (and, in this case, only) OutputState of my_mech:
-# # for projection in my_mech.output_states[0].efferents:
-# #     print(projection.name)
-#
-# I = pnl.InputState(reference_value=[0,0,0])
-# pnl.TransferMechanism(name='TEMP', input_states=[I])
-#
-# p = pnl.MappingProjection()
-# T = pnl.TransferMechanism(input_states=[{pnl.VARIABLE: [0, 0, 0], pnl.PROJECTIONS:[p]}])
-#
-# p = pnl.MappingProjection()
-# T = pnl.TransferMechanism(default_variable=[0, 0], input_states=[p])
-#
-# # FIX: ADD AS TEST:
-# m = pnl.TransferMechanism()
-# i = pnl.InputState(variable=[0,0])
-# m.add_states([i])
-# m.execute()
-# assert len(m.input_states) == 2
-# assert len(m.variable)==2
-# assert len(m.variable[0])==1
-# assert len(m.variable[1])==2
-# assert m.input_states[0].name == 'InputState-0'
-# assert m.input_states[1].name == 'InputState-1'
-#
-# m = pnl.TransferMechanism()
-# i = pnl.InputState(owner=m, variable=[0, 0, 0])
-# m.execute()
-# assert len(m.input_states) == 2
-# assert m.input_states[0].name == 'InputState-0'
-# assert m.input_states[1].name == 'InputState-1'
-# assert len(m.variable)==2
-# assert len(m.variable[0])==1
-# assert len(m.variable[1])==3
-#
-# my_mech_A = pnl.TransferMechanism(default_variable=[[0],[0,0]])
-# print(my_mech_A.input_states)
-# print(my_mech_A.input_states[0].value)
-# print(my_mech_A.input_states[1].value)
-#
-#
-# my_mech_B = pnl.TransferMechanism(default_variable=[[0],[0],[0]])
-# print(my_mech_B.input_states)
-#
-# my_mech_C = pnl.TransferMechanism(input_states=[[0,0], 'Hello'])
-# print(my_mech_C.input_states)
-# print(my_mech_C.variable)
-#
-# m = pnl.TransferMechanism(size=2)
-# p = pnl.MappingProjection(sender=m, matrix=[[0, 0, 0], [0, 0, 0]])
-# q = pnl.MappingProjection()
-# T = pnl.TransferMechanism(name='TEST INPUT VALUE', input_states=[p])
-#
-# R1 = pnl.TransferMechanism(output_states=['OUTPUT_1', 'OUTPUT_2'])
-# R2 = pnl.TransferMechanism(default_variable=[[0],[0]],
-#                         input_states=['INPUT_1', 'INPUT_2'])
-# T = pnl.TransferMechanism(name='HOOBLY DOOBLY MECH',
-#                           input_states=[{pnl.MECHANISM: R1,
-#                                          pnl.OUTPUT_STATES: ['OUTPUT_1', ('OUTPUT_2', 3, 2, None)],
-#                                          pnl.WEIGHT: 24},
-#                                         'HOOBLY_DOOBLY',
-#                                         (3, q)],
-#                           output_states=[{pnl.MECHANISM:R2,
-#                                           pnl.INPUT_STATES: ['INPUT_1', 'INPUT_2']}])
-#
-# # T = pnl.TransferMechanism(params={pnl.INPUT_STATES:[{pnl.MECHANISM: R1,
-# #                                                      pnl.OUTPUT_STATES: ['OUTPUT_1', ('OUTPUT_2', 3, 2, None)],
-# #                                                      pnl.WEIGHT: 24},
-# #                                                     'HOOBLY_DOOBLY'],
-# #                                   pnl.OUTPUT_STATES:[{pnl.MECHANISM:R2,
-# #                                                       pnl.INPUT_STATES: ['INPUT_1', 'INPUT_2']}],
-#
-# my_gating_mech = pnl.GatingMechanism()
-# my_mech = pnl.TransferMechanism(name='MY_MECH',
-#                                 input_states=[{pnl.NAME: 'MY INPUT',
-#                                                pnl.PROJECTIONS:[my_gating_mech]}])
-#
-#
-# my_mech = pnl.DDM(name='MY DDM')
-# my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.NAME: 'MY DDM DRIFT RATE AND THREHOLD CONTROL SIGNAL',
-#                                                      pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE],
-#                                                                        my_mech.parameter_states[pnl.THRESHOLD]]}])
-# # Print out ControlSignals and their ControlProjections
-# for control_signal in my_ctl_mech.control_signals:
-#     print(control_signal.name)
-#     for control_projection in control_signal.efferents:
-#         print("\t{}: {}".format(control_projection.receiver.owner.name, control_projection.receiver))
-#
-# my_mech = pnl.DDM(name='MY DDM')
-# my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.NAME: 'DRIFT RATE CONTROL SIGNAL',
-#                                                      pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE]]},
-#                                                     {pnl.NAME: 'THRESHOLD RATE CONTROL SIGNAL',
-#                                                      pnl.PROJECTIONS: [my_mech.parameter_states[pnl.THRESHOLD]]}])
-# # Print out ControlSignals and their ControlProjections
-# for control_signal in my_ctl_mech.control_signals:
-#     print(control_signal.name)
-#     for control_projection in control_signal.efferents:
-#         print("\t{}: {}".format(control_projection.receiver.owner.name, control_projection.receiver))
-#
-# my_ctl_mech = pnl.ControlMechanism(control_signals=[my_mech.parameter_states[pnl.DRIFT_RATE],
-#                                                     my_mech.parameter_states[pnl.THRESHOLD]])
-#
-# for control_signal in my_ctl_mech.control_signals:
-#     print(control_signal.name)
-#     for control_projection in control_signal.efferents:
-#         print("\t{}: {}".format(control_projection.receiver.owner.name, control_projection.receiver))
-#
-#
-# # my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [my_mech.parameter_states[pnl.DRIFT_RATE]]},
-# #                                                     {pnl.PROJECTIONS: [my_mech.parameter_states[pnl.THRESHOLD]]}])
-#
-# # my_ctl_mech = pnl.ControlMechanism(control_signals=[my_mech.parameter_states[pnl.DRIFT_RATE],
-# #                                                     my_mech.parameter_states[pnl.THRESHOLD]])
-#
-# # my_ctl_mech = pnl.ControlMechanism(projections=[my_mech.parameter_states[pnl.DRIFT_RATE],
-# #                                                 my_mech.parameter_states[pnl.THRESHOLD]])
-#
-#
-# # my_mech = pnl.DDM(name='MY DDM')
-# # my_control_mech = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: my_mech,
-# #                                                          pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
-# # m = pnl.TransferMechanism(default_variable=[0, 0, 0])
-# # i = pnl.InputState(owner=m, variable=[0, 0, 0])
-# # T = pnl.TransferMechanism(input_states=[i])
-#
-#
-# source_mech_1 = pnl.TransferMechanism()
-# source_mech_2 = pnl.TransferMechanism()
-# destination_mech = pnl.TransferMechanism()
-# my_mech_C = pnl.TransferMechanism(input_states=[{'MY INPUT':[source_mech_1, source_mech_2]}],
-#                                   output_states=[{'RESULT':[destination_mech]}])
-#
-#
-# # my_mech = pnl.DDM(name='MY DDM')
-# # my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.MECHANISM: my_mech,
-# #                                                      pnl.PARAMETER_STATES: [pnl.DRIFT_RATE, pnl.THRESHOLD]}])
-
-# mech_A = pnl.TransferMechanism()
-# my_input_state = pnl.InputState(projections=[mech_A])
-# mech_B = pnl.TransferMechanism(input_states=[my_input_state])
-# assert mech_B.input_states[0].name == 'InputState-0'
-# print(mech_B.input_states)
-
-#
-# assert True
-
-# --------------------------------------------------------------------------------------------------
-
-# My_Transfer_Mech_A = TransferMechanism(
-#                            function=Logistic(
-#                                         gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
-#
-#
-# My_Mech_A = TransferMechanism(function=Logistic)
-# My_Mech_B = TransferMechanism(function=Linear,
-#                              output_states=[RESULT, MEAN])
-#
-# Process_A = Process(pathway=[My_Mech_A])
-# Process_B = Process(pathway=[My_Mech_B])
-# My_System = System(processes=[Process_A, Process_B])
-#
-# My_EVC_Mechanism = EVCControlMechanism(system=My_System,
-#                                 monitor_for_control=[My_Mech_A.output_states[RESULT],
-#                                                      My_Mech_B.output_states[MEAN]],
-#                                 control_signals=[(GAIN, My_Mech_A),
-#                                                  {NAME: INTERCEPT,
-#                                                   MECHANISM: My_Mech_B,
-#                                                   MODULATION:ModulationParam.ADDITIVE}],
-#                                 name='My EVC Mechanism')
-#
-#
-# My_Mech_A = TransferMechanism(function=Logistic)
-# My_Mech_B = TransferMechanism(function=Linear,
-#                              output_states=[RESULT, MEAN])
-# Process_A = Process(pathway=[My_Mech_A])
-# Process_B = Process(pathway=[My_Mech_B])
-#
-# My_System = System(processes=[Process_A, Process_B],
-#                                 monitor_for_control=[My_Mech_A.output_states[RESULT],
-#                                                      My_Mech_B.output_states[MEAN]],
-#                                 control_signals=[(GAIN, My_Mech_A),
-#                                                  {NAME: INTERCEPT,
-#                                                   MECHANISM: My_Mech_B,
-#                                                   MODULATION:ModulationParam.ADDITIVE}],
-#                    name='My Test System')
-
-#endregion
-
 #region TEST Learning @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 #     import ComparatorMechanism
@@ -947,90 +707,42 @@ class ScratchPadError(Exception):
 # endregion
 
 #region TEST Naming
-
-# D = pnl.DDM()
-# T = pnl.TransferMechanism(input_states=['x'],
-#                           output_states=pnl.MECHANISM_VALUE)
+# print("TEST Naming")
 #
-T = pnl.TransferMechanism(input_states=[[[0],[0]],'b','c'],
-# T = pnl.TransferMechanism(input_states=[[[[0],[0]],[[0],[0]]],'b','c'],
-#                           output_states=pnl.MECHANISM_VALUE
-                          )
-# print(T.variable)
-# assert T.output_states[MECHANISM_VALUE].value == WHAT IT DOES
-# GET NAME RIGHT FOR ALL AS WELL
-print(T.execute([[[1],[4]],[2],[3]]))
-# print(T.execute([[[[1],[4]],[[[5],[6]]]],[2],[3]]))
-print(T.output_states)
-for i, o in enumerate(T.output_states):
-    print("Output {}: {}".format(o.name, o.value))
-# print(T.output_states[0].value)
-# print(T.output_values)
-# print(T.value)
-
-# endregion
-
-T1 = pnl.TransferMechanism(name='T1')
-T2 = pnl.TransferMechanism(name='T2', input_states=[T1])
-I1 = pnl.InputState(owner=T2)
-I2 = pnl.InputState(projections=[T1])
-assert I2.name == 'Deferred Init InputState'
-T2.add_states([I2])
-assert I1.name == 'InputState-1'
-assert I2.name == 'InputState-2'
-assert T2.input_states[0].path_afferents[0].name == \
-       'MappingProjection from T1[RESULT] to T2[InputState-0]'
-assert T2.input_states[2].path_afferents[0].name == \
-       'MappingProjection from T1[RESULT] to T2[InputState-2]'
-
-
-
-#region TEST Naming
-# print ('TEST Naming')
-from psyneulink.components.mechanisms.mechanism import MechanismRegistry
-
 # T1 = pnl.TransferMechanism()
 # print(T1.name)
 # T2 = pnl.TransferMechanism()
 # print(T2.name)
-# pnl.clear_registry(MechanismRegistry)
-# T3 = pnl.TransferMechanism()
-# print(T3.name)
 
-#
-# # I = pnl.InputState(name='I', owner=T)
-# I = pnl.InputState(name='I')
-# I.owner = T
-# assert T.input_states[1].name == 'I'
 #endregion
 
-#region TEST InputState SPECIFICATION
-# print ('TEST InputState SPECIFICATION')
-#
-# import numpy as np
-# from psyneulink.components.states.inputstate import InputState
-# from psyneulink.components.states.outputstate import OutputState
-# from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-# from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-# from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-# from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, RESPONSE_TIME
-# from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES, PROJECTIONS, NAME, INPUT_STATES, VARIABLE
-#
-# R1 = TransferMechanism(input_states=[OutputState])
+#region TEST InputState
+print("TEST InputState")
 
-#
-# # InputState specification tests:
-#
-# # NOT YET IMPLEMENTED [10/29/17]:
-# # MECHANISM/OUTPUT_STATES specification
-# # my_mech_2 = TransferMechanism(input_states=[{MECHANISM: my_mech_1,
-# #                                              OUTPUT_STATES: [DECISION_VARIABLE, RESPONSE_TIME]}])
-# # assert len(my_mech_2.input_states)==2
-# # assert all(name in my_mech_2.input_states.names for name in {DECISION_VARIABLE, RESPONSE_TIME})
-# # for input_state in my_mech_2.input_states:
-# #     for projection in input_state.path_afferents:
-# #         assert projection.sender.owner is my_mech_1
-#
+# T1 = pnl.TransferMechanism(name='T1', default_variable=[0,0,0])
+# # G = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], T1)])
+# T2 = pnl.TransferMechanism(input_states=[(pnl.RESULT, RESULT-1, T1)])
+# # assert T2.input_states[0].path_afferents[0].sender.owner.name == 'D'
+# assert True
+
+
+# I = pnl.InputState(name='I', owner=T1)
+# # I = pnl.InputState(name='I')
+# # FIX: IMPLEMENT ASSIGNMENT TO OWNER WITH ASSIGNMENT OF OWNER
+# # I.owner = T1
+# assert T1.input_states[1].name == 'I'
+
+
+G = pnl.GatingMechanism(gating_signals=['a','b'])
+T = pnl.TransferMechanism(name='T',
+             input_states=(3,G),
+             output_states=(2,G.gating_signals['b']))
+
+assert T.input_states[0].mod_afferents[0].sender==G.gating_signals[0]
+assert T.output_states[0].mod_afferents[0].sender==G.gating_signals[1]
+
+
+assert True
 
 #endregion
 

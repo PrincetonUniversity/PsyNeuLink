@@ -542,7 +542,7 @@ class Function_Base(Function):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -901,8 +901,6 @@ class ArgumentTherapy(Function_Base):
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -1160,7 +1158,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -1262,8 +1260,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -1396,7 +1392,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -1646,8 +1642,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -1860,7 +1854,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2085,8 +2079,6 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -2258,7 +2250,7 @@ class SoftMax(NormalizingFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2351,8 +2343,6 @@ class SoftMax(NormalizingFunction):
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -2559,7 +2549,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2655,8 +2645,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -2786,7 +2774,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2869,8 +2857,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -2909,6 +2895,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
          default_variable, \
          gain=1.0,         \
          bias=0.0,         \
+         offset=0.0,       \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -2926,10 +2913,14 @@ class Logistic(TransferFunction):  # -------------------------------------------
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
-        specifies a value by which to multiply `variable <Linear.variable>` before logistic transformation
+        specifies a value by which to multiply `variable <Logistic.variable>` before logistic transformation
 
     bias : float : default 0.0
-        specifies a value to add to each element of `variable <Linear.variable>` after applying `gain <Linear.gain>`
+        specifies a value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`
+        and before logistic transformation.
+
+    offset : float : default 0.0
+        specifies a value to add to each element of `variable <Logistic.variable>` after applying `gain <Logistic.gain>`
         but before logistic transformation.
 
     params : Dict[param keyword, param value] : default None
@@ -2942,7 +2933,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2954,13 +2945,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     gain : float
         value by which each element of `variable <Logistic.variable>` is multiplied before applying the
-        `bias <Linear.bias>` (if it is specified).
+        `bias <Logistic.bias>` (if it is specified).
 
     bias : float
         value added to each element of `variable <Logistic.variable>` after applying the `gain <Logistic.gain>`
         (if it is specified).
-
-    bounds : (0,1)
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -2992,6 +2981,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  default_variable=ClassDefaults.variable,
                  gain: parameter_spec = 1.0,
                  bias: parameter_spec = 0.0,
+                 offset: parameter_spec = 0.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -2999,6 +2989,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   bias=bias,
+                                                  offset=offset,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -3013,7 +3004,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: 1 / (1 + e**( (`gain <Logistic.gain>` :math:`*` `variable <Logistic.variable>`) + `bias <Logistic.bias>`))
+        Return:
+
+        .. math::
+
+            \\frac{1}{1 + e^{ - gain ( variable - bias ) + offset}}
 
         Arguments
         ---------
@@ -3026,8 +3021,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -3039,8 +3032,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
+        offset = self.paramsCurrent[OFFSET]
 
-        return 1 / (1 + np.exp(-(gain * variable) + bias))
+        return 1 / (1 + np.exp(-gain*(variable-bias) + offset))
 
     def derivative(self, output, input=None):
         """
@@ -3083,7 +3077,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 #         specifies a template for the value to be transformed.
 #
 #     gain : float : default 1.0
-#         specifies a value by which to multiply `variable <Linear.variable>` before SoftMax transformation.
+#         specifies a value by which to multiply `variable <Softmax.variable>` before SoftMax transformation.
 #
 #     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
 #         specifies the format of array returned by `function <SoftMax.function>`
@@ -3362,7 +3356,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -3683,8 +3677,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         ---------
@@ -3797,7 +3789,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     if type(specification) == str:
         try:
             return np.array(np.matrix(specification))
-        except (ValueError, NameError):
+        except (ValueError, NameError, TypeError):
             # np.matrix(specification) will give ValueError if specification is a bad value (e.g. 'abc', '1; 1 2')
             #                          [JDC] actually gives NameError if specification is a string (e.g., 'abc')
             pass
@@ -3870,7 +3862,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4176,7 +4168,7 @@ class SimpleIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4387,7 +4379,7 @@ class LCAIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4602,7 +4594,7 @@ class ConstantIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4730,8 +4722,6 @@ class ConstantIntegrator(
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -4821,7 +4811,7 @@ class AdaptiveIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -5014,8 +5004,6 @@ class AdaptiveIntegrator(
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -5106,7 +5094,7 @@ class DriftDiffusionIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -5338,7 +5326,7 @@ class OrnsteinUhlenbeckIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -5479,8 +5467,6 @@ class OrnsteinUhlenbeckIntegrator(
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -5749,7 +5735,7 @@ class FHNIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -6175,7 +6161,7 @@ class AccumulatorIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -6390,8 +6376,6 @@ class AccumulatorIntegrator(
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -6520,7 +6504,7 @@ class AGTUtilityIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -6873,7 +6857,7 @@ class BogaczEtAl(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -6973,8 +6957,6 @@ class BogaczEtAl(
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -7175,7 +7157,7 @@ class NavarroAndFuss(IntegratorFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7282,8 +7264,6 @@ class NavarroAndFuss(IntegratorFunction):
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -7348,7 +7328,7 @@ class NormalDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7371,7 +7351,7 @@ class NormalDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7451,7 +7431,7 @@ class ExponentialDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7471,7 +7451,7 @@ class ExponentialDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7551,7 +7531,7 @@ class UniformDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7574,7 +7554,7 @@ class UniformDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7657,7 +7637,7 @@ class GammaDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7680,7 +7660,7 @@ class GammaDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7928,7 +7908,7 @@ COMMENT
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     Attributes
@@ -8191,7 +8171,7 @@ class Distance(ObjectiveFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -8464,7 +8444,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     Attributes
@@ -8687,7 +8667,7 @@ class Reinforcement(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -8831,8 +8811,6 @@ class Reinforcement(
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -8946,7 +8924,7 @@ class BackPropagation(LearningFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -9161,8 +9139,6 @@ class BackPropagation(LearningFunction):
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------

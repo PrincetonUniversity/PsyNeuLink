@@ -116,9 +116,9 @@ The specification of the initial value of a parameter can take any of the follow
     ..
     .. _ParameterState_Tuple_Specification:
 
-    * **Tuple** (value, Modulatory specification) -- this creates a default ParameterState, uses the value
-      (1st) item of the tuple as parameter's `value assignment <ParameterState_Value_Assignment>`, and assigns the
-      parameter's name as the name of the ParameterState.  The Modulatory (2nd) item of the tuple is used as the
+    * **2-item tuple:** *(value, Modulatory specification)* -- this creates a default ParameterState, uses the value
+      specification (1st item) as parameter's `value assignment <ParameterState_Value_Assignment>`, and assigns the
+      parameter's name as the name of the ParameterState.  The Modulatory specification (2nd item) is used as the
       ParameterState's `modulatory assignment <ParameterState_Modulatory_Specification>`, and the ParameterState
       is assigned as the `receiver <Projection_Base.receiver>` for the corresponding `ModulatoryProjection
       <ModulatoryProjection>`.
@@ -279,6 +279,7 @@ Class Reference
 """
 
 import inspect
+from collections import Iterable
 
 import numpy as np
 import typecheck as tc
@@ -577,9 +578,9 @@ class ParameterState(State_Base):
 
         self._instantiate_projections_to_state(projections=projections, context=context)
 
-    # MODIFIED 9/30/17 NEW:
+
     @tc.typecheck
-    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
+    def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get connections specified in a ParameterState specification tuple
 
         Tuple specification can be:
@@ -592,22 +593,21 @@ class ParameterState(State_Base):
         from psyneulink.components.projections.projection import _parse_connection_specs
 
         params_dict = {}
+        state_spec = state_specific_spec
 
-        if isinstance(state_specific_params, dict):
-            return state_specific_params
+        if isinstance(state_specific_spec, dict):
+            return None, state_specific_spec
 
-        elif isinstance(state_specific_params, tuple):
+        elif isinstance(state_specific_spec, tuple):
 
-            tuple_spec = state_specific_params
-
-            # Note: 1st item is assumed to be a specification for the ParameterState itself, handled in _parse_state_spec()
+            tuple_spec = state_specific_spec
+            state_spec = tuple_spec[0]
 
             # Get connection (afferent Projection(s)) specification from tuple
             PROJECTIONS_INDEX = len(tuple_spec)-1
             # Get projection_spec and parse
             try:
                 projections_spec = tuple_spec[PROJECTIONS_INDEX]
-                # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
             except IndexError:
                 projections_spec = None
 
@@ -624,12 +624,12 @@ class ParameterState(State_Base):
                                                  owner.name,
                                                  projections_spec))
 
-        elif state_specific_params is not None:
-            raise ParameterStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
-                                  format(self.__class__.__name__, state_specific_params))
 
-        return params_dict
-# MODIFIED 9/30/17 END
+        elif state_specific_spec is not None:
+            raise ParameterStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
+                                  format(self.__class__.__name__, state_specific_spec))
+
+        return state_spec, params_dict
 
 
     def _execute(self, function_params, context):
@@ -820,13 +820,19 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                           "with the same name as a parameter of the component itself".
                                           format(function_name, owner.name, function_param_name))
 
-            # # FIX: 10/3/17 - ??MOVE THIS TO _parse_state_specific_params ----------------
+            # # FIX: 10/3/17 - ??MOVE THIS TO _parse_state_specific_specs ----------------
             # # Use function_param_value as constraint
             # # IMPLEMENTATION NOTE:  need to copy, since _instantiate_state() calls _parse_state_value()
             # #                       for constraints before state_spec, which moves items to subdictionaries,
             # #                       which would make them inaccessible to the subsequent parse of state_spec
-            from copy import deepcopy
-            reference_value = deepcopy(function_param_value)
+            from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
+            from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+            if (isinstance(function_param_value, Iterable)
+                and any(isinstance(item, (ModulatorySignal, AdaptiveMechanism_Base)) for item in function_param_value)):
+                reference_value = function_param_value
+            else:
+                from copy import deepcopy
+                reference_value = deepcopy(function_param_value)
             # # FIX: ----------------------------------------------------------------------
 
             # Assign parameterState for function_param to the component

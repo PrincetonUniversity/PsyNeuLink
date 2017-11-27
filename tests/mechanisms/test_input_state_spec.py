@@ -3,11 +3,12 @@ import pytest
 
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
 from psyneulink.components.projections.projection import ProjectionError
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.state import StateError
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, VARIABLE
+from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, VARIABLE, RESULT
 
 mismatches_default_variable_error_text = 'not compatible with the specified default variable'
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
@@ -224,10 +225,23 @@ class TestInputStateSpec:
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
-    # TEST 13
-    # ConnectionTuple Specification
+    # TEST 12.1
+    # 2-item tuple specification with value as first item (and no size specification for T)
 
-    def test_connection_tuple_spec(self):
+    def test_2_item_tuple_value_for_first_item(self):
+        R2 = TransferMechanism(size=3)
+        T = TransferMechanism(input_states=[([0,0], R2)])
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        assert len(T.input_states) == 1
+        assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
+        assert len(T.input_state.instance_defaults.variable) == 2
+        T.execute()
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 13
+    # ProjectionTuple Specification
+
+    def test_projection_tuple_spec(self):
         R2 = TransferMechanism(size=3)
         T = TransferMechanism(size=2, input_states=[(R2, None, None, np.zeros((3, 2)))])
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
@@ -618,3 +632,75 @@ class TestInputStateSpec:
         T2 = TransferMechanism(input_states=[my_input_state])
         assert T2.input_states[0].name == 'InputState-0'
         assert T2.input_states[0].projections[0].sender.name == 'RESULTS'
+
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 33
+
+    def test_2_item_tuple_with_state_name_list_and_mechanism(self):
+
+        # T1 has OutputStates of with same lengths,
+        #    so T2 should use that length for its InputState (since it is not otherwise specified
+        T1 = TransferMechanism(input_states=[[0,0],[0,0]])
+        T2 = TransferMechanism(input_states=[(['RESULT', 'RESULT-1'], T1)])
+        assert len(T2.input_states[0].value) == 2
+        assert T2.input_states[0].path_afferents[0].sender.name == 'RESULT'
+        assert T2.input_states[0].path_afferents[1].sender.name == 'RESULT-1'
+
+        # T1 has OutputStates with different lengths,
+        #    so T2 should use its variable default to as format for its InputStates (since it is not otherwise specified
+        T1 = TransferMechanism(input_states=[[0,0],[0,0,0]])
+        T2 = TransferMechanism(input_states=[(['RESULT', 'RESULT-1'], T1)])
+        assert len(T2.input_states[0].value) == 1
+        assert T2.input_states[0].path_afferents[0].sender.name == 'RESULT'
+        assert T2.input_states[0].path_afferents[1].sender.name == 'RESULT-1'
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 34
+
+    def test_lists_of_mechanisms_and_output_states(self):
+
+        # Test "bare" list of Mechanisms
+        T0 = TransferMechanism(name='T0')
+        T1 = TransferMechanism(name='T1', input_states=[[0,0],[0,0,0]])
+        T2 = TransferMechanism(name='T2', input_states=[[T0, T1]])
+        assert len(T2.input_states[0].path_afferents)==2
+        assert T2.input_states[0].path_afferents[0].sender.owner.name=='T0'
+        assert T2.input_states[0].path_afferents[1].sender.owner.name=='T1'
+        assert T2.input_states[0].path_afferents[1].matrix.shape == (2,1)
+
+        # Test list of Mechanisms in ProjectionTuple
+        T3 = TransferMechanism(name='T3', input_states=[([T0, T1],None,None,InputState)])
+        assert len(T3.input_states[0].path_afferents)==2
+        assert T3.input_states[0].path_afferents[0].sender.owner.name=='T0'
+        assert T3.input_states[0].path_afferents[1].sender.owner.name=='T1'
+        assert T3.input_states[0].path_afferents[1].matrix.shape == (2,1)
+
+        # Test "bare" list of OutputStates
+        T4= TransferMechanism(name='T4', input_states=[[T0.output_states[0], T1.output_states[1]]])
+        assert len(T4.input_states[0].path_afferents)==2
+        assert T4.input_states[0].path_afferents[0].sender.owner.name=='T0'
+        assert T4.input_states[0].path_afferents[1].sender.owner.name=='T1'
+        assert T4.input_states[0].path_afferents[1].matrix.shape == (3,1)
+
+        # Test list of OutputStates in ProjectionTuple
+        T5 = TransferMechanism(name='T5', input_states=[([T0.output_states[0], T1.output_states[1]],
+                                                         None,None,
+                                                         InputState)])
+        assert len(T5.input_states[0].path_afferents)==2
+        assert T5.input_states[0].path_afferents[0].sender.owner.name=='T0'
+        assert T5.input_states[0].path_afferents[1].sender.owner.name=='T1'
+        assert T5.input_states[0].path_afferents[1].matrix.shape == (3,1)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 35
+
+    def test_list_of_mechanisms_with_gating_mechanism(self):
+
+        T1 = TransferMechanism(name='T6')
+        G = GatingMechanism(gating_signals=['a','b'])
+        T2 = TransferMechanism(input_states=[[T1, G]],
+                               output_states=[G.gating_signals['b']])
+        assert T2.input_states[0].path_afferents[0].sender.owner.name=='T6'
+        assert T2.input_states[0].mod_afferents[0].sender.name=='a'
+        assert T2.output_states[0].mod_afferents[0].sender.name=='b'

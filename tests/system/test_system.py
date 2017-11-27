@@ -140,7 +140,7 @@ class TestInputSpecsDocumentationExamples:
         for mech in input_dictionary:
             assert np.allclose(check_inputs_dictionary[mech], input_dictionary[mech])
 
-        
+
     def test_example_2(self):
         # "If num_trials is in use, run will iterate over the inputs until num_trials is reached. For example, if five
         # inputs are provided for each ORIGIN mechanism, and num_trials = 7, the system will execute seven times. The
