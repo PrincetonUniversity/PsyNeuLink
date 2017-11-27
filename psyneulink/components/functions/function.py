@@ -264,7 +264,7 @@ def is_Function(x):
 def is_function_type(x):
     if not x:
         return False
-    elif isinstance(x, (Function, function_type)):
+    elif isinstance(x, (Function, function_type, method_type)):
         return True
     elif issubclass(x, Function):
         return True
@@ -8001,6 +8001,9 @@ COMMENT
 
             matrix = target_set[MATRIX]
 
+            if isinstance(matrix, str):
+                matrix = get_matrix(matrix)
+
             if isinstance(matrix, MappingProjection):
                 try:
                     matrix = matrix._parameter_states[MATRIX].value
@@ -8029,7 +8032,11 @@ COMMENT
                                     format(param_type_string, MATRIX, self.name, matrix))
             rows = matrix.shape[0]
             cols = matrix.shape[1]
-            size = len(np.squeeze(self.instance_defaults.variable))
+            # MODIFIED 11/25/17 OLD:
+            # size = len(np.squeeze(self.instance_defaults.variable))
+            # MODIFIED 11/25/17 NEW:
+            size = len(self.instance_defaults.variable)
+            # MODIFIED 11/25/17 END
 
             if rows != size:
                 raise FunctionError("The value of the {} specified for the {} arg of {} is the wrong size;"
@@ -8052,7 +8059,11 @@ COMMENT
 
         """
 
-        size = len(np.squeeze(self.instance_defaults.variable))
+        # MODIFIED 11/25/17 OLD:
+        # size = len(np.squeeze(self.instance_defaults.variable))
+        # MODIFIED 11/25/17 NEW:
+        size = len(self.instance_defaults.variable)
+        # MODIFIED 11/25/17 END
 
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.components.states.parameterstate import ParameterState
