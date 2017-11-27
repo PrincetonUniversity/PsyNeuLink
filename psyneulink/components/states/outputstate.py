@@ -425,13 +425,20 @@ and then assigned either as::
     ...                                     decision_entropy_output_state])
 
 or::
-
-    >>> my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
-    ...              output_states=[ pnl.DDM_OUTPUT.DECISION_VARIABLE,
+    >>> another_decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
+    ...                                                index=2,
+    ...                                                calculate=pnl.Stability(metric=pnl.ENTROPY).function)
+    >>> my_mech2 = pnl.DDM(function=pnl.BogaczEtAl(),
+    ...               output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                              pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
 
-    >>> my_mech.add_states(decision_entropy_output_state)
+    >>> my_mech.add_states(another_decision_entropy_output_state)
+    {'output_states': [(OutputState OutputState-1)], 'input_states': None}
 
+The line after the last command is the `add_state <Mecanism_Base.add_states>` method returning the list of States
+add to the Mechanism. Note, also, that a separate OutputState had to be used for the second example, as trying to
+add the first one created for ``my_mech``) to ``my_mech2`` would have produce an error (since a State already
+belonging to one Mechanism can't be added to another).
 
 .. _OutputState_Structure:
 
@@ -897,22 +904,45 @@ class OutputState(State_Base):
         # IMPLEMENT: VALIDATE THAT CALCULATE FUNCTION ACCEPTS VALUE CONSISTENT WITH
         #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE
         if CALCULATE in target_set:
+
             try:
                 if isinstance(target_set[CALCULATE], type):
                     function = target_set[CALCULATE]().function
                 else:
                     function = target_set[CALCULATE]
                 try:
-                    function(self.owner.default_value[target_set[INDEX]])
+                    index = target_set[INDEX]
+                except KeyError:
+                    # Assign default value for index if it was not specified
+                    index = self.index
+                # Default index is an index keyword (e.g., SEQUENTIAL) so can't evaluate at present
+                if isinstance(index, str):
+                    if not index in StandardOutputStates.keywords:
+                        raise OutputStateError("Illegal keyword ({}) found in specification of index for {} of {}".
+                                               format(index, self.name, self.owner.name))
+                    return
+
+                default_value_item_str = self.owner.default_value[index] if isinstance(index, int) else index
+                error_msg = ("Item {} of value for {} ({}) is not compatible with "
+                             "the function specified for the {} parameter of {} ({})".
+                             format(index,
+                                    self.owner.name,
+                                    default_value_item_str,
+                                    CALCULATE,
+                                    self.name,
+                                    target_set[CALCULATE]))
+                try:
+                    function(self.owner.default_value[index], context=context)
+                except TypeError:
+                    try:
+                        function(self.owner.default_value[index])
+                    except:
+                        raise OutputStateError(error_msg)
+                # except IndexError:
+                #     # This handles cases in which index has not yet been assigned
+                #     pass
                 except:
-                    raise OutputStateError("Item {} of value for {} ({}) is not compatible with the function "
-                                           "specified for the {} parameter of {} ({})".
-                                           format(target_set[INDEX],
-                                                  self.owner.name,
-                                                  self.owner.default_value[target_set[INDEX]],
-                                                  CALCULATE,
-                                                  self.name,
-                                                  target_set[CALCULATE]))
+                    raise OutputStateError(error_msg)
             except KeyError:
                 pass
 
@@ -1224,7 +1254,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
                     # If OutputState's calculate function is specified, use it to determine OutputState's vaue
                     if CALCULATE in output_state[PARAMS]:
-                        output_state_value = output_state[PARAMS][CALCULATE](owner_value[index])
+                        output_state_value = output_state[PARAMS][CALCULATE](owner_value[index], context=context)
                     else:
                         output_state_value = owner_value[index]
 
@@ -1280,7 +1310,8 @@ class StandardOutputStates():
     output_state_dicts : list of dicts
         list of dictionaries specifying OutputStates for the Component specified by `owner`
 
-    indices : PRIMARY, SEQUENTIAL, list of ints
+    indices : PRIMARY,
+    SEQUENTIAL, list of ints
         specifies how to assign the INDEX entry for each dict listed in `output_state_dicts`;
 
         The effects of each value of indices are as follows:
@@ -1312,6 +1343,8 @@ class StandardOutputStates():
     get_state_dict(name)
         returns a copy of the designated OutputState specification dictionary
     """
+
+    keywords = {PRIMARY, SEQUENTIAL, ALL}
 
     @tc.typecheck
     def __init__(self,

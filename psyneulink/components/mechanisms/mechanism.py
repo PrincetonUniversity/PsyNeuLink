@@ -2288,7 +2288,7 @@ class Mechanism_Base(Mechanism):
             `State specification dictionary <State_Specification>` (the latter must have a *STATE_TYPE* entry
             specifying the class or keyword for InputState or OutputState).
 
-        Returns
+        Returns a dictionary with two entries, containing the list of InputStates and OutputStates added.
         -------
 
         Dictionary with entries containing InputStates and/or OutputStates added
