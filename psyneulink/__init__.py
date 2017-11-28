@@ -20,6 +20,9 @@ please contact psyneulinkhelp@princeton.edu.
 '''
 
 import logging as _logging
+import numpy as _numpy
+
+from ._version import get_versions
 
 # starred imports to allow user imports from top level
 from . import components
@@ -39,6 +42,14 @@ __all__.extend(composition.__all__)
 __all__.extend(globals.__all__)
 __all__.extend(library.__all__)
 __all__.extend(scheduling.__all__)
+
+
+# set __version__ based on versioneer
+__version__ = get_versions()['version']
+del get_versions
+
+# suppress numpy overflow and underflow errors
+_numpy.seterr(over='ignore', under='ignore')
 
 # https://stackoverflow.com/a/17276457/3131666
 class _Whitelist(_logging.Filter):

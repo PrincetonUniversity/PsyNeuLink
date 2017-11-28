@@ -17,11 +17,12 @@ import numbers
 
 import numpy as np
 import typecheck as tc
+from collections import Iterable
 
 from psyneulink.components.functions.function import Hebbian, Linear, is_function_type, LCAIntegrator
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.states.outputstate import PRIMARY_OUTPUT_STATE, StandardOutputStates
+from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 from psyneulink.globals.keywords import INITIALIZER, NOISE, RATE, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MEAN, MEDIAN, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -131,6 +132,9 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
     size : int, list or np.ndarray of ints
         specifies variable as array(s) of zeros if **variable** is not passed as an argument;
         if **variable** is specified, it takes precedence over the specification of **size**.
+        As an example, the following mechanisms are equivalent::
+            T1 = TransferMechanism(size = [3, 2])
+            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
@@ -203,20 +207,18 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
         takes a list or 1d array of numeric values as its `variable <Function_Base.variable>` and returns a sqaure
         matrix of numeric values with the same dimensions as the length of the input.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
-        the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
-        the dictionary override any assigned to those parameters in arguments of the constructor.
+        the Mechanism, its `function <GilzenratTransferMechanism.function>`, and/or a custom function and its
+        parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
 
-    name : str : default GilzenratTransferMechanism-<index>
-        a string used for the name of the Mechanism.
-        If not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <GilzenratTransferMechanism.name>`
+        specifies the name of the GilzenratTransferMechanism.
 
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for Mechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the GilzenratTransferMechanism; see `prefs <GilzenratTransferMechanism.prefs>` 
+        for details.
 
     context : str : default componentType+INITIALIZING
         string used for contextualization of instantiation, hierarchical calls, executions, etc.
@@ -330,17 +332,14 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
         * **energy** of the result (``value`` of ENERGY OutputState);
         * **entropy** of the result (if the ENTROPY OutputState is present).
 
-    name : str : default GilzenratTransferMechanism-<index>
-        the name of the Mechanism.
-        Specified in the **name** argument of the constructor for the Projection;
-        if not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the GilzenratTransferMechanism; if it is not specified in the **name** argument of the constructor,
+        a default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for Mechanism.
-        Specified in the **prefs** argument of the constructor for the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the GilzenratTransferMechanism; if it is not specified in the **prefs** argument of the 
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        <LINK>` for details).
 
     Returns
     -------
@@ -365,12 +364,12 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
                  decay: is_numeric_or_none=None,
                  noise=0.0,
                  time_step_size=0.02,
-                 range=None,
+                 clip=None,
                  input_states: tc.optional(tc.any(list, dict)) = None,
                  enable_learning:bool=False,
-                 learning_rate: tc.optional(tc.any(parameter_spec, bool))=None,
-                 learning_function: tc.any(is_function_type) = Hebbian,
-                 output_states: tc.optional(tc.any(list, dict))=None,
+                 learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
+                 learning_function:tc.any(is_function_type) = Hebbian,
+                 output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
@@ -378,7 +377,11 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
                  context=componentType+INITIALIZING):
         """Instantiate GilzenratTransferMechanism
         """
-        if output_states is None:
+
+        # Default output_states is specified in constructor as a string rather than a list
+        # to avoid "gotcha" associated with mutable default arguments
+        # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
+        if output_states is None or output_states is RESULT:
             output_states = [RESULT]
 
         if isinstance(hetero, (list, np.matrix)):
@@ -403,7 +406,7 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
-                                                               indices=PRIMARY_OUTPUT_STATE)
+                                                               indices=PRIMARY)
 
         super().__init__(default_variable=default_variable,
                          size=size,
@@ -411,7 +414,7 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
                          function=function,
                          initial_value=initial_value,
                          noise=noise,
-                         range=range,
+                         clip=clip,
                          output_states=output_states,
                          time_scale=time_scale,
                          params=params,
@@ -472,7 +475,7 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
         #region ASSIGN PARAMETER VALUES
 
         time_constant = self.time_constant
-        range = self.range
+        clip = self.clip
         noise = self.noise
 
         #endregion
@@ -507,12 +510,12 @@ class GilzenratTransferMechanism(RecurrentTransferMechanism):
         # # MODIFIED  OLD:
         # if list(range):
         # MODIFIED  NEW:
-        if range is not None:
+        if clip is not None:
         # MODIFIED  END
-            minCapIndices = np.where(output_vector < range[0])
-            maxCapIndices = np.where(output_vector > range[1])
-            output_vector[minCapIndices] = np.min(range)
-            output_vector[maxCapIndices] = np.max(range)
+            minCapIndices = np.where(output_vector < clip[0])
+            maxCapIndices = np.where(output_vector > clip[1])
+            output_vector[minCapIndices] = np.min(clip)
+            output_vector[maxCapIndices] = np.max(clip)
 
         return output_vector
         #endregion

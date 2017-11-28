@@ -10,7 +10,7 @@ from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_
 from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.library.mechanisms.processing.transfer.kwta import KWTA, KWTAError
 from psyneulink.scheduling.timescale import TimeScale
-
+import numpy as np
 
 class TestKWTAInputs:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
@@ -18,9 +18,9 @@ class TestKWTAInputs:
     def test_kwta_empty_spec(self):
         K = KWTA()
         assert(K.value is None)
-        assert(K.instance_defaults.variable.tolist() == [[0]])
-        assert(K.size.tolist() == [1])
-        assert(K.matrix.tolist() == [[5]])
+        assert(K.instance_defaults.variable == [[0]])
+        assert(K.size == [1])
+        assert(K.matrix == [[5]])
 
     def test_kwta_check_attrs(self):
         K = KWTA(
@@ -28,9 +28,9 @@ class TestKWTAInputs:
             size=3
         )
         assert(K.value is None)
-        assert(K.instance_defaults.variable.tolist() == [[0., 0., 0.]])
-        assert(K.size.tolist() == [3])
-        assert(K.matrix.tolist() == [[5, 0, 0], [0, 5, 0], [0, 0, 5]])
+        assert(np.allclose(K.instance_defaults.variable, [[0., 0., 0.]]))
+        assert(K.size == [3])
+        assert(np.allclose(K.matrix, [[5, 0, 0], [0, 5, 0], [0, 0, 5]]))
         assert(K.recurrent_projection.sender is K.output_state)
         assert(K.recurrent_projection.receiver is K.input_state)
 
@@ -39,18 +39,18 @@ class TestKWTAInputs:
             name='K',
             default_variable=[0, 0, 0, 0]
         )
-        val = K.execute([10, 12, 0, -1]).tolist()
-        assert(val == [[0.9933071490757153, 0.9990889488055994, 0.0066928509242848554, 0.0024726231566347743]])
-        val = K.execute([1, 2, 3, 0]).tolist()
-        assert(val == [[0.3775406687981454, 0.6224593312018546, 0.8175744761936437, 0.18242552380635635]])
+        val = K.execute([10, 12, 0, -1])
+        assert(np.allclose(val, [[0.9933071490757153, 0.9990889488055994, 0.0066928509242848554, 0.0024726231566347743]]))
+        val = K.execute([1, 2, 3, 0])
+        assert(np.allclose(val, [[0.3775406687981454, 0.6224593312018546, 0.8175744761936437, 0.18242552380635635]]))
 
     def test_kwta_no_inputs(self):
         K = KWTA(
             name='K'
         )
-        assert(K.instance_defaults.variable.tolist() == [[0]])
-        val = K.execute([10]).tolist()
-        assert(val == [[0.5]])
+        assert(K.instance_defaults.variable == [[0]])
+        val = K.execute([10])
+        assert(np.allclose(val, [[0.5]]))
 
     def test_kwta_inputs_list_of_strings(self):
         with pytest.raises(KWTAError) as error_text:
@@ -58,7 +58,7 @@ class TestKWTAInputs:
                 name='K',
                 size = 4,
             )
-            K.execute(["one", "two", "three", "four"]).tolist()
+            K.execute(["one", "two", "three", "four"])
         assert("which is not supported for KWTA" in str(error_text.value))
 
     def test_kwta_var_list_of_strings(self):
@@ -76,7 +76,7 @@ class TestKWTAInputs:
                 name='K',
                 size=4
             )
-            K.execute([1, 2, 3, 4, 5]).tolist()
+            K.execute([1, 2, 3, 4, 5])
         assert("does not match required length" in str(error_text.value))
 
     def test_recurrent_mech_inputs_mismatched_with_default_shorter(self):
@@ -85,14 +85,14 @@ class TestKWTAInputs:
                 name='K',
                 size=6
             )
-            K.execute([1, 2, 3, 4, 5]).tolist()
+            K.execute([1, 2, 3, 4, 5])
         assert("does not match required length" in str(error_text.value))
 
 
 class TestKWTAFunction:
 
     def test_kwta_function_various_spec(self):
-        specs = [Logistic, Linear, Linear(slope=3), Logistic(gain=2, bias=-4.2)]
+        specs = [Logistic, Linear, Linear(slope=3), Logistic(gain=2, offset=-4.2)]
         for s in specs:
             K = KWTA(
                 name='K',
@@ -109,29 +109,29 @@ class TestKWTAFunction:
             function=Logistic(gain=2),
             k_value=2
         )
-        val = K.execute(input = [1, 2, 3]).tolist()
-        assert val == [[0.2689414213699951, 0.7310585786300049, 0.9525741268224334]]
+        val = K.execute(input = [1, 2, 3])
+        assert np.allclose(val, [[0.2689414213699951, 0.7310585786300049, 0.9525741268224334]])
 
-    def test_kwta_log_bias(self):
+    def test_kwta_log_offset(self):
         K = KWTA(
             name='K',
             size=3,
-            function=Logistic(bias=-.2),
+            function=Logistic(offset=-.2),
             k_value=2
         )
-        val = K.execute(input=[1, 2, 3]).tolist()
-        assert val == [[0.425557483188341, 0.6681877721681662, 0.84553473491646523]]
+        val = K.execute(input=[1, 2, 3])
+        assert np.allclose(val, [[0.425557483188341, 0.6681877721681662, 0.84553473491646523]])
 
     # the inhibition would have to be positive in order to get the desired activity level: thus, inhibition is set to 0
-    def test_kwta_log_gain_bias(self):
+    def test_kwta_log_gain_offset(self):
         K = KWTA(
             name='K',
             size=2,
-            function=Logistic(gain=-.2, bias=4),
+            function=Logistic(gain=-.2, offset=4),
             k_value=1
         )
-        val = K.execute(input = [.1, -4]).tolist()
-        assert val == [[0.017636340339722684, 0.039165722796764356]]
+        val = K.execute(input = [.1, -4])
+        assert np.allclose(val, [[0.017636340339722684, 0.039165722796764356]])
 
     def test_kwta_linear(self): # inhibition would be positive: so instead it is set to zero
         K = KWTA(
@@ -141,8 +141,8 @@ class TestKWTAFunction:
             k_value=2,
             function=Linear
         )
-        val = K.execute(input=[1, 3, 4]).tolist()
-        assert val == [[1, 3, 4]]
+        val = K.execute(input=[1, 3, 4])
+        assert np.allclose(val, [[1, 3, 4]])
 
     def test_kwta_linear_slope(self):
         K = KWTA(
@@ -152,8 +152,8 @@ class TestKWTAFunction:
             k_value=2,
             function=Linear(slope=2)
         )
-        val = K.execute(input=[1, 3, 4, 2, 1]).tolist()
-        assert val == [[-2, 2, 4, 0, -2]]
+        val = K.execute(input=[1, 3, 4, 2, 1])
+        assert np.allclose(val, [[-2, 2, 4, 0, -2]])
 
     def test_kwta_linear_system(self):
         K=KWTA(
@@ -174,8 +174,8 @@ class TestKWTAMatrix:
                     size=4,
                     matrix=m
                 )
-                val = K.execute([10, 10, 10, 10]).tolist()
-                assert(val == [[.5, .5, .5, .5]])
+                val = K.execute([10, 10, 10, 10])
+                assert(np.allclose(val, [[.5, .5, .5, .5]]))
 
     def test_kwta_matrix_auto_hetero_spec(self):
         K = KWTA(
@@ -184,7 +184,7 @@ class TestKWTAMatrix:
             auto=3,
             hetero=2
         )
-        assert(K.recurrent_projection.matrix.tolist() == [[3, 2, 2, 2], [2, 3, 2, 2], [2, 2, 3, 2], [2, 2, 2, 3]])
+        assert(np.allclose(K.recurrent_projection.matrix, [[3, 2, 2, 2], [2, 3, 2, 2], [2, 2, 3, 2], [2, 2, 2, 3]]))
 
     def test_kwta_matrix_hetero_spec(self):
         K = KWTA(
@@ -192,7 +192,7 @@ class TestKWTAMatrix:
             size=3,
             hetero=-.5,
         )
-        assert(K.recurrent_projection.matrix.tolist() == [[5, -.5, -.5], [-.5, 5, -.5], [-.5, -.5, 5]])
+        assert(np.allclose(K.recurrent_projection.matrix, [[5, -.5, -.5], [-.5, 5, -.5], [-.5, -.5, 5]]))
 
     def test_kwta_matrix_auto_spec(self):
         K = KWTA(
@@ -200,7 +200,7 @@ class TestKWTAMatrix:
             size=3,
             auto=-.5,
         )
-        assert(K.recurrent_projection.matrix.tolist() == [[-.5, 0, 0], [0, -.5, 0], [0, 0, -.5]])
+        assert(np.allclose(K.recurrent_projection.matrix, [[-.5, 0, 0], [0, -.5, 0], [0, 0, -.5]]))
 
 
 class TestKWTARatio:
@@ -213,10 +213,12 @@ class TestKWTARatio:
         )
         p = Process(pathway = [K], prefs = TestKWTARatio.simple_prefs)
         s = System(processes=[p], prefs = TestKWTARatio.simple_prefs)
+
         s.run(inputs = {K: [2, 4, 1, 6]})
-        assert K.value.tolist() == [[0.2689414213699951, 0.7310585786300049, 0.11920292202211755, 0.9525741268224334]]
+        assert np.allclose(K.value, [[0.2689414213699951, 0.7310585786300049, 0.11920292202211755, 0.9525741268224334]])
         s.run(inputs = {K: [1, 2, 3, 4]})
-        assert K.value.tolist() == [[0.09271329298112314, 0.7368459299092773, 0.2631540700907225, 0.9842837170829899]]
+        assert np.allclose(K.value, [[0.09271329298112314, 0.7368459299092773, 0.2631540700907225, 0.9842837170829899]])
+
 
     def test_kwta_ratio_1(self):
         K = KWTA(
@@ -226,10 +228,12 @@ class TestKWTARatio:
         )
         p = Process(pathway = [K], prefs = TestKWTARatio.simple_prefs)
         s = System(processes=[p], prefs = TestKWTARatio.simple_prefs)
+
         s.run(inputs = {K: [2, 4, 1, 6]})
-        assert K.value.tolist() == [[0.5, 0.8807970779778823, 0.2689414213699951, 0.9820137900379085]]
+        assert np.allclose(K.value, [[0.5, 0.8807970779778823, 0.2689414213699951, 0.9820137900379085]])
         s.run(inputs = {K: [1, 2, 3, 4]})
-        assert K.value.tolist() == [[0.30054433998850033, 0.8868817857039745, 0.5, 0.9897010588046231]]
+        assert np.allclose(K.value, [[0.30054433998850033, 0.8868817857039745, 0.5, 0.9897010588046231]])
+
 
     def test_kwta_ratio_0(self):
         K = KWTA(
@@ -239,10 +243,12 @@ class TestKWTARatio:
         )
         p = Process(pathway = [K], prefs = TestKWTARatio.simple_prefs)
         s = System(processes=[p], prefs = TestKWTARatio.simple_prefs)
+
         s.run(inputs = {K: [2, 4, 1, 6]})
-        assert K.value.tolist() == [[0.11920292202211755, 0.5, 0.04742587317756678, 0.8807970779778823]]
+        assert np.allclose(K.value, [[0.11920292202211755, 0.5, 0.04742587317756678, 0.8807970779778823]])
         s.run(inputs = {K: [1, 2, 3, 4]})
-        assert K.value.tolist() == [[0.051956902301427035, 0.5, 0.22048012438199008, 0.9802370486903237]]
+        assert np.allclose(K.value, [[0.051956902301427035, 0.5, 0.22048012438199008, 0.9802370486903237]])
+
 
     # answers for this tests should be exactly 70% of the way between the answers for ratio=0 and ratio=1
     # (after taking the inverse of the Logistic function on the output)
@@ -254,10 +260,12 @@ class TestKWTARatio:
         )
         p = Process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
         s = System(processes=[p], prefs=TestKWTARatio.simple_prefs)
+
         s.run(inputs={K: [2, 4, 1, 6]})
-        assert K.value.tolist() == [[0.19781611144141834, 0.6456563062257956, 0.08317269649392241, 0.9308615796566533]]
+        assert np.allclose(K.value, [[0.19781611144141834, 0.6456563062257956, 0.08317269649392241, 0.9308615796566533]])
         s.run(inputs={K: [1, 2, 3, 4]})
-        assert K.value.tolist() == [[0.06324086143390241, 0.6326786177649943, 0.21948113371757957, 0.9814716617176014]]
+        assert np.allclose(K.value, [[0.06324086143390241, 0.6326786177649943, 0.21948113371757957, 0.9814716617176014]])
+
 
     def test_kwta_ratio_2(self):
         with pytest.raises(KWTAError) as error_text:
@@ -287,8 +295,10 @@ class TestKWTAKValue:
         assert K.k_value == 0.5
         p = Process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
         s = System(processes=[p], prefs=TestKWTARatio.simple_prefs)
+
         s.run(inputs={K: [1, 2, 3, 4]})
-        assert K.value.tolist() == [[0.18242552380635635, 0.3775406687981454, 0.6224593312018546, 0.8175744761936437]]
+        assert np.allclose(K.value, [[0.18242552380635635, 0.3775406687981454, 0.6224593312018546, 0.8175744761936437]])
+
 
     def test_kwta_k_value_empty_size_6(self):
         K = KWTA(
@@ -298,9 +308,11 @@ class TestKWTAKValue:
         assert K.k_value == 0.5
         p = Process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
         s = System(processes=[p], prefs=TestKWTARatio.simple_prefs)
+
         s.run(inputs={K: [1, 2, 2, 3, 3, 4]})
-        assert K.value.tolist() == [[0.18242552380635635, 0.3775406687981454, 0.3775406687981454,
-                                     0.6224593312018546, 0.6224593312018546, 0.8175744761936437]]
+        assert np.allclose(K.value, [[0.18242552380635635, 0.3775406687981454, 0.3775406687981454,
+                                     0.6224593312018546, 0.6224593312018546, 0.8175744761936437]])
+
 
     def test_kwta_k_value_int_size_5(self):
         K = KWTA(
@@ -382,8 +394,9 @@ class TestKWTAThreshold:
         )
         p = Process(pathway=[K], prefs=TestKWTAThreshold.simple_prefs)
         s = System(processes=[p], prefs=TestKWTAThreshold.simple_prefs)
+
         s.run(inputs={K: [1, 2, 3, 4]})
-        assert K.value.tolist() == [[0.07585818002124355, 0.18242552380635635, 0.3775406687981454, 0.6224593312018546]]
+        assert np.allclose(K.value, [[0.07585818002124355, 0.18242552380635635, 0.3775406687981454, 0.6224593312018546]])
 
     def test_kwta_threshold_float(self):
         K = KWTA(
@@ -393,8 +406,9 @@ class TestKWTAThreshold:
         )
         p = Process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
         s = System(processes=[p], prefs=TestKWTARatio.simple_prefs)
+
         s.run(inputs={K: [1, 2, 3, 3]})
-        assert K.value.tolist() == [[0.2689414213699951, 0.5, 0.7310585786300049, 0.7310585786300049]]
+        assert np.allclose(K.value, [[0.2689414213699951, 0.5, 0.7310585786300049, 0.7310585786300049]])
 
 
 class TestKWTAControl:
@@ -416,24 +430,26 @@ class TestKWTALongTerm:
         )
         p = Process(pathway=[K], prefs=TestKWTALongTerm.simple_prefs)
         s = System(processes=[p], prefs=TestKWTALongTerm.simple_prefs)
-        kwta_input = {K: [-1, -.5, 0, 0, 0, 1, 1, 2, 3, 3]}
+        kwta_input = {K: [[-1, -.5, 0, 0, 0, 1, 1, 2, 3, 3]]}
         print("")
         for i in range(20):
             s.run(inputs=kwta_input)
             print('\ntrial number', i)
             print('K.value: ', K.value)
-        assert K.value.tolist() == [[0.012938850123312412, 0.022127587008877226, 0.039010157367582114,
+        assert np.allclose(K.value, [[0.012938850123312412, 0.022127587008877226, 0.039010157367582114,
                                      0.039010157367582114, 0.039010157367582114, 0.19055156271846602,
-                                     0.19055156271846602, 0.969124504436019, 0.9895271824560731, 0.9895271824560731]]
+
+                                     0.19055156271846602, 0.969124504436019, 0.9895271824560731, 0.9895271824560731]])
         kwta_input2 = {K: [0] * 10}
+
         print('\n\nturning to zero-inputs now:')
         for i in range(20):
             s.run(inputs=kwta_input2)
             print('\ntrial number', i)
             print('K.value: ', K.value)
-        assert K.value.tolist() == [[0.13127237999481228, 0.13130057846907178, 0.1313653354768465, 0.1313653354768465,
+        assert np.allclose(K.value, [[0.13127237999481228, 0.13130057846907178, 0.1313653354768465, 0.1313653354768465,
                                      0.1313653354768465, 0.5863768938723602, 0.5863768938723602, 0.8390251365605804,
-                                     0.8390251603214743, 0.8390251603214743]]
+                                     0.8390251603214743, 0.8390251603214743]])
 
 class TestKWTAAverageBased:
 
@@ -450,9 +466,9 @@ class TestKWTAAverageBased:
         )
         p = Process(pathway=[K], prefs=TestKWTAAverageBased.simple_prefs)
         s = System(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
-        kwta_input = {K: [1, 2, 3, 4]}
+        kwta_input = {K: [[1, 2, 3, 4]]}
         s.run(inputs=kwta_input)
-        assert K.value.tolist() == [[-1.5, -0.5, 0.5, 1.5]]
+        assert np.allclose(K.value, [[-1.5, -0.5, 0.5, 1.5]])
 
     def test_kwta_average_k_1(self):
         K = KWTA(
@@ -465,9 +481,9 @@ class TestKWTAAverageBased:
         )
         p = Process(pathway=[K], prefs=TestKWTAAverageBased.simple_prefs)
         s = System(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
-        kwta_input = {K: [1, 2, 3, 4]}
+        kwta_input = {K: [[1, 2, 3, 4]]}
         s.run(inputs=kwta_input)
-        assert K.value.tolist() == [[-2, -1, 0, 1]]
+        assert np.allclose(K.value, [[-2, -1, 0, 1]])
 
     def test_kwta_average_k_1_ratio_0_2(self):
         K = KWTA(
@@ -481,9 +497,9 @@ class TestKWTAAverageBased:
         )
         p = Process(pathway=[K], prefs=TestKWTAAverageBased.simple_prefs)
         s = System(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
-        kwta_input = {K: [1, 2, 3, 4]}
+        kwta_input = {K: [[1, 2, 3, 4]]}
         s.run(inputs=kwta_input)
-        assert K.value.tolist() == [[-2.6, -1.6, -0.6000000000000001, 0.3999999999999999]]
+        assert np.allclose(K.value, [[-2.6, -1.6, -0.6000000000000001, 0.3999999999999999]])
 
     def test_kwta_average_k_1_ratio_0_8(self):
         K = KWTA(
@@ -497,6 +513,6 @@ class TestKWTAAverageBased:
         )
         p = Process(pathway=[K], prefs=TestKWTAAverageBased.simple_prefs)
         s = System(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
-        kwta_input = {K: [1, 2, 3, 4]}
+        kwta_input = {K: [[1, 2, 3, 4]]}
         s.run(inputs=kwta_input)
-        assert K.value.tolist() == [[-1.4, -0.3999999999999999, 0.6000000000000001, 1.6]]
+        assert np.allclose(K.value, [[-1.4, -0.3999999999999999, 0.6000000000000001, 1.6]])

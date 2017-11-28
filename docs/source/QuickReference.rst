@@ -2,11 +2,12 @@ Quick Reference
 ===============
 
 * `Conventions`
+* `Repository_Organization`
 * `PsyNeuLink_Objects`
     * `Quick_Reference_Overview`
     * `Quick_Reference_Components`
     * `Quick_Reference_Compositions`
-* `Quick_Reference_Execution`
+* `Quick_Reference_Scheduling`
 * `Quick_Reference_Logging`
 * `Quick_Reference_Graphic_Displays`
 * `Quick_Reference_Preferences`
@@ -34,6 +35,31 @@ The following conventions are used for the names of PsyNeuLink objects and their
 
           Appear in boxed insets.
 
+See `Naming` for conventions for default and user-assigned names of instances.
+
+.. _Repository_Organization:
+
+Repository Organization
+-----------------------
+
+The PsyNeuLink "repo" is organized into two major sections:
+
+`Core`
+~~~~~~
+
+This contains the basic PsyNeuLink objects (described in the next section) that are used to build models and run
+simulations, and is divided into three subsections:  `Components <Quick_Reference_Components>` (the basic building 
+blocks of PsyNeuLink models), `Compositions <Quick_Reference_Compositions>` (objects used to combine Components into 
+models), and `Scheduling <Quick_Reference_Scheduling>` (used to control execution of the Components within a
+Composition).
+
+`Library`
+~~~~~~~~~
+
+This contains extensions based on the Core objects (under `Compositions` and `Components`), and
+PsyNeuLink implementations of published models (under `Models`).  The Library is meant to be extended, and used both
+to compare different models that address similar neural mechanisms and/or psychological functions, and to integrate
+these into higher level models of system-level function.
 
 .. _PsyNeuLink_Objects:
 
@@ -80,8 +106,8 @@ PsyNeuLink.
 
 .. _Quick_Reference_Components:
 
-Components
-~~~~~~~~~~
+`Components <Component>`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Components are objects that perform a specific function. Every Component has the following core attributes:
 
@@ -194,8 +220,8 @@ The four types of Components in PsyNeuLink, Mechanisms, Projections, States and 
 
 .. _Quick_Reference_Compositions:
 
-Compositions
-~~~~~~~~~~~~
+`Compositions <Composition>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Compositions are combinations of Components that make up a PsyNeuLink model.  There are two primary types of
 Compositions:
@@ -225,25 +251,26 @@ Compositions:
    `learning <LearningMechanism>`, `control <ControlMechanism>` and `gating <GatingMechanism>`).
 
 
-.. _Quick_Reference_Execution:
+.. _Quick_Reference_Scheduling:
 
-Execution
----------
+`Scheduling <Scheduler>`
+------------------------
 
 PsyNeuLink Mechanisms can be executed on their own.  However, usually, they are executed when a Composition to which
-they belong is executed.  Compositions are executed iteratively in rounds of execution referred to as `PASS` es, in
-which each Mechanism in the Composition is given an opportunity to execute;  By default, each Mechanism in a Composition
-executes exactly once per `PASS`.  However, a `Scheduler` can be used to specify one or more `Conditions <Condition>`
-for each Mechanism that determine whether it executes in a given `PASS`.  This can be used to determine when
-a Mechanism begins and/or ends executing, how many times it executes or the frequency with which it executes relative
-to other Mechanisms, and any other dependency that can be expressed in terms of the attributes of other Components
-in PsyNeuLink. Using a `Scheduler` and a combination of `pre-specified <Condition_Pre_Specified>` and `custom
-<Condition_Custom>` Conditions, any pattern of execution can be configured that is logically possible.
+they belong is executed, under the control of the `Scheduler`.  The Schedule executes Compositions iteratively
+in rounds of execution referred to as `PASS` es, in which each Mechanism in the Composition is given an opportunity
+to execute;  By default, each Mechanism in a Composition executes exactly once per `PASS`.  However, the Scheduler
+can be used to specify one or more `Conditions <Condition>` for each Mechanism that determine whether it executes in
+a given `PASS`.  This can be used to determine when a Mechanism begins and/or ends executing, how many times it
+executes or the frequency with which it executes relative to other Mechanisms, and any other dependency that can be
+expressed in terms of the attributes of other Components in PsyNeuLink. Using a `Scheduler` and a combination of
+`pre-specified <Condition_Pre_Specified>` and `custom <Condition_Custom>` Conditions, any pattern of execution can be
+ configured that is logically possible.
 
-Using a Scheduler, a Composition continues to execute `PASS` es until its `TRIAL` `termination Condition <Scheduler_Termination_Conditions>`
-is met, which constitutes a `TRIAL` of executions.  This is associated with a single input to the System.
-Multiple `TRIAL` s (corresponding to a sequences of inputs) can be executed using a Composition's `run <Composition
-.run>` method.
+Using a Scheduler, a Composition continues to execute `PASS` es until its `TRIAL` `termination Condition
+<Scheduler_Termination_Conditions>` is met, which constitutes a `TRIAL` of executions.  This is associated with a
+single input to the System. Multiple `TRIAL` s (corresponding to a sequences of inputs) can be executed using a
+Composition's `run <Composition.run>` method.
 
 .. _Quick_Reference_Logging:
 

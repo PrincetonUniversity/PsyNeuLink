@@ -1,3 +1,6 @@
+import numpy as np
+import psyneulink as pnl
+
 # GLOBALS:
 
 # MECHANISMS:
@@ -351,48 +354,6 @@ class ScratchPadError(Exception):
 #
 #endregion
 
-#region TEST Modulation @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-#
-# My_Transfer_Mech_A = TransferMechanism(
-#                            function=Logistic(
-#                                         gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
-#
-#
-# My_Mech_A = TransferMechanism(function=Logistic)
-# My_Mech_B = TransferMechanism(function=Linear,
-#                              output_states=[RESULT, MEAN])
-#
-# Process_A = Process(pathway=[My_Mech_A])
-# Process_B = Process(pathway=[My_Mech_B])
-# My_System = System(processes=[Process_A, Process_B])
-#
-# My_EVC_Mechanism = EVCControlMechanism(system=My_System,
-#                                 monitor_for_control=[My_Mech_A.output_states[RESULT],
-#                                                      My_Mech_B.output_states[MEAN]],
-#                                 control_signals=[(GAIN, My_Mech_A),
-#                                                  {NAME: INTERCEPT,
-#                                                   MECHANISM: My_Mech_B,
-#                                                   MODULATION:ModulationParam.ADDITIVE}],
-#                                 name='My EVC Mechanism')
-#
-#
-# My_Mech_A = TransferMechanism(function=Logistic)
-# My_Mech_B = TransferMechanism(function=Linear,
-#                              output_states=[RESULT, MEAN])
-# Process_A = Process(pathway=[My_Mech_A])
-# Process_B = Process(pathway=[My_Mech_B])
-#
-# My_System = System(processes=[Process_A, Process_B],
-#                                 monitor_for_control=[My_Mech_A.output_states[RESULT],
-#                                                      My_Mech_B.output_states[MEAN]],
-#                                 control_signals=[(GAIN, My_Mech_A),
-#                                                  {NAME: INTERCEPT,
-#                                                   MECHANISM: My_Mech_B,
-#                                                   MODULATION:ModulationParam.ADDITIVE}],
-#                    name='My Test System')
-
-#endregion
 
 #region TEST Learning @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -637,9 +598,9 @@ class ScratchPadError(Exception):
 # s.run(inputs)
 # #endregion
 
-# #region TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# region TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # print("TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS")
-#
+
 # a = TransferMechanism(name='a', default_variable=[0, 0])
 # b = TransferMechanism(name='b')
 # c = TransferMechanism(name='c')
@@ -670,10 +631,10 @@ class ScratchPadError(Exception):
 # TEST = p1.execute(input=[2,2])
 # # p1.run(inputs)
 # TEST=True
-#
-# #endregion
 
-# #region TEST ControlMechanism and ObjectiveMechanism EXAMPLES @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# endregion
+
+# region TEST ControlMechanism and ObjectiveMechanism EXAMPLES @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # print("TEST ControlMechanism and ObjectiveMechanism EXAMPLES")
 
 # my_transfer_mech_A = TransferMechanism()
@@ -745,38 +706,232 @@ class ScratchPadError(Exception):
 # TEST = True
 # endregion
 
-#region TEST InputState SPECIFICATION
-print ('TEST InputState SPECIFICATION')
+#region TEST Naming
+# print("TEST Naming")
+#
+# T1 = pnl.TransferMechanism()
+# print(T1.name)
+# T2 = pnl.TransferMechanism()
+# print(T2.name)
 
-import numpy as np
-from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.states.outputstate import OutputState
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, RESPONSE_TIME
-from psyneulink.globals.keywords import MECHANISM, OUTPUT_STATES, PROJECTIONS, NAME, INPUT_STATES, VARIABLE
-
-R1 = TransferMechanism(input_states=[OutputState])
+#endregion
 
 
-# InputState specification tests:
+#region TEST MODULATORY SPECS
+# print ("TEST MODULATORY SPECS")
+#
+# # # ADD TO TEST:
+# # import psyneulink as pnl
+# # my_mechanism = pnl.RecurrentTransferMechanism(size=5,
+# #                               # noise=pnl.CONTROL,
+# #                               # noise=pnl.CONTROL_SIGNAL,
+# #                               # noise=pnl.ControlSignal,
+# #                               # noise=pnl.ControlSignal(),
+# #                               # noise=(1, pnl.CONTROL),
+# #                               # noise=(1, pnl.CONTROL_SIGNAL),
+# #                               # noise=(1, pnl.ControlSignal),
+# #                               # noise=(1, pnl.ControlSignal()),
+# #                               # noise=(1, pnl.ControlProjection),
+# #                               noise=(0.3, pnl.ControlProjection()),
+# #                               # noise=(1, pnl.ControlMechanism),  # <- FIX: DOESN'T WORK
+# #                               # noise=(1, pnl.ControlMechanism()),  # <- FIX: DOESN'T WORK
+# #                               function=pnl.Logistic(
+# #                                       # gain=pnl.CONTROL,
+# #                                       # gain=pnl.CONTROL_SIGNAL,
+# #                                       # gain=pnl.ControlSignal,
+# #                                       # gain=pnl.ControlSignal(),
+# #                                       # gain=(0.5, pnl.CONTROL),
+# #                                       # gain=(0.5, pnl.CONTROL_SIGNAL),
+# #                                       # gain=(0.5, pnl.ControlSignal),
+# #                                       # gain=(0.5, pnl.ControlSignal()),
+# #                                       # gain=(0.5, pnl.ControlProjection),
+# #                                       gain=(0.5, pnl.ControlProjection()),
+# #                                       # gain=(0.5, pnl.ControlMechanism),  # <- FIX: DOESN'T WORK
+# #                                       # gain=(0.5, pnl.ControlMechanism()),  # <- FIX: DOESN'T WORK
+# #                                       bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE)))
+# #                                               )
+# # print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.NOISE].mod_afferents)
+# # print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.GAIN].mod_afferents)
+# # # print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.BIAS].mod_afferents)
+#
+# import psyneulink as pnl
+#
+# # control_spec_list = [
+# #     pnl.CONTROL,
+# #     pnl.CONTROL_SIGNAL,
+# #     pnl.ControlSignal,
+# #     pnl.ControlSignal(),
+# #     (0.3, pnl.CONTROL),
+# #     (0.3, pnl.CONTROL_SIGNAL),
+# #     (0.3, pnl.ControlSignal),
+# #     (0.3, pnl.ControlSignal()),
+# #     (0.3, pnl.ControlProjection),
+# #     (0.3, pnl.ControlProjection())
+# # ]
+#
+#
+# # for i, ctl_tuple in enumerate([i for i in zip(control_spec_list, reversed(control_spec_list))]):
+# #     c1, c2 = ctl_tuple
+# #     m = pnl.RecurrentTransferMechanism(noise=c1,
+# #                                        function=pnl.Logistic(gain=c2))
+# #     assert m.parameter_states[pnl.NOISE].mod_afferents[0].name in \
+# #            'ControlProjection for RecurrentTransferMechanism-{}[noise]'.format(i)
+# #     assert m.parameter_states[pnl.GAIN].mod_afferents[0].name in \
+# #            'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)
+#
+# # for c1, c2 in ctl_signals:
+# #     print("-------\n{}\n{}".format(c1, c2))
+# # print("--------------\n--------------")
+#
+# # for c1, c2 in ctl_signals:
+# #     m = pnl.RecurrentTransferMechanism(noise=c1,
+# #                                        function=pnl.Logistic(gain=c2))
+# #     print('-------------\nSIGNAL: {}\nMOD_AFFERENTS: {}\nSIGNAL: {}\nMOD_AFFERENTS: {}'
+# #           .format(c2, m.parameter_states[pnl.NOISE].mod_afferents,
+# #                   c1, m.parameter_states[pnl.GAIN].mod_afferents))
+#
+#
+# gating_spec_list = [
+#     pnl.GATING,
+#     pnl.GATING_SIGNAL,
+#     pnl.GatingSignal,
+#     pnl.GatingSignal(),
+#     (0.3, pnl.GATING),
+#     (0.3, pnl.GATING_SIGNAL),
+#     (0.3, pnl.GatingSignal),
+#     (0.3, pnl.GatingSignal()),
+#     (0.3, pnl.GatingProjection),
+#     (0.3, pnl.GatingProjection())
+# ]
+#
+# T = pnl.TransferMechanism(output_states=[
+#     # pnl.GATING,  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+#     # pnl.GATING_SIGNAL,  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+#     # pnl.GatingSignal,  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+#     pnl.GatingSignal(),  # <- FIX DOESN"T WORK FOR INPUT_STATES BUT DOES FOR OUTPUT_STATES
+#     # (0.3, pnl.GATING),  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+#     # (0.3, pnl.GATING_SIGNAL),  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+#     # (0.3, pnl.GatingSignal),  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+#     # (0.3, pnl.GatingSignal()),
+#     # (0.3, pnl.GatingProjection),  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+#     # (0.3, pnl.GatingProjection())
+# ])
+#
+#
+# # for i, gating_tuple in enumerate([i for i in zip(gating_spec_list, reversed(gating_spec_list))]):
+# #     G1, G2 = gating_tuple
+# #     T = pnl.TransferMechanism(input_states=[G1],
+# #                               output_states=[G2])
+# #     assert T.input_states[0].mod_afferents[0].name in \
+# #            'GatingProjection for TransferMechanism-0[InputState-{}]'.format(i)
+# #
+# #     assert T.output_states[0].mod_afferents[0].name in \
+# #            'GatingProjection for TransferMechanism-0[OutputState-{}]'.format(i)
+#
 
-# NOT YET IMPLEMENTED [10/29/17]:
-# MECHANISM/OUTPUT_STATES specification
-# my_mech_2 = TransferMechanism(input_states=[{MECHANISM: my_mech_1,
-#                                              OUTPUT_STATES: [DECISION_VARIABLE, RESPONSE_TIME]}])
-# assert len(my_mech_2.input_states)==2
-# assert all(name in my_mech_2.input_states.names for name in {DECISION_VARIABLE, RESPONSE_TIME})
-# for input_state in my_mech_2.input_states:
-#     for projection in input_state.path_afferents:
-#         assert projection.sender.owner is my_mech_1
+#endregion
+#region TEST DOCUMENTATION
+print ("TEST DOCUMENTATION")
+
+# # import matlab.engine
+# # eng1 = matlab.engine.start_matlab('-nojvm')
+# my_DDM_NavarroAndFuss = pnl.DDM(function=pnl.NavarroAndFuss(drift_rate=3.0,
+#                                                             starting_point=1.0,
+#                                                             threshold=30.0,
+#                                                             noise=1.5,
+#                                                             t0 = 2.0),
+#                                 name='my_DDM_NavarroAndFuss')
+
+
+import psyneulink as pnl
+
+A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
+B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
+C = pnl.TransferMechanism(function=pnl.Linear(), name='C')
+
+p = pnl.Process(
+    pathway=[A, B, C],
+    name = 'p'
+)
+s = pnl.System(
+    processes=[p],
+    name='s'
+)
+my_scheduler = pnl.Scheduler(system=s)
+
+# implicit condition of Always for A
+my_scheduler.add_condition(B, pnl.scheduling.condition.EveryNCalls(A, 2))
+my_scheduler.add_condition(C, pnl.scheduling.condition.EveryNCalls(B, 3))
+
+# implicit AllHaveRun Termination condition
+execution_sequence = list(my_scheduler.run())
+execution_sequence
+
+A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
+B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
+
+p = pnl.Process(
+    pathway=[A, B],
+    name = 'p'
+)
+s = pnl.System(
+   processes=[p],
+   name='s'
+)
+my_scheduler = pnl.Scheduler(system=s)
+
+my_scheduler.add_condition(A,
+                           pnl.scheduling.condition.Any(pnl.scheduling.condition.AtPass(0),
+                                                        pnl.scheduling.condition.EveryNCalls(B, 2)))
+my_scheduler.add_condition(B,
+                           pnl.scheduling.condition.Any(pnl.scheduling.condition.EveryNCalls(A, 1),
+                           pnl.scheduling.condition.EveryNCalls(B, 1)))
+
+termination_conds = {ts: None for ts in pnl.TimeScale}
+termination_conds[pnl.TimeScale.TRIAL] = pnl.scheduling.condition.AfterNCalls(B,
+                                                                              4,
+                                                                              time_scale=pnl.TimeScale.TRIAL)
+# CRASHING on line 473 of scheduler (self.termination_conds[ts] is None)
+execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
+
+A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
+B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
+C = pnl.TransferMechanism(function=pnl.Linear(), name='C')
+
+p = pnl.Process(
+        pathway=[A, C],
+        name = 'p'
+)
+q = pnl.Process(
+        pathway=[B, C],
+        name = 'q'
+)
+s = pnl.System(
+        processes=[p, q],
+        name='s'
+)
+my_scheduler = pnl.Scheduler(system=s)
+
+my_scheduler.add_condition(A, pnl.scheduling.condition.EveryNPasses(1))
+my_scheduler.add_condition(B, pnl.scheduling.condition.EveryNCalls(A, 2))
+my_scheduler.add_condition(C,
+                           pnl.scheduling.condition.Any(pnl.scheduling.condition.AfterNCalls(A, 3),
+                                                        pnl.scheduling.condition.AfterNCalls(B, 3)))
+
+termination_conds = {ts: None for ts in pnl.TimeScale}
+termination_conds[pnl.TimeScale.TRIAL] = pnl.scheduling.condition.AfterNCalls(C,
+                                                                              4,
+                                                                              time_scale=pnl.TimeScale.TRIAL)
+execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
+
+
+
 
 
 #endregion
 
 #region TEST INPUT FORMATS
-
+# print ("TEST INPUT FORMATS")
 #
 # x = TransferMechanism([0,0,0],
 #              name='x')

@@ -39,8 +39,8 @@ Deferred Initialization
 If information necessary to complete initialization is not specified in the constructor (e.g, the **owner** for a
 `State <State_Base.owner>`, or the **sender** or **receiver** for a `Projection <Projection_Structure>`), then its
 full initialization is deferred until its the information is available (e.g., the `State <State>` is assigned to a
-`Mechanism <Mechanism>`, or a `Projection <Projection>` is assigned its `sender <Projection.sender>` and `receiver
-<Projection.receiver>`).  This allows Components to be created before all of the information they require is
+`Mechanism <Mechanism>`, or a `Projection <Projection>` is assigned its `sender <Projection_Base.sender>` and `receiver
+<Projection_Base.receiver>`).  This allows Components to be created before all of the information they require is
 available (e.g., at the beginning of a script). However, for the Component to be operational, initialization must be
 completed its `deferred_init` method must be called.  This is usually done automatically when the Component is
 assigned to another Component to which it belongs (e.g., assigning a State to a Mechanism) or to a Composition (e.g.,
@@ -159,8 +159,8 @@ Core Informational Attributes
   The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class `UserDict
   <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
   value of an entry can be accessed in the standard manner (e.g., ``my_component.user_params[`PARAMETER NAME`]``);
-  however, to access a full list of entries it's data attribute must be used (e.g., ``my_component.user_params.data``).
-  Also, because it is read-only, it cannot be used to make assignments.  Rather, changes to the value of a parameter
+  as can its full list of entries (e.g., ``my_component.user_params``).  However, because it is read-only,
+  it cannot be used to make assignments.  Rather, changes to the value of a parameter
   must be made by assigning a value to the attribute for that parameter directly (e.g., ``my_component.my_parameter``),
   or using the Component's `assign_params <Component.assign_params>` method.
 
@@ -186,12 +186,12 @@ COMMENT
   value is the value of that parameter.  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
   class `UserList <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
   value of an entry can be accessed in the standard manner (e.g., ``my_component.function_params[`PARAMETER NAME`]``);
-  however, to access a full list of its entries its data attribute must be used (e.g.,
-  ``my_component.function_params.data``).  Also, because it is read-only, it cannot be used to make assignments.
-  Rather, changes to the value of a function's parameters must be made by assigning a value to the corresponding
-  attribute of the Component's `function_object <Component.function_object>` attribute (e.g.,
-  ``my_component.function_object.my_parameter``), or in a FUNCTION_PARAMS dict using its `assign_params` method.  The
-  parameters for a function can be specified when the Component is created in one of the following ways:
+  as can its  full list of its entries (e.g., ``my_component.function_params``).  However, because it is read-only,
+  it cannot be used to make assignments. Rather, changes to the value of a function's parameters must be made by
+  assigning a value to the corresponding attribute of the Component's `function_object <Component.function_object>`
+  attribute (e.g., ``my_component.function_object.my_parameter``), or in a FUNCTION_PARAMS dict using its
+  `assign_params` method.  The parameters for a function can be specified when the Component is created in one of
+  the following ways:
 
       * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>`
         argument, as in the following example::
@@ -346,12 +346,16 @@ from enum import Enum, IntEnum
 import numpy as np
 import typecheck as tc
 
-from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+from psyneulink.globals.registry import register_category
+from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, DEFERRED_DEFAULT_NAME, COMPONENT_INIT, \
+    CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, \
+    INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, \
+    PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, \
+    SIZE, USER_PARAMS, VALUE, VARIABLE, MODULATORY_SPEC_KEYWORDS, kwComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
-from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_to_np_array, \
-    is_same_function_spec, iscompatible, kwCompatibilityLength, is_matrix
+from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
@@ -359,6 +363,8 @@ __all__ = [
 ]
 
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
+
+DeferredInitRegistry = {}
 
 class ResetMode(Enum):
     """
@@ -494,11 +500,12 @@ class ComponentLog(IntEnum):
 
 
 class ComponentError(Exception):
-     def __init__(self, error_value):
-         self.error_value = error_value
+    def __init__(self, error_value):
+        self.error_value = error_value
 
-     def __str__(self):
-         return repr(self.error_value)
+    def __str__(self):
+        return repr(self.error_value)
+
 
 # *****************************************   COMPONENT CLASS  ********************************************************
 
@@ -671,19 +678,51 @@ class Component(object):
     componentType = None
 
     class Defaults(object):
+        def _attributes(obj):
+            return {k: getattr(obj, k) for k in dir(obj) if k[:2]+k[-2:] != '____' and not callable(getattr(obj, k))}
+
         @classmethod
         def values(cls):
-            vardict = {k: getattr(cls, k) for k in dir(cls) if k[:2]+k[-2:] != '____' and not callable(getattr(cls, k))}
-            return vardict
+            '''
+                Returns
+                -------
+                A dictionary consisting of the non-dunder and non-function attributes of **obj**
+            '''
+            return cls._attributes(cls)
+
+        def _show(obj):
+            vals = obj.values()
+            return '(\n\t{0}\n)'.format('\n\t'.join(['{0} = {1},'.format(k, vals[k]) for k in vals]))
+
+        @classmethod
+        def show(cls):
+            '''
+                Returns
+                -------
+                A pretty string version of the non-dunder and non-function attributes of **obj**
+            '''
+            return cls._show(cls)
 
     class ClassDefaults(Defaults):
         exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
-        pass
+        variable = np.array([0])
 
     class InstanceDefaults(Defaults):
         def __init__(self, **kwargs):
             for param in kwargs:
                 setattr(self, param, kwargs[param])
+
+        def values(self):
+            return self._attributes()
+
+        def show(self):
+            return self._show()
+
+        def __repr__(self):
+            return '{0} :\n{1}'.format(super().__repr__(), self.__str__())
+
+        def __str__(self):
+            return self.show()
 
     initMethod = INIT_FULL_EXECUTE_METHOD
 
@@ -696,7 +735,6 @@ class Component(object):
 
     # Determines whether ClassDefaults.variable can be changed (to match an variable in __init__ method)
     variableClassDefault_locked = False
-
 
     # Names and types of params required to be implemented in all subclass paramClassDefaults:
     # Notes:
@@ -752,10 +790,13 @@ class Component(object):
         # self.init_status = InitStatus.INITIALIZING
 
         defaults = self.ClassDefaults.values().copy()
-        defaults.update(param_defaults)
-        del defaults[VARIABLE]
+        if param_defaults is not None:
+            defaults.update(param_defaults)
 
-        self.instance_defaults = self.InstanceDefaults(variable=default_variable, **defaults)
+        if default_variable is not None:
+            defaults[VARIABLE] = default_variable
+
+        self.instance_defaults = self.InstanceDefaults(**defaults)
 
         # These ensure that subclass values are preserved, while allowing them to be referred to below
         self.paramInstanceDefaults = {}
@@ -926,24 +967,18 @@ class Component(object):
                 return int_x
 
             #region Convert variable (if given) to a 2D array, and size (if given) to a 1D integer array
-            try:
-                if variable is not None:
-                    variable = self._update_variable(np.atleast_2d(variable))
-                    # 6/30/17 (CW): Previously, using variable or default_variable to create
-                    # input states of differing lengths (e.g. default_variable = [[1, 2], [1, 2, 3]])
-                    # caused a bug. The if statement below fixes this bug. This solution is ugly, though.
-                    if isinstance(variable[0], list) or isinstance(variable[0], np.ndarray):
-                        allLists = True
-                        for i in range(len(variable[0])):
-                            if isinstance(variable[0][i], (list, np.ndarray)):
-                                variable[0][i] = np.array(variable[0][i])
-                            else:
-                                allLists = False
-                                break
-                        if allLists:
-                            variable = self._update_variable(variable[0])
-            except:
-                raise ComponentError("Failed to convert variable (of type {}) to a 2D array.".format(type(variable)))
+            if variable is not None:
+                variable = np.array(variable)
+                if variable.dtype == object:
+                    # CAVEAT: assuming here that object dtype implies there are list objects (i.e. array with
+                    # different sized arrays/lists inside like [[0, 1], [2, 3, 4]]), even though putting a None
+                    # value in the array will give object dtype. This case doesn't really make sense in our
+                    # context though, so ignoring this case in the interest of quickly fixing 3D variable behavior
+                    variable = np.atleast_1d(variable)
+                else:
+                    variable = np.atleast_2d(variable)
+
+                variable = convert_all_elements_to_np_array(variable)
 
             try:
                 if size is not None:
@@ -967,10 +1002,10 @@ class Component(object):
             # value of variable (though it's an unlikely use case), which is an array of zeros at the moment
             if variable is None and size is not None:
                 try:
-                    variable = self._update_variable([])
+                    variable = []
                     for s in size:
                         variable.append(np.zeros(s))
-                    variable = self._update_variable(np.array(variable))
+                    variable = np.array(variable)
                 except:
                     raise ComponentError("variable (possibly default_variable) was not specified, but PsyNeuLink "
                                          "was unable to infer variable from the size argument, {}. size should be"
@@ -1045,7 +1080,7 @@ class Component(object):
             #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
             #   and will be restored in _instantiate_function
             try:
-                del self.init_args['function']
+                del self.init_args[FUNCTION]
             except KeyError:
                 pass
 
@@ -1062,14 +1097,26 @@ class Component(object):
 
             # If name is None, mark as deferred so that name can be customized
             #    using info that has become available at time of deferred init
-            self.init_args['name'] = (self.init_args['name'] or
-                                      ('deferred_init_' + self.className) or
-                                      DEFERRED_DEFAULT_NAME)
+            self.init_args[NAME] = self.name or (self.init_args[NAME] or
+                                                 (DEFERRED_INITIALIZATION + ' ' + self.className) or
+                                                 DEFERRED_DEFAULT_NAME)
 
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
 
             self.init_status = InitStatus.INITIALIZED
+
+    def _assign_deferred_init_name(self, name, context):
+
+        name = "{} [{}]".format(name,DEFERRED_INITIALIZATION) if name \
+          else "{} {}".format(DEFERRED_INITIALIZATION,self.__class__.__name__)
+
+        # Register with ProjectionRegistry or create one
+        register_category(entry=self,
+                          base_class=Component,
+                          name=name,
+                          registry=DeferredInitRegistry,
+                          context=context)
 
     def _assign_args_to_param_dicts(self, **kwargs):
         """Assign args passed in __init__() to params
@@ -1173,8 +1220,11 @@ class Component(object):
                                              format(arg, self.__class__.__name__))
                     self.paramClassDefaults[arg] = default_arg
 
-            # param corresponding to arg IS already in paramClassDefaults, so ignore
+            # param corresponding to arg IS already in paramClassDefaults
             else:
+                # param has a value but paramClassDefaults is None, so assign param's value to paramClassDefaults
+                if self.paramClassDefaults[arg] is None and arg in defaults_dict and defaults_dict[arg] is not None:
+                    self.paramClassDefaults[arg] = defaults_dict[arg]
                 continue
 
         # ASSIGN ARG VALUES TO params dicts
@@ -1755,16 +1805,29 @@ class Component(object):
 
         # if request_set has been passed or created then validate and, if OK, assign params to target_set
         if request_set:
-            # For params that are a 2-item tuple, extract the value
-            #    both for validation and assignment (tuples are left intact in user_params_for_instantiation dict
-            #    which is used it instantiate the specified Components in the 2nd item of the tuple)
+            # For params that are a 2-item tuple, extract the value; and get value of single item modulatory specs
+            # Do this both for validation and assignment;
+            #   tuples and modulatory specs are left intact in user_params_for_instantiation dict
+            #   which are used to instantiate the specified Components
             # IMPLEMENTATION NOTE:  Do this here rather than in _validate_params, as it needs to be done before
             #                       any override of _validate_params, which (should not, but) may process params
             #                       before calling super()._validate_params
             for param_name, param_value in request_set.items():
+                # # MODIFIED 11/25/17 OLD:
+                # if isinstance(param_value, tuple):
+                #     param_value = self._get_param_value_from_tuple(param_value)
+                #     request_set[param_name] = param_value
+                # MODIFIED 11/25/17 NEW:
                 if isinstance(param_value, tuple):
                     param_value = self._get_param_value_from_tuple(param_value)
-                    request_set[param_name] = param_value
+                elif isinstance(param_value, (str, Component, type)):
+                    old_param_value = request_set[param_name]
+                    param_value = self._get_param_value_for_modulatory_spec(param_name, param_value)
+                else:
+                    continue
+                request_set[param_name] = param_value
+                # MODIFIED 11/25/17 END:
+
             try:
                 self._validate_params(variable=variable,
                                       request_set=request_set,
@@ -1786,7 +1849,6 @@ class Component(object):
         context = context or COMMAND_LINE
 
         self._assign_params(request_set=request_set, context=context)
-
 
     @tc.typecheck
     def _assign_params(self, request_set:tc.optional(dict)=None, context=None):
@@ -2184,25 +2246,49 @@ class Component(object):
                 raise ComponentError("Value of {} param for {} ({}) is not compatible with {}".
                                     format(param_name, self.name, param_value, type_name))
 
+    # MODIFIED 11/25/17 NEW:
+    def _get_param_value_for_modulatory_spec(self, param_name, param_value):
+        from psyneulink.globals.keywords import MODULATORY_SPEC_KEYWORDS
+        if isinstance(param_value, str):
+            param_spec = param_value
+        elif isinstance(param_value, Component):
+            param_spec = param_value.__class__.__name__
+        elif isinstance(param_value, type):
+            param_spec = param_value.__name__
+        else:
+            raise ComponentError("PROGRAM ERROR: got {} instead of string, Component, or Class".format(param_value))
+
+        if not param_spec in MODULATORY_SPEC_KEYWORDS:
+            return(param_value)
+
+        try:
+            param_default_value = self.paramClassDefaults[param_name]
+            # Only assign default value if it is not None
+            if param_default_value is not None:
+                return param_default_value
+            else:
+                return param_value
+        except:
+            raise ComponentError("PROGRAM ERROR: Could not get default value for {} of {} (to replace spec as {})".
+                                 format(param_name, self.name, param_value))
+
+    # MODIFIED 11/25/17 END:
+
     def _get_param_value_from_tuple(self, param_spec):
-        """Returns param value (first item) of a (value, projection) tuple
+        """Returns param value (first item) of a (value, projection) tuple;
         """
+        from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-        ALLOWABLE_TUPLE_SPEC_KEYWORDS = {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING}
-        ALLOWABLE_TUPLE_SPEC_CLASSES = (ModulatoryProjection_Base, ModulatorySignal)
+
+        ALLOWABLE_TUPLE_SPEC_KEYWORDS = MODULATORY_SPEC_KEYWORDS
+        ALLOWABLE_TUPLE_SPEC_CLASSES = (ModulatoryProjection_Base, ModulatorySignal, AdaptiveMechanism_Base)
 
         # If the 2nd item is a CONTROL or LEARNING SPEC, return the first item as the value
         if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
-                # # MODIFIED 6/19/17 OLD:
-                # (param_spec[1] in {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING} or
-                #      isinstance(param_spec[1], Projection) or
-                #      (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
-                # MODIFIED 6/19/17 NEW:
                 (param_spec[1] in ALLOWABLE_TUPLE_SPEC_KEYWORDS or
                      isinstance(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES) or
                          (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES)))
-                # MODIFIED 6/19/17 END
             ):
             value =  param_spec[0]
 
@@ -2595,7 +2681,10 @@ class Component(object):
 
     @property
     def name(self):
-        return self._name
+        try:
+            return self._name
+        except AttributeError:
+            return 'unnamed {0}'.format(self.__class__)
 
     @name.setter
     def name(self, value):

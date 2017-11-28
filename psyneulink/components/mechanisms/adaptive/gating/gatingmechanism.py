@@ -173,12 +173,23 @@ from psyneulink.globals.keywords import \
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.globals.utilities import ContentAddressableList
 
 __all__ = [
     'GatingMechanism', 'GatingMechanismError', 'GatingMechanismRegistry'
 ]
 
 GatingMechanismRegistry = {}
+
+
+def _is_gating_spec(spec):
+    from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
+    if isinstance(spec, tuple):
+        return _is_gating_spec(spec[1])
+    elif isinstance(spec, (GatingMechanism, GatingSignal, GatingProjection)):
+        return True
+    else:
+        return False
 
 
 class GatingMechanismError(Exception):
@@ -230,6 +241,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
     size : int, list or 1d np.array of ints
         specifies default_gating_policy as an array of zeros if **default_gating_policy** is not passed as an
         argument;  if **default_gating_policy** is specified, it takes precedence over the specification of **size**.
+        As an example, the following mechanisms are equivalent::
+            T1 = TransferMechanism(size = [3, 2])
+            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies the function used to transform the GatingMechanism's `variable <GatingMechanism.variable>`
@@ -245,21 +259,17 @@ class GatingMechanism(AdaptiveMechanism_Base):
         specifies the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
         unless they are `individually specified <GatingSignal_Specification>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
         for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name : str : default GatingMechanism-<index>
-        a string used for the name of the Mechanism.
-        If not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <GatingMechanism.name>`
+        specifies the name of the GatingMechanism.
 
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for the Mechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the GatingMechanism; see `prefs <GatingMechanism.prefs>` for details.
 
 
     Attributes
@@ -276,7 +286,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         to a `gating_policy`;  the default is an identity function that simply assigns
         `variable <GatingMechanism.variable>` as the `gating_policy <GatingMechanism.gating_policy>`.
 
-    gating_signals : List[GatingSignal]
+    gating_signals : ContentAddressableList[GatingSignal]
         list of `GatingSignals <GatingSignals>` for the GatingMechanism, each of which sends
         `GatingProjection(s) <GatingProjection>` to the `InputState(s) <InputState>` and/or `OutputStates <OutputState>`
         that it gates; same as GatingMechanism `output_states <Mechanism_Base.output_states>` attribute.
@@ -305,6 +315,14 @@ class GatingMechanism(AdaptiveMechanism_Base):
         the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
         unless they are `individually specified <GatingSignal_Specification>`.
 
+    name : str
+        the name of the GatingMechanism; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the GatingMechanism; if it is not specified in the **prefs** argument of the 
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        <LINK>` for details).
     """
 
     componentType = "GatingMechanism"
@@ -312,6 +330,10 @@ class GatingMechanism(AdaptiveMechanism_Base):
     initMethod = INIT__EXECUTE__METHOD_ONLY
 
     output_state_type = GatingSignal
+
+    state_list_attr = Mechanism_Base.state_list_attr.copy()
+    state_list_attr.update({GatingSignal:GATING_SIGNALS})
+
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -366,11 +388,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                                       context=context)
 
         if GATING_SIGNALS in target_set and target_set[GATING_SIGNALS]:
-
             if not isinstance(target_set[GATING_SIGNALS], list):
-                raise GatingMechanismError("{} arg of {} must be list".
-                                           format(GATING_SIGNAL, self.name))
-
+                target_set[g] = [target_set[GATING_SIGNALS]]
             for gating_signal in target_set[GATING_SIGNALS]:
                 _parse_state_spec(state_type=GatingSignal, owner=self, state_spec=gating_signal)
 
@@ -388,13 +407,16 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
             self._output_states = []
 
-            for i, gating_signal in enumerate(self.gating_signals):
-                self._instantiate_gating_signal(gating_signal, index=i, context=context)
+            for gating_signal in self.gating_signals:
+                self._instantiate_gating_signal(gating_signal, context=context)
 
         super()._instantiate_output_states(context=context)
 
-        # Reassign gating_signals to capture any user_defined GatingSignals (OutputStates) instantiated in call to super
-        self._gating_signals = [state for state in self.output_states if isinstance(state, GatingSignal)]
+        # Reassign gating_signals to capture any user_defined GatingSignals instantiated in call to super
+        #    and assign to ContentAddressableList
+        self._gating_signals = ContentAddressableList(component_type=GatingSignal,
+                                                      list=[state for state in self.output_states
+                                                            if isinstance(state, GatingSignal)])
 
         # If the GatingMechanism's policy has more than one item,
         #    warn if the number of items does not equal the number of its GatingSignals
@@ -406,10 +428,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                  format(GatingSignal.__name__, self.name, len(self.gating_signals),
                                         GATING_POLICY, len(self.gating_policy)))
 
-    def _instantiate_gating_signal(self, gating_signal, index:int=0, context=None):
+    def _instantiate_gating_signal(self, gating_signal, context=None):
         """Instantiate GatingSignal OutputState and assign (if specified) or instantiate GatingProjection
-
-        # Extends gating_policy and to accommodate instantiated projection
 
         Notes:
         * gating_signal arg can be a:
@@ -448,12 +468,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                             modulation=self.modulation,
                                             state_spec=gating_signal)
 
-        # Add GatingProjection to GatingMechanism's list of GatingProjections
-        try:
-            self.gating_projections.extend(gating_signal.efferents)
-        except AttributeError:
-            self.gating_projections = gating_signal.efferents.copy()
-
         # Validate index
         try:
             self.gating_policy[gating_signal.index]
@@ -465,6 +479,12 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # Add GatingSignal TO output_states LIST
         self._output_states.append(gating_signal)
+
+        # Add GatingProjection(s) to GatingMechanism's list of GatingProjections
+        try:
+            self.gating_projections.extend(gating_signal.efferents)
+        except AttributeError:
+            self.gating_projections = gating_signal.efferents.copy()
 
         return gating_signal
 

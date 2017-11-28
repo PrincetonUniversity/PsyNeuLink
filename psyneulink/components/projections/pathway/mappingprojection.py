@@ -46,7 +46,7 @@ MappingProjections are also generated automatically in the following circumstanc
   * by a `LearningMechanism`, between it and the other components required to implement learning
     (see `LearningMechanism_Learning_Configurations` for details);
   ..
-  * by a `ControlMechanism <ControlMechanism>`, from the *OUTCOME* `OutputState of the `ObjectiveMechanism` that `it
+  * by a `ControlMechanism <ControlMechanism>`, from the *OUTCOME* `OutputState` of the `ObjectiveMechanism` that `it
     creates <ControlMechanism_ObjectiveMechanism>` to its *ERROR_SIGNAL* `InputState`, and from the `OutputStates
     <OutputState>` listed in the ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
     attribute to the ObjectiveMechanism's `primary InputState <InputState_Primary>` (as described above; an
@@ -145,7 +145,7 @@ allows a MappingProjection to be created before its `sender <MappingProjection.s
 specifying its **sender** or **receiver** arguments. However, for the MappingProjection to be operational,
 initialization must be completed by calling its `deferred_init` method.  This is not necessary if the MappingProjection
 is specified in the `pathway <Process.pathway>` of `Process`, or anywhere else that its `sender
-<MappingProjection.sender>` and receiver <MappingProjection.receiver>` can be determined by context.
+<MappingProjection.sender>` and `receiver <MappingProjection.receiver>` can be determined by context.
 
 .. _Mapping_Structure:
 
@@ -161,6 +161,19 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
   <MappingProjection.function>` to carry out a matrix transformation of its input, that is then provided to its
   `receiver <MappingProjection.receiver>`. It can be specified in a variety of ways, as described `above
   <Mapping_Matrix_Specification>`.
+
+  .. _Mapping_Matrix_Dimensionality
+
+  * **Matrix Dimensionality** -- this must match the dimensionality of the MappingProjection's `sender
+    <MappingProjection.sender>` and `receiver <MappingProjection.reciever>.`  For a standard 2d "weight" matrix (i.e.,
+    one that maps a 1d array from its `sender <MappingProjection.sender>` to a 1d array of its `receiver
+    <MappingProjection.receiver>`), the dimensionality of the sender is the number of rows and of the receiver
+    the number of columns.  More generally, the sender dimensionality is the number of outer dimensions (i.e.,
+    starting with axis 0 of numpy array) equal to the number of dimensions of its `sender <MappingProjection.sender>`'s
+    `value <State_Base.value>`, and the receiver dimensionality is the number of inner dimensions equal to its
+    `receiver <MappingProjection.receiver>`'s `variable <MappingProjection.variable>` (equal to the dimensionality of
+    the matrix minus its sender dimensionality).
+
 
 .. _Mapping_Matrix_ParameterState:
 
@@ -251,7 +264,8 @@ from psyneulink.components.functions.function import AccumulatorIntegrator, Line
 from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, SYSTEM_INPUT_STATE
+from psyneulink.globals.keywords import VALUE, AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, \
+    FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, SYSTEM_INPUT_STATE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock
@@ -271,14 +285,14 @@ class MappingError(Exception):
 
 class MappingProjection(PathwayProjection_Base):
     """
-    MappingProjection(                                      \
-        sender=None,                                        \
-        receiver=None,                                      \
-        matrix=DEFAULT_MATRIX,                              \
+    MappingProjection(             \
+        sender=None,               \
+        receiver=None,             \
+        matrix=DEFAULT_MATRIX,     \
         weight=None,               \
         exponent=None,             \
-        params=None,                                        \
-        name=None,                                          \
+        params=None,               \
+        name=None,                 \
         prefs=None)
 
     Implements a Projection that transmits the output of one Mechanism to the input of another.
@@ -348,21 +362,17 @@ class MappingProjection(PathwayProjection_Base):
         value of the `sender <MappingProjection.sender>` into a form suitable for the `variable <InputState.variable>`
         of its `receiver <MappingProjection.receiver>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default MappingProjection-<index>
-        a string used for the name of the MappingProjection.
-        If not is specified, a default is assigned by `ProjectionRegistry`
-        (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see MappingProjection `name <MappingProjection.name>`
+        specifies the name of the MappingProjection.
 
-    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
-        the `PreferenceSet` for the MappingProjection.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see `PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default State.classPreferences
+        specifies the `PreferenceSet` for the MappingProjection; see `prefs <MappingProjection.prefs>` for details.
 
     Attributes
     ----------
@@ -403,17 +413,24 @@ class MappingProjection(PathwayProjection_Base):
         `InputState` to determine that InputState's `variable <InputState.variable>` (see `description above
         <Mapping_Weight_Exponent>` for details).
 
-    name : str : default MappingProjection-<index>
-        the name of the MappingProjection.
-        Specified in the **name** argument of the constructor for the Projection;
-        if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the MappingProjection. If the specified name is the name of an existing MappingProjection,
+        it is appended with an indexed suffix, incremented for each MappingProjection with the same base name (see
+        `Naming`). If the name is not specified in the **name** argument of its constructor, a default name is
+        assigned using the following format:
+        'MappingProjection from <sender Mechanism>[<OutputState>] to <receiver Mechanism>[InputState]'
+        (for example, ``'MappingProjection from my_mech_1[OutputState-0] to my_mech2[InputState-0]'``).
+        If either the `sender <MappingProjection.sender>` or `receiver <MappingProjection.receiver>` has not yet been
+        assigned (the MappingProjection is in `deferred initialization <MappingProjection_Deferred_Initialization>`),
+        then the parenthesized name of class is used in place of the unassigned attribute
+        (for example, if the `sender <MappingProjection.sender>` has not yet been specified:
+        ``'MappingProjection from (OutputState-0) to my_mech2[InputState-0]'``).
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for Projection.
-        Specified in the **prefs** argument of the constructor for the Projection;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the MappingProjection; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 
@@ -470,21 +487,14 @@ class MappingProjection(PathwayProjection_Base):
             self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
-        super(MappingProjection, self).__init__(sender=sender,
-                                                receiver=receiver,
-                                                weight=weight,
-                                                exponent=exponent,
-                                                params=params,
-                                                name=name,
-                                                prefs=prefs,
-                                                context=self)
-
-    # def _instantiate_sender(self, context=None):
-            # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
-            # #            - kwMATRIX NEEDS TO BE A 3D np.array, EACH 3D ITEM OF WHICH IS A 2D WEIGHT MATRIX
-            # #            - MAKE SURE len(self.sender.value) == len(self.receiver.input_states.items())
-            # # for i in range (len(self.sender.value)):
-            # #            - CHECK EACH MATRIX AND ASSIGN??
+        super().__init__(sender=sender,
+                         receiver=receiver,
+                         weight=weight,
+                         exponent=exponent,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=self)
 
     def _instantiate_parameter_states(self, context=None):
 
@@ -550,15 +560,22 @@ class MappingProjection(PathwayProjection_Base):
             else:
                 projection_string = 'projection'
 
+            if all(string in self.name for string in {'from', 'to'}):
+                states_string = ''
+            else:
+                states_string = "from \'{}\' OuputState of \'{}\' to \'{}\'".format(self.sender.name,
+                                                                                    self.sender.owner.name,
+                                                                                    self.receiver.owner.name)
             if not isinstance(self._matrix_spec, str):
-                raise ProjectionError("Width ({}) of \'{}{}\' from \'{}\' OuputState of \'{}\' to \'{}\'"
-                                      " does not match the length of its \'{}\' InputState ({})".
+                # if all(string in self.name for string in {'from', 'to'}):
+
+                raise ProjectionError("Width ({}) of the {} of \'{}{}\'{} "
+                                      "does not match the length of its \'{}\' InputState ({})".
                                       format(mapping_output_len,
+                                             VALUE,
                                              self.name,
                                              projection_string,
-                                             self.sender.name,
-                                             self.sender.owner.name,
-                                             self.receiver.owner.name,
+                                             states_string,
                                              self.receiver.name,
                                              receiver_len))
 

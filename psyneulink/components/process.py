@@ -149,7 +149,7 @@ specified in any of the following ways:
   * **Inline specification** -- a MappingProjection specification can be interposed between any two Mechanisms in the
     `pathway <Process.pathway>` list. This creates a Projection from the preceding Mechanism in the list to the
     one that follows it.  It can be specified using any of the ways used to `specify a Projection
-    <Projection_In_Context_Specification>` or the `matrix parameter <Mapping_Matrix_Specification>` of one.
+    <Projection_Specification>` or the `matrix parameter <Mapping_Matrix_Specification>` of one.
   ..
 
   .. _Process_Tuple_Specification:
@@ -782,16 +782,14 @@ class Process(Process_Base):
     timeScale : TimeScale : default TimeScale.TRIAL
         determines the default `TimeScale` value used by Mechanisms in the pathway.
 
-    name : str : default Process-<index>
-        the name of the Process.
-        Specified in the **name** argument of the constructor for the Process;
-        if not is specified, a default is assigned by ProcessRegistry
-        (see :ref:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the Process; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by ProcessRegistry (see `Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Process.classPreferences
-        the `PreferenceSet` for the Process.
-        Specified in the **prefs** argument of the constructor for the Process;  if it is not specified, a default is
-        assigned using `classPreferences` defined in __init__.py (see :ref:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the Process; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
 
     """
@@ -1758,6 +1756,9 @@ class Process(Process_Base):
         Returns:
 
         """
+
+        if isinstance(input, dict):
+            input = list(input.values())[0]
         # Validate input
         if input is None:
             input = self.first_mechanism.instance_defaults.variable
@@ -1781,7 +1782,7 @@ class Process(Process_Base):
                                format(len(input), self.name, len(self.process_input_states)))
 
         # Assign items in input to value of each process_input_state
-        for i in range (len(self.process_input_states)):
+        for i in range(len(self.process_input_states)):
             self.process_input_states[i].value = input[i]
 
         return input
@@ -2334,7 +2335,7 @@ class Process(Process_Base):
             each `TRIAL`;  if it is `False`, then `initialize <Process.initialize>` is called only *once*,
             before the first `TRIAL` executed.
 
-        initial_values : Optional[Dict[ProcessingMechanism, List[input] or np.ndarray(input)]] : default None
+        initial_values : ProcessingMechanism, List[input] or np.ndarray(input)] : default None
             specifies the values used to initialize `ProcessingMechanisms <ProcessingMechanism>` designated as
             `INITIALIZE_CYCLE` whenever the Process' `initialize <Process.initialize>` method is called. The key
             for each entry must be a ProcessingMechanism `designated <Process_Mechanism_Initialize_Cycle>`
@@ -2343,7 +2344,7 @@ class Process(Process_Base):
             `INITIALIZE_CYCLE` but not specified in **initial_values** are initialized with the value of their
             `variable <Mechanism_Base.variable>` attribute (the default input for that Mechanism).
 
-        targets : Optional[List[input] or np.ndarray(input)] : default None
+        targets : List[input] or np.ndarray(input) : default None
             specifies the target value assigned to each of the `target_mechanisms <Process.target_mechanisms>` in
             each `TRIAL` of execution.  Each item of the outermost level (if a nested list) or axis 0 (if an ndarray)
             corresponds to a single `TRIAL`;  the number of items must equal the number of items in the **inputs**
@@ -2552,7 +2553,7 @@ class ProcessInputState(OutputState):
 
     COMMENT:
     .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
-       in Projection._instantiate_sender()
+       in Projection_Base._instantiate_sender()
 
        self.value is used to represent the corresponding item of the input arg to process.execute or process.run
     COMMENT
@@ -2575,7 +2576,7 @@ class ProcessInputState(OutputState):
         # self.owner.input = self.value
         # MODIFIED 2/17/17 END
         # self.path_afferents = []
-        # self.index = PRIMARY_OUTPUT_STATE
+        # self.index = PRIMARY
         # self.calculate = Linear
 
     # MODIFIED 2/1717 NEW:

@@ -27,7 +27,8 @@ An IntegratorMechanism can be created directly by calling its constructor, or us
 specifying *INTEGRATOR_MECHANISM* as its **mech_spec** argument.  Its function is specified in the **function**
 argument, which can be parametrized by calling its constructor with parameter values::
 
-    my_time_averaging_mechanism = IntegratorMechanism(function=AdaptiveIntegrator(rate=0.5))
+    >>> import psyneulink as pnl
+    >>> my_time_averaging_mechanism = pnl.IntegratorMechanism(function=pnl.AdaptiveIntegrator(rate=0.5))
 
 The **default_variable** argument specifies the format of its input (i.e., whether it is a single scalar or an
 array), as well as the value to use if none is provided when Mechanism is executed.  Alternatively, the **size**
@@ -135,43 +136,39 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     size : int, list or np.ndarray of ints
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
         if **default_variable** is specified, it takes precedence over the specification of **size**.
+        As an example, the following mechanisms are equivalent::
+            T1 = TransferMechanism(size = [3, 2])
+            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     function : IntegratorFunction : default Integrator
         specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
         of values, and return one of the same form.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, parameters for its `function <IntegratorMechanism.function>`, and/or a custom function and its
         parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
-    name : str : default IntegratorMechanism-<index>
-        a string used for the name of the Mechanism.
-        If not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <IntegratorMechanism.name>`
+        specifies the name of the IntegratorMechanism.
 
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for Mechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the IntegratorMechanism; see `prefs <IntegratorMechanism.prefs>` for details.
 
     Attributes
     ----------
     variable : value: default
         the input to Mechanism's ``function``.
 
-    name : str : default IntegratorMechanism-<index>
-        the name of the Mechanism.
-        Specified in the **name** argument of the constructor for the Mechanism;
-        if not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the IntegratorMechanism; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for Mechanism.
-        Specified in the **prefs** argument of the constructor for the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the IntegratorMechanism; if it is not specified in the **prefs** argument of the 
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        <LINK>` for details).
 
     """
 

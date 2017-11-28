@@ -25,16 +25,16 @@ Overview
 --------
 
 Projections allow information to be passed between `Mechanisms <Mechanism>`.  A Projection takes its input from
-its `sender <Projection.sender>` and transmits that information to its `receiver <Projection.receiver>`.  The
-`sender <Projection.sender>` and `receiver <Projection.receiver>` of a Projection are always `States <State>`:
-the`sender <Projection.sender>` is always the `OutputState` of a `Mechanism <Mechanism>`; the `receiver
-<Projection.receiver>` depends upon the type of Projection.  There are two broad categories of Projections,
+its `sender <Projection_Base.sender>` and transmits that information to its `receiver <Projection_Base.receiver>`.  The
+`sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` of a Projection are always `States <State>`:
+the `sender <Projection_Base.sender>` is always the `OutputState` of a `Mechanism <Mechanism>`; the `receiver
+<Projection_Base.receiver>` depends upon the type of Projection.  There are two broad categories of Projections,
 each of which has subtypes that differ in the type of information they transmit, how they do this, and the type of
-`State <State>` to which they project (i.e., of their `receiver <Projection.receiver>`):
+`State <State>` to which they project (i.e., of their `receiver <Projection_Base.receiver>`):
 
 * `PathwayProjection <PathwayProjection>`
     Used in conjunction with `ProcessingMechanisms <ProcessingMechanism>` to convey information along a processing
-    `pathway <Process.pathway`>.  There is currently one on type of PathwayProjection:
+    `pathway <Process.pathway>`.  There is currently one on type of PathwayProjection:
 
   * `MappingProjection`
       takes the `value <OutputState.value>` of an `OutputState` of a `ProcessingMechanism <ProcessingMechanism>`
@@ -46,7 +46,7 @@ each of which has subtypes that differ in the type of information they transmit,
 
 * `ModulatoryProjection <ModulatoryProjection>`
     takes the `value <OutputState.value>` of a `ModulatorySignal <ModulatorySignal>` of an `AdaptiveMechanism
-    <ProcessingMechanism>`, uses it to regulate modify the `value <State_Base.value>` of an `InputState,
+    <ProcessingMechanism>`, uses it to regulate modify the `value <State_Base.value>` of an `InputState`,
     `ParameterState` or `OutputState` of another Component.  ModulatorySignals are specialized types of `OutputState`,
     that are used to specify how to modify the `value <State_Base.value>` of the `State <State>` to which a
     ModulatoryProjection projects. There are three types of ModulatoryProjections, corresponding to the three types
@@ -76,14 +76,14 @@ Creating a Projection
 ---------------------
 
 A Projection can be created on its own, by calling the constructor for the desired type of Projection.  More
-commonly, however, Projections are either specified `in context <Projection_In_Context_Specification>`, or
-are `created automatically <Projection_Automatic_Creation>`, as described below.
+commonly, however, Projections are either specified `in context <Projection_Specification>`, or are `created
+automatically <Projection_Automatic_Creation>`, as described below.
 
 
-.. _Projection_In_Context_Specification:
+.. _Projection_Specification:
 
-In Context Specification
-~~~~~~~~~~~~~~~~~~~~~~~~
+Specifying a Projection
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Projections can be specified in a number of places where they are required or permitted, for example in the
 specification of a `pathway <Process.pathway>` for a `Process`, where the value of a parameter is specified
@@ -91,18 +91,22 @@ specification of a `pathway <Process.pathway>` for a `Process`, where the value 
 `LearningProjection <MappingProjection_Tuple_Specification>`).  Any of the following can be used to specify a
 Projection in context:
 
-  * **Constructor**.  Used the same way in context as it is ordinarily.
+  * **Constructor** -- used the same way in context as it is ordinarily.
   ..
-  * **Projection reference**.  This must be a reference to a Projection that has already been created.
+  * **Projection object** -- must be a reference to a Projection that has already been created.
   ..
-  * **Keyword**.  This creates a default instance of the specified type, and can be any of the following:
+  * **Projection subclass** -- creates a default instance of the specified Projection type.  The assignment or creation
+    of the Projection's `sender <Projection_Base.sender>` is handled in the same manner as described below for keyword
+    specifications.
+  ..
+  * **Keyword** -- creates a default instance of the specified type, which can be any of the following:
 
       * *MAPPING_PROJECTION* -- if the `sender <MappingProjection.sender>` and/or its `receiver
         <MappingProjection.receiver>` cannot be inferred from the context in which this specification occurs, then its
         `initialization is deferred <MappingProjection_Deferred_Initialization>` until both of those have been
         determined (e.g., it is used in the specification of a `pathway <Process.pathway>` for a `Process`). For
         MappingProjections, a `matrix specification <Mapping_Matrix_Specification>` can also be used to specify the
-        projection.
+        projection (see **value** below).
       |
       * *LEARNING_PROJECTION*  (or *LEARNING*) -- this can only be used in the specification of a `MappingProjection`
         (see `tuple <Mapping_Matrix_Specification>` format).  If the `receiver <MappingProjection.receiver>` of the
@@ -112,7 +116,7 @@ Projection in context:
         <LearningMechanism_Creation>`, along with a LearningSignal that is assigned as the LearningProjection's `sender
         <LearningProjection.sender>`. See `LearningMechanism_Learning_Configurations` for additional details.
       |
-      * *CONTROL_PROJECTION* (or *CONTROL*)-- this can be used when specifying a parameter using the `tuple format
+      * *CONTROL_PROJECTION* (or *CONTROL*) -- this can be used when specifying a parameter using the `tuple format
         <ParameterState_Tuple_Specification>`, to create a default `ControlProjection` to the `ParameterState` for that
         parameter.  If the `Component <Component>` to which the parameter belongs is part of a `System`, then a
         `ControlSignal` is added to the System's `controller <System.controller>` and assigned as the
@@ -122,17 +126,30 @@ Projection in context:
         as its the ControlProjection's `sender <ControlProjection.sender>`.  See `ControlMechanism_Control_Signals` for
         additional details.
       |
-      * *GATING_PROJECTION* (or *GATING*)-- this can be used when specifying an `InputState <InputState_Projections>`
-        or an `OutputState <OutputState_Projections>`, to create a default `GatingProjection` to the `State <State>`.
-        If the GatingProjection's `sender <GatingProjection.sender>` cannot be inferred from the context in which this
-        specification occurs, then its `initialization is deferred <GatingProjection_Deferred_Initialization>` until
-        it can be determined (e.g., a `GatingMechanism` or `GatingSignal` is created to which it is assigned).
+      * *GATING_PROJECTION* (or *GATING*) -- this can be used when specifying an `InputState
+        <InputState_Projection_Source_Specification>` or an `OutputState <OutputState_Projections>`, to create a
+        default `GatingProjection` to the `State <State>`. If the GatingProjection's `sender <GatingProjection.sender>`
+        cannot be inferred from the context in which this specification occurs, then its `initialization is deferred
+        <GatingProjection_Deferred_Initialization>` until it can be determined (e.g., a `GatingMechanism` or
+        `GatingSignal` is created to which it is assigned).
   ..
-  * **Projection type**.  This creates a default instance of the specified Projection subclass.  The assignment or
-    creation of the Projection's `sender <Projection.sender>` is handled in the same manner as described above for the
-    keyword specifications.
+  * **value** -- creates a Projection of a type determined by the context of the specification, and using the
+    specified value as the `value <Projection_Base.value>` of the Projection, which must be compatible with the
+    `variable <State_Base.variable>` attribute of its `receiver <Projection_Base.receiver>`.  If the Projection is a
+    `MappingProjection`, the value is interpreted as a `matrix specification <Mapping_Matrix_Specification>` and
+    assigned as the `matrix <MappingProjection.matrix>` parameter of the Projection;  it must be compatible with the
+    `value <State_Base.value>` attribute of its `sender <MappingProjection.sender>` and `variable <State_Base.variable>`
+    attribute of its `receiver <MappingProjection.receiver>`.
   ..
-  * **Specification dictionary**.  This can contain an entry specifying the type of Projection, and/or entries
+  * **Mechanism** -- creates a `MappingProjection` to either the `primary InputState <InputState_Primary>` or
+    `primary OutputState <OutputState_Primary>`, depending on the type of Mechanism and context of the specification.
+  ..
+  * **State** -- creates a `Projection` to or from the specified `State`, depending on the type of State and the
+    context of the specification.
+
+  .. _Projection_Specification_Dictionary:
+
+  * **Specification dictionary** -- can contain an entry specifying the type of Projection, and/or entries
     specifying the value of parameters used to instantiate it. These should take the following form:
 
       * *PROJECTION_TYPE*: *<name of a Projection type>* --
@@ -161,6 +178,40 @@ Projection in context:
         method for a Mechanism directly, or where it is specified in the `pathway` of a Process.
       COMMENT
 
+  .. _Projection_ProjectionTuple:
+
+  * **ProjectionTuple** -- a 4-item tuple used in the context of a `State specification <State_Specification>` to
+    create a Projection between it and another `State <State>`. It must have at least the first three of the following
+    items in order, and can include the fourth optional item:
+
+     * **State specification** -- specifies the `State <State_Specification>` to connect with (**not** the one being
+       connected; that is determined from context)
+
+     * **weight** -- must be a value specifying the `weight <Projection_Base.weight>` of the Projection;  it can be
+       `None`, in which case it is ignored, but there must be a specification present;
+
+     * **exponent** -- must be a value specifying the `exponent <Projection_Base.exponent>` of the Projection;  it
+     can be `None`, in which case it is ignored, but there must be a specification present;
+
+     * **Projection specification** -- this is optional but, if included, msut be a `Projection specification
+       <Projection_Specification>`;  it can take any of the forms of a Projection specification described above for
+       any Projection subclass; it can be used to provide additional specifications for the Projection, such as its
+       `matrix <MappingProjection.matrix>` if it is a `MappingProjection`.
+
+    .. note::
+       A ProjectionTuple should not be confused with a `4-item InputState specification tuple <
+       InputState_Tuple_Specification>`, which also contains weight and exponent items.  In a ProjectionTuple, those
+       items specify the weight and/or exponent assigned to the *Projection* (see `Projection_Weight_Exponent`),
+       whereas in an InputState specification tuple they specify the weight and/or exponent of the **InputState**
+       (see `InputState_Weights_And_Exponents`).
+
+    Any (but not all) of the items can be `None`.  If the State specification is `None`, then there must be a
+    Projection specification (used to infer the State to be connected with).  If the Projection specification is
+    `None` or absent, the State specification cannot be `None` (as it is then used to infer the type of Projection).
+    If weight and/or exponent is `None`, it is ignored.  If both the State and Projection are specified, they must
+    be compatible  (see `examples <State_Projections_Examples>` in State).
+
+
 .. _Projection_Automatic_Creation:
 
 Automatic creation
@@ -178,14 +229,15 @@ Deferred Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 When a Projection is created, its full initialization is `deferred <Component_Deferred_Init>` until its `sender
-<ControlProjection.sender>` and `receiver <ControlProjection.receiver>` have been fully specified.  This allows
-a Projection to be created before its `sender` and/or `receiver` have been created (e.g., before them in a script),
-by calling its constructor without specifying its **sender** or **receiver** arguments. However, for the Projection
-to be operational, initialization must be completed by calling its `_deferred_init` method.  Under most conditions
-this occurs automatically (e.g., when the projection is assigned to a type of Component that expects to be the
-`sender <Projection.sender>` or `receiver <Projection.receiver>` for that type of Projection); these conditions are
-described in the section on *Deferred Initialization* for each type of Projection.  Otherwise, the Projection's
-`_deferred_init` method must be called explicitly, once the missing attribute assignments have been made.
+<Projection_Base.sender>` and `receiver <Projection_Base.receiver>` have been fully specified.  This allows a
+Projection to be created before its `sender <Projection_Base.sender>` and/or `receiver <Projection_Base.receiver>` have
+been created (e.g., before them in a script), by calling its constructor without specifying its **sender** or
+**receiver** arguments. However, for the Projection to be operational, initialization must be completed by calling
+its `_deferred_init` method.  Under most conditions this occurs automatically (e.g., when the projection is assigned
+to a type of Component that expects to be the `sender <Projection_Base.sender>` or `receiver <Projection_Base.receiver>`
+for that type of Projection); these conditions are described in the section on *Deferred Initialization* for each type
+of Projection.  Otherwise, the  Projection's `_deferred_init` method must be called explicitly, once the missing
+attribute assignments have been made.
 
 
 .. _Projection_Structure:
@@ -193,31 +245,34 @@ described in the section on *Deferred Initialization* for each type of Projectio
 Structure
 ---------
 
-In addition to its `function <Projection.function>`, a Projection has two primary attributes: a `sender
-<Projection.sender>` and `receiver <Projection.receiver>`.  The types of `State(s) <State>` that can be
+In addition to its `function <Projection_Base.function>`, a Projection has two primary attributes: a `sender
+<Projection_Base.sender>` and `receiver <Projection_Base.receiver>`.  The types of `State(s) <State>` that can be
 assigned to these, and the attributes of those States to which Projections of each type are assigned, are
-summarized in the following table, and described in greater detail in the subsections below.
+summarized in the following table, and described in greater detail in the subsections below.  In addition to the
+State attributes to which different types of Projections are assigned (shown in the table), all of the Projections
+of a State are listed in its `projections <State_Base.projections>` attribute.
 
 .. _Projection_Table:
 
-+-----------------------------------------------------------------------------------------------------------------+
-|            Sender, receiver and attribute assignments for different types of Projections                        |
-+----------------------+---------------------------------------+--------------------------------------------------+
-|     Projection       |   sender                              |  receiver                                        |
-|                      |   (attribute)                         |  (attribute)                                     |
-+======================+=======================================+==================================================+
-| `MappingProjection`  | `OutputState`                         | `InputState`                                     |
-|                      | (`efferents <OutputState.efferents>`) | (`path_afferents <InputState.path_afferents>`)   |
-+----------------------+---------------------------------------+--------------------------------------------------+
-| `LearningProjection` | `LearningSignal`                      | `ParameterState`                                 |
-|                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <ParameterState.mod_afferents>`) |
-+----------------------+---------------------------------------+--------------------------------------------------+
-| `ControlProjection`  | `ControlSignal`                       | `ParameterState`                                 |
-|                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <ParameterState.mod_afferents>`) |
-+----------------------+---------------------------------------+--------------------------------------------------+
-| `GatingProjection`   | `GatingSignal`                        | `InputState` or `OutputState`                    |
-|                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <State_Base.mod_afferents>`)     |
-+----------------------+---------------------------------------+--------------------------------------------------+
+.. table:: **Sender, Receiver and Attribute Assignments for Projection Types**
+    :align: center
+
+    +----------------------+---------------------------------------+--------------------------------------------------+
+    |     Projection       |   sender                              |  receiver                                        |
+    |                      |   *(attribute)*                       |  *(attribute)*                                   |
+    +======================+=======================================+==================================================+
+    | `MappingProjection`  | `OutputState`                         | `InputState`                                     |
+    |                      | (`efferents <OutputState.efferents>`) | (`path_afferents <InputState.path_afferents>`)   |
+    +----------------------+---------------------------------------+--------------------------------------------------+
+    | `LearningProjection` | `LearningSignal`                      | `ParameterState`                                 |
+    |                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <ParameterState.mod_afferents>`) |
+    +----------------------+---------------------------------------+--------------------------------------------------+
+    | `ControlProjection`  | `ControlSignal`                       | `ParameterState`                                 |
+    |                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <ParameterState.mod_afferents>`) |
+    +----------------------+---------------------------------------+--------------------------------------------------+
+    | `GatingProjection`   | `GatingSignal`                        | `InputState` or `OutputState`                    |
+    |                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <State_Base.mod_afferents>`)     |
+    +----------------------+---------------------------------------+--------------------------------------------------+
 
 .. _Projection_Sender:
 
@@ -228,7 +283,8 @@ This must be an `OutputState` or a `ModulatorySignal <ModulatorySignal>` (a subc
 `ModulatoryProjections <ModulatoryProjection>`).  The Projection is assigned to the OutputState or ModulatorySignal's
 `efferents <State_Base.efferents>` list and, for ModulatoryProjections, to the list of ModulatorySignals specific to
 the `AdaptiveMechanism <AdaptiveMechanism>` from which it projects.  The OutputState or ModulatorySignal's `value
-<OutputState.value>` is used as the `variable <Function.variable>` for Projection's `function <Projection.function>`.
+<OutputState.value>` is used as the `variable <Function.variable>` for Projection's `function
+<Projection_Base.function>`.
 
 A sender can be specified as:
 
@@ -236,10 +292,10 @@ A sender can be specified as:
     `specifying an OutputState <OutputState_Specification>`.
   ..
   * a **Mechanism**;  for a `MappingProjection`, the Mechanism's `primary OutputState <OutputState_Primary>` is
-    assigned as the `sender <Projection.sender>`; for a `ModulatoryProjection <ModulatoryProjection>`, a
+    assigned as the `sender <Projection_Base.sender>`; for a `ModulatoryProjection <ModulatoryProjection>`, a
     `ModulatorySignal <ModulatorySignal>` of the appropriate type is created and assigned to the Mechanism.
 
-If the `sender <Projection.sender>` is not specified and it can't be determined from the context, or an OutputState
+If the `sender <Projection_Base.sender>` is not specified and it can't be determined from the context, or an OutputState
 specification is not associated with a Mechanism that can be determined from context, then the initialization of the
 Projection is `deferred <Projection_Deferred_Initialization>`.
 
@@ -248,7 +304,7 @@ Projection is `deferred <Projection_Deferred_Initialization>`.
 Receiver
 ~~~~~~~~
 
-The `receiver <Projection.receiver>` required by a Projection depends on its type, as listed below:
+The `receiver <Projection_Base.receiver>` required by a Projection depends on its type, as listed below:
 
     * MappingProjection: `InputState`
     * LearningProjection: `ParameterState` (for the `matrix <MappingProjection>` of a `MappingProjection`)
@@ -256,10 +312,10 @@ The `receiver <Projection.receiver>` required by a Projection depends on its typ
     * GatingProjection: `InputState` or OutputState`
 
 A `MappingProjection` (as a `PathwayProjection <PathwayProjection>`) is assigned to the `path_afferents
-<State.path_afferents>` attribute of its `receiver <Projection.receiver>`.  The ModulatoryProjections are assigned to
-the `mod_afferents <State.mod_afferents>` attribute of their `receiver <Projection.receiver>`.
+<State.path_afferents>` attribute of its `receiver <Projection_Base.receiver>`.  The ModulatoryProjections are assigned
+to the `mod_afferents <State.mod_afferents>` attribute of their `receiver <Projection_Base.receiver>`.
 
-A `receiver <Projection.receiver>` can be specified as:
+A `receiver <Projection_Base.receiver>` can be specified as:
 
   * an existing **State**;
   ..
@@ -273,15 +329,16 @@ A `receiver <Projection.receiver>` can be specified as:
 Weight and Exponent
 ~~~~~~~~~~~~~~~~~~~
 
-Every Projecton has a `weight <Projection.weight>` and `exponent <Projection.exponent>` attribute. These are applied
-to its `value <Projection.value>` before combining it with other Projections that project to the same `State`.  If
-both are specified, the `exponent <Projection.exponent>` is applied before the `weight <Projection.weight>`.  These
-attributes determine both how the Projection's `value <Projection.value>` is combined with others to determine the
-`variable <State.variable>` of the State to which they project.
+Every Projection has a `weight <Projection_Base.weight>` and `exponent <Projection_Base.exponent>` attribute. These
+are applied to its `value <Projection_Base.value>` before combining it with other Projections that project to the same
+`State`.  If both are specified, the `exponent <Projection_Base.exponent>` is applied before the `weight
+<Projection_Base.weight>`.  These attributes determine both how the Projection's `value <Projection.value>` is combined
+with others to determine the `variable <State_Base.variable>` of the State to which they project.
 
 .. note::
-   The `weight <Projection.weight>` and `exponent <Projection.exponent>` attributes of a Projection are not
-   normalized, and their aggregate effects contribute to the magnitude of the `variable <State.variable>` to which
+   The `weight <Projection_Base.weight>` and `exponent <Projection_Base.exponent>` attributes of a Projection are not
+   the same as a State's `weight <State_Base.weight>` and `exponent <State_Base.exponent>` attributes.  Also, they are
+   not normalized: their aggregate effects contribute to the magnitude of the `variable <State.variable>` to which
    they project.
 
 
@@ -291,7 +348,7 @@ ParameterStates and Parameters
 `ParameterStates <ParameterState>` provide the value for each parameter of a Projection and its `function
 <Mechanism_Base.function>`.  ParameterStates and their associated parameters are handled in the same way by
 Projections as they are for Mechanisms (see `Mechanism_ParameterStates` for details).  The ParameterStates for a
-Projection are listed in its `parameter_states <Projection.parameter_states>` attribute.
+Projection are listed in its `parameter_states <Projection_Base.parameter_states>` attribute.
 
 
 .. _Projection_Execution:
@@ -300,12 +357,27 @@ Execution
 ---------
 
 A Projection cannot be executed directly.  It is executed when the `State <State>` to which it projects (i.e., its
-`receiver <Projection.receiver>`) is updated;  that occurs when the State's owner `Mechanism <Mechanism>` is executed.
-When a Projection executes, it gets the value of its `sender <Projection.sender>`, assigns this as the `variable
-<Projection.variable>` of its `function <Projection.function>`, calls the `function <Projection.function>`, and
-provides the result as to its `receiver <Projection.receiver>`.  The `function <Projection.function>` of a Projection
-converts the value received from its `sender <Projection.sender>` to a form suitable as input for its `receiver
-<Projection.receiver>`.
+`receiver <Projection_Base.receiver>`) is updated;  that occurs when the State's owner `Mechanism <Mechanism>` is
+executed. When a Projection executes, it gets the value of its `sender <Projection_Base.sender>`, assigns this as the
+`variable <Projection_Base.variable>` of its `function <Projection_Base.function>`, calls the `function
+<Projection_Base.function>`, and provides the result as to its `receiver <Projection_Base.receiver>`.  The `function
+<Projection_Base.function>` of a Projection converts the value received from its `sender <Projection_Base.sender>` to
+a form suitable as input for its `receiver <Projection_Base.receiver>`.
+
+
+COMMENT:
+*** ADD EXAMPLES
+
+GET FROM Scratch Pad
+
+for example, if a ProjectionTuple is used in the context of an
+    `InputState specification
+    <InputState_Specification>` to specify a MappingProjection to it from an `OutputState` that is specified
+    in the first item of the tuple, and a Projection specification is included in the fourth, its sender (and/or the
+    sending dimensions of its `matrix <MappingProjection.matrix>` parameter) must be compatible with the specified
+    OutputState (see `examples <XXX>` below)
+
+COMMENT
 
 .. _Projection_Class_Reference:
 
@@ -316,16 +388,20 @@ import warnings
 
 from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
+from psyneulink.components.states.state import StateError
 from psyneulink.globals.keywords import \
-    CONTEXT, CONTROL, CONTROL_PROJECTION, EXPONENT, GATING, GATING_PROJECTION, \
-    INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
-    MECHANISM, NAME, OUTPUT_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, \
+    NAME, PARAMS, CONTEXT, PATHWAY, \
+    MECHANISM, INPUT_STATE, OUTPUT_STATE, PARAMETER_STATE_PARAMS, \
+    STANDARD_ARGS, STATE, STATES, WEIGHT, EXPONENT, \
     PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, \
-    STANDARD_ARGS, STATE, STATES, WEIGHT, CONTROLLED_PARAMS, LEARNED_PARAM, GATED_STATES, \
+    MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
+    LEARNING, LEARNING_SIGNAL, LEARNING_PROJECTION, \
+    CONTROL, CONTROL_SIGNAL, CONTROL_PROJECTION, \
+    GATING, GATING_SIGNAL, GATING_PROJECTION, \
     kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import ContentAddressableList, iscompatible, type_match, is_matrix
+from psyneulink.globals.utilities import ContentAddressableList, iscompatible, is_numeric, is_matrix, type_match
 
 __all__ = [
     'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError',
@@ -341,15 +417,18 @@ PROJECTION_ARGS = {PROJECTION_TYPE, SENDER, RECEIVER, WEIGHT, EXPONENT} | STANDA
 
 PROJECTION_SPEC_KEYWORDS = {PATHWAY: MAPPING_PROJECTION,
                             LEARNING: LEARNING_PROJECTION,
+                            LEARNING_SIGNAL: LEARNING_PROJECTION,
                             LEARNING_PROJECTION: LEARNING_PROJECTION,
                             CONTROL: CONTROL_PROJECTION,
+                            CONTROL_SIGNAL: CONTROL_PROJECTION,
                             CONTROL_PROJECTION: CONTROL_PROJECTION,
                             GATING: GATING_PROJECTION,
+                            GATING_SIGNAL: GATING_PROJECTION,
                             GATING_PROJECTION: GATING_PROJECTION
                             }
 
 from collections import namedtuple
-ConnectionTuple = namedtuple("ConnectionTuple", "state, weight, exponent, projection")
+ProjectionTuple = namedtuple("ProjectionTuple", "state, weight, exponent, projection")
 
 
 class ProjectionError(Exception):
@@ -397,7 +476,7 @@ class Projection_Base(Projection):
     .. note::
        Projection is an abstract class and should NEVER be instantiated by a direct call to its constructor.
        It should be created by calling the constructor for a subclass` or by using any of the other methods for
-       `specifying a Projection <Projection_In_Context_Specification>`.
+       `specifying a Projection <Projection_Specification>`.
 
 
     COMMENT:
@@ -432,45 +511,46 @@ class Projection_Base(Projection):
               a count for all instances of that type, and a dictionary of those instances
     COMMENT
 
+
     Attributes
     ----------
 
     variable : value
-        input to Projection, received from OutputState.value of sender.
+        input to Projection, received from OutputState.value of `sender <Projection_Base.sender>`.
 
     sender : State
-        State from which Projection receives its input.
+        State from which Projection receives its input (see `Projection_Sender` for additional information).
 
     receiver : State
-        State to which Projection sends its output.
+        State to which Projection sends its output  (see `Projection_Receiver` for additional information)
 
     value : value
-        Output of Projection, transmitted as variable to InputState of receiver.
+        Output of Projection, transmitted as variable to InputState of `receiver <Projection_Base.receiver>`.
 
     parameter_states : ContentAddressableList[str, ParameterState]
         a list of the Projection's `ParameterStates <Projection_ParameterStates>`, one for each of its specifiable
         parameters and those of its `function <Mechanism_Base.function>` (i.e., the ones for which there are
         arguments in their constructors).  The value of the parameters of the Projection are also accessible as
         attributes of the Projection (using the name of the parameter); the function parameters are listed in the
-        Projection's `function_params <Projection.function_params>` attribute, and as attributes of the `Function`
+        Projection's `function_params <Projection_Base.function_params>` attribute, and as attributes of the `Function`
         assigned to its `function_object <Component.function_object>` attribute.
 
     parameter_states : ContentAddressableList[str, ParameterState]
         a read-only list of the Projection's `ParameterStates <Mechanism_ParameterStates>`, one for each of its
         `configurable parameters <ParameterState_Configurable_Parameters>`, including those of its `function
-        <Projection.function>`.  The value of the parameters of the Projection and its `function
-        <Projection.function>` are also accessible as (and can be modified using) attributes of the Projection,
+        <Projection_Base.function>`.  The value of the parameters of the Projection and its `function
+        <Projection_Base.function>` are also accessible as (and can be modified using) attributes of the Projection,
         in the same manner as they can for a `Mechanism <Mechanism_ParameterStates>`).
 
     weight : number
-       multiplies `value <Projection.value>` of the Projection after applying `exponent <Projection.exponent>`,
-       and before combining with any others that project to the same `State` to determine that State's `variable
-       <State.variable>`.
+       multiplies the `value <Projection_Base.value>` of the Projection after applying the `exponent
+       <Projection_Base.exponent>`, and before combining with any other Projections that project to the same `State`
+       to determine that State's `variable <State_Base.variable>`.
 
     exponent : number
-        exponentiates the `value <Projection.value>` of the Projection, before applying `weight <Projection.weight>`,
-        and before combining it with any other Projections that project to the same `State` to determine that State's
-        `variable <State.variable>`.
+        exponentiates the `value <Projection_Base.value>` of the Projection, before applying `weight
+        <Projection_Base.weight>`, and before combining it with any other Projections that project to the same
+        `State` to determine that State's `variable <State_Base.variable>`.
 
     COMMENT:
         projectionSender : Mechanism, State, or Object
@@ -483,17 +563,18 @@ class Projection_Base(Projection):
             Used to instantiate projectionSender
     COMMENT
 
-    name : str : default <Projection subclass>-<index>
-        the name of the Projection.
-        Specified in the **name** argument of the constructor for the Projection;  if not is specified,
-        a default is assigned by ProjectionRegistry based on the Projection's subclass
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the Projection. If the Projection's `initialization has been deferred
+        <Projection_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
+        status) until initialization is completed, at which time it is assigned its designated name.  If that is the
+        name of an existing Projection, it is appended with an indexed suffix, incremented for each Projection with the
+        same base name (see `Naming`). If the name is not  specified in the **name** argument of its constructor, a
+        default name is assigned by the subclass (see subclass for details)
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for the Projection.
-        Specified in the **prefs** argument of the constructor for the Projection;  if it is not specified, a default is
-        assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the Projection; if it is not specified in the **prefs** argument of the constructor,
+        a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
+        details).
 
     """
 
@@ -577,7 +658,31 @@ class Projection_Base(Projection):
                                  "use projection() or one of the following subclasses: {0}".
                                  format(", ".join("{!s}".format(key) for (key) in ProjectionRegistry.keys())))
 
-        # Register with ProjectionRegistry or create one
+        params = self._assign_args_to_param_dicts(weight=weight,
+                                                  exponent=exponent,
+                                                  params=params)
+
+        try:
+            if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                self._assign_deferred_init_name(name, context)
+                self.init_args = locals().copy()
+                self.init_args[CONTEXT] = self
+                self.init_args[NAME] = name
+
+                # remove local imports
+                del self.init_args['ParameterState']
+                del self.init_args['State_Base']
+                return
+        except AttributeError:
+            # if this Projection does not have an init_status attribute, we can guarantee that it's not in
+            # deferred init state. It's tricky to ensure this attribute always exists due to the nature
+            # of deferred init
+            pass
+
+        self.sender = sender
+        self.receiver = receiver
+
+         # Register with ProjectionRegistry or create one
         register_category(entry=self,
                           base_class=Projection_Base,
                           name=name,
@@ -592,30 +697,6 @@ class Projection_Base(Projection):
                           registry=self._stateRegistry,
                           context=context)
 
-        params = self._assign_args_to_param_dicts(weight=weight,
-                                                  exponent=exponent,
-                                                  params=params)
-
-        try:
-            if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                self.init_args = locals().copy()
-                self.init_args[CONTEXT] = self
-                self.init_args[NAME] = name
-
-                # remove local imports
-                del self.init_args['ParameterState']
-                del self.init_args['State_Base']
-
-                return
-        except AttributeError:
-            # if this Projection does not have an init_status attribute, we can guarantee that it's not in
-            # deferred init state. It's tricky to ensure this attribute always exists due to the nature
-            # of deferred init
-            pass
-
-        self.sender = sender
-        self.receiver = receiver
-
         # FIX: ADD _validate_variable, THAT CHECKS FOR SENDER?
         # FIX: NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR STATE
         try:
@@ -629,9 +710,11 @@ class Projection_Base(Projection):
             except AttributeError:
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 
-         # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) InputState
+        # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) InputState
+        # MODIFIED 11/1/17 CW: Added " hasattr(self, "prefs") and" in order to avoid errors. Otherwise, this was being
+        # called and yielding an error: " AttributeError: 'MappingProjection' object has no attribute '_prefs' "
         if isinstance(self.receiver, Mechanism):
-            if (len(self.receiver.input_states) > 1 and
+            if (len(self.receiver.input_states) > 1 and hasattr(self, 'prefs') and
                     (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
                 print("{0} has more than one InputState; {1} has been assigned to the first one".
                       format(self.receiver.owner.name, self.name))
@@ -932,14 +1015,14 @@ def _is_projection_subclass(spec, keyword):
         return True
     # Get projection subclass specified by keyword
     try:
-        type = ProjectionRegistry[keyword]
+        proj_type = ProjectionRegistry[keyword].subclass
     except KeyError:
         pass
     else:
         # Check if spec is either the name of the subclass or an instance of it
-        if inspect.isclass(spec) and issubclass(spec, type):
+        if inspect.isclass(spec) and issubclass(spec, proj_type):
             return True
-        if isinstance(spec, type):
+        if isinstance(spec, proj_type):
             return True
     # spec is a specification dict for an instance of the projection subclass
     if isinstance(spec, dict) and keyword in spec:
@@ -974,11 +1057,11 @@ def _parse_projection_spec(projection_spec,
     # Projection object
     if isinstance(projection_spec, Projection):
         projection = projection_spec
-        # FIX: NOT SURE WHICH TO GIVE PRECEDENCE: SPEC IN ConnectionTuple OR INSTANTIATED Projection:
+        # FIX: NOT SURE WHICH TO GIVE PRECEDENCE: SPEC IN ProjectionTuple OR INSTANTIATED Projection:
         if ((proj_spec_dict[WEIGHT] is not None and projection.weight is not None) or
             (proj_spec_dict[EXPONENT] is not None and projection.exponent is not None)):
             raise ProjectionError("PROGRAM ERROR: Conflict in weight and/or exponent specs "
-                                  "between Projection and ConnectionTuple")
+                                  "between Projection and ProjectionTuple")
         projection._weight = proj_spec_dict[WEIGHT] or projection.weight
         projection._exponent = proj_spec_dict[EXPONENT] or projection.exponent
         if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
@@ -992,14 +1075,14 @@ def _parse_projection_spec(projection_spec,
     elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
         proj_spec_dict[PROJECTION_TYPE] = projection_spec
 
-    # Projection keyword
-    elif isinstance(projection_spec, str):
-        proj_spec_dict[PROJECTION_TYPE] = _parse_projection_keyword(projection_spec)
-
     # Matrix
     elif is_matrix(projection_spec):
         is_matrix(projection_spec)
         proj_spec_dict[MATRIX] = projection_spec
+
+    # Projection keyword
+    elif isinstance(projection_spec, str):
+        proj_spec_dict[PROJECTION_TYPE] = _parse_projection_keyword(projection_spec)
 
     # State object
     elif isinstance(projection_spec, State):
@@ -1019,7 +1102,7 @@ def _parse_projection_spec(projection_spec,
         if PROJECTION_PARAMS in proj_spec_dict:
             proj_spec_dict[PARAMS].update = proj_spec_dict[PROJECTION_PARAMS]
             # projection_spec[PARAMS].update(projection_params)
-            assert False, "PROJECTION_PARAMS ({}) passed in spec dict in ConnectionTuple for {}.".\
+            assert False, "PROJECTION_PARAMS ({}) passed in spec dict in ProjectionTuple for {}.".\
                            format(proj_spec_dict[PROJECTION_PARAMS], projection_spec, proj_spec_dict[NAME])
 
     # None
@@ -1027,7 +1110,14 @@ def _parse_projection_spec(projection_spec,
         # Assign default type
         proj_spec_dict[PROJECTION_TYPE] = state_type.paramClassDefaults[PROJECTION_TYPE]
 
-        if owner.prefs.verbosePref:
+        # prefs is not always created when this is called, so check
+        try:
+            owner.prefs
+            has_prefs = True
+        except AttributeError:
+            has_prefs = False
+
+        if has_prefs and owner.prefs.verbosePref:
             warnings.warn("Unrecognized specification ({}) for a Projection for {} of {}; "
                           "default {} has been assigned".
                           format(projection_spec,
@@ -1056,7 +1146,7 @@ def _parse_projection_keyword(projection_spec:str):
 # FIX: REPLACE "PROJECTIONS" WITH "CONNECTIONS"
 # FIX: IN RECURSIVE CALLS TO _parse_state_spec, SPECIFY THAT IT HAS TO RETURN AN INSTANTIATED STATE
 # FIX: MAKE SURE IT IS OK TO USE DICT PASSED IN (as params) AND NOT INADVERTENTLY OVERWRITING STUFF HERE
-# FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS AND PROJECTION_SPEC FOR EACH ConnectsWith ITEM:
+# FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS AND PROJECTION_SPEC FOR EACH connectsWith ITEM:
 #      CHANGE *PROJECTIONS* to *CONNECTS_WITH*
 #      MAKE EACH ENTRY OF CONNECTS_WITH A DICT OR TUPLE:
 #          DICT ENTRIES: *STATE*, *WEIGHT*, *EXPONENT*, *PROJECTION*
@@ -1071,7 +1161,7 @@ def _parse_projection_keyword(projection_spec:str):
 # def _parse_connection_specs(connectee_state_type:_is_state_class,
 def _parse_connection_specs(connectee_state_type,
                             owner,
-                            # connections:tc.any(State, Mechanism, dict, tuple, ConnectionTuple)):
+                            # connections:tc.any(State, Mechanism, dict, tuple, ProjectionTuple)):
                             connections):
     """Parse specification(s) for States to/from which the connectee_state_type should be connected
 
@@ -1083,14 +1173,14 @@ def _parse_connection_specs(connectee_state_type,
                 usually it is a Mechanism or State to/from which the connectee_state_type should send/receive the Projection,
                 so calling the method "_parse_projections" would be misleading.
 
-    CONNECTION CHARACTERISTICS DECLARED BY EACH TYPE (SUBCLASS) OF State:
-        ConnectsWith : State
+    Connection attributes declared for each type (subclass) of State that are used here:
+        connectsWith : State
            - specifies the type (subclass) of State to which the connectee_state_type should be assigned projection(s)
-        connect_with_attr : str
-           - specifies the name of the attribute of the Mechanism that holds the states of the ConnectsWith's type
-        PROJECTION_SOCKET : [SENDER or RECEIVER]
+        connectsWithAttribute : str
+           - specifies the name of the attribute of the Mechanism that holds the states of the connectsWith's type
+        projectionSocket : [SENDER or RECEIVER]
            - specifies for this method whether to use a Projection's sender or receiver for the connection
-        Modulator : ModulatorySignal
+        modulators : ModulatorySignal
            -  class of ModulatorySignal that can send ModulatoryProjection to the connectee_state_type
 
     This method deals with CONNECTION specifications that are made in one of the following places/ways:
@@ -1120,7 +1210,7 @@ def _parse_connection_specs(connectee_state_type,
                                                    its name (or, for completeness, the State itself);
                                                    _parse_connections() is called recursively for each state_spec
                                                    (first replacing the name with the actual state);
-                                                   and returns a list of ConnectionTuples; any weights, exponents,
+                                                   and returns a list of ProjectionTuples; any weights, exponents,
                                                    or projections assigned in those tuples are left;  otherwise, any
                                                    values in the entries of the outer dict (below) are assigned;
                                                    note:  the dictionary can have multiple Mechanism entries
@@ -1141,21 +1231,21 @@ def _parse_connection_specs(connectee_state_type,
         # If params is a dict:
         #     entry key can be any of the following, with the corresponding value:
         #         Mechanism:<connection_spec> or [connection_spec<, connection_spec..>]
-        #            - generates projection for each specified ConnectsWith State
+        #            - generates projection for each specified connectsWith State
         #         MECHANISMS:<Mechanism> or [Mechanism<, Mechanism>]
-        #            - generates projection for primary ConnectsWith State of each Mechanism
+        #            - generates projection for primary connectsWith State of each Mechanism
         #
         # If params is a tuple:
         #     - the first must be a BaseSpec specification (processed by _parse_state_spec, not here)
-        #     - if it has two items, the second must resolve to a ConnectsWith
+        #     - if it has two items, the second must resolve to a connectsWith
         #         (parsed in a recursive call to _parse_state_specific_entries)
         #     - if it has three or four items:
         #         - the second is a weight specification
         #         - the third is an exponent specification
-        #         - the fourth (optional) must resolve to an ConnectsWith specification
+        #         - the fourth (optional) must resolve to an connectsWith specification
         #           (parsed in a recursive call to _parse_state_specific_entries)
 
-    Returns list of ConnectionTuples, each of which specifies:
+    Returns list of ProjectionTuples, each of which specifies:
         - the state to be connected with
         - weight and exponent for that connection (assigned to the projection)
         - projection specification
@@ -1170,19 +1260,30 @@ def _parse_connection_specs(connectee_state_type,
                          format(owner.name, connectee_state_type))
 
     # Get connection attributes
-    ConnectsWith = [StateRegistry[name].subclass for name in connectee_state_type.ConnectsWith]
-    connect_with_attr = connectee_state_type.ConnectsWithAttribute
-    PROJECTION_SOCKET = connectee_state_type.ProjectionSocket
-    Modulators = [StateRegistry[name].subclass for name in connectee_state_type.Modulators]
+    connects_with = [StateRegistry[name].subclass for name in connectee_state_type.connectsWith]
+    connect_with_attr = connectee_state_type.connectsWithAttribute
+    projection_socket = connectee_state_type.projectionSocket
+    modulators = [StateRegistry[name].subclass for name in connectee_state_type.modulators]
 
     DEFAULT_WEIGHT = None
     DEFAULT_EXPONENT = None
     DEFAULT_PROJECTION = None
 
     # Convert to list for subsequent processing
-    if not isinstance(connections, list):
+    if isinstance(connections, set):
+        # if owner.verbosePref:
+        #     warnings.warn("Connection specification for {} of {} was a set ({});"
+        #                   "it was converted to a list, but the order of {} assignments is not "
+        #                   "predictable".format(connectee_state_type, owner.name,
+        #                                        connections, Projection.__name__))
+        # connections = list(connections)
+        raise ProjectionError("Connection specification for {} of {} is a set ({}); it should be a list.".
+                              format(connectee_state_type.__name__, owner.name, connections, Projection.__name__))
+
+    elif not isinstance(connections, list):
         connections = [connections]
     connect_with_states = []
+
 
     for connection in connections:
 
@@ -1190,14 +1291,14 @@ def _parse_connection_specs(connectee_state_type,
         # FIX:               ?? RETURN AS IS, AND/OR PARSE INTO DICT??
 
         # If a Mechanism, State, or State type is used to specify the connection on its own (i.e., w/o dict or tuple)
-        #     put in ConnectionTuple as both State spec and Projection spec (to get Projection for that State)
+        #     put in ProjectionTuple as both State spec and Projection spec (to get Projection for that State)
         #     along with defaults for weight and exponent, and call _parse_connection_specs recursively
-        #     to validate the state spec and append ConnectionTuple to connect_with_states
+        #     to validate the state spec and append ProjectionTuple to connect_with_states
         if isinstance(connection, (Mechanism, State, type)):
-            # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ConnectionTuple THAT HAS BOTH SENDER AND RECEIVER
+            # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ProjectionTuple THAT HAS BOTH SENDER AND RECEIVER
             projection_spec = connectee_state_type
-            connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
-            connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
+            projection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
+            connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, projection_tuple))
 
         # If a Projection specification is used to specify the connection:
         #  assign the Projection specification to the projection_specification item of the tuple,
@@ -1208,19 +1309,23 @@ def _parse_connection_specs(connectee_state_type,
             # FIX: 10/24/17 - IF connectee_state_type IS LearningSignal AND projection_spec is A MappingProjection
             # FIX:            THEN THE LATTER SHOULD BE TREATED AS A DESTINATION RATHER THAN AN ACTUAL projection_spec
             # FIX:            OR connection SHOULD BE LearningSignal AND projection_spec SHOULD BE THE DESITNATION
-            connection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
-            connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, connection_tuple))
+            # FIX: 11/4/17 - IF connectee_state_type IS OutputState AND projection_spec is A GatingProjection
+            # FIX:            THEN THE LATTER SHOULD BE TREATED AS A SOURCE RATHER THAN AN ACTUAL projection_spec
+            # FIX:            OR connection SHOULD BE GatingSignal AND projection_spec SHOULD BE THE DESITNATION
+            projection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
+            connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, projection_tuple))
 
         # Dict of one or more Mechanism specifications, used to specify individual States of (each) Mechanism;
-        #   convert all entries to tuples and call _parse_connection_specs recursively to generate ConnectionTuples;
+        #   convert all entries to tuples and call _parse_connection_specs recursively to generate ProjectionTuples;
         #   main purpose of this is to resolve any str references to name of state (using context of owner Mechanism)
         elif isinstance(connection, dict):
 
             # Check that dict has at least one entry with a Mechanism as the key
             if (not any(isinstance(spec, Mechanism) for spec in connection) and
                     not any(spec == STATES for spec in connection)):
-                raise ProjectionError("There are no {} or {} entries in the connection specification dictionary for {}".
-                                 format(MECHANISM, STATES, owner.name))
+                raise ProjectionError("There are no {}s or {}s in the list ({}) specifying {}s for an {} of {}".
+                                 format(Mechanism.__name__, State.__name__, connection, Projection.__name__,
+                                        connectee_state_type.__name__, owner.name))
 
             # Add default WEIGHT, EXPONENT, and/or PROJECTION specification for any that are not aleady in the dict
             #    (used as the default values for all the States of all Mechanisms specified for this dict;
@@ -1257,10 +1362,10 @@ def _parse_connection_specs(connectee_state_type,
                                                       state_spec=state_connect_spec,
                                                       state_types=connect_with_attr,
                                                       mech=mech,
-                                                      projection_socket=PROJECTION_SOCKET)
+                                                      projection_socket=projection_socket)
                         if isinstance(state, list):
                             assert False, 'Got list of allowable states for {} as specification for {} of {}'.\
-                                          format(state_connect_spec, PROJECTION_SOCKET, mech.name)
+                                          format(state_connect_spec, projection_socket, mech.name)
 
                         # Assign state along with dict's default values to tuple
                         state_connect_spec = (state,
@@ -1277,10 +1382,10 @@ def _parse_connection_specs(connectee_state_type,
                                                     state_spec=state_spec,
                                                     state_types=connect_with_attr,
                                                     mech=mech,
-                                                    projection_socket=PROJECTION_SOCKET)
+                                                    projection_socket=projection_socket)
                         if isinstance(state, list):
                             assert False, 'Got list of allowable states for {} as specification for {} of {}'.\
-                                           format(state_connect_spec, PROJECTION_SOCKET, mech.name)
+                                           format(state_connect_spec, projection_socket, mech.name)
                         # Re-assign to STATE entry of dict (to preserve any other connection specifications in dict)
                         state_connect_spec[STATE] = state
 
@@ -1293,10 +1398,10 @@ def _parse_connection_specs(connectee_state_type,
                                                     state_spec=state_spec,
                                                     state_types=connect_with_attr,
                                                     mech=mech,
-                                                    projection_socket=PROJECTION_SOCKET)
+                                                    projection_socket=projection_socket)
                         if isinstance(state, list):
                             assert False, 'Got list of allowable states for {} as specification for {} of {}'.\
-                                           format(state_connect_spec, PROJECTION_SOCKET, mech.name)
+                                           format(state_connect_spec, projection_socket, mech.name)
                         # Replace parsed value in original tuple, but...
                         #    tuples are immutable, so have to create new one, with state_spec as (new) first item
                         # Get items from original tuple
@@ -1306,7 +1411,7 @@ def _parse_connection_specs(connectee_state_type,
                         # Reassign to new tuple
                         state_connect_spec = tuple(state_connect_spec_tuple_items)
 
-                    # Recusively call _parse_connection_specs to get ConnectionTuple and append to connect_with_states
+                    # Recusively call _parse_connection_specs to get ProjectionTuple and append to connect_with_states
                     connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, state_connect_spec))
 
         # Process tuple, including final validation of State specification
@@ -1316,29 +1421,104 @@ def _parse_connection_specs(connectee_state_type,
         # Note:  this is NOT the same as the State specification tuple (which can have a similar format);
         #        the weights and exponents here specify *individual* Projections to a particular state,
         #            (vs. weights and exponents for an entire state, such as for InputState);
-        #        State specification tuple is handled in the _parse_state_specific_params() method of State subclasses
+        #        State specification tuple is handled in the _parse_state_specific_specs() method of State subclasses
 
         elif isinstance(connection, tuple):
 
-        # Notes:
-        #    - first item is assumed to always be a specification for the State being connected with
+            # 2-item tuple: can be (<value>, <projection_spec>) or (<state name or list of state names>, <Mechanism>)
+            mech=None
+
             if len(connection) == 2:
-                state_spec, projection_spec = connection
+                first_item, last_item = connection
                 weight = DEFAULT_WEIGHT
                 exponent = DEFAULT_EXPONENT
             elif len(connection) == 4:
-                state_spec, weight, exponent, projection_spec = connection
+                first_item, weight, exponent, last_item = connection
             else:
-                # FIX: FINISH ERROR MESSAGE
-                raise ProjectionError("{} specificaton tuple for {} ({}) must have either two or four items".
+                raise ProjectionError("{} specification tuple for {} ({}) must have either two or four items".
                                       format(connectee_state_type.__name__, owner.name, connection))
 
+            # Default assignments, possibly overridden below
+            state_spec = first_item
+            projection_spec = last_item
+
+            # (<value>, <projection_spec>)
+            if is_numeric(first_item):
+                projection_spec = first_item
+                # FIX: 11/18/17 TRY DELETING THIS:
+                # Ignore first_item (assume it was processed by _parse_state_specific_specs),
+                #    and use projection_spec as state_spec
+                state_spec = projection_spec
+
+            # elif is_matrix(first_item):
+            #     projection_spec = last_item
+            #     state_spec = None
+
+            elif _is_projection_spec(last_item):
+
+                # If specification is a list of States and/or Mechanisms, get Projection spec for each
+                if isinstance(first_item, list):
+                     # Call _parse_connection_spec for each State or Mechanism, to generate a conection spec for each
+                    for connect_with_spec in first_item:
+                        if not isinstance(connect_with_spec, (State, Mechanism)):
+                              raise StateError("Item in the list used to specify a(n) {} for {} ({}) is not a {} or {}".
+                                             format(state_type.__name__, owner.name, connect_with_spec,
+                                                    State.__name__, Mechanism.__name__))
+                        c = _parse_connection_specs(connectee_state_type=connectee_state_type,
+                                                    owner=owner,
+                                                    connections=ProjectionTuple(connect_with_spec,
+                                                                                weight, exponent,
+                                                                                last_item))
+                        connect_with_states.extend(c)
+                    # Move on to other connections
+                    continue
+                # Otherwise, go on to process this Projection specification
+                state_spec = first_item
+                projection_spec = last_item
+
+
+            # (<state name or list of state names>, <Mechanism>)
+            elif isinstance(first_item, (str, list)):
+                state_item = first_item
+                mech_item = last_item
+
+                if not isinstance(mech_item, Mechanism):
+                    raise ProjectionError("Expected 2nd item of the {} specification tuple for {} ({}) to be a "
+                                          "Mechanism".format(connectee_state_type.__name__, owner.name, mech_item))
+                # First item of tuple is a list of State names, so recursively process it
+                if isinstance(state_item, list):
+                     # Call _parse_connection_spec for each State name, to generate a conection spec for each
+                    for state_name in state_item:
+                        if not isinstance(state_name, str):
+                             raise ProjectionError("Expected 1st item of the {} specification tuple for {} ({}) to be "
+                                                   "the name of a {} of its 2nd item ({})".
+                                                      format(connectee_state_type.__name__, owner.name, state_name,
+                                                              connects_with, mech_item.name))
+                        c = _parse_connection_specs(connectee_state_type=connectee_state_type,
+                                                    owner=owner,
+                                                    connections=ProjectionTuple(state_name,
+                                                                                weight, exponent,
+                                                                                mech_item))
+                        connect_with_states.extend(c)
+                    # Move on to other connections
+                    continue
+                # Otherwise, go on to process (<State name>, Mechanism) spec
+                state_spec = state_item
+                projection_spec = None
+                mech=mech_item
+
             # Validate state specification, and get actual state referenced if it has been instantiated
-            state = _get_state_for_socket(owner=owner,
-                                          state_spec=state_spec,
-                                          state_types=ConnectsWith,
-                                          mech_state_attribute=connect_with_attr,
-                                          projection_socket=PROJECTION_SOCKET)
+            try:
+                state = _get_state_for_socket(owner=owner,
+                                              state_spec=state_spec,
+                                              state_types=connects_with,
+                                              mech=mech,
+                                              mech_state_attribute=connect_with_attr,
+                                              projection_socket=projection_socket)
+            except StateError as e:
+                raise ProjectionError("Problem with specification for {} in {} specification for {}: ".
+                                      format(State.__name__, Projection.__name__, owner.name) + e.error_value)
+
 
             # Check compatibility with any State(s) returned by _get_state_for_socket
 
@@ -1351,8 +1531,10 @@ def _parse_connection_specs(connectee_state_type,
                     state_type = state_spec
                 else:
                     state_type = state_spec.__class__
-                # FIX: 10/3/17 - CHANGE THIS TO "ANY" TEST
-                if not any(issubclass(connects_with_state, state_type) for connects_with_state in ConnectsWith):
+
+                # Test that state_type is in the list for state's connects_with
+                if not any(issubclass(connects_with_state, state_type)
+                           for connects_with_state in connects_with + modulators):
                     spec = projection_spec or state_type.__name__
                     raise ProjectionError("Projection specification (\'{}\') for an incompatible connection: "
                                           "{} with {} of {} ; should be one of the following: {}".
@@ -1360,21 +1542,30 @@ def _parse_connection_specs(connectee_state_type,
                                                  state_type.__name__,
                                                  connectee_state_type.__name__,
                                                  owner.name,
-                                                 ", ".join([c.__name__ for c in ConnectsWith])))
+                                                 ", ".join([c.__name__ for c in connects_with])))
 
             # Parse projection specification into Projection specification dictionary
             # Validate projection specification
             if _is_projection_spec(projection_spec) or projection_spec is None:
 
-                # FIX: 10/3/17 - NEED TO SPECIFY Projection Type HERE OR IN CALL FROM _parse_state_spec
+                # FIX: 11/21/17 THIS IS A HACK TO DEAL WITH GatingSignal PROJECTION TO InputState or OutputState
+                from psyneulink.components.states.inputstate import InputState
+                from psyneulink.components.states.outputstate import OutputState
+                from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
+                from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
+                if (not isinstance(projection_spec, GatingProjection)
+                    and isinstance(state, GatingSignal)
+                    and connectee_state_type in {InputState, OutputState}):
+                    projection_spec = state
+
                 projection_spec = _parse_projection_spec(projection_spec,
                                                          owner=owner,
                                                          state_type=connectee_state_type)
 
                 _validate_connection_request(owner,
-                                             ConnectsWith + Modulators,
+                                             connects_with + modulators,
                                              projection_spec,
-                                             PROJECTION_SOCKET,
+                                             projection_socket,
                                              connectee_state_type)
             else:
                 raise ProjectionError("Invalid specification of {} ({}) for connection between {} and {} of {}.".
@@ -1384,14 +1575,14 @@ def _parse_connection_specs(connectee_state_type,
                                         connectee_state_type.__name__,
                                         owner.name))
 
-            connect_with_states.extend([ConnectionTuple(state, weight, exponent, projection_spec)])
+            connect_with_states.extend([ProjectionTuple(state, weight, exponent, projection_spec)])
 
         else:
-            raise ProjectionError("Invalid or insufficient specification of connection for {}: \'{}\'".
+            raise ProjectionError("Unrecognized, invalid or insufficient specification of connection for {}: \'{}\'".
                                   format(owner.name, connection))
 
-    if not all(isinstance(connection_tuple, ConnectionTuple) for connection_tuple in connect_with_states):
-        raise ProjectionError("PROGRAM ERROR: Not all items are ConnectionTuples for {}".format(owner.name))
+    if not all(isinstance(projection_tuple, ProjectionTuple) for projection_tuple in connect_with_states):
+        raise ProjectionError("PROGRAM ERROR: Not all items are ProjectionTuples for {}".format(owner.name))
 
     return connect_with_states
 
@@ -1436,7 +1627,7 @@ def _validate_connection_request(
     # Make sure none of its entries are None (which will fail in isinstance()):
     if None in connect_with_states:
         raise ProjectionError("PROGRAM ERROR: connect_with_states ({}) should not have any entries that are \'None\'; "
-                              "Check assignments to \'ConnectsWith' and \'Modulators\' for each State class".
+                              "Check assignments to \'connectsWith' and \'modulators\' for each State class".
                               format(connect_with_states))
 
     connect_with_state_names = ", ".join([c.__name__ for c in connect_with_states if c is not None])
@@ -1467,7 +1658,7 @@ def _validate_connection_request(
             # Try to get the State to which the Projection will be connected when fully initialized
             #     as confirmation that it is the correct type for state_type
             try:
-                projection_socket_state = projection_spec.socket_assignments[RECEIVER]
+                projection_socket_state = projection_spec.socket_assignments[projection_socket]
             # State for projection's socket couldn't be determined
             except KeyError:
                 # Use Projection's type for validation
@@ -1475,27 +1666,36 @@ def _validate_connection_request(
                 return _validate_projection_type(projection_spec.__class__)
                     # Projection's socket has been assigned to a State
             else:
-                if projection_socket_state:
+                # if both SENDER and RECEIVER are specified:
+                if projection_spec.init_args[SENDER] and projection_spec.init_args[RECEIVER]:
                     # Validate that the State is a class in connect_with_states
                     if (isinstance(projection_socket_state, connect_with_states) or
                             (inspect.isclass(projection_socket_state)
                              and issubclass(projection_socket_state, connect_with_states))):
                         return True
+                # Otherwise, revert again to validating Projection's type
                 else:
                     return _validate_projection_type(projection_spec.__class__)
-
 
         # Projection has been instantiated
         else:
             # Determine whether the State to which the Projection's socket has been assigned is in connect_with_states
+            # FIX: 11/4/17 - THIS IS A MAJOR HACK TO DEAL WITH THE CASE IN WHICH THE connectee_state IS AN OutputState
+            # FIX:               THE projection_socket FOR WHICH IS USUALLY A RECEIVER;
+            # FIX:           HOWEVER, IF THE projection_spec IS A GatingSignal
+            # FIX:               THEN THE projection_socket MUST BE SENDER
+            from psyneulink.components.states.outputstate import OutputState
+            from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
+            if connectee_state is OutputState and isinstance(projection_spec, GatingProjection):
+                projection_socket = SENDER
             projection_socket_state = getattr(projection_spec, projection_socket)
-            # if projection_socket_state is in connect_with_states:
             if  issubclass(projection_socket_state.__class__, connect_with_states):
+            # if  issubclass(projection_socket_state.__class__, connectee_state):
                 return True
 
         # None of the above worked, so must be incompatible
         raise ProjectionError("{} specified to be connected with{} {} "
-                              "is not compatible with the {} of the specified {} ({})".
+                              "is not consistent with the {} of the specified {} ({})".
                               format(State.__name__, connectee_str, owner.name,
                                      projection_socket, Projection.__name__, projection_spec))
 

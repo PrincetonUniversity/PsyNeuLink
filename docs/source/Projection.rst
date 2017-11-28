@@ -9,4 +9,4 @@ Projections
 
 .. automodule:: psyneulink.components.projections.projection
    :members:
-   :exclude-members: Projection_Base, _is_projection_spec, random
+   :exclude-members: _is_projection_spec, random

@@ -155,20 +155,20 @@ class AutoAssociativeProjection(MappingProjection):
         the matrix used by `function <AutoAssociativeProjection.function>` (default: `LinearCombination`) to transform
         the value of the `sender <AutoAssociativeProjection.sender>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
     name : str : default AutoAssociativeProjection-<index>
-        a string used for the name of the MappingProjection. When an AutoAssociativeProjection is created by a
-        RecurrentTransferMechanism, its name is specified as "<name of RecurrentTransferMechanism> recurrent projection".
+        a string used for the name of the AutoAssociativeProjection. When an AutoAssociativeProjection is created by a
+        RecurrentTransferMechanism, its name is assigned "<name of RecurrentTransferMechanism> recurrent projection"
+        (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
-        the `PreferenceSet` for the MappingProjection.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see `PreferenceSet <LINK>` for details).
+    prefs : Optional[PreferenceSet or specification dict : Projection_Base.classPreferences]
+        the `PreferenceSet` for the MappingProjection; if it is not specified, a default is assigned using
+        `classPreferences` defined in __init__.py (see `PreferenceSet <LINK>` for details).
 
     Attributes
     ----------
@@ -186,16 +186,16 @@ class AutoAssociativeProjection(MappingProjection):
         `learning <LearningProjection>` is used.
 
     matrix : 2d np.ndarray
-        matrix used by `function <AutoAssociativeProjection.function>` to transform input from the
-        `sender <MappingProjection.sender>` to the value provided to the `receiver <AutoAssociativeProjection.receiver>`.
+        matrix used by `function <AutoAssociativeProjection.function>` to transform input from the `sender
+        <MappingProjection.sender>` to the value provided to the `receiver <AutoAssociativeProjection.receiver>`.
 
     auto : number or 1d np.ndarray
         diagonal terms of the `matrix <AutoAssociativeProjection.matrix>` used by the AutoAssociativeProjection: if auto
-        is a single number, it means the diagonal is uniform
+        is a single number, it means the diagonal is uniform.
 
     hetero : number or 2d np.ndarray
         off-diagonal terms of the `matrix <AutoAssociativeProjection.matrix>` used by the AutoAssociativeProjection: if
-        hetero is a single number, it means the off-diagonal terms are all the same
+        hetero is a single number, it means the off-diagonal terms are all the same.
 
     has_learning_projection : bool : False
         identifies whether the AutoAssociativeProjection's `MATRIX` `ParameterState <ParameterState>` has been assigned
@@ -204,17 +204,12 @@ class AutoAssociativeProjection(MappingProjection):
     value : np.ndarray
         Output of AutoAssociativeProjection, transmitted to `variable <InputState.variable>` of `receiver`.
 
-    name : str : default AutoAssociativeProjection-<index>
-        a string used for the name of the MappingProjection. When an AutoAssociativeProjection is created by a
-        RecurrentTransferMechanism, its name is specified as "<name of RecurrentTransferMechanism> recurrent projection".
-        If not is specified, a default is assigned by `ProjectionRegistry`
-        (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        a string used for the name of the AutoAssociativeProjection (see `Registry <LINK>` for conventions used in
+        naming, including for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for Projection.
-        Specified in the **prefs** argument of the constructor for the Projection;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences
+        the `PreferenceSet` for AutoAssociativeProjection (see :doc:`PreferenceSet <LINK>` for details).
     """
 
     componentType = AUTO_ASSOCIATIVE_PROJECTION
