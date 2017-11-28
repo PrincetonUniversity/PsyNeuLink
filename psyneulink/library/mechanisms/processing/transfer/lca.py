@@ -20,12 +20,27 @@ Overview
 
 An LCA is a subclass of `RecurrentTransferMechanism` that implements a single-layered leaky competitive accumulator
 network, in which each element is connected to every other element with mutually inhibitory weights.  All of the
-inhibitory weights have the same value, specified by its `inhibition <LCA.inhibition>` parameter.  In the case that
-it has two elements, the value of its `inhibition <LCA.inhibition>` parameter is equal to its `decay
-<RecurrentTransferMechanism.decay>` parameter, and the two are of sufficient magnitude, it implements a close
+inhibitory weights have the same value, specified by its `competition <LCA.competition>` parameter.  In the case that
+it has two elements, the value of its `competition <LCA.competition>` parameter is equal to its `leak
+<LCA.leak>` parameter, and the two are of sufficient magnitude, it implements a close
 approximation of a `DDM` Mechanism
 (see `Usher & McClelland, 2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and
 `Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_).
+
+.. note::
+
+    The LCA's recurrent projection matrix always has self_excitation on the diagonal and -competition off-diagonal.
+
+    COMMENT:
+    .. math::
+
+        \\begin{bmatrix}
+            excitation    &  - competition  &  - competition  &  - competition  \
+            - competition &  excitation     &  - competition  &  - competition  \
+            - competition &  - competition  &  excitation     &  - competition  \
+            - competition &  - competition  &  - competition  &  excitation     \
+        \\end{bmatrix}
+    COMMENT
 
 .. _Recurrent_Transfer_Creation:
 
@@ -33,10 +48,25 @@ Creating an LCA
 ---------------
 
 An LCA can be created directly by calling its constructor.  The set of mutually inhibitory connections are implemented as a recurrent `MappingProjection`
-with a `matrix <LCA.matrix>` of uniform negative weights specified by the **inhibition** argument of the LCA's
-constructor.  The default format of its `variable <LCA.variable>`, and default values of its `inhibition
+with a `matrix <LCA.matrix>` in which the diagonal consists of uniform weights specified by **self_excitation** and the
+off-diagonal consists of uniform *negative* weights specified by the **competition** argument of the LCA's constructor.
+
+COMMENT:
+.. math::
+
+    \\begin{bmatrix}
+        excitation    &  - competition  &  - competition  &  - competition  \
+        - competition &  excitation     &  - competition  &  - competition  \
+        - competition &  - competition  &  excitation     &  - competition  \
+        - competition &  - competition  &  - competition  &  excitation     \
+    \\end{bmatrix}
+COMMENT
+
+COMMENT:
+The default format of its `variable <LCA.variable>`, and default values of its `inhibition
 <LCA.inhibition>`, `decay <RecurrentTransferMechanism.decay>` and `noise <TransferMechanism.noise>` parameters
 implement an approximation of a `DDM`.
+COMMENT
 
 .. _LCA_Structure:
 
@@ -240,17 +270,6 @@ class LCA(RecurrentTransferMechanism):
         `LCAIntegrator's value <LCAIntegrator.value>` (:math:`x_{i}`) on each time step. See
         `LCAIntegrator <LCAIntegrator>` for more details on what the `LCAIntegrator function  <LCAIntegrator>` computes.
 
-    The LCA's recurrent projection matrix is always of the following form:
-
-     .. math::
-
-        \\begin{bmatrix}
-            excitation   & - competition   & - competition  & - competition \
-            - competition & excitation     & - competition  & - competition \
-            - competition & - competition  & excitation     & - competition \
-            - competition & - competition  & - competition  & excitation  \
-        \\end{bmatrix}
-
     self_excitation : value : default 0.0
         sets the diagonal terms in the LCA's recurrent projection, thereby scaling the contributions of each unit's own
         recurrent value (:math:`f(x)_{i}`) to the accumulation of the `LCAIntegrator's value <LCAIntegrator.value>`
@@ -292,9 +311,9 @@ class LCA(RecurrentTransferMechanism):
         the function used to transform the input.
 
     matrix : 2d np.array
-        the `matrix <MappingProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism,
-        with a uniform set of negative weights, the magnitude of which are determined by the
-        `inhibition <LCA.inhibition>` attribute.
+        the `matrix <MappingProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism, the
+        `self_excitation <LCA.self_excitation>` attribute sets the values on the diagonal, and the
+        `competition <LCA.competition>` attribute sets the magnitude of the negative off-diagonal values.
 
     leak : value : default 0.5
         sets the `rate <LCAIntegrator.rate>` on the `LCAIntegrator function <LCAIntegrator>`, which scales the
@@ -307,17 +326,6 @@ class LCA(RecurrentTransferMechanism):
         contributions of the competing unit (all :math:`f(x)_{j}` where :math:`j \\neq i`) to the accumulation of the
         `LCAIntegrator's value <LCAIntegrator.value>` (:math:`x_{i}`) on each time step. See
         `LCAIntegrator <LCAIntegrator>` for more details on what the `LCAIntegrator function  <LCAIntegrator>` computes.
-
-    The LCA's recurrent projection matrix is always of the following form:
-
-     .. math::
-
-        \\begin{bmatrix}
-            excitation   & - competition   & - competition  & - competition \
-            - competition & excitation     & - competition  & - competition \
-            - competition & - competition  & excitation     & - competition \
-            - competition & - competition  & - competition  & excitation  \
-        \\end{bmatrix}
 
     self_excitation : value : default 0.0
         sets the diagonal terms in the LCA's recurrent projection, thereby scaling the contributions of each unit's own
@@ -341,7 +349,7 @@ class LCA(RecurrentTransferMechanism):
         COMMENT
 
     noise : float or function : default 0.0
-        a stochastically-sampled value added to the output of the `function <TransferMechahnism.function>`:
+        a stochastically-sampled value added to the output of the `function <LCA.function>`:
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
@@ -434,7 +442,7 @@ class LCA(RecurrentTransferMechanism):
                  leak=0.5,
                  competition=1.0,
                  self_excitation=0.0,
-                 noise:is_numeric_or_none=0.0,
+                 noise=0.0,
                  integrator_mode=True,
                  time_step_size=0.1,
                  clip=None,
@@ -454,7 +462,8 @@ class LCA(RecurrentTransferMechanism):
             output_states = [RESULT]
 
         if matrix is not None:
-            warnings.warn("Matrix arg for LCA is not used; matrix was assigned using inhibition arg")
+            warnings.warn("Matrix arg for LCA is not used; matrix was assigned using self_excitation and competition "
+                          "args")
         # matrix = np.full((size[0], size[0]), -inhibition) * get_matrix(HOLLOW_MATRIX,size[0],size[0])
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -586,24 +595,21 @@ class LCA(RecurrentTransferMechanism):
             else:
 
                 current_input = variable[0]
-        # self.previous_input = current_input
 
         # Apply TransferMechanism function
         output_vector = self.function(variable=current_input, params=runtime_params)
-        # # MODIFIED  OLD:
-        # if list(clip):
-        # MODIFIED  NEW:
+
         if clip is not None:
-        # MODIFIED  END
             minCapIndices = np.where(output_vector < clip[0])
             maxCapIndices = np.where(output_vector > clip[1])
             output_vector[minCapIndices] = np.min(clip)
             output_vector[maxCapIndices] = np.max(clip)
-        return output_vector
-    @property
-    def inhibition(self):
-        return self.hetero
 
-    @inhibition.setter
-    def inhibition(self, setting):
-        self.hetero = setting
+        return output_vector
+    # @property
+    # def inhibition(self):
+    #     return self.hetero
+    #
+    # @inhibition.setter
+    # def inhibition(self, setting):
+    #     self.hetero = setting
