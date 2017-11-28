@@ -294,9 +294,9 @@ Example
 The following example implements a System with an EVCControlMechanism (and two processes not shown)::
 
 
-    >>> import psyneulink as pnl
-    >>> myRewardProcess = pnl.Process()                                                 #doctest: +SKIP
-    >>> myDecisionProcess = pnl.Process()                                               #doctest: +SKIP
+    >>> import psyneulink as pnl                                                        #doctest: +SKIP
+    >>> myRewardProcess = pnl.Process(...)                                              #doctest: +SKIP
+    >>> myDecisionProcess = pnl.Process(...)                                            #doctest: +SKIP
     >>> mySystem = pnl.System(processes=[myRewardProcess, myDecisionProcess],           #doctest: +SKIP
     ...                       controller=pnl.EVCControlMechanism,                       #doctest: +SKIP
     ...                       monitor_for_control=[Reward,                              #doctest: +SKIP

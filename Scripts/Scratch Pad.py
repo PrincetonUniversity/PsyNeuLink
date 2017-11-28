@@ -833,15 +833,99 @@ class ScratchPadError(Exception):
 #region TEST DOCUMENTATION
 print ("TEST DOCUMENTATION")
 
+# # import matlab.engine
+# # eng1 = matlab.engine.start_matlab('-nojvm')
+# my_DDM_NavarroAndFuss = pnl.DDM(function=pnl.NavarroAndFuss(drift_rate=3.0,
+#                                                             starting_point=1.0,
+#                                                             threshold=30.0,
+#                                                             noise=1.5,
+#                                                             t0 = 2.0),
+#                                 name='my_DDM_NavarroAndFuss')
+
 
 import psyneulink as pnl
-myRewardProcess = pnl.Process()
-myDecisionProcess = pnl.Process()
-mySystem = pnl.System(processes=[myRewardProcess, myDecisionProcess],
-                      controller=pnl.EVCControlMechanism,
-                      monitor_for_control=[Reward,
-                                           pnl.DDM_OUTPUT.DECISION_VARIABLE,
-                                           (pnl.RESPONSE_TIME, 1, -1)],)
+
+A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
+B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
+C = pnl.TransferMechanism(function=pnl.Linear(), name='C')
+
+p = pnl.Process(
+    pathway=[A, B, C],
+    name = 'p'
+)
+s = pnl.System(
+    processes=[p],
+    name='s'
+)
+my_scheduler = pnl.Scheduler(system=s)
+
+# implicit condition of Always for A
+my_scheduler.add_condition(B, pnl.scheduling.condition.EveryNCalls(A, 2))
+my_scheduler.add_condition(C, pnl.scheduling.condition.EveryNCalls(B, 3))
+
+# implicit AllHaveRun Termination condition
+execution_sequence = list(my_scheduler.run())
+execution_sequence
+
+A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
+B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
+
+p = pnl.Process(
+    pathway=[A, B],
+    name = 'p'
+)
+s = pnl.System(
+   processes=[p],
+   name='s'
+)
+my_scheduler = pnl.Scheduler(system=s)
+
+my_scheduler.add_condition(A,
+                           pnl.scheduling.condition.Any(pnl.scheduling.condition.AtPass(0),
+                                                        pnl.scheduling.condition.EveryNCalls(B, 2)))
+my_scheduler.add_condition(B,
+                           pnl.scheduling.condition.Any(pnl.scheduling.condition.EveryNCalls(A, 1),
+                           pnl.scheduling.condition.EveryNCalls(B, 1)))
+
+termination_conds = {ts: None for ts in pnl.TimeScale}
+termination_conds[pnl.TimeScale.TRIAL] = pnl.scheduling.condition.AfterNCalls(B,
+                                                                              4,
+                                                                              time_scale=pnl.TimeScale.TRIAL)
+# CRASHING on line 473 of scheduler (self.termination_conds[ts] is None)
+execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
+
+A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
+B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
+C = pnl.TransferMechanism(function=pnl.Linear(), name='C')
+
+p = pnl.Process(
+        pathway=[A, C],
+        name = 'p'
+)
+q = pnl.Process(
+        pathway=[B, C],
+        name = 'q'
+)
+s = pnl.System(
+        processes=[p, q],
+        name='s'
+)
+my_scheduler = pnl.Scheduler(system=s)
+
+my_scheduler.add_condition(A, pnl.scheduling.condition.EveryNPasses(1))
+my_scheduler.add_condition(B, pnl.scheduling.condition.EveryNCalls(A, 2))
+my_scheduler.add_condition(C,
+                           pnl.scheduling.condition.Any(pnl.scheduling.condition.AfterNCalls(A, 3),
+                                                        pnl.scheduling.condition.AfterNCalls(B, 3)))
+
+termination_conds = {ts: None for ts in pnl.TimeScale}
+termination_conds[pnl.TimeScale.TRIAL] = pnl.scheduling.condition.AfterNCalls(C,
+                                                                              4,
+                                                                              time_scale=pnl.TimeScale.TRIAL)
+execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
+
+
+
 
 
 #endregion
