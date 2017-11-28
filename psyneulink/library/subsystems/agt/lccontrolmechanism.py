@@ -266,25 +266,44 @@ Examples
 The following example generates an LCControlMechanism that modulates the function of two TransferMechanisms, one that uses
 a `Linear` function and the other a `Logistic` function::
 
-    my_mech_1 = TransferMechanism(function=Linear,
-                                  name='my_linear_mechanism')
-    my_mech_2 = TransferMechanism(function=Logistic,
-                                  name='my_logistic_mechanism')
+    >>> import psyneulink as pnl
+    >>> my_mech_1 = pnl.TransferMechanism(function=pnl.Linear,
+    ...                                   name='my_linear_mechanism')
+    >>> my_mech_2 = pnl.TransferMechanism(function=pnl.Logistic,
+    ...                                   name='my_logistic_mechanism')
 
-    LC = LCControlMechanism(modulated_mechanisms=[my_mech_1, my_mech_2],
-                     name='my_LC')
+    >>> LC = LCControlMechanism(modulated_mechanisms=[my_mech_1, my_mech_2],
+    ...                         name='my_LC')
 
-Calling `my_LC.show()` generates the following report::
-
-    my_LC
 COMMENT:
-        Monitoring the following Mechanism OutputStates:
-            None
+# Calling `LC.show()` generates the following report::
+#
+#     >>> LC.show()
+#     <BLANKLINE>
+#     ---------------------------------------------------------
+#     <BLANKLINE>
+#     my_LC
+#     <BLANKLINE>
+#       Monitoring the following Mechanism OutputStates:
+#     <BLANKLINE>
+#       Modulating the following parameters:
+#         my_logistic_mechanism: gain
+#         my_linear_mechanism: slope
+#     <BLANKLINE>
+#     ---------------------------------------------------------
 COMMENT
 
-        Modulating the following Mechanism parameters:
-            my_logistic_mechanism: gain
-            my_linear_mechanism: slope
+Calling `LC.show()` generates the following report::
+
+    my_LC
+
+      Monitoring the following Mechanism OutputStates:
+
+      Modulating the following parameters:
+        my_logistic_mechanism: gain
+        my_linear_mechanism: slope
+
+
 
 Note that the LCControlMechanism controls the `multiplicative_param <Function_Modulatory_Params>` of the `function
 <Mechanism_Base.function>` of each Mechanism:  the `gain <Logistic.gain>` parameter for ``my_mech_1``, since it uses
@@ -749,12 +768,12 @@ class LCControlMechanism(ControlMechanism):
         and the `multiplicative_params <Function_Modulatory_Params>` modulated by the LCControlMechanism.
         """
 
-        print ("\n---------------------------------------------------------")
+        print("\n---------------------------------------------------------")
 
-        print ("\n{0}".format(self.name))
+        print("\n{0}".format(self.name))
         print("\n\tMonitoring the following Mechanism OutputStates:")
         if self.objective_mechanism is None:
-            print ("\t\tNone")
+            print("\t\tNone")
         else:
             for state in self.objective_mechanism.input_states:
                 for projection in state.path_afferents:

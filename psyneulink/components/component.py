@@ -351,7 +351,7 @@ from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, D
     CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, \
     INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, \
     PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, \
-    SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+    SIZE, USER_PARAMS, VALUE, VARIABLE, MODULATORY_SPEC_KEYWORDS, kwComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
@@ -1220,8 +1220,11 @@ class Component(object):
                                              format(arg, self.__class__.__name__))
                     self.paramClassDefaults[arg] = default_arg
 
-            # param corresponding to arg IS already in paramClassDefaults, so ignore
+            # param corresponding to arg IS already in paramClassDefaults
             else:
+                # param has a value but paramClassDefaults is None, so assign param's value to paramClassDefaults
+                if self.paramClassDefaults[arg] is None and arg in defaults_dict and defaults_dict[arg] is not None:
+                    self.paramClassDefaults[arg] = defaults_dict[arg]
                 continue
 
         # ASSIGN ARG VALUES TO params dicts
@@ -1802,16 +1805,29 @@ class Component(object):
 
         # if request_set has been passed or created then validate and, if OK, assign params to target_set
         if request_set:
-            # For params that are a 2-item tuple, extract the value
-            #    both for validation and assignment (tuples are left intact in user_params_for_instantiation dict
-            #    which is used it instantiate the specified Components in the 2nd item of the tuple)
+            # For params that are a 2-item tuple, extract the value; and get value of single item modulatory specs
+            # Do this both for validation and assignment;
+            #   tuples and modulatory specs are left intact in user_params_for_instantiation dict
+            #   which are used to instantiate the specified Components
             # IMPLEMENTATION NOTE:  Do this here rather than in _validate_params, as it needs to be done before
             #                       any override of _validate_params, which (should not, but) may process params
             #                       before calling super()._validate_params
             for param_name, param_value in request_set.items():
+                # # MODIFIED 11/25/17 OLD:
+                # if isinstance(param_value, tuple):
+                #     param_value = self._get_param_value_from_tuple(param_value)
+                #     request_set[param_name] = param_value
+                # MODIFIED 11/25/17 NEW:
                 if isinstance(param_value, tuple):
                     param_value = self._get_param_value_from_tuple(param_value)
-                    request_set[param_name] = param_value
+                elif isinstance(param_value, (str, Component, type)):
+                    old_param_value = request_set[param_name]
+                    param_value = self._get_param_value_for_modulatory_spec(param_name, param_value)
+                else:
+                    continue
+                request_set[param_name] = param_value
+                # MODIFIED 11/25/17 END:
+
             try:
                 self._validate_params(variable=variable,
                                       request_set=request_set,
@@ -2230,13 +2246,42 @@ class Component(object):
                 raise ComponentError("Value of {} param for {} ({}) is not compatible with {}".
                                     format(param_name, self.name, param_value, type_name))
 
+    # MODIFIED 11/25/17 NEW:
+    def _get_param_value_for_modulatory_spec(self, param_name, param_value):
+        from psyneulink.globals.keywords import MODULATORY_SPEC_KEYWORDS
+        if isinstance(param_value, str):
+            param_spec = param_value
+        elif isinstance(param_value, Component):
+            param_spec = param_value.__class__.__name__
+        elif isinstance(param_value, type):
+            param_spec = param_value.__name__
+        else:
+            raise ComponentError("PROGRAM ERROR: got {} instead of string, Component, or Class".format(param_value))
+
+        if not param_spec in MODULATORY_SPEC_KEYWORDS:
+            return(param_value)
+
+        try:
+            param_default_value = self.paramClassDefaults[param_name]
+            # Only assign default value if it is not None
+            if param_default_value is not None:
+                return param_default_value
+            else:
+                return param_value
+        except:
+            raise ComponentError("PROGRAM ERROR: Could not get default value for {} of {} (to replace spec as {})".
+                                 format(param_name, self.name, param_value))
+
+    # MODIFIED 11/25/17 END:
+
     def _get_param_value_from_tuple(self, param_spec):
-        """Returns param value (first item) of a (value, projection) tuple
+        """Returns param value (first item) of a (value, projection) tuple;
         """
         from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-        ALLOWABLE_TUPLE_SPEC_KEYWORDS = {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING}
+
+        ALLOWABLE_TUPLE_SPEC_KEYWORDS = MODULATORY_SPEC_KEYWORDS
         ALLOWABLE_TUPLE_SPEC_CLASSES = (ModulatoryProjection_Base, ModulatorySignal, AdaptiveMechanism_Base)
 
         # If the 2nd item is a CONTROL or LEARNING SPEC, return the first item as the value

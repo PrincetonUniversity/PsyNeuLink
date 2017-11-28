@@ -138,8 +138,8 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
 
 .. _LearningMechanism_Input_Error_Signal:
 
-* *ERROR_SIGNAL* - receives the `value <OutputState.value> from the *OUTCOME* `OutputState
-  <ComparatorMechanism_Structure> of a `ComparatorMechanism` or the *ERROR_SIGNAL* OutputState of another
+* *ERROR_SIGNAL* - receives the `value <OutputState.value>` from the *OUTCOME* `OutputState
+  <ComparatorMechanism_Structure>` of a `ComparatorMechanism` or the *ERROR_SIGNAL* OutputState of another
   `LearningMechanism <LearningMechanism_Output_Error_Signal>`. If the
   `primary_learned_projection` projects to the `TERMINAL` Mechanism of the Process or System being learned,
   or is not part of a `multilayer learning sequence <LearningMechanism_Multilayer_Learning>`,
@@ -520,7 +520,9 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import InitStatus, parameter_keywords
-from psyneulink.components.functions.function import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.components.functions.function import BackPropagation, ModulationParam, _is_modulation_param, \
+    is_function_type
+from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
 from psyneulink.components.shellclasses import Mechanism
@@ -543,7 +545,8 @@ __all__ = [
 
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 
-def _is_learning_spec(spec):
+
+def _is_learning_spec(spec, include_matrix_spec=True):
     """Evaluate whether spec is a valid learning specification
 
     Return `True` if spec is LEARNING or a valid projection_spec (see Projection_Base._is_projection_spec)
@@ -552,10 +555,14 @@ def _is_learning_spec(spec):
     """
     from psyneulink.components.projections.projection import _is_projection_spec
 
-    if spec in {LEARNING, ENABLED}:
-        return True
-    else:
-        return _is_projection_spec(spec)
+    try:
+        if spec in {LEARNING, ENABLED}:
+            return True
+        else:
+            return _is_projection_spec(spec=spec,
+                                       include_matrix_spec=include_matrix_spec)
+    except:
+        return False
 
 
 # Used to index variable:
@@ -818,6 +825,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
     suffix = " " + className
 
     output_state_type = LearningSignal
+
+    state_list_attr = Mechanism_Base.state_list_attr.copy()
+    state_list_attr.update({LearningSignal:LEARNING_SIGNALS})
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
