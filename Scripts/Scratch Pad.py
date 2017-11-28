@@ -834,34 +834,17 @@ class ScratchPadError(Exception):
 print ("TEST DOCUMENTATION")
 
 
-my_input_layer = pnl.TransferMechanism(name='INPUT_LAYER', size=3)
-my_hidden_layer = pnl.TransferMechanism(name='HIDDEN_LAYER', size=5)
-my_output_layer = pnl.TransferMechanism(name='OUTPUT_LAYER', size=2)
+import psyneulink as pnl
+my_mech_1 = pnl.TransferMechanism(function=pnl.Linear,
+                                  name='my_linear_mechanism')
+my_mech_2 = pnl.TransferMechanism(function=pnl.Logistic,
+                                  name='my_logistic_mechanism')
 
-# my_gating_mechanism = pnl.GatingMechanism(gating_signals=[{pnl.NAME: 'GATE_ALL',
-#                                                            pnl.PROJECTIONS: [my_input_layer,
-#                                                                              my_hidden_layer,
-#                                                                              my_output_layer]}],
-#                                           modulation=pnl.ModulationParam.ADDITIVE)
-#
-#
-# my_gating_mechanism = pnl.GatingMechanism(gating_signals=[{pnl.NAME: 'GATING_SIGNAL_A',
-#                                                            pnl.MODULATION: pnl.ModulationParam.ADDITIVE,
-#                                                            pnl.PROJECTIONS: my_input_layer},
-#                                                           {pnl.NAME: 'GATING_SIGNAL_B',
-#                                                            pnl.PROJECTIONS: [my_hidden_layer,
-#                                                                              my_output_layer]}])
+LC = pnl.LCMechanism(modulated_mechanisms=[my_mech_1, my_mech_2],
+                 name='my_LC')
 
-my_gating_signal_A = pnl.GatingSignal(name='GATING_SIGNAL_A',
-                                      modulation=pnl.ModulationParam.ADDITIVE,
-                                      projections=my_input_layer)
-my_gating_signal_B = pnl.GatingSignal(name='GATING_SIGNAL_B',
-                                      projections=[my_hidden_layer,
-                                                   my_output_layer])
 
-my_gating_mechanism = pnl.GatingMechanism(name='MY_GATING_MECH',
-                                          gating_signals=[my_gating_signal_A,
-                                                          my_gating_signal_B])
+LC.show()
 
 
 #endregion
