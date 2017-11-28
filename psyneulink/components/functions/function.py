@@ -7859,19 +7859,19 @@ COMMENT:
 
     *ENTROPY*:
 
-       :math:`s = -\\sum\limits^{len}(i*log(j))`
+       :math:`s = -\\sum\\limits^{len}(i*log(j))`
 
     *DIFFERENCE*:
 
-       :math:`s = \\sum\limits^{len}(i-j)`
+       :math:`s = \\sum\\limits^{len}(i-j)`
 
     *EUCLIDEAN*:
 
-       :math:`s = \\sum\limits^{len}\\sqrt{(i-j)^2}`
+       :math:`s = \\sum\\limits^{len}\\sqrt{(i-j)^2}`
 
     *CORRELATION*:
 
-       :math:`s = \\frac{\\sum\limits^{len}(i-\\bar{i})(j-\\bar{j})}{(len-1)\\sigma_{i}\\sigma_{j}}`
+       :math:`s = \\frac{\\sum\\limits^{len}(i-\\bar{i})(j-\\bar{j})}{(len-1)\\sigma_{i}\\sigma_{j}}`
 
     **normalize**:
 

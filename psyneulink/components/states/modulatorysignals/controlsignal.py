@@ -414,7 +414,7 @@ class ControlSignal(ModulatorySignal):
     """
     ControlSignal(                                       \
         owner,                                           \
-\       index=SEQUENTIAL,                                \
+        index=SEQUENTIAL,                                \
         function=LinearCombination(operation=SUM),       \
         costs_options=ControlSignalCosts.DEFAULTS,       \
         intensity_cost_function=Exponential,             \
