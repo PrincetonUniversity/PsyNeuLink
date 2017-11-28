@@ -7,7 +7,7 @@ and electrophysiological data (from LC recordings) in non-human primates.
 import sys
 import numpy as np
 
-from psyneulink.library.subsystems.agt.gilzenrattransfermechanism import GilzenratTransferMechanism
+from psyneulink.library.mechanisms.processing.transfer.lca import LCA
 from psyneulink.components.functions.function import Linear, Logistic, NormalDist
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -23,7 +23,7 @@ b_response = 2.00  # Bias on response unit --- NOTE: Gilzenrat has negative sign
 w_XiIi = 1.00       # Connection weight from input units I1 and I2 to respective decision units X1 and X2
 w_XiIj = 0.33       # Cross talk weight from input unit to opposite decision unit
 w_XiXi = 1.00       # Recurrent self-connection weight for both decision units
-w_XiXj = -1.00      # Mutually inhibitory weight between decision units
+w_XiXj = 1.00       # Magnitude of mutually inhibitory weight between decision units
 w_X3X1 = 1.84       # Connection weight from target decision unit (X1) to response unit (X3)
 w_X3X3 = 2.00       # Recurrent self-connection weight for the response unit
 w_vX1 = 0.30        # Connection weight from target decision unit X1 to the abstracted LC
@@ -58,24 +58,32 @@ input_layer = TransferMechanism(size=2,
                                 initial_value=np.array([[0.0, 0.0]]),
                                 name='INPUT LAYER')
 
-# Decision Layer  --- [ Target, Distractor ]
-decision_layer = GilzenratTransferMechanism(size=2,
-                                            initial_value=np.array([[0.0, 0.0]]),
-                                            matrix=np.matrix([[w_XiXi, w_XiXj],
-                                                              [w_XiXj, w_XiXi]]),
-                                            time_step_size=dt,
-                                            noise=NormalDist(standard_dev=SD).function,
-                                            function=Logistic(bias=b_decision),
-                                            name='DECISION LAYER')
+# Create Decision Layer  --- [ Target, Distractor ]
 
-# Response  --- [ Target ]
-response = GilzenratTransferMechanism(size=1,
-                                      initial_value=np.array([[0.0]]),
-                                      matrix=np.matrix([[w_X3X3]]),
-                                      function=Logistic(bias=b_response),
-                                      time_step_size=dt,
-                                      noise=NormalDist(standard_dev=SD).function,
-                                      name='RESPONSE')
+decision_layer = LCA(size=2,
+                     time_step_size=dt,
+                     leak=-1.0,
+                     self_excitation=w_XiXi,
+                     competition=w_XiXj,
+                     #  Recurrent matrix: [  w_XiXi   -w_XiXj ]
+                     #                    [ -w_XiXj    w_XiXi ]
+                     function=Logistic(bias=b_decision),
+                     noise=NormalDist(standard_dev=SD).function,
+                     integrator_mode=True,
+                     name='DECISION LAYER')
+
+# Create Response Layer  --- [ Target ]
+
+response_layer = LCA(size=1,
+                     time_step_size=dt,
+                     leak=-1.0,
+                     self_excitation=w_X3X3,
+                     #  Recurrent matrix: [w_X3X3]
+                     #  Competition param does not apply because there is only one unit
+                     function=Logistic(bias=b_response),
+                     noise=NormalDist(standard_dev=SD).function,
+                     integrator_mode=True,
+                     name='RESPONSE')
 
 # Connect mechanisms --------------------------------------------------------------------------------------------------
 
@@ -91,7 +99,7 @@ decision_process = Process(pathway=[input_layer,
                                     input_weights,
                                     decision_layer,
                                     output_weights,
-                                    response],
+                                    response_layer],
                            name='DECISION PROCESS')
 
 # Monitor decision layer in order to modulate gain --------------------------------------------------------------------
@@ -124,12 +132,11 @@ LC = LCControlMechanism(integration_method="EULER",
                                                                                         np.array([[w_vX1],
                                                                                                   [0.0]]))],
                                                                name='LC ObjectiveMechanism'),
-                        modulated_mechanisms=[decision_layer, response],   # Modulate gain of decision & response layers
+                        modulated_mechanisms=[decision_layer, response_layer],  # Modulate gain of decision & response layers
                         name='LC')
+
 task = System(processes=[decision_process])
-print()
-print("OUTPUT STATES")
-print(LC.output_states)
+
 # Create Stimulus -----------------------------------------------------------------------------------------------------
 
 # number of trials
@@ -159,7 +166,7 @@ def record_trial():
     LC_results_u.append(LC.value[3][0])
     decision_layer_target_values.append(decision_layer.value[0][0])
     decision_layer_distractor_values.append(decision_layer.value[0][1])
-    response_layer_values.append(response.value[0][0])
+    response_layer_values.append(response_layer.value[0][0])
 
     # Progress bar
     current_trial_num = len(LC_results_h_of_v)
@@ -178,11 +185,12 @@ task.run(inputs=stimulus_dictionary,
          call_after_trial=record_trial)
 
 # Plot results of all units into one figure ---------------------------------------------------------------------------
+
 # import matplotlib
 # matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import numpy as np
-beingsaved = plt.figure()
+
 # Create x axis "t" for plotting
 t = np.arange(0.0, 20.02, 0.02)
 
@@ -216,8 +224,10 @@ plt.ylim((-0.2, 1.2))
 x_values = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
 plt.xticks(x_values)
 plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
+
+
 plt.show()
-beingsaved.savefig('gilzenrat_pnl.svg', format='svg', dpi=1000)
+
 task.show()
 
 # This displays a diagram of the System
