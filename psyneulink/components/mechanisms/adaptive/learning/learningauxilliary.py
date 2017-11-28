@@ -546,12 +546,14 @@ def _instantiate_learning_components(learning_projection, context=None):
                         target={NAME: TARGET,
                                 VARIABLE: target_input,
                                 PROJECTIONS: [lc.activation_mech_output]},
-                        name="{} {}".format(lc.activation_mech.name,
-                                            PREDICTION_ERROR_MECHANISM),
+                        output_states={NAME: OUTCOME,
+                                       VARIABLE: np.zeros_like(lc.activation_mech_output)},
                         function=LinearCombination(
                             default_variable=[np.zeros(len(sample_input)),
                                               np.zeros(len(sample_input))],
-                            weights=[-1, 1]),
+                            weights=[[-1], [1]]),
+                        name="{} {}".format(lc.activation_mech.name,
+                                            PREDICTION_ERROR_MECHANISM),
                         context=context)
                 print("objective mechanism value = {}".format(objective_mechanism.function))
             else:

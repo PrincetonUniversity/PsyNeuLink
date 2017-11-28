@@ -1308,7 +1308,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         offset = self.paramsCurrent[OFFSET]
 
         # Calculate using relevant aggregation operation and return
-        if (operation is SUM):
+        if operation is SUM:
             result = np.sum(variable) * scale + offset
         elif operation is PRODUCT:
             result = np.product(variable) * scale + offset
@@ -1578,7 +1578,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         Check that WEIGHTS and EXPONENTS are lists or np.arrays of numbers with length equal to variable
         Check that SCALE and OFFSET are either scalars or np.arrays of numbers with length and shape equal to variable
 
-        Note: the checks of compatiability with variable are only performed for validation calls during execution
+        Note: the checks of compatibility with variable are only performed for validation calls during execution
               (i.e., from check_args(), since during initialization or COMMAND_LINE assignment,
               a parameter may be re-assigned before variable assigned during is known
         """
