@@ -402,12 +402,13 @@ class LCA(RecurrentTransferMechanism):
                  size:tc.optional(tc.any(int, list, np.array))=None,
                  input_states:tc.optional(tc.any(list, dict))=None,
                  matrix=None,
-                 auto=None,  # not used: only here to avoid bugs
-                 hetero=None,
                  function=Logistic,
                  initial_value=None,
-                 decay:tc.optional(tc.any(int, float))=1.0,
-                 inhibition:tc.optional(tc.any(int, float))=1.0,
+                 leak=0.0,
+                 competition=0.0,
+                 self_excitation=0.0,
+                 # decay:tc.optional(tc.any(int, float))=1.0,
+                 # inhibition:tc.optional(tc.any(int, float))=1.0,
                  noise:is_numeric_or_none=0.0,
                  beta=1.0,
                  integrator_mode=True,
@@ -434,7 +435,9 @@ class LCA(RecurrentTransferMechanism):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,
-                                                  inhibition=inhibition,
+                                                  leak=leak,
+                                                  self_excitation=self_excitation,
+                                                  competition=competition,
                                                   beta=beta,
                                                   integrator_mode=integrator_mode,
                                                   time_step_size=time_step_size,
@@ -450,11 +453,11 @@ class LCA(RecurrentTransferMechanism):
         super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
-                         auto = 0,
-                         hetero = inhibition,
+                         auto=self_excitation,
+                         hetero=competition,
+                         leak=leak,
                          function=function,
                          initial_value=initial_value,
-                         decay=decay,
                          noise=noise,
                          clip=clip,
                          output_states=output_states,
@@ -561,10 +564,6 @@ class LCA(RecurrentTransferMechanism):
             else:
 
                 current_input = variable[0]
-        print("==================================================")
-        print(context)
-        print("variable = ", variable)
-        print("after integrator = ", current_input)
         # self.previous_input = current_input
 
         # Apply TransferMechanism function
@@ -578,7 +577,6 @@ class LCA(RecurrentTransferMechanism):
             maxCapIndices = np.where(output_vector > clip[1])
             output_vector[minCapIndices] = np.min(clip)
             output_vector[maxCapIndices] = np.max(clip)
-        print("output_vector = ", output_vector)
         return output_vector
     @property
     def inhibition(self):
