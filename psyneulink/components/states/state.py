@@ -1439,15 +1439,19 @@ class State_Base(State):
                 proj_sender = projection.init_args[SENDER]
                 proj_receiver = projection.init_args[RECEIVER]
 
+                # validate receiver
+                if proj_receiver is not None and proj_receiver != self:
+                    raise StateError("Projection ({}) assigned to {} of {} already has a receiver ({})".
+                                     format(projection_type.__name__, self.name, self.owner.name, proj_receiver.name))
                 projection.init_args[RECEIVER] = self
 
-                # validate/parse sender
+                # parse/validate sender
                 if proj_sender:
                     # If the Projection already has State as its sender,
                     #    it must be the same as the one specified in the connection spec
                     if isinstance(proj_sender, State) and proj_sender != state:
                         raise StateError("Projection assigned to {} of {} from {} already has a sender ({})".
-                                         format(self.name, self.owner.name, state.name, sender.name))
+                                         format(self.name, self.owner.name, state.name, proj_sender.name))
                     # If the Projection has a Mechanism specified as its sender:
                     elif isinstance(state, State):
                         #    Connection spec (state) is specified as a State,
@@ -1468,11 +1472,6 @@ class State_Base(State):
                 else:
                     sender = state
                 projection.init_args[SENDER] = sender
-
-                # validate receiver
-                if proj_receiver and not proj_receiver != self:
-                    raise StateError("Projection assigned to {} of {} already has a receiver ({})".
-                                     format(self.name, self.owner.name, proj_receiver.name))
 
                 # Construct and assign name
                 if isinstance(sender, State):

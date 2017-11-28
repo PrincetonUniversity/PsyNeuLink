@@ -770,7 +770,7 @@ class OutputState(State_Base):
 
     stateAttributes = State_Base.stateAttributes | {INDEX, CALCULATE}
 
-    connectsWith = [INPUT_STATE]
+    connectsWith = [INPUT_STATE, GATING_SIGNAL]
     connectsWithAttribute = [INPUT_STATES]
     projectionSocket = RECEIVER
     modulators = [GATING_SIGNAL]

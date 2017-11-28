@@ -809,21 +809,21 @@ gating_spec_list = [
 ]
 
 T = pnl.TransferMechanism(output_states=[
-    # pnl.GATING, # FIX INPUTSTATES
-    # pnl.GATING_SIGNAL, # FIX INPUTSATES
+    pnl.GATING,
+    # pnl.GATING_SIGNAL,
     # pnl.GatingSignal, # FIX OUTPUTSTATES / INPUTSTATES
-    # pnl.GatingSignal(), # FIX INPUTSTATES
+    # pnl.GatingSignal(),
     # pnl.GatingProjection, # FIX OUTPUTSTATES  / INPUTSTATES
     # pnl.GatingProjection(), # FIX OUTPUTSTATES
     # (0.3, pnl.GATING),  # FIX OUTPUTSTATES
     # (0.3, pnl.GATING_SIGNAL),  # FIX OUTPUTSTATES
-    # (0.3, pnl.GatingSignal),  # FIX: DOESN"T WORK FOR OUTPUT_STATES / INPUTSTATES
-    (0.3, pnl.GatingSignal()), # FIX INPUTSTATES
-    # (0.3, pnl.GatingProjection),  # FIX: DOESN"T WORK FOR OUTPUT_STATES / INPUTSTATES
-    # (0.3, pnl.GatingProjection())  # FIX: DOESN"T WORK FOR INPUT_STATES
+    # (0.3, pnl.GatingSignal),  # FIX: OUTPUT_STATES / INPUTSTATES
+    # (0.3, pnl.GatingSignal()),
+    # (0.3, pnl.GatingProjection),  # FIX: OUTPUT_STATES / INPUTSTATES
+    (0.3, pnl.GatingProjection())
 ])
 
-assert T.input_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[OutputState-0]'
+assert T.output_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[OutputState-0]'
 # assert T.input_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[InputState-0]'
 
 print(T.execute())

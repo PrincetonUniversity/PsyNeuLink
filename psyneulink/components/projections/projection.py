@@ -389,6 +389,7 @@ import warnings
 from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.components.states.state import StateError
+from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.globals.keywords import \
     NAME, PARAMS, CONTEXT, PATHWAY, \
     MECHANISM, INPUT_STATE, OUTPUT_STATE, PARAMETER_STATE_PARAMS, \
@@ -1275,10 +1276,12 @@ def _parse_connection_specs(connectee_state_type,
         raise ProjectionError("Called for {} with \'connectee_state_type\' arg ({}) that is not a class".
                          format(owner.name, connectee_state_type))
 
-    # Get connection attributes
+    # Get connection attributes (execept projection_socket, which depends on context)
     connects_with = [StateRegistry[name].subclass for name in connectee_state_type.connectsWith]
     connect_with_attr = connectee_state_type.connectsWithAttribute
-    projection_socket = connectee_state_type.projectionSocket
+    # MODIFIED 11/28/17 OLD:
+    # projection_socket = connectee_state_type.projectionSocket
+    # MODIFIED 11/28/17 END
     modulators = [StateRegistry[name].subclass for name in connectee_state_type.modulators]
 
     DEFAULT_WEIGHT = None
@@ -1302,6 +1305,13 @@ def _parse_connection_specs(connectee_state_type,
 
 
     for connection in connections:
+
+        # MODIFIED 11/28/17 NEW:
+        # Assign projection_socket based on connectee_state_type and projection spec
+        if _is_modulatory_spec(connection):
+            pass XYZ
+
+        # MODIFIED 11/28/17 END
 
         # FIX: 10/3/17 - IF IT IS ALREADY A PROJECTION OF THE CORRECT TYPE FOR THE CONNECTEE:
         # FIX:               ?? RETURN AS IS, AND/OR PARSE INTO DICT??
