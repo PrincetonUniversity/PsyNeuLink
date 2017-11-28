@@ -37,11 +37,11 @@ specifying DDM as its **mech_spec** argument.  The model implementation is selec
 argument. The function selection can be simply the name of a DDM function::
 
     >>> import psyneulink as pnl
-    >>> my_DDM = DDM(function=pnl.BogaczEtAl)
+    >>> my_DDM = pnl.DDM(function=pnl.BogaczEtAl)
 
 or a call to the function with arguments specifying its parameters::
 
-    >>> my_DDM = DDM(function=pnl.BogaczEtAl(drift_rate=0.2, threshold=1.0))
+    >>> my_DDM = pnl.DDM(function=pnl.BogaczEtAl(drift_rate=0.2, threshold=1.0))
 
 
 COMMENT:
@@ -125,21 +125,24 @@ Examples for each, that illustrate all of their parameters, are shown below:
 
 `BogaczEtAl <BogaczEtAl>` Function::
 
-    >>> my_DDM_BogaczEtAl = DDM(function=BogaczEtAl(drift_rate=3.0,
-    ...                                             starting_point=1.0,
-    ...                                             threshold=30.0,
-    ...                                             noise=1.5,
-    ...                                             t0 = 2.0),
-    ...                         name='my_DDM_BogaczEtAl')
+    >>> my_DDM_BogaczEtAl = pnl.DDM(function=pnl.BogaczEtAl(drift_rate=3.0,
+    ...                                                     starting_point=1.0,
+    ...                                                     threshold=30.0,
+    ...                                                      noise=1.5,
+    ...                                                      t0 = 2.0),
+    ...                             name='my_DDM_BogaczEtAl')
 
 `NavarroAndFuss <NavarroAndFuss>` Function (requires MATLAB engine)::
 
-    >>> my_DDM_NavarroAndFuss = DDM(function=NavarroAndFuss(drift_rate=3.0,
-    ...                                                     starting_point=1.0,
-    ...                                                     threshold=30.0,
-    ...                                                     noise=1.5,
-    ...                                                     t0 = 2.0),
-    ...                            name='my_DDM_NavarroAndFuss')
+    >>> import matlab.engine                                                               # doctest: +SKIP
+    >>> self.eng1 = matlab.engine.start_matlab('-nojvm')                                   # doctest: +SKIP
+
+    >>> my_DDM_NavarroAndFuss = pnl.DDM(function=pnl.NavarroAndFuss(drift_rate=3.0,        # doctest: +SKIP
+    ...                                                             starting_point=1.0,    # doctest: +SKIP
+    ...                                                             threshold=30.0,        # doctest: +SKIP
+    ...                                                             noise=1.5,             # doctest: +SKIP
+    ...                                                             t0 = 2.0),             # doctest: +SKIP
+    ...                                 name='my_DDM_NavarroAndFuss')                      # doctest: +SKIP
 
 .. _DDM_Integration_Mode:
 
@@ -153,11 +156,11 @@ mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <D
 
 `Integrator <Integrator>` Function::
 
-    >>> my_DDM_path_integrator = DDM(function=DriftDiffusionIntegrator(noise=0.5,
-    ...                                                                initializer=1.0,
-    ...                                                                t0=2.0,
-    ...                                                                rate=3.0),
-    ...                              name='my_DDM_path_integrator')
+    >>> my_DDM_path_integrator = pnl.DDM(function=pnl.DriftDiffusionIntegrator(noise=0.5,
+    ...                                                                        initializer=1.0,
+    ...                                                                        t0=2.0,
+    ...                                                                        rate=3.0),
+    ...                                   name='my_DDM_path_integrator')
 
 COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]

@@ -294,16 +294,17 @@ Example
 
 The following example implements a System with an EVCControlMechanism (and two processes not shown)::
 
-    >>> import psyneulink as pnl
-    >>> myRewardProcess = pnl.Process()
-    >>> myDecisionProcess = pnl.Process()
-    >>> mySystem = pnl.System(processes=[myRewardProcess, myDecisionProcess],
-    ...                       controller=pnl.EVCControlMechanism,
-    ...                       monitor_for_control=[Reward,
-    ...                                            pnl.DDM_OUTPUT.DECISION_VARIABLE,
-    ...                                            (pnl.RESPONSE_TIME, 1, -1)],
 
-It uses the System's `monitor_for_control` argument to assign three OutputStates to be monitored.  The first one
+    >>> import psyneulink as pnl                                                        #doctest: +SKIP
+    >>> myRewardProcess = pnl.Process(...)                                              #doctest: +SKIP
+    >>> myDecisionProcess = pnl.Process(...)                                            #doctest: +SKIP
+    >>> mySystem = pnl.System(processes=[myRewardProcess, myDecisionProcess],           #doctest: +SKIP
+    ...                       controller=pnl.EVCControlMechanism,                       #doctest: +SKIP
+    ...                       monitor_for_control=[Reward,                              #doctest: +SKIP
+    ...                                            pnl.DDM_OUTPUT.DECISION_VARIABLE,    #doctest: +SKIP
+    ...                                            (pnl.RESPONSE_TIME, 1, -1)],         #doctest: +SKIP
+
+It uses the System's **monitor_for_control** argument to assign three OutputStates to be monitored.  The first one
 references the Reward Mechanism (not shown);  its `primary OutputState <OutputState_Primary>` will be used by default.
 The second and third use keywords that are the names of outputStates of a  `DDM` Mechanism (also not shown).
 The last one (RESPONSE_TIME) is assigned a weight of 1 and an exponent of -1. As a result, each calculation of the EVC

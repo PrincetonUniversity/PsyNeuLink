@@ -432,8 +432,8 @@ or::
     ...               output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                              pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
 
-    >>> my_mech.add_states(another_decision_entropy_output_state)
-    {'output_states': [(OutputState OutputState-1)], 'input_states': None}
+    >>> my_mech.add_states(another_decision_entropy_output_state) # doctest: +ELLIPSIS
+    [...]
 
 The line after the last command is the `add_state <Mecanism_Base.add_states>` method returning the list of States
 add to the Mechanism. Note, also, that a separate OutputState had to be used for the second example, as trying to

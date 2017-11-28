@@ -833,35 +833,99 @@ class ScratchPadError(Exception):
 #region TEST DOCUMENTATION
 print ("TEST DOCUMENTATION")
 
+# # import matlab.engine
+# # eng1 = matlab.engine.start_matlab('-nojvm')
+# my_DDM_NavarroAndFuss = pnl.DDM(function=pnl.NavarroAndFuss(drift_rate=3.0,
+#                                                             starting_point=1.0,
+#                                                             threshold=30.0,
+#                                                             noise=1.5,
+#                                                             t0 = 2.0),
+#                                 name='my_DDM_NavarroAndFuss')
 
-my_input_layer = pnl.TransferMechanism(name='INPUT_LAYER', size=3)
-my_hidden_layer = pnl.TransferMechanism(name='HIDDEN_LAYER', size=5)
-my_output_layer = pnl.TransferMechanism(name='OUTPUT_LAYER', size=2)
 
-# my_gating_mechanism = pnl.GatingMechanism(gating_signals=[{pnl.NAME: 'GATE_ALL',
-#                                                            pnl.PROJECTIONS: [my_input_layer,
-#                                                                              my_hidden_layer,
-#                                                                              my_output_layer]}],
-#                                           modulation=pnl.ModulationParam.ADDITIVE)
-#
-#
-# my_gating_mechanism = pnl.GatingMechanism(gating_signals=[{pnl.NAME: 'GATING_SIGNAL_A',
-#                                                            pnl.MODULATION: pnl.ModulationParam.ADDITIVE,
-#                                                            pnl.PROJECTIONS: my_input_layer},
-#                                                           {pnl.NAME: 'GATING_SIGNAL_B',
-#                                                            pnl.PROJECTIONS: [my_hidden_layer,
-#                                                                              my_output_layer]}])
+import psyneulink as pnl
 
-my_gating_signal_A = pnl.GatingSignal(name='GATING_SIGNAL_A',
-                                      modulation=pnl.ModulationParam.ADDITIVE,
-                                      projections=my_input_layer)
-my_gating_signal_B = pnl.GatingSignal(name='GATING_SIGNAL_B',
-                                      projections=[my_hidden_layer,
-                                                   my_output_layer])
+A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
+B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
+C = pnl.TransferMechanism(function=pnl.Linear(), name='C')
 
-my_gating_mechanism = pnl.GatingMechanism(name='MY_GATING_MECH',
-                                          gating_signals=[my_gating_signal_A,
-                                                          my_gating_signal_B])
+p = pnl.Process(
+    pathway=[A, B, C],
+    name = 'p'
+)
+s = pnl.System(
+    processes=[p],
+    name='s'
+)
+my_scheduler = pnl.Scheduler(system=s)
+
+# implicit condition of Always for A
+my_scheduler.add_condition(B, pnl.scheduling.condition.EveryNCalls(A, 2))
+my_scheduler.add_condition(C, pnl.scheduling.condition.EveryNCalls(B, 3))
+
+# implicit AllHaveRun Termination condition
+execution_sequence = list(my_scheduler.run())
+execution_sequence
+
+A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
+B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
+
+p = pnl.Process(
+    pathway=[A, B],
+    name = 'p'
+)
+s = pnl.System(
+   processes=[p],
+   name='s'
+)
+my_scheduler = pnl.Scheduler(system=s)
+
+my_scheduler.add_condition(A,
+                           pnl.scheduling.condition.Any(pnl.scheduling.condition.AtPass(0),
+                                                        pnl.scheduling.condition.EveryNCalls(B, 2)))
+my_scheduler.add_condition(B,
+                           pnl.scheduling.condition.Any(pnl.scheduling.condition.EveryNCalls(A, 1),
+                           pnl.scheduling.condition.EveryNCalls(B, 1)))
+
+termination_conds = {ts: None for ts in pnl.TimeScale}
+termination_conds[pnl.TimeScale.TRIAL] = pnl.scheduling.condition.AfterNCalls(B,
+                                                                              4,
+                                                                              time_scale=pnl.TimeScale.TRIAL)
+# CRASHING on line 473 of scheduler (self.termination_conds[ts] is None)
+execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
+
+A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
+B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
+C = pnl.TransferMechanism(function=pnl.Linear(), name='C')
+
+p = pnl.Process(
+        pathway=[A, C],
+        name = 'p'
+)
+q = pnl.Process(
+        pathway=[B, C],
+        name = 'q'
+)
+s = pnl.System(
+        processes=[p, q],
+        name='s'
+)
+my_scheduler = pnl.Scheduler(system=s)
+
+my_scheduler.add_condition(A, pnl.scheduling.condition.EveryNPasses(1))
+my_scheduler.add_condition(B, pnl.scheduling.condition.EveryNCalls(A, 2))
+my_scheduler.add_condition(C,
+                           pnl.scheduling.condition.Any(pnl.scheduling.condition.AfterNCalls(A, 3),
+                                                        pnl.scheduling.condition.AfterNCalls(B, 3)))
+
+termination_conds = {ts: None for ts in pnl.TimeScale}
+termination_conds[pnl.TimeScale.TRIAL] = pnl.scheduling.condition.AfterNCalls(C,
+                                                                              4,
+                                                                              time_scale=pnl.TimeScale.TRIAL)
+execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
+
+
+
 
 
 #endregion

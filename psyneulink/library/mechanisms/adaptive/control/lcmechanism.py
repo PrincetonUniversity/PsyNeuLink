@@ -10,16 +10,6 @@
 
 """
 
-.. note::
-   **THIS MECHANISM IS ONLY PARTIALLY IMPLEMENTED.**
-
-   IT CAN MODULATE MECHANISMS, BUT:
-
-   - IT DOES NOT YET AUTOMATICALLY GENERATE A `UtilityIntegrator` AS ITS OBJECTIVE MECHANISM
-   ..
-   - THE `FitzHughNagumoIntegration` FUNCTION AND ASSOCIATED `mode` PARAMETER HAVE NOT YET BEEN IMPLEMENTED
-
-
 Overview
 --------
 
@@ -168,12 +158,27 @@ a `Linear` function and the other a `Logistic` function::
     >>> my_mech_2 = pnl.TransferMechanism(function=pnl.Logistic,
     ...                                   name='my_logistic_mechanism')
 
-    >>> LC = LCMechanism(modulated_mechanisms=[my_mech_1, my_mech_2],
-    ...                  name='my_LC')
+    >>> LC = pnl.LCMechanism(modulated_mechanisms=[my_mech_1, my_mech_2],
+    ...                      name='my_LC')
 
-Calling `LC.show()` generates the following report::
-
-    >>> LC.show()
+COMMENT:
+# Calling `LC.show()` generates the following report::
+#
+#     >>> LC.show()
+#     <BLANKLINE>
+#     ---------------------------------------------------------
+#     <BLANKLINE>
+#     my_LC
+#     <BLANKLINE>
+#     	Monitoring the following Mechanism OutputStates:
+#     		None
+#     <BLANKLINE>
+#     	Modulating the following parameters:
+#     		my_linear_mechanism: slope
+#     		my_logistic_mechanism: gain
+#     <BLANKLINE>
+#     ---------------------------------------------------------
+COMMENT
 
 COMMENT:
         Monitoring the following Mechanism OutputStates:
@@ -491,7 +496,7 @@ class LCMechanism(ControlMechanism):
                               method should be implemented that also implements an _instantiate_monitored_output_states
                               method, and that can be used to add OutputStates/Mechanisms to be monitored.
         """
-        self.monitored_output_states = []
+        self._monitored_output_states = []
 
         if not hasattr(self, INPUT_STATES):
             self._input_states = None
@@ -636,10 +641,10 @@ class LCMechanism(ControlMechanism):
 
         print ("\n{0}".format(self.name))
         print("\n\tMonitoring the following Mechanism OutputStates:")
-        if self.monitoring_mechanism is None:
+        if self.monitored_output_states is None:
             print ("\t\tNone")
         else:
-            for state in self.monitoring_mechanism.input_states:
+            for state in self.monitored_output_states:
                 for projection in state.path_afferents:
                     monitored_state = projection.sender
                     monitored_state_mech = projection.sender.owner
