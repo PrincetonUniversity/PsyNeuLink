@@ -560,6 +560,7 @@ def _is_learning_spec(spec, include_matrix_spec=True):
             return True
         else:
             return _is_projection_spec(spec=spec,
+                                       type=LEARNING_PROJECTION,
                                        include_matrix_spec=include_matrix_spec)
     except:
         return False

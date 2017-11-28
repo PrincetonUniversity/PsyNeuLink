@@ -989,7 +989,8 @@ class OutputState(State_Base):
 
         """
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-        from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
+        from psyneulink.components.states.modulatorysignals.modulatorysignal import \
+            ModulatorySignal, _is_modulatory_spec
         from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.components.projections.projection import ProjectionTuple
@@ -997,14 +998,18 @@ class OutputState(State_Base):
 
         # Treat as ModulatoryProjection spec if it is a ModulatoryProjection, ModulatorySignal or AdaptiveMechanism
         # or one of those is the first or last item of a ProjectionTuple
+        # modulatory_projections = [proj for proj in projections
+        #                           if (isinstance(proj, (ModulatoryProjection_Base,
+        #                                                ModulatorySignal,
+        #                                                AdaptiveMechanism_Base)) or
+        #                               (isinstance(proj, ProjectionTuple) and
+        #                                any(isinstance(item, (ModulatoryProjection_Base,
+        #                                                    ModulatorySignal,
+        #                                                    AdaptiveMechanism_Base)) for item in proj)))]
         modulatory_projections = [proj for proj in projections
-                                  if (isinstance(proj, (ModulatoryProjection_Base,
-                                                       ModulatorySignal,
-                                                       AdaptiveMechanism_Base)) or
+                                  if (_is_modulatory_spec(proj) or
                                       (isinstance(proj, ProjectionTuple) and
-                                       any(isinstance(item, (ModulatoryProjection_Base,
-                                                           ModulatorySignal,
-                                                           AdaptiveMechanism_Base)) for item in proj)))]
+                                       any(_is_modulatory_spec(item) for item in proj)))]
         self._instantiate_projections_to_state(projections=modulatory_projections, context=context)
 
         # Treat all remaining specifications in projections as ones for outgoing MappingProjections

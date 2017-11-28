@@ -789,8 +789,9 @@ class ScratchPadError(Exception):
 # #     print('-------------\nSIGNAL: {}\nMOD_AFFERENTS: {}\nSIGNAL: {}\nMOD_AFFERENTS: {}'
 # #           .format(c2, m.parameter_states[pnl.NOISE].mod_afferents,
 # #                   c1, m.parameter_states[pnl.GAIN].mod_afferents))
-#
-#
+
+# ----------------------------------------------------
+
 gating_spec_list = [
     pnl.GATING,
     pnl.GATING_SIGNAL,
@@ -805,30 +806,38 @@ gating_spec_list = [
 ]
 
 T = pnl.TransferMechanism(output_states=[
-    # pnl.GATING,  # FIX: DOESN"T WORK FOR OUTPUT_STATES
-    # pnl.GATING_SIGNAL,  # FIX: DOESN"T WORK FOR OUTPUT_STATES
-    # pnl.GatingSignal,  # FIX: DOESN"T WORK FOR OUTPUT_STATES
-    pnl.GatingSignal(),
-    # (0.3, pnl.GATING),  # FIX: DOESN"T WORK FOR OUTPUT_STATES
-    # (0.3, pnl.GATING_SIGNAL),  # FIX: DOESN"T WORK FOR OUTPUT_STATES
-    # (0.3, pnl.GatingSignal),  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+    pnl.GATING,
+    # pnl.GATING_SIGNAL,
+    # pnl.GatingSignal, # FIX OUTPUTSTATES / INPUTSTATES
+    # pnl.GatingSignal(),
+    # pnl.GatingProjection, # FIX OUTPUTSTATES  / INPUTSTATES
+    # pnl.GatingProjection(), # FIX OUTPUTSTATES
+    # (0.3, pnl.GATING),
+    # (0.3, pnl.GATING_SIGNAL),
+    # (0.3, pnl.GatingSignal),  # FIX: DOESN"T WORK FOR OUTPUT_STATES / INPUTSTATES
     # (0.3, pnl.GatingSignal()),
-    # (0.3, pnl.GatingProjection),  # FIX: DOESN"T WORK FOR OUTPUT_STATES
-    # (0.3, pnl.GatingProjection())
+    # (0.3, pnl.GatingProjection),  # FIX: DOESN"T WORK FOR OUTPUT_STATES / INPUTSTATES
+    # (0.3, pnl.GatingProjection())  # FIX: DOESN"T WORK FOR OUTPUT_STATES
 ])
+
+assert T.output_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[OutputState-0]'
+# assert T.input_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[InputState-0]'
 
 print(T.execute())
 #
-# # for i, gating_tuple in enumerate([i for i in zip(gating_spec_list, reversed(gating_spec_list))]):
-# #     G1, G2 = gating_tuple
-# #     T = pnl.TransferMechanism(input_states=[G1],
-# #                               output_states=[G2])
-# #     assert T.input_states[0].mod_afferents[0].name in \
-# #            'GatingProjection for TransferMechanism-0[InputState-{}]'.format(i)
-# #
-# #     assert T.output_states[0].mod_afferents[0].name in \
-# #            'GatingProjection for TransferMechanism-0[OutputState-{}]'.format(i)
-#
+# ----------------------------------------------------
+
+
+
+# R1 = pnl.TransferMechanism(name='R1', output_states=['OUTPUT_1', 'OUTPUT_2'])
+# R2 = pnl.TransferMechanism(name='R2', default_variable=[[0],[0]],
+#                         input_states=['INPUT_1', 'INPUT_2'])
+# T = pnl.TransferMechanism(name = 'T', input_states=[{pnl.MECHANISM: R1,
+#                                       pnl.OUTPUT_STATES: ['OUTPUT_1', 'OUTPUT_2']}],
+#                        output_states=[{pnl.MECHANISM:R2,
+#                                        pnl.INPUT_STATES: ['INPUT_1', 'INPUT_2']}])
+
+
 
 #endregion
 #region TEST DOCUMENTATION

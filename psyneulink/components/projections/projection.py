@@ -952,12 +952,13 @@ class Projection_Base(Projection):
                               format(self.__class__.__name__))
 
 
-def _is_projection_spec(spec, include_matrix_spec=True):
+@tc.typecheck
+def _is_projection_spec(spec, proj_type:tc.optional(Projection)=None, include_matrix_spec=True):
     """Evaluate whether spec is a valid Projection specification
 
     Return `True` if spec is any of the following:
-    + Projection class (or keyword string constant for one):
-    + Projection object:
+    + Projection object, and of specified type (if proj_type is specified)
+    + Projection class (or keyword string constant for one), and of specified type (if proj_type is specified)
     + 2-item tuple of which the second is a projection_spec (checked recursively with this method):
     + specification dict containing:
         + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
@@ -966,13 +967,28 @@ def _is_projection_spec(spec, include_matrix_spec=True):
     Otherwise, return :keyword:`False`
     """
 
-    if isinstance(spec, (Projection, State)):
+    if isinstance(spec, Projection):
+        if proj_type is None or isinstance(spec, type):
+                return True
+        else:
+            return False
+    if isinstance(spec, State):
+        # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
-    if inspect.isclass(spec) and issubclass(spec, (Projection, State)):
-        return True
+    if inspect.isclass(spec):
+        if issubclass(spec, State):
+            # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
+            return True
+        if issubclass(spec, Projection):
+            if issubclass(spec, proj_type):
+                return True
+            else:
+                return False
     if isinstance(spec, dict) and any(key in spec for key in {PROJECTION_TYPE, SENDER, RECEIVER, MATRIX}):
+        # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
     if isinstance(spec, str) and spec in PROJECTION_SPEC_KEYWORDS:
+        # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
     if include_matrix_spec:
         if isinstance(spec, str) and spec in MATRIX_KEYWORD_SET:

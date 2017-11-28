@@ -171,27 +171,27 @@ class TestProjectionSpecificationFormats:
             assert R.parameter_states[pnl.GAIN].mod_afferents[0].name in \
                    'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)
 
-    # def test_formats_for_gating_specification(self):
-    #
-    #     gating_spec_list = [
-    #         pnl.GATING,
-    #         pnl.GATING_SIGNAL,
-    #         pnl.GatingSignal,
-    #         pnl.GatingSignal(),
-    #         (0.3, pnl.GATING),
-    #         (0.3, pnl.GATING_SIGNAL),
-    #         (0.3, pnl.GatingSignal),
-    #         (0.3, pnl.GatingSignal()),
-    #         (0.3, pnl.GatingProjection),
-    #         (0.3, pnl.GatingProjection())
-    #     ]
-    #
-    #     for i, gating_tuple in enumerate([i for i in zip(gating_spec_list, reversed(gating_spec_list))]):
-    #         G1, G2 = gating_tuple
-    #         T = pnl.TransferMechanism(input_states=[G1],
-    #                                   output_states=[G2])
-    #         assert T.input_states[0].mod_afferents[0].name in \
-    #                'GatingProjection for TransferMechanism-0[InputState-{}]'.format(i)
-    #
-    #         assert T.output_states[0].mod_afferents[0].name in \
-    #                'GatingProjection for TransferMechanism-0[OutputState-{}]'.format(i)
+    def test_formats_for_gating_specification(self):
+
+        gating_spec_list = [
+            pnl.GATING,
+            pnl.GATING_SIGNAL,
+            pnl.GatingSignal,
+            pnl.GatingSignal(),
+            (0.3, pnl.GATING),
+            (0.3, pnl.GATING_SIGNAL),
+            (0.3, pnl.GatingSignal),
+            (0.3, pnl.GatingSignal()),
+            (0.3, pnl.GatingProjection),
+            (0.3, pnl.GatingProjection())
+        ]
+
+        for i, gating_tuple in enumerate([i for i in zip(gating_spec_list, reversed(gating_spec_list))]):
+            G1, G2 = gating_tuple
+            T = pnl.TransferMechanism(input_states=[G1],
+                                      output_states=[G2])
+            assert T.input_states[0].mod_afferents[0].name in \
+                   'GatingProjection for TransferMechanism-{}[InputState-0]'.format(i)
+
+            assert T.output_states[0].mod_afferents[0].name in \
+                   'GatingProjection for TransferMechanism-{}[OutputState-0]'.format(i)
