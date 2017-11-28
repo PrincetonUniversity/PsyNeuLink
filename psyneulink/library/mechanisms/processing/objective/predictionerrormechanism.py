@@ -103,9 +103,8 @@ class PredictionErrorMechanism(ComparatorMechanism):
                          prefs=prefs,
                          context=context)
 
-        self.function.variable = np.zeros_like(self.input_state[SAMPLE].variable)
-
         print("input state for PEM = {}".format(self.input_state))
+        print("PEM value = {}".format(self.function))
         # self.standard_output_states[OUTCOME].
 
         # self.integrator_function = AdaptiveIntegrator(

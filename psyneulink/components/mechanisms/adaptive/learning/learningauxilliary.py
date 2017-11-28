@@ -137,7 +137,7 @@ from psyneulink.library.mechanisms.processing.objective.predictionerrormechanism
     import PredictionErrorMechanism
 from psyneulink.components.component import function_type, method_type
 from psyneulink.components.functions.function import BackPropagation, Hebbian, \
-    Linear, Reinforcement, TDLearning
+    Linear, Reinforcement, TDLearning, LinearCombination
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import \
@@ -475,9 +475,10 @@ def _instantiate_learning_components(learning_projection, context=None):
             try:
                 error_derivative = lc.error_derivative
             except AttributeError:
-                raise LearningAuxilliaryError("Function for error_mech of {} must have a derivative "
-                                              "to be used with {}".
-                                              format(learning_projection.name, BackPropagation.componentName))
+                raise LearningAuxilliaryError("Function for error_mech of {} "
+                                              "must have a derivative to be "
+                                              "used with {}".format(learning_projection.name,
+                                                                    BackPropagation.componentName))
 
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     DERIVATIVE, LEARNING_RATE, ERROR_MATRIX
@@ -492,8 +493,9 @@ def _instantiate_learning_components(learning_projection, context=None):
                                             context=context)
 
     else:
-        raise LearningAuxilliaryError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
-                                  format(learning_function.componentName, learning_projection.name))
+        raise LearningAuxilliaryError("PROGRAM ERROR: unrecognized learning "
+                                      "function ({}) for {}".format(learning_function.componentName,
+                                                                    learning_projection.name))
 
 
     # INSTANTIATE ObjectiveMechanism
@@ -538,23 +540,28 @@ def _instantiate_learning_components(learning_projection, context=None):
             if learning_function.componentName == TDLEARNING_FUNCTION:
 
                 objective_mechanism = PredictionErrorMechanism(
-                    sample={NAME: SAMPLE,
-                            VARIABLE: sample_input,
-                            PROJECTIONS: [lc.activation_mech_output]},
-                    target={NAME: TARGET,
-                            VARIABLE: target_input,
-                            PROJECTIONS: [lc.activation_mech_output]},
-                    name="{} {}".format(lc.activation_mech.name,
-                                        PREDICTION_ERROR_MECHANISM),
-                    context=context)
+                        sample={NAME: SAMPLE,
+                                VARIABLE: sample_input,
+                                PROJECTIONS: [lc.activation_mech_output]},
+                        target={NAME: TARGET,
+                                VARIABLE: target_input,
+                                PROJECTIONS: [lc.activation_mech_output]},
+                        name="{} {}".format(lc.activation_mech.name,
+                                            PREDICTION_ERROR_MECHANISM),
+                        function=LinearCombination(
+                            default_variable=[np.zeros(len(sample_input)),
+                                              np.zeros(len(sample_input))],
+                            weights=[-1, 1]),
+                        context=context)
+                print("objective mechanism value = {}".format(objective_mechanism.function))
             else:
 
-                objective_mechanism = ComparatorMechanism(sample={NAME:SAMPLE,
-                                                                  VARIABLE:sample_input,
-                                                                  PROJECTIONS:[lc.activation_mech_output],
-                                                                  WEIGHT:-1},
-                                                          target={NAME:TARGET,
-                                                                  VARIABLE:target_input},
+                objective_mechanism = ComparatorMechanism(sample={NAME: SAMPLE,
+                                                                  VARIABLE: sample_input,
+                                                                  PROJECTIONS: [lc.activation_mech_output],
+                                                                  WEIGHT: -1},
+                                                          target={NAME: TARGET,
+                                                                  VARIABLE: target_input},
                                                           # input_states=[sample_input, target_input],
                                                           # FOR TESTING: ALTERNATIVE specifications of input_states arg:
                                                           # input_states=[(sample_input, FULL_CONNECTIVITY_MATRIX),

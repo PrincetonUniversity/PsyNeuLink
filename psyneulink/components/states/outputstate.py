@@ -194,7 +194,7 @@ OutputState, as in the following example::
                                    CALCULATE: Entropy().function }])
 
 COMMENT:
-   ADD VERSION IN WHICH INDEX IS SPECIFICED USING DDM_standard_output_states
+   ADD VERSION IN WHICH INDEX IS SPECIFIED USING DDM_standard_output_states
 COMMENT
 
 In this example, ``my_mech`` is configured with three OutputStates.  The first two are `Standard OutputStates
