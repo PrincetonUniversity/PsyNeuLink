@@ -404,13 +404,10 @@ class LCA(RecurrentTransferMechanism):
                  matrix=None,
                  function=Logistic,
                  initial_value=None,
-                 leak=0.0,
-                 competition=0.0,
+                 leak=0.5,
+                 competition=1.0,
                  self_excitation=0.0,
-                 # decay:tc.optional(tc.any(int, float))=1.0,
-                 # inhibition:tc.optional(tc.any(int, float))=1.0,
                  noise:is_numeric_or_none=0.0,
-                 beta=1.0,
                  integrator_mode=True,
                  time_step_size=0.1,
                  clip=None,
@@ -438,7 +435,6 @@ class LCA(RecurrentTransferMechanism):
                                                   leak=leak,
                                                   self_excitation=self_excitation,
                                                   competition=competition,
-                                                  beta=beta,
                                                   integrator_mode=integrator_mode,
                                                   time_step_size=time_step_size,
                                                   output_states=output_states,
@@ -454,8 +450,7 @@ class LCA(RecurrentTransferMechanism):
                          size=size,
                          input_states=input_states,
                          auto=self_excitation,
-                         hetero=competition,
-                         leak=leak,
+                         hetero=-competition,
                          function=function,
                          initial_value=initial_value,
                          noise=noise,
@@ -514,7 +509,7 @@ class LCA(RecurrentTransferMechanism):
         # Use self.instance_defaults.variable to initialize state of input
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
-        time_scale = self.time_scale
+        # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         integrator_mode = self.integrator_mode
 
         #region ASSIGN PARAMETER VALUES
@@ -541,14 +536,14 @@ class LCA(RecurrentTransferMechanism):
                                             initializer=self.initial_value,
                                             noise=self.noise,
                                             time_step_size=self.time_step_size,
-                                            rate=self.beta,
+                                            rate=self.leak,
                                             owner=self)
 
             current_input = self.integrator_function.execute(variable,
                                                         # Should we handle runtime params?
                                                               params={INITIALIZER: self.initial_value,
                                                                       NOISE: self.noise,
-                                                                      RATE: self.beta,
+                                                                      RATE: self.leak,
                                                                       TIME_STEP_SIZE: self.time_step_size},
                                                               context=context
 

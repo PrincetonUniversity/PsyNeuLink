@@ -1,11 +1,11 @@
 import pytest
+import numpy as np
 
 from psyneulink.library.mechanisms.processing.transfer.lca import LCA
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.functions.function import Linear, Logistic
+from psyneulink.components.functions.function import Linear
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
-import numpy as np
 
 class TestLCA:
     def test_LCA_length_1(self):
@@ -14,7 +14,7 @@ class TestLCA:
         L = LCA(function=Linear(slope=2.0),
                 self_excitation=3.0,
                 leak=0.5,
-                competition=-1.0,
+                competition=1.0,   #  competition does not matter because we only have one unit
                 time_step_size=0.1)
         P = Process(pathway=[T, L])
         S = System(processes=[P])
@@ -66,7 +66,7 @@ class TestLCA:
                 size=2,
                 self_excitation=3.0,
                 leak=0.5,
-                competition=-1.0,
+                competition=1.0,
                 time_step_size=0.1)
         P = Process(pathway=[T, L])
         S = System(processes=[P])
@@ -94,26 +94,26 @@ class TestLCA:
 
         # - - - - - - - TRIAL 1 - - - - - - -
 
-        # new_transfer_input_1 = 0.0 + ( 0.5 * 0.0 + 3.0 * 0.0 + (-1.0)*0.0 + 1.0)*0.1 + 0.0    =    0.1
+        # new_transfer_input_1 = 0.0 + ( 0.5 * 0.0 + 3.0 * 0.0 - 1.0*0.0 + 1.0)*0.1 + 0.0    =    0.1
         # f(new_transfer_input_1) = 0.1 * 2.0 = 0.2
 
-        # new_transfer_input_2 = 0.0 + ( 0.5 * 0.0 + 3.0 * 0.0 + (-1.0)*0.0 + 2.0)*0.1 + 0.0    =    0.2
+        # new_transfer_input_2 = 0.0 + ( 0.5 * 0.0 + 3.0 * 0.0 - 1.0*0.0 + 2.0)*0.1 + 0.0    =    0.2
         # f(new_transfer_input_2) = 0.2 * 2.0 = 0.4
 
         # - - - - - - - TRIAL 2 - - - - - - -
 
-        # new_transfer_input = 0.1 + ( 0.5 * 0.1 + 3.0 * 0.2 + (-1.0)*0.4 + 1.0)*0.1 + 0.0    =    0.225
+        # new_transfer_input = 0.1 + ( 0.5 * 0.1 + 3.0 * 0.2 - 1.0*0.4 + 1.0)*0.1 + 0.0    =    0.225
         # f(new_transfer_input) = 0.265 * 2.0 = 0.45
 
-        # new_transfer_input_2 = 0.2 + ( 0.5 * 0.2 + 3.0 * 0.4 + (-1.0)*0.2 + 2.0)*0.1 + 0.0    =    0.51
+        # new_transfer_input_2 = 0.2 + ( 0.5 * 0.2 + 3.0 * 0.4 - 1.0*0.2 + 2.0)*0.1 + 0.0    =    0.51
         # f(new_transfer_input_2) = 0.1 * 2.0 = 1.02
 
         # - - - - - - - TRIAL 3 - - - - - - -
 
-        # new_transfer_input = 0.225 + ( 0.5 * 0.225 + 3.0 * 0.45 + (-1.0)*1.02 + 1.0)*0.1 + 0.0    =    0.36925
+        # new_transfer_input = 0.225 + ( 0.5 * 0.225 + 3.0 * 0.45 - 1.0*1.02 + 1.0)*0.1 + 0.0    =    0.36925
         # f(new_transfer_input) = 0.36925 * 2.0 = 0.7385
 
-        # new_transfer_input_2 = 0.51 + ( 0.5 * 0.51 + 3.0 * 1.02 + (-1.0)*0.45 + 2.0)*0.1 + 0.0    =    0.9965
+        # new_transfer_input_2 = 0.51 + ( 0.5 * 0.51 + 3.0 * 1.02 - 1.0*0.45 + 2.0)*0.1 + 0.0    =    0.9965
         # f(new_transfer_input_2) = 0.9965 * 2.0 = 1.463
 
         assert np.allclose(results, [[0.2, 0.4], [0.45, 1.02], [0.7385, 1.993]])
