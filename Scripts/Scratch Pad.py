@@ -795,10 +795,13 @@ class ScratchPadError(Exception):
 gating_spec_list = [
     pnl.GATING,
     pnl.GATING_SIGNAL,
+    pnl.GATING_PROJECTION,
     pnl.GatingSignal,
+    pnl.GatingSignal(),
     pnl.GatingSignal(),
     (0.3, pnl.GATING),
     (0.3, pnl.GATING_SIGNAL),
+    (0.3, pnl.GATING_PROJECTION),
     (0.3, pnl.GatingSignal),
     (0.3, pnl.GatingSignal()),
     (0.3, pnl.GatingProjection),
@@ -806,21 +809,21 @@ gating_spec_list = [
 ]
 
 T = pnl.TransferMechanism(output_states=[
-    pnl.GATING,
-    # pnl.GATING_SIGNAL,
+    # pnl.GATING, # FIX INPUTSTATES
+    # pnl.GATING_SIGNAL, # FIX INPUTSATES
     # pnl.GatingSignal, # FIX OUTPUTSTATES / INPUTSTATES
-    # pnl.GatingSignal(),
+    # pnl.GatingSignal(), # FIX INPUTSTATES
     # pnl.GatingProjection, # FIX OUTPUTSTATES  / INPUTSTATES
     # pnl.GatingProjection(), # FIX OUTPUTSTATES
-    # (0.3, pnl.GATING),
-    # (0.3, pnl.GATING_SIGNAL),
+    # (0.3, pnl.GATING),  # FIX OUTPUTSTATES
+    # (0.3, pnl.GATING_SIGNAL),  # FIX OUTPUTSTATES
     # (0.3, pnl.GatingSignal),  # FIX: DOESN"T WORK FOR OUTPUT_STATES / INPUTSTATES
-    # (0.3, pnl.GatingSignal()),
+    (0.3, pnl.GatingSignal()), # FIX INPUTSTATES
     # (0.3, pnl.GatingProjection),  # FIX: DOESN"T WORK FOR OUTPUT_STATES / INPUTSTATES
-    # (0.3, pnl.GatingProjection())  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+    # (0.3, pnl.GatingProjection())  # FIX: DOESN"T WORK FOR INPUT_STATES
 ])
 
-assert T.output_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[OutputState-0]'
+assert T.input_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[OutputState-0]'
 # assert T.input_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[InputState-0]'
 
 print(T.execute())

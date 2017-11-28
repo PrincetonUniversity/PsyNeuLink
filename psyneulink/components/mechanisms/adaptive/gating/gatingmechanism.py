@@ -168,7 +168,7 @@ from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSi
 from psyneulink.components.states.state import State_Base, _parse_state_spec
 from psyneulink.globals.defaults import defaultGatingPolicy
 from psyneulink.globals.keywords import \
-    GATING_POLICY, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, \
+    GATING, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, \
     INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -187,6 +187,10 @@ def _is_gating_spec(spec):
     if isinstance(spec, tuple):
         return _is_gating_spec(spec[1])
     elif isinstance(spec, (GatingMechanism, GatingSignal, GatingProjection)):
+        return True
+    elif isinstance(spec, type) and issubclass(spec, (GatingSignal, GatingProjection)):
+        return True
+    elif isinstance(spec, str) and spec in {GATING, GATING_PROJECTION, GATING_SIGNAL}:
         return True
     else:
         return False

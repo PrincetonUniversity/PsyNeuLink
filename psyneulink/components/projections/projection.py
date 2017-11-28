@@ -976,14 +976,14 @@ def _is_projection_spec(spec, proj_type:tc.optional(Projection)=None, include_ma
         # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
     if inspect.isclass(spec):
-        if issubclass(spec, State):
-            # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
-            return True
         if issubclass(spec, Projection):
-            if issubclass(spec, proj_type):
+            if proj_type is None or issubclass(spec, proj_type):
                 return True
             else:
                 return False
+        if issubclass(spec, State):
+            # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
+            return True
     if isinstance(spec, dict) and any(key in spec for key in {PROJECTION_TYPE, SENDER, RECEIVER, MATRIX}):
         # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
