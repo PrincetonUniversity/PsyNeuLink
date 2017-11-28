@@ -420,25 +420,32 @@ the ``DECISION ENTROPY`` OutputState could be created as follows::
 and then assigned either as::
 
     >>> my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
-    ...                      output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
-    ...                                     pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
-    ...                                     decision_entropy_output_state])
+    ...                   output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
+    ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
+    ...                                  decision_entropy_output_state])
 
 or::
+
     >>> another_decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
     ...                                                index=2,
     ...                                                calculate=pnl.Stability(metric=pnl.ENTROPY).function)
     >>> my_mech2 = pnl.DDM(function=pnl.BogaczEtAl(),
-    ...               output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
-    ...                              pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
+    ...                    output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
+    ...                                   pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
 
-    >>> my_mech.add_states(another_decision_entropy_output_state) # doctest: +ELLIPSIS
-    [...]
+    >>> my_mech2.add_states(another_decision_entropy_output_state) # doctest: +SKIP
 
+COMMENT:
 The line after the last command is the `add_state <Mecanism_Base.add_states>` method returning the list of States
-add to the Mechanism. Note, also, that a separate OutputState had to be used for the second example, as trying to
-add the first one created for ``my_mech``) to ``my_mech2`` would have produce an error (since a State already
-belonging to one Mechanism can't be added to another).
+added to the Mechanism. Note, also, that another new OutputState had to be used for the second example, as trying to
+add the first one created for ``my_mech`` to ``my_mech2`` would have produce an error (since a State already
+belonging to one Mechanism can't be added to another.
+COMMENT
+
+Note that another new OutputState had to be used for the second example, as trying to
+add the first one created for ``my_mech`` to ``my_mech2`` would have produce an error (since a State already
+belonging to one Mechanism can't be added to another.
+
 
 .. _OutputState_Structure:
 

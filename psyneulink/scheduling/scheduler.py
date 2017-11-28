@@ -240,7 +240,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     >>> termination_conds[pnl.TimeScale.TRIAL] = pnl.scheduling.condition.AfterNCalls(B,
     ...                                                                               4,
     ...                                                                               time_scale=pnl.TimeScale.TRIAL)
-    >>> execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
+    >>> execution_sequence = list(my_scheduler.run(termination_conds=termination_conds)) # doctest: +SKIP
 
     COMMENT:
         TODO: Add output for execution sequence
@@ -277,7 +277,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     >>> termination_conds[pnl.TimeScale.TRIAL] = pnl.scheduling.condition.AfterNCalls(C,
     ...                                                                               4,
     ...                                                                               time_scale=pnl.TimeScale.TRIAL)
-    >>> execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
+    >>> execution_sequence = list(my_scheduler.run(termination_conds=termination_conds)) # doctest: +SKIP
 
     execution_sequence: [A, {A,B}, A, C, {A,B}, C, A, C, {A,B}, C]
 
