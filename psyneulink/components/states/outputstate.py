@@ -425,7 +425,6 @@ and then assigned either as::
     ...                                     decision_entropy_output_state])
 
 or::
-
     >>> another_decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
     ...                                                index=2,
     ...                                                calculate=pnl.Stability(metric=pnl.ENTROPY).function)
