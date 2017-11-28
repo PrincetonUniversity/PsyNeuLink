@@ -27,6 +27,21 @@ approximation of a `DDM` Mechanism
 (see `Usher & McClelland, 2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and
 `Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_).
 
+.. note::
+
+    The LCA's recurrent projection matrix always has self_excitation on the diagonal and -competition off-diagonal.
+
+    COMMENT:
+    .. math::
+
+        \\begin{bmatrix}
+            excitation    &  - competition  &  - competition  &  - competition  \
+            - competition &  excitation     &  - competition  &  - competition  \
+            - competition &  - competition  &  excitation     &  - competition  \
+            - competition &  - competition  &  - competition  &  excitation     \
+        \\end{bmatrix}
+    COMMENT
+
 .. _Recurrent_Transfer_Creation:
 
 Creating an LCA
@@ -240,17 +255,6 @@ class LCA(RecurrentTransferMechanism):
         `LCAIntegrator's value <LCAIntegrator.value>` (:math:`x_{i}`) on each time step. See
         `LCAIntegrator <LCAIntegrator>` for more details on what the `LCAIntegrator function  <LCAIntegrator>` computes.
 
-    The LCA's recurrent projection matrix is always of the following form:
-
-     .. math::
-
-        \\begin{bmatrix}
-            excitation   & - competition   & - competition  & - competition \
-            - competition & excitation     & - competition  & - competition \
-            - competition & - competition  & excitation     & - competition \
-            - competition & - competition  & - competition  & excitation  \
-        \\end{bmatrix}
-
     self_excitation : value : default 0.0
         sets the diagonal terms in the LCA's recurrent projection, thereby scaling the contributions of each unit's own
         recurrent value (:math:`f(x)_{i}`) to the accumulation of the `LCAIntegrator's value <LCAIntegrator.value>`
@@ -307,17 +311,6 @@ class LCA(RecurrentTransferMechanism):
         contributions of the competing unit (all :math:`f(x)_{j}` where :math:`j \\neq i`) to the accumulation of the
         `LCAIntegrator's value <LCAIntegrator.value>` (:math:`x_{i}`) on each time step. See
         `LCAIntegrator <LCAIntegrator>` for more details on what the `LCAIntegrator function  <LCAIntegrator>` computes.
-
-    The LCA's recurrent projection matrix is always of the following form:
-
-     .. math::
-
-        \\begin{bmatrix}
-            excitation   & - competition   & - competition  & - competition \
-            - competition & excitation     & - competition  & - competition \
-            - competition & - competition  & excitation     & - competition \
-            - competition & - competition  & - competition  & excitation  \
-        \\end{bmatrix}
 
     self_excitation : value : default 0.0
         sets the diagonal terms in the LCA's recurrent projection, thereby scaling the contributions of each unit's own
