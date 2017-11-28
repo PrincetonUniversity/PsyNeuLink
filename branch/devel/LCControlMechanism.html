@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCControlMechanism &mdash; PsyNeuLink 0.3.4-alpha+266.g97a730f documentation</title>
+  <title>LCControlMechanism &mdash; PsyNeuLink 0.3.4-alpha+278.g9eab51e documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.4-alpha+266.g97a730f documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.4-alpha+278.g9eab51e documentation" href="index.html"/>
         <link rel="up" title="AGT" href="AGT.html"/>
         <link rel="next" title="EVC" href="EVC.html"/>
         <link rel="prev" title="AGTControlMechanism" href="AGTControlMechanism.html"/> 
@@ -197,7 +197,7 @@ The following sections describe how to specify the inputs that drive the LCContr
 Mechanisms that it controls.</p>
 <div class="section" id="objectivemechanism-and-monitored-outputstates">
 <span id="lccontrolmechanism-objectivemechanism"></span><h3>ObjectiveMechanism and Monitored OutputStates<a class="headerlink" href="#objectivemechanism-and-monitored-outputstates" title="Permalink to this headline">¶</a></h3>
-<p>Like all ControlMechanisms, an LCControlMechanism it receives its <a class="reference internal" href="#lccontrolmechanism-input"><span class="std std-ref">input</span></a> from an
+<p>Like all ControlMechanisms, an LCControlMechanism receives its <a class="reference internal" href="#lccontrolmechanism-input"><span class="std std-ref">input</span></a> from an
 <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that, in turn, receives its input from a specified list of <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>.  These
 are used to drive the <a class="reference internal" href="#lccontrolmechanism-modes-of-operation"><span class="std std-ref">phasic response</span></a> of the LCControlMechanism.  The
 ObjectiveMechanism and/or the OutputStates from which it gets its input can be <a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">specified in the standard way for a
@@ -269,7 +269,8 @@ LCControlMechanism’s <a class="reference internal" href="#psyneulink.library.s
 <p>An LCControlMechanism uses the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator" title="psyneulink.components.functions.function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> as its <code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;LCControlMechanism.function</span></code>; this implements a <a class="reference external" href="https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model">FitzHugh-Nagumo
 model</a> often used to describe the spiking of a neuron,
 but in this case the population activity of the LC (see <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub">Gilzenrat et al., 2002</a>). The <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator" title="psyneulink.components.functions.function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> Function
-takes the <a class="reference internal" href="#lccontrolmechanism-input"><span class="std std-ref">input</span></a> to the LCControlMechanism as its <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator.variable" title="psyneulink.components.functions.function.FHNIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+takes the <a class="reference internal" href="#lccontrolmechanism-input"><span class="std std-ref">input</span></a> to the LCControlMechanism as its <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator.variable" title="psyneulink.components.functions.function.FHNIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>. All
+of the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator" title="psyneulink.components.functions.function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> function parameters are exposed on the LCControlMechanism.</p>
 <div class="section" id="lc-modes-of-operation">
 <span id="lccontrolmechanism-modes-of-operation"></span><h4>LC Modes of Operation<a class="headerlink" href="#lc-modes-of-operation" title="Permalink to this headline">¶</a></h4>
 <p>The <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator.mode" title="psyneulink.components.functions.function.FHNIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> parameter of the LCControlMechanism’s <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator" title="psyneulink.components.functions.function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> Function regulates its operation between
@@ -522,7 +523,7 @@ and the <a class="reference internal" href="Function.html#function-modulatory-pa
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.4-alpha+266.g97a730f',
+            VERSION:'0.3.4-alpha+278.g9eab51e',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
