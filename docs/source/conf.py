@@ -17,14 +17,12 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 import os
-import psyneulink
 import sys
 
 sys.path.insert(0, os.path.abspath('../../'))
 # adding this path alone so that Run/Environment module can go in the dropdown underneath Scheduling
 sys.path.insert(0, os.path.abspath('../../psyneulink/globals/'))
-
-
+import psyneulink._version
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
