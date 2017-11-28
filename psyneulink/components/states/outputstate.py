@@ -269,10 +269,10 @@ which it should project. Each of these is described below:
 
             * **value, State specification, or list of State specifications** -- specifies either the `variable
               <InputState.variable>` of the InputState, or one or more States that should project to it.  The State
-              specification(s) can include Mechanisms, in which case their `primary OutputState <OutputStatePrimary>`
-              is used.  All of the State specifications must be consistent with (that is, their `value
-              <State_Base.value>` must be compatible with the `variable <Projection_Base.variable>` of) the
-              Projection specified in the fourth item if that is included.
+              specification(s) can be a (State name, Mechanism) tuple (see above), and/or include Mechanisms, in which
+              case their `primary InputState <InputStatePrimary>` is used.  All of the State specifications must be
+              consistent with (that is, their `value <State_Base.value>` must be compatible with the `variable
+              <Projection_Base.variable>` of) the Projection specified in the fourth item if that is included.
             |
             * **index** -- must be an integer; specifies the `index <OutputState.index>` for the OutputState.
             |
@@ -356,11 +356,12 @@ defines `TRANSFER_OUTPUT`, with attributes *MEAN*, *MEDIAN*, *VARIANCE* and *STA
 predefined OutputStates in its `standard_output_states <TransferMechanism.standard_output_states>` attribute.
 These can be used in the list of OutputStates specified for a TransferMechanism object, as in the following example::
 
-    my_mech = TransferMechanism(default_variable=[0,0],
-                                function=Logistic(),
-                                output_states=[TRANSFER_OUTPUT.RESULT,
-                                               TRANSFER_OUTPUT.MEAN,
-                                               TRANSFER_OUTPUT.VARIANCE)
+    >>> import psyneulink as pnl
+    >>> my_mech = pnl.TransferMechanism(default_variable=[0,0],
+    ...                                 function=pnl.Logistic(),
+    ...                                 output_states=[pnl.TRANSFER_OUTPUT.RESULT,
+    ...                                                pnl.TRANSFER_OUTPUT.MEAN,
+    ...                                                pnl.TRANSFER_OUTPUT.VARIANCE])
 
 In this example, ``my_mech`` is configured with three OutputStates;  the first will be named *RESULT* and will
 represent logistic transform of the 2-element input vector;  the second will be named  *MEAN* and will represent mean
@@ -383,12 +384,17 @@ An OutputState's `index <OutputState.index>` and `calculate <OutputState.calcula
 the OutputState is assigned to a Mechanism, by including *INDEX* and *CALCULATE* entries in a `specification dictionary
 <OutputState_Specification>` for the OutputState, as in the following example::
 
-    my_mech = DDM(function=BogaczEtAl(),
-                  output_states=[ DDM.DECISION_VARIABLE,
-                                  DDM.PROB_UPPER_THRESHOLD,
-                                  {NAME: 'DECISION ENTROPY',
-                                   INDEX: 2},
-                                   CALCULATE: Entropy().function }])
+
+    >>> my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
+    ...                   output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
+    ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
+    ...                                  {pnl.NAME: 'DECISION ENTROPY',
+    ...                                   pnl.INDEX: 2,
+    ...                                   pnl.CALCULATE: pnl.Stability(metric=pnl.ENTROPY).function }])
+
+COMMENT:
+    what is this Entropy() class???
+COMMENT
 
 COMMENT:
    ADD VERSION IN WHICH INDEX IS SPECIFICED USING DDM_standard_output_states
@@ -407,24 +413,38 @@ are listed in the **output_states** argument of the constructor for ``my_mech``.
 Custom OutputStates can also be created on their own, and separately assigned or added to a Mechanism.  For example,
 the ``DECISION ENTROPY`` OutputState could be created as follows::
 
-    decision_entropy_output_state = OutputState(name='DECISION ENTROPY',
-                                                index=2,
-                                                calculate=Entropy().function)
+    >>> decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
+    ...                                                 index=2,
+    ...                                                 calculate=pnl.Stability(metric=pnl.ENTROPY).function)
 
 and then assigned either as::
 
-    my_mech = DDM(function=BogaczEtAl(),
-                  output_states=[ DDM.DECISION_VARIABLE,
-                                  DDM.PROB_UPPER_THRESHOLD,
-                                  decision_entropy_output_state])
+    >>> my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
+    ...                   output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
+    ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
+    ...                                  decision_entropy_output_state])
 
 or::
 
-    my_mech = DDM(function=BogaczEtAl(),
-                  output_states=[ DDM.DECISION_VARIABLE,
-                                  DDM.PROB_UPPER_THRESHOLD)
+    >>> another_decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
+    ...                                                index=2,
+    ...                                                calculate=pnl.Stability(metric=pnl.ENTROPY).function)
+    >>> my_mech2 = pnl.DDM(function=pnl.BogaczEtAl(),
+    ...                    output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
+    ...                                   pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
 
-    my_mech.add_state(decsion_entropy_output_state)
+    >>> my_mech2.add_states(another_decision_entropy_output_state) # doctest: +SKIP
+
+COMMENT:
+The line after the last command is the `add_state <Mecanism_Base.add_states>` method returning the list of States
+added to the Mechanism. Note, also, that another new OutputState had to be used for the second example, as trying to
+add the first one created for ``my_mech`` to ``my_mech2`` would have produce an error (since a State already
+belonging to one Mechanism can't be added to another.
+COMMENT
+
+Note that another new OutputState had to be used for the second example, as trying to
+add the first one created for ``my_mech`` to ``my_mech2`` would have produce an error (since a State already
+belonging to one Mechanism can't be added to another.
 
 
 .. _OutputState_Structure:
@@ -891,22 +911,45 @@ class OutputState(State_Base):
         # IMPLEMENT: VALIDATE THAT CALCULATE FUNCTION ACCEPTS VALUE CONSISTENT WITH
         #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE
         if CALCULATE in target_set:
+
             try:
                 if isinstance(target_set[CALCULATE], type):
                     function = target_set[CALCULATE]().function
                 else:
                     function = target_set[CALCULATE]
                 try:
-                    function(self.owner.default_value[target_set[INDEX]])
+                    index = target_set[INDEX]
+                except KeyError:
+                    # Assign default value for index if it was not specified
+                    index = self.index
+                # Default index is an index keyword (e.g., SEQUENTIAL) so can't evaluate at present
+                if isinstance(index, str):
+                    if not index in StandardOutputStates.keywords:
+                        raise OutputStateError("Illegal keyword ({}) found in specification of index for {} of {}".
+                                               format(index, self.name, self.owner.name))
+                    return
+
+                default_value_item_str = self.owner.default_value[index] if isinstance(index, int) else index
+                error_msg = ("Item {} of value for {} ({}) is not compatible with "
+                             "the function specified for the {} parameter of {} ({})".
+                             format(index,
+                                    self.owner.name,
+                                    default_value_item_str,
+                                    CALCULATE,
+                                    self.name,
+                                    target_set[CALCULATE]))
+                try:
+                    function(self.owner.default_value[index], context=context)
+                except TypeError:
+                    try:
+                        function(self.owner.default_value[index])
+                    except:
+                        raise OutputStateError(error_msg)
+                # except IndexError:
+                #     # This handles cases in which index has not yet been assigned
+                #     pass
                 except:
-                    raise OutputStateError("Item {} of value for {} ({}) is not compatible with the function "
-                                           "specified for the {} parameter of {} ({})".
-                                           format(target_set[INDEX],
-                                                  self.owner.name,
-                                                  self.owner.default_value[target_set[INDEX]],
-                                                  CALCULATE,
-                                                  self.name,
-                                                  target_set[CALCULATE]))
+                    raise OutputStateError(error_msg)
             except KeyError:
                 pass
 
@@ -1032,6 +1075,9 @@ class OutputState(State_Base):
             return None, state_specific_spec
 
         elif isinstance(state_specific_spec, ProjectionTuple):
+            # MODIFIED 11/25/17 NEW:
+            state_spec = None
+            # MODIFIED 11/25/17 END:
             params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                owner=owner,
                                                                connections=[state_specific_spec])
@@ -1215,7 +1261,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
                     # If OutputState's calculate function is specified, use it to determine OutputState's vaue
                     if CALCULATE in output_state[PARAMS]:
-                        output_state_value = output_state[PARAMS][CALCULATE](owner_value[index])
+                        output_state_value = output_state[PARAMS][CALCULATE](owner_value[index], context=context)
                     else:
                         output_state_value = owner_value[index]
 
@@ -1271,7 +1317,8 @@ class StandardOutputStates():
     output_state_dicts : list of dicts
         list of dictionaries specifying OutputStates for the Component specified by `owner`
 
-    indices : PRIMARY, SEQUENTIAL, list of ints
+    indices : PRIMARY,
+    SEQUENTIAL, list of ints
         specifies how to assign the INDEX entry for each dict listed in `output_state_dicts`;
 
         The effects of each value of indices are as follows:
@@ -1303,6 +1350,8 @@ class StandardOutputStates():
     get_state_dict(name)
         returns a copy of the designated OutputState specification dictionary
     """
+
+    keywords = {PRIMARY, SEQUENTIAL, ALL}
 
     @tc.typecheck
     def __init__(self,

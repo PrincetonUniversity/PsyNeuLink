@@ -182,6 +182,16 @@ __all__ = [
 GatingMechanismRegistry = {}
 
 
+def _is_gating_spec(spec):
+    from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
+    if isinstance(spec, tuple):
+        return _is_gating_spec(spec[1])
+    elif isinstance(spec, (GatingMechanism, GatingSignal, GatingProjection)):
+        return True
+    else:
+        return False
+
+
 class GatingMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -320,6 +330,10 @@ class GatingMechanism(AdaptiveMechanism_Base):
     initMethod = INIT__EXECUTE__METHOD_ONLY
 
     output_state_type = GatingSignal
+
+    state_list_attr = Mechanism_Base.state_list_attr.copy()
+    state_list_attr.update({GatingSignal:GATING_SIGNALS})
+
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

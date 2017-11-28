@@ -92,7 +92,7 @@ the LearningProjection's `learning_rate <LearningProjection.learning_rate>` para
 `learning_rate <LearningMechanism.learning_rate>` for the `LearningMechanism` from which it receives the
 `learning_signal <LearningProjection.learning_signal>`. Specification of the `learning_rate
 <LearningProjection.learning_rate>` for a LearningProjection supersedes any specification(s) of the
-:keyword:`learning_rate` for any `Process <Process_Learning_Sequence` and/or `System <System_Learning>` to which the
+:keyword:`learning_rate` for any `Process <Process_Learning_Sequence>` and/or `System <System_Learning>` to which the
 Projection belongs (see `learning_rate <LearningMechanism_Learning_Rate>` for additional details).  However, its
 `learning_rate <LearningProjection.learning_rate>` can be specified by the `LearningSignal
 <LearningSignal_Learning_Rate>` that is its `sender <LearningProjection.sender>`;  that specification takes precedence
