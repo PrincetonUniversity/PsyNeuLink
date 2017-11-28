@@ -10,35 +10,6 @@ from psyneulink.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVI
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferError, RecurrentTransferMechanism
-from psyneulink.library.mechanisms.processing.transfer.lca import LCA
-
-class TestLCA:
-    def test_lca(self):
-        L = LCA(
-            size=3,
-            integrator_mode=True,
-            function=Linear(slope=2.0),
-            beta=0.75
-        )
-        p=Process(pathway=[L])
-        s=System(processes=[p])
-        def after_trial():
-            print()
-            print("- - - - - - - - - - - Trial - - - - - - - - - - - - -")
-            print("variable: ")
-            print(L.variable)
-            print()
-            print("integrator output: ")
-            print(L.integrator_function.previous_value)
-            print()
-            print("value: ")
-            print(L.value)
-            print()
-            print("- - - - - - - - - - - - - - - - - - - - - - - - - - -")
-            print()
-            print()
-
-        s.run(inputs={L: [[1.0, 2.0, 3.0]]}, num_trials=5, call_after_trial=after_trial)
 
 class TestRecurrentTransferMechanismInputs:
 
