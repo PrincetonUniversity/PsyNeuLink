@@ -173,7 +173,8 @@ a `Linear` function and the other a `Logistic` function::
 
 Calling `LC.show()` generates the following report::
 
-    >>> LC.show() #doctest:+ELLIPSIS
+    >>> LC.show() #doctest: +ELLIPSIS
+    [...]
 
 
 
