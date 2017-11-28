@@ -947,7 +947,16 @@ class InputState(State_Base):
                             # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ProjectionTuple SPEC
                             # FIX:           USING _get_state_for_socket
                             # from psyneulink.components.projections.projection import _parse_projection_spec
-                            sender_dim = projection_spec.state.value.ndim
+                            try:
+                                sender_dim = projection_spec.state.value.ndim
+                            except AttributeError:
+                                if projection_spec.state.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                                    continue
+                                else:
+                                    raise StateError("PROGRAM ERROR: indeterminate value for {} "
+                                                     "specified to project to {} of {}".
+                                                     format(projection_spec.state.name, self.__name__, owner.name))
+
                             projection = projection_spec.projection
                             if isinstance(projection, dict):
                                 # # MODIFIED 11/25/17 OLD:

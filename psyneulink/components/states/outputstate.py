@@ -393,10 +393,6 @@ the OutputState is assigned to a Mechanism, by including *INDEX* and *CALCULATE*
     ...                                   pnl.CALCULATE: pnl.Stability(metric=pnl.ENTROPY).function }])
 
 COMMENT:
-    what is this Entropy() class???
-COMMENT
-
-COMMENT:
    ADD VERSION IN WHICH INDEX IS SPECIFICED USING DDM_standard_output_states
 COMMENT
 
