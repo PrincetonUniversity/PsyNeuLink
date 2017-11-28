@@ -20,9 +20,9 @@ Overview
 
 An LCA is a subclass of `RecurrentTransferMechanism` that implements a single-layered leaky competitive accumulator
 network, in which each element is connected to every other element with mutually inhibitory weights.  All of the
-inhibitory weights have the same value, specified by its `inhibition <LCA.inhibition>` parameter.  In the case that
-it has two elements, the value of its `inhibition <LCA.inhibition>` parameter is equal to its `decay
-<RecurrentTransferMechanism.decay>` parameter, and the two are of sufficient magnitude, it implements a close
+inhibitory weights have the same value, specified by its `competition <LCA.competition>` parameter.  In the case that
+it has two elements, the value of its `competition <LCA.competition>` parameter is equal to its `leak
+<LCA.leak>` parameter, and the two are of sufficient magnitude, it implements a close
 approximation of a `DDM` Mechanism
 (see `Usher & McClelland, 2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and
 `Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_).
@@ -48,10 +48,25 @@ Creating an LCA
 ---------------
 
 An LCA can be created directly by calling its constructor.  The set of mutually inhibitory connections are implemented as a recurrent `MappingProjection`
-with a `matrix <LCA.matrix>` of uniform negative weights specified by the **inhibition** argument of the LCA's
-constructor.  The default format of its `variable <LCA.variable>`, and default values of its `inhibition
+with a `matrix <LCA.matrix>` in which the diagonal consists of uniform weights specified by **self_excitation** and the
+off-diagonal consists of uniform *negative* weights specified by the **competition** argument of the LCA's constructor.
+
+COMMENT:
+.. math::
+
+    \\begin{bmatrix}
+        excitation    &  - competition  &  - competition  &  - competition  \
+        - competition &  excitation     &  - competition  &  - competition  \
+        - competition &  - competition  &  excitation     &  - competition  \
+        - competition &  - competition  &  - competition  &  excitation     \
+    \\end{bmatrix}
+COMMENT
+
+COMMENT:
+The default format of its `variable <LCA.variable>`, and default values of its `inhibition
 <LCA.inhibition>`, `decay <RecurrentTransferMechanism.decay>` and `noise <TransferMechanism.noise>` parameters
 implement an approximation of a `DDM`.
+COMMENT
 
 .. _LCA_Structure:
 
@@ -296,9 +311,9 @@ class LCA(RecurrentTransferMechanism):
         the function used to transform the input.
 
     matrix : 2d np.array
-        the `matrix <MappingProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism,
-        with a uniform set of negative weights, the magnitude of which are determined by the
-        `inhibition <LCA.inhibition>` attribute.
+        the `matrix <MappingProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism, the
+        `self_excitation <LCA.self_excitation>` attribute sets the values on the diagonal, and the
+        `competition <LCA.competition>` attribute sets the magnitude of the negative off-diagonal values.
 
     leak : value : default 0.5
         sets the `rate <LCAIntegrator.rate>` on the `LCAIntegrator function <LCAIntegrator>`, which scales the
@@ -447,7 +462,8 @@ class LCA(RecurrentTransferMechanism):
             output_states = [RESULT]
 
         if matrix is not None:
-            warnings.warn("Matrix arg for LCA is not used; matrix was assigned using inhibition arg")
+            warnings.warn("Matrix arg for LCA is not used; matrix was assigned using self_excitation and competition "
+                          "args")
         # matrix = np.full((size[0], size[0]), -inhibition) * get_matrix(HOLLOW_MATRIX,size[0],size[0])
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -590,10 +606,10 @@ class LCA(RecurrentTransferMechanism):
             output_vector[maxCapIndices] = np.max(clip)
 
         return output_vector
-    @property
-    def inhibition(self):
-        return self.hetero
-
-    @inhibition.setter
-    def inhibition(self, setting):
-        self.hetero = setting
+    # @property
+    # def inhibition(self):
+    #     return self.hetero
+    #
+    # @inhibition.setter
+    # def inhibition(self, setting):
+    #     self.hetero = setting
