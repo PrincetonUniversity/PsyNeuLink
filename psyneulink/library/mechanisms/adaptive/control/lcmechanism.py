@@ -10,16 +10,6 @@
 
 """
 
-.. note::
-   **THIS MECHANISM IS ONLY PARTIALLY IMPLEMENTED.**
-
-   IT CAN MODULATE MECHANISMS, BUT:
-
-   - IT DOES NOT YET AUTOMATICALLY GENERATE A `UtilityIntegrator` AS ITS OBJECTIVE MECHANISM
-   ..
-   - THE `FitzHughNagumoIntegration` FUNCTION AND ASSOCIATED `mode` PARAMETER HAVE NOT YET BEEN IMPLEMENTED
-
-
 Overview
 --------
 
@@ -171,12 +161,24 @@ a `Linear` function and the other a `Logistic` function::
     >>> LC = pnl.LCMechanism(modulated_mechanisms=[my_mech_1, my_mech_2],
     ...                      name='my_LC')
 
-Calling `LC.show()` generates the following report::
-
-    >>> LC.show() #doctest: +ELLIPSIS
-    [...]
-
-
+COMMENT:
+# Calling `LC.show()` generates the following report::
+#
+#     >>> LC.show()
+#     <BLANKLINE>
+#     ---------------------------------------------------------
+#     <BLANKLINE>
+#     my_LC
+#     <BLANKLINE>
+#     	Monitoring the following Mechanism OutputStates:
+#     		None
+#     <BLANKLINE>
+#     	Modulating the following parameters:
+#     		my_linear_mechanism: slope
+#     		my_logistic_mechanism: gain
+#     <BLANKLINE>
+#     ---------------------------------------------------------
+COMMENT
 
 COMMENT:
         Monitoring the following Mechanism OutputStates:

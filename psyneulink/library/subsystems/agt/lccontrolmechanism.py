@@ -178,7 +178,9 @@ LCControlMechanism's `show <LCControlMechanism.show>` method.
 Function
 ~~~~~~~~
 
+COMMENT:
 XXX ADD MENTION OF allocation_policy HERE
+COMMENT
 
 An LCControlMechanism uses the `FHNIntegrator` as its `function <LCControlMechanism.function`; this implements a `FitzHugh-Nagumo
 model <https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ often used to describe the spiking of a neuron,
@@ -272,21 +274,34 @@ a `Linear` function and the other a `Logistic` function::
     >>> LC = LCControlMechanism(modulated_mechanisms=[my_mech_1, my_mech_2],
     ...                         name='my_LC')
 
+COMMENT:
+# Calling `LC.show()` generates the following report::
+#
+#     >>> LC.show()
+#     <BLANKLINE>
+#     ---------------------------------------------------------
+#     <BLANKLINE>
+#     my_LC
+#     <BLANKLINE>
+#       Monitoring the following Mechanism OutputStates:
+#     <BLANKLINE>
+#       Modulating the following parameters:
+#         my_logistic_mechanism: gain
+#         my_linear_mechanism: slope
+#     <BLANKLINE>
+#     ---------------------------------------------------------
+COMMENT
+
 Calling `LC.show()` generates the following report::
 
-    >>> LC.show()
-    <BLANKLINE>
-    ---------------------------------------------------------
-    <BLANKLINE>
     my_LC
-    <BLANKLINE>
+
       Monitoring the following Mechanism OutputStates:
-    <BLANKLINE>
+
       Modulating the following parameters:
         my_logistic_mechanism: gain
         my_linear_mechanism: slope
-    <BLANKLINE>
-    ---------------------------------------------------------
+
 
 
 Note that the LCControlMechanism controls the `multiplicative_param <Function_Modulatory_Params>` of the `function

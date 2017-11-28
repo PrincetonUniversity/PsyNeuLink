@@ -835,16 +835,13 @@ print ("TEST DOCUMENTATION")
 
 
 import psyneulink as pnl
-my_mech_1 = pnl.TransferMechanism(function=pnl.Linear,
-                                  name='my_linear_mechanism')
-my_mech_2 = pnl.TransferMechanism(function=pnl.Logistic,
-                                  name='my_logistic_mechanism')
-
-LC = pnl.LCMechanism(modulated_mechanisms=[my_mech_1, my_mech_2],
-                 name='my_LC')
-
-
-LC.show()
+myRewardProcess = pnl.Process()
+myDecisionProcess = pnl.Process()
+mySystem = pnl.System(processes=[myRewardProcess, myDecisionProcess],
+                      controller=pnl.EVCControlMechanism,
+                      monitor_for_control=[Reward,
+                                           pnl.DDM_OUTPUT.DECISION_VARIABLE,
+                                           (pnl.RESPONSE_TIME, 1, -1)],)
 
 
 #endregion
