@@ -1635,7 +1635,8 @@ def _parse_connection_specs(connectee_state_type,
                                              projection_socket,
                                              connectee_state_type)
             else:
-                raise ProjectionError("Invalid specification of {} ({}) for connection between {} and {} of {}.".
+                raise ProjectionError("Invalid specification of {} ({}) for connection "
+                                      "between \'{}\' and {} of \'{}\'.".
                                  format(Projection.__class__.__name__,
                                         projection_spec,
                                         state.name,
