@@ -138,15 +138,15 @@ class TestProjectionSpecificationFormats:
         assert G.gating_signals[0].efferents[0].receiver.name == 'DECISION_VARIABLE'
         assert G.gating_signals[0].efferents[1].receiver.name == 'RESPONSE_TIME'
 
-    # def test_2_item_tuple_from_input_and_output_states_to_gating_signals(self):
-    #
-    #     G = pnl.GatingMechanism(gating_signals=['a','b'])
-    #     T = pnl.TransferMechanism(name='T',
-    #                  input_states=[(3,G)],
-    #                  output_states=[(2,G.gating_signals['b'])]
-    #                               )
-    #     assert T.input_states[0].mod_afferents[0].sender==G.gating_signals[0]
-    #     assert T.output_states[0].mod_afferents[0].sender==G.gating_signals[1]
+    def test_2_item_tuple_from_input_and_output_states_to_gating_signals(self):
+
+        G = pnl.GatingMechanism(gating_signals=['a','b'])
+        T = pnl.TransferMechanism(name='T',
+                     input_states=[(3,G)],
+                     output_states=[(2,G.gating_signals['b'])]
+                                  )
+        assert T.input_states[0].mod_afferents[0].sender==G.gating_signals[0]
+        assert T.output_states[0].mod_afferents[0].sender==G.gating_signals[1]
 
     def test_formats_for_control_specification(self):
 

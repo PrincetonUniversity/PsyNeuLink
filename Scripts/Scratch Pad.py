@@ -792,22 +792,6 @@ print ("TEST MODULATORY SPECS")
 
 # ----------------------------------------------------
 
-# gating_spec_list = [
-#     pnl.GATING,
-#     pnl.GATING_SIGNAL,
-#     pnl.GATING_PROJECTION,
-#     pnl.GatingSignal,
-#     pnl.GatingSignal(),
-#     pnl.GatingSignal(),
-#     (0.3, pnl.GATING),
-#     (0.3, pnl.GATING_SIGNAL),
-#     (0.3, pnl.GATING_PROJECTION),
-#     (0.3, pnl.GatingSignal),
-#     (0.3, pnl.GatingSignal()),
-#     (0.3, pnl.GatingProjection),
-#     (0.3, pnl.GatingProjection())
-# ]
-
 # T = pnl.TransferMechanism(input_states=[
 T = pnl.TransferMechanism(output_states=[
 #     pnl.GATING,
@@ -816,12 +800,16 @@ T = pnl.TransferMechanism(output_states=[
 #     pnl.GatingSignal(),
 #     pnl.GatingProjection, # FIX OUTPUTSTATES
 #     pnl.GatingProjection(), # FIX OUTPUTSTATES
+    pnl.GatingMechanism,
+#     pnl.GatingMechanism(),
 #     (0.3, pnl.GATING),
 #     (0.3, pnl.GATING_SIGNAL),
 #     (0.3, pnl.GatingSignal),
 #     (0.3, pnl.GatingSignal()),
 #     (0.3, pnl.GatingProjection),
 #     (0.3, pnl.GatingProjection())
+#     (0.3, pnl.GatingMechanism),
+#     (0.3, pnl.GatingMechanism()),
 ])
 
 # assert T.input_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[InputState-0]'
