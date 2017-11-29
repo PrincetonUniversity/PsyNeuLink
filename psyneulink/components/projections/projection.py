@@ -977,10 +977,10 @@ def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_s
     if isinstance(spec, State):
         # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
-    # if isinstance(spec, Mechanism):
-    #     if proj_type is None:
-    #     # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
-    #         return True
+    if isinstance(spec, Mechanism):
+        if proj_type is None:
+        # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
+            return True
     if inspect.isclass(spec):
         if issubclass(spec, Projection):
             if proj_type is None or issubclass(spec, proj_type):
@@ -990,9 +990,9 @@ def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_s
         if issubclass(spec, State):
             # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
             return True
-        # if issubclass(spec, Mechanism):
-        #     # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
-        #     return True
+        if issubclass(spec, Mechanism):
+            # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
+            return True
     if isinstance(spec, dict) and any(key in spec for key in {PROJECTION_TYPE, SENDER, RECEIVER, MATRIX}):
         # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True

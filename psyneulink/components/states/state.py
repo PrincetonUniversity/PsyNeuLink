@@ -1407,7 +1407,7 @@ class State_Base(State):
         # - assign it to self.path_afferents or .mod_afferents
         for connection in projection_tuples:
 
-            'TransferMechanism' in self.owner.name and 'OutputState' in self.__name__     # Get sender State, weight, exponent and projection for each projection specification
+            # Get sender State, weight, exponent and projection for each projection specification
             #    note: weight and exponent for connection have been assigned to Projection in _parse_connection_specs
             state, weight, exponent, projection_spec = connection
 
