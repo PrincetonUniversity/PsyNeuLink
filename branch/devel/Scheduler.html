@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.3.4-alpha+281.g2974f8e documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.3.4-alpha+283.g905cdc2 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.4-alpha+281.g2974f8e documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.4-alpha+283.g905cdc2 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Condition" href="Condition.html"/>
         <link rel="prev" title="Scheduling" href="Scheduling.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.3.4-alpha+281
+                0.3.4-alpha+283
               </div>
             
           
@@ -213,8 +213,8 @@ used as the default order of executions, subject to any <a class="reference inte
 <p>If both a System and a graph are specified, the System takes precedence, and the graph is ignored.</p>
 <p>Conditions can be added to a Scheduler when it is created by specifying a <a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.ConditionSet" title="psyneulink.scheduling.condition.ConditionSet"><code class="xref any py py-class docutils literal"><span class="pre">ConditionSet</span></code></a> (a set of
 <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>) in the <strong>condition_set</strong> argument of its constructor.  Individual Conditions and/or
-ConditionSets can also be added after the  Scheduler has been created, using its <a class="reference internal" href="#psyneulink.scheduling.scheduler.Scheduler.add_condition" title="psyneulink.scheduling.scheduler.Scheduler.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and
-<a class="reference internal" href="#psyneulink.scheduling.scheduler.Scheduler.add_condition_set" title="psyneulink.scheduling.scheduler.Scheduler.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods, respectively.</p>
+ConditionSets can also be added after the  Scheduler has been created, using its <a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.ConditionSet.add_condition" title="psyneulink.scheduling.condition.ConditionSet.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and
+<a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.ConditionSet.add_condition_set" title="psyneulink.scheduling.condition.ConditionSet.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods, respectively.</p>
 </div>
 <div class="section" id="algorithm">
 <span id="scheduler-algorithm"></span><h2>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline">¶</a></h2>
@@ -282,8 +282,8 @@ However, the execution of a Component within a <code class="xref any docutils li
   ↗ ↖
  A   B
 
-scheduler.add_condition(B, pnl.scheduling.condition.EveryNCalls(A, 2))
-scheduler.add_condition(C, pnl.scheduling.condition.EveryNCalls(B, 1))
+scheduler.add_condition(B, pnl.EveryNCalls(A, 2))
+scheduler.add_condition(C, pnl.EveryNCalls(B, 1))
 
 time steps: [{A}, {A, B}, {C}, ...]
 </pre></div>
@@ -346,8 +346,8 @@ or its <strong>termination_learning</strong> argument to terminate the execution
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Scheduler</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># implicit condition of Always for A</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">scheduling</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">scheduling</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># implicit AllHaveRun Termination condition</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">())</span>
@@ -365,23 +365,31 @@ or its <strong>termination_learning</strong> argument to terminate the execution
 <span class="gp">... </span>    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;p&#39;</span>
 <span class="gp">... </span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span>
-<span class="gp">... </span>   <span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p</span><span class="p">],</span>
-<span class="gp">... </span>   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;s&#39;</span>
+<span class="gp">... </span>    <span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;s&#39;</span>
 <span class="gp">... </span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Scheduler</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">A</span><span class="p">,</span>
-<span class="gp">... </span>                           <span class="n">pnl</span><span class="o">.</span><span class="n">scheduling</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">scheduling</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">AtPass</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
-<span class="gp">... </span>                                                        <span class="n">pnl</span><span class="o">.</span><span class="n">scheduling</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span>
-<span class="gp">... </span>                           <span class="n">pnl</span><span class="o">.</span><span class="n">scheduling</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">scheduling</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-<span class="gp">... </span>                           <span class="n">pnl</span><span class="o">.</span><span class="n">scheduling</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">A</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">AtPass</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">termination_conds</span> <span class="o">=</span> <span class="p">{</span><span class="n">ts</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">ts</span> <span class="ow">in</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">termination_conds</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">]</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">scheduling</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span>
-<span class="gp">... </span>                                                                              <span class="mi">4</span><span class="p">,</span>
-<span class="gp">... </span>                                                                              <span class="n">time_scale</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">termination_conds</span><span class="o">=</span><span class="n">termination_conds</span><span class="p">))</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">B</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">termination_conds</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">time_scale</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">termination_conds</span><span class="o">=</span><span class="n">termination_conds</span><span class="p">))</span>
 
 <span class="go">execution_sequence: [A, B, B, A, B, B]</span>
 </pre></div>
@@ -406,17 +414,20 @@ or its <strong>termination_learning</strong> argument to terminate the execution
 <span class="gp">... </span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Scheduler</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">scheduling</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">EveryNPasses</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">scheduling</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span>
-<span class="gp">... </span>                           <span class="n">pnl</span><span class="o">.</span><span class="n">scheduling</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">scheduling</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-<span class="gp">... </span>                                                        <span class="n">pnl</span><span class="o">.</span><span class="n">scheduling</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNPasses</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">C</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">termination_conds</span> <span class="o">=</span> <span class="p">{</span><span class="n">ts</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">ts</span> <span class="ow">in</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">termination_conds</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">]</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">scheduling</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">C</span><span class="p">,</span>
-<span class="gp">... </span>                                                                              <span class="mi">4</span><span class="p">,</span>
-<span class="gp">... </span>                                                                              <span class="n">time_scale</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">termination_conds</span><span class="o">=</span><span class="n">termination_conds</span><span class="p">))</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">termination_conds</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">time_scale</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">termination_conds</span><span class="o">=</span><span class="n">termination_conds</span><span class="p">))</span>
 
 <span class="go">execution_sequence: [A, {A,B}, A, C, {A,B}, C, A, C, {A,B}, C]</span>
 </pre></div>
@@ -577,7 +588,7 @@ terminate the execution of the specified <a class="reference internal" href="Tim
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.4-alpha+281.g2974f8e',
+            VERSION:'0.3.4-alpha+283.g905cdc2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
