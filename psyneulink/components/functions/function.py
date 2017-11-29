@@ -5509,14 +5509,13 @@ class OrnsteinUhlenbeckIntegrator(
 class FHNIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
-    FHNIntegrator(              \
+    FHNIntegrator(                      \
         default_variable=1.0,           \
-        rate=1.0,                       \
         scale: parameter_spec = 1.0,    \
         offset: parameter_spec = 0.0,   \
         initial_w=0.0,                  \
         initial_v=0.0,                  \
-        time_step_size=0.0.05,          \
+        time_step_size=0.05,          \
         t_0=0.0,                        \
         a_v=-1/3,                       \
         b_v=0.0,                        \
@@ -5524,6 +5523,7 @@ class FHNIntegrator(
         d_v=0.0,                        \
         e_v=-1.0,                       \
         f_v=1.0,                        \
+        threshold=-1.0                  \
         time_constant_v=1.0,            \
         a_w=1.0,                        \
         b_w=-0.8,                       \
