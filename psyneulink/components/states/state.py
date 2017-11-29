@@ -2499,6 +2499,7 @@ def _parse_state_spec(state_type=None,
     from psyneulink.components.projections.projection \
         import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple
     from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
+    from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 
 
     # Get all of the standard arguments passed from _instantiate_state (i.e., those other than state_spec) into a dict
@@ -2566,7 +2567,12 @@ def _parse_state_spec(state_type=None,
     if isinstance(state_specification, function_type):
         state_specification = state_specification()
 
+    # ModulatorySpecification of some kind
     if _is_modulatory_spec(state_specification):
+        # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
+        # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
+        if isinstance(state_specification, type) and issubclass(state_specification, AdaptiveMechanism_Base):
+            state_specification = state_specification.output_state_type
         projection = state_type
 
     # State or Mechanism object specification:
