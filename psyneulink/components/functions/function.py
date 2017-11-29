@@ -5510,14 +5510,13 @@ class FHNIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
     FHNIntegrator(              \
-        default_variable=None,          \
+        default_variable=1.0,           \
         rate=1.0,                       \
-        noise=0.0,                      \
         scale: parameter_spec = 1.0,    \
         offset: parameter_spec = 0.0,   \
         initial_w=0.0,                  \
         initial_v=0.0,                  \
-        time_step_size=0.1,             \
+        time_step_size=0.0.05,          \
         t_0=0.0,                        \
         a_v=-1/3,                       \
         b_v=0.0,                        \
@@ -5532,6 +5531,7 @@ class FHNIntegrator(
         mode=1.0,                       \
         uncorrelated_activity=0.0       \
         time_constant_w = 12.5,         \
+        integration_method="RK4"        \
         params=None,                    \
         owner=None,                     \
         prefs=None,                     \
@@ -5539,26 +5539,23 @@ class FHNIntegrator(
 
     .. _FHNIntegrator:
 
-    Implements the Fitzhugh-Nagumo model using the 4th order Runge Kutta method of numerical integration.
+    Implements the Fitzhugh-Nagumo model using a choice of Euler or 4th Order Runge-Kutta numerical integration.
 
     In order to support several common representations of the model, the FHNIntegrator includes many parameters, some of
     which would not be sensible to use in combination.
 
-    The most general form of the FHNIntegrator function, with all of its arguments, is:
+    The most general form of PsyNeuLink's FHNIntegrator function, with all of its arguments, is:
 
-        *time_constant_v* :math:`* \\frac{dv}{dt}` =
+    .. math::
 
-            *a_v* :math:`* v^3` + *((1+threshold)* :math:`*` *b_v* :math:`* v^2)` *- threshold* :math:`*` *c_v* \
-            :math:`* v^2`) *+ d_v + (e_v* :math:`*` *w) + (f_v* :math:`* I_{ext})`
+        time_constant_v \\cdot \\frac{dv}{dt} = (a_v*(v^{3}) + (1+threshold) \\cdot b_v \\cdot (v^{2}) + (-threshold) \\cdot c_v \\cdot v + d_v + e_v \\cdot previous_w + f_v \\cdot variable)
 
-        *time_constant_w* :math:`* \\frac{dw}{dt}` =
-
-          *mode* :math:`*` *a_w* :math:`*` *(v + b_w)* :math:`*` *(w + c_w + (1 - self.mode))* :math:`*`
-          *self.uncorrelated_activity*
+        time_constant_w \\frac{dw}{dt} = (mode \\cdot a_w \\cdot previous_v + b_w \\cdot w + c_w +
+                    (1-mode) \\cdot self.uncorrelated_activity)
 
     The three formulations that the FHNIntegrator was designed to allow are:
 
-    **Fitzhugh-Nagumo Model**
+    * **Fitzhugh-Nagumo Model**
 
             :math:`\\frac{dv}{dt} = v - \\frac{v^3}{3} - w + I_{ext}`
 
@@ -5572,7 +5569,7 @@ class FHNIntegrator(
         implementation.
 
 
-    **Modified FHN Model**
+    * **Modified FHN Model**
 
             :math:`\\frac{dv}{dt} = v*(a-v)(v-1) - w + I_{ext}`
 
@@ -5614,7 +5611,7 @@ class FHNIntegrator(
         of why this formulation is useful.
 
 
-    `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ **Implementation
+    * `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ **Implementation
     of the Modified FHN Model**
 
             *tau_v* :math:`* \\frac{dv}{dt} = v*(a-v)(v-1) - w + b *` *f(X_1)*
