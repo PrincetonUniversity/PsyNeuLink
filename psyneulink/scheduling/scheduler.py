@@ -292,7 +292,7 @@ import logging
 
 from toposort import toposort
 
-from psyneulink.scheduling.condition import AllHaveRun, Always, ConditionSet, Never
+from psyneulink.scheduling.condition import AllHaveRun, Always, Condition, ConditionSet, Never
 from psyneulink.scheduling.timescale import TimeScale
 
 __all__ = [
@@ -472,6 +472,15 @@ class Scheduler(object):
         for ts in self.termination_conds:
             self.termination_conds[ts].scheduler = self
 
+    def _parse_termination_conditions(self, termination_conds):
+        if termination_conds is None:
+            return None
+
+        try:
+            return {k: termination_conds[k] for k in termination_conds if isinstance(k, TimeScale) and isinstance(termination_conds[k], Condition)}
+        except TypeError:
+            raise TypeError('termination_conditions must be a dictionary of the form {TimeScale: Condition, ...}')
+
     ################################################################################
     # Wrapper methods
     #   to allow the user to ignore the ConditionSet internals
@@ -522,7 +531,7 @@ class Scheduler(object):
                terminate the execution of the specified `TimeScale`
         '''
         self._validate_run_state()
-        self.update_termination_conditions(termination_conds)
+        self.update_termination_conditions(self._parse_termination_conditions(termination_conds))
 
         self.counts_useable = {node: {n: 0 for n in self.nodes} for node in self.nodes}
         self._reset_counts_total(TimeScale.TRIAL)
