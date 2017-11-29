@@ -1833,6 +1833,7 @@ class Component(object):
                                       request_set=request_set,
                                       target_set=target_set,
                                       context=context)
+            # variable not implemented by Mechanism subclass, so validate without it
             except TypeError:
                 self._validate_params(request_set=request_set,
                                       target_set=target_set,
