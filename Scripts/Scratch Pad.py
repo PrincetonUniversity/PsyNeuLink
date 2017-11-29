@@ -752,66 +752,85 @@ print ("TEST MODULATORY SPECS")
 # print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.NOISE].mod_afferents)
 # print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.GAIN].mod_afferents)
 # print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.BIAS].mod_afferents)
-#
-# import psyneulink as pnl
-#
+
+# # def test_formats_for_control_specification(self):
 # control_spec_list = [
 #     pnl.CONTROL,
 #     pnl.CONTROL_SIGNAL,
+#     pnl.CONTROL_PROJECTION,
 #     pnl.ControlSignal,
 #     pnl.ControlSignal(),
+#     pnl.ControlProjection,
+#     # pnl.ControlProjection(),
+#     # pnl.ControlMechanism,
+#     # pnl.ControlMechanism(),
 #     (0.3, pnl.CONTROL),
 #     (0.3, pnl.CONTROL_SIGNAL),
+#     (0.3, pnl.CONTROL_PROJECTION),
 #     (0.3, pnl.ControlSignal),
 #     (0.3, pnl.ControlSignal()),
 #     (0.3, pnl.ControlProjection),
-#     (0.3, pnl.ControlProjection())
+#     # (0.3, pnl.ControlProjection()),
+#     # (0.3, pnl.ControlMechanism),
+#     # (0.3, pnl.ControlMechanism()
 # ]
-#
-# for i, ctl_tuple in enumerate([i for i in zip(control_spec_list, reversed(control_spec_list))]):
-#     c1, c2 = ctl_tuple
-#     m = pnl.RecurrentTransferMechanism(noise=c1,
-#                                        function=pnl.Logistic(gain=c2))
-#     assert m.parameter_states[pnl.NOISE].mod_afferents[0].name in \
+# for i, ctl_tuple in enumerate([j for j in zip(control_spec_list, reversed(control_spec_list))]):
+#     C1, C2 = ctl_tuple
+#     R = pnl.RecurrentTransferMechanism(noise=C1,
+#                                        function=pnl.Logistic(gain=C2))
+#     assert R.parameter_states[pnl.NOISE].mod_afferents[0].name in \
 #            'ControlProjection for RecurrentTransferMechanism-{}[noise]'.format(i)
-#     assert m.parameter_states[pnl.GAIN].mod_afferents[0].name in \
+#     assert R.parameter_states[pnl.GAIN].mod_afferents[0].name in \
 #            'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)
-
-# # for c1, c2 in ctl_signals:
-# #     print("-------\n{}\n{}".format(c1, c2))
-# # print("--------------\n--------------")
-#
-# # for c1, c2 in ctl_signals:
-# #     m = pnl.RecurrentTransferMechanism(noise=c1,
-# #                                        function=pnl.Logistic(gain=c2))
-# #     print('-------------\nSIGNAL: {}\nMOD_AFFERENTS: {}\nSIGNAL: {}\nMOD_AFFERENTS: {}'
-# #           .format(c2, m.parameter_states[pnl.NOISE].mod_afferents,
-# #                   c1, m.parameter_states[pnl.GAIN].mod_afferents))
 
 
 # ----------------------------------------------------
 
-control_spec_list = [
-    pnl.CONTROL,
-    pnl.CONTROL_SIGNAL,
-    pnl.ControlSignal,
-    pnl.ControlSignal(),
-    (0.3, pnl.CONTROL),
-    (0.3, pnl.CONTROL_SIGNAL),
-    (0.3, pnl.ControlSignal),
-    (0.3, pnl.ControlSignal()),
-    (0.3, pnl.ControlProjection),
-    (0.3, pnl.ControlProjection())
-]
+m = pnl.RecurrentTransferMechanism(
+    noise=
+    # pnl.CONTROL,
+    # pnl.CONTROL_SIGNAL,
+    # pnl.CONTROL_PROJECTION,
+    # pnl.ControlSignal,
+    # pnl.ControlSignal(),
+    # pnl.ControlProjection,
+    # pnl.ControlProjection(),
+    pnl.ControlMechanism,  # FIX
+    # pnl.ControlMechanism(), # FIX:
+    # (0.3, pnl.CONTROL),
+    # (0.3, pnl.CONTROL_SIGNAL),
+    # (0.3, pnl.CONTROL_PROJECTION),
+    # (0.3, pnl.ControlSignal),
+    # (0.3, pnl.ControlSignal()),
+    # (0.3, pnl.ControlProjection),
+    # (0.3, pnl.ControlProjection()),
+    # (0.3, pnl.ControlMechanism),  # FIX
+    # (0.3, pnl.ControlMechanism()), # FIX
+    function=pnl.Logistic(gain=
+                          # pnl.CONTROL,
+                          # pnl.CONTROL_SIGNAL,
+                          # pnl.CONTROL_PROJECTION,
+                          # pnl.ControlSignal,
+                          # pnl.ControlSignal(),
+                          # pnl.ControlProjection,
+                          pnl.ControlProjection(),
+                          # pnl.ControlMechanism,  # FIX
+                          # pnl.ControlMechanism(),  # FIX
+                          # (0.3, pnl.CONTROL),
+                          # (0.3, pnl.CONTROL_SIGNAL),
+                          # (0.3, pnl.CONTROL_PROJECTION),
+                          # (0.3, pnl.ControlSignal),
+                          # (0.3, pnl.ControlSignal()),
+                          # (0.3, pnl.ControlProjection),
+                          # (0.3, pnl.ControlProjection()),
+                          # (0.3, pnl.ControlMechanism),  # FIX
+                          # (0.3, pnl.ControlMechanism())  # FIX
+                                   ))
 
-for i, ctl_tuple in enumerate([i for i in zip(control_spec_list, reversed(control_spec_list))]):
-    c1, c2 = ctl_tuple
-    m = pnl.RecurrentTransferMechanism(noise=c1,
-                                       function=pnl.Logistic(gain=c2))
-    assert m.parameter_states[pnl.NOISE].mod_afferents[0].name in \
-           'ControlProjection for RecurrentTransferMechanism-{}[noise]'.format(i)
-    assert m.parameter_states[pnl.GAIN].mod_afferents[0].name in \
-           'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)
+assert m.parameter_states[pnl.NOISE].mod_afferents[0].name in \
+       'ControlProjection for RecurrentTransferMechanism-0[noise]'
+assert m.parameter_states[pnl.GAIN].mod_afferents[0].name in \
+       'ControlProjection for RecurrentTransferMechanism-0[gain]'
 
 
 # ----------------------------------------------------
@@ -857,7 +876,7 @@ for i, ctl_tuple in enumerate([i for i in zip(control_spec_list, reversed(contro
 
 #endregion
 #region TEST DOCUMENTATION
-print ("TEST DOCUMENTATION")
+# print ("TEST DOCUMENTATION")
 
 # # import matlab.engine
 # # eng1 = matlab.engine.start_matlab('-nojvm')
