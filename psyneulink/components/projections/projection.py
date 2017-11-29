@@ -393,7 +393,7 @@ from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_
 from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
 from psyneulink.globals.keywords import \
     NAME, PARAMS, CONTEXT, PATHWAY, \
-    MECHANISM, INPUT_STATE, OUTPUT_STATE, PARAMETER_STATE_PARAMS, \
+    MECHANISM, INPUT_STATE, OUTPUT_STATE, OUTPUT_STATES, PARAMETER_STATE_PARAMS, \
     STANDARD_ARGS, STATE, STATES, WEIGHT, EXPONENT, \
     PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, \
     MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
@@ -977,7 +977,7 @@ def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_s
     if isinstance(spec, State):
         # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
-    # MODIFIED 11/29/17 NEW:
+    # # MODIFIED 11/29/17 NEW:
     # if isinstance(spec, Mechanism):
     #     if proj_type is None:
     #     # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
@@ -992,7 +992,7 @@ def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_s
         if issubclass(spec, State):
             # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
             return True
-    # MODIFIED 11/29/17 NEW:
+    # # MODIFIED 11/29/17 NEW:
         # if issubclass(spec, Mechanism):
         #     # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         #     return True
@@ -1014,7 +1014,6 @@ def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_s
         if _is_projection_spec(spec[0], proj_type=proj_type, include_matrix_spec=include_matrix_spec):
             if spec[1] is not None:
                 # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
-                # MODIFIED 11/28/17 OLD:
                 if _is_projection_subclass(spec[1], MAPPING_PROJECTION):
                     return True
                 if _is_modulatory_spec(spec[1]):
@@ -1123,11 +1122,11 @@ def _parse_projection_spec(projection_spec,
           or (isinstance(projection_spec, type) and issubclass(projection_spec, State))):
         proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
 
-    # # MODIFIED 11/29/17 NEW:
-    # # Mechanism object or class
-    # elif (isinstance(projection_spec, Mechanism)
-    #       or (isinstance(projection_spec, type) and issubclass(projection_spec, Mechanism))):
-    #     proj_spec_dict[PROJECTION_TYPE] = projection_spec.
+    # MODIFIED 11/29/17 NEW:
+    # Mechanism object or class
+    elif (isinstance(projection_spec, Mechanism)
+          or (isinstance(projection_spec, type) and issubclass(projection_spec, Mechanism))):
+        proj_spec_dict[PROJECTION_TYPE] = projection_spec.output_state_type.paramClassDefaults[PROJECTION_TYPE]
     # MODIFIED 11/29/17 END
 
     # Dict
@@ -1298,7 +1297,7 @@ def _parse_connection_specs(connectee_state_type,
         raise ProjectionError("Called for {} with \'connectee_state_type\' arg ({}) that is not a class".
                          format(owner.name, connectee_state_type))
 
-    # Get connection attributes (execept projection_socket, which depends on context)
+    # Get connection attributes for connectee
     connects_with = [StateRegistry[name].subclass for name in connectee_state_type.connectsWith]
     connect_with_attr = connectee_state_type.connectsWithAttribute
     projection_socket = connectee_state_type.projectionSocket
@@ -1560,11 +1559,26 @@ def _parse_connection_specs(connectee_state_type,
 
             # Validate state specification, and get actual state referenced if it has been instantiated
             try:
+                state_types = connects_with
+                mech_state_attribute=connect_with_attr
+                # # MODIFIED 11/29/17 NEW:
+                # # FIX: 11/28/17 HACK TO DEAL WITH GatingSignal Projection to OutputState
+                # if (_is_gating_spec(first_item)
+                #     and (isinstance(last_item, OutputState)
+                #          or (isinstance(last_item, type) and issubclass(last_item, OutputState)))):
+                #     projection_socket = SENDER
+                #     state_types = [OutputState]
+                #     mech_state_attribute = [OUTPUT_STATES]
+                # else:
+                #     state_types = connects_with
+                #     mech_state_attribute=connect_with_attr
+                # MODIFIED 11/29/17 END
+
                 state = _get_state_for_socket(owner=owner,
                                               state_spec=state_spec,
-                                              state_types=connects_with,
+                                              state_types=state_types,
                                               mech=mech,
-                                              mech_state_attribute=connect_with_attr,
+                                              mech_state_attribute=mech_state_attribute,
                                               projection_socket=projection_socket)
             except StateError as e:
                 raise ProjectionError("Problem with specification for {} in {} specification for {}: ".
@@ -1599,7 +1613,7 @@ def _parse_connection_specs(connectee_state_type,
             # Validate projection specification
             if _is_projection_spec(projection_spec) or projection_spec is None:
 
-                # FIX: 11/21/17 THIS IS A HACK TO DEAL WITH GatingSignal PROJECTION TO InputState or OutputState
+                # FIX: 11/21/17 THIS IS A HACK TO DEAL WITH GatingSignal Projection TO InputState or OutputState
                 from psyneulink.components.states.inputstate import InputState
                 from psyneulink.components.states.outputstate import OutputState
                 from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
@@ -1608,7 +1622,10 @@ def _parse_connection_specs(connectee_state_type,
                     and isinstance(state, GatingSignal)
                     and connectee_state_type in {InputState, OutputState}):
                     projection_spec = state
-
+                # FIX: 11/29/17  GENERALIZE TO _is_modulatory_spec??
+                elif _is_gating_spec(first_item):
+                    projection_spec = first_item
+                from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
                 projection_spec = _parse_projection_spec(projection_spec,
                                                          owner=owner,
                                                          state_type=connectee_state_type)

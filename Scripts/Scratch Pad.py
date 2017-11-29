@@ -800,8 +800,8 @@ T = pnl.TransferMechanism(output_states=[
 #     pnl.GatingSignal(),
 #     pnl.GatingProjection,
     # pnl.GatingProjection(),
-    pnl.GatingMechanism, # FIX OUTPUTSTATES
-    # pnl.GatingMechanism(), # FIX OUTPUTSTATES
+    # pnl.GatingMechanism, # FIX OUTPUTSTATES
+    pnl.GatingMechanism(), # FIX OUTPUTSTATES
 #     (0.3, pnl.GATING),
 #     (0.3, pnl.GATING_SIGNAL),
 #     (0.3, pnl.GatingSignal),
