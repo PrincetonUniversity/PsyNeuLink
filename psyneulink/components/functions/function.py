@@ -4391,7 +4391,8 @@ class LCAIntegrator(
         added to the prior value;  if it is an array, each element is independently integrated.
 
     rate : float or 1d np.array
-        determines the rate of integration based on current and prior values. If it has a single element, it
+        scales the contribution of `previous_value <LCAIntegrator.previous_value>` to the
+        accumulation of the `LCAIntegrator's value <LCAIntegrator.value>` (:math:`x_{i}`) on each time step. If it has a single element, it
         applies to all elements of `variable <LCAIntegrator.variable>`;  if it has more than one element, each element
         applies to the corresponding element of `variable <LCAIntegrator.variable>`.
 
@@ -4530,7 +4531,6 @@ class LCAIntegrator(
         # if params and VARIABLE in params:
         #     new_value = params[VARIABLE]
 
-        # Compute function based on integration_type param
         # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
         value = previous_value + (rate*previous_value + new_value)*self.time_step_size + noise*(self.time_step_size**0.5)
 
@@ -5539,124 +5539,170 @@ class FHNIntegrator(
 
     .. _FHNIntegrator:
 
-    Implements the Fitzhugh-Nagumo model using a choice of Euler or 4th Order Runge-Kutta numerical integration.
+    The FHN Integrator function in PsyNeuLink implements the Fitzhugh-Nagumo model using a choice of Euler or 4th Order
+    Runge-Kutta numerical integration.
 
     In order to support several common representations of the model, the FHNIntegrator includes many parameters, some of
-    which would not be sensible to use in combination.
+    which would not be sensible to use in combination. The equations of the Fitzhugh-Nagumo model are expressed below in
+    terms of all of the parameters exposed in PsyNeuLink:
 
-    The most general form of PsyNeuLink's FHNIntegrator function, with all of its arguments, is:
+    **Fast, Excitatory Variable:**
+
 
     .. math::
 
-        time_constant_v \\cdot \\frac{dv}{dt} = (a_v*(v^{3}) + (1+threshold) \\cdot b_v \\cdot (v^{2}) + (-threshold) \\cdot c_v \\cdot v + d_v + e_v \\cdot previous_w + f_v \\cdot variable)
-
-        time_constant_w \\frac{dw}{dt} = (mode \\cdot a_w \\cdot previous_v + b_w \\cdot w + c_w +
-                    (1-mode) \\cdot self.uncorrelated_activity)
-
-    The three formulations that the FHNIntegrator was designed to allow are:
-
-    * **Fitzhugh-Nagumo Model**
-
-            :math:`\\frac{dv}{dt} = v - \\frac{v^3}{3} - w + I_{ext}`
-
-            :math:`T*\\frac{dw}{dt} = v + a - b*w`
-
-        where :math:`\\frac{dw}{dt}` often has the following parameters:
-
-            :math:`\\frac{dw}{dt} = 0.08(v + 0.7 - 0.8*w)`
-
-        The FHNIntegrator's default parameter values map the above equations and parameters onto the PsyNeuLink
-        implementation.
+        \\frac{dv}{dt} = \\frac{a_v v^{3} + b_v v^{2} (1+threshold) - c_v v\\, threshold + d_v + e_v\\, previous_w + f_v\\, variable)}{time\\, constant_v}
 
 
-    * **Modified FHN Model**
+    **Slow, Inactivating Variable:**
 
-            :math:`\\frac{dv}{dt} = v*(a-v)(v-1) - w + I_{ext}`
 
-            :math:`\\frac{dw}{dt} = b*v - c*w`
+    .. math::
 
-        In order to reproduce the modified FHN equation for :math:`\\frac{dv}{dt},
-        the following FHNIntegrator parameters must be set:
+        \\frac{dw}{dt} = \\frac{a_w\\, mode\\, previous_v + b_w w + c_w +
+                    uncorrelated\\,activity\\,(1-mode)}{time\\, constant_w}
 
-            *b_v = c_v = f_v = time_constant_v = 1.0*
+    *The three formulations that the FHNIntegrator was designed to allow are:*
 
-            *a_v = e_v = -1.0*
+    (1) **Fitzhugh-Nagumo Model**
 
-            *d_v = 0.0;*
+        **Fast, Excitatory Variable:**
 
-        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for
-        dv/dt then correspond to the modified FHN equation for :math:`\\frac{dv}{dt} as follows:
+        .. math::
 
-            (modified FHN representation --> PsyNeuLink representation)
+            \\frac{dv}{dt} = v - \\frac{v^3}{3} - w + I_{ext}
 
-            *a* --> `threshold <FHNIntegrator.threshold>`
+        **Slow, Inactivating Variable:**
 
-            :math:`I_{ext}` --> `variable <FHNIntegrator.variable>`
+        .. math::
 
-        In order to reproduce the modified FHN equation for dw/dt, the following FHNIntegrator parameters must be set:
+            \\frac{dw}{dt} = \\frac{v + a - bw}{T}
 
-            *mode = time_constant_w = 1.0*
+        :math:`\\frac{dw}{dt}` often has the following parameter values:
 
-            *c_w = uncorrelated_activity = 0.0;*
+        .. math::
 
-        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dw/dt then correspond to the modified FHN equation for dw/dt as follows:
+            \\frac{dw}{dt} = 0.08\\,(v + 0.7 - 0.8 w)
 
-            (modified FHN representation --> PsyNeuLink representation)
+        *How to implement this model in PsyNeuLink:*
 
-            *b* --> `a_w <FHNIntegrator.a_w>`
+            In PsyNeuLink, the default parameter values of the FHNIntegrator function implement the above equations.
 
-            *c --> NEGATIVE* `b_w <FHNIntegrator.b_w>`
+
+    (2) **Modified FHN Model**
+
+        **Fast, Excitatory Variable:**
+
+        .. math::
+
+            \\frac{dv}{dt} = v(a-v)(v-1) - w + I_{ext}
+
+        **Slow, Inactivating Variable:**
+
+        .. math::
+
+            \\frac{dw}{dt} = bv - cw
 
         `Mahbub Khan (2013) <http://pcwww.liv.ac.uk/~bnvasiev/Past%20students/Mahbub_549.pdf>`_ provides a nice summary
         of why this formulation is useful.
 
+        *How to implement this model in PsyNeuLink:*
 
-    * `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ **Implementation
-    of the Modified FHN Model**
+            In order to implement the modified FHN model, the following PsyNeuLink parameter values must be set in the
+            equation for :math:`\\frac{dv}{dt}`:
 
-            *tau_v* :math:`* \\frac{dv}{dt} = v*(a-v)(v-1) - w + b *` *f(X_1)*
+            +-----------------+-----+-----+-----+-----+-----+-----+---------------+
+            |**PNL Parameter**| a_v | b_v | c_v | d_v | e_v | f_v |time_constant_v|
+            +-----------------+-----+-----+-----+-----+-----+-----+---------------+
+            |**Value**        |-1.0 |1.0  |1.0  |0.0  |-1.0 |1.0  |1.0            |
+            +-----------------+-----+-----+-----+-----+-----+-----+---------------+
 
-            *tau_w* :math:`* \\frac{dw}{dt} = c*v + (1-c)*d - w`
+            When the parameters above are set to the listed values, the PsyNeuLink equation for :math:`\\frac{dv}{dt}`
+            reduces to the Modified FHN formulation, and the remaining parameters in the :math:`\\frac{dv}{dt}` equation
+            correspond as follows:
 
-        In order to reproduce the Gilzenrat equation for dv/dt, the following FHNIntegrator parameters must be set:
+            +--------------------------+---------------------------------------+---------------------------------------+
+            |**PNL Parameter**         |`threshold <FHNIntegrator.threshold>`  |`variable <FHNIntegrator.variable>`    |
+            +--------------------------+---------------------------------------+---------------------------------------+
+            |**Modified FHN Parameter**|a                                      |:math:`I_{ext}`                        |
+            +--------------------------+---------------------------------------+---------------------------------------+
 
-            *b_v = c_v = 1.0*
+            In order to implement the modified FHN model, the following PsyNeuLink parameter values must be set in the
+            equation for :math:`\\frac{dw}{dt}`:
 
-            *a_v = e_v = -1.0*
+            +-----------------+-----+------+---------------+----------------------+
+            |**PNL Parameter**|c_w  | mode |time_constant_w|uncorrelated_activity |
+            +-----------------+-----+------+---------------+----------------------+
+            |**Value**        | 0.0 | 1.0  |1.0            | 0.0                  |
+            +-----------------+-----+------+---------------+----------------------+
 
-            *d_v = 0.0;*
+            When the parameters above are set to the listed values, the PsyNeuLink equation for :math:`\\frac{dw}{dt}`
+            reduces to the Modified FHN formulation, and the remaining parameters in the :math:`\\frac{dw}{dt}` equation
+            correspond as follows:
 
-        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dv/dt then correspond to the Gilzenrat equation for dv/dt as follows:
+            +--------------------------+---------------------------------------+---------------------------------------+
+            |**PNL Parameter**         |`a_w <FHNIntegrator.a_w>`              |*NEGATIVE* `b_w <FHNIntegrator.b_w>`   |
+            +--------------------------+---------------------------------------+---------------------------------------+
+            |**Modified FHN Parameter**|b                                      |c                                      |
+            +--------------------------+---------------------------------------+---------------------------------------+
 
-            (Gilzenrat representation --> PsyNeuLink representation)
+    (3) **Modified FHN Model as implemented in** `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_
 
-            *a* --> `threshold <FHNIntegrator.threshold>`
+        **Fast, Excitatory Variable:**
 
-            *b* --> `f_v <FHNIntegrator.f_v>`
+        [Eq. (6) in `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ ]
 
-            *f(X_1)* --> `variable <FHNIntegrator.variable>`
+        .. math::
 
-            *tau_v* --> `time_constant_v <FHNIntegrator.time_constant_v>`
+            \\tau_v \\frac{dv}{dt} = v(a-v)(v-1) - u + w_{vX_1}\\, f(X_1)
 
+        **Slow, Inactivating Variable:**
 
-        In order to reproduce the Gilzenrat equation for dw/dt, the following FHNIntegrator parameters must be set:
+        [Eq. (7) & Eq. (8) in `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ ]
 
-            *a_w = 1.0*
+        .. math::
 
-            *b_w = -1.0*
+            \\tau_u \\frac{du}{dt} = Cv + (1-C)\\, d - u
 
-            *c_w = 0.0;*
+        *How to implement this model in PsyNeuLink:*
 
-        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dw/dt then correspond to the Gilzenrat equation for dw/dt as follows:
+            In order to implement the Gilzenrat 2002 model, the following PsyNeuLink parameter values must be set in the
+            equation for :math:`\\frac{dv}{dt}`:
 
-            (Gilzenrat representation --> PsyNeuLink representation)
+            +-----------------+-----+-----+-----+-----+-----+
+            |**PNL Parameter**| a_v | b_v | c_v | d_v | e_v |
+            +-----------------+-----+-----+-----+-----+-----+
+            |**Value**        |-1.0 |1.0  |1.0  |0.0  |-1.0 |
+            +-----------------+-----+-----+-----+-----+-----+
 
-            *c* --> `mode <FHNIntegrator.mode>`
+            When the parameters above are set to the listed values, the PsyNeuLink equation for :math:`\\frac{dv}{dt}`
+            reduces to the Gilzenrat formulation, and the remaining parameters in the :math:`\\frac{dv}{dt}` equation
+            correspond as follows:
 
-            *d* --> `uncorrelated_activity <FHNIntegrator.uncorrelated_activity>`
+            +-----------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
+            |**PNL Parameter**      |`threshold <FHNIntegrator.threshold>`|`variable <FHNIntegrator.variable>`|`f_v <FHNIntegrator.f_v>`|`time_constant_v <FHNIntegrator.time_constant_v>`   |
+            +-----------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
+            |**Gilzenrat Parameter**|a                                    |:math:`f(X_1)`                     |:math:`w_{vX_1}`         |:math:`T_{v}`                                       |
+            +-----------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
 
-            *tau_w* --> `time_constant_w <FHNIntegrator.time_constant_w>`
+            In order to implement the Gilzenrat 2002 model, the following PsyNeuLink parameter values must be set in the
+            equation for :math:`\\frac{dw}{dt}`:
 
+            +-----------------+-----+-----+-----+
+            |**PNL Parameter**| a_w | b_w | c_w |
+            +-----------------+-----+-----+-----+
+            |**Value**        | 1.0 |-1.0 |0.0  |
+            +-----------------+-----+-----+-----+
+
+            When the parameters above are set to the listed values, the PsyNeuLink equation for :math:`\\frac{dw}{dt}`
+            reduces to the Gilzenrat formulation, and the remaining parameters in the :math:`\\frac{dw}{dt}` equation
+            correspond as follows:
+
+            +--------------------------+---------------------------------------+-------------------------------------------------------------+----------------------------------------------------+
+            |**PNL Parameter**         |`mode <FHNIntegrator.mode>`            |`uncorrelated_activity <FHNIntegrator.uncorrelated_activity>`|`time_constant_v <FHNIntegrator.time_constant_w>`   |
+            +--------------------------+---------------------------------------+-------------------------------------------------------------+----------------------------------------------------+
+            |**Gilzenrat Parameter**   |C                                      |d                                                            |:math:`T_{u}`                                       |
+            +--------------------------+---------------------------------------+-------------------------------------------------------------+----------------------------------------------------+
 
     Arguments
     ---------
@@ -5784,7 +5830,7 @@ class FHNIntegrator(
         coefficient on the w term in the dv/dt equation
 
     f_v : float : default  1.0
-        coefficient on the external stimulus ('variable <FHNIntegrator.variable>`) term in the dv/dt equation
+        coefficient on the external stimulus (`variable <FHNIntegrator.variable>`) term in the dv/dt equation
 
     time_constant_v : float : default 1.0
         scaling factor on the dv/dt equation
