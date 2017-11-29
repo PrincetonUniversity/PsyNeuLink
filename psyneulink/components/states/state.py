@@ -2840,12 +2840,12 @@ def _parse_state_spec(state_type=None,
             state_dict[PARAMS].update(params)
 
     else:
-        if owner.verbosePref:
-            warnings.warn("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
-                         format(state_type_name, owner.name, state_spec))
-        return
-        # raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
+        # if owner.verbosePref:
+        #     warnings.warn("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
         #                  format(state_type_name, owner.name, state_spec))
+        # return
+        raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
+                         format(state_type_name, owner.name, state_specification))
 
     # If variable is none, use value:
     if state_dict[VARIABLE] is None:

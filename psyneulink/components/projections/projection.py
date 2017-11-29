@@ -955,7 +955,7 @@ class Projection_Base(Projection):
 
 
 @tc.typecheck
-def _is_projection_spec(spec, proj_type:tc.optional(Projection)=None, include_matrix_spec=True):
+def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_spec=True):
     """Evaluate whether spec is a valid Projection specification
 
     Return `True` if spec is any of the following:
@@ -970,13 +970,19 @@ def _is_projection_spec(spec, proj_type:tc.optional(Projection)=None, include_ma
     """
 
     if isinstance(spec, Projection):
-        if proj_type is None or isinstance(spec, type):
+        if proj_type is None or isinstance(spec, proj_type):
                 return True
         else:
             return False
     if isinstance(spec, State):
         # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
+    # MODIFIED 11/29/17 NEW:
+    # if isinstance(spec, Mechanism):
+    #     if proj_type is None:
+    #     # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
+    #         return True
+    # MODIFIED 11/29/17 END
     if inspect.isclass(spec):
         if issubclass(spec, Projection):
             if proj_type is None or issubclass(spec, proj_type):
@@ -986,6 +992,11 @@ def _is_projection_spec(spec, proj_type:tc.optional(Projection)=None, include_ma
         if issubclass(spec, State):
             # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
             return True
+    # MODIFIED 11/29/17 NEW:
+        # if issubclass(spec, Mechanism):
+        #     # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
+        #     return True
+    # MODIFIED 11/29/17 END
     if isinstance(spec, dict) and any(key in spec for key in {PROJECTION_TYPE, SENDER, RECEIVER, MATRIX}):
         # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
@@ -1006,17 +1017,8 @@ def _is_projection_spec(spec, proj_type:tc.optional(Projection)=None, include_ma
                 # MODIFIED 11/28/17 OLD:
                 if _is_projection_subclass(spec[1], MAPPING_PROJECTION):
                     return True
-                # if _is_projection_subclass(spec[1], LEARNING_PROJECTION):
-                #     return True
-                # if _is_projection_subclass(spec[1], CONTROL_PROJECTION):
-                #     return True
-                # if _is_projection_subclass(spec[1], GATING_PROJECTION):
-                #     return True
-                # MODIFIED 11/28/17 NEW:
                 if _is_modulatory_spec(spec[1]):
                     return True
-                # MODIFIED 11/28/17 END:
-
         # if _is_projection_spec(spec[1], proj_type=proj_type, include_matrix_spec=include_matrix_spec):
         #         # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
         #     if is_numeric(spec[0]):
@@ -1116,14 +1118,17 @@ def _parse_projection_spec(projection_spec,
     elif isinstance(projection_spec, str):
         proj_spec_dict[PROJECTION_TYPE] = _parse_projection_keyword(projection_spec)
 
-    # State object
-    elif isinstance(projection_spec, State):
+    # State object or class
+    elif (isinstance(projection_spec, State)
+          or (isinstance(projection_spec, type) and issubclass(projection_spec, State))):
         proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
 
-    # State class
-    elif inspect.isclass(projection_spec) and issubclass(projection_spec, State):
-        # Assign default Projection type for State's class
-        proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
+    # # MODIFIED 11/29/17 NEW:
+    # # Mechanism object or class
+    # elif (isinstance(projection_spec, Mechanism)
+    #       or (isinstance(projection_spec, type) and issubclass(projection_spec, Mechanism))):
+    #     proj_spec_dict[PROJECTION_TYPE] = projection_spec.
+    # MODIFIED 11/29/17 END
 
     # Dict
     elif isinstance(projection_spec, dict):
