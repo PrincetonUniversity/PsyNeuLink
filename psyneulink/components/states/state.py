@@ -2499,6 +2499,7 @@ def _parse_state_spec(state_type=None,
     from psyneulink.components.projections.projection \
         import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple
     from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
+    from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 
 
     # Get all of the standard arguments passed from _instantiate_state (i.e., those other than state_spec) into a dict
@@ -2566,7 +2567,12 @@ def _parse_state_spec(state_type=None,
     if isinstance(state_specification, function_type):
         state_specification = state_specification()
 
+    # ModulatorySpecification of some kind
     if _is_modulatory_spec(state_specification):
+        # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
+        # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
+        if isinstance(state_specification, type) and issubclass(state_specification, AdaptiveMechanism_Base):
+            state_specification = state_specification.output_state_type
         projection = state_type
 
     # State or Mechanism object specification:
@@ -2840,12 +2846,12 @@ def _parse_state_spec(state_type=None,
             state_dict[PARAMS].update(params)
 
     else:
-        if owner.verbosePref:
-            warnings.warn("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
-                         format(state_type_name, owner.name, state_spec))
-        return
-        # raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
+        # if owner.verbosePref:
+        #     warnings.warn("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
         #                  format(state_type_name, owner.name, state_spec))
+        # return
+        raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
+                         format(state_type_name, owner.name, state_specification))
 
     # If variable is none, use value:
     if state_dict[VARIABLE] is None:
@@ -3005,7 +3011,6 @@ def _get_state_for_socket(owner,
             raise StateError("{} does not have a {} named \'{}\' in its {}".
                              format(mech.name, State.__name__, state_spec, attr_name))
 
-
     # Get primary State of specified type
     elif isinstance(state_spec, Mechanism):
 
@@ -3031,6 +3036,10 @@ def _get_state_for_socket(owner,
                 if state is None:
                     raise StateError("PROGRAM ERROR: {} attribute(s) not found on {}'s type ({})".
                                      format(mech_state_attribute, mech.name, mech.__class__.__name__))
+
+    # # Get
+    # elif isinstance(state_spec, type) and issubclass(state_spec, Mechanism):
+
 
     # Get state from Projection specification (exclude matrix spec in test as it can't be used to determine the state)
     elif _is_projection_spec(state_spec, include_matrix_spec=False):

@@ -138,15 +138,15 @@ class TestProjectionSpecificationFormats:
         assert G.gating_signals[0].efferents[0].receiver.name == 'DECISION_VARIABLE'
         assert G.gating_signals[0].efferents[1].receiver.name == 'RESPONSE_TIME'
 
-    # def test_2_item_tuple_from_input_and_output_states_to_gating_signals(self):
-    #
-    #     G = pnl.GatingMechanism(gating_signals=['a','b'])
-    #     T = pnl.TransferMechanism(name='T',
-    #                  input_states=[(3,G)],
-    #                  output_states=[(2,G.gating_signals['b'])]
-    #                               )
-    #     assert T.input_states[0].mod_afferents[0].sender==G.gating_signals[0]
-    #     assert T.output_states[0].mod_afferents[0].sender==G.gating_signals[1]
+    def test_2_item_tuple_from_input_and_output_states_to_gating_signals(self):
+
+        G = pnl.GatingMechanism(gating_signals=['a','b'])
+        T = pnl.TransferMechanism(name='T',
+                     input_states=[(3,G)],
+                     output_states=[(2,G.gating_signals['b'])]
+                                  )
+        assert T.input_states[0].mod_afferents[0].sender==G.gating_signals[0]
+        assert T.output_states[0].mod_afferents[0].sender==G.gating_signals[1]
 
     def test_formats_for_control_specification(self):
 
@@ -156,7 +156,7 @@ class TestProjectionSpecificationFormats:
             pnl.CONTROL_PROJECTION,
             pnl.ControlSignal,
             pnl.ControlSignal(),
-            # pnl.ControlProjection,
+            pnl.ControlProjection,
             # pnl.ControlProjection(),
             # pnl.ControlMechanism,
             # pnl.ControlMechanism(),
@@ -165,10 +165,10 @@ class TestProjectionSpecificationFormats:
             (0.3, pnl.CONTROL_PROJECTION),
             (0.3, pnl.ControlSignal),
             (0.3, pnl.ControlSignal()),
-            # (0.3, pnl.ControlProjection),
+            (0.3, pnl.ControlProjection),
             # (0.3, pnl.ControlProjection()),
             # (0.3, pnl.ControlMechanism),
-            # (0.3, pnl.ControlMechanism())
+            # (0.3, pnl.ControlMechanism()
         ]
         for i, ctl_tuple in enumerate([j for j in zip(control_spec_list, reversed(control_spec_list))]):
             C1, C2 = ctl_tuple
@@ -219,8 +219,8 @@ class TestProjectionSpecificationFormats:
             pnl.GatingSignal(),
             pnl.GatingProjection,
             pnl.GatingProjection(),
-            # pnl.GatingMechanism,
-            # pnl.GatingMechanism(),
+            pnl.GatingMechanism,
+            pnl.GatingMechanism(),
             (0.3, pnl.GATING),
             (0.3, pnl.GATING_SIGNAL),
             (0.3, pnl.GATING_PROJECTION),
@@ -228,8 +228,8 @@ class TestProjectionSpecificationFormats:
             (0.3, pnl.GatingSignal()),
             (0.3, pnl.GatingProjection),
             (0.3, pnl.GatingProjection()),
-            # (0.3, pnl.GatingMechanism),
-            # (0.3, pnl.GatingMechanism())
+            (0.3, pnl.GatingMechanism),
+            (0.3, pnl.GatingMechanism())
         ]
 
         for i, G in enumerate(gating_spec_list):
@@ -247,17 +247,17 @@ class TestProjectionSpecificationFormats:
             pnl.GatingSignal(),
             pnl.GatingProjection,
             pnl.GatingProjection(),
-            # pnl.GatingMechanism,
-            # pnl.GatingMechanism(),
+            pnl.GatingMechanism,
+            pnl.GatingMechanism(),
             (0.3, pnl.GATING),
             (0.3, pnl.GATING_SIGNAL),
             (0.3, pnl.GATING_PROJECTION),
             (0.3, pnl.GatingSignal),
             (0.3, pnl.GatingSignal()),
             (0.3, pnl.GatingProjection),
-            (0.3, pnl.GatingProjection())
-            # (0.3, pnl.GatingMechanism),
-            # (0.3, pnl.GatingMechanism())
+            (0.3, pnl.GatingProjection()),
+            (0.3, pnl.GatingMechanism),
+            (0.3, pnl.GatingMechanism())
         ]
 
         for i, G in enumerate(gating_spec_list):
