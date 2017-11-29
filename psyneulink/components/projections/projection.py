@@ -393,7 +393,7 @@ from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_
 from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
 from psyneulink.globals.keywords import \
     NAME, PARAMS, CONTEXT, PATHWAY, \
-    MECHANISM, INPUT_STATE, OUTPUT_STATE, OUTPUT_STATES, PARAMETER_STATE_PARAMS, \
+    MECHANISM, INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, PARAMETER_STATE_PARAMS, \
     STANDARD_ARGS, STATE, STATES, WEIGHT, EXPONENT, \
     PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, \
     MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
@@ -1347,6 +1347,14 @@ def _parse_connection_specs(connectee_state_type,
                  or isinstance(connectee_state_type, type) and issubclass(connectee_state_type, (InputState,
                                                                                                  OutputState)))
                 and _is_gating_spec(connection)):
+                # MODIFIED 11/29/17 NEW:
+                # Convert AdaptiveMechanism specs to corresponding ModulatorySignal spec
+                if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
+                    connection = connection.output_state_type
+                elif isinstance(connection, AdaptiveMechanism_Base):
+                    connection = connection.output_state
+                # MODIFIED 11/29/17 END
+
                 projection_spec = connection
             else:
                 projection_spec = connectee_state_type
@@ -1573,6 +1581,13 @@ def _parse_connection_specs(connectee_state_type,
                     projection_socket = SENDER
                     state_types = [OutputState]
                     mech_state_attribute = [OUTPUT_STATES]
+
+                # elif (isinstance(first_item, AdaptiveMechanism_Base)
+                #       and _is_gating_spec(first_item) and last_item == first_item):
+                #     projection_socket = SENDER
+                #     state_types = [connectee_state_type]
+                #     mech_state_attribute = [INPUT_STATES]
+
                 else:
                     state_types = connects_with
                     mech_state_attribute=connect_with_attr

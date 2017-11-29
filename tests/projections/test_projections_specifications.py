@@ -228,8 +228,8 @@ class TestProjectionSpecificationFormats:
             (0.3, pnl.GatingSignal()),
             (0.3, pnl.GatingProjection),
             (0.3, pnl.GatingProjection()),
-            # (0.3, pnl.GatingMechanism),
-            # (0.3, pnl.GatingMechanism())
+            (0.3, pnl.GatingMechanism),
+            (0.3, pnl.GatingMechanism())
         ]
 
         for i, G in enumerate(gating_spec_list):
@@ -256,8 +256,8 @@ class TestProjectionSpecificationFormats:
             (0.3, pnl.GatingSignal()),
             (0.3, pnl.GatingProjection),
             (0.3, pnl.GatingProjection()),
-            # (0.3, pnl.GatingMechanism),
-            # (0.3, pnl.GatingMechanism())
+            (0.3, pnl.GatingMechanism),
+            (0.3, pnl.GatingMechanism())
         ]
 
         for i, G in enumerate(gating_spec_list):

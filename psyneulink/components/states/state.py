@@ -3011,7 +3011,6 @@ def _get_state_for_socket(owner,
             raise StateError("{} does not have a {} named \'{}\' in its {}".
                              format(mech.name, State.__name__, state_spec, attr_name))
 
-
     # Get primary State of specified type
     elif isinstance(state_spec, Mechanism):
 
@@ -3037,6 +3036,10 @@ def _get_state_for_socket(owner,
                 if state is None:
                     raise StateError("PROGRAM ERROR: {} attribute(s) not found on {}'s type ({})".
                                      format(mech_state_attribute, mech.name, mech.__class__.__name__))
+
+    # # Get
+    # elif isinstance(state_spec, type) and issubclass(state_spec, Mechanism):
+
 
     # Get state from Projection specification (exclude matrix spec in test as it can't be used to determine the state)
     elif _is_projection_spec(state_spec, include_matrix_spec=False):
