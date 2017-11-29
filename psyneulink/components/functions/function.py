@@ -5059,7 +5059,7 @@ class DriftDiffusionIntegrator(
 
     .. _DriftDiffusionIntegrator:
 
-    Accumulate evidence overtime based on a stimulus, previous position, and noise.
+    Accumulate evidence overtime based on a stimulus, rate, previous position, and noise.
 
     Arguments
     ---------
@@ -5068,8 +5068,7 @@ class DriftDiffusionIntegrator(
         specifies the stimulus component of drift rate -- the drift rate is the product of variable and rate
 
     rate : float, list or 1d np.array : default 1.0
-        specifies the rate of evidence accumulation. Rate is a component of drift rate -- the drift rate is the product
-        of variable and rate
+        specifies the attentional component of drift rate -- the drift rate is the product of variable and rate
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
         scales the random value to be added in each call to `function <DriftDiffusionIntegrator.function>`. (see
@@ -5108,8 +5107,7 @@ class DriftDiffusionIntegrator(
         current input value, which represents the stimulus component of drift.
 
     rate : float or 1d np.array
-        specifies the rate of evidence accumulation. Rate is a component of drift rate -- the drift rate is the product
-        of variable and rate
+        specifies the attentional component of drift rate -- the drift rate is the product of variable and rate
 
     noise : float, function, list, or 1d np.array
         scales the random value to be added in each call to `function <DriftDiffusionIntegrator.function> according to
@@ -5229,7 +5227,7 @@ class DriftDiffusionIntegrator(
         ---------
 
         variable : number, list or np.array : default ClassDefaults.variable
-           the stimulus component of drift rate in the Drift Diffusion Model.
+            specifies the stimulus component of drift rate -- the drift rate is the product of variable and rate
 
         params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -5279,11 +5277,11 @@ class OrnsteinUhlenbeckIntegrator(
         default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
-        scale: parameter_spec = 1.0,    \
-        offset: parameter_spec = 0.0,   \
+        offset= 0.0,                    \
         time_step_size=1.0,             \
         t0=0.0,                         \
-        initializer,                    \
+        decay=1.0,                      \
+        initializer=0.0,                \
         params=None,                    \
         owner=None,                     \
         prefs=None,                     \
@@ -5297,16 +5295,14 @@ class OrnsteinUhlenbeckIntegrator(
     ---------
 
     default_variable : number, list or np.array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
+        specifies a template for  the stimulus component of drift rate -- the drift rate is the product of variable and
+        rate
 
     rate : float, list or 1d np.array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <OrnsteinUhlenbeckIntegrator.default_variable>` (see `rate <OrnsteinUhlenbeckIntegrator.rate>` for
-        details).
+        specifies  the attentional component of drift rate -- the drift rate is the product of variable and rate
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <OrnsteinUhlenbeckIntegrator.function>`. (see
+        scales random value to be added in each call to `function <OrnsteinUhlenbeckIntegrator.function>`. (see
         `noise <OrnsteinUhlenbeckIntegrator.noise>` for details).
 
     time_step_size : float : default 0.0
@@ -5340,7 +5336,7 @@ class OrnsteinUhlenbeckIntegrator(
     ----------
 
     variable : number or np.array
-        current input value which represents the stimulus component of drift. The product of
+        represents the stimulus component of drift. The product of
         `variable <OrnsteinUhlenbeckIntegrator.variable>` and `rate <OrnsteinUhlenbeckIntegrator.rate>` is multiplied
         by `time_step_size <OrnsteinUhlenbeckIntegrator.time_step_size>` to model the accumulation of evidence during
         one step.
@@ -5496,9 +5492,8 @@ class OrnsteinUhlenbeckIntegrator(
         previous_value = self.previous_value
 
         previous_value = np.atleast_2d(previous_value)
-        new_value = variable
         # dx = (lambda*x + A)dt + c*dW
-        value = previous_value + decay * (previous_value -  rate * new_value) * time_step_size + np.sqrt(
+        value = previous_value + (decay * previous_value - rate * variable) * time_step_size + np.sqrt(
             time_step_size * noise) * np.random.normal()
 
         # If this NOT an initialization run, update the old value and time
