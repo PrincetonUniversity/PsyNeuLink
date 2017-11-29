@@ -57,3 +57,7 @@ def expand_np_ndarray(arr):
                 nested_elem = [nested_elem]
             results_list.extend(nested_elem)
     return results_list
+
+def pytest_runtest_setup():
+    import doctest
+    doctest.ELLIPSIS_MARKER = "[...]"

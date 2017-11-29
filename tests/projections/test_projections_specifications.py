@@ -98,32 +98,108 @@ class TestProjectionSpecificationFormats:
         assert T2.output_states[1].index == 2
         assert T2.output_states[2].index == 1
 
-    def test_gating_signal_using_2_item_tuple(self):
+    def test_2_item_tuple_from_control_signal_to_parameter_state(self):
 
-        T = pnl.DDM(name='D')
+        D = pnl.DDM(name='D')
 
         # Single name
-        G = pnl.GatingMechanism(gating_signals=[(pnl.DECISION_VARIABLE, T)])
-        assert G.gating_signals[0].name == 'D[DECISION_VARIABLE] GatingSignal'
+        C = pnl.ControlMechanism(control_signals=[(pnl.DRIFT_RATE, D)])
+        assert C.control_signals[0].name == 'D[drift_rate] ControlSignal'
+        assert C.control_signals[0].efferents[0].receiver.name == 'drift_rate'
+
+        # List of names
+        C = pnl.ControlMechanism(control_signals=[([pnl.DRIFT_RATE, pnl.THRESHOLD], D)])
+        assert C.control_signals[0].name == 'D[drift_rate, threshold] ControlSignal'
+        assert C.control_signals[0].efferents[0].receiver.name == 'drift_rate'
+        assert C.control_signals[0].efferents[1].receiver.name == 'threshold'
+
+    def test_2_item_tuple_from_parameter_state_to_control_signals(self):
+
+        C = pnl.ControlMechanism(control_signals=['a','b'])
+        D = pnl.DDM(name='D3',
+                     function=pnl.BogaczEtAl(drift_rate=(3,C),
+                                             threshold=(2,C.control_signals['b']))
+                    )
+        assert D.parameter_states[pnl.DRIFT_RATE].mod_afferents[0].sender==C.control_signals[0]
+        assert D.parameter_states[pnl.THRESHOLD].mod_afferents[0].sender==C.control_signals[1]
+
+    def test_2_item_tuple_from_gating_signal_to_output_states(self):
+
+        D4 = pnl.DDM(name='D4')
+
+        # Single name
+        G = pnl.GatingMechanism(gating_signals=[(pnl.DECISION_VARIABLE, D4)])
+        assert G.gating_signals[0].name == 'D4[DECISION_VARIABLE] GatingSignal'
         assert G.gating_signals[0].efferents[0].receiver.name == 'DECISION_VARIABLE'
 
         # List of names
-        G = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], T)])
-        assert G.gating_signals[0].name == 'D[DECISION_VARIABLE, RESPONSE_TIME] GatingSignal'
+        G = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], D4)])
+        assert G.gating_signals[0].name == 'D4[DECISION_VARIABLE, RESPONSE_TIME] GatingSignal'
         assert G.gating_signals[0].efferents[0].receiver.name == 'DECISION_VARIABLE'
         assert G.gating_signals[0].efferents[1].receiver.name == 'RESPONSE_TIME'
 
-    def test_control_signal_using_2_item_tuple(self):
+    def test_2_item_tuple_from_input_and_output_states_to_gating_signals(self):
 
-        T = pnl.DDM(name='D')
+        G = pnl.GatingMechanism(gating_signals=['a','b'])
+        T = pnl.TransferMechanism(name='T',
+                     input_states=[(3,G)],
+                     output_states=[(2,G.gating_signals['b'])])
 
-        # Single name
-        C = pnl.ControlMechanism(control_signals=[(pnl.DRIFT_RATE, T)])
-        assert C.control_signals[0].name == 'D-1[drift_rate] ControlSignal'
-        assert C.control_signals[0].efferents[0].receiver.name == 'drift_rate'
+        assert T.input_states[0].mod_afferents[0].sender==G.gating_signals[0]
+        assert T.output_states[0].mod_afferents[0].sender==G.gating_signals[1]
 
-        # List of names
-        C = pnl.ControlMechanism(control_signals=[([pnl.DRIFT_RATE, pnl.THRESHOLD], T)])
-        assert C.control_signals[0].name == 'D-1[drift_rate, threshold] ControlSignal'
-        assert C.control_signals[0].efferents[0].receiver.name == 'drift_rate'
-        assert C.control_signals[0].efferents[1].receiver.name == 'threshold'
+    def test_formats_for_control_specification(self):
+
+        control_spec_list = [
+            pnl.CONTROL,
+            pnl.CONTROL_SIGNAL,
+            pnl.CONTROL_PROJECTION,
+            pnl.ControlSignal,
+            pnl.ControlSignal(),
+            # pnl.ControlProjection,
+            # pnl.ControlProjection(),
+            (0.3, pnl.CONTROL),
+            (0.3, pnl.CONTROL_SIGNAL),
+            (0.3, pnl.CONTROL_PROJECTION),
+            (0.3, pnl.ControlSignal),
+            (0.3, pnl.ControlSignal()),
+            (0.3, pnl.ControlProjection),
+            (0.3, pnl.ControlProjection())
+        ]
+        for i, ctl_tuple in enumerate([i for i in zip(control_spec_list, reversed(control_spec_list))]):
+            C1, C2 = ctl_tuple
+            R = pnl.RecurrentTransferMechanism(noise=C1,
+                                               function=pnl.Logistic(gain=C2))
+            assert R.parameter_states[pnl.NOISE].mod_afferents[0].name in \
+                   'ControlProjection for RecurrentTransferMechanism-{}[noise]'.format(i)
+            assert R.parameter_states[pnl.GAIN].mod_afferents[0].name in \
+                   'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)
+
+    def test_formats_for_gating_specification(self):
+
+        gating_spec_list = [
+            pnl.GATING,
+            pnl.GATING_SIGNAL,
+            pnl.GATING_PROJECTION,
+            pnl.GatingSignal,
+            pnl.GatingSignal(),
+            pnl.GatingProjection,
+            pnl.GatingProjection(),
+            (0.3, pnl.GATING),
+            (0.3, pnl.GATING_SIGNAL),
+            (0.3, pnl.GATING_PROJECTION),
+            (0.3, pnl.GatingSignal),
+            (0.3, pnl.GatingSignal()),
+            (0.3, pnl.GatingProjection),
+            (0.3, pnl.GatingProjection())
+        ]
+
+        for i, gating_tuple in enumerate([i for i in zip(gating_spec_list, reversed(gating_spec_list))]):
+            G1, G2 = gating_tuple
+            T = pnl.TransferMechanism(input_states=[G1],
+                                      output_states=[G2])
+            assert T.input_states[0].mod_afferents[0].name in \
+                   'GatingProjection for TransferMechanism-{}[InputState-0]'.format(i)
+
+            assert T.output_states[0].mod_afferents[0].name in \
+                   'GatingProjection for TransferMechanism-{}[OutputState-0]'.format(i)

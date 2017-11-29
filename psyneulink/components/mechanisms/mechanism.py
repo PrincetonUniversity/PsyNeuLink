@@ -163,15 +163,17 @@ Examples
 The following example creates an instance of a TransferMechanism that names the default InputState ``MY_INPUT``,
 and assigns three `Standard OutputStates <OutputState_Standard>`::
 
-     my_mech = TransferMechanism(input_states=['MY_INPUT'],
-                                 output_states=[RESULT, MEAN, VARIANCE])
+    >>> import psyneulink as pnl
+    >>> my_mech = pnl.TransferMechanism(input_states=['MY_INPUT'],
+    ...                                 output_states=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE])
+
 
 .. _Mechanism_Example_2:
 
 This shows how the same Mechanism can be specified using a dictionary assigned to the **params** argument::
 
-     my_mech = TransferMechanism(params={INPUT_STATES: ['MY_INPUT'],
-                                         OUTPUT_STATES: [RESULT, MEAN, VARIANCE]})
+     >>> my_mech = pnl.TransferMechanism(params={pnl.INPUT_STATES: ['MY_INPUT'],
+     ...                                         pnl.OUTPUT_STATES: [pnl.RESULT, pnl.MEAN, pnl.VARIANCE]})
 
 See `State <State_Examples>` for additional examples of specifying the States of a Mechanism.
 
@@ -208,7 +210,7 @@ be specified using the name of `Function <Function>` class, or its constructor (
 parameters).  For example, the `function <TransferMechanism.function>` of a `TransferMechanism`, which is `Linear` by
 default, can be specified to be the `Logistic` function as follows::
 
-    my_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4))
+    >>> my_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4))
 
 Notice that the parameters of the :keyword:`function` (in this case, `gain` and `bias`) can be specified by including
 them in its constructor.  Some Mechanisms support only a single function.  In that case, the :keyword:`function`
@@ -222,9 +224,8 @@ The parameters for a Mechanism's primary function can also be specified as entri
 constructor.  For example, the parameters of the `Logistic` function in the example above can
 also be assigned as follows::
 
-    my_mechanism = TransferMechanism(function=Logistic
-                                     params={FUNCTION_PARAMS: {GAIN:1.0,
-                                                               BIAS=-4.0})
+    >>> my_mechanism = pnl.TransferMechanism(function=pnl.Logistic,
+    ...                                      params={pnl.FUNCTION_PARAMS: {pnl.GAIN: 1.0, pnl.BIAS: -4.0}})
 
 Again, while not as simple as specifying these as arguments in the function's constructor, this format is more flexible.
 Any values specified in the parameter dictionary will **override** any specified within the constructor for the function
@@ -1257,7 +1258,7 @@ class Mechanism_Base(Mechanism):
 
         return variable
 
-    def _parse_arg_input_states(self, input_states):
+    def _parse_arg_input_states(self, default_variable, size, input_states):
         '''
         Takes user-inputted argument **input_states** and returns an instance_defaults.variable-like
         object that it represents
@@ -1268,6 +1269,7 @@ class Mechanism_Base(Mechanism):
             A is an instance_defaults.variable-like object
             B is True if **input_states** contained an explicit variable specification, False otherwise
         '''
+
         if input_states is None:
             return None, False
 
@@ -1277,8 +1279,18 @@ class Mechanism_Base(Mechanism):
         if not isinstance(input_states, Iterable):
             input_states = [input_states]
 
-        for s in input_states:
-            parsed_spec = _parse_state_spec(owner=self, state_type=InputState, state_spec=s)
+        # Pass default_variable or one based on size to _parse_state_spe as default
+        # FIX: THIS REALLY ISN'T RIGHT:  NEED TO BASE IT ON SHAPE REQUESTED IN SIZE
+        # dv = [0]*size if default_variable is None and size is not None else default_variable
+        dv = np.zeros(size) if default_variable is None and size is not None else default_variable
+        dv = convert_to_np_array(dv,2).tolist() if dv is not None else None
+        # dv = convert_to_np_array(default_variable,2).tolist() if default_variable is not None else None
+        for i, s in enumerate(input_states):
+            parsed_spec = _parse_state_spec(owner=self,
+                                            variable=dv[i] if dv is not None else None,
+                                            state_type=InputState,
+                                            state_spec=s,
+                                            context='_parse_arg_input_states')
 
             if isinstance(parsed_spec, dict):
                 try:
@@ -1328,13 +1340,15 @@ class Mechanism_Base(Mechanism):
 
         # handle specifying through params dictionary
         try:
-            default_variable_from_input_states, input_states_variable_was_specified = self._parse_arg_input_states(params[INPUT_STATES])
+            default_variable_from_input_states, input_states_variable_was_specified = \
+                self._parse_arg_input_states(default_variable, size, params[INPUT_STATES])
         except (TypeError, KeyError):
             pass
 
         if default_variable_from_input_states is None:
             # fallback to standard arg specification
-            default_variable_from_input_states, input_states_variable_was_specified = self._parse_arg_input_states(input_states)
+            default_variable_from_input_states, input_states_variable_was_specified = \
+                self._parse_arg_input_states(default_variable, size, input_states)
 
         if default_variable_from_input_states is not None:
             if default_variable is None:
@@ -1348,9 +1362,8 @@ class Mechanism_Base(Mechanism):
                         else:
                             raise MechanismError(
                                 'default variable determined from the specified input_states spec ({0}) '
-                                'is not compatible with the default variable determined from size parameter ({1})'.format(
-                                    default_variable_from_input_states,
-                                    size_variable,
+                                'is not compatible with the default variable determined from size parameter ({1})'.
+                                    format(default_variable_from_input_states, size_variable,
                                 )
                             )
                     else:
@@ -1361,10 +1374,9 @@ class Mechanism_Base(Mechanism):
                     if iscompatible(self._parse_arg_variable(default_variable), default_variable_from_input_states):
                         default_variable = default_variable_from_input_states
                     else:
-                        raise MechanismError(
-                            'default variable determined from the specified input_states spec ({0}) '
-                            'is not compatible with the specified default variable ({1})'.format(
-                                default_variable_from_input_states, default_variable
+                        raise MechanismError('default variable determined from the specified input_states spec ({0}) '
+                                             'is not compatible with the specified default variable ({1})'.
+                                             format(default_variable_from_input_states, default_variable
                             )
                         )
                 else:
@@ -2276,7 +2288,7 @@ class Mechanism_Base(Mechanism):
             `State specification dictionary <State_Specification>` (the latter must have a *STATE_TYPE* entry
             specifying the class or keyword for InputState or OutputState).
 
-        Returns
+        Returns a dictionary with two entries, containing the list of InputStates and OutputStates added.
         -------
 
         Dictionary with entries containing InputStates and/or OutputStates added
@@ -2308,7 +2320,7 @@ class Mechanism_Base(Mechanism):
         # _instantiate_state_list(self, input_states, InputState)
         if input_states:
             # FIX: 11/9/17
-            added_variable, added_input_state = self._parse_arg_input_states(input_states)
+            added_variable, added_input_state = self._parse_arg_input_states(self.variable, self.size, input_states)
             if added_input_state:
                 old_variable = self.instance_defaults.variable.tolist()
                 old_variable.extend(added_variable)

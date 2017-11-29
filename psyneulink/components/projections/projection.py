@@ -389,12 +389,16 @@ import warnings
 from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.components.states.state import StateError
+from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.globals.keywords import \
-    CONTEXT, CONTROL, CONTROL_PROJECTION, EXPONENT, GATING, GATING_PROJECTION, \
-    INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
-    MECHANISM, NAME, OUTPUT_STATE, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, \
+    NAME, PARAMS, CONTEXT, PATHWAY, \
+    MECHANISM, INPUT_STATE, OUTPUT_STATE, PARAMETER_STATE_PARAMS, \
+    STANDARD_ARGS, STATE, STATES, WEIGHT, EXPONENT, \
     PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, \
-    STANDARD_ARGS, STATE, STATES, WEIGHT, GATING_SIGNAL, \
+    MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
+    LEARNING, LEARNING_SIGNAL, LEARNING_PROJECTION, \
+    CONTROL, CONTROL_SIGNAL, CONTROL_PROJECTION, \
+    GATING, GATING_SIGNAL, GATING_PROJECTION, \
     kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -414,10 +418,13 @@ PROJECTION_ARGS = {PROJECTION_TYPE, SENDER, RECEIVER, WEIGHT, EXPONENT} | STANDA
 
 PROJECTION_SPEC_KEYWORDS = {PATHWAY: MAPPING_PROJECTION,
                             LEARNING: LEARNING_PROJECTION,
+                            LEARNING_SIGNAL: LEARNING_PROJECTION,
                             LEARNING_PROJECTION: LEARNING_PROJECTION,
                             CONTROL: CONTROL_PROJECTION,
+                            CONTROL_SIGNAL: CONTROL_PROJECTION,
                             CONTROL_PROJECTION: CONTROL_PROJECTION,
                             GATING: GATING_PROJECTION,
+                            GATING_SIGNAL: GATING_PROJECTION,
                             GATING_PROJECTION: GATING_PROJECTION
                             }
 
@@ -946,12 +953,13 @@ class Projection_Base(Projection):
                               format(self.__class__.__name__))
 
 
-def _is_projection_spec(spec, include_matrix_spec=True):
+@tc.typecheck
+def _is_projection_spec(spec, proj_type:tc.optional(Projection)=None, include_matrix_spec=True):
     """Evaluate whether spec is a valid Projection specification
 
     Return `True` if spec is any of the following:
-    + Projection class (or keyword string constant for one):
-    + Projection object:
+    + Projection object, and of specified type (if proj_type is specified)
+    + Projection class (or keyword string constant for one), and of specified type (if proj_type is specified)
     + 2-item tuple of which the second is a projection_spec (checked recursively with this method):
     + specification dict containing:
         + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
@@ -960,13 +968,28 @@ def _is_projection_spec(spec, include_matrix_spec=True):
     Otherwise, return :keyword:`False`
     """
 
-    if isinstance(spec, (Projection, State)):
+    if isinstance(spec, Projection):
+        if proj_type is None or isinstance(spec, type):
+                return True
+        else:
+            return False
+    if isinstance(spec, State):
+        # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
-    if inspect.isclass(spec) and issubclass(spec, (Projection, State)):
-        return True
+    if inspect.isclass(spec):
+        if issubclass(spec, Projection):
+            if proj_type is None or issubclass(spec, proj_type):
+                return True
+            else:
+                return False
+        if issubclass(spec, State):
+            # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
+            return True
     if isinstance(spec, dict) and any(key in spec for key in {PROJECTION_TYPE, SENDER, RECEIVER, MATRIX}):
+        # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
     if isinstance(spec, str) and spec in PROJECTION_SPEC_KEYWORDS:
+        # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
     if include_matrix_spec:
         if isinstance(spec, str) and spec in MATRIX_KEYWORD_SET:
@@ -1009,14 +1032,14 @@ def _is_projection_subclass(spec, keyword):
         return True
     # Get projection subclass specified by keyword
     try:
-        type = ProjectionRegistry[keyword]
+        proj_type = ProjectionRegistry[keyword].subclass
     except KeyError:
         pass
     else:
         # Check if spec is either the name of the subclass or an instance of it
-        if inspect.isclass(spec) and issubclass(spec, type):
+        if inspect.isclass(spec) and issubclass(spec, proj_type):
             return True
-        if isinstance(spec, type):
+        if isinstance(spec, proj_type):
             return True
     # spec is a specification dict for an instance of the projection subclass
     if isinstance(spec, dict) and keyword in spec:
@@ -1069,14 +1092,14 @@ def _parse_projection_spec(projection_spec,
     elif inspect.isclass(projection_spec) and issubclass(projection_spec, Projection):
         proj_spec_dict[PROJECTION_TYPE] = projection_spec
 
-    # Projection keyword
-    elif isinstance(projection_spec, str):
-        proj_spec_dict[PROJECTION_TYPE] = _parse_projection_keyword(projection_spec)
-
     # Matrix
     elif is_matrix(projection_spec):
         is_matrix(projection_spec)
         proj_spec_dict[MATRIX] = projection_spec
+
+    # Projection keyword
+    elif isinstance(projection_spec, str):
+        proj_spec_dict[PROJECTION_TYPE] = _parse_projection_keyword(projection_spec)
 
     # State object
     elif isinstance(projection_spec, State):
@@ -1253,10 +1276,12 @@ def _parse_connection_specs(connectee_state_type,
         raise ProjectionError("Called for {} with \'connectee_state_type\' arg ({}) that is not a class".
                          format(owner.name, connectee_state_type))
 
-    # Get connection attributes
+    # Get connection attributes (execept projection_socket, which depends on context)
     connects_with = [StateRegistry[name].subclass for name in connectee_state_type.connectsWith]
     connect_with_attr = connectee_state_type.connectsWithAttribute
-    projection_socket = connectee_state_type.projectionSocket
+    # MODIFIED 11/28/17 OLD:
+    # projection_socket = connectee_state_type.projectionSocket
+    # MODIFIED 11/28/17 END
     modulators = [StateRegistry[name].subclass for name in connectee_state_type.modulators]
 
     DEFAULT_WEIGHT = None
@@ -1280,6 +1305,13 @@ def _parse_connection_specs(connectee_state_type,
 
 
     for connection in connections:
+
+        # MODIFIED 11/28/17 NEW:
+        # Assign projection_socket based on connectee_state_type and projection spec
+        if _is_modulatory_spec(connection):
+            pass XYZ
+
+        # MODIFIED 11/28/17 END
 
         # FIX: 10/3/17 - IF IT IS ALREADY A PROJECTION OF THE CORRECT TYPE FOR THE CONNECTEE:
         # FIX:               ?? RETURN AS IS, AND/OR PARSE INTO DICT??
@@ -1509,9 +1541,9 @@ def _parse_connection_specs(connectee_state_type,
                                               mech=mech,
                                               mech_state_attribute=connect_with_attr,
                                               projection_socket=projection_socket)
-            except StateError:
-                raise ProjectionError("Unrecognized specification for {} ({}) in {} specification ({}) for {}".
-                                      format(State.__name__, state_spec, Projection.__name__, connection, owner.name))
+            except StateError as e:
+                raise ProjectionError("Problem with specification for {} in {} specification for {}: ".
+                                      format(State.__name__, Projection.__name__, owner.name) + e.error_value)
 
 
             # Check compatibility with any State(s) returned by _get_state_for_socket
@@ -1652,7 +1684,7 @@ def _validate_connection_request(
             # Try to get the State to which the Projection will be connected when fully initialized
             #     as confirmation that it is the correct type for state_type
             try:
-                projection_socket_state = projection_spec.socket_assignments[RECEIVER]
+                projection_socket_state = projection_spec.socket_assignments[projection_socket]
             # State for projection's socket couldn't be determined
             except KeyError:
                 # Use Projection's type for validation
@@ -1660,12 +1692,14 @@ def _validate_connection_request(
                 return _validate_projection_type(projection_spec.__class__)
                     # Projection's socket has been assigned to a State
             else:
-                if projection_socket_state:
+                # if both SENDER and RECEIVER are specified:
+                if projection_spec.init_args[SENDER] and projection_spec.init_args[RECEIVER]:
                     # Validate that the State is a class in connect_with_states
                     if (isinstance(projection_socket_state, connect_with_states) or
                             (inspect.isclass(projection_socket_state)
                              and issubclass(projection_socket_state, connect_with_states))):
                         return True
+                # Otherwise, revert again to validating Projection's type
                 else:
                     return _validate_projection_type(projection_spec.__class__)
 

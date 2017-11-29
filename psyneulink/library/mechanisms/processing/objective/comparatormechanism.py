@@ -87,7 +87,7 @@ Example
 
 *Formatting InputState values*
 
-The **variable** argument can be used to specify a particular format for the SAMPLE and/or TARGET InputStates
+The **default_variable** argument can be used to specify a particular format for the SAMPLE and/or TARGET InputStates
 of a ComparatorMechanism.  This can be useful when one or both of these differ from the format of the
 OutputState(s) specified in the **sample** and **target** arguments. For example, for `Reinforcement Learning
 <Reinforcement>`, a ComparatorMechanism is used to monitor an action selection Mechanism (the sample), and compare
@@ -97,25 +97,27 @@ an action.  This generates a vector with a single non-zero value (the selected a
 specifying it as the ComparatorMechanism's **sample** argument will generate a corresponding InputState with a vector
 as its value.  This will not match the reward signal specified in the ComparatorMechanism's **target** argument, the
 value of which is a single scalar.  This can be dealt with by explicitly specifying the format for the SAMPLE and
-TARGET InputStates in the **variable** argument of the ComparatorMechanism's constructor, as follows::
+TARGET InputStates in the **default_variable** argument of the ComparatorMechanism's constructor, as follows::
 
-    my_action_selection_mech = TransferMechanism(size=5,
-                                                 function=SoftMax(output=PROB))
+    >>> import psyneulink as pnl
+    >>> my_action_selection_mech = pnl.TransferMechanism(size=5,
+    ...                                                  function=pnl.SoftMax(output=pnl.PROB))
 
-    my_reward_mech = TransferMechanism(default_variable = [0])
+    >>> my_reward_mech = pnl.TransferMechanism()
 
-    my_comparator_mech = ComparatorMechanism(sample=my_action_selection_mech,
-                                             target=my_reward_mech,
-                                             variable = [[0],[0]])
+    >>> my_comparator_mech = pnl.ComparatorMechanism(default_variable = [[0],[0]],
+    ...                                              sample=my_action_selection_mech,
+    ...                                              target=my_reward_mech)
 
 Note that ``my_action_selection_mechanism`` is specified to take an array of length 5 as its input, and therefore
 generate one of the same length as its `primary output <OutputState_Primary>`.  Since it is assigned as the **sample**
 of the ComparatorMechanism, by default this will create a *SAMPLE* InputState of length 5, that will not match the
-length of the *TARGET* InputState (which is 1).  This is taken care of, by specifying the **variable** argument
-as an array with two single-value arrays (corresponding to the *SAMPLE* and *TARGET* InputStates). (In this
-example, the **sample** and **target** arguments are specified as Mechanisms since, by default, each has only a single
-(`primary <OutputState_Primary>`) OutputState, that will be used;  if either had more than one OutputState, and
-one of those was desired, it would have had to be specified explicitly in the **sample** or **target** argument).
+length of the *TARGET* InputState (the default for which is length 1).  This is taken care of, by specifying the
+**default_variable** argument as an array with two single-value arrays (corresponding to the *SAMPLE* and *TARGET*
+InputStates). (In this example, the **sample** and **target** arguments are specified as Mechanisms since,
+by default, each has only a single (`primary <OutputState_Primary>`) OutputState, that will be used;  if either had
+more than one OutputState, and one of those was desired, it would have had to be specified explicitly in the
+**sample** or **target** argument).
 
 .. _ComparatorMechanism_Class_Reference:
 
@@ -314,16 +316,17 @@ class ComparatorMechanism(ObjectiveMechanism):
     paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
 
     standard_output_states = ObjectiveMechanism.standard_output_states.copy()
-    standard_output_states.extend([{NAME:SSE,
-                                    CALCULATE:lambda x: np.sum(x*x)},
-                                   {NAME:MSE,
-                                    CALCULATE:lambda x: np.sum(x*x)/len(x)}])
+    standard_output_states.extend([{NAME: SSE,
+                                    CALCULATE: lambda x: np.sum(x*x)},
+                                   {NAME: MSE,
+                                    CALCULATE: lambda x: np.sum(x*x)/len(x)}])
 
     # MODIFIED 10/10/17 OLD:
     @tc.typecheck
     def __init__(self,
-                 sample:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
-                 target:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
+                 default_variable=None,
+                 sample: tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
+                 target: tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  function=LinearCombination(weights=[[-1], [1]]),
                  output_states:tc.optional(tc.any(str, Iterable))=(OUTCOME, MSE),
                  params=None,
@@ -333,7 +336,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  **input_states # IMPLEMENTATION NOTE: this is for backward compatibility
                  ):
 
-        input_states = self._merge_legacy_constructor_args(sample, target, input_states)
+        input_states = self._merge_legacy_constructor_args(sample, target, default_variable, input_states)
 
         # Default output_states is specified in constructor as a tuple rather than a list
         # to avoid "gotcha" associated with mutable default arguments
@@ -352,7 +355,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                                                                indices=PRIMARY)
 
         super().__init__(# monitored_output_states=[sample, target],
-                         monitored_output_states = input_states,
+                         monitored_output_states=input_states,
                          function=function,
                          output_states=output_states.copy(), # prevent default from getting overwritten by later assign
                          params=params,
@@ -436,7 +439,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                                  target_set=target_set,
                                  context=context)
 
-    def _merge_legacy_constructor_args(self, sample, target, input_states):
+    def _merge_legacy_constructor_args(self, sample, target, default_variable=None, input_states=None):
 
         # USE sample and target TO CREATE AN InputState specfication dictionary for each;
         # DO SAME FOR InputStates argument, USE TO OVERWRITE ANY SPECIFICATIONS IN sample AND target DICTS
@@ -452,12 +455,24 @@ class ComparatorMechanism(ObjectiveMechanism):
                                         state_spec=target,
                                         name=TARGET)
 
-        # If input_states arg is provided, parse it and use it to upate sample and target dicts
+        # If either the default_variable arg or the input_states arg is provided:
+        #    - validate that there are exactly two items in default_variable or input_states list
+        #    - if there is an input_states list, parse it and use it to update sample and target dicts
         if input_states:
+            input_states[INPUT_STATES]
+            if not isinstance(input_states, list):
+                raise ComparatorMechanismError("If an \'{}\' argument is included in the constructor for a {} "
+                                               "it must be a list with two {} specifications.".
+                                               format(INPUT_STATES, ComparatorMechanism.__name__, InputState.__name__))
 
-            if len(input_states) != 2:
-                raise ComparatorMechanismError("If an \'input_states\' arg is included in the constructor for a {}"
-                                               "it must be a list with exactly two items (not {})".
+        input_states = input_states or default_variable
+
+        if input_states is not None:
+            if len(input_states)!=2:
+                raise ComparatorMechanismError("If an \'input_states\' arg is "
+                                               "included in the constructor for "
+                                               "a {}, it must be a list with "
+                                               "exactly two items (not {})".
                                                format(ComparatorMechanism.__name__, len(input_states)))
 
             sample_input_state_dict = _parse_state_spec(owner=self,

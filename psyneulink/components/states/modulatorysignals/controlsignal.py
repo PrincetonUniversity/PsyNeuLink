@@ -30,7 +30,7 @@ Creating a ControlSignal
 A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function is `specified for
 control <ControlMechanism_Control_Signals>`.  ControlSignals can also be specified in the **control_signals** argument
 of the constructor for a `ControlMechanism <ControlMechanism>`.  Although a ControlSignal can be created directly
-using its constructor (or any of the other ways for `creating an outputState <OutputStates_Creation>`), this is usually
+using its constructor (or any of the other ways for `creating an OutputState <OutputStates_Creation>`), this is usually
 not necessary nor is it advisable, as a ControlSignal has dedicated components and requirements for configuration
 that must be met for it to function properly.
 
@@ -43,11 +43,6 @@ When a ControlSignal is specified in the **control_signals** argument of the con
 <ControlMechanism>`, the parameter to be controlled must be specified.  This can take any of the following forms:
 
   * **ParameterState** -- of the Mechanism to which the parameter belongs;
-  ..
-  * **2-item tuple** -- the 1st time must be the name of the parameter (or list of parameter names), and the 2nd item
-    the Mechanism to which it (they) belong(s); this is a convenience format, which is simpler to use than a
-    specification dictionary (see below), but precludes specification of any `parameters <ControlSignal_Structure>`
-    for the ControlSignal.
   ..
   * **specification dictionary** -- can take either of the following two forms:
 
@@ -65,6 +60,12 @@ When a ControlSignal is specified in the **control_signals** argument of the con
             the string used as the key specifies the name to be used for the ControlSignal,
             and each item of the list must be a `specification of a parameter <ParameterState_Specification>` to be
             controlled by the ControlSignal (and that will receive a `ControlProjection` from it).
+  ..
+  * **2-item tuple** -- the 1st time must be the name of the parameter (or list of parameter names), and the 2nd item
+    the Mechanism to which it (they) belong(s); this is a convenience format, which is simpler to use than a
+    specification dictionary (see below), but precludes specification of any `parameters <ControlSignal_Structure>`
+    for the ControlSignal.
+  ..
 
 .. _ControlSignal_Structure:
 
@@ -209,7 +210,8 @@ Examples
 *Modulate the parameter of a Mechanism's function*.  The following example assigns a
 ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function used by a `TransferMechanism`::
 
-    My_Mech = TransferMechanism(function=Logistic(bias=(1.0, ControlSignal)))
+    >>> import psyneulink as pnl
+    >>> my_mech = pnl.TransferMechanism(function=pnl.Logistic(bias=(1.0, pnl.ControlSignal)))
 
 Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
 with a ControlProjection that projects to the TransferMechanism's `ParameterState` for the `bias <Logistic.bias>`
@@ -223,7 +225,8 @@ In the example below, this is changed by specifying the `modulation <ControlSign
 ControlSignal adds to, rather than multiplies, the value of the `gain <Logistic.gain>` parameter of the Logistic
 function::
 
-    My_Mech = TransferMechanism(function=Logistic(gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
+    >>> my_mech = pnl.TransferMechanism(function=pnl.Logistic(gain=(1.0,
+    ...                                                             pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))))
 
 Note that the `ModulationParam` specified for the `ControlSignal` pertains to the function of a *ParameterState*
 for the *Logistic* Function (in this case, its `gain <Logistic.gain>` parameter), and *not* the Logistic function
@@ -259,20 +262,21 @@ COMMENT
 the `gain <Logistic.gain>` parameter of the `Logistic` function for ``My_Mech_A`` and the `intercept
 <Logistic.intercept>` parameter of the `Linear` function for ``My_Mech_B``::
 
-    My_Mech_A = TransferMechanism(function=Logistic)
-    My_Mech_B = TransferMechanism(function=Linear,
-                                 output_states=[RESULT, MEAN])
-    Process_A = Process(pathway=[My_Mech_A])
-    Process_B = Process(pathway=[My_Mech_B])
+    >>> my_mech_a = pnl.TransferMechanism(function=pnl.Logistic)
+    >>> my_mech_b = pnl.TransferMechanism(function=pnl.Linear,
+    ...                                   output_states=[pnl.RESULT, pnl.MEAN])
 
-    My_System = System(processes=[Process_A, Process_B],
-                                    monitor_for_control=[My_Mech_A.output_states[RESULT],
-                                                         My_Mech_B.output_states[MEAN]],
-                                    control_signals=[(GAIN, My_Mech_A),
-                                                     {NAME: INTERCEPT,
-                                                      MECHANISM: My_Mech_B,
-                                                      MODULATION: ModulationParam.ADDITIVE}],
-                       name='My Test System')
+    >>> process_a = pnl.Process(pathway=[my_mech_a])
+    >>> process_b = pnl.Process(pathway=[my_mech_b])
+
+    >>> my_system = pnl.System(processes=[process_a, process_b],
+    ...                        monitor_for_control=[my_mech_a.output_states[pnl.RESULTS],
+    ...                                             my_mech_b.output_states[pnl.MEAN]],
+    ...                        control_signals=[(pnl.GAIN, my_mech_a),
+    ...                                         {pnl.NAME: pnl.INTERCEPT,
+    ...                                          pnl.MECHANISM: my_mech_b,
+    ...                                          pnl.MODULATION: pnl.ModulationParam.ADDITIVE}],
+    ...                        name='My Test System')
 
 
 Class Reference
@@ -413,7 +417,7 @@ class ControlSignal(ModulatorySignal):
     """
     ControlSignal(                                       \
         owner,                                           \
-\       index=SEQUENTIAL,                                \
+        index=SEQUENTIAL,                                \
         function=LinearCombination(operation=SUM),       \
         costs_options=ControlSignalCosts.DEFAULTS,       \
         intensity_cost_function=Exponential,             \

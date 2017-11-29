@@ -42,8 +42,9 @@ A TransferMechanism is created by calling its constructor.  Its `function <Trans
 the **function** argument, which can be the name of a `Function <Function>` class (first example below), or a call to
 a Function constructor that can include arguments specifying the Function's parameters (second example)::
 
-    my_linear_transfer_mechanism = TransferMechanism(function=Linear)
-    my_logistic_transfer_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4)
+    >>> import psyneulink as pnl
+    >>> my_linear_transfer_mechanism = pnl.TransferMechanism(function=pnl.Linear)
+    >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4))
 
 In addition to Function-specific parameters, `noise <TransferMechanism.noise>` and `time_constant
 <TransferMechanism.time_constant>` parameters can be specified for the Mechanism (see `Transfer_Execution`).
@@ -156,6 +157,7 @@ from psyneulink.components.component import Component, function_type, method_typ
 from psyneulink.components.functions.function import AdaptiveIntegrator, Linear, TransferFunction
 from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
+from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.globals.keywords import NAME, INDEX, FUNCTION, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NOISE, RATE, \
@@ -473,7 +475,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states:tc.optional(tc.any(list, dict, Mechanism, OutputState, InputState))=None,
+                 input_states:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
                  function=Linear,
                  initial_value=None,
                  noise=0.0,
@@ -511,8 +513,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
-                                                               indices=PRIMARY
-                                                               )
+                                                               indices=PRIMARY)
 
         super(TransferMechanism, self).__init__(
             variable=default_variable,
@@ -619,11 +620,14 @@ class TransferMechanism(ProcessingMechanism_Base):
                             "The elements of a noise list or array must be floats or functions. {} is not a valid noise"
                             " element for {}".format(noise_item, self.name))
 
+        elif _is_control_spec(noise):
+            pass
+
         # Otherwise, must be a float, int or function
         elif not isinstance(noise, (float, int)) and not callable(noise):
-            raise MechanismError(
-                "Noise parameter ({}) for {} must be a float, function, or array/list of these."
-                    .format(noise, self.name))
+            raise MechanismError("Noise parameter ({}) for {} must be a float, "
+                                 "function, or array/list of these.".format(noise,
+                                                                            self.name))
 
     def _try_execute_param(self, param, var):
 

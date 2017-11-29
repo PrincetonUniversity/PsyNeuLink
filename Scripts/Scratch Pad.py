@@ -716,44 +716,152 @@ class ScratchPadError(Exception):
 
 #endregion
 
-#region TEST InputState
-print("TEST InputState")
 
-# T1 = pnl.TransferMechanism(name='T1', default_variable=[0,0,0])
-# # G = pnl.GatingMechanism(gating_signals=[([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], T1)])
-# T2 = pnl.TransferMechanism(input_states=[(pnl.RESULT, RESULT-1, T1)])
-# # assert T2.input_states[0].path_afferents[0].sender.owner.name == 'D'
-# assert True
+#region TEST MODULATORY SPECS
+# print ("TEST MODULATORY SPECS")
+#
+# # # ADD TO TEST:
+# # import psyneulink as pnl
+# # my_mechanism = pnl.RecurrentTransferMechanism(size=5,
+# #                               # noise=pnl.CONTROL,
+# #                               # noise=pnl.CONTROL_SIGNAL,
+# #                               # noise=pnl.ControlSignal,
+# #                               # noise=pnl.ControlSignal(),
+# #                               # noise=(1, pnl.CONTROL),
+# #                               # noise=(1, pnl.CONTROL_SIGNAL),
+# #                               # noise=(1, pnl.ControlSignal),
+# #                               # noise=(1, pnl.ControlSignal()),
+# #                               # noise=(1, pnl.ControlProjection),
+# #                               noise=(0.3, pnl.ControlProjection()),
+# #                               # noise=(1, pnl.ControlMechanism),  # <- FIX: DOESN'T WORK
+# #                               # noise=(1, pnl.ControlMechanism()),  # <- FIX: DOESN'T WORK
+# #                               function=pnl.Logistic(
+# #                                       # gain=pnl.CONTROL,
+# #                                       # gain=pnl.CONTROL_SIGNAL,
+# #                                       # gain=pnl.ControlSignal,
+# #                                       # gain=pnl.ControlSignal(),
+# #                                       # gain=(0.5, pnl.CONTROL),
+# #                                       # gain=(0.5, pnl.CONTROL_SIGNAL),
+# #                                       # gain=(0.5, pnl.ControlSignal),
+# #                                       # gain=(0.5, pnl.ControlSignal()),
+# #                                       # gain=(0.5, pnl.ControlProjection),
+# #                                       gain=(0.5, pnl.ControlProjection()),
+# #                                       # gain=(0.5, pnl.ControlMechanism),  # <- FIX: DOESN'T WORK
+# #                                       # gain=(0.5, pnl.ControlMechanism()),  # <- FIX: DOESN'T WORK
+# #                                       bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE)))
+# #                                               )
+# # print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.NOISE].mod_afferents)
+# # print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.GAIN].mod_afferents)
+# # # print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.BIAS].mod_afferents)
+#
+# import psyneulink as pnl
+#
+# # control_spec_list = [
+# #     pnl.CONTROL,
+# #     pnl.CONTROL_SIGNAL,
+# #     pnl.ControlSignal,
+# #     pnl.ControlSignal(),
+# #     (0.3, pnl.CONTROL),
+# #     (0.3, pnl.CONTROL_SIGNAL),
+# #     (0.3, pnl.ControlSignal),
+# #     (0.3, pnl.ControlSignal()),
+# #     (0.3, pnl.ControlProjection),
+# #     (0.3, pnl.ControlProjection())
+# # ]
+#
+#
+# # for i, ctl_tuple in enumerate([i for i in zip(control_spec_list, reversed(control_spec_list))]):
+# #     c1, c2 = ctl_tuple
+# #     m = pnl.RecurrentTransferMechanism(noise=c1,
+# #                                        function=pnl.Logistic(gain=c2))
+# #     assert m.parameter_states[pnl.NOISE].mod_afferents[0].name in \
+# #            'ControlProjection for RecurrentTransferMechanism-{}[noise]'.format(i)
+# #     assert m.parameter_states[pnl.GAIN].mod_afferents[0].name in \
+# #            'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)
+#
+# # for c1, c2 in ctl_signals:
+# #     print("-------\n{}\n{}".format(c1, c2))
+# # print("--------------\n--------------")
+#
+# # for c1, c2 in ctl_signals:
+# #     m = pnl.RecurrentTransferMechanism(noise=c1,
+# #                                        function=pnl.Logistic(gain=c2))
+# #     print('-------------\nSIGNAL: {}\nMOD_AFFERENTS: {}\nSIGNAL: {}\nMOD_AFFERENTS: {}'
+# #           .format(c2, m.parameter_states[pnl.NOISE].mod_afferents,
+# #                   c1, m.parameter_states[pnl.GAIN].mod_afferents))
+
+# ----------------------------------------------------
+
+gating_spec_list = [
+    pnl.GATING,
+    pnl.GATING_SIGNAL,
+    pnl.GATING_PROJECTION,
+    pnl.GatingSignal,
+    pnl.GatingSignal(),
+    pnl.GatingSignal(),
+    (0.3, pnl.GATING),
+    (0.3, pnl.GATING_SIGNAL),
+    (0.3, pnl.GATING_PROJECTION),
+    (0.3, pnl.GatingSignal),
+    (0.3, pnl.GatingSignal()),
+    (0.3, pnl.GatingProjection),
+    (0.3, pnl.GatingProjection())
+]
+
+T = pnl.TransferMechanism(output_states=[
+    pnl.GATING,
+    # pnl.GATING_SIGNAL,
+    # pnl.GatingSignal, # FIX OUTPUTSTATES / INPUTSTATES
+    # pnl.GatingSignal(),
+    # pnl.GatingProjection, # FIX OUTPUTSTATES  / INPUTSTATES
+    # pnl.GatingProjection(), # FIX OUTPUTSTATES
+    # (0.3, pnl.GATING),  # FIX OUTPUTSTATES
+    # (0.3, pnl.GATING_SIGNAL),  # FIX OUTPUTSTATES
+    # (0.3, pnl.GatingSignal),  # FIX: OUTPUT_STATES / INPUTSTATES
+    # (0.3, pnl.GatingSignal()),
+    # (0.3, pnl.GatingProjection),  # FIX: OUTPUT_STATES / INPUTSTATES
+    (0.3, pnl.GatingProjection())
+])
+
+assert T.output_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[OutputState-0]'
+# assert T.input_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[InputState-0]'
+
+print(T.execute())
+#
+# ----------------------------------------------------
 
 
-# I = pnl.InputState(name='I', owner=T1)
-# # I = pnl.InputState(name='I')
-# # FIX: IMPLEMENT ASSIGNMENT TO OWNER WITH ASSIGNMENT OF OWNER
-# # I.owner = T1
-# assert T1.input_states[1].name == 'I'
 
-D1 = pnl.DDM(name='D1')
-D2 = pnl.DDM(name='D2')
+# R1 = pnl.TransferMechanism(name='R1', output_states=['OUTPUT_1', 'OUTPUT_2'])
+# R2 = pnl.TransferMechanism(name='R2', default_variable=[[0],[0]],
+#                         input_states=['INPUT_1', 'INPUT_2'])
+# T = pnl.TransferMechanism(name = 'T', input_states=[{pnl.MECHANISM: R1,
+#                                       pnl.OUTPUT_STATES: ['OUTPUT_1', 'OUTPUT_2']}],
+#                        output_states=[{pnl.MECHANISM:R2,
+#                                        pnl.INPUT_STATES: ['INPUT_1', 'INPUT_2']}])
 
-C3 = pnl.ControlMechanism(control_signals=['a','b'])
 
-# FIX:  ADD ABILITY FOR PARAMETERSTATE TO TAKE LIST OF CONTROL SIGNALS AS ITS SPECIFICATION
-# GatingProjections to ProcessingMechanism from GatingSignals of existing GatingMechanism
-# D3 = pnl.DDM(name='D3',
-#              function=pnl.BogaczEtAl(drift_rate=[C3.control_signals['a']],
-#                                      threshold=[C3.control_signals['b']]))
 
-# FIX: BUG
-D3 = pnl.DDM(name='D3',
-             function=pnl.BogaczEtAl(drift_rate=(3,C3.control_signals['a']),
-                                     threshold=(2,C3.control_signals['b'])))
+#endregion
+#region TEST DOCUMENTATION
+print ("TEST DOCUMENTATION")
+
+# # import matlab.engine
+# # eng1 = matlab.engine.start_matlab('-nojvm')
+# my_DDM_NavarroAndFuss = pnl.DDM(function=pnl.NavarroAndFuss(drift_rate=3.0,
+#                                                             starting_point=1.0,
+#                                                             threshold=30.0,
+#                                                             noise=1.5,
+#                                                             t0 = 2.0),
+#                                 name='my_DDM_NavarroAndFuss')
+
 
 
 
 #endregion
 
 #region TEST INPUT FORMATS
-
+# print ("TEST INPUT FORMATS")
 #
 # x = TransferMechanism([0,0,0],
 #              name='x')
