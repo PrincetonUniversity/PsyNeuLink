@@ -1292,6 +1292,7 @@ def _parse_connection_specs(connectee_state_type,
     from psyneulink.components.states.state import StateRegistry
     from psyneulink.components.states.inputstate import InputState
     from psyneulink.components.states.outputstate import OutputState
+    from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 
     if not inspect.isclass(connectee_state_type):
         raise ProjectionError("Called for {} with \'connectee_state_type\' arg ({}) that is not a class".
@@ -1335,9 +1336,13 @@ def _parse_connection_specs(connectee_state_type,
         #     to validate the state spec and append ProjectionTuple to connect_with_states
         if isinstance(connection, (Mechanism, State, type)):
             # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ProjectionTuple THAT HAS BOTH SENDER AND RECEIVER
-            # # # MODIFIED 11/28/17 OLD:
-            # projection_spec = connectee_state_type
-            # MODIFIED 11/28/17 NEW:
+
+            # FIX: 11/28/17 - HACKS TO HANDLE PROJECTION FROM GatingSignal TO InputState or OutputState
+            # # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
+            # # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
+            # if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
+            #     connection = connection.output_state_type
+            # elif
             if ((isinstance(connectee_state_type, (InputState, OutputState))
                  or isinstance(connectee_state_type, type) and issubclass(connectee_state_type, (InputState,
                                                                                                  OutputState)))
@@ -1610,7 +1615,7 @@ def _parse_connection_specs(connectee_state_type,
 
             # Parse projection specification into Projection specification dictionary
             # Validate projection specification
-            if _is_projection_spec(projection_spec) or projection_spec is None:
+            if _is_projection_spec(projection_spec) or _is_modulatory_spec(projection_spec) or projection_spec is None:
 
                 # FIX: 11/21/17 THIS IS A HACK TO DEAL WITH GatingSignal Projection TO InputState or OutputState
                 from psyneulink.components.states.inputstate import InputState
@@ -1635,10 +1640,11 @@ def _parse_connection_specs(connectee_state_type,
                                              projection_socket,
                                              connectee_state_type)
             else:
-                raise ProjectionError("Invalid specification of {} ({}) for connection "
-                                      "between \'{}\' and {} of \'{}\'.".
-                                 format(Projection.__class__.__name__,
+                raise ProjectionError("Invalid {} specification ({}) for connection "
+                                      "between {} \'{}\' and {} of \'{}\'.".
+                                 format(Projection.__name__,
                                         projection_spec,
+                                        state_type.__name__,
                                         state.name,
                                         connectee_state_type.__name__,
                                         owner.name))

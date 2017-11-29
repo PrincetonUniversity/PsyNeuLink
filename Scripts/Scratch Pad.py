@@ -800,8 +800,8 @@ T = pnl.TransferMechanism(input_states=[
     # pnl.GatingSignal(),
     # pnl.GatingProjection,
     # pnl.GatingProjection(),
-    pnl.GatingMechanism, # FIX OUTPUTSTATES
-    # pnl.GatingMechanism(), # FIX OUTPUTSTATES
+    # pnl.GatingMechanism, # FIX OUTPUTSTATES
+    pnl.GatingMechanism(), # FIX OUTPUTSTATES
     # # (0.3, pnl.GATING),
     # (0.3, pnl.GATING_SIGNAL),
     # (0.3, pnl.GatingSignal),
@@ -809,7 +809,7 @@ T = pnl.TransferMechanism(input_states=[
     # (0.3, pnl.GatingProjection),
     # (0.3, pnl.GatingProjection())
     # (0.3, pnl.GatingMechanism), # FIX OUTPUTSTATES
-    # (0.3, pnl.GatingMechanism()), # FIX OUTPUTSTATES
+    (0.3, pnl.GatingMechanism()), # FIX OUTPUTSTATES
 ])
 
 assert T.input_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[InputState-0]'
