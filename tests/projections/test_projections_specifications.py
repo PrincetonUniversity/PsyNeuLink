@@ -158,13 +158,17 @@ class TestProjectionSpecificationFormats:
             pnl.ControlSignal(),
             # pnl.ControlProjection,
             # pnl.ControlProjection(),
+            # pnl.ControlMechanism,
+            # pnl.ControlMechanism(),
             (0.3, pnl.CONTROL),
             (0.3, pnl.CONTROL_SIGNAL),
             (0.3, pnl.CONTROL_PROJECTION),
             (0.3, pnl.ControlSignal),
             (0.3, pnl.ControlSignal()),
             # (0.3, pnl.ControlProjection),
-            # (0.3, pnl.ControlProjection())
+            # (0.3, pnl.ControlProjection()),
+            # (0.3, pnl.ControlMechanism),
+            # (0.3, pnl.ControlMechanism())
         ]
         for i, ctl_tuple in enumerate([j for j in zip(control_spec_list, reversed(control_spec_list))]):
             C1, C2 = ctl_tuple
@@ -215,13 +219,17 @@ class TestProjectionSpecificationFormats:
             pnl.GatingSignal(),
             pnl.GatingProjection,
             pnl.GatingProjection(),
+            # pnl.GatingMechanism,
+            # pnl.GatingMechanism(),
             (0.3, pnl.GATING),
             (0.3, pnl.GATING_SIGNAL),
             (0.3, pnl.GATING_PROJECTION),
             (0.3, pnl.GatingSignal),
             (0.3, pnl.GatingSignal()),
             (0.3, pnl.GatingProjection),
-            (0.3, pnl.GatingProjection())
+            (0.3, pnl.GatingProjection()),
+            # (0.3, pnl.GatingMechanism),
+            # (0.3, pnl.GatingMechanism())
         ]
 
         for i, G in enumerate(gating_spec_list):
@@ -239,6 +247,8 @@ class TestProjectionSpecificationFormats:
             pnl.GatingSignal(),
             pnl.GatingProjection,
             pnl.GatingProjection(),
+            # pnl.GatingMechanism,
+            # pnl.GatingMechanism(),
             (0.3, pnl.GATING),
             (0.3, pnl.GATING_SIGNAL),
             (0.3, pnl.GATING_PROJECTION),
@@ -246,6 +256,8 @@ class TestProjectionSpecificationFormats:
             (0.3, pnl.GatingSignal()),
             (0.3, pnl.GatingProjection),
             (0.3, pnl.GatingProjection())
+            # (0.3, pnl.GatingMechanism),
+            # (0.3, pnl.GatingMechanism())
         ]
 
         for i, G in enumerate(gating_spec_list):
