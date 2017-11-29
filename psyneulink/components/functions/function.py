@@ -3845,8 +3845,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         `noise <Integrator.noise>` for details).
 
     time_step_size : float : default 0.0
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
-        is set to DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
+        determines the timing precision of the integration process
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -3872,9 +3871,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     variable : number or np.array
         current input value some portion of which (determined by `rate <Integrator.rate>`) that will be
         added to the prior value;  if it is an array, each element is independently integrated.
-
-    integration_type : [**NEEDS TO BE SPECIFIED**] : default [**NEEDS TO BE SPECIFIED**]
-        [**NEEDS TO BE SPECIFIED**]
 
     rate : float or 1d np.array
         determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
@@ -4317,8 +4313,6 @@ class SimpleIntegrator(
         # if params and VARIABLE in params:
         #     new_value = params[VARIABLE]
 
-        # Compute function based on integration_type param
-
         value = previous_value + (new_value * rate) + noise
 
         adjusted_value = value + offset
@@ -4333,22 +4327,31 @@ class SimpleIntegrator(
 class LCAIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
-    LCAIntegrator(                 \
-        default_variable=None,  \
-        noise=0.0,              \
-        initializer,            \
-        params=None,            \
-        owner=None,             \
-        prefs=None,             \
+    LCAIntegrator(                  \
+        default_variable=None,      \
+        noise=0.0,                  \
+        initializer=0.0,            \
+        rate=1.0,                   \
+        offset=None,                \
+        time_step_size=0.1,         \
+        params=None,                \
+        owner=None,                 \
+        prefs=None,                 \
         )
 
     .. _LCAIntegrator:
 
     Integrate current value of `variable <LCAIntegrator.variable>` with its prior value:
 
+    .. math::
+
+        rate \\dot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
+
+    COMMENT:
     `rate <LCAIntegrator.rate>` * `previous_value <LCAIntegrator.previous_value>` + \
     `variable <variable.LCAIntegrator.variable>` + \
     `noise <LCAIntegrator.noise>`;
+    COMMENT
 
     Arguments
     ---------
@@ -4358,14 +4361,14 @@ class LCAIntegrator(
         integrated.
 
     rate : float, list or 1d np.array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <LCAIntegrator.default_variable>` (see `rate <LCAIntegrator.rate>` for details).
+        scales the contribution of `previous_value <LCAIntegrator.previous_value>` to the accumulation of the
+        `value <LCAIntegrator.value>` on each time step
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
         specifies random value to be added in each call to `function <LCAIntegrator.function>`. (see
         `noise <LCAIntegrator.noise>` for details).
 
-    initializer float, list or 1d np.array : default 0.0
+    initializer : float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <LCAIntegrator.default_variable>` (see `initializer <LCAIntegrator.initializer>` for details).
 
@@ -4392,8 +4395,8 @@ class LCAIntegrator(
 
     rate : float or 1d np.array
         scales the contribution of `previous_value <LCAIntegrator.previous_value>` to the
-        accumulation of the `LCAIntegrator's value <LCAIntegrator.value>` (:math:`x_{i}`) on each time step. If it has a single element, it
-        applies to all elements of `variable <LCAIntegrator.variable>`;  if it has more than one element, each element
+        accumulation of the `value <LCAIntegrator.value>` on each time step. If rate has a single element, it
+        applies to all elements of `variable <LCAIntegrator.variable>`;  if rate has more than one element, each element
         applies to the corresponding element of `variable <LCAIntegrator.variable>`.
 
     noise : float, function, list, or 1d np.array
@@ -4404,7 +4407,6 @@ class LCAIntegrator(
         If noise is specified as a single float or function, while `variable <LCAIntegrator.variable>` is a list or array,
         noise will be applied to each variable element. In the case of a noise function, this means that the function
         will be executed separately for each variable element.
-
 
         .. note::
             In order to generate random noise, we recommend selecting a probability distribution function
@@ -4485,9 +4487,11 @@ class LCAIntegrator(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: `variable <Linear.slope>` combined with `previous_value <LCAIntegrator.previous_value>`
-        according to `rate <LCAIntegrator.rate>` * `previous_value <LCAIntegrator.previous_value>` + `variable
-        <variable.LCAIntegrator.variable>` + `noise <LCAIntegrator.noise>`;
+        Return:
+
+        .. math::
+
+            rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
 
         Arguments
         ---------
@@ -4970,13 +4974,13 @@ class AdaptiveIntegrator(
                 for r in target_set[RATE]:
                     if r < 0.0 or r > 1.0:
                         raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
-                                            "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
+                                            "between 0.0 and 1.0 because it is an AdaptiveIntegrator".
                                             format(target_set[RATE], self.name))
             else:
                 if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
                     raise FunctionError(
                         "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                        "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
+                        "1.0 because it is an AdaptiveIntegrator".format(target_set[RATE], self.name))
 
         if NOISE in target_set:
             self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
@@ -5042,8 +5046,8 @@ class DriftDiffusionIntegrator(
         default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
-        scale: parameter_spec = 1.0,    \
-        offset: parameter_spec = 0.0,   \
+        scale= 1.0,                     \
+        offset= 0.0,                    \
         time_step_size=1.0,             \
         t0=0.0,                         \
         decay=0.0,                      \
@@ -5061,15 +5065,14 @@ class DriftDiffusionIntegrator(
     ---------
 
     default_variable : number, list or np.array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
+        specifies the stimulus component of drift rate -- the drift rate is the product of variable and rate
 
     rate : float, list or 1d np.array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <DriftDiffusionIntegrator.default_variable>` (see `rate <DriftDiffusionIntegrator.rate>` for details).
+        specifies the rate of evidence accumulation. Rate is a component of drift rate -- the drift rate is the product
+        of variable and rate
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <DriftDiffusionIntegrator.function>`. (see
+        scales the random value to be added in each call to `function <DriftDiffusionIntegrator.function>`. (see
         `noise <DriftDiffusionIntegrator.noise>` for details).
 
     time_step_size : float : default 0.0
@@ -5080,7 +5083,7 @@ class DriftDiffusionIntegrator(
         determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
         the DDM Mechanism.
 
-    initializer float, list or 1d np.array : default 0.0
+    initializer : float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <DriftDiffusionIntegrator.default_variable>` (see `initializer <DriftDiffusionIntegrator.initializer>` for details).
 
@@ -5105,20 +5108,21 @@ class DriftDiffusionIntegrator(
         current input value, which represents the stimulus component of drift.
 
     rate : float or 1d np.array
-        determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
-        all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
-        applies to all elements of `variable <DriftDiffusionIntegrator.variable>`;  if it has more than one element, each element
-        applies to the corresponding element of `variable <DriftDiffusionIntegrator.variable>`.
+        specifies the rate of evidence accumulation. Rate is a component of drift rate -- the drift rate is the product
+        of variable and rate
 
     noise : float, function, list, or 1d np.array
-        scales the random value to be added in each call to `function <DriftDiffusionIntegrator.function>
+        scales the random value to be added in each call to `function <DriftDiffusionIntegrator.function> according to
+        the standard DDM probability distribution.
 
-        Noise must be specified as a float (or list or array of floats) because this
-        value will be used to construct the standard DDM probability distribution.
+        On each call to `function <DriftDiffusionIntegrator.function>, :math:`\\sqrt{time\\_step\\_size \\cdot noise}
+        \\cdot Sample\\,From\\,Normal\\,distribution` is added to the accumulated evidence.
+
+        Noise must be specified as a float (or list or array of floats).
 
     time_step_size : float
         determines the timing precision of the integration process and is used to scale the `noise
-        <DriftDiffusionIntegrator.noise>` parameter appropriately.
+        <DriftDiffusionIntegrator.noise>` parameter according to the standard DDM probability distribution.
 
     t0 : float
         determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
@@ -5216,8 +5220,10 @@ class DriftDiffusionIntegrator(
         """
         Return: One time step of evidence accumulation according to the Drift Diffusion Model
 
-        previous_value + rate * variable * time_step_size + :math:`\\sqrt{time_step_size * noise}` * random
-        sample from Normal distribution
+        ..  math::
+
+            previous\\_value + rate \\cdot variable \\cdot time\\_step\\_size + \\sqrt{time\\_step\\_size \\cdot noise}
+            \\cdot Sample\\,from\\,Normal\\,Distribution
 
         Arguments
         ---------
