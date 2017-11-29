@@ -248,7 +248,7 @@ class TestProjectionSpecificationFormats:
             pnl.GatingProjection,
             pnl.GatingProjection(),
             # pnl.GatingMechanism,
-            # pnl.GatingMechanism(),
+            pnl.GatingMechanism(),
             (0.3, pnl.GATING),
             (0.3, pnl.GATING_SIGNAL),
             (0.3, pnl.GATING_PROJECTION),

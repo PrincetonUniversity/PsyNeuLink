@@ -1559,19 +1559,18 @@ def _parse_connection_specs(connectee_state_type,
 
             # Validate state specification, and get actual state referenced if it has been instantiated
             try:
-                state_types = connects_with
-                mech_state_attribute=connect_with_attr
-                # # MODIFIED 11/29/17 NEW:
-                # # FIX: 11/28/17 HACK TO DEAL WITH GatingSignal Projection to OutputState
-                # if (_is_gating_spec(first_item)
-                #     and (isinstance(last_item, OutputState)
-                #          or (isinstance(last_item, type) and issubclass(last_item, OutputState)))):
-                #     projection_socket = SENDER
-                #     state_types = [OutputState]
-                #     mech_state_attribute = [OUTPUT_STATES]
-                # else:
-                #     state_types = connects_with
-                #     mech_state_attribute=connect_with_attr
+                # state_types = connects_with
+                # mech_state_attribute=connect_with_attr
+                # MODIFIED 11/29/17 NEW:
+                # FIX: 11/28/17 HACK TO DEAL WITH GatingSignal Projection to OutputState
+                if (_is_gating_spec(first_item)
+                    and (isinstance(last_item, OutputState) or last_item == OutputState)):
+                    projection_socket = SENDER
+                    state_types = [OutputState]
+                    mech_state_attribute = [OUTPUT_STATES]
+                else:
+                    state_types = connects_with
+                    mech_state_attribute=connect_with_attr
                 # MODIFIED 11/29/17 END
 
                 state = _get_state_for_socket(owner=owner,
