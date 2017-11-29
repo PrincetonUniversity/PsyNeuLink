@@ -717,42 +717,42 @@ class ScratchPadError(Exception):
 #endregion
 
 
-#region TEST MODULATORY SPECS
-# print ("TEST MODULATORY SPECS")
-#
-# # # ADD TO TEST:
-# # import psyneulink as pnl
-# # my_mechanism = pnl.RecurrentTransferMechanism(size=5,
-# #                               # noise=pnl.CONTROL,
-# #                               # noise=pnl.CONTROL_SIGNAL,
-# #                               # noise=pnl.ControlSignal,
-# #                               # noise=pnl.ControlSignal(),
-# #                               # noise=(1, pnl.CONTROL),
-# #                               # noise=(1, pnl.CONTROL_SIGNAL),
-# #                               # noise=(1, pnl.ControlSignal),
-# #                               # noise=(1, pnl.ControlSignal()),
-# #                               # noise=(1, pnl.ControlProjection),
-# #                               noise=(0.3, pnl.ControlProjection()),
-# #                               # noise=(1, pnl.ControlMechanism),  # <- FIX: DOESN'T WORK
-# #                               # noise=(1, pnl.ControlMechanism()),  # <- FIX: DOESN'T WORK
-# #                               function=pnl.Logistic(
-# #                                       # gain=pnl.CONTROL,
-# #                                       # gain=pnl.CONTROL_SIGNAL,
-# #                                       # gain=pnl.ControlSignal,
-# #                                       # gain=pnl.ControlSignal(),
-# #                                       # gain=(0.5, pnl.CONTROL),
-# #                                       # gain=(0.5, pnl.CONTROL_SIGNAL),
-# #                                       # gain=(0.5, pnl.ControlSignal),
-# #                                       # gain=(0.5, pnl.ControlSignal()),
-# #                                       # gain=(0.5, pnl.ControlProjection),
-# #                                       gain=(0.5, pnl.ControlProjection()),
-# #                                       # gain=(0.5, pnl.ControlMechanism),  # <- FIX: DOESN'T WORK
-# #                                       # gain=(0.5, pnl.ControlMechanism()),  # <- FIX: DOESN'T WORK
-# #                                       bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE)))
-# #                                               )
-# # print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.NOISE].mod_afferents)
-# # print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.GAIN].mod_afferents)
-# # # print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.BIAS].mod_afferents)
+# region TEST MODULATORY SPECS
+print ("TEST MODULATORY SPECS")
+
+# # ADD TO TEST:
+# import psyneulink as pnl
+# my_mechanism = pnl.RecurrentTransferMechanism(size=5,
+#                               # noise=pnl.CONTROL,
+#                               # noise=pnl.CONTROL_SIGNAL,
+#                               # noise=pnl.ControlSignal,
+#                               # noise=pnl.ControlSignal(),
+#                               # noise=(1, pnl.CONTROL),
+#                               # noise=(1, pnl.CONTROL_SIGNAL),
+#                               # noise=(1, pnl.ControlSignal),
+#                               # noise=(1, pnl.ControlSignal()),
+#                               # noise=(1, pnl.ControlProjection),
+#                               noise=(0.3, pnl.ControlProjection()),
+#                               # noise=(1, pnl.ControlMechanism),  # <- FIX: DOESN'T WORK
+#                               # noise=(1, pnl.ControlMechanism()),  # <- FIX: DOESN'T WORK
+#                               function=pnl.Logistic(
+#                                       # gain=pnl.CONTROL,
+#                                       # gain=pnl.CONTROL_SIGNAL,
+#                                       # gain=pnl.ControlSignal,
+#                                       # gain=pnl.ControlSignal(),
+#                                       # gain=(0.5, pnl.CONTROL),
+#                                       # gain=(0.5, pnl.CONTROL_SIGNAL),
+#                                       # gain=(0.5, pnl.ControlSignal),
+#                                       # gain=(0.5, pnl.ControlSignal()),
+#                                       # gain=(0.5, pnl.ControlProjection),
+#                                       gain=(0.5, pnl.ControlProjection()),
+#                                       # gain=(0.5, pnl.ControlMechanism),  # <- FIX: DOESN'T WORK
+#                                       # gain=(0.5, pnl.ControlMechanism()),  # <- FIX: DOESN'T WORK
+#                                       bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE)))
+#                                               )
+# print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.NOISE].mod_afferents)
+# print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.GAIN].mod_afferents)
+# print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.BIAS].mod_afferents)
 #
 # import psyneulink as pnl
 #
@@ -792,39 +792,40 @@ class ScratchPadError(Exception):
 
 # ----------------------------------------------------
 
-gating_spec_list = [
-    pnl.GATING,
-    pnl.GATING_SIGNAL,
-    pnl.GATING_PROJECTION,
-    pnl.GatingSignal,
-    pnl.GatingSignal(),
-    pnl.GatingSignal(),
-    (0.3, pnl.GATING),
-    (0.3, pnl.GATING_SIGNAL),
-    (0.3, pnl.GATING_PROJECTION),
-    (0.3, pnl.GatingSignal),
-    (0.3, pnl.GatingSignal()),
-    (0.3, pnl.GatingProjection),
-    (0.3, pnl.GatingProjection())
-]
+# gating_spec_list = [
+#     pnl.GATING,
+#     pnl.GATING_SIGNAL,
+#     pnl.GATING_PROJECTION,
+#     pnl.GatingSignal,
+#     pnl.GatingSignal(),
+#     pnl.GatingSignal(),
+#     (0.3, pnl.GATING),
+#     (0.3, pnl.GATING_SIGNAL),
+#     (0.3, pnl.GATING_PROJECTION),
+#     (0.3, pnl.GatingSignal),
+#     (0.3, pnl.GatingSignal()),
+#     (0.3, pnl.GatingProjection),
+#     (0.3, pnl.GatingProjection())
+# ]
 
+# T = pnl.TransferMechanism(input_states=[
 T = pnl.TransferMechanism(output_states=[
-    pnl.GATING,
-    # pnl.GATING_SIGNAL,
-    # pnl.GatingSignal, # FIX OUTPUTSTATES / INPUTSTATES
-    # pnl.GatingSignal(),
-    # pnl.GatingProjection, # FIX OUTPUTSTATES  / INPUTSTATES
-    # pnl.GatingProjection(), # FIX OUTPUTSTATES
-    # (0.3, pnl.GATING),  # FIX OUTPUTSTATES
-    # (0.3, pnl.GATING_SIGNAL),  # FIX OUTPUTSTATES
-    # (0.3, pnl.GatingSignal),  # FIX: OUTPUT_STATES / INPUTSTATES
-    # (0.3, pnl.GatingSignal()),
-    # (0.3, pnl.GatingProjection),  # FIX: OUTPUT_STATES / INPUTSTATES
-    (0.3, pnl.GatingProjection())
+#     pnl.GATING,
+#     pnl.GATING_SIGNAL,
+#     pnl.GatingSignal,
+#     pnl.GatingSignal(),
+#     pnl.GatingProjection, # FIX OUTPUTSTATES
+#     pnl.GatingProjection(), # FIX OUTPUTSTATES
+#     (0.3, pnl.GATING), # FIX OUTPUTSTATES
+#     (0.3, pnl.GATING_SIGNAL), # FIX OUTPUTSTATES
+#     (0.3, pnl.GatingSignal), # FIX OUTPUTSTATES
+#     (0.3, pnl.GatingSignal()),
+#     (0.3, pnl.GatingProjection), # FIX OUTPUTSTATES
+#     (0.3, pnl.GatingProjection())
 ])
 
-assert T.output_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[OutputState-0]'
 # assert T.input_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[InputState-0]'
+assert T.output_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[OutputState-0]'
 
 print(T.execute())
 #

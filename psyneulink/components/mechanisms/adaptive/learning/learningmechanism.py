@@ -529,7 +529,7 @@ from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.globals.keywords import CONTROL_PROJECTIONS, IDENTITY_MATRIX, INDEX, INITIALIZING, \
     INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, \
-    LEARNING_SIGNALS, MATRIX, NAME, PARAMS, OUTPUT_STATES, PROJECTIONS, ENABLED
+    LEARNING_SIGNALS, MATRIX, NAME, PARAMS, OUTPUT_STATES, PROJECTIONS, ENABLED, MATRIX_KEYWORD_SET
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, parameter_spec, ContentAddressableList
@@ -553,6 +553,7 @@ def _is_learning_spec(spec, include_matrix_spec=True):
     Otherwise, return `False`
 
     """
+    # MODIFIED 11/28/17 OLD:
     from psyneulink.components.projections.projection import _is_projection_spec
 
     try:
@@ -564,6 +565,25 @@ def _is_learning_spec(spec, include_matrix_spec=True):
                                        include_matrix_spec=include_matrix_spec)
     except:
         return False
+    # # MODIFIED 11/28/17 NEW:
+    # from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
+    # if isinstance(spec, tuple):
+    #     return _is_learning_spec(spec[1])
+    # elif isinstance(spec, (LearningMechanism, LearningSignal, LearningProjection)):
+    #     return True
+    # elif isinstance(spec, type) and issubclass(spec, LearningSignal):
+    #     return True
+    # elif isinstance(spec, str) and spec in {LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL}:
+    #     return True
+    # elif include_matrix_spec:
+    #     if isinstance(spec, str) and spec in MATRIX_KEYWORD_SET:
+    #         return True
+    #     from psyneulink.components.functions.function import get_matrix
+    #     if get_matrix(spec) is not None:
+    #         return True
+    # else:
+    #     return False
+    # # MODIFIED 11/28/17 END:
 
 
 # Used to index variable:

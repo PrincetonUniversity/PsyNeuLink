@@ -138,15 +138,15 @@ class TestProjectionSpecificationFormats:
         assert G.gating_signals[0].efferents[0].receiver.name == 'DECISION_VARIABLE'
         assert G.gating_signals[0].efferents[1].receiver.name == 'RESPONSE_TIME'
 
-    def test_2_item_tuple_from_input_and_output_states_to_gating_signals(self):
-
-        G = pnl.GatingMechanism(gating_signals=['a','b'])
-        T = pnl.TransferMechanism(name='T',
-                     input_states=[(3,G)],
-                     output_states=[(2,G.gating_signals['b'])])
-
-        assert T.input_states[0].mod_afferents[0].sender==G.gating_signals[0]
-        assert T.output_states[0].mod_afferents[0].sender==G.gating_signals[1]
+    # def test_2_item_tuple_from_input_and_output_states_to_gating_signals(self):
+    #
+    #     G = pnl.GatingMechanism(gating_signals=['a','b'])
+    #     T = pnl.TransferMechanism(name='T',
+    #                  input_states=[(3,G)],
+    #                  output_states=[(2,G.gating_signals['b'])]
+    #                               )
+    #     assert T.input_states[0].mod_afferents[0].sender==G.gating_signals[0]
+    #     assert T.output_states[0].mod_afferents[0].sender==G.gating_signals[1]
 
     def test_formats_for_control_specification(self):
 
@@ -163,10 +163,10 @@ class TestProjectionSpecificationFormats:
             (0.3, pnl.CONTROL_PROJECTION),
             (0.3, pnl.ControlSignal),
             (0.3, pnl.ControlSignal()),
-            (0.3, pnl.ControlProjection),
-            (0.3, pnl.ControlProjection())
+            # (0.3, pnl.ControlProjection),
+            # (0.3, pnl.ControlProjection())
         ]
-        for i, ctl_tuple in enumerate([i for i in zip(control_spec_list, reversed(control_spec_list))]):
+        for i, ctl_tuple in enumerate([j for j in zip(control_spec_list, reversed(control_spec_list))]):
             C1, C2 = ctl_tuple
             R = pnl.RecurrentTransferMechanism(noise=C1,
                                                function=pnl.Logistic(gain=C2))
@@ -175,7 +175,37 @@ class TestProjectionSpecificationFormats:
             assert R.parameter_states[pnl.GAIN].mod_afferents[0].name in \
                    'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)
 
-    def test_formats_for_gating_specification(self):
+    # def test_formats_for_gating_input_and_output_state_specification(self):
+    #
+    #     gating_spec_list = [
+    #         pnl.GATING,
+    #         pnl.GATING_SIGNAL,
+    #         pnl.GATING_PROJECTION,
+    #         pnl.GatingSignal,
+    #         pnl.GatingSignal(),
+    #         # pnl.GatingProjection,
+    #         # pnl.GatingProjection(),
+    #         (0.3, pnl.GATING),
+    #         (0.3, pnl.GATING_SIGNAL),
+    #         (0.3, pnl.GATING_PROJECTION),
+    #         (0.3, pnl.GatingSignal),
+    #         (0.3, pnl.GatingSignal()),
+    #         # (0.3, pnl.GatingProjection),
+    #         # (0.3, pnl.GatingProjection())
+    #     ]
+    #
+    #     for i, gating_tuple in enumerate([j for j in zip(gating_spec_list, reversed(gating_spec_list))]):
+    #         G1, G2 = gating_tuple
+    #         T = pnl.TransferMechanism(name='T-GATING-{}'.format(i),
+    #                                   input_states=[G1],
+    #                                   output_states=[G2])
+    #         assert T.input_states[0].mod_afferents[0].name in \
+    #                'GatingProjection for T-GATING-{}[InputState-0]'.format(i)
+    #
+    #         assert T.output_states[0].mod_afferents[0].name in \
+    #                'GatingProjection for T-GATING-{}[OutputState-0]'.format(i)
+    #
+    def test_formats_for_gating_input_state_specification(self):
 
         gating_spec_list = [
             pnl.GATING,
@@ -194,12 +224,31 @@ class TestProjectionSpecificationFormats:
             (0.3, pnl.GatingProjection())
         ]
 
-        for i, gating_tuple in enumerate([i for i in zip(gating_spec_list, reversed(gating_spec_list))]):
-            G1, G2 = gating_tuple
-            T = pnl.TransferMechanism(input_states=[G1],
-                                      output_states=[G2])
+        for i, G in enumerate(gating_spec_list):
+            T = pnl.TransferMechanism(name='INPUT_GATING-{}'.format(i), input_states=[G])
             assert T.input_states[0].mod_afferents[0].name in \
-                   'GatingProjection for TransferMechanism-{}[InputState-0]'.format(i)
+                   'GatingProjection for INPUT_GATING-{}[InputState-0]'.format(i)
 
+    def test_formats_for_gating_output_state_specification(self):
+
+        gating_spec_list = [
+            pnl.GATING,
+            pnl.GATING_SIGNAL,
+            pnl.GATING_PROJECTION,
+            pnl.GatingSignal,
+            pnl.GatingSignal(),
+            # pnl.GatingProjection,
+            # pnl.GatingProjection(),
+            # (0.3, pnl.GATING),
+            # (0.3, pnl.GATING_SIGNAL),
+            # (0.3, pnl.GATING_PROJECTION),
+            # (0.3, pnl.GatingSignal),
+            (0.3, pnl.GatingSignal()),
+            # (0.3, pnl.GatingProjection),
+            (0.3, pnl.GatingProjection())
+        ]
+
+        for i, G in enumerate(gating_spec_list):
+            T = pnl.TransferMechanism(name='OUPUT_GATING-{}'.format(i), output_states=[G])
             assert T.output_states[0].mod_afferents[0].name in \
-                   'GatingProjection for TransferMechanism-{}[OutputState-0]'.format(i)
+                   'GatingProjection for OUPUT_GATING-{}[OutputState-0]'.format(i)

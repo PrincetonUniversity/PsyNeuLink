@@ -1009,7 +1009,8 @@ class OutputState(State_Base):
         modulatory_projections = [proj for proj in projections
                                   if (_is_modulatory_spec(proj) or
                                       (isinstance(proj, ProjectionTuple) and
-                                       any(_is_modulatory_spec(item) for item in proj)))]
+                                       any((_is_modulatory_spec(item) or isinstance(item, ProjectionTuple))
+                                           for item in proj)))]
         self._instantiate_projections_to_state(projections=modulatory_projections, context=context)
 
         # Treat all remaining specifications in projections as ones for outgoing MappingProjections
@@ -1102,7 +1103,11 @@ class OutputState(State_Base):
                                      "is not compatible with its {} ({})".
                                      format(OutputState.__name__, owner.name, state_spec,
                                             REFERENCE_VALUE, reference_value))
+                # # MODIFIED 11/28/17 OLD:
                 projection_spec = tuple_spec[1]
+                # MODIFIED 11/28/17 NEW:
+                # projection_spec =
+                # MODIFIED 11/28/17 END:
             # MODIFIED 11/23/17 END
 
             # MODIFIED 11/23/17 NEW: ADDED ELSE AND INDENTED
