@@ -795,12 +795,12 @@ print ("TEST MODULATORY SPECS")
 # T = pnl.TransferMechanism(input_states=[
 T = pnl.TransferMechanism(output_states=[
     # pnl.GATING,
-#     pnl.GATING_SIGNAL,
-#     pnl.GatingSignal,
+    # pnl.GATING_SIGNAL,
+    # pnl.GatingSignal,
 #     pnl.GatingSignal(),
 #     pnl.GatingProjection,
     # pnl.GatingProjection(),
-    # pnl.GatingMechanism, # FIX OUTPUTSTATES
+    pnl.GatingMechanism, # FIX OUTPUTSTATES
     # pnl.GatingMechanism(), # FIX OUTPUTSTATES
 #     (0.3, pnl.GATING),
 #     (0.3, pnl.GATING_SIGNAL),

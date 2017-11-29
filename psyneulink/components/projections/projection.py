@@ -955,7 +955,7 @@ class Projection_Base(Projection):
 
 
 @tc.typecheck
-def _is_projection_spec(spec, proj_type:tc.optional(Projection)=None, include_matrix_spec=True):
+def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_spec=True):
     """Evaluate whether spec is a valid Projection specification
 
     Return `True` if spec is any of the following:
@@ -970,13 +970,17 @@ def _is_projection_spec(spec, proj_type:tc.optional(Projection)=None, include_ma
     """
 
     if isinstance(spec, Projection):
-        if proj_type is None or isinstance(spec, type):
+        if proj_type is None or isinstance(spec, proj_type):
                 return True
         else:
             return False
     if isinstance(spec, State):
         # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
+    # if isinstance(spec, Mechanism):
+    #     if proj_type is None:
+    #     # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
+    #         return True
     if inspect.isclass(spec):
         if issubclass(spec, Projection):
             if proj_type is None or issubclass(spec, proj_type):
@@ -986,6 +990,9 @@ def _is_projection_spec(spec, proj_type:tc.optional(Projection)=None, include_ma
         if issubclass(spec, State):
             # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
             return True
+        # if issubclass(spec, Mechanism):
+        #     # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
+        #     return True
     if isinstance(spec, dict) and any(key in spec for key in {PROJECTION_TYPE, SENDER, RECEIVER, MATRIX}):
         # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
@@ -1116,7 +1123,7 @@ def _parse_projection_spec(projection_spec,
     elif isinstance(projection_spec, str):
         proj_spec_dict[PROJECTION_TYPE] = _parse_projection_keyword(projection_spec)
 
-    # State object
+    # State object or class
     elif isinstance(projection_spec, State):
         proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
 
@@ -1124,6 +1131,17 @@ def _parse_projection_spec(projection_spec,
     elif inspect.isclass(projection_spec) and issubclass(projection_spec, State):
         # Assign default Projection type for State's class
         proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
+
+    # # Mechanism object or class
+    # elif (isinstance(projection_spec, Mechanism)
+    #       or (isinstance(projection_spec, type) and issubclass(projection_spec, Mechanism))):
+    #     proj_spec_dict[PROJECTION_TYPE] = projection_spec.
+    #
+    # # Mechanism class
+    # elif inspect.isclass(projection_spec) and issubclass(projection_spec, Mechanism):
+    #     # Assign default Projection type for State's class
+    #     proj_spec_dict[PROJECTION_TYPE] = projection_spec.
+
 
     # Dict
     elif isinstance(projection_spec, dict):

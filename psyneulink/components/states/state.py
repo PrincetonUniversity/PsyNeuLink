@@ -1407,7 +1407,7 @@ class State_Base(State):
         # - assign it to self.path_afferents or .mod_afferents
         for connection in projection_tuples:
 
-            # Get sender State, weight, exponent and projection for each projection specification
+            'TransferMechanism' in self.owner.name and 'OutputState' in self.__name__     # Get sender State, weight, exponent and projection for each projection specification
             #    note: weight and exponent for connection have been assigned to Projection in _parse_connection_specs
             state, weight, exponent, projection_spec = connection
 
@@ -2840,12 +2840,12 @@ def _parse_state_spec(state_type=None,
             state_dict[PARAMS].update(params)
 
     else:
-        if owner.verbosePref:
-            warnings.warn("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
-                         format(state_type_name, owner.name, state_spec))
-        return
-        # raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
+        # if owner.verbosePref:
+        #     warnings.warn("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
         #                  format(state_type_name, owner.name, state_spec))
+        # return
+        raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
+                         format(state_type_name, owner.name, state_specification))
 
     # If variable is none, use value:
     if state_dict[VARIABLE] is None:

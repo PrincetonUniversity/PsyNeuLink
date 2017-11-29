@@ -456,6 +456,7 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import Objec
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.projection import _add_projection_to, _is_projection_spec
+from psyneulink.components.projections.projection import Projection_Base
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, System_Base
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.parameterstate import ParameterState
@@ -1128,7 +1129,7 @@ class Process(Process_Base):
             # Can't be first entry, and can never have two in a row
 
             # Config entry is a Projection
-            if _is_projection_spec(item):
+            if _is_projection_spec(item, proj_type=Projection):
                 # Projection not allowed as first entry
                 if i==0:
                     raise ProcessError("Projection cannot be first entry in pathway ({0})".format(self.name))
