@@ -173,16 +173,13 @@ Class Reference
 """
 
 import numbers
+import numpy as np
+import typecheck as tc
 import warnings
 
 from collections import namedtuple
 from enum import Enum, IntEnum
 from random import randint
-
-import numpy as np
-import typecheck as tc
-
-from numpy import abs, exp, tanh
 
 from psyneulink.components.component import ComponentError, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
@@ -6978,32 +6975,32 @@ class BogaczEtAl(
             bias = 1 - 1e-8
 
         # drift_rate close to or at 0 (avoid float comparison)
-        if abs(drift_rate) < 1e-8:
+        if np.abs(drift_rate) < 1e-8:
             # back to absolute bias in order to apply limit
             bias_abs = bias * 2 * threshold - threshold
             # use expression for limit a->0 from Srivastava et al. 2016
             rt = t0 + (threshold ** 2 - bias_abs ** 2) / (noise ** 2)
             er = (threshold - bias_abs) / (2 * threshold)
         else:
-            drift_rate_normed = abs(drift_rate)
+            drift_rate_normed = np.abs(drift_rate)
             ztilde = threshold / drift_rate_normed
             atilde = (drift_rate_normed / noise) ** 2
 
             is_neg_drift = drift_rate < 0
             bias_adj = (is_neg_drift == 1) * (1 - bias) + (is_neg_drift == 0) * bias
             y0tilde = ((noise ** 2) / 2) * np.log(bias_adj / (1 - bias_adj))
-            if abs(y0tilde) > threshold:
+            if np.abs(y0tilde) > threshold:
                 y0tilde = -1 * (is_neg_drift == 1) * threshold + (is_neg_drift == 0) * threshold
             x0tilde = y0tilde / drift_rate_normed
 
             old_settings = np.seterr(over='raise', under='raise')
 
             try:
-                rt = ztilde * tanh(ztilde * atilde) + \
-                     ((2 * ztilde * (1 - exp(-2 * x0tilde * atilde))) / (
-                     exp(2 * ztilde * atilde) - exp(-2 * ztilde * atilde)) - x0tilde) + t0
-                er = 1 / (1 + exp(2 * ztilde * atilde)) - \
-                     ((1 - exp(-2 * x0tilde * atilde)) / (exp(2 * ztilde * atilde) - exp(-2 * ztilde * atilde)))
+                rt = ztilde *np.tanh(ztilde * atilde) + \
+                     ((2 * ztilde * (1 - np.exp(-2 * x0tilde * atilde))) / (
+                     np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)) - x0tilde) + t0
+                er = 1 / (1 + np.exp(2 * ztilde * atilde)) - \
+                     ((1 - np.exp(-2 * x0tilde * atilde)) / (np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)))
 
             except FloatingPointError:
                 # Per Mike Shvartsman:
@@ -7069,7 +7066,7 @@ class BogaczEtAl(
         A = input or self.drift_rate
         c = self.noise
         c_sq = c**2
-        E = exp(-2*Z*A/c_sq)
+        E = np.exp(-2*Z*A/c_sq)
         D_iti = 0
         D_pen = 0
         D = D_iti + D_pen
