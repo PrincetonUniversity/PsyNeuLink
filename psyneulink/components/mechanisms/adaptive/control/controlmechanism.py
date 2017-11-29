@@ -315,7 +315,7 @@ from psyneulink.components.shellclasses import System_Base
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import \
     AUTO_ASSIGN_MATRIX,  INIT__EXECUTE__METHOD_ONLY, \
-    CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
+    PROJECTION_TYPE, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
     NAME, OBJECTIVE_MECHANISM, PRODUCT, PROJECTIONS, SYSTEM, VARIABLE, WEIGHT, EXPONENT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -330,19 +330,36 @@ ALLOCATION_POLICY = 'allocation_policy'
 
 ControlMechanismRegistry = {}
 
+# MODIFIED 11/28/17 OLD:
+# def _is_control_spec(spec):
+#     from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+#     if isinstance(spec, tuple):
+#         return _is_control_spec(spec[1])
+#     elif isinstance(spec, (ControlMechanism, ControlSignal, ControlProjection)):
+#         return True
+#     elif isinstance(spec, type) and issubclass(spec, ControlSignal):
+#         return True
+#     elif isinstance(spec, str) and spec in {CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL}:
+#         return True
+#     else:
+#         return False
 
+# MODIFIED 11/28/17 NEW:
 def _is_control_spec(spec):
     from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
     if isinstance(spec, tuple):
-        return _is_control_spec(spec[1])
+        return any(_is_control_spec(item) for item in spec)
+    if isinstance(spec, dict) and PROJECTION_TYPE in spec:
+        return _is_control_spec(spec[PROJECTION_TYPE])
     elif isinstance(spec, (ControlMechanism, ControlSignal, ControlProjection)):
         return True
-    elif isinstance(spec, type) and issubclass(spec, ControlSignal):
+    elif isinstance(spec, type) and issubclass(spec, (ControlMechanism, ControlSignal, ControlProjection)):
         return True
     elif isinstance(spec, str) and spec in {CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL}:
         return True
     else:
         return False
+# MODIFIED 11/28/17 END
 
 
 class ControlMechanismError(Exception):

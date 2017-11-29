@@ -1006,11 +1006,13 @@ class OutputState(State_Base):
         #                                any(isinstance(item, (ModulatoryProjection_Base,
         #                                                    ModulatorySignal,
         #                                                    AdaptiveMechanism_Base)) for item in proj)))]
-        modulatory_projections = [proj for proj in projections
-                                  if (_is_modulatory_spec(proj) or
-                                      (isinstance(proj, ProjectionTuple) and
-                                       any((_is_modulatory_spec(item) or isinstance(item, ProjectionTuple))
-                                           for item in proj)))]
+        # modulatory_projections = [proj for proj in projections
+        #                           if ((_is_modulatory_spec(proj) and
+        #                               isinstance(proj, ProjectionTuple)) or
+        #                                any((_is_modulatory_spec(item)
+        #                                     or isinstance(item, ProjectionTuple))
+        #                                    for item in proj))]
+        modulatory_projections = [proj for proj in projections if _is_modulatory_spec(proj)]
         self._instantiate_projections_to_state(projections=modulatory_projections, context=context)
 
         # Treat all remaining specifications in projections as ones for outgoing MappingProjections

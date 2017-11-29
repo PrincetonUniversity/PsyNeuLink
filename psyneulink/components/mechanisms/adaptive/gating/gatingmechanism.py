@@ -169,7 +169,7 @@ from psyneulink.components.states.state import State_Base, _parse_state_spec
 from psyneulink.globals.defaults import defaultGatingPolicy
 from psyneulink.globals.keywords import \
     GATING, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, \
-    INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM
+    INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, PROJECTION_TYPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
@@ -182,18 +182,35 @@ __all__ = [
 GatingMechanismRegistry = {}
 
 
+# MODIFIED 11/28/17 OLD:
+# def _is_gating_spec(spec):
+#     from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
+#     if isinstance(spec, tuple):
+#         return _is_gating_spec(spec[1])
+#     elif isinstance(spec, (GatingMechanism, GatingSignal, GatingProjection)):
+#         return True
+#     elif isinstance(spec, type) and issubclass(spec, (GatingSignal, GatingProjection)):
+#         return True
+#     elif isinstance(spec, str) and spec in {GATING, GATING_PROJECTION, GATING_SIGNAL}:
+#         return True
+#     else:
+#         return False
+# MODIFIED 11/28/17 NEW:
 def _is_gating_spec(spec):
     from psyneulink.components.projections.modulatory.gatingprojection import GatingProjection
     if isinstance(spec, tuple):
-        return _is_gating_spec(spec[1])
+        return any(_is_gating_spec(item) for item in spec)
+    if isinstance(spec, dict) and PROJECTION_TYPE in spec:
+        return _is_gating_spec(spec[PROJECTION_TYPE])
     elif isinstance(spec, (GatingMechanism, GatingSignal, GatingProjection)):
         return True
-    elif isinstance(spec, type) and issubclass(spec, (GatingSignal, GatingProjection)):
+    elif isinstance(spec, type) and issubclass(spec, (GatingSignal, GatingProjection, GatingMechanism)):
         return True
     elif isinstance(spec, str) and spec in {GATING, GATING_PROJECTION, GATING_SIGNAL}:
         return True
     else:
         return False
+# MODIFIED 11/28/17 END
 
 
 class GatingMechanismError(Exception):

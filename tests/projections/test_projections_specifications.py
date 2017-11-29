@@ -239,12 +239,12 @@ class TestProjectionSpecificationFormats:
             pnl.GatingSignal(),
             # pnl.GatingProjection,
             # pnl.GatingProjection(),
-            # (0.3, pnl.GATING),
-            # (0.3, pnl.GATING_SIGNAL),
-            # (0.3, pnl.GATING_PROJECTION),
-            # (0.3, pnl.GatingSignal),
+            (0.3, pnl.GATING),
+            (0.3, pnl.GATING_SIGNAL),
+            (0.3, pnl.GATING_PROJECTION),
+            (0.3, pnl.GatingSignal),
             (0.3, pnl.GatingSignal()),
-            # (0.3, pnl.GatingProjection),
+            (0.3, pnl.GatingProjection),
             (0.3, pnl.GatingProjection())
         ]
 
