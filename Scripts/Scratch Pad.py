@@ -716,7 +716,6 @@ class ScratchPadError(Exception):
 
 #endregion
 
-
 # region TEST MODULATORY SPECS
 # print ("TEST MODULATORY SPECS")
 #
@@ -811,7 +810,6 @@ class ScratchPadError(Exception):
 
 #endregion
 
-
 #region TEST DOCUMENTATION
 # print ("TEST DOCUMENTATION")
 
@@ -880,6 +878,23 @@ class ScratchPadError(Exception):
 #       call_before_trial=show_trial_header)
 
 #endregion
+
+#region TEST System Graph with AutoAssociativeMechanism
+print("TEST System Graph with AutoAssociativeMechanism")
+
+a = pnl.DDM(name='MY DDM')
+# a = pnl.RecurrentTransferMechanism(name='Autoassociator')
+p = pnl.Process(pathway=[a],
+                learning=pnl.ENABLED
+                )
+s = pnl.System(processes=[p])
+s.show_graph(show_learning=pnl.ALL,
+             show_dimensions=pnl.ALL
+             )
+
+
+#endregion
+
 
 #region TEST INSTANTATION OF Cyclic and Acyclic Systems @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #

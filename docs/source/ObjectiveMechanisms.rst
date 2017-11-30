@@ -1,7 +1,7 @@
 Objective Mechanisms
 ====================
 
-**Base class**:
+**Core class**:
 
 * `ObjectiveMechanism`
 

@@ -1,7 +1,7 @@
 Learning Mechanisms
 ===================
 
-**Base class**:
+**Core class**:
 
 * `LearningMechanism`
 

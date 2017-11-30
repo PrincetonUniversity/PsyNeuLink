@@ -704,16 +704,14 @@ class ParameterState(State_Base):
 
                     for projection_spec in params_dict[PROJECTIONS]:
                         if state_dict[REFERENCE_VALUE] is None:
-                            # FIX: 10/3/17 - PUTTING THIS HERE IS A HACK...
-                            # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ProjectionTuple SPEC
-                            # FIX:           USING _get_state_for_socket
+                            # FIX: - PUTTING THIS HERE IS A HACK...
+                            # FIX:     MOVE TO _parse_state_spec UNDER PROCESSING OF ProjectionTuple SPEC
+                            # FIX:     USING _get_state_for_socket
                             # from psyneulink.components.projections.projection import _parse_projection_spec
 
                             mod_signal_value = projection_spec.state.value \
                                 if isinstance(projection_spec.state, State_Base) else None
 
-
-                            # MODIFIED 11/25/17 OLD:
                             mod_projection = projection_spec.projection
                             if isinstance(mod_projection, dict):
                                 if mod_projection[PROJECTION_TYPE] not in {ControlProjection, LearningProjection}:
@@ -798,13 +796,6 @@ class ParameterState(State_Base):
         value = self.function(variable=param_value,
                               params=function_params,
                               context=context)
-
-        # TEST PRINT
-        # TEST DEBUG MULTILAYER
-        # if MATRIX == self.name:
-        #     print("\n{}\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".
-        #           format(self.__class__.__name__.upper(), self.owner.name, CentralClock.trial, value))
-
         return value
 
     @property
@@ -922,20 +913,16 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
         else:
             return
 
-    # MODIFIED 11/25/17 NEW:
     elif _is_modulatory_spec(param_value, include_matrix_spec=False) and not isinstance(param_value, tuple):
         # If parameter is a single Modulatory specification (e.g., ControlSignal, or CONTROL, etc.)
-        #   (note: exclude matrix since it is allowed as a value specification vs. a projection reference)
-        # Try to place it in a tuple (for interpretation by _parse_state_spec) using default value as 1st item
-        param_value = _get_tuple_for_single_item_modulatory_spec(owner, param_name, param_value)
-    # MODIFIED 11/25/17 END:
+         #  try to place it in a tuple (for interpretation by _parse_state_spec) using default value as 1st item
+        #   (note: exclude matrix since it is allowed as a value specification but not a projection reference)
+       param_value = _get_tuple_for_single_item_modulatory_spec(owner, param_name, param_value)
 
     # Allow tuples (could be spec that includes a Projection or Modulation)
     elif isinstance(param_value, tuple):
-        # # MODIFIED 4/18/17 NEW:
         # # FIX: EXTRACT VALUE HERE (AS IN Component.__init__?? [4/18/17]
         # param_value = owner._get_param_value_from_tuple(param_value)
-        # # MODIFIED 4/18/17 END
         pass
     # Allow if it is a keyword for a parameter
     elif isinstance(param_value, str) and param_value in parameter_keywords:
@@ -985,16 +972,14 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                           "with the same name as a parameter of the component itself".
                                           format(function_name, owner.name, function_param_name))
 
-            # MODIFIED 11/25/17 NEW:
             elif (_is_modulatory_spec(function_param_value, include_matrix_spec=False)
                   and not isinstance(function_param_value, tuple)):
                 # If parameter is a single Modulatory specification (e.g., ControlSignal, or CONTROL, etc.)
+                # try to place it in a tuple (for interpretation by _parse_state_spec) using default value as 1st item
                 #   (note: exclude matrix since it is allowed as a value specification vs. a projection reference)
-                # Try to place it in a tuple (for interpretation by _parse_state_spec) using default value as 1st item
                 function_param_value = _get_tuple_for_single_item_modulatory_spec(owner.function,
                                                                                   function_param_name,
                                                                                   function_param_value)
-            # MODIFIED 11/25/17 END:
 
 
             # # FIX: 10/3/17 - ??MOVE THIS TO _parse_state_specific_specs ----------------
@@ -1012,11 +997,6 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             else:
                 from copy import deepcopy
                 reference_value = deepcopy(function_param_value)
-
-
-
-
-            # # FIX: ----------------------------------------------------------------------
 
             # Assign parameterState for function_param to the component
             state = _instantiate_state(owner=owner,
@@ -1065,10 +1045,8 @@ def _is_legal_param_value(owner, value):
     if isinstance(value, dict) and VALUE in value:
         return True
 
-    # MODIFIED 11/25/17 NEW:
     if _is_control_spec(value) or _is_gating_spec(value):
         return True
-    # MODIFIED 11/25/17 END
 
     # keyword that resolves to one of the above
     if get_param_value_for_keyword(owner, value) is not None:
@@ -1101,27 +1079,3 @@ def _get_parameter_state(sender_owner, sender_type, param_name, component):
             raise ParameterStateError("There is no ParameterState for the parameter ({}) of {} "
                                         "specified in {} for {}".
                                         format(param_name, component.name, sender_type, sender_owner.name))
-
-# def _assign_default_value():
-#
-#     elif _is_modulatory_spec(param_value, include_matrix_spec=False):
-#     # If parameter is a single Modulatory specification (e.g., ControlSignal, or CONTROL, etc.)
-#     #   (note: exclude matrix since it is allowed as a value specification vs. a projection reference)
-#     if not isinstance(param_value, tuple):
-#         # Try to place it in a tuple (for interpretation by _parse_state_spec) using default value as 1st item
-#         try:
-#             param_default_value = owner.paramClassDefaults[param_name]
-#             # Only assign default value if it is not None
-#             if param_default_value is not None:
-#                 param_value = (param_default_value, param_value)
-#                 try:
-#                     # Set actual param (ownner's attribute) to assigned value
-#                     setattr(owner, param_name, param_default_value)
-#                 except:
-#                     raise ParameterStateError("Unable to assign {} as value for {} paramater of {}".
-#                                               format(param_value, param_name, owner.name))
-#         except ParameterStateError as e:
-#             raise ParameterStateError(e)
-#         except:
-#             raise ParameterStateError("Unrecognized specification for {} paramater of {} ({})".
-#                                       format(param_name, owner.name, param_value))

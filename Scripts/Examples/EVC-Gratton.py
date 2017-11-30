@@ -152,6 +152,7 @@ mySystem = pnl.System(
 # Show characteristics of system:
 mySystem.show()
 mySystem.controller.show()
+mySystem.show_graph(show_control=pnl.ALL, show_dimensions=pnl.ALL)
 
 # configure EVC components
 mySystem.controller.control_signals[0].intensity_cost_function = pnl.Exponential(rate=0.8046).function
