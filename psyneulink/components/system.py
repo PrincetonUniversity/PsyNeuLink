@@ -3185,6 +3185,7 @@ class System(System_Base):
                    direction = 'BT',
                    show_learning = False,
                    show_control = False,
+                   show_dimensions = False,
                    origin_color = 'green',
                    terminal_color = 'red',
                    origin_and_terminal_color = 'brown',
@@ -3193,6 +3194,10 @@ class System(System_Base):
                    output_fmt='pdf',
                    ):
         """Generate a display of the graph structure of mechanisms and projections in the system.
+
+        .. note::
+           This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
+           (standard with PsyNeuLink pip install)
 
         Displays a graph showing the structure of the System (based on the `System's graph <System.graph>`).
         By default, only the primary processing Components are shown.  However,the **show_learning** and
@@ -3203,6 +3208,12 @@ class System(System_Base):
         arrows, unless **show_learning** is assigned **True**, in which case MappingProjections that receive a
         `LearningProjection` are displayed as diamond-shaped nodes. The numbers in parentheses within a Mechanism
         node indicate its dimensionality.
+
+        COMMENT:
+        node shapes: https://graphviz.gitlab.io/_pages/doc/info/shapes.html
+        arrow shapes: https://graphviz.gitlab.io/_pages/doc/info/arrows.html
+        colors: https://graphviz.gitlab.io/_pages/doc/info/colors.html
+        COMMENT
 
         Arguments
         ---------
@@ -3257,11 +3268,10 @@ class System(System_Base):
 
         """
 
-        from psyneulink.components.mechanisms.processing.objectivemechanism \
-            import ObjectiveMechanism
-        from psyneulink.components.mechanisms.adaptive.learning.learningmechanism \
-            import LearningMechanism
+        from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+        from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.components.projections.projection import Projection
 
         import graphviz as gv
 
@@ -3269,39 +3279,81 @@ class System(System_Base):
         learning_graph=self.learningGraph
 
         default_node_color = 'black'
+        mechanism_shape = 'oval'
+        projection_shape = 'diamond'
+        # projection_shape = 'Mdiamond'
+        # projection_shape = 'hexagon'
+
+        def get_name(item):
+
+            if show_dimensions:
+                if isinstance(item, Mechanism):
+                    value = item.default_value
+                elif isinstance(item, Projection):
+                    value = item.matrix
+                else:
+                    raise SystemError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
+
+                value = np.array(value)
+                dimensions = np.array(value).ndim
+                if dimensions == 1 or len(value)==1:
+                    dim_string = "({})".format(len(value))
+                else:
+                    dim_string = "({})".format("x".join([str(i) for i in value.shape]))
+                return "{}\n{}".format(item.name, dim_string)
+
+            else:
+                return item.name
 
         # build graph and configure visualisation settings
         G = gv.Digraph(engine = "dot",
-                       node_attr  = {'fontsize':'12', 'fontname':'arial', 'shape':'oval', 'color':default_node_color},
-                       edge_attr  = {'arrowhead':'halfopen', 'fontsize': '10', 'fontname': 'arial'},
-                       graph_attr = {"rankdir" : direction} )
+                       node_attr  = {
+                           'fontsize':'12',
+                           'fontname':'arial',
+                           'shape':mechanism_shape,
+                           'color':default_node_color
+                       },
+                       edge_attr  = {
+                           # 'arrowhead':'halfopen',
+                           'fontsize': '10',
+                           'fontname': 'arial'
+                       },
+                       graph_attr = {
+                           "rankdir" : direction
+                       } )
 
 
         # work with system graph
         rcvrs = list(system_graph.keys())
         # loop through receivers
         for rcvr in rcvrs:
-            rcvr_name = rcvr.name
+            rcvr_name = get_name(rcvr)
             # rcvr_shape = rcvr.instance_defaults.variable.shape[1]
             rcvr_label = rcvr_name
-            G.node(rcvr_label, shape="oval")
+            G.node(rcvr_label, shape=mechanism_shape)
 
             # handle auto-recurrent projections
             for input_state in rcvr.input_states:
                 for proj in input_state.path_afferents:
                     if proj.sender.owner is not rcvr:
                         continue
-                    edge_name = proj.name
+                    edge_label = get_name(proj)
                     try:
                         has_learning = proj.has_learning_projection
                     except AttributeError:
                         has_learning = None
-                    G.edge(rcvr_label, rcvr_label)
+                    if show_learning and has_learning:
+                        G.node(edge_label, shape=projection_shape)
+                        G.edge(rcvr_label, edge_label, arrowhead='none')
+                        G.edge(edge_label, rcvr_label)
+                    else:
+                        # render normally
+                        G.edge(rcvr_label, rcvr_label, label=edge_label)
 
             # loop through senders
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
-                sndr_name = sndr.name
+                sndr_name = get_name(sndr)
                 # sndr_shape = sndr.instance_defaults.variable.shape[1]
                 sndr_label = sndr_name
 
@@ -3310,7 +3362,7 @@ class System(System_Base):
                 projs = sndr.output_state.efferents
                 for proj in projs:
                     if proj.receiver.owner == rcvr:
-                        edge_name = proj.name
+                        edge_name = get_name(proj)
                         # edge_shape = proj.matrix.shape
                         try:
                             has_learning = proj.has_learning_projection
@@ -3327,9 +3379,9 @@ class System(System_Base):
                 arrow_color="black"
                 if show_learning and has_learning:
                     # expand
-                    G.node(sndr_label, shape="oval")
-                    G.node(edge_label, shape="diamond")
-                    G.node(rcvr_label, shape="oval")
+                    G.node(sndr_label, shape=mechanism_shape)
+                    G.node(edge_label, shape=projection_shape)
+                    G.node(rcvr_label, shape=mechanism_shape)
                     G.edge(sndr_label, edge_label, arrowhead='none')
                     G.edge(edge_label, rcvr_label)
                 else:
@@ -3354,36 +3406,34 @@ class System(System_Base):
                     sndrs = learning_graph[rcvr]
                     for sndr in sndrs:
                         edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
-                        G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
+                        G.edge(get_name(sndr), get_name(rcvr), color=learning_color, label = edge_label)
                 else:
-                    # FIX THIS TO INCLUDE Projections FROM ProcessingMechanisms TO LearningMechanisms
                     # Implement edges for Projections to each LearningMechanism from other LearningMechanisms
-                    # Show Projections to LearningComponents
+                    # and from ProcessingMechanisms if 'ALL' is set
                     for input_state in rcvr.input_states:
                         for proj in input_state.path_afferents:
                             sndr = proj.sender.owner
-                            G.node(rcvr.name, color=learning_color)
-                            # If Projection is not from another learning component,
-                            #    don't color and only show if ALL is set
+                            G.node(get_name(rcvr), color=learning_color)
+                            # If Projection is not from another learning component
+                            #    only show if ALL is set, and don't color
                             if (isinstance(sndr, LearningMechanism) or
                                 (isinstance(sndr, ObjectiveMechanism) and sndr._role is LEARNING)):
-                                G.node(sndr.name, color=learning_color)
+                                G.node(get_name(sndr), color=learning_color)
                             else:
                                 if show_learning is True:
                                     continue
-                            G.edge(sndr.name, rcvr.name, color=learning_color, label=proj.name)
+                            G.edge(get_name(sndr), get_name(rcvr), color=learning_color, label=proj.name)
 
                             # Get Projections to ComparatorMechanism as well
                             if isinstance(sndr, ObjectiveMechanism) and sndr._role is LEARNING and show_learning is ALL:
                                 for input_state in sndr.input_states:
                                     for proj in input_state.path_afferents:
-                                        # Skip any Projections from ProcesInputStates
-                                        if isinstance(proj.sender.owner, Process):
+                                        # Skip any Projections from ProcesInputStates or SystemInputStates
+                                        if isinstance(proj.sender.owner, (Process, System)):
                                             continue
                                         output_mech = proj.sender.owner
-                                        G.edge(output_mech.name, sndr.name, color=learning_color, label=proj.name)
-
-
+                                        G.edge(get_name(output_mech), get_name(sndr), color=learning_color,
+                                               label=proj.name)
 
 
         # add control graph if show_control

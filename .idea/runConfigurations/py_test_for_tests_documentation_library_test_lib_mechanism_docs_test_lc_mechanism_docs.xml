@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" factoryName="py.test" name="py.test for tests.documentation.library.test_lib_mechanism_docs.test_lc_mechanism_docs" nameIsGenerated="true" singleton="true" type="tests">
+  <configuration default="false" name="py.test for tests.documentation.library.test_lib_mechanism_docs.test_lc_mechanism_docs" type="tests" factoryName="py.test" singleton="true" nameIsGenerated="true">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs />
@@ -8,7 +8,7 @@
     <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <module name="" />
+    <module name="PsyNeuLink" />
     <option name="_new_keywords" value="&quot;&quot;" />
     <option name="_new_additionalArguments" value="&quot;&quot;" />
     <option name="_new_target" value="&quot;tests.documentation.library.test_lib_mechanism_docs.test_lc_mechanism_docs&quot;" />

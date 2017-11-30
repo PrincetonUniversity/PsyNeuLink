@@ -104,7 +104,7 @@ mySystem = pnl.System(
 )
 
 mySystem.reportOutputPref = True
-mySystem.show_graph(show_learning=pnl.ALL)
+mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=True)
 # mySystem.show_graph()
 
 stim_list = {Input_Layer: [[-1, 30]]}
