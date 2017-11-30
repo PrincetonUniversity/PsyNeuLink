@@ -1341,15 +1341,15 @@ def _parse_connection_specs(connectee_state_type,
             # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ProjectionTuple THAT HAS BOTH SENDER AND RECEIVER
 
             # FIX: 11/28/17 - HACKS TO HANDLE PROJECTION FROM GatingSignal TO InputState or OutputState
+            # FIX:            AND PROJECTION FROM ControlSignal to ParameterState
             # # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
             # # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
             # if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
             #     connection = connection.outputStateType
-            # elif
-            if ((isinstance(connectee_state_type, (InputState, OutputState))
-                 or isinstance(connectee_state_type, type) and issubclass(connectee_state_type, (InputState,
-                                                                                                 OutputState)))
-                and _is_gating_spec(connection)):
+            if ((isinstance(connectee_state_type, (InputState, OutputState, ParameterState))
+                 or isinstance(connectee_state_type, type)
+                and issubclass(connectee_state_type, (InputState, OutputState, ParameterState)))
+                and _is_modulatory_spec(connection)):
                 # MODIFIED 11/29/17 NEW:
                 # Convert AdaptiveMechanism specs to corresponding ModulatorySignal spec
                 if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
@@ -1359,17 +1359,6 @@ def _parse_connection_specs(connectee_state_type,
                 # MODIFIED 11/29/17 END
 
                 projection_spec = connection
-
-            # MODIFIED 11/29/17 NEW:
-            elif (isinstance(connectee_state_type, ParameterState)
-                  or (isinstance(connectee_state_type, type) and issubclass(connectee_state_type, ParameterState))
-                and _is_control_spec(connection)):
-                if isinstance(connection, type) and issubclass(connection, ControlMechanism):
-                    connection = connection.outputStateType
-                elif isinstance(connection, AdaptiveMechanism_Base):
-                    connection = connection.output_state
-                projection_spec = connection
-            # MODIFIED 11/29/17 END
 
             else:
                 projection_spec = connectee_state_type
