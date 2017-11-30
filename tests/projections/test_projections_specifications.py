@@ -158,7 +158,7 @@ class TestProjectionSpecificationFormats:
             pnl.ControlSignal(),
             pnl.ControlProjection,
             # pnl.ControlProjection(),
-            # pnl.ControlMechanism,
+            pnl.ControlMechanism,
             # pnl.ControlMechanism(),
             (0.3, pnl.CONTROL),
             (0.3, pnl.CONTROL_SIGNAL),
@@ -167,7 +167,7 @@ class TestProjectionSpecificationFormats:
             (0.3, pnl.ControlSignal()),
             (0.3, pnl.ControlProjection),
             # (0.3, pnl.ControlProjection()),
-            # (0.3, pnl.ControlMechanism),
+            (0.3, pnl.ControlMechanism),
             # (0.3, pnl.ControlMechanism()
         ]
         for i, ctl_tuple in enumerate([j for j in zip(control_spec_list, reversed(control_spec_list))]):

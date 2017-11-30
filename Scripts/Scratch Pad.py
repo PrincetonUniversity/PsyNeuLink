@@ -786,6 +786,8 @@ print ("TEST MODULATORY SPECS")
 
 # ----------------------------------------------------
 
+C = pnl.ControlMechanism()
+
 m = pnl.RecurrentTransferMechanism(
     noise=
     # pnl.CONTROL,
@@ -795,8 +797,11 @@ m = pnl.RecurrentTransferMechanism(
     # pnl.ControlSignal(),
     # pnl.ControlProjection,
     # pnl.ControlProjection(),
-    pnl.ControlMechanism,  # FIX
+    # pnl.ControlMechanism,
+
     # pnl.ControlMechanism(), # FIX:
+    C
+
     # (0.3, pnl.CONTROL),
     # (0.3, pnl.CONTROL_SIGNAL),
     # (0.3, pnl.CONTROL_PROJECTION),
@@ -804,28 +809,29 @@ m = pnl.RecurrentTransferMechanism(
     # (0.3, pnl.ControlSignal()),
     # (0.3, pnl.ControlProjection),
     # (0.3, pnl.ControlProjection()),
-    # (0.3, pnl.ControlMechanism),  # FIX
+    # (0.3, pnl.ControlMechanism),
     # (0.3, pnl.ControlMechanism()), # FIX
-    function=pnl.Logistic(gain=
-                          # pnl.CONTROL,
-                          # pnl.CONTROL_SIGNAL,
-                          # pnl.CONTROL_PROJECTION,
-                          # pnl.ControlSignal,
-                          # pnl.ControlSignal(),
-                          # pnl.ControlProjection,
-                          pnl.ControlProjection(),
-                          # pnl.ControlMechanism,  # FIX
-                          # pnl.ControlMechanism(),  # FIX
-                          # (0.3, pnl.CONTROL),
-                          # (0.3, pnl.CONTROL_SIGNAL),
-                          # (0.3, pnl.CONTROL_PROJECTION),
-                          # (0.3, pnl.ControlSignal),
-                          # (0.3, pnl.ControlSignal()),
-                          # (0.3, pnl.ControlProjection),
-                          # (0.3, pnl.ControlProjection()),
-                          # (0.3, pnl.ControlMechanism),  # FIX
-                          # (0.3, pnl.ControlMechanism())  # FIX
-                                   ))
+    # function=pnl.Logistic(gain=
+    #                       # pnl.CONTROL,
+    #                       # pnl.CONTROL_SIGNAL,
+    #                       # pnl.CONTROL_PROJECTION,
+    #                       # pnl.ControlSignal,
+    #                       # pnl.ControlSignal(),
+    #                       # pnl.ControlProjection,
+    #                       # pnl.ControlProjection(),
+    #                       # pnl.ControlMechanism,
+    #                       # # pnl.ControlMechanism(),  # FIX
+    #                       # (0.3, pnl.CONTROL),
+    #                       # (0.3, pnl.CONTROL_SIGNAL),
+    #                       # (0.3, pnl.CONTROL_PROJECTION),
+    #                       # (0.3, pnl.ControlSignal),
+    #                       # (0.3, pnl.ControlSignal()),
+    #                       # (0.3, pnl.ControlProjection),
+    #                       (0.3, pnl.ControlProjection()),
+    #                       # (0.3, pnl.ControlMechanism),
+    #                       # (0.3, pnl.ControlMechanism())  # FIX
+    #                                )
+)
 
 assert m.parameter_states[pnl.NOISE].mod_afferents[0].name in \
        'ControlProjection for RecurrentTransferMechanism-0[noise]'
