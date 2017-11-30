@@ -14,17 +14,10 @@
 #### Format:
 - class names:
     fully capitalized camelCase [ClassName]
-DEPRECATED:
-    - externally available attributes that do not correspond to an argument of a constructor:
-        camelCase without initial capitalization [externalAttribute]
-    all attributes should now use underscore format: [all_attributes]
-- arguments of constructors and methods, and any attributes corresponding to them (must be same name):
-    lowercase and underscore separator(s) [constructor_arg, method_arg, object_attribute]
-- externally available methods and functions:
-    lowercase and underscore separator(s) (enforced by PEP8) [external_method, any_function]
-- internal attributes, methods and functions:
-    initial undercore, lowercase, and underscore separatos(s) [_internal_method, _internal_attribute]
-- externally accessible keywords:
+- classAttributes: camelCase without initial capitalization
+- arguments_of_constructors, instance_attributes and instance_methods:
+      lowercase and underscore separator(s) [constructor_arg, method_arg, object_attribute]
+- keywords:
     all capitals and underscore separator(s) [KEY_WORD]
 DEPRECATED:
     - internal keywords:

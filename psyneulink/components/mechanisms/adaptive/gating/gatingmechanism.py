@@ -350,10 +350,10 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
     initMethod = INIT__EXECUTE__METHOD_ONLY
 
-    output_state_type = GatingSignal
+    outputStateType = GatingSignal
 
-    state_list_attr = Mechanism_Base.state_list_attr.copy()
-    state_list_attr.update({GatingSignal:GATING_SIGNALS})
+    stateListAttr = Mechanism_Base.stateListAttr.copy()
+    stateListAttr.update({GatingSignal:GATING_SIGNALS})
 
 
     classPreferenceLevel = PreferenceLevel.TYPE

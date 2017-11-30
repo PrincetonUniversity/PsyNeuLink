@@ -390,7 +390,6 @@ from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.components.states.state import StateError
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
-from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
 from psyneulink.globals.keywords import \
     NAME, PARAMS, CONTEXT, PATHWAY, \
     MECHANISM, INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, PARAMETER_STATE_PARAMS, \
@@ -1126,7 +1125,7 @@ def _parse_projection_spec(projection_spec,
     # Mechanism object or class
     elif (isinstance(projection_spec, Mechanism)
           or (isinstance(projection_spec, type) and issubclass(projection_spec, Mechanism))):
-        proj_spec_dict[PROJECTION_TYPE] = projection_spec.output_state_type.paramClassDefaults[PROJECTION_TYPE]
+        proj_spec_dict[PROJECTION_TYPE] = projection_spec.outputStateType.paramClassDefaults[PROJECTION_TYPE]
     # MODIFIED 11/29/17 END
 
     # Dict
@@ -1292,7 +1291,11 @@ def _parse_connection_specs(connectee_state_type,
     from psyneulink.components.states.state import StateRegistry
     from psyneulink.components.states.inputstate import InputState
     from psyneulink.components.states.outputstate import OutputState
+    from psyneulink.components.states.parameterstate import ParameterState
     from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+    from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, _is_control_spec
+    from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
+
 
     if not inspect.isclass(connectee_state_type):
         raise ProjectionError("Called for {} with \'connectee_state_type\' arg ({}) that is not a class".
@@ -1338,29 +1341,24 @@ def _parse_connection_specs(connectee_state_type,
             # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ProjectionTuple THAT HAS BOTH SENDER AND RECEIVER
 
             # FIX: 11/28/17 - HACKS TO HANDLE PROJECTION FROM GatingSignal TO InputState or OutputState
+            # FIX:            AND PROJECTION FROM ControlSignal to ParameterState
             # # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
             # # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
             # if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
-            #     connection = connection.output_state_type
-            # elif
-            if ((isinstance(connectee_state_type, (InputState, OutputState))
-                 or isinstance(connectee_state_type, type) and issubclass(connectee_state_type, (InputState,
-                                                                                                 OutputState)))
-                and _is_gating_spec(connection)):
+            #     connection = connection.outputStateType
+            if ((isinstance(connectee_state_type, (InputState, OutputState, ParameterState))
+                 or isinstance(connectee_state_type, type)
+                and issubclass(connectee_state_type, (InputState, OutputState, ParameterState)))
+                and _is_modulatory_spec(connection)):
                 # MODIFIED 11/29/17 NEW:
                 # Convert AdaptiveMechanism specs to corresponding ModulatorySignal spec
                 if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
-                    connection = connection.output_state_type
+                    connection = connection.outputStateType
                 elif isinstance(connection, AdaptiveMechanism_Base):
                     connection = connection.output_state
                 # MODIFIED 11/29/17 END
 
                 projection_spec = connection
-
-            elif (isinstance(connectee_state_type, ParameterState)
-                  and isinstance(connection, type) and issubclass(connection, ControlMechanism):
-
-
 
             else:
                 projection_spec = connectee_state_type
@@ -1650,7 +1648,6 @@ def _parse_connection_specs(connectee_state_type,
                 # FIX: 11/29/17  GENERALIZE TO _is_modulatory_spec??
                 elif _is_gating_spec(first_item):
                     projection_spec = first_item
-                from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
                 projection_spec = _parse_projection_spec(projection_spec,
                                                          owner=owner,
                                                          state_type=connectee_state_type)
