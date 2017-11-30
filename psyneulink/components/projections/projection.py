@@ -1356,6 +1356,12 @@ def _parse_connection_specs(connectee_state_type,
                 # MODIFIED 11/29/17 END
 
                 projection_spec = connection
+
+            elif (isinstance(connectee_state_type, ParameterState)
+                  and isinstance(connection, type) and issubclass(connection, ControlMechanism):
+
+
+
             else:
                 projection_spec = connectee_state_type
             # MODIFIED 11/28/17 END:
