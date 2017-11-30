@@ -718,86 +718,9 @@ class ScratchPadError(Exception):
 
 
 # region TEST MODULATORY SPECS
-print ("TEST MODULATORY SPECS")
-
-# # ADD TO TEST:
-# my_mechanism = pnl.RecurrentTransferMechanism(size=5,
-#                               # noise=pnl.CONTROL,
-#                               # noise=pnl.CONTROL_SIGNAL,
-#                               # noise=pnl.ControlSignal,
-#                               # noise=pnl.ControlSignal(),
-#                               # noise=(1, pnl.CONTROL),
-#                               # noise=(1, pnl.CONTROL_SIGNAL),
-#                               # noise=(1, pnl.ControlSignal),
-#                               # noise=(1, pnl.ControlSignal()),
-#                               # noise=(1, pnl.ControlProjection),
-#                               noise=(0.3, pnl.ControlProjection()),
-#                               # noise=(1, pnl.ControlMechanism),  # <- FIX: DOESN'T WORK
-#                               # noise=(1, pnl.ControlMechanism()),  # <- FIX: DOESN'T WORK
-#                               function=pnl.Logistic(
-#                                       # gain=pnl.CONTROL,
-#                                       # gain=pnl.CONTROL_SIGNAL,
-#                                       # gain=pnl.ControlSignal,
-#                                       # gain=pnl.ControlSignal(),
-#                                       # gain=(0.5, pnl.CONTROL),
-#                                       # gain=(0.5, pnl.CONTROL_SIGNAL),
-#                                       # gain=(0.5, pnl.ControlSignal),
-#                                       # gain=(0.5, pnl.ControlSignal()),
-#                                       # gain=(0.5, pnl.ControlProjection),
-#                                       gain=(0.5, pnl.ControlProjection()),
-#                                       # gain=(0.5, pnl.ControlMechanism),  # <- FIX: DOESN'T WORK
-#                                       # gain=(0.5, pnl.ControlMechanism()),  # <- FIX: DOESN'T WORK
-#                                       bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE)))
-#                                               )
-# print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.NOISE].mod_afferents)
-# print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.GAIN].mod_afferents)
-# print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.BIAS].mod_afferents)
-
-# def test_formats_for_control_specification(self):
-
-
-control_spec_list = [
-    pnl.CONTROL,
-    pnl.CONTROL_SIGNAL,
-    pnl.CONTROL_PROJECTION,
-    pnl.ControlSignal,
-    pnl.ControlSignal(),
-    pnl.ControlProjection,
-    "CP_OBJECT",
-    pnl.ControlMechanism,
-    pnl.ControlMechanism(),
-    (0.3, pnl.CONTROL),
-    (0.3, pnl.CONTROL_SIGNAL),
-    (0.3, pnl.CONTROL_PROJECTION),
-    (0.3, pnl.ControlSignal),
-    (0.3, pnl.ControlSignal()),
-    (0.3, pnl.ControlProjection),
-    (0.3, "CP_OBJECT"),
-    (0.3, pnl.ControlMechanism),
-    (0.3, pnl.ControlMechanism())
-]
-for i, ctl_tuple in enumerate([j for j in zip(control_spec_list, reversed(control_spec_list))]):
-    # This shenanigans is to avoid assigning the same instantiated ControlProjection more than once
-    C1, C2 = ctl_tuple
-    if C1 is 'CP_OBJECT':
-        C1 = pnl.ControlProjection()
-    elif isinstance(C1, tuple) and C1[1] is 'CP_OBJECT':
-        C1 = (C1[0], pnl.ControlProjection())
-    if C2 is 'CP_OBJECT':
-        C2 = pnl.ControlProjection()
-    elif isinstance(C2, tuple) and C2[1] is 'CP_OBJECT':
-        C2 = (C2[0], pnl.ControlProjection())
-    R = pnl.RecurrentTransferMechanism(noise=C1,
-                                       function=pnl.Logistic(gain=C2))
-    assert R.parameter_states[pnl.NOISE].mod_afferents[0].name in \
-           'ControlProjection for RecurrentTransferMechanism-{}[noise]'.format(i)
-    assert R.parameter_states[pnl.GAIN].mod_afferents[0].name in \
-           'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)
-
-
-# ----------------------------------------------------
-
-
+# print ("TEST MODULATORY SPECS")
+#
+#
 # m = pnl.RecurrentTransferMechanism(
 #     noise=
 #     # pnl.CONTROL,
@@ -886,9 +809,9 @@ for i, ctl_tuple in enumerate([j for j in zip(control_spec_list, reversed(contro
 #                        output_states=[{pnl.MECHANISM:R2,
 #                                        pnl.INPUT_STATES: ['INPUT_1', 'INPUT_2']}])
 
-
-
 #endregion
+
+
 #region TEST DOCUMENTATION
 # print ("TEST DOCUMENTATION")
 
@@ -900,9 +823,6 @@ for i, ctl_tuple in enumerate([j for j in zip(control_spec_list, reversed(contro
 #                                                             noise=1.5,
 #                                                             t0 = 2.0),
 #                                 name='my_DDM_NavarroAndFuss')
-
-
-
 
 #endregion
 
