@@ -3284,7 +3284,7 @@ class System(System_Base):
             rcvr_name = rcvr.name
             # rcvr_shape = rcvr.instance_defaults.variable.shape[1]
             rcvr_label = rcvr_name
-
+            G.node(rcvr_label, shape="oval")
 
             # loop through senders
             sndrs = system_graph[rcvr]
