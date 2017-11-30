@@ -143,7 +143,7 @@ Examples for each, that illustrate all of their parameters, are shown below:
     ...         t0=2.0
     ...     ),
     ...     name='my_DDM_NavarroAndFuss'
-    ... )
+    ... )                                   #doctest: +SKIP
 
 .. _DDM_Integration_Mode:
 
