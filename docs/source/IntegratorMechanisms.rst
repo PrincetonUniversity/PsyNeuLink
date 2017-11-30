@@ -1,7 +1,7 @@
 IntegratorMechanisms
 ====================
 
-**Base class**:
+**Core class**:
 
 * `IntegratorMechanism`
 

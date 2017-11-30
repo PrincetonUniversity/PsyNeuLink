@@ -1765,7 +1765,6 @@ class Component(object):
             #    so that latter are evaluated in context of former
             for param_name, param_value in sorted(default_set.items()):
 
-                # MODIFIED 11/30/16 NEW:
                 # FUNCTION class has changed, so replace rather than update FUNCTION_PARAMS
                 if param_name is FUNCTION:
                     try:
@@ -1778,27 +1777,22 @@ class Component(object):
                     except UnboundLocalError:
                         pass
                 # FIX: MAY NEED TO ALSO ALLOW assign_default_FUNCTION_PARAMS FOR COMMAND_LINE IN CONTEXT
-                # MODIFIED 11/30/16 END
 
                 if param_name is FUNCTION_PARAMS and not self.assign_default_FUNCTION_PARAMS:
                     continue
 
-                # MODIFIED 11/29/16 NEW:
                 # Don't replace requested entry with default
                 if param_name in request_set:
                     continue
-                # MODIFIED 11/29/16 END
 
                 # Add to request_set any entries it is missing fron the default_set
                 request_set.setdefault(param_name, param_value)
                 # Update any values in a dict
                 if isinstance(param_value, dict):
                     for dict_entry_name, dict_entry_value in param_value.items():
-                        # MODIFIED 11/29/16 NEW:
                         # Don't replace requested entries
                         if dict_entry_name in request_set[param_name]:
                             continue
-                        # MODIFIED 11/29/16 END
                         request_set[param_name].setdefault(dict_entry_name, dict_entry_value)
 
         # VALIDATE PARAMS
@@ -1813,11 +1807,6 @@ class Component(object):
             #                       any override of _validate_params, which (should not, but) may process params
             #                       before calling super()._validate_params
             for param_name, param_value in request_set.items():
-                # # MODIFIED 11/25/17 OLD:
-                # if isinstance(param_value, tuple):
-                #     param_value = self._get_param_value_from_tuple(param_value)
-                #     request_set[param_name] = param_value
-                # MODIFIED 11/25/17 NEW:
                 if isinstance(param_value, tuple):
                     param_value = self._get_param_value_from_tuple(param_value)
                 elif isinstance(param_value, (str, Component, type)):
@@ -1826,13 +1815,13 @@ class Component(object):
                 else:
                     continue
                 request_set[param_name] = param_value
-                # MODIFIED 11/25/17 END:
 
             try:
                 self._validate_params(variable=variable,
                                       request_set=request_set,
                                       target_set=target_set,
                                       context=context)
+            # variable not implemented by Mechanism subclass, so validate without it
             except TypeError:
                 self._validate_params(request_set=request_set,
                                       target_set=target_set,
@@ -1886,11 +1875,7 @@ class Component(object):
 
         self._instantiate_defaults(request_set=request_set,
                                    target_set=validated_set,
-                                   # # MODIFIED 4/14/17 OLD:
-                                   # assign_missing=False,
-                                   # MODIFIED 4/14/17 NEW:
-                                   assign_missing=False,
-                                   # MODIFIED 4/14/17 END
+                                    assign_missing=False,
                                    context=context)
 
         self.paramInstanceDefaults.update(validated_set)
@@ -2085,7 +2070,6 @@ class Component(object):
                 raise ComponentError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
 
             # The value of the param is None in paramClassDefaults: suppress type checking
-            # DOCUMENT:
             # IMPLEMENTATION NOTE: this can be used for params with multiple possible types,
             #                      until type lists are implemented (see below)
             if self.paramClassDefaults[param_name] is None or self.paramClassDefaults[param_name] is NotImplemented:
@@ -2099,18 +2083,14 @@ class Component(object):
             # If the value in paramClassDefault is a type, check if param value is an instance of it
             if inspect.isclass(self.paramClassDefaults[param_name]):
                 if isinstance(param_value, self.paramClassDefaults[param_name]):
-                    # MODIFIED 2/14/17 NEW:
                     target_set[param_name] = param_value
-                    # MODIFIED 2/14/17 END
                     continue
                 # If the value is a Function class, allow any instance of Function class
                 from psyneulink.components.functions.function import Function_Base
                 if issubclass(self.paramClassDefaults[param_name], Function_Base):
                     # if isinstance(param_value, (function_type, Function_Base)):  <- would allow function of any kind
                     if isinstance(param_value, Function_Base):
-                        # MODIFIED 2/14/17 NEW:
                         target_set[param_name] = param_value
-                        # MODIFIED 2/14/17 END
                         continue
 
             # If the value in paramClassDefault is an object, check if param value is the corresponding class
@@ -2246,7 +2226,6 @@ class Component(object):
                 raise ComponentError("Value of {} param for {} ({}) is not compatible with {}".
                                     format(param_name, self.name, param_value, type_name))
 
-    # MODIFIED 11/25/17 NEW:
     def _get_param_value_for_modulatory_spec(self, param_name, param_value):
         from psyneulink.globals.keywords import MODULATORY_SPEC_KEYWORDS
         if isinstance(param_value, str):
@@ -2271,8 +2250,6 @@ class Component(object):
         except:
             raise ComponentError("PROGRAM ERROR: Could not get default value for {} of {} (to replace spec as {})".
                                  format(param_name, self.name, param_value))
-
-    # MODIFIED 11/25/17 END:
 
     def _get_param_value_from_tuple(self, param_spec):
         """Returns param value (first item) of a (value, projection) tuple;

@@ -456,6 +456,7 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import Objec
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.projection import _add_projection_to, _is_projection_spec
+from psyneulink.components.projections.projection import Projection_Base
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, System_Base
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.parameterstate import ParameterState
@@ -1028,10 +1029,12 @@ class Process(Process_Base):
         self._instantiate__deferred_inits(context=context)
 
         if self.learning:
-            self._check_for_target_mechanisms()
-            if self._target_mechs:
-                self._instantiate_target_input(context=context)
-            self._learning_enabled = True
+            if self._check_for_target_mechanisms():
+                if self._target_mechs:
+                    self._instantiate_target_input(context=context)
+                self._learning_enabled = True
+            else:
+                self._learning_enabled = False
         else:
             self._learning_enabled = False
 
@@ -1128,7 +1131,7 @@ class Process(Process_Base):
             # Can't be first entry, and can never have two in a row
 
             # Config entry is a Projection
-            if _is_projection_spec(item):
+            if _is_projection_spec(item, proj_type=Projection):
                 # Projection not allowed as first entry
                 if i==0:
                     raise ProcessError("Projection cannot be first entry in pathway ({0})".format(self.name))
@@ -1933,6 +1936,8 @@ class Process(Process_Base):
          Identify TARGET Mechanisms and assign to self.target_mechanisms,
              assign self to each TARGET Mechanism
              and report assignment if verbose
+
+         Returns True of TARGET Mechanisms are found and/or assigned, else False
         """
 
         from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -1969,8 +1974,18 @@ class Process(Process_Base):
                             if (isinstance(object_item, ObjectiveMechanism) and
                                 object_item._learning_role is TARGET))
 
-        if not target_mechs:
+        if target_mechs:
 
+            # self.target_mechanisms = target_mechs
+            self._target_mechs = target_mechs
+            if self.prefs.verbosePref:
+                print("\'{}\' assigned as TARGET Mechanism(s) for \'{}\'".
+                      format([mech.name for mech in self._target_mechs], self.name))
+            return True
+
+
+        # No target_mechs already specified, so get from learning_mechanism
+        elif self._learning_mechs:
             last_learning_mech  = self._learning_mechs[0]
 
             # Trace projections to first learning ObjectiveMechanism, which is for the last mechanism in the process,
@@ -2004,13 +2019,10 @@ class Process(Process_Base):
 
                 raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
                                    "but no TARGET ObjectiveMechanism".format(self.name, self.learning))
+            return True
 
         else:
-            # self.target_mechanisms = target_mechs
-            self._target_mechs = target_mechs
-            if self.prefs.verbosePref:
-                print("\'{}\' assigned as TARGET Mechanism(s) for \'{}\'".
-                      format([mech.name for mech in self._target_mechs], self.name))
+            return False
 
     def _instantiate_target_input(self, context=None):
 

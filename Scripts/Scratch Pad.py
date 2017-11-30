@@ -716,122 +716,102 @@ class ScratchPadError(Exception):
 
 #endregion
 
-
-#region TEST MODULATORY SPECS
+# region TEST MODULATORY SPECS
 # print ("TEST MODULATORY SPECS")
 #
-# # # ADD TO TEST:
-# # import psyneulink as pnl
-# # my_mechanism = pnl.RecurrentTransferMechanism(size=5,
-# #                               # noise=pnl.CONTROL,
-# #                               # noise=pnl.CONTROL_SIGNAL,
-# #                               # noise=pnl.ControlSignal,
-# #                               # noise=pnl.ControlSignal(),
-# #                               # noise=(1, pnl.CONTROL),
-# #                               # noise=(1, pnl.CONTROL_SIGNAL),
-# #                               # noise=(1, pnl.ControlSignal),
-# #                               # noise=(1, pnl.ControlSignal()),
-# #                               # noise=(1, pnl.ControlProjection),
-# #                               noise=(0.3, pnl.ControlProjection()),
-# #                               # noise=(1, pnl.ControlMechanism),  # <- FIX: DOESN'T WORK
-# #                               # noise=(1, pnl.ControlMechanism()),  # <- FIX: DOESN'T WORK
-# #                               function=pnl.Logistic(
-# #                                       # gain=pnl.CONTROL,
-# #                                       # gain=pnl.CONTROL_SIGNAL,
-# #                                       # gain=pnl.ControlSignal,
-# #                                       # gain=pnl.ControlSignal(),
-# #                                       # gain=(0.5, pnl.CONTROL),
-# #                                       # gain=(0.5, pnl.CONTROL_SIGNAL),
-# #                                       # gain=(0.5, pnl.ControlSignal),
-# #                                       # gain=(0.5, pnl.ControlSignal()),
-# #                                       # gain=(0.5, pnl.ControlProjection),
-# #                                       gain=(0.5, pnl.ControlProjection()),
-# #                                       # gain=(0.5, pnl.ControlMechanism),  # <- FIX: DOESN'T WORK
-# #                                       # gain=(0.5, pnl.ControlMechanism()),  # <- FIX: DOESN'T WORK
-# #                                       bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE)))
-# #                                               )
-# # print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.NOISE].mod_afferents)
-# # print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.GAIN].mod_afferents)
-# # # print ('MOD_AFFERENTS: ', my_mechanism.parameter_states[pnl.BIAS].mod_afferents)
 #
-# import psyneulink as pnl
+# m = pnl.RecurrentTransferMechanism(
+#     noise=
+#     # pnl.CONTROL,
+#     # pnl.CONTROL_SIGNAL,
+#     # pnl.CONTROL_PROJECTION,
+#     # pnl.ControlSignal,
+#     # pnl.ControlSignal(),
+#     # pnl.ControlProjection,
+#     # pnl.ControlProjection(),
+#     # pnl.ControlMechanism,
 #
-# # control_spec_list = [
-# #     pnl.CONTROL,
-# #     pnl.CONTROL_SIGNAL,
-# #     pnl.ControlSignal,
-# #     pnl.ControlSignal(),
-# #     (0.3, pnl.CONTROL),
-# #     (0.3, pnl.CONTROL_SIGNAL),
-# #     (0.3, pnl.ControlSignal),
-# #     (0.3, pnl.ControlSignal()),
-# #     (0.3, pnl.ControlProjection),
-# #     (0.3, pnl.ControlProjection())
-# # ]
+#     pnl.ControlMechanism(), # FIX:
 #
-#
-# # for i, ctl_tuple in enumerate([i for i in zip(control_spec_list, reversed(control_spec_list))]):
-# #     c1, c2 = ctl_tuple
-# #     m = pnl.RecurrentTransferMechanism(noise=c1,
-# #                                        function=pnl.Logistic(gain=c2))
-# #     assert m.parameter_states[pnl.NOISE].mod_afferents[0].name in \
-# #            'ControlProjection for RecurrentTransferMechanism-{}[noise]'.format(i)
-# #     assert m.parameter_states[pnl.GAIN].mod_afferents[0].name in \
-# #            'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)
-#
-# # for c1, c2 in ctl_signals:
-# #     print("-------\n{}\n{}".format(c1, c2))
-# # print("--------------\n--------------")
-#
-# # for c1, c2 in ctl_signals:
-# #     m = pnl.RecurrentTransferMechanism(noise=c1,
-# #                                        function=pnl.Logistic(gain=c2))
-# #     print('-------------\nSIGNAL: {}\nMOD_AFFERENTS: {}\nSIGNAL: {}\nMOD_AFFERENTS: {}'
-# #           .format(c2, m.parameter_states[pnl.NOISE].mod_afferents,
-# #                   c1, m.parameter_states[pnl.GAIN].mod_afferents))
-#
-#
-# gating_spec_list = [
-#     pnl.GATING,
-#     pnl.GATING_SIGNAL,
-#     pnl.GatingSignal,
-#     pnl.GatingSignal(),
-#     (0.3, pnl.GATING),
-#     (0.3, pnl.GATING_SIGNAL),
-#     (0.3, pnl.GatingSignal),
-#     (0.3, pnl.GatingSignal()),
-#     (0.3, pnl.GatingProjection),
-#     (0.3, pnl.GatingProjection())
-# ]
-#
+#     # (0.3, pnl.CONTROL),
+#     # (0.3, pnl.CONTROL_SIGNAL),
+#     # (0.3, pnl.CONTROL_PROJECTION),
+#     # (0.3, pnl.ControlSignal),
+#     # (0.3, pnl.ControlSignal()),
+#     # (0.3, pnl.ControlProjection),
+#     # (0.3, pnl.ControlProjection()),
+#     # (0.3, pnl.ControlMechanism),
+#     # (0.3, pnl.ControlMechanism()), # FIX
+#     function=pnl.Logistic(gain=
+#                           # pnl.CONTROL,
+#                           # pnl.CONTROL_SIGNAL,
+#                           # pnl.CONTROL_PROJECTION,
+#                           # pnl.ControlSignal,
+#                           # pnl.ControlSignal(),
+#                           # pnl.ControlProjection,
+#                           # pnl.ControlProjection(),
+#                           # pnl.ControlMechanism,
+#                           # # pnl.ControlMechanism(),  # FIX
+#                           # (0.3, pnl.CONTROL),
+#                           # (0.3, pnl.CONTROL_SIGNAL),
+#                           # (0.3, pnl.CONTROL_PROJECTION),
+#                           # (0.3, pnl.ControlSignal),
+#                           # (0.3, pnl.ControlSignal()),
+#                           # (0.3, pnl.ControlProjection),
+#                           # (0.3, pnl.ControlProjection()),
+#                           # (0.3, pnl.ControlMechanism),
+#                           (0.3, pnl.ControlMechanism())  # FIX
+#                                    )
+# )
+# assert m.parameter_states[pnl.NOISE].mod_afferents[0].name in \
+#        'ControlProjection for RecurrentTransferMechanism-0[noise]'
+# assert m.parameter_states[pnl.GAIN].mod_afferents[0].name in \
+#        'ControlProjection for RecurrentTransferMechanism-0[gain]'
+
+
+# ----------------------------------------------------
+
+# # T = pnl.TransferMechanism(input_states=[
 # T = pnl.TransferMechanism(output_states=[
-#     # pnl.GATING,  # FIX: DOESN"T WORK FOR OUTPUT_STATES
-#     # pnl.GATING_SIGNAL,  # FIX: DOESN"T WORK FOR OUTPUT_STATES
-#     # pnl.GatingSignal,  # FIX: DOESN"T WORK FOR OUTPUT_STATES
-#     pnl.GatingSignal(),  # <- FIX DOESN"T WORK FOR INPUT_STATES BUT DOES FOR OUTPUT_STATES
-#     # (0.3, pnl.GATING),  # FIX: DOESN"T WORK FOR OUTPUT_STATES
-#     # (0.3, pnl.GATING_SIGNAL),  # FIX: DOESN"T WORK FOR OUTPUT_STATES
-#     # (0.3, pnl.GatingSignal),  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+#     # pnl.GATING,
+#     # pnl.GATING_SIGNAL,
+#     # pnl.GatingSignal,
+#     # pnl.GatingSignal(),
+#     # pnl.GatingProjection,
+#     # pnl.GatingProjection(),
+#     # pnl.GatingMechanism, # FIX OUTPUTSTATES
+#     # pnl.GatingMechanism(), # FIX OUTPUTSTATES
+#     # # (0.3, pnl.GATING),
+#     # (0.3, pnl.GATING_SIGNAL),
+#     # (0.3, pnl.GatingSignal),
 #     # (0.3, pnl.GatingSignal()),
-#     # (0.3, pnl.GatingProjection),  # FIX: DOESN"T WORK FOR OUTPUT_STATES
+#     # (0.3, pnl.GatingProjection),
 #     # (0.3, pnl.GatingProjection())
+#     (0.3, pnl.GatingMechanism), # FIX OUTPUTSTATES
+#     # (0.3, pnl.GatingMechanism()), # FIX OUTPUTSTATES
 # ])
 #
+# # assert T.input_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[InputState-0]'
+# assert T.output_states[0].mod_afferents[0].name in 'GatingProjection for TransferMechanism-0[OutputState-0]'
 #
-# # for i, gating_tuple in enumerate([i for i in zip(gating_spec_list, reversed(gating_spec_list))]):
-# #     G1, G2 = gating_tuple
-# #     T = pnl.TransferMechanism(input_states=[G1],
-# #                               output_states=[G2])
-# #     assert T.input_states[0].mod_afferents[0].name in \
-# #            'GatingProjection for TransferMechanism-0[InputState-{}]'.format(i)
+# print(T.execute())
 # #
-# #     assert T.output_states[0].mod_afferents[0].name in \
-# #            'GatingProjection for TransferMechanism-0[OutputState-{}]'.format(i)
+# # ----------------------------------------------------
 #
 
+
+# R1 = pnl.TransferMechanism(name='R1', output_states=['OUTPUT_1', 'OUTPUT_2'])
+# R2 = pnl.TransferMechanism(name='R2', default_variable=[[0],[0]],
+#                         input_states=['INPUT_1', 'INPUT_2'])
+# T = pnl.TransferMechanism(name = 'T', input_states=[{pnl.MECHANISM: R1,
+#                                       pnl.OUTPUT_STATES: ['OUTPUT_1', 'OUTPUT_2']}],
+#                        output_states=[{pnl.MECHANISM:R2,
+#                                        pnl.INPUT_STATES: ['INPUT_1', 'INPUT_2']}])
+
 #endregion
+
 #region TEST DOCUMENTATION
-print ("TEST DOCUMENTATION")
+# print ("TEST DOCUMENTATION")
 
 # # import matlab.engine
 # # eng1 = matlab.engine.start_matlab('-nojvm')
@@ -841,92 +821,6 @@ print ("TEST DOCUMENTATION")
 #                                                             noise=1.5,
 #                                                             t0 = 2.0),
 #                                 name='my_DDM_NavarroAndFuss')
-
-
-import psyneulink as pnl
-
-A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
-B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
-C = pnl.TransferMechanism(function=pnl.Linear(), name='C')
-
-p = pnl.Process(
-    pathway=[A, B, C],
-    name = 'p'
-)
-s = pnl.System(
-    processes=[p],
-    name='s'
-)
-my_scheduler = pnl.Scheduler(system=s)
-
-# implicit condition of Always for A
-my_scheduler.add_condition(B, pnl.scheduling.condition.EveryNCalls(A, 2))
-my_scheduler.add_condition(C, pnl.scheduling.condition.EveryNCalls(B, 3))
-
-# implicit AllHaveRun Termination condition
-execution_sequence = list(my_scheduler.run())
-execution_sequence
-
-A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
-B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
-
-p = pnl.Process(
-    pathway=[A, B],
-    name = 'p'
-)
-s = pnl.System(
-   processes=[p],
-   name='s'
-)
-my_scheduler = pnl.Scheduler(system=s)
-
-my_scheduler.add_condition(A,
-                           pnl.scheduling.condition.Any(pnl.scheduling.condition.AtPass(0),
-                                                        pnl.scheduling.condition.EveryNCalls(B, 2)))
-my_scheduler.add_condition(B,
-                           pnl.scheduling.condition.Any(pnl.scheduling.condition.EveryNCalls(A, 1),
-                           pnl.scheduling.condition.EveryNCalls(B, 1)))
-
-termination_conds = {ts: None for ts in pnl.TimeScale}
-termination_conds[pnl.TimeScale.TRIAL] = pnl.scheduling.condition.AfterNCalls(B,
-                                                                              4,
-                                                                              time_scale=pnl.TimeScale.TRIAL)
-# CRASHING on line 473 of scheduler (self.termination_conds[ts] is None)
-execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
-
-A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
-B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
-C = pnl.TransferMechanism(function=pnl.Linear(), name='C')
-
-p = pnl.Process(
-        pathway=[A, C],
-        name = 'p'
-)
-q = pnl.Process(
-        pathway=[B, C],
-        name = 'q'
-)
-s = pnl.System(
-        processes=[p, q],
-        name='s'
-)
-my_scheduler = pnl.Scheduler(system=s)
-
-my_scheduler.add_condition(A, pnl.scheduling.condition.EveryNPasses(1))
-my_scheduler.add_condition(B, pnl.scheduling.condition.EveryNCalls(A, 2))
-my_scheduler.add_condition(C,
-                           pnl.scheduling.condition.Any(pnl.scheduling.condition.AfterNCalls(A, 3),
-                                                        pnl.scheduling.condition.AfterNCalls(B, 3)))
-
-termination_conds = {ts: None for ts in pnl.TimeScale}
-termination_conds[pnl.TimeScale.TRIAL] = pnl.scheduling.condition.AfterNCalls(C,
-                                                                              4,
-                                                                              time_scale=pnl.TimeScale.TRIAL)
-execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
-
-
-
-
 
 #endregion
 
@@ -984,6 +878,23 @@ execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
 #       call_before_trial=show_trial_header)
 
 #endregion
+
+#region TEST System Graph with AutoAssociativeMechanism
+print("TEST System Graph with AutoAssociativeMechanism")
+
+a = pnl.DDM(name='MY DDM')
+# a = pnl.RecurrentTransferMechanism(name='Autoassociator')
+p = pnl.Process(pathway=[a],
+                learning=pnl.ENABLED
+                )
+s = pnl.System(processes=[p])
+s.show_graph(show_learning=pnl.ALL,
+             show_dimensions=pnl.ALL
+             )
+
+
+#endregion
+
 
 #region TEST INSTANTATION OF Cyclic and Acyclic Systems @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
