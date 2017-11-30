@@ -890,11 +890,12 @@ class DDM(ProcessingMechanism_Base):
 
             elif isinstance(self.function.__self__, NavarroAndFuss):
                 return_value = np.array([[0.0], [0.0], [0.0], [0.0], [0.0], [0.0]])
-                return_value[self.RESPONSE_TIME_INDEX] = result[NF_Results.MEAN_DT.value]
+                return_value[self.RESPONSE_TIME_INDEX] = result[NF_Results.MEAN_RT.value]
                 return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX] = result[NF_Results.MEAN_ER.value]
                 return_value[self.PROBABILITY_UPPER_THRESHOLD_INDEX] = 1 - result[NF_Results.MEAN_ER.value]
-                return_value[self.RT_CORRECT_MEAN_INDEX] = result[NF_Results.MEAN_CORRECT_RT.value]
-                return_value[self.RT_CORRECT_VARIANCE_INDEX]= result[NF_Results.MEAN_CORRECT_VARIANCE.value]
+                # index 1 holds upper/correct (0 holds lower/error)
+                return_value[self.RT_CORRECT_MEAN_INDEX] = result[NF_Results.COND_RTS.value][1]
+                return_value[self.RT_CORRECT_VARIANCE_INDEX] = result[NF_Results.COND_VAR_RTS.value][1]
                 # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
 
             else:

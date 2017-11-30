@@ -7079,14 +7079,13 @@ class BogaczEtAl(
 
 
 # Results from Navarro and Fuss DDM solution (indices for return value tuple)
-class NF_Results(AutoNumber):
-    RESULT = ()
-    MEAN_ER = ()
-    MEAN_DT = ()
-    PLACEMARKER = ()
-    MEAN_CORRECT_RT = ()
-    MEAN_CORRECT_VARIANCE = ()
-    MEAN_CORRECT_SKEW_RT = ()
+class NF_Results(IntEnum):
+    MEAN_ER = 0
+    MEAN_RT = 1
+    MEAN_DT = 2
+    COND_RTS = 3
+    COND_VAR_RTS = 4
+    COND_SKEW_RTS = 5
 
 # ----------------------------------------------------------------------------
 class NavarroAndFuss(IntegratorFunction):
@@ -7286,11 +7285,14 @@ class NavarroAndFuss(IntegratorFunction):
         noise = float(self.noise)
         t0 = float(self.t0)
 
-        # print("\nimporting matlab...")
-        # import matlab.engine
-        # eng1 = matlab.engine.start_matlab('-nojvm')
-        # print("matlab imported\n")
-        results = self.eng1.ddmSim(drift_rate, starting_point, threshold, noise, t0, 1, nargout=5)
+        # used to pass values in a way that the matlab script can handle
+        ddm_struct = {
+            'z': threshold,
+            'c': noise,
+            'T0': t0
+        }
+
+        results = self.eng1.ddmSimFRG(drift_rate, starting_point, ddm_struct, 1, nargout=6)
 
         return results
 
