@@ -1146,7 +1146,7 @@ class State_Base(State):
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
         if context is COMMAND_LINE:
-            state_list = getattr(owner, owner.state_list_attr[self.__class__])
+            state_list = getattr(owner, owner.stateListAttr[self.__class__])
             if state_list and not self in state_list:
                 owner.add_states(self)
 
@@ -2572,7 +2572,7 @@ def _parse_state_spec(state_type=None,
         # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
         # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
         if isinstance(state_specification, type) and issubclass(state_specification, AdaptiveMechanism_Base):
-            state_specification = state_specification.output_state_type
+            state_specification = state_specification.outputStateType
         projection = state_type
 
     # State or Mechanism object specification:
@@ -2992,15 +2992,15 @@ def _get_state_for_socket(owner,
                              format(mech.name, state_spec))
         for attr in mech_state_attribute:
             try:
-                state_list_attribute = getattr(mech, attr)
-                state = state_list_attribute[state_spec]
+                stateListAttribute = getattr(mech, attr)
+                state = stateListAttribute[state_spec]
             except AttributeError:
-                state_list_attribute = None
+                stateListAttribute = None
             except (KeyError, TypeError):
                 state = None
             else:
                 break
-        if state_list_attribute is None:
+        if stateListAttribute is None:
             raise StateError("PROGRAM ERROR: {} attribute(s) not found on {}'s type ({})".
                              format(mech_state_attribute, mech.name, mech.__class__.__name__))
         if state is None:

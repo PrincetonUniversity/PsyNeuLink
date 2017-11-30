@@ -561,7 +561,7 @@ state_type_keywords = state_type_keywords.update({OUTPUT_STATE})
 #     ALL = TIME_STAMP
 #     DEFAULTS = NONE
 
-OUTPUT_STATE_TYPE = 'output_state_type'
+OUTPUT_STATE_TYPE = 'outputStateType'
 
 # Used to specify how StandardOutputStates are indexed
 PRIMARY = 0
@@ -1284,13 +1284,13 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         reference_value = owner_value
 
     if hasattr(owner, OUTPUT_STATE_TYPE):
-        output_state_type = owner.output_state_type
+        outputStateType = owner.outputStateType
     else:
-        output_state_type = OutputState
+        outputStateType = OutputState
 
     state_list = _instantiate_state_list(owner=owner,
                                          state_list=output_states,
-                                         state_type=output_state_type,
+                                         state_type=outputStateType,
                                          state_param_identifier=OUTPUT_STATE,
                                          reference_value=reference_value,
                                          reference_value_name="output",

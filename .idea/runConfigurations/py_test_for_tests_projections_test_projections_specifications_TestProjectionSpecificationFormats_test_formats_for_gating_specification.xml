@@ -8,7 +8,7 @@
     <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <module name="PsyNeuLink (Dropbox)" />
+    <module name="PsyNeuLink" />
     <option name="_new_keywords" value="&quot;&quot;" />
     <option name="_new_additionalArguments" value="&quot;&quot;" />
     <option name="_new_target" value="&quot;tests.projections.test_projections_specifications.TestProjectionSpecificationFormats.test_formats_for_gating_specification&quot;" />

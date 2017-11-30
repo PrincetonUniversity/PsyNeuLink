@@ -1067,7 +1067,7 @@ class Mechanism_Base(Mechanism):
     variableEncodingDim = 2
     valueEncodingDim = 2
 
-    state_list_attr = {InputState:INPUT_STATES,
+    stateListAttr = {InputState:INPUT_STATES,
                        ParameterState:PARAMETER_STATES,
                        OutputState:OUTPUT_STATES}
 
