@@ -1029,19 +1029,12 @@ class Process(Process_Base):
         self._instantiate__deferred_inits(context=context)
 
         if self.learning:
-            # # MODIFIED 11/30/17 OLD:
-            # self._check_for_target_mechanisms()
-            # if self._target_mechs:
-            #     self._instantiate_target_input(context=context)
-            # self._learning_enabled = True
-            # MODIFIED 11/30/17 NEW:
             if self._check_for_target_mechanisms():
                 if self._target_mechs:
                     self._instantiate_target_input(context=context)
                 self._learning_enabled = True
             else:
                 self._learning_enabled = False
-            # MODIFIED 11/30/17 END
         else:
             self._learning_enabled = False
 

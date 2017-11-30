@@ -119,4 +119,3 @@ mySystem.run(
     termination_processing={pnl.TimeScale.TRIAL: pnl.AfterNCalls(Output_Layer, 1)}
 )
 
-mySystem.show_graph(show_learning=pnl.ALL)

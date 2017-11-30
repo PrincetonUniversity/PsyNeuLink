@@ -888,8 +888,8 @@ p = pnl.Process(pathway=[a],
                 learning=pnl.ENABLED
                 )
 s = pnl.System(processes=[p])
-s.show_graph(show_learning=True,
-             show_dimensions=True
+s.show_graph(show_learning=pnl.ALL,
+             show_dimensions=pnl.ALL
              )
 
 
