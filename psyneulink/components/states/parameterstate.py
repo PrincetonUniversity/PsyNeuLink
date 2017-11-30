@@ -1005,7 +1005,9 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
             from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
             if (isinstance(function_param_value, Iterable)
-                and any(isinstance(item, (ModulatorySignal, AdaptiveMechanism_Base)) for item in function_param_value)):
+                and any(isinstance(item, (ModulatorySignal,
+                                          ModulatoryProjection_Base,
+                                          AdaptiveMechanism_Base)) for item in function_param_value)):
                 reference_value = function_param_value
             else:
                 from copy import deepcopy
