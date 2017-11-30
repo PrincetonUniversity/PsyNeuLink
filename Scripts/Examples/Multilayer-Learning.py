@@ -104,7 +104,7 @@ mySystem = pnl.System(
 )
 
 mySystem.reportOutputPref = True
-mySystem.show_graph(show_learning=pnl.ALL)
+mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL)
 # mySystem.show_graph()
 
 stim_list = {Input_Layer: [[-1, 30]]}
@@ -119,4 +119,3 @@ mySystem.run(
     termination_processing={pnl.TimeScale.TRIAL: pnl.AfterNCalls(Output_Layer, 1)}
 )
 
-mySystem.show_graph(show_learning=pnl.ALL)

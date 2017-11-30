@@ -1,7 +1,7 @@
 GatingProjections
 =================
 
-**Base class**:
+**Core class**:
 
 * `GatingProjection`
 

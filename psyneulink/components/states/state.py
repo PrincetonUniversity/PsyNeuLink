@@ -1133,8 +1133,8 @@ class State_Base(State):
                                          prefs=prefs,
                                          context=context.__class__.__name__)
 
+        # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
-        # FIX: 10/3/17 - ??MOVE TO COMPOSITION THAT IS IMPELEMENTED (INSTEAD OF BEING HANDLED BY STATE ITSELF)
         if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
             self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
         else:
@@ -1237,14 +1237,13 @@ class State_Base(State):
             # + FUNCTION_PARAMS:  <dict>, every entry of which must be one of the following:
             #     ParameterState, projection, 2-item tuple or value
         """
-
-        # FIX: 10/3/17 SHOULD ADD CHECK THAT PROJECTION_TYPE IS CONSISTENT WITH TYPE SPECIFIED BY THE
-        # FIX:         RECEIVER/SENDER SOCKET SPECIFICATIONS OF CORRESPONDING PROJECTION TYPES (FOR API)
+        # FIX: PROJECTION_REFACTOR
+        #      SHOULD ADD CHECK THAT PROJECTION_TYPE IS CONSISTENT WITH TYPE SPECIFIED BY THE
+        #      RECEIVER/SENDER SOCKET SPECIFICATIONS OF CORRESPONDING PROJECTION TYPES (FOR API)
 
         if PROJECTIONS in request_set and request_set[PROJECTIONS] is not None:
             # if projection specification is an object or class reference, needs to be wrapped in a list
-            # - to be consistent with paramClassDefaults
-            # - for consistency of treatment below
+            #    to be consistent with paramClassDefaults and for consistency of treatment below
             projections = request_set[PROJECTIONS]
             if not isinstance(projections, list):
                 projections = [projections]
@@ -1331,12 +1330,13 @@ class State_Base(State):
                 )
             )
 
-    # FIX: 10/3/17 - MOVE THESE TO Projection, WITH self (State) AS ADDED ARG
-    # FIX:           BOTH _instantiate_projections_to_state AND _instantiate_projections_to_state
-    # FIX:               CAN USE self AS connectee STATE, since _parse_connection_specs USES SOCKET TO RESOLVE
-    # FIX:           ALTERNATIVE: BREAK STATE FIELD OF ProjectionTuple INTO sender AND receiver FIELDS, THEN COMBINE
-    # FIX:               _instantiate_projections_to_state AND _instantiate_projections_to_state INTO ONE METHOD
-    # FIX:               MAKING CORRESPONDING ASSIGNMENTS TO send AND receiver FIELDS (WOULD BE CLEARER)
+    # FIX: PROJECTION_REFACTOR
+    #      - MOVE THESE TO Projection, WITH self (State) AS ADDED ARG
+    #          BOTH _instantiate_projections_to_state AND _instantiate_projections_from_state
+    #          CAN USE self AS connectee STATE, since _parse_connection_specs USES SOCKET TO RESOLVE
+    #      - ALTERNATIVE: BREAK STATE FIELD OF ProjectionTuple INTO sender AND receiver FIELDS, THEN COMBINE
+    #          _instantiate_projections_to_state AND _instantiate_projections_to_state INTO ONE METHOD
+    #          MAKING CORRESPONDING ASSIGNMENTS TO send AND receiver FIELDS (WOULD BE CLEARER)
 
     def _instantiate_projections(self, projections, context=None):
         """Implement any Projection(s) to/from State specified in PROJECTIONS entry of params arg
@@ -1357,8 +1357,7 @@ class State_Base(State):
                          format(self.__class__.__name__,
                                 self.name))
 
-    # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED??
-    # FIX: 10/3/17 - ADD senders ARG THAT IS THEN PROCESSED BY _parse_connections_specs
+    # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_projections_to_state(self, projections, context=None):
         """Instantiate projections to a State and assign them to self.path_afferents
 
@@ -1403,7 +1402,7 @@ class State_Base(State):
 
         # For Projection in each ProjectionTuple:
         # - instantiate the Projection if necessary, and initialize if possible
-        # - insure its value is compatible with self.value FIX: 10/3/17 ??and variable is compatible with sender's value
+        # - insure its value is compatible with self.value FIX: ??and variable is compatible with sender's value
         # - assign it to self.path_afferents or .mod_afferents
         for connection in projection_tuples:
 
@@ -1614,9 +1613,6 @@ class State_Base(State):
         for connection, receiver in zip(projection_tuples, receiver_list):
 
             # VALIDATE CONNECTION AND RECEIVER SPECS
-
-            # FIX: 10/3/17
-            # FIX: CLEAN UP THE FOLLOWING WITH REGARD TO RECEIVER, CONNECTION, RECEIVER_STATE, CONNECTION_STATE ETC.
 
             # Validate that State to be connected to specified in receiver is same as any one specified in connection
             def _get_receiver_state(spec):
