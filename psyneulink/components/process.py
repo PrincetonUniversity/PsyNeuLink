@@ -1029,10 +1029,19 @@ class Process(Process_Base):
         self._instantiate__deferred_inits(context=context)
 
         if self.learning:
-            self._check_for_target_mechanisms()
-            if self._target_mechs:
-                self._instantiate_target_input(context=context)
-            self._learning_enabled = True
+            # # MODIFIED 11/30/17 OLD:
+            # self._check_for_target_mechanisms()
+            # if self._target_mechs:
+            #     self._instantiate_target_input(context=context)
+            # self._learning_enabled = True
+            # MODIFIED 11/30/17 NEW:
+            if self._check_for_target_mechanisms():
+                if self._target_mechs:
+                    self._instantiate_target_input(context=context)
+                self._learning_enabled = True
+            else:
+                self._learning_enabled = False
+            # MODIFIED 11/30/17 END
         else:
             self._learning_enabled = False
 
@@ -1934,6 +1943,8 @@ class Process(Process_Base):
          Identify TARGET Mechanisms and assign to self.target_mechanisms,
              assign self to each TARGET Mechanism
              and report assignment if verbose
+
+         Returns True of TARGET Mechanisms are found and/or assigned, else False
         """
 
         from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -1970,8 +1981,18 @@ class Process(Process_Base):
                             if (isinstance(object_item, ObjectiveMechanism) and
                                 object_item._learning_role is TARGET))
 
-        if not target_mechs:
+        if target_mechs:
 
+            # self.target_mechanisms = target_mechs
+            self._target_mechs = target_mechs
+            if self.prefs.verbosePref:
+                print("\'{}\' assigned as TARGET Mechanism(s) for \'{}\'".
+                      format([mech.name for mech in self._target_mechs], self.name))
+            return True
+
+
+        # No target_mechs already specified, so get from learning_mechanism
+        elif self._learning_mechs:
             last_learning_mech  = self._learning_mechs[0]
 
             # Trace projections to first learning ObjectiveMechanism, which is for the last mechanism in the process,
@@ -2005,13 +2026,10 @@ class Process(Process_Base):
 
                 raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
                                    "but no TARGET ObjectiveMechanism".format(self.name, self.learning))
+            return True
 
         else:
-            # self.target_mechanisms = target_mechs
-            self._target_mechs = target_mechs
-            if self.prefs.verbosePref:
-                print("\'{}\' assigned as TARGET Mechanism(s) for \'{}\'".
-                      format([mech.name for mech in self._target_mechs], self.name))
+            return False
 
     def _instantiate_target_input(self, context=None):
 

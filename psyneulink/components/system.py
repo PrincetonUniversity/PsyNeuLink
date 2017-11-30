@@ -1052,7 +1052,11 @@ class System(System_Base):
 
             # Assign the Process a reference to this System
             process.systems.append(self)
-            if process.learning:
+            # # MODIFIED 11/30/17 OLD:
+            # if process.learning:
+            # MODIFIED 11/30/17 NEW:
+            if process._learning_enabled:
+            # MODIFIED 11/30/17 END
                 self.learning = True
 
             # Get max of Process phaseSpecs
