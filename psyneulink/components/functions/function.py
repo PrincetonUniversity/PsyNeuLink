@@ -5769,6 +5769,10 @@ class FHNIntegrator(
     time_constant_w : float : default 12.5
         scaling factor on the dv/dt equation
 
+    integration_method: str : default "RK4"
+        selects the numerical integration method. Currently, the choices are: "RK4" (4th Order Runge-Kutta) or "EULER"
+        (Forward Euler)
+
     params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -5985,7 +5989,7 @@ class FHNIntegrator(
                                  target_set=target_set,
                                  context=context)
         if self.integration_method not in {"RK4", "EULER"}:
-            raise FunctionError("Invalid integration method ({}) selected for {}".
+            raise FunctionError("Invalid integration method ({}) selected for {}. Choose 'RK4' or 'EULER'".
                                 format(self.integration_method, self.name))
 
     def _euler_FHN(self, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size):
