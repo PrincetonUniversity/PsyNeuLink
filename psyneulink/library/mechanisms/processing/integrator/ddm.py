@@ -134,15 +134,16 @@ Examples for each, that illustrate all of their parameters, are shown below:
 
 `NavarroAndFuss <NavarroAndFuss>` Function (requires MATLAB engine)::
 
-    >>> import matlab.engine                                                               # doctest: +SKIP
-    >>> self.eng1 = matlab.engine.start_matlab('-nojvm')                                   # doctest: +SKIP
-
-    >>> my_DDM_NavarroAndFuss = pnl.DDM(function=pnl.NavarroAndFuss(drift_rate=3.0,        # doctest: +SKIP
-    ...                                                             starting_point=1.0,    # doctest: +SKIP
-    ...                                                             threshold=30.0,        # doctest: +SKIP
-    ...                                                             noise=1.5,             # doctest: +SKIP
-    ...                                                             t0 = 2.0),             # doctest: +SKIP
-    ...                                 name='my_DDM_NavarroAndFuss')                      # doctest: +SKIP
+    >>> my_DDM_NavarroAndFuss = pnl.DDM(
+    ...     function=pnl.NavarroAndFuss(
+    ...         drift_rate=3.0,
+    ...         starting_point=1.0,
+    ...         threshold=30.0,
+    ...         noise=1.5,
+    ...         t0=2.0
+    ...     ),
+    ...     name='my_DDM_NavarroAndFuss'
+    ... )
 
 .. _DDM_Integration_Mode:
 

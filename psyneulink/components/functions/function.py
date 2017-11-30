@@ -7231,10 +7231,22 @@ class NavarroAndFuss(IntegratorFunction):
                          context=context)
 
     def _instantiate_function(self, context=None):
-        print("\nimporting matlab...")
-        import matlab.engine
-        self.eng1 = matlab.engine.start_matlab('-nojvm')
-        print("matlab imported\n")
+        import os
+        import sys
+        try:
+            import matlab.engine
+        except ImportError as e:
+            raise ImportError(
+                'python failed to import matlab. Ensure that MATLAB and the python API is installed. See'
+                ' https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html'
+                ' for more info'
+            )
+
+        ddm_functions_path = os.path.abspath(sys.modules['psyneulink'].__path__[0] + '/../Matlab/DDMFunctions')
+
+        # must add the package-included MATLAB files to the engine path to run when not running from the path
+        # MATLAB is very finnicky about the formatting here to actually add the path so be careful if you modify
+        self.eng1 = matlab.engine.start_matlab("-r 'addpath(char(\"{0}\"))' -nojvm".format(ddm_functions_path))
 
         super()._instantiate_function(context=context)
 
