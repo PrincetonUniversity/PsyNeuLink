@@ -7310,7 +7310,7 @@ class NormalDist(DistributionFunction):
         The mean or center of the normal distribution
 
     standard_dev : float : default 1.0
-        Standard deviation of the normal distribution
+        Standard deviation of the normal distribution. Must be > 0.0
 
     params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -7333,7 +7333,7 @@ class NormalDist(DistributionFunction):
         The mean or center of the normal distribution
 
     standard_dev : float : default 1.0
-        Standard deviation of the normal distribution
+        Standard deviation of the normal distribution. Must be > 0.0
 
     params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -7379,6 +7379,15 @@ class NormalDist(DistributionFunction):
                          context=context)
 
         self.functionOutputType = None
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if STANDARD_DEVIATION in target_set:
+            if target_set[STANDARD_DEVIATION] <= 0.0:
+                raise FunctionError("The standard_dev parameter ({}) of {} must be greater than zero.".
+                                            format(target_set[STANDARD_DEVIATION], self.name))
+
 
     def function(self,
                  variable=None,
