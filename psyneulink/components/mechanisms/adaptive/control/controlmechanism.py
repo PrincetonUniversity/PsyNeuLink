@@ -808,6 +808,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                        list=[state for state in self.output_states
                                                              if isinstance(state, ControlSignal)])
 
+        if self.allocation_policy is None:
+            self.allocation_policy = self.default_value
+
         # If the ControlMechanism's allocation_policy has more than one item,
         #    warn if the number of items does not equal the number of its ControlSignals
         #    (note:  there must be fewer ControlSignals than items in allocation_policy,
