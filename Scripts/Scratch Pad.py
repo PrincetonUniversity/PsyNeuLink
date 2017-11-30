@@ -886,7 +886,7 @@ a = pnl.RecurrentTransferMechanism()
 # b = pnl.TransferMechanism()
 p = pnl.Process(pathway=[a])
 s = pnl.System(processes=[p])
-s.show_graph()
+s.show_graph(show_learning=True)
 
 #endregion
 

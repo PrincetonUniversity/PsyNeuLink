@@ -3286,6 +3286,18 @@ class System(System_Base):
             rcvr_label = rcvr_name
             G.node(rcvr_label, shape="oval")
 
+            # handle auto-recurrent projections
+            for input_state in rcvr.input_states:
+                for proj in input_state.path_afferents:
+                    if proj.sender.owner is not rcvr:
+                        continue
+                    edge_name = proj.name
+                    try:
+                        has_learning = proj.has_learning_projection
+                    except AttributeError:
+                        has_learning = None
+                    G.edge(rcvr_label, rcvr_label)
+
             # loop through senders
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
@@ -3294,6 +3306,7 @@ class System(System_Base):
                 sndr_label = sndr_name
 
                 # find edge name
+                # FIX: THIS ONLY LOOKS AT EFFERENTS FROM PRIMARY OutputState... SHOULD LOOK AT ALL OutputStates
                 projs = sndr.output_state.efferents
                 for proj in projs:
                     if proj.receiver.owner == rcvr:
