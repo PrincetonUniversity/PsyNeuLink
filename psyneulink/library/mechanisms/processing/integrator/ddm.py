@@ -889,7 +889,7 @@ class DDM(ProcessingMechanism_Base):
                                                                1 - return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]
 
             elif isinstance(self.function.__self__, NavarroAndFuss):
-                return_value = np.array([[0], [0], [0], [0], [0], [0]])
+                return_value = np.array([[0.0], [0.0], [0.0], [0.0], [0.0], [0.0]])
                 return_value[self.RESPONSE_TIME_INDEX] = result[NF_Results.MEAN_DT.value]
                 return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX] = result[NF_Results.MEAN_ER.value]
                 return_value[self.PROBABILITY_UPPER_THRESHOLD_INDEX] = 1 - result[NF_Results.MEAN_ER.value]
