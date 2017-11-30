@@ -7396,6 +7396,128 @@ class NormalDist(DistributionFunction):
         return result
 
 
+class UniformToNormalDist(DistributionFunction):
+    """
+    UniformToNormalDist(                     \
+             mean=0.0,              \
+             standard_dev=1.0,      \
+             params=None,           \
+             owner=None,            \
+             prefs=None             \
+             )
+
+    .. _UniformToNormalDist:
+
+    Return a random sample from a normal distribution using first np.random.rand(1), and then converting the sample to a
+    normal distribution with the following equation:
+
+    .. math::
+
+        standard\\_dev \\cdot (\\sqrt{2} * scipy.special.erfinv(2 \\cdot sample - 1)) + mean
+
+    The uniform --> normal conversion allows for a more direct comparison with MATLAB scripts.
+
+    .. note::
+
+        This function requires SciPy.
+
+    Arguments
+    ---------
+
+    mean : float : default 0.0
+        The mean or center of the normal distribution
+
+    standard_dev : float : default 1.0
+        Standard deviation of the normal distribution
+
+    params : Dict[param keyword, param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    mean : float : default 0.0
+        The mean or center of the normal distribution
+
+    standard_dev : float : default 1.0
+        Standard deviation of the normal distribution
+
+    params : Dict[param keyword, param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    """
+
+    componentName = NORMAL_DIST_FUNCTION
+
+    class ClassDefaults(DistributionFunction.ClassDefaults):
+        variable = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=ClassDefaults.variable,
+                 mean=0.0,
+                 standard_dev=1.0,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context=componentName + INITIALIZING):
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(mean=mean,
+                                                  standard_dev=standard_dev,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+
+        try:
+            from scipy.special import erfinv
+        except:
+            raise FunctionError("The UniformToNormalDist function requires the SciPy package.")
+
+        # Validate variable and validate params
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        mean = self.paramsCurrent[DIST_MEAN]
+        standard_dev = self.paramsCurrent[STANDARD_DEVIATION]
+
+        sample = np.random.rand(1)[0]
+        return ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_dev) + mean
+
 class ExponentialDist(DistributionFunction):
     """
     ExponentialDist(                \
