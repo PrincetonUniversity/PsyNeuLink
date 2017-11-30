@@ -884,7 +884,7 @@ print("TEST System Graph with AutoAssociativeMechanism")
 
 a = pnl.RecurrentTransferMechanism()
 # b = pnl.TransferMechanism()
-p = pnl.Process(pathway=[a])
+p = pnl.Process(pathway=[a], learning=pnl.ENABLED)
 s = pnl.System(processes=[p])
 s.show_graph(show_learning=True)
 
