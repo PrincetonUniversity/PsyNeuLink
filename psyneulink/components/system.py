@@ -3319,9 +3319,14 @@ class System(System_Base):
             # For Projection, show dimensions of matrix
             elif isinstance(item, Projection):
                 if show_dimensions in {ALL, PROJECTIONS}:
-                    value = np.array(item.matrix)
-                    dim_string = "({})".format("x".join([str(i) for i in value.shape]))
-                    return "{}\n{}".format(item.name, dim_string)
+                    if isinstance(item, MappingProjection):
+                        value = np.array(item.matrix)
+                        dim_string = "({})".format("x".join([str(i) for i in value.shape]))
+                        return "{}\n{}".format(item.name, dim_string)
+                    else:
+                        value = np.array(item.value)
+                        dim_string = "({})".format(len(value))
+                        return "{}\n{}".format(item.name, dim_string)
                 else:
                     return item.name
 
