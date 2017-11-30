@@ -882,12 +882,16 @@ class ScratchPadError(Exception):
 #region TEST System Graph with AutoAssociativeMechanism
 print("TEST System Graph with AutoAssociativeMechanism")
 
+# a = pnl.DDM(name='MY DDM')
 a = pnl.RecurrentTransferMechanism(name='Autoassociator')
-p = pnl.Process(pathway=[a], learning=pnl.ENABLED)
+p = pnl.Process(pathway=[a],
+                # learning=pnl.ENABLED
+                )
 s = pnl.System(processes=[p])
 s.show_graph(show_learning=True,
              show_dimensions=True
              )
+
 
 #endregion
 

@@ -3225,13 +3225,29 @@ class System(System_Base):
             specifies whether or not to show the learning components of the system;
             they will all be displayed in the color specified for **learning_color**.
             Projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
-            if set to `ALL`, all Projections associated with learning will be shown:  the LearningProjections
+            if set to *ALL*, all Projections associated with learning will be shown:  the LearningProjections
             as well as from `ProcessingMechanisms <ProcessingMechanism>` to `LearningMechanisms <LearningMechanism>`
             that convey error and activation information;  if set to `True`, only the LearningPojections are shown.
 
         show_control :  bool : default False
             specifies whether or not to show the control components of the system;
             they will all be displayed in the color specified for **control_color**.
+
+        show_dimensions : bool or ALL or MECHANISMS or PROJECTIONS: default False
+            specifies whether or not to show dimemsions of Mechanisms (and/or MappingProjections when show_learning is
+            `True`);  can have the following settings:
+
+            * *ALL* -- shows dimensions for both Mechanisms and Projections (see below for formats).
+            |
+            * *MECHANISMS* -- shows `Mechanism` input and output dimensions.  Input dimensions are shown in parentheses
+              below the name of the Mechanism; each number represents the dimension of the `variable
+              <InputState.variable>` for each `InputState` of the Mechanism; Output dimensions are shown above
+              the name of the Mechanism; each number represents the dimension for `value <OutputState.value>` of each
+              of `OutputState` of the Mechanism;
+            |
+            * *PROJECTIONS* -- shows `MappingProjection` `matrix <MappingProjection.matrix>` dimensions.  Each is
+              shown in (<dim>x<dim>...) format;  for standard 2x2 "weight" matrix, the first entry is the number of
+              rows (input dimension) and the second the number of columns (output dimension).
 
         origin_color : keyword : default 'green',
             specifies the color in which the `ORIGIN` Mechanisms of the System are displayed.
@@ -3277,6 +3293,8 @@ class System(System_Base):
 
         system_graph = self.graph
         learning_graph=self.learningGraph
+        if show_dimensions == True:
+            show_dimensions = ALL
 
         default_node_color = 'black'
         mechanism_shape = 'oval'
@@ -3284,26 +3302,33 @@ class System(System_Base):
         # projection_shape = 'Mdiamond'
         # projection_shape = 'hexagon'
 
-        def get_name(item):
+        def _get_label(item):
 
-            if show_dimensions:
-                if isinstance(item, Mechanism):
-                    value = item.default_value
-                elif isinstance(item, Projection):
-                    value = item.matrix
-                else:
-                    raise SystemError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
 
-                value = np.array(value)
-                dimensions = np.array(value).ndim
-                if dimensions == 1 or len(value)==1:
-                    dim_string = "({})".format(len(value))
+            # For Mechanisms, show length of each InputState and OutputState
+            if isinstance(item, Mechanism):
+                if show_dimensions in {ALL, MECHANISMS}:
+                    input_str = "in ({})".format(",".join(str(len(input_state.variable))
+                                                       for input_state in item.input_states))
+                    output_str = "out ({})".format(",".join(str(len(output_state.value))
+                                                        for output_state in item.output_states))
+                    return "{}\n{}\n{}".format(output_str, item.name, input_str)
                 else:
+                    return item.name
+
+            # For Projection, show dimensions of matrix
+            elif isinstance(item, Projection):
+                if show_dimensions in {ALL, PROJECTIONS}:
+                    value = np.array(item.matrix)
                     dim_string = "({})".format("x".join([str(i) for i in value.shape]))
-                return "{}\n{}".format(item.name, dim_string)
+                    return "{}\n{}".format(item.name, dim_string)
+                else:
+                    return item.name
 
             else:
-                return item.name
+                raise SystemError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
+
+
 
         # build graph and configure visualisation settings
         G = gv.Digraph(engine = "dot",
@@ -3327,7 +3352,7 @@ class System(System_Base):
         rcvrs = list(system_graph.keys())
         # loop through receivers
         for rcvr in rcvrs:
-            rcvr_name = get_name(rcvr)
+            rcvr_name = _get_label(rcvr)
             # rcvr_shape = rcvr.instance_defaults.variable.shape[1]
             rcvr_label = rcvr_name
             G.node(rcvr_label, shape=mechanism_shape)
@@ -3337,7 +3362,7 @@ class System(System_Base):
                 for proj in input_state.path_afferents:
                     if proj.sender.owner is not rcvr:
                         continue
-                    edge_label = get_name(proj)
+                    edge_label = _get_label(proj)
                     try:
                         has_learning = proj.has_learning_projection
                     except AttributeError:
@@ -3353,21 +3378,21 @@ class System(System_Base):
             # loop through senders
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
-                sndr_name = get_name(sndr)
+                sndr_name = _get_label(sndr)
                 # sndr_shape = sndr.instance_defaults.variable.shape[1]
                 sndr_label = sndr_name
 
                 # find edge name
-                # FIX: THIS ONLY LOOKS AT EFFERENTS FROM PRIMARY OutputState... SHOULD LOOK AT ALL OutputStates
-                projs = sndr.output_state.efferents
-                for proj in projs:
-                    if proj.receiver.owner == rcvr:
-                        edge_name = get_name(proj)
-                        # edge_shape = proj.matrix.shape
-                        try:
-                            has_learning = proj.has_learning_projection
-                        except AttributeError:
-                            has_learning = None
+                for output_state in sndr.output_states:
+                    projs = output_state.efferents
+                    for proj in projs:
+                        if proj.receiver.owner == rcvr:
+                            edge_name = _get_label(proj)
+                            # edge_shape = proj.matrix.shape
+                            try:
+                                has_learning = proj.has_learning_projection
+                            except AttributeError:
+                                has_learning = None
                 edge_label = edge_name
 
                 # if rcvr is learning mechanism, draw arrow with learning color
@@ -3406,23 +3431,23 @@ class System(System_Base):
                     sndrs = learning_graph[rcvr]
                     for sndr in sndrs:
                         edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
-                        G.edge(get_name(sndr), get_name(rcvr), color=learning_color, label = edge_label)
+                        G.edge(_get_label(sndr), _get_label(rcvr), color=learning_color, label = edge_label)
                 else:
                     # Implement edges for Projections to each LearningMechanism from other LearningMechanisms
                     # and from ProcessingMechanisms if 'ALL' is set
                     for input_state in rcvr.input_states:
                         for proj in input_state.path_afferents:
                             sndr = proj.sender.owner
-                            G.node(get_name(rcvr), color=learning_color)
+                            G.node(_get_label(rcvr), color=learning_color)
                             # If Projection is not from another learning component
                             #    only show if ALL is set, and don't color
                             if (isinstance(sndr, LearningMechanism) or
                                 (isinstance(sndr, ObjectiveMechanism) and sndr._role is LEARNING)):
-                                G.node(get_name(sndr), color=learning_color)
+                                G.node(_get_label(sndr), color=learning_color)
                             else:
                                 if show_learning is True:
                                     continue
-                            G.edge(get_name(sndr), get_name(rcvr), color=learning_color, label=proj.name)
+                            G.edge(_get_label(sndr), _get_label(rcvr), color=learning_color, label=proj.name)
 
                             # Get Projections to ComparatorMechanism as well
                             if isinstance(sndr, ObjectiveMechanism) and sndr._role is LEARNING and show_learning is ALL:
@@ -3432,7 +3457,7 @@ class System(System_Base):
                                         if isinstance(proj.sender.owner, (Process, System)):
                                             continue
                                         output_mech = proj.sender.owner
-                                        G.edge(get_name(output_mech), get_name(sndr), color=learning_color,
+                                        G.edge(_get_label(output_mech), _get_label(sndr), color=learning_color,
                                                label=proj.name)
 
 
@@ -3449,9 +3474,9 @@ class System(System_Base):
             objmech = connector.sender.owner
 
             # main edge
-            G.node(controller.name, color=control_color)
-            G.node(objmech.name, color=control_color)
-            G.edge(objmech.name, controller.name, label=connector.name, color=control_color)
+            G.node(_get_label(controller), color=control_color)
+            G.node(_get_label(objmech), color=control_color)
+            G.edge(_get_label(objmech), _get_label(controller), label=connector.name, color=control_color)
 
             # outgoing edges
             for output_state in controller.control_signals:
@@ -3459,22 +3484,22 @@ class System(System_Base):
                     # MODIFIED 7/21/17 CW: this edge_name statement below didn't do anything and caused errors, so
                     # I commented it out.
                     # edge_name
-                    rcvr_name = projection.receiver.owner.name
-                    G.edge(controller.name, rcvr_name, label=projection.name, color=control_color)
+                    rcvr_name = _get_label(projection.receiver.owner)
+                    G.edge(_get_label(controller), rcvr_name, label=projection.name, color=control_color)
 
             # incoming edges
             for istate in objmech.input_states:
                 for proj in istate.path_afferents:
-                    sndr_name = proj.sender.owner.name
-                    G.edge(sndr_name, objmech.name, label=proj.name, color=control_color)
+                    sndr_name = _get_label(proj.sender.owner)
+                    G.edge(sndr_name, _get_label(objmech), label=proj.name, color=control_color)
 
             # prediction mechanisms
             for object_item in self.execution_list:
                 mech = object_item
                 if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
-                    G.node(mech.name, color='purple')
+                    G.node(_get_label(mech), color='purple')
                     recvr = mech.origin_mech
-                    G.edge(mech.name, recvr.name, label=' prediction assignment', color='purple')
+                    G.edge(_get_label(mech), _get_label(recvr), label=' prediction assignment', color='purple')
                     pass
 
         # return
