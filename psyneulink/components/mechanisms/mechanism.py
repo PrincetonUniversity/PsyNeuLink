@@ -767,6 +767,7 @@ from psyneulink.components.shellclasses import Function, Mechanism, Projection, 
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.outputstate import OutputState
+from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.components.states.state import _parse_state_spec, ADD_STATES
 from psyneulink.globals.defaults import timeScaleSystemDefault
 from psyneulink.globals.keywords import \
@@ -1066,7 +1067,7 @@ class Mechanism_Base(Mechanism):
     variableEncodingDim = 2
     valueEncodingDim = 2
 
-    state_list_attr = {InputState:INPUT_STATES,
+    stateListAttr = {InputState:INPUT_STATES,
                        ParameterState:PARAMETER_STATES,
                        OutputState:OUTPUT_STATES}
 
@@ -1630,6 +1631,7 @@ class Mechanism_Base(Mechanism):
                             isinstance(item, dict) or                   # OutputState specification dict
                             isinstance(item, str) or                    # Name (to be used as key in OutputStates list)
                             isinstance(item, tuple) or                  # Projection specification tuple
+                            _is_modulatory_spec(item) or                # Modulatory specification for the OutputState
                             iscompatible(item, **{kwCompatibilityNumeric: True})):  # value
                     # set to None, so it is set to default (self.value) in instantiate_output_state
                     param_value[key] = None

@@ -389,9 +389,10 @@ import warnings
 from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.components.states.state import StateError
+from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.globals.keywords import \
     NAME, PARAMS, CONTEXT, PATHWAY, \
-    MECHANISM, INPUT_STATE, OUTPUT_STATE, PARAMETER_STATE_PARAMS, \
+    MECHANISM, INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, PARAMETER_STATE_PARAMS, \
     STANDARD_ARGS, STATE, STATES, WEIGHT, EXPONENT, \
     PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, \
     MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
@@ -952,12 +953,13 @@ class Projection_Base(Projection):
                               format(self.__class__.__name__))
 
 
-def _is_projection_spec(spec, include_matrix_spec=True):
+@tc.typecheck
+def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_spec=True):
     """Evaluate whether spec is a valid Projection specification
 
     Return `True` if spec is any of the following:
-    + Projection class (or keyword string constant for one):
-    + Projection object:
+    + Projection object, and of specified type (if proj_type is specified)
+    + Projection class (or keyword string constant for one), and of specified type (if proj_type is specified)
     + 2-item tuple of which the second is a projection_spec (checked recursively with this method):
     + specification dict containing:
         + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
@@ -966,13 +968,39 @@ def _is_projection_spec(spec, include_matrix_spec=True):
     Otherwise, return :keyword:`False`
     """
 
-    if isinstance(spec, (Projection, State)):
+    if isinstance(spec, Projection):
+        if proj_type is None or isinstance(spec, proj_type):
+                return True
+        else:
+            return False
+    if isinstance(spec, State):
+        # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
-    if inspect.isclass(spec) and issubclass(spec, (Projection, State)):
-        return True
+    # # MODIFIED 11/29/17 NEW:
+    # if isinstance(spec, Mechanism):
+    #     if proj_type is None:
+    #     # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
+    #         return True
+    # MODIFIED 11/29/17 END
+    if inspect.isclass(spec):
+        if issubclass(spec, Projection):
+            if proj_type is None or issubclass(spec, proj_type):
+                return True
+            else:
+                return False
+        if issubclass(spec, State):
+            # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
+            return True
+    # # MODIFIED 11/29/17 NEW:
+        # if issubclass(spec, Mechanism):
+        #     # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
+        #     return True
+    # MODIFIED 11/29/17 END
     if isinstance(spec, dict) and any(key in spec for key in {PROJECTION_TYPE, SENDER, RECEIVER, MATRIX}):
+        # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
     if isinstance(spec, str) and spec in PROJECTION_SPEC_KEYWORDS:
+        # FIX: CHECK STATE AGAIN ALLOWABLE STATES IF type IS SPECIFIED
         return True
     if include_matrix_spec:
         if isinstance(spec, str) and spec in MATRIX_KEYWORD_SET:
@@ -982,17 +1010,21 @@ def _is_projection_spec(spec, include_matrix_spec=True):
             return True
     if isinstance(spec, tuple) and len(spec) == 2:
         # Call recursively on first item, which should be a standard projection spec
-        if _is_projection_spec(spec[0], include_matrix_spec=include_matrix_spec):
+        if _is_projection_spec(spec[0], proj_type=proj_type, include_matrix_spec=include_matrix_spec):
             if spec[1] is not None:
                 # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
                 if _is_projection_subclass(spec[1], MAPPING_PROJECTION):
                     return True
-                if _is_projection_subclass(spec[1], LEARNING_PROJECTION):
+                if _is_modulatory_spec(spec[1]):
                     return True
-                if _is_projection_subclass(spec[1], CONTROL_PROJECTION):
-                    return True
-                if _is_projection_subclass(spec[1], GATING_PROJECTION):
-                    return True
+        # if _is_projection_spec(spec[1], proj_type=proj_type, include_matrix_spec=include_matrix_spec):
+        #         # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
+        #     if is_numeric(spec[0]):
+        #         # if _is_projection_subclass(spec[1], MAPPING_PROJECTION):
+        #         #     return True
+        #         if _is_modulatory_spec(spec[1]):
+        #             return True
+
     return False
 
 
@@ -1084,14 +1116,17 @@ def _parse_projection_spec(projection_spec,
     elif isinstance(projection_spec, str):
         proj_spec_dict[PROJECTION_TYPE] = _parse_projection_keyword(projection_spec)
 
-    # State object
-    elif isinstance(projection_spec, State):
+    # State object or class
+    elif (isinstance(projection_spec, State)
+          or (isinstance(projection_spec, type) and issubclass(projection_spec, State))):
         proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
 
-    # State class
-    elif inspect.isclass(projection_spec) and issubclass(projection_spec, State):
-        # Assign default Projection type for State's class
-        proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
+    # MODIFIED 11/29/17 NEW:
+    # Mechanism object or class
+    elif (isinstance(projection_spec, Mechanism)
+          or (isinstance(projection_spec, type) and issubclass(projection_spec, Mechanism))):
+        proj_spec_dict[PROJECTION_TYPE] = projection_spec.outputStateType.paramClassDefaults[PROJECTION_TYPE]
+    # MODIFIED 11/29/17 END
 
     # Dict
     elif isinstance(projection_spec, dict):
@@ -1254,12 +1289,19 @@ def _parse_connection_specs(connectee_state_type,
 
     from psyneulink.components.states.state import _get_state_for_socket
     from psyneulink.components.states.state import StateRegistry
+    from psyneulink.components.states.inputstate import InputState
+    from psyneulink.components.states.outputstate import OutputState
+    from psyneulink.components.states.parameterstate import ParameterState
+    from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+    from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, _is_control_spec
+    from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
+
 
     if not inspect.isclass(connectee_state_type):
         raise ProjectionError("Called for {} with \'connectee_state_type\' arg ({}) that is not a class".
                          format(owner.name, connectee_state_type))
 
-    # Get connection attributes
+    # Get connection attributes for connectee
     connects_with = [StateRegistry[name].subclass for name in connectee_state_type.connectsWith]
     connect_with_attr = connectee_state_type.connectsWithAttribute
     projection_socket = connectee_state_type.projectionSocket
@@ -1287,6 +1329,7 @@ def _parse_connection_specs(connectee_state_type,
 
     for connection in connections:
 
+
         # FIX: 10/3/17 - IF IT IS ALREADY A PROJECTION OF THE CORRECT TYPE FOR THE CONNECTEE:
         # FIX:               ?? RETURN AS IS, AND/OR PARSE INTO DICT??
 
@@ -1296,7 +1339,30 @@ def _parse_connection_specs(connectee_state_type,
         #     to validate the state spec and append ProjectionTuple to connect_with_states
         if isinstance(connection, (Mechanism, State, type)):
             # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ProjectionTuple THAT HAS BOTH SENDER AND RECEIVER
-            projection_spec = connectee_state_type
+
+            # FIX: 11/28/17 - HACKS TO HANDLE PROJECTION FROM GatingSignal TO InputState or OutputState
+            # FIX:            AND PROJECTION FROM ControlSignal to ParameterState
+            # # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
+            # # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
+            # if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
+            #     connection = connection.outputStateType
+            if ((isinstance(connectee_state_type, (InputState, OutputState, ParameterState))
+                 or isinstance(connectee_state_type, type)
+                and issubclass(connectee_state_type, (InputState, OutputState, ParameterState)))
+                and _is_modulatory_spec(connection)):
+                # MODIFIED 11/29/17 NEW:
+                # Convert AdaptiveMechanism specs to corresponding ModulatorySignal spec
+                if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
+                    connection = connection.outputStateType
+                elif isinstance(connection, AdaptiveMechanism_Base):
+                    connection = connection.output_state
+                # MODIFIED 11/29/17 END
+
+                projection_spec = connection
+
+            else:
+                projection_spec = connectee_state_type
+            # MODIFIED 11/28/17 END:
             projection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, projection_tuple))
 
@@ -1305,13 +1371,14 @@ def _parse_connection_specs(connectee_state_type,
         #  but also leave it is as the connection specification (it will get resolved to a State reference when the
         #    tuple is created in the recursive call to _parse_connection_specs below).
         elif _is_projection_spec(connection, include_matrix_spec=False):
-            projection_spec = connection
             # FIX: 10/24/17 - IF connectee_state_type IS LearningSignal AND projection_spec is A MappingProjection
             # FIX:            THEN THE LATTER SHOULD BE TREATED AS A DESTINATION RATHER THAN AN ACTUAL projection_spec
             # FIX:            OR connection SHOULD BE LearningSignal AND projection_spec SHOULD BE THE DESITNATION
             # FIX: 11/4/17 - IF connectee_state_type IS OutputState AND projection_spec is A GatingProjection
             # FIX:            THEN THE LATTER SHOULD BE TREATED AS A SOURCE RATHER THAN AN ACTUAL projection_spec
             # FIX:            OR connection SHOULD BE GatingSignal AND projection_spec SHOULD BE THE DESITNATION
+
+            projection_spec = connection
             projection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, projection_tuple))
 
@@ -1509,11 +1576,32 @@ def _parse_connection_specs(connectee_state_type,
 
             # Validate state specification, and get actual state referenced if it has been instantiated
             try:
+                # state_types = connects_with
+                # mech_state_attribute=connect_with_attr
+                # MODIFIED 11/29/17 NEW:
+                # FIX: 11/28/17 HACK TO DEAL WITH GatingSignal Projection to OutputState
+                if (_is_gating_spec(first_item)
+                    and (isinstance(last_item, OutputState) or last_item == OutputState)):
+                    projection_socket = SENDER
+                    state_types = [OutputState]
+                    mech_state_attribute = [OUTPUT_STATES]
+
+                # elif (isinstance(first_item, AdaptiveMechanism_Base)
+                #       and _is_gating_spec(first_item) and last_item == first_item):
+                #     projection_socket = SENDER
+                #     state_types = [connectee_state_type]
+                #     mech_state_attribute = [INPUT_STATES]
+
+                else:
+                    state_types = connects_with
+                    mech_state_attribute=connect_with_attr
+                # MODIFIED 11/29/17 END
+
                 state = _get_state_for_socket(owner=owner,
                                               state_spec=state_spec,
-                                              state_types=connects_with,
+                                              state_types=state_types,
                                               mech=mech,
-                                              mech_state_attribute=connect_with_attr,
+                                              mech_state_attribute=mech_state_attribute,
                                               projection_socket=projection_socket)
             except StateError as e:
                 raise ProjectionError("Problem with specification for {} in {} specification for {}: ".
@@ -1546,9 +1634,9 @@ def _parse_connection_specs(connectee_state_type,
 
             # Parse projection specification into Projection specification dictionary
             # Validate projection specification
-            if _is_projection_spec(projection_spec) or projection_spec is None:
+            if _is_projection_spec(projection_spec) or _is_modulatory_spec(projection_spec) or projection_spec is None:
 
-                # FIX: 11/21/17 THIS IS A HACK TO DEAL WITH GatingSignal PROJECTION TO InputState or OutputState
+                # FIX: 11/21/17 THIS IS A HACK TO DEAL WITH GatingSignal Projection TO InputState or OutputState
                 from psyneulink.components.states.inputstate import InputState
                 from psyneulink.components.states.outputstate import OutputState
                 from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
@@ -1557,7 +1645,9 @@ def _parse_connection_specs(connectee_state_type,
                     and isinstance(state, GatingSignal)
                     and connectee_state_type in {InputState, OutputState}):
                     projection_spec = state
-
+                # FIX: 11/29/17  GENERALIZE TO _is_modulatory_spec??
+                elif _is_gating_spec(first_item):
+                    projection_spec = first_item
                 projection_spec = _parse_projection_spec(projection_spec,
                                                          owner=owner,
                                                          state_type=connectee_state_type)
@@ -1568,9 +1658,11 @@ def _parse_connection_specs(connectee_state_type,
                                              projection_socket,
                                              connectee_state_type)
             else:
-                raise ProjectionError("Invalid specification of {} ({}) for connection between {} and {} of {}.".
-                                 format(Projection.__class__.__name__,
+                raise ProjectionError("Invalid {} specification ({}) for connection "
+                                      "between {} \'{}\' and {} of \'{}\'.".
+                                 format(Projection.__name__,
                                         projection_spec,
+                                        state_type.__name__,
                                         state.name,
                                         connectee_state_type.__name__,
                                         owner.name))

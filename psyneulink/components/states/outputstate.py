@@ -393,10 +393,6 @@ the OutputState is assigned to a Mechanism, by including *INDEX* and *CALCULATE*
     ...                                   pnl.CALCULATE: pnl.Stability(metric=pnl.ENTROPY).function }])
 
 COMMENT:
-    what is this Entropy() class???
-COMMENT
-
-COMMENT:
    ADD VERSION IN WHICH INDEX IS SPECIFICED USING DDM_standard_output_states
 COMMENT
 
@@ -565,7 +561,7 @@ state_type_keywords = state_type_keywords.update({OUTPUT_STATE})
 #     ALL = TIME_STAMP
 #     DEFAULTS = NONE
 
-OUTPUT_STATE_TYPE = 'output_state_type'
+OUTPUT_STATE_TYPE = 'outputStateType'
 
 # Used to specify how StandardOutputStates are indexed
 PRIMARY = 0
@@ -774,7 +770,7 @@ class OutputState(State_Base):
 
     stateAttributes = State_Base.stateAttributes | {INDEX, CALCULATE}
 
-    connectsWith = [INPUT_STATE]
+    connectsWith = [INPUT_STATE, GATING_SIGNAL]
     connectsWithAttribute = [INPUT_STATES]
     projectionSocket = RECEIVER
     modulators = [GATING_SIGNAL]
@@ -993,7 +989,8 @@ class OutputState(State_Base):
 
         """
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-        from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
+        from psyneulink.components.states.modulatorysignals.modulatorysignal import \
+            ModulatorySignal, _is_modulatory_spec
         from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.components.projections.projection import ProjectionTuple
@@ -1001,14 +998,21 @@ class OutputState(State_Base):
 
         # Treat as ModulatoryProjection spec if it is a ModulatoryProjection, ModulatorySignal or AdaptiveMechanism
         # or one of those is the first or last item of a ProjectionTuple
-        modulatory_projections = [proj for proj in projections
-                                  if (isinstance(proj, (ModulatoryProjection_Base,
-                                                       ModulatorySignal,
-                                                       AdaptiveMechanism_Base)) or
-                                      (isinstance(proj, ProjectionTuple) and
-                                       any(isinstance(item, (ModulatoryProjection_Base,
-                                                           ModulatorySignal,
-                                                           AdaptiveMechanism_Base)) for item in proj)))]
+        # modulatory_projections = [proj for proj in projections
+        #                           if (isinstance(proj, (ModulatoryProjection_Base,
+        #                                                ModulatorySignal,
+        #                                                AdaptiveMechanism_Base)) or
+        #                               (isinstance(proj, ProjectionTuple) and
+        #                                any(isinstance(item, (ModulatoryProjection_Base,
+        #                                                    ModulatorySignal,
+        #                                                    AdaptiveMechanism_Base)) for item in proj)))]
+        # modulatory_projections = [proj for proj in projections
+        #                           if ((_is_modulatory_spec(proj) and
+        #                               isinstance(proj, ProjectionTuple)) or
+        #                                any((_is_modulatory_spec(item)
+        #                                     or isinstance(item, ProjectionTuple))
+        #                                    for item in proj))]
+        modulatory_projections = [proj for proj in projections if _is_modulatory_spec(proj)]
         self._instantiate_projections_to_state(projections=modulatory_projections, context=context)
 
         # Treat all remaining specifications in projections as ones for outgoing MappingProjections
@@ -1101,7 +1105,11 @@ class OutputState(State_Base):
                                      "is not compatible with its {} ({})".
                                      format(OutputState.__name__, owner.name, state_spec,
                                             REFERENCE_VALUE, reference_value))
+                # # MODIFIED 11/28/17 OLD:
                 projection_spec = tuple_spec[1]
+                # MODIFIED 11/28/17 NEW:
+                # projection_spec =
+                # MODIFIED 11/28/17 END:
             # MODIFIED 11/23/17 END
 
             # MODIFIED 11/23/17 NEW: ADDED ELSE AND INDENTED
@@ -1276,13 +1284,13 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         reference_value = owner_value
 
     if hasattr(owner, OUTPUT_STATE_TYPE):
-        output_state_type = owner.output_state_type
+        outputStateType = owner.outputStateType
     else:
-        output_state_type = OutputState
+        outputStateType = OutputState
 
     state_list = _instantiate_state_list(owner=owner,
                                          state_list=output_states,
-                                         state_type=output_state_type,
+                                         state_type=outputStateType,
                                          state_param_identifier=OUTPUT_STATE,
                                          reference_value=reference_value,
                                          reference_value_name="output",
