@@ -1,6 +1,62 @@
 
-# PsyNeuLink Coding and Documentation Conventions
+# PsyNeuLink Organization, Coding, and Documentation Conventions
 
+## REPOSITORY ORGANIZATION:
+
+### Core:
+Made up of two types of classes:
+- *abstract base classes* (italicized) - cannot be instantiated.
+- **core classes** (bold) - most basic (abstract) level of objects that can be instantiated. 
+
+#### Components
+"Building blocks"
+- *Mechanism*
+    - *ProcessingMechanism*
+        - **TransferMechanism**
+        - **IntegratorMechanism**
+        - **ObjectiveMechanism**
+    - *AdaptiveMechanism*
+        - **LearningMechanism**
+        - **ControlMechanism**
+        - **GatingMechanism**
+- *Projection*
+    - *PathwayProjection*
+        - **MappingProjection**
+    - *ModulatoryProjection*
+        - **LearningProjection**
+        - **ControlProjection**
+        - **GatingProjection**
+- *State*
+    - **InputState**
+    - **ParameterState**
+    - **OutputState**
+    - *ModulatorySignal*
+        - **LearningSignal**
+        - **ControlSignal**
+        - **GatingSignal**
+- *Function*
+    - *TransferFunction*
+    - *CombinationFunction*
+    - *IntegratorFunction*
+    - *DistributionFunction*
+    - *LearningFunction*
+        
+#### Composisitons
+Objects that compose building blocks and control their execution.
+- *Composition*
+    - **System**
+    - **Process**
+
+#### Scheduler
+Objects used by Compositions to control the execution of Components and Compositions.
+- **Scheduler**
+- **Condition** 
+
+### Library
+Extensions of Core objects
+- *Components:* classes derived from Core objects
+- *Compositions:*  models
+- *Models:*  published, implemented models
 
 ### NAMING:
 
