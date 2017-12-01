@@ -3334,7 +3334,6 @@ class System(System_Base):
                 raise SystemError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
 
 
-
         # build graph and configure visualisation settings
         G = gv.Digraph(engine = "dot",
                        node_attr  = {
