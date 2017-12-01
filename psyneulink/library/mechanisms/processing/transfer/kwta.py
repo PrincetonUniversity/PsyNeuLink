@@ -100,12 +100,12 @@ KWTA:
   (including positive offsets). If `inhibition_only <KWTA.inhibition_only>` is `True`, then any positive offset
   selected is "clipped" at (i.e re-assigned a value of) 0.  This ensures that the values of the elements of the KWTA's
   `variable <KWTA.variable>` are never increased.
-
+COMMENT:
   .. note::
      If the `inhibition_only <KWTA.inhibition_only>` option is set to `True`, the number of elements at or above the
      `threshold <KWTA.threshold>` may fall below `k_value <KWTA.k_value>`; and, if the input to the KWTA is sufficiently
      low, the value of all elements may decay to 0 (depending on the value of the `decay <KWTA.decay>` parameter.
-
+COMMENT
 In all other respects, a KWTA has the same attributes and is specified in the same way as a standard
 `RecurrentTransferMechanism`.
 
@@ -185,7 +185,6 @@ class KWTA(RecurrentTransferMechanism):
     auto=None,                  \
     hetero=None,                \
     initial_value=None,         \
-    decay=1.0,                  \
     noise=0.0,                  \
     time_constant=1.0,          \
     k_value=0.5,                \
@@ -248,9 +247,6 @@ class KWTA(RecurrentTransferMechanism):
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
-
-    decay : number : default 1.0
-        specifies the amount by which to decrement its `previous_input <KWTA.previous_input>` each time it is executed.
 
     noise : float or function : default 0.0
         specifies a stochastically-sampled value added to the result of the `function <KWTA.function>`:
@@ -325,10 +321,6 @@ class KWTA(RecurrentTransferMechanism):
     recurrent_projection : AutoAssociativeProjection
         an `AutoAssociativeProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
         back to its `primary inputState <Mechanism_InputStates>`.
-
-    decay : float : default 1.0
-        determines the amount by which to multiply the `previous_input <KWTA.previous_input>` value
-        each time it is executed.
 
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
@@ -447,7 +439,6 @@ class KWTA(RecurrentTransferMechanism):
                  auto: is_numeric_or_none=None,
                  hetero: is_numeric_or_none=None,
                  initial_value=None,
-                 decay: tc.optional(tc.any(int, float)) = 1.0,
                  noise: is_numeric_or_none = 0.0,
                  time_constant: is_numeric_or_none = 1.0,
                  integrator_mode=False,
@@ -495,7 +486,6 @@ class KWTA(RecurrentTransferMechanism):
                          hetero=hetero,
                          integrator_mode=integrator_mode,
                          initial_value=initial_value,
-                         decay=decay,
                          noise=noise,
                          time_constant=time_constant,
                          clip=clip,
@@ -582,7 +572,7 @@ class KWTA(RecurrentTransferMechanism):
         return np.atleast_2d(new_input)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate shape and size of matrix and decay.
+        """Validate shape and size of matrix.
         """
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)

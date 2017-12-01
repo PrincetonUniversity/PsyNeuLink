@@ -379,13 +379,34 @@ class LCControlMechanismError(Exception):
 
 class LCControlMechanism(ControlMechanism):
     """
-    LCControlMechanism(                    \
-        system=None,                \
-        objective_mechanism=None,   \
-        modulated_mechanisms=None,  \
-        modulation=None,            \
-        params=None,                \
-        name=None,                  \
+    LCControlMechanism(                     \
+        system=None,                        \
+        objective_mechanism=None,           \
+        modulated_mechanisms=None,          \
+        initial_w_FHN=0.0,                  \
+        initial_v_FHN=0.0,                  \
+        time_step_size_FHN=0.05,            \
+        t_0_FHN=0.0,                        \
+        a_v_FHN=-1/3,                       \
+        b_v_FHN=0.0,                        \
+        c_v_FHN=1.0,                        \
+        d_v_FHN=0.0,                        \
+        e_v_FHN=-1.0,                       \
+        f_v_FHN=1.0,                        \
+        threshold_FHN=-1.0                  \
+        time_constant_v_FHN=1.0,            \
+        a_w_FHN=1.0,                        \
+        b_w_FHN=-0.8,                       \
+        c_w_FHN=0.7,                        \
+        mode_FHN=1.0,                       \
+        uncorrelated_activity_FHN=0.0       \
+        time_constant_w_FHN = 12.5,         \
+        integration_method_FHN="RK4"        \
+        base_level_gain=0.5,                \
+        scaling_factor_gain=3.0,            \
+        modulation=None,                    \
+        params=None,                        \
+        name=None,                          \
         prefs=None)
 
     Subclass of `ControlMechanism <AdaptiveMechanism>` that modulates the `multiplicative_param
@@ -412,6 +433,83 @@ class LCControlMechanism(ControlMechanism):
         <Function_Modulatory_Params>`;  alternatively the keyword *ALL* can be used to specify all of the
         `ProcessingMechanisms <ProcessingMechanism>` in the Composition(s) to which the LCControlMechanism
         belongs.
+
+    initial_w_FHN : float : default 0.0
+        sets `initial_w <initial_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    initial_v_FHN : float : default 0.0
+        sets `initial_v <initial_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    time_step_size_FHN : float : default 0.0
+        sets `time_step_size <time_step_size.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    t_0_FHN : float : default 0.0
+        sets `t_0 <t_0.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    a_v_FHN : float : default -1/3
+        sets `a_v <a_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    b_v_FHN : float : default 0.0
+        sets `b_v <b_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    c_v_FHN : float : default 1.0
+        sets `c_v <c_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    d_v_FHN : float : default 0.0
+        sets `d_v <d_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    e_v_FHN : float : default -1.0
+        sets `e_v <e_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    f_v_FHN : float : default 1.0
+        sets `f_v <f_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    threshold_FHN : float : default -1.0
+        sets `threshold <threshold.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    time_constant_v_FHN : float : default 1.0
+        sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    a_w_FHN : float : default 1.0
+        sets `a_w <a_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    b_w_FHN : float : default -0.8,
+        sets `b_w <b_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    c_w_FHN : float : default 0.7
+        sets `c_w <c_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    mode_FHN : float : default 1.0
+        sets `mode <mode.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    uncorrelated_activity_FHN : float : default 0.0
+        sets `uncorrelated_activity <uncorrelated_activity.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    time_constant_w_FHN  : float : default  12.5
+        sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    integration_method_FHN : float : default "RK4"
+        sets `integration_method <integration_method.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    base_level_gain : float : default 0.5
+        sets the base value in the equation used to compute the time-dependent gain value that the LCControl applies
+        to each of the mechanisms it modulates
+
+        .. math::
+
+            g(t) = G + k w(t)
+
+        base_level_gain = G
+
+    scaling_factor_gain : float : default 3.0
+        sets the scaling factor in the equation used to compute the time-dependent gain value that the LCControl
+        applies to each of the mechanisms it modulates
+
+        .. math::
+
+            g(t) = G + k w(t)
+
+        scaling_factor_gain = k
 
     params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
@@ -487,6 +585,83 @@ class LCControlMechanism(ControlMechanism):
     modulated_mechanisms : List[Mechanism]
         list of `Mechanisms <Mechanism>` modulated by the LCControlMechanism.
 
+        initial_w_FHN : float : default 0.0
+        sets `initial_w <initial_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    initial_v_FHN : float : default 0.0
+        sets `initial_v <initial_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    time_step_size_FHN : float : default 0.0
+        sets `time_step_size <time_step_size.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    t_0_FHN : float : default 0.0
+        sets `t_0 <t_0.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    a_v_FHN : float : default -1/3
+        sets `a_v <a_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    b_v_FHN : float : default 0.0
+        sets `b_v <b_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    c_v_FHN : float : default 1.0
+        sets `c_v <c_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    d_v_FHN : float : default 0.0
+        sets `d_v <d_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    e_v_FHN : float : default -1.0
+        sets `e_v <e_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    f_v_FHN : float : default 1.0
+        sets `f_v <f_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    threshold_FHN : float : default -1.0
+        sets `threshold <threshold.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    time_constant_v_FHN : float : default 1.0
+        sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    a_w_FHN : float : default 1.0
+        sets `a_w <a_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    b_w_FHN : float : default -0.8,
+        sets `b_w <b_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    c_w_FHN : float : default 0.7
+        sets `c_w <c_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    mode_FHN : float : default 1.0
+        sets `mode <mode.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    uncorrelated_activity_FHN : float : default 0.0
+        sets `uncorrelated_activity <uncorrelated_activity.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    time_constant_w_FHN  : float : default  12.5
+        sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    integration_method_FHN : float : default "RK4"
+        sets `integration_method <integration_method.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    base_level_gain : float : default 0.5
+        sets the base value in the equation used to compute the time-dependent gain value that the LCControl applies
+        to each of the mechanisms it modulates
+
+        .. math::
+
+            g(t) = G + k w(t)
+
+        base_level_gain = G
+
+    scaling_factor_gain : float : default 3.0
+        sets the scaling factor in the equation used to compute the time-dependent gain value that the LCControl
+        applies to each of the mechanisms it modulates
+
+        .. math::
+
+            g(t) = G + k w(t)
+
+        scaling_factor_gain = k
+
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
         the default value of `ModulationParam` that specifies the form of modulation used by the LCControlMechanism's
         `ControlProjections <ControlProjection>` unless they are `individually specified <ControlSignal_Specification>`.
@@ -533,9 +708,9 @@ class LCControlMechanism(ControlMechanism):
                  integration_method="RK4",
                  initial_w_FHN=0.0,
                  initial_v_FHN=0.0,
-                 time_step_size_FHN=0.1,
+                 time_step_size_FHN=0.05,
                  t_0_FHN=0.0,
-                 a_v_FHN=-1 / 3,
+                 a_v_FHN=-1/3,
                  b_v_FHN=0.0,
                  c_v_FHN=1.0,
                  d_v_FHN=0.0,
