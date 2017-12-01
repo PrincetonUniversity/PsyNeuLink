@@ -488,8 +488,6 @@ class MappingProjection(PathwayProjection_Base):
                          prefs=prefs,
                          context=self)
 
-        self._assign_default_projection_name()
-
     def _instantiate_parameter_states(self, context=None):
 
         super()._instantiate_parameter_states(context=context)
