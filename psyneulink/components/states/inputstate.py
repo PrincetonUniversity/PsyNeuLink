@@ -968,7 +968,6 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     #    while calls from init_methods continue to use owner.input_states (i.e., InputState specifications
     #    assigned in the **input_states** argument of the Mechanism's constructor)
     input_states = input_states or owner.input_states
-    print("input states (inputstate.py) = {}".format(input_states))
     state_list = _instantiate_state_list(owner=owner,
                                          state_list=input_states,
                                          state_type=InputState,

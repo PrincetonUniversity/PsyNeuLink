@@ -336,9 +336,6 @@ class ComparatorMechanism(ObjectiveMechanism):
                  ):
 
         input_states = self._merge_legacy_constructor_args(sample, target, input_states)
-        print("input states = {}".format(input_states))
-        print("sample = {}".format(sample))
-        print("target = {}".format(target))
 
         # Default output_states is specified in constructor as a tuple rather than a list
         # to avoid "gotcha" associated with mutable default arguments
@@ -379,7 +376,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                                                       TARGET))
 
             # Validate that input_states are specified as dicts
-            if not all(isinstance(input_state,dict) for input_state in input_states):
+            if not all(isinstance(input_state, dict) for input_state in input_states):
                 raise ComparatorMechanismError("PROGRAM ERROR: all items in input_state args must be converted to dicts"
                                                " by calling State._parse_state_spec() before calling super().__init__")
 

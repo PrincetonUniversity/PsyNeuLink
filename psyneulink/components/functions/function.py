@@ -3475,8 +3475,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         sender = self.instance_defaults.variable
         # Note: this assumes variable is a 1D np.array, as enforced by _validate_variable
         sender_len = len(sender)
-        print("self.instance_defaults.variable = {}".format(sender))
-        print("self.name = {}".format(self.name))
 
         # FIX: RELABEL sender -> input AND receiver -> output
         # FIX: THIS NEEDS TO BE CLEANED UP:
@@ -3652,7 +3650,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                 "since its receiver has not been specified".
                                 format(specification, self.name, self.owner.name))
             # receiver = sender
-        print("self.receiver.name = {}".format(self.receiver))
         receiver_len = receiver.shape[0]
 
         matrix = get_matrix(specification, rows=sender_len, cols=receiver_len, context=context)
@@ -3696,7 +3693,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         # Note: this calls _validate_variable and _validate_params which are overridden above;
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-        print("self.name = {}".format(self.name))
         return np.dot(variable, self.matrix)
 
     def keyword(self, keyword):
@@ -8776,11 +8772,6 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     def _validate_variable(self, variable, context=None):
         variable = self._update_variable(super()._validate_variable(variable, context))
 
-        print("variable (Reinforcement _validate_variable()) = {}".format(variable))
-
-        if context:
-            print("context = {}".format(context))
-
         if len(variable) != 3:
             raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
                                  format(self.name, variable))
@@ -8789,8 +8780,6 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         self.activation_input = variable[LEARNING_ACTIVATION_INPUT]
         self.activation_output = variable[LEARNING_ACTIVATION_OUTPUT]
         self.error_signal = variable[LEARNING_ERROR_OUTPUT]
-
-        print("activation_output = {}".format(self.activation_output))
 
         if len(self.error_signal) != 1:
             raise ComponentError("Error term for {} (the third item of its variable arg) must be an array with a "
@@ -8857,10 +8846,6 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
         output = self.activation_output
         error = self.error_signal
-
-        print("output = {}".format(output))
-        print("error = {}".format(error))
-        print("self.activation_input = {}".format(self.activation_input))
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None

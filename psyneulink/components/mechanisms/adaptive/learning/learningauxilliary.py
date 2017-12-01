@@ -137,7 +137,7 @@ from psyneulink.library.mechanisms.processing.objective.predictionerrormechanism
     import PredictionErrorMechanism
 from psyneulink.components.component import function_type, method_type
 from psyneulink.components.functions.function import BackPropagation, Hebbian, \
-    Linear, Reinforcement, TDLearning, LinearCombination
+    Linear, Reinforcement, TDLearning, LinearCombination, LinearMatrix
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import \
@@ -155,7 +155,8 @@ from psyneulink.globals.keywords import \
     BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, \
     IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, \
     MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, \
-    WEIGHT, PROJECTIONS, TDLEARNING_FUNCTION, PREDICTION_ERROR_MECHANISM
+    WEIGHT, PROJECTIONS, TDLEARNING_FUNCTION, PREDICTION_ERROR_MECHANISM, \
+    FUNCTION, HOLLOW_MATRIX
 
 __all__ = [
     'LearningAuxilliaryError'
@@ -415,7 +416,6 @@ def _instantiate_learning_components(learning_projection, context=None):
 
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     ACTIVATION FUNCTION AND/OR LEARNING RATE
-        print("Reinforcement variable = {}".format(lc.activation_mech_output.value))
         learning_function = Reinforcement(default_variable=[activation_input, activation_output, error_signal],
                                           activation_function=lc.activation_mech_fct,
                                           learning_rate=learning_rate)
@@ -423,18 +423,10 @@ def _instantiate_learning_components(learning_projection, context=None):
     elif learning_function.componentName is TDLEARNING_FUNCTION:
         activation_input = np.zeros_like(lc.activation_mech_input.value)
         activation_output = np.zeros_like(lc.activation_mech_output.value)
-        print("activation mech name = {}".format(lc.activation_mech.name))
 
-        print("activation_mech_input name = {}".format(lc.activation_mech_input.owner.name))
-        print("activation_mech_output name = {}".format(lc.activation_mech_output.owner.name))
-
-        error_output = np.ones_like(lc.activation_mech_output.value)
+        error_output = np.zeros_like(lc.activation_mech_output.value)
         error_signal = np.zeros_like(lc.activation_mech_output.value)
         learning_rate = learning_projection.learning_function.learning_rate
-
-        print("TDLearning variable = {}".format([activation_input,
-                                                 activation_output,
-                                                 error_signal]))
 
         learning_function = TDLearning(default_variable=[activation_input,
                                                          activation_output,
@@ -515,7 +507,6 @@ def _instantiate_learning_components(learning_projection, context=None):
             # Assign derivative of Linear to lc.error_derivative (as default, until TARGET projection is assigned);
             #    this will induce a simple subtraction of target-sample (i.e., implement a comparator)
             sample_input = target_input = error_output
-            print("length of target_input = {}".format(target_input))
             # MODIFIED 10/10/17 OLD:
             # objective_mechanism = ComparatorMechanism(sample=lc.activation_mech_output,
             #                                           target=TARGET,
@@ -538,26 +529,19 @@ def _instantiate_learning_components(learning_projection, context=None):
             #                                           context=context)
             # MODIFIED 10/10/17 NEW:
             if learning_function.componentName == TDLEARNING_FUNCTION:
-
                 objective_mechanism = PredictionErrorMechanism(
                         sample={NAME: SAMPLE,
                                 VARIABLE: sample_input,
                                 PROJECTIONS: [lc.activation_mech_output]},
                         target={NAME: TARGET,
-                                VARIABLE: target_input,
-                                PROJECTIONS: [lc.activation_mech_output]},
-                        output_states={NAME: OUTCOME,
-                                       VARIABLE: np.zeros_like(lc.activation_mech_output)},
+                                VARIABLE: target_input},
                         function=LinearCombination(
-                            default_variable=[np.zeros(len(sample_input)),
-                                              np.zeros(len(sample_input))],
+                            default_variable=np.zeros((2, len(sample_input))),
                             weights=[[-1], [1]]),
                         name="{} {}".format(lc.activation_mech.name,
                                             PREDICTION_ERROR_MECHANISM),
                         context=context)
-                print("objective mechanism value = {}".format(objective_mechanism.function))
             else:
-
                 objective_mechanism = ComparatorMechanism(sample={NAME: SAMPLE,
                                                                   VARIABLE: sample_input,
                                                                   PROJECTIONS: [lc.activation_mech_output],
@@ -600,22 +584,26 @@ def _instantiate_learning_components(learning_projection, context=None):
             objective_mechanism._learning_role = TARGET
 
         try:
-            lc.error_projection = objective_mechanism.input_state.path_afferents[0]
-            # FIX: THIS IS TO FORCE ASSIGNMENT (SINCE IT DOESN'T SEEM TO BE ASSIGNED BY TEST BELOW)
+            lc.error_projection = \
+            objective_mechanism.input_state.path_afferents[0]
+            # FIX: THIS IS TO FORCE ASSIGNMENT (SINCE IT DOESN'T SEEM TO BE
+            # ASSIGNED BY TEST BELOW)
         except AttributeError:
             raise LearningAuxilliaryError("PROGRAM ERROR: problem finding "
                                           "projection to TARGET "
                                           "ObjectiveMechanism from {} when "
-                                          "instantiating {}".format(lc.activation_mech.name,
-                                                                    learning_projection.name))
+                                          "instantiating {}".format(
+                lc.activation_mech.name,
+                learning_projection.name))
         else:
             if not lc.error_matrix:
                 raise LearningAuxilliaryError("PROGRAM ERROR: problem "
                                               "assigning error_matrix for "
                                               "projection to "
                                               "ObjectiveMechanism for {} when "
-                                              "instantiating {}".format(lc.activation_mech.name,
-                                                                        learning_projection.name))
+                                              "instantiating {}".format(
+                    lc.activation_mech.name,
+                    learning_projection.name))
 
         # INSTANTIATE LearningMechanism
 
@@ -641,7 +629,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                            function=learning_function,
                                            # learning_signals=[lc.activation_mech_projection],
                                            learning_signals=[learning_projection],
-                                           name = lc.activation_mech_projection.name + " " + LEARNING_MECHANISM,
+                                           name=lc.activation_mech_projection.name + " " + LEARNING_MECHANISM,
                                            context=context)
 
     # IMPLEMENTATION NOTE:

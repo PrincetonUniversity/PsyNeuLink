@@ -131,81 +131,80 @@ class PredictionErrorMechanism(ComparatorMechanism):
         # sample = x(t) in Montague
         from globals.keywords import SAMPLE, TARGET, INITIALIZING, INPUT_STATES
 
-        if INITIALIZING in context:
-            return 0
-        else:
-            sample = self.paramsCurrent[INPUT_STATES][SAMPLE].value
-            reward = self.paramsCurrent[INPUT_STATES][TARGET].value
+        sample = self.paramsCurrent[INPUT_STATES][SAMPLE].value
+        reward = self.paramsCurrent[INPUT_STATES][TARGET].value
 
-            delta = np.zeros_like(sample)
+        delta = np.zeros_like(sample)
+        if clock.trial == 0:
+            sample = sample * 0
 
-            # FIXME: correct the value size
-            # -- call function with sample[0:t-1], sample[1:t]
-            # -- add reward to returned value
-            sample_prev_t = sample[0:len(sample) - 1]
-            sample_next_t = sample[1:len(sample)]
+        # FIXME: correct the value size
+        # -- call function with sample[0:t-1], sample[1:t]
+        # -- add reward to returned value
+        sample_prev_t = self.gamma * sample[0:len(sample) - 1]
+        sample_next_t = sample[1:len(sample)]
 
-            new_sample = self.function(variable=[sample_next_t, sample_prev_t])
+        new_sample = self.function(variable=[sample_prev_t, sample_next_t])
 
-            for t in range(0, len(sample) - 1):
-                delta[t] = reward[t + 1] + new_sample[t]
+        for t in range(0, len(sample) - 1):
+            delta[t] = reward[t + 1] + new_sample[t]
 
-            # for t in range(0, len(sample) - 1):
-            #     delta[t] = reward[t + 1] + self.function(sample[t + 1],
-            #                                              sample[t])
+        # for t in range(0, len(sample) - 1):
+        #     delta[t] = reward[t + 1] + self.function(sample[t + 1],
+        #                                              sample[t])
 
-            # v_t = sample
-            # if self.t == 0:
-            #     v_t_minus_1 = 0
-            # else:
-            #     if self.load:
-            #         if not self.max_t_default:
-            #             np.append(self.e, 0)
-            #             np.append(self.utility_matrix, v_t)
-            #         self.utility_matrix[self.t] = v_t
-            #
-            #     v_t_minus_1 = self.utility_matrix[self.t - 1]
-            #
-            #     # v_t = self.get_value(v_t, self.t, self.learning_rate,
-            #     #                      self.prev_delta)
-            #     # v_t_minus_1 = self.get_value(
-            #     #     self.integrator_function.previous_value, self.t,
-            #     #     self.learning_rate, self.prev_delta)
-            # v_t *= self.gamma
-            # values = [v_t_minus_1, v_t]
-            #
-            # output_vector = self.function(variable=values)
-            # delta_t = reward[0] + output_vector[0]
-            # if np.any(sample):
-            #     self.e[self.t] += 1
-            #     self._update_utility_matrix(self.learning_rate, delta_t)
-            #     self.prev_delta = delta_t
-            #     self._update_eligibility_trace()
-            #
-            # self.t += 1
-            #
-            # if self.load:
-            #     if not self.max_t_default:
-            #         if reward > 0:
-            #             self.load = False
-            #             self.max_t = self.t
-            #             self.t = 0
-            #     else:
-            #         if self.t == self.max_t:
-            #             self.load = False
-            #             self.t = 0
-            #
-            #
-            # else:
-            #
-            #     # delta_t = self.eligibility_trace[self.t + 1] +
-            # output_vector[0]
-            #     # self.t += 1
-            #
-            #     if self.t == self.max_t:
-            #         self.t = 0
-
-            return delta
+        # v_t = sample
+        # if self.t == 0:
+        #     v_t_minus_1 = 0
+        # else:
+        #     if self.load:
+        #         if not self.max_t_default:
+        #             np.append(self.e, 0)
+        #             np.append(self.utility_matrix, v_t)
+        #         self.utility_matrix[self.t] = v_t
+        #
+        #     v_t_minus_1 = self.utility_matrix[self.t - 1]
+        #
+        #     # v_t = self.get_value(v_t, self.t, self.learning_rate,
+        #     #                      self.prev_delta)
+        #     # v_t_minus_1 = self.get_value(
+        #     #     self.integrator_function.previous_value, self.t,
+        #     #     self.learning_rate, self.prev_delta)
+        # v_t *= self.gamma
+        # values = [v_t_minus_1, v_t]
+        #
+        # output_vector = self.function(variable=values)
+        # delta_t = reward[0] + output_vector[0]
+        # if np.any(sample):
+        #     self.e[self.t] += 1
+        #     self._update_utility_matrix(self.learning_rate, delta_t)
+        #     self.prev_delta = delta_t
+        #     self._update_eligibility_trace()
+        #
+        # self.t += 1
+        #
+        # if self.load:
+        #     if not self.max_t_default:
+        #         if reward > 0:
+        #             self.load = False
+        #             self.max_t = self.t
+        #             self.t = 0
+        #     else:
+        #         if self.t == self.max_t:
+        #             self.load = False
+        #             self.t = 0
+        #
+        #
+        # else:
+        #
+        #     # delta_t = self.eligibility_trace[self.t + 1] +
+        # output_vector[0]
+        #     # self.t += 1
+        #
+        #     if self.t == self.max_t:
+        #         self.t = 0
+        print("delta value = {}".format(delta))
+        return delta
 
     def get_value(self, sample_value, t, alpha, prev_delta):
         return sample_value * self.e[t] * alpha * prev_delta

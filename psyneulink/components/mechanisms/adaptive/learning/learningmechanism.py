@@ -1192,12 +1192,9 @@ def _instantiate_error_signal_projection(sender, receiver):
     if isinstance(receiver, LearningMechanism):
         receiver = receiver.input_states[ERROR_SIGNAL]
     else:
-        raise LearningMechanismError("Receiver of the error signal Projection {} must be a LearningMechanism".
-                                     format(receiver))
+        raise LearningMechanismError("Receiver of the error signal Projection "
+                                     "{} must be a LearningMechanism".format(receiver))
 
-    print("receiver value = {}".format(receiver.value))
-    print("sender name = {}".format(sender.name))
-    print("sender value = {}".format(sender.value))
     if len(sender.value) != len(receiver.value):
         raise LearningMechanismError("The length of the OutputState ({}) for "
                                      "the sender ({}) of the error signal "
