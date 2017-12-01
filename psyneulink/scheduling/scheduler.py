@@ -132,10 +132,10 @@ considered as executing simultaneously.
 
             C
           ↗ ↖
-         A     B
+         A   B
 
-        scheduler.add_condition(B, EveryNCalls(A, 2))
-        scheduler.add_condition(C, EveryNCalls(B, 1))
+        scheduler.add_condition(B, pnl.EveryNCalls(A, 2))
+        scheduler.add_condition(C, pnl.EveryNCalls(B, 1))
 
         time steps: [{A}, {A, B}, {C}, ...]
 
@@ -189,80 +189,106 @@ Please see `Condition` for a list of all supported Conditions and their behavior
 
 * Basic phasing in a linear process::
 
-    A = TransferMechanism(function=Linear(), name='A')
-    B = TransferMechanism(function=Linear(), name='B')
-    C = TransferMechanism(function=Linear(), name='C')
+    >>> import psyneulink as pnl
 
-    p = Process(
-        pathway=[A, B, C],
-        name = 'p'
-    )
-    s = System(
-        processes=[p],
-        name='s'
-    )
-    my_scheduler = Scheduler(system=s)
+    >>> A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
+    >>> B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
+    >>> C = pnl.TransferMechanism(function=pnl.Linear(), name='C')
 
-    #impicit condition of Always for A
-    my_scheduler.add_condition(B, EveryNCalls(A, 2))
-    my_scheduler.add_condition(C, EveryNCalls(B, 3))
+    >>> p = pnl.Process(
+    ...     pathway=[A, B, C],
+    ...     name = 'p'
+    ... )
+    >>> s = pnl.System(
+    ...     processes=[p],
+    ...     name='s'
+    ... )
+    >>> my_scheduler = pnl.Scheduler(system=s)
 
-    # implicit AllHaveRun Termination condition
-    execution_sequence = list(my_scheduler.run())
+    >>> # implicit condition of Always for A
+    >>> my_scheduler.add_condition(B, pnl.EveryNCalls(A, 2))
+    >>> my_scheduler.add_condition(C, pnl.EveryNCalls(B, 3))
 
-    execution_sequence: [A, A, B, A, A, B, A, A, B, C]
+    >>> # implicit AllHaveRun Termination condition
+    >>> execution_sequence = list(my_scheduler.run())
+    >>> execution_sequence
+    [{(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism C)}]
 
 * Alternate basic phasing in a linear process::
 
-    A = TransferMechanism(function=Linear(), name='A')
-    B = TransferMechanism(function=Linear(), name='B')
+    >>> A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
+    >>> B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
 
-    p = Process(
-        pathway=[A, B],
-        name = 'p'
-    )
-    s = System(
-        processes=[p],
-        name='s'
-    )
-    my_scheduler = Scheduler(system=s)
+    >>> p = pnl.Process(
+    ...     pathway=[A, B],
+    ...     name = 'p'
+    ... )
+    >>> s = pnl.System(
+    ...     processes=[p],
+    ...     name='s'
+    ... )
+    >>> my_scheduler = pnl.Scheduler(system=s)
 
-    my_scheduler.add_condition(A, Any(AtPass(0), EveryNCalls(B, 2)))
-    my_scheduler.add_condition(B, Any(EveryNCalls(A, 1), EveryNCalls(B, 1)))
+    >>> my_scheduler.add_condition(
+    ...     A,
+    ...     pnl.Any(
+    ...         pnl.AtPass(0),
+    ...         pnl.EveryNCalls(B, 2)
+    ...     )
+    ... )
 
-    termination_conds = {ts: None for ts in TimeScale}
-    termination_conds[TimeScale.TRIAL] = AfterNCalls(B, 4, time_scale=TimeScale.TRIAL)
-    execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
+    >>> my_scheduler.add_condition(
+    ...     B,
+    ...     pnl.Any(
+    ...         pnl.EveryNCalls(A, 1),
+    ...         pnl.EveryNCalls(B, 1)
+    ...     )
+    ... )
 
+    >>> termination_conds = {
+    ...     pnl.TimeScale.TRIAL: pnl.AfterNCalls(B, 4, time_scale=pnl.TimeScale.TRIAL)
+    ... }
+    >>> execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
+
+    COMMENT:
+        TODO: Add output for execution sequence
+    COMMENT
     execution_sequence: [A, B, B, A, B, B]
 
 * Basic phasing in two processes::
 
-    A = TransferMechanism(function=Linear(), name='A')
-    B = TransferMechanism(function=Linear(), name='B')
-    C = TransferMechanism(function=Linear(), name='C')
+    >>> A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
+    >>> B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
+    >>> C = pnl.TransferMechanism(function=pnl.Linear(), name='C')
 
-    p = Process(
-        pathway=[A, C],
-        name = 'p'
-    )
-    q = Process(
-        pathway=[B, C],
-        name = 'q'
-    )
-    s = System(
-        processes=[p, q],
-        name='s'
-    )
-    my_scheduler = Scheduler(system=s)
+    >>> p = pnl.Process(
+    ...         pathway=[A, C],
+    ...         name = 'p'
+    ... )
+    >>> q = pnl.Process(
+    ...         pathway=[B, C],
+    ...         name = 'q'
+    ... )
+    >>> s = pnl.System(
+    ...         processes=[p, q],
+    ...         name='s'
+    ... )
+    >>> my_scheduler = pnl.Scheduler(system=s)
 
-    my_scheduler.add_condition(A, EveryNPasses(1))
-    my_scheduler.add_condition(B, EveryNCalls(A, 2))
-    my_scheduler.add_condition(C, Any(AfterNCalls(A, 3), AfterNCalls(B, 3)))
+    >>> my_scheduler.add_condition(A, pnl.EveryNPasses(1))
+    >>> my_scheduler.add_condition(B, pnl.EveryNCalls(A, 2))
+    >>> my_scheduler.add_condition(
+    ...     C,
+    ...     pnl.Any(
+    ...         pnl.AfterNCalls(A, 3),
+    ...         pnl.AfterNCalls(B, 3)
+    ...     )
+    ... )
 
-    termination_conds = {ts: None for ts in TimeScale}
-    termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 4, time_scale=TimeScale.TRIAL)
-    execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
+    >>> termination_conds = {
+    ...     pnl.TimeScale.TRIAL: pnl.AfterNCalls(C, 4, time_scale=pnl.TimeScale.TRIAL)
+    ... }
+    >>> execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
 
     execution_sequence: [A, {A,B}, A, C, {A,B}, C, A, C, {A,B}, C]
 
@@ -277,7 +303,7 @@ import logging
 
 from toposort import toposort
 
-from psyneulink.scheduling.condition import AllHaveRun, Always, ConditionSet, Never
+from psyneulink.scheduling.condition import AllHaveRun, Always, Condition, ConditionSet, Never
 from psyneulink.scheduling.timescale import TimeScale
 
 __all__ = [
@@ -457,6 +483,15 @@ class Scheduler(object):
         for ts in self.termination_conds:
             self.termination_conds[ts].scheduler = self
 
+    def _parse_termination_conditions(self, termination_conds):
+        if termination_conds is None:
+            return None
+
+        try:
+            return {k: termination_conds[k] for k in termination_conds if isinstance(k, TimeScale) and isinstance(termination_conds[k], Condition)}
+        except TypeError:
+            raise TypeError('termination_conditions must be a dictionary of the form {TimeScale: Condition, ...}')
+
     ################################################################################
     # Wrapper methods
     #   to allow the user to ignore the ConditionSet internals
@@ -507,7 +542,7 @@ class Scheduler(object):
                terminate the execution of the specified `TimeScale`
         '''
         self._validate_run_state()
-        self.update_termination_conditions(termination_conds)
+        self.update_termination_conditions(self._parse_termination_conditions(termination_conds))
 
         self.counts_useable = {node: {n: 0 for n in self.nodes} for node in self.nodes}
         self._reset_counts_total(TimeScale.TRIAL)
@@ -588,9 +623,6 @@ class Scheduler(object):
 
                 self._increment_time(TimeScale.TIME_STEP)
 
-            # can execute the execution_list here
-            logger.info(self.execution_list)
-            logger.debug('Execution list: [{0}]'.format(' '.join([str(x) for x in self.execution_list])))
             self._increment_time(TimeScale.PASS)
 
         self._increment_time(TimeScale.TRIAL)

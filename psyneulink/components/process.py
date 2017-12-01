@@ -149,7 +149,7 @@ specified in any of the following ways:
   * **Inline specification** -- a MappingProjection specification can be interposed between any two Mechanisms in the
     `pathway <Process.pathway>` list. This creates a Projection from the preceding Mechanism in the list to the
     one that follows it.  It can be specified using any of the ways used to `specify a Projection
-    <Projection_In_Context_Specification>` or the `matrix parameter <Mapping_Matrix_Specification>` of one.
+    <Projection_Specification>` or the `matrix parameter <Mapping_Matrix_Specification>` of one.
   ..
 
   .. _Process_Tuple_Specification:
@@ -456,6 +456,7 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import Objec
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.projection import _add_projection_to, _is_projection_spec
+from psyneulink.components.projections.projection import Projection_Base
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, System_Base
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.parameterstate import ParameterState
@@ -782,16 +783,14 @@ class Process(Process_Base):
     timeScale : TimeScale : default TimeScale.TRIAL
         determines the default `TimeScale` value used by Mechanisms in the pathway.
 
-    name : str : default Process-<index>
-        the name of the Process.
-        Specified in the **name** argument of the constructor for the Process;
-        if not is specified, a default is assigned by ProcessRegistry
-        (see :ref:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the Process; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by ProcessRegistry (see `Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Process.classPreferences
-        the `PreferenceSet` for the Process.
-        Specified in the **prefs** argument of the constructor for the Process;  if it is not specified, a default is
-        assigned using `classPreferences` defined in __init__.py (see :ref:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the Process; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
 
     """
@@ -1030,10 +1029,12 @@ class Process(Process_Base):
         self._instantiate__deferred_inits(context=context)
 
         if self.learning:
-            self._check_for_target_mechanisms()
-            if self._target_mechs:
-                self._instantiate_target_input(context=context)
-            self._learning_enabled = True
+            if self._check_for_target_mechanisms():
+                if self._target_mechs:
+                    self._instantiate_target_input(context=context)
+                self._learning_enabled = True
+            else:
+                self._learning_enabled = False
         else:
             self._learning_enabled = False
 
@@ -1130,7 +1131,7 @@ class Process(Process_Base):
             # Can't be first entry, and can never have two in a row
 
             # Config entry is a Projection
-            if _is_projection_spec(item):
+            if _is_projection_spec(item, proj_type=Projection):
                 # Projection not allowed as first entry
                 if i==0:
                     raise ProcessError("Projection cannot be first entry in pathway ({0})".format(self.name))
@@ -1547,14 +1548,9 @@ class Process(Process_Base):
                     elif (isinstance(item, (np.matrix, str, tuple)) or
                               (isinstance(item, np.ndarray) and item.ndim == 2)):
                         # If a LearningProjection is explicitly specified for this Projection, use it
-                        # MODIFIED 8/14/17 OLD [WAS ALREADY COMMENTED OUT]:
-                        # if params:
-                        #     matrix_spec = (item, params)
-                        # MODIFIED 8/14/17 NEW:
                         if isinstance(item, tuple):
                             matrix_spec = item
                             learning_projection_specified = True
-                        # MODIFIED 8/14/17 END
                         # If a LearningProjection is not specified for this Projection but self.learning is, use that
                         elif self.learning:
                             matrix_spec = (item, self.learning)
@@ -1758,6 +1754,9 @@ class Process(Process_Base):
         Returns:
 
         """
+
+        if isinstance(input, dict):
+            input = list(input.values())[0]
         # Validate input
         if input is None:
             input = self.first_mechanism.instance_defaults.variable
@@ -1781,7 +1780,7 @@ class Process(Process_Base):
                                format(len(input), self.name, len(self.process_input_states)))
 
         # Assign items in input to value of each process_input_state
-        for i in range (len(self.process_input_states)):
+        for i in range(len(self.process_input_states)):
             self.process_input_states[i].value = input[i]
 
         return input
@@ -1932,6 +1931,8 @@ class Process(Process_Base):
          Identify TARGET Mechanisms and assign to self.target_mechanisms,
              assign self to each TARGET Mechanism
              and report assignment if verbose
+
+         Returns True of TARGET Mechanisms are found and/or assigned, else False
         """
 
         from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -1968,8 +1969,18 @@ class Process(Process_Base):
                             if (isinstance(object_item, ObjectiveMechanism) and
                                 object_item._learning_role is TARGET))
 
-        if not target_mechs:
+        if target_mechs:
 
+            # self.target_mechanisms = target_mechs
+            self._target_mechs = target_mechs
+            if self.prefs.verbosePref:
+                print("\'{}\' assigned as TARGET Mechanism(s) for \'{}\'".
+                      format([mech.name for mech in self._target_mechs], self.name))
+            return True
+
+
+        # No target_mechs already specified, so get from learning_mechanism
+        elif self._learning_mechs:
             last_learning_mech  = self._learning_mechs[0]
 
             # Trace projections to first learning ObjectiveMechanism, which is for the last mechanism in the process,
@@ -2003,13 +2014,10 @@ class Process(Process_Base):
 
                 raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
                                    "but no TARGET ObjectiveMechanism".format(self.name, self.learning))
+            return True
 
         else:
-            # self.target_mechanisms = target_mechs
-            self._target_mechs = target_mechs
-            if self.prefs.verbosePref:
-                print("\'{}\' assigned as TARGET Mechanism(s) for \'{}\'".
-                      format([mech.name for mech in self._target_mechs], self.name))
+            return False
 
     def _instantiate_target_input(self, context=None):
 
@@ -2334,7 +2342,7 @@ class Process(Process_Base):
             each `TRIAL`;  if it is `False`, then `initialize <Process.initialize>` is called only *once*,
             before the first `TRIAL` executed.
 
-        initial_values : Optional[Dict[ProcessingMechanism, List[input] or np.ndarray(input)]] : default None
+        initial_values : ProcessingMechanism, List[input] or np.ndarray(input)] : default None
             specifies the values used to initialize `ProcessingMechanisms <ProcessingMechanism>` designated as
             `INITIALIZE_CYCLE` whenever the Process' `initialize <Process.initialize>` method is called. The key
             for each entry must be a ProcessingMechanism `designated <Process_Mechanism_Initialize_Cycle>`
@@ -2343,7 +2351,7 @@ class Process(Process_Base):
             `INITIALIZE_CYCLE` but not specified in **initial_values** are initialized with the value of their
             `variable <Mechanism_Base.variable>` attribute (the default input for that Mechanism).
 
-        targets : Optional[List[input] or np.ndarray(input)] : default None
+        targets : List[input] or np.ndarray(input) : default None
             specifies the target value assigned to each of the `target_mechanisms <Process.target_mechanisms>` in
             each `TRIAL` of execution.  Each item of the outermost level (if a nested list) or axis 0 (if an ndarray)
             corresponds to a single `TRIAL`;  the number of items must equal the number of items in the **inputs**
@@ -2552,7 +2560,7 @@ class ProcessInputState(OutputState):
 
     COMMENT:
     .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
-       in Projection._instantiate_sender()
+       in Projection_Base._instantiate_sender()
 
        self.value is used to represent the corresponding item of the input arg to process.execute or process.run
     COMMENT

@@ -239,20 +239,25 @@ Examples
 The following example creates a ControlMechanism by specifying its **objective_mechanism** using a constructor
 that specifies the OutputStates to be monitored by its `objective_mechanism <ControlMechanism.objective_mechanism>`::
 
-    my_transfer_mech_A = TransferMechanism()
-    my_DDM = DDM()
-    my_transfer_mech_B = TransferMechanism(function=Logistic)
+    >>> import psyneulink as pnl
+    >>> my_transfer_mech_A = pnl.TransferMechanism(name="Transfer Mech A")
+    >>> my_DDM = pnl.DDM(name="My DDM")
+    >>> my_transfer_mech_B = pnl.TransferMechanism(function=pnl.Logistic,
+    ...                                            name="Transfer Mech B")
 
-    my_control_mech = ControlMechanism(
-                         objective_mechanism=ObjectiveMechanism(monitored_output_states=[(my_transfer_mech_A, 2, 1),
-                                                                                  my_DDM.output_states[RESPONSE_TIME]],
-                                                                function=LinearCombination(operation=PRODUCT)),
-                         control_signals=[(THRESHOLD, my_DDM),
-                                          (GAIN, my_transfer_mech_B)])
+    >>> my_control_mech = pnl.ControlMechanism(
+    ...                          objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[(my_transfer_mech_A, 2, 1),
+    ...                                                                                               my_DDM.output_states[pnl.RESPONSE_TIME]],
+    ...                                                                     name="Objective Mechanism"),
+    ...                          function=pnl.LinearCombination(operation=pnl.PRODUCT),
+    ...                          control_signals=[(pnl.THRESHOLD, my_DDM),
+    ...                                           (pnl.GAIN, my_transfer_mech_B)],
+    ...                          name="My Control Mech")
+
 
 This creates an ObjectiveMechanism for the ControlMechanism that monitors the `primary OutputState
 <OutputState_Primary>` of ``my_Transfer_mech_A`` and the *RESPONSE_TIME* OutputState of ``my_DDM``;  its function
-first multiplies the former by 2 before, then takes product of ther values and passes the result as the input to the
+first multiplies the former by 2 before, then takes product of their values and passes the result as the input to the
 ControlMechanism.  The ControlMechanism's `function <ControlMechanism.function>` uses this value to determine
 the allocation for its ControlSignals, that control the value of the `threshold <DDM.threshold>` parameter of
 ``my_DDM`` and the  `gain <Logistic.gain>` parameter of the `Logistic` Function for ``my_transfer_mech_B``.
@@ -260,25 +265,26 @@ the allocation for its ControlSignals, that control the value of the `threshold 
 The following example specifies the same set of OutputStates for the ObjectiveMechanism, by assigning them directly
 to the **objective_mechanism** argument::
 
-    my_control_mech = ControlMechanism(
-                            objective_mechanism=[(my_transfer_mech_A, 2, 1),
-                                                 my_DDM.output_states[RESPONSE_TIME]],
-                            control_signals=[(THRESHOLD, my_DDM),
-                                             (GAIN, my_transfer_mech_B)])
+    >>> my_control_mech = pnl.ControlMechanism(
+    ...                             objective_mechanism=[(my_transfer_mech_A, 2, 1),
+    ...                                                  my_DDM.output_states[pnl.RESPONSE_TIME]],
+    ...                             control_signals=[(pnl.THRESHOLD, my_DDM),
+    ...                                              (pnl.GAIN, my_transfer_mech_B)])
+    ...
 
 Note that, while this form is more succinct, it precludes specifying the ObjectiveMechanism's function.  Therefore,
 the values of the monitored OutputStates will be added (the default) rather than multiplied.
 
 The ObjectiveMechanism can also be created on its own, and then referenced in the constructor for the ControlMechanism::
 
-    my_obj_mech=ObjectiveMechanism(monitored_output_states=[(my_transfer_mech_A, 2, 1),
-                                                     my_DDM.output_states[RESPONSE_TIME]],
-                                   function=LinearCombination(operation=PRODUCT))
+    >>> my_obj_mech = pnl.ObjectiveMechanism(monitored_output_states=[(my_transfer_mech_A, 2, 1),
+    ...                                                               my_DDM.output_states[pnl.RESPONSE_TIME]],
+    ...                                      function=pnl.LinearCombination(operation=pnl.PRODUCT))
 
-    my_control_mech = ControlMechanism(
-                            objective_mechanism=my_obj_mech,
-                            control_signals=[(THRESHOLD, my_DDM),
-                                             (GAIN, my_transfer_mech_B)])
+    >>> my_control_mech = pnl.ControlMechanism(
+    ...                        objective_mechanism=my_obj_mech,
+    ...                        control_signals=[(pnl.THRESHOLD, my_DDM),
+    ...                                         (pnl.GAIN, my_transfer_mech_B)])
 
 Here, as in the first example, the constructor for the ObjectiveMechanism can be used to specify its function, as well
 as the OutputState that it monitors.
@@ -308,8 +314,9 @@ from psyneulink.components.states.modulatorysignals.controlsignal import Control
 from psyneulink.components.shellclasses import System_Base
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import \
-    AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, \
-    NAME, OBJECTIVE_MECHANISM, PRODUCT, PROJECTIONS, SYSTEM, VARIABLE, WEIGHT
+    AUTO_ASSIGN_MATRIX,  INIT__EXECUTE__METHOD_ONLY, \
+    PROJECTION_TYPE, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
+    NAME, OBJECTIVE_MECHANISM, PRODUCT, PROJECTIONS, SYSTEM, VARIABLE, WEIGHT, EXPONENT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -322,6 +329,38 @@ __all__ = [
 ALLOCATION_POLICY = 'allocation_policy'
 
 ControlMechanismRegistry = {}
+
+# MODIFIED 11/28/17 OLD:
+# def _is_control_spec(spec):
+#     from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+#     if isinstance(spec, tuple):
+#         return _is_control_spec(spec[1])
+#     elif isinstance(spec, (ControlMechanism, ControlSignal, ControlProjection)):
+#         return True
+#     elif isinstance(spec, type) and issubclass(spec, ControlSignal):
+#         return True
+#     elif isinstance(spec, str) and spec in {CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL}:
+#         return True
+#     else:
+#         return False
+
+# MODIFIED 11/28/17 NEW:
+def _is_control_spec(spec):
+    from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+    if isinstance(spec, tuple):
+        return any(_is_control_spec(item) for item in spec)
+    if isinstance(spec, dict) and PROJECTION_TYPE in spec:
+        return _is_control_spec(spec[PROJECTION_TYPE])
+    elif isinstance(spec, (ControlMechanism, ControlSignal, ControlProjection)):
+        return True
+    elif isinstance(spec, type) and issubclass(spec, (ControlMechanism, ControlSignal, ControlProjection)):
+        return True
+    elif isinstance(spec, str) and spec in {CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL}:
+        return True
+    else:
+        return False
+# MODIFIED 11/28/17 END
+
 
 class ControlMechanismError(Exception):
     def __init__(self, error_value):
@@ -407,21 +446,17 @@ class ControlMechanism(AdaptiveMechanism_Base):
         specifies the default form of modulation used by the ControlMechanism's `ControlSignals <ControlSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
         for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name : str : default ControlMechanism-<index>
-        a string used for the name of the Mechanism.
-        If not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <ControlMechanism.name>`
+        specifies the name of the ControlMechanism.
 
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for the Mechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the ControlMechanism; see `prefs <ControlMechanism.prefs>` for details.
 
     Attributes
     ----------
@@ -464,7 +499,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         ControlSignal listed in the `control_signals` attribute;  the allocation_policy is the same as the
         ControlMechanism's `value <Mechanism_Base.value>` attribute).
 
-    control_signals : List[ControlSignal]
+    control_signals : ContentAddressableList[ControlSignal]
         list of the `ControlSignals <ControlSignals>` for the ControlMechanism, including any inherited from a
         `system <ControlMechanism.system>` for which it is a `controller <System.controller>` (same as
         ControlMechanism's `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`
@@ -476,11 +511,24 @@ class ControlMechanism(AdaptiveMechanism_Base):
     modulation : ModulationParam
         the default form of modulation used by the ControlMechanism's `ControlSignals <GatingSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
+
+    name : str
+        the name of the ControlMechanism; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the ControlMechanism; if it is not specified in the **prefs** argument of the 
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        <LINK>` for details).
     """
 
     componentType = "ControlMechanism"
 
     initMethod = INIT__EXECUTE__METHOD_ONLY
+
+    outputStateType = ControlSignal
+    stateListAttr = Mechanism_Base.stateListAttr.copy()
+    stateListAttr.update({ControlSignal:CONTROL_SIGNALS})
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -550,8 +598,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         from psyneulink.components.states.state import _parse_state_spec
 
         super(ControlMechanism, self)._validate_params(request_set=request_set,
-                                                                 target_set=target_set,
-                                                                 context=context)
+                                                       target_set=target_set,
+                                                       context=context)
         if SYSTEM in target_set:
             if not isinstance(target_set[SYSTEM], System_Base):
                 raise KeyError
@@ -617,7 +665,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
             for control_signal in target_set[CONTROL_SIGNALS]:
                 _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=control_signal)
 
-    # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+    # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION
+    # ONCE THAT IS IMPLEMENTED
     def _instantiate_objective_mechanism(self, context=None):
         """
         Assign InputState to ControlMechanism for each OutputState to be monitored;
@@ -687,23 +736,25 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
                                                                function=LinearCombination(operation=PRODUCT),
                                                                name=self.name + '_ObjectiveMechanism')
+
             except ObjectiveMechanismError as e:
                 raise ObjectiveMechanismError(e)
 
         # Print monitored_output_states
         if self.prefs.verbosePref:
-            print ("{0} monitoring:".format(self.name))
+            print("{0} monitoring:".format(self.name))
             for state in self.monitored_output_states:
                 weight = self.monitored_output_states_weights_and_exponents[
                                                          self.monitored_output_states.index(state)][WEIGHT_INDEX]
                 exponent = self.monitored_output_states_weights_and_exponents[
                                                          self.monitored_output_states.index(state)][EXPONENT_INDEX]
-                print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
+                print("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
 
         # Assign ObjectiveMechanism's role as CONTROL
         self.objective_mechanism._role = CONTROL
 
-        # If ControlMechanism is a System controller, name Projection from ObjectiveMechanism based on the System
+        # If ControlMechanism is a System controller, name Projection from
+        # ObjectiveMechanism based on the System
         if self.system is not None:
             name = self.system.name + ' outcome signal'
         # Otherwise, name it based on the ObjectiveMechanism
@@ -718,7 +769,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)
 
-        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION
+        # ONCE THAT IS IMPLEMENTED
         self._instantiate_objective_mechanism(context=context)
 
     def _instantiate_output_states(self, context=None):
@@ -748,11 +800,16 @@ class ControlMechanism(AdaptiveMechanism_Base):
             for control_signal in self.control_signals:
                 self._instantiate_control_signal(control_signal, context=context)
 
-
         super()._instantiate_output_states(context=context)
 
         # Reassign control_signals to capture any user_defined ControlSignals instantiated by in call to super
-        self._control_signals = [state for state in self.output_states if isinstance(state, ControlSignal)]
+        #    and assign to ContentAddressableList
+        self._control_signals = ContentAddressableList(component_type=ControlSignal,
+                                                       list=[state for state in self.output_states
+                                                             if isinstance(state, ControlSignal)])
+
+        if self.allocation_policy is None:
+            self.allocation_policy = self.default_value
 
         # If the ControlMechanism's allocation_policy has more than one item,
         #    warn if the number of items does not equal the number of its ControlSignals
@@ -833,11 +890,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
 
     def _execute(self,
-                    variable=None,
-                    runtime_params=None,
-                    clock=CentralClock,
-                    time_scale=TimeScale.TRIAL,
-                    context=None):
+                 variable=None,
+                 runtime_params=None,
+                 clock=CentralClock,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
         """Updates ControlSignals based on inputs
 
         Must be overriden by subclass
@@ -851,9 +908,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
         <ControlMechanism.control_signals>`.
         """
 
-        print ("\n---------------------------------------------------------")
+        print("\n---------------------------------------------------------")
 
-        print ("\n{0}".format(self.name))
+        print("\n{0}".format(self.name))
         print("\n\tMonitoring the following Mechanism OutputStates:")
         for state in self.objective_mechanism.input_states:
             for projection in state.path_afferents:
@@ -964,14 +1021,33 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Flag ObjectiveMechanism as associated with a ControlMechanism that is a controller for the System
         self._objective_mechanism.controller = True
 
-
     @property
     def monitored_output_states(self):
-        return self.objective_mechanism.monitored_output_states
+        try:
+            return self._objective_mechanism.monitored_output_states
+        except AttributeError:
+            return None
+
+    @monitored_output_states.setter
+    def monitored_output_states(self, value):
+        try:
+            self._objective_mechanism._monitored_output_states = value
+        except AttributeError:
+            # # MODIFIED 11/25/17 OLD:
+            # raise ControlMechanismError("Control Mechanism {}'s Objective "
+            #                             "Mechanism has not been "
+            #                             "instantiated.".format(self.name))
+            # MODIFIED 11/25/17 NEW:
+            return None
+
+            # # MODIFIED 11/25/17 NEWER:
+            # self._instantiate_objective_mechanism(context='INSTANTIATE_OBJECTIVE_MECHANISM')
+            # return self.monitored_output_states
+            # MODIFIED 11/25/17 END:
 
     @property
     def monitored_output_states_weights_and_exponents(self):
-        return self.objective_mechanism.monitored_output_states_weights_and_exponents
+        return self._objective_mechanism.monitored_output_states_weights_and_exponents
 
 
 

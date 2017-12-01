@@ -173,16 +173,13 @@ Class Reference
 """
 
 import numbers
+import numpy as np
+import typecheck as tc
 import warnings
 
 from collections import namedtuple
 from enum import Enum, IntEnum
 from random import randint
-
-import numpy as np
-import typecheck as tc
-
-from numpy import abs, exp, tanh
 
 from psyneulink.components.component import ComponentError, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
@@ -202,7 +199,7 @@ from psyneulink.globals.keywords import \
     PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, \
     RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, \
     SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, \
-    USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, \
+    USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, NORMALIZING_FUNCTION_TYPE,\
     kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -216,7 +213,7 @@ __all__ = [
     'ConstantIntegrator', 'DISABLE', 'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
     'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON', 'ERROR_MATRIX', 'Exponential', 'ExponentialDist',
     'FHNIntegrator', 'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
-    'GammaDist', '_get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword', 'Hebbian', 'Integrator',
+    'GammaDist', 'get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword', 'Hebbian', 'Integrator',
     'IntegratorFunction', 'is_Function', 'is_function_type', 'kwBogaczEtAl', 'kwNavarrosAndFuss', 'LCAIntegrator',
     'LEARNING_ACTIVATION_FUNCTION', 'LEARNING_ACTIVATION_INPUT', 'LEARNING_ACTIVATION_OUTPUT', 'LEARNING_ERROR_OUTPUT',
     'LearningFunction', 'Linear', 'LinearCombination', 'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next',
@@ -264,7 +261,7 @@ def is_Function(x):
 def is_function_type(x):
     if not x:
         return False
-    elif isinstance(x, (Function, function_type)):
+    elif isinstance(x, (Function, function_type, method_type)):
         return True
     elif issubclass(x, Function):
         return True
@@ -532,7 +529,7 @@ class Function_Base(Function):
     variable : value : default ClassDefaults.variable
         specifies the format and a default value for the input to `function <Function>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -540,9 +537,11 @@ class Function_Base(Function):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
 
     Attributes
@@ -565,13 +564,17 @@ class Function_Base(Function):
         for details).
     COMMENT
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 
@@ -712,7 +715,7 @@ class ArgumentTherapy(Function_Base):
     pertinacity : float : default 10.0
         specifies therapeutic consistency
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -720,9 +723,11 @@ class ArgumentTherapy(Function_Base):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
 
     Attributes
@@ -737,13 +742,18 @@ class ArgumentTherapy(Function_Base):
     pertinacity : float : default 10.0
         determines consistency with which the manner complies with the propensity.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+
 
     """
 
@@ -883,13 +893,11 @@ class ArgumentTherapy(Function_Base):
         variable : boolean : default ClassDefaults.variable
            an assertion to which a therapeutic response is made.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -955,7 +963,7 @@ class UserDefinedFunction(Function_Base):
     variable : value : default ClassDefaults.variable
         specifies the format and a default value for the input to `function <Function>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -963,10 +971,11 @@ class UserDefinedFunction(Function_Base):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -988,13 +997,17 @@ class UserDefinedFunction(Function_Base):
         for details).
     COMMENT
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the Function; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
     componentName = USER_DEFINED_FUNCTION
@@ -1132,7 +1145,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         specifies a value to add to each element of the output of `function <Reduce.function>`
         (see `offset <Reduce.offset>` for details)
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -1140,10 +1153,11 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -1164,14 +1178,17 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         value is added to each element of the array after applying the `operation <Reduce.operation>`
         and `scale <Reduce.scale>` (if it is specified).
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
     componentName = REDUCE_FUNCTION
 
@@ -1235,13 +1252,11 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         variable : list or np.array : default ClassDefaults.variable
            a list or np.array of numeric values.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -1364,7 +1379,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         specifies a value to add to each element of the result of `function <LinearCombination.function>`
         (see `offset <LinearCombination.offset>` for details)
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -1372,10 +1387,11 @@ class LinearCombination(CombinationFunction):  # -------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -1429,14 +1445,17 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         for details).
     COMMENT
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = LINEAR_COMBINATION_FUNCTION
@@ -1615,13 +1634,11 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         variable : 1d or 2d np.array : default ClassDefaults.variable
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -1824,7 +1841,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         specifies a value to add to the result of `function <CombineMeans.function>`
         (see `offset <CombineMeans.offset>` for details)
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -1832,10 +1849,11 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -1889,14 +1907,17 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         for details).
     COMMENT
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = COMBINE_MEANS_FUNCTION
@@ -2050,13 +2071,11 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         variable : 1d or 2d np.array : default ClassDefaults.variable
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -2143,6 +2162,285 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     @scale.setter
     def scale(self, val):
         self._scale = val
+
+# *********************************** NORMALIZING FUNCTIONS **************************************************
+
+class NormalizingFunction(Function_Base):
+    """Function that adjusts a set of values
+    """
+    componentType = NORMALIZING_FUNCTION_TYPE
+
+    # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
+    def __init__(self, default_variable,
+                 params,
+                 owner,
+                 prefs,
+                 context):
+
+        if not hasattr(self, MULTIPLICATIVE_PARAM):
+            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
+                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
+
+        if not hasattr(self, ADDITIVE_PARAM):
+            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
+                                format(self.__class__.__name__, ADDITIVE_PARAM))
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+    @property
+    def multiplicative(self):
+        return getattr(self, self.multiplicative_param)
+
+    @multiplicative.setter
+    def multiplicative(self, val):
+        setattr(self, self.multiplicative_param, val)
+
+    @property
+    def additive(self):
+        return getattr(self, self.additive_param)
+
+    @additive.setter
+    def additive(self, val):
+        setattr(self, self.additive_param, val)
+
+class SoftMax(NormalizingFunction):
+    """
+    SoftMax(               \
+         default_variable, \
+         gain=1.0,         \
+         output=ALL,       \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
+
+    .. _SoftMax:
+
+    SoftMax transform of variable (see `The Softmax function and its derivative
+    <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
+
+    Arguments
+    ---------
+
+    default_variable : 1d np.array : default ClassDefaults.variable
+        specifies a template for the value to be transformed.
+
+    gain : float : default 1.0
+        specifies a value by which to multiply `variable <Linear.variable>` before SoftMax transformation.
+
+    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
+        specifies the format of array returned by `function <SoftMax.function>`
+        (see `output <SoftMax.output>` for details).
+
+    params : Dict[param keyword, param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : 1d np.array
+        contains value to be transformed.
+
+    gain : float
+        value by which `variable <Logistic.variable>` is multiplied before the SoftMax transformation;  determines
+        the "sharpness" of the distribution.
+
+    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
+        determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
+        in the array returned by `function <SoftMax.funtion>`:
+            * **ALL**: array of all SoftMax-transformed values (the default);
+            * **MAX_VAL**: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
+            * **MAX_INDICATOR**: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
+            * **PROB**: probabilistically chosen element based on SoftMax-transformed values after normalizing sum of
+              values to 1, 0 for all others.
+
+    bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = SOFTMAX_FUNCTION
+
+    bounds = (0,1)
+    multiplicative_param = GAIN
+    additive_param = None
+
+    class ClassDefaults(NormalizingFunction.ClassDefaults):
+        variable = 0
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=ClassDefaults.variable,
+                 gain: parameter_spec = 1.0,
+                 output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context='SoftMax Init'):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(gain=gain,
+                                                  output=output,
+                                                  params=params)
+        if output is MAX_VAL:
+            bounds = None
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        """
+        Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
+        sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
+        filtered by `ouptput <SoftMax.output>` specification.
+
+        Arguments
+        ---------
+
+        variable : 1d np.array : default ClassDefaults.variable
+           an array to be transformed.
+
+        params : Dict[param keyword, param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+
+        Returns
+        -------
+
+        SoftMax transformation of variable : number or np.array
+
+        """
+
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        # Assign the params and return the result
+        output_type = self.params[OUTPUT_TYPE]
+        gain = self.params[GAIN]
+
+        # Modulate variable by gain
+        v = gain * variable
+        # Shift by max to avoid extreme values:
+        v = v - np.max(v)
+        # Exponentiate
+        v = np.exp(v)
+        # Normalize (to sum to 1)
+        sm = v / np.sum(v, axis=0)
+
+        # For the element that is max of softmax, set it's value to its softmax value, set others to zero
+        if output_type is MAX_VAL:
+            max_value = np.max(sm)
+            sm = np.where(sm == max_value, max_value, 0)
+
+        # For the element that is max of softmax, set its value to 1, set others to zero
+        elif output_type is MAX_INDICATOR:
+            # sm = np.where(sm == np.max(sm), 1, 0)
+            max_value = np.max(sm)
+            sm = np.where(sm == max_value, 1, 0)
+
+        # Choose a single element probabilistically based on softmax of their values;
+        #    leave that element's value intact, set others to zero
+        elif output_type is PROB:
+            cum_sum = np.cumsum(sm)
+            random_value = np.random.uniform()
+            chosen_item = next(element for element in cum_sum if element > random_value)
+            chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
+            sm = variable * chosen_in_cum_sum
+
+        return sm
+
+    def derivative(self, output, input=None):
+        """
+        derivative(output)
+
+        Calculate the derivative of `function <SoftMax.function>`.  If OUTPUT_TYPE for the SoftMax Function is ALL,
+        return Jacobian matrix (derivative for each element of the output array with respect to each of the others):
+            COMMENT:
+                D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
+            COMMENT
+            D\\ :sub:`j`\\ S\\ :sub:`i` = S\\ :sub:`i`\\ (𝜹\\ :sub:`i,j` - S\\ :sub:`j`),
+            where 𝜹\\ :sub:`i,j`\\ =1 if i=j and 𝜹\\ :sub:`i,j`\\ =0 if i≠j.
+        If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
+        value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
+        (since it is ambiguous as to which element would have been chosen by the SoftMax function)
+
+        Returns
+        -------
+
+        derivative :  1d or 2d np.array (depending on OUTPUT_TYPE of SoftMax)
+            derivative of values returns by SoftMax.
+
+        """
+
+        output_type = self.params[OUTPUT_TYPE]
+        size = len(output)
+        sm = self.function(output, params={OUTPUT_TYPE: ALL})
+
+        if output_type is ALL:
+            # Return full Jacobian matrix of derivatives
+            derivative = np.empty([size, size])
+            for j in range(size):
+                for i, val in zip(range(size), output):
+                    if i==j:
+                        d = 1
+                    else:
+                        d = 0
+                    derivative[j,i] = sm[i] * (d - sm[j])
+
+        elif output_type in {MAX_VAL, MAX_INDICATOR}:
+            # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
+            derivative = np.empty(size)
+            # Get the element of output returned as non-zero when output_type is not ALL
+            index_of_max = int(np.where(output==np.max(output))[0])
+            max_val = sm[index_of_max]
+            for i in range(size):
+                if i==index_of_max:
+                    d = 1
+                else:
+                    d = 0
+                derivative[i] = sm[i] * (d - max_val)
+
+        else:
+            raise FunctionError("Can't calculate derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
+                                "(and therefore the relevant element is ambiguous)".format(self.owner_name))
+
+        return derivative
 
 
 # region ***********************************  TRANSFER FUNCTIONS  ***********************************************
@@ -2238,7 +2536,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
     intercept : float : default 0.0
         specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -2246,10 +2544,11 @@ class Linear(TransferFunction):  # ---------------------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -2267,14 +2566,17 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     bounds : None
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = LINEAR_FUNCTION
@@ -2335,13 +2637,11 @@ class Linear(TransferFunction):  # ---------------------------------------------
         variable : number or np.array : default ClassDefaults.variable
            a single value or array to be transformed.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -2461,7 +2761,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
     scale : float : default 1.0
         specifies a value by which to multiply the exponentiated value of `variable <Exponential.variable>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -2469,10 +2769,11 @@ class Exponential(TransferFunction):  # ----------------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -2488,14 +2789,17 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     bounds : (0, None)
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = EXPONENTIAL_FUNCTION
@@ -2545,13 +2849,11 @@ class Exponential(TransferFunction):  # ----------------------------------------
         variable : number or np.array : default ClassDefaults.variable
            a single value or array to be exponentiated.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -2590,6 +2892,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
          default_variable, \
          gain=1.0,         \
          bias=0.0,         \
+         offset=0.0,       \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -2607,13 +2910,17 @@ class Logistic(TransferFunction):  # -------------------------------------------
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
-        specifies a value by which to multiply `variable <Linear.variable>` before logistic transformation
+        specifies a value by which to multiply `variable <Logistic.variable>` before logistic transformation
 
     bias : float : default 0.0
-        specifies a value to add to each element of `variable <Linear.variable>` after applying `gain <Linear.gain>`
+        specifies a value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`
+        and before logistic transformation.
+
+    offset : float : default 0.0
+        specifies a value to add to each element of `variable <Logistic.variable>` after applying `gain <Logistic.gain>`
         but before logistic transformation.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -2621,10 +2928,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -2632,24 +2940,25 @@ class Logistic(TransferFunction):  # -------------------------------------------
     variable : number or np.array
         contains value to be transformed.
 
-    gain : float
+    gain : float : default 1.0
         value by which each element of `variable <Logistic.variable>` is multiplied before applying the
-        `bias <Linear.bias>` (if it is specified).
+        `bias <Logistic.bias>` (if it is specified).
 
-    bias : float
+    bias : float : default 0.0
         value added to each element of `variable <Logistic.variable>` after applying the `gain <Logistic.gain>`
         (if it is specified).
 
-    bounds : (0,1)
-
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = LOGISTIC_FUNCTION
@@ -2669,6 +2978,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  default_variable=ClassDefaults.variable,
                  gain: parameter_spec = 1.0,
                  bias: parameter_spec = 0.0,
+                 offset: parameter_spec = 0.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -2676,6 +2986,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   bias=bias,
+                                                  offset=offset,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -2690,7 +3001,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: 1 / (1 + e**( (`gain <Logistic.gain>` :math:`*` `variable <Logistic.variable>`) + `bias <Logistic.bias>`))
+        Return:
+
+        .. math::
+
+            \\frac{1}{1 + e^{ - gain ( variable - bias ) + offset}}
 
         Arguments
         ---------
@@ -2698,13 +3013,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         variable : number or np.array : default ClassDefaults.variable
            a single value or array to be transformed.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -2716,14 +3029,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
+        offset = self.paramsCurrent[OFFSET]
 
-        try:
-            return_val = 1 / (1 + np.exp(-(gain * variable) + bias))
-        except (Warning):
-            # handle RuntimeWarning: overflow in exp
-            return_val = 0
-
-        return return_val
+        return 1 / (1 + np.exp(-gain*(variable-bias) + offset))
 
     def derivative(self, output, input=None):
         """
@@ -2741,239 +3049,243 @@ class Logistic(TransferFunction):  # -------------------------------------------
         return output * (1 - output)
 
 # ------------------------------------------------------------------------------------
-class SoftMax(TransferFunction):
-    """
-    SoftMax(               \
-         default_variable, \
-         gain=1.0,         \
-         output=ALL,       \
-         params=None,      \
-         owner=None,       \
-         name=None,        \
-         prefs=None        \
-         )
 
-    .. _SoftMax:
-
-    SoftMax transform of variable (see `The Softmax function and its derivative
-    <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
-
-    Arguments
-    ---------
-
-    default_variable : 1d np.array : default ClassDefaults.variable
-        specifies a template for the value to be transformed.
-
-    gain : float : default 1.0
-        specifies a value by which to multiply `variable <Linear.variable>` before SoftMax transformation.
-
-    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
-        specifies the format of array returned by `function <SoftMax.function>`
-        (see `output <SoftMax.output>` for details).
-
-    params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
-
-
-    Attributes
-    ----------
-
-    variable : 1d np.array
-        contains value to be transformed.
-
-    gain : float
-        value by which `variable <Logistic.variable>` is multiplied before the SoftMax transformation;  determines
-        the "sharpness" of the distribution.
-
-    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
-        determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
-        in the array returned by `function <SoftMax.funtion>`:
-            * **ALL**: array of all SoftMax-transformed values (the default);
-            * **MAX_VAL**: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
-            * **MAX_INDICATOR**: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
-            * **PROB**: probabilistically chosen element based on SoftMax-transformed values after normalizing sum of
-              values to 1, 0 for all others.
-
-    bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
-
-    owner : Mechanism
-        `component <Component>` to which the Function has been assigned.
-
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
-
-    """
-
-    componentName = SOFTMAX_FUNCTION
-
-    bounds = (0,1)
-    multiplicative_param = GAIN
-    additive_param = None
-
-    class ClassDefaults(TransferFunction.ClassDefaults):
-        variable = 0
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
-    @tc.typecheck
-    def __init__(self,
-                 default_variable=ClassDefaults.variable,
-                 gain: parameter_spec = 1.0,
-                 output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
-                 params: tc.optional(dict) = None,
-                 owner=None,
-                 prefs: is_pref_set = None,
-                 context='SoftMax Init'):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(gain=gain,
-                                                  output=output,
-                                                  params=params)
-        if output is MAX_VAL:
-            bounds = None
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
-    def function(self,
-                 variable=None,
-                 params=None,
-                 time_scale=TimeScale.TRIAL,
-                 context=None):
-        """
-        Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
-        sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
-        filtered by `ouptput <SoftMax.output>` specification.
-
-        Arguments
-        ---------
-
-        variable : 1d np.array : default ClassDefaults.variable
-           an array to be transformed.
-
-        params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
-
-        Returns
-        -------
-
-        SoftMax transformation of variable : number or np.array
-
-        """
-
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
-        # Assign the params and return the result
-        output_type = self.params[OUTPUT_TYPE]
-        gain = self.params[GAIN]
-
-        # Modulate variable by gain
-        v = gain * variable
-        # Shift by max to avoid extreme values:
-        v = v - np.max(v)
-        # Exponentiate
-        v = np.exp(v)
-        # Normalize (to sum to 1)
-        sm = v / np.sum(v, axis=0)
-
-        # For the element that is max of softmax, set it's value to its softmax value, set others to zero
-        if output_type is MAX_VAL:
-            max_value = np.max(sm)
-            sm = np.where(sm == max_value, max_value, 0)
-
-        # For the element that is max of softmax, set its value to 1, set others to zero
-        elif output_type is MAX_INDICATOR:
-            # sm = np.where(sm == np.max(sm), 1, 0)
-            max_value = np.max(sm)
-            sm = np.where(sm == max_value, 1, 0)
-
-        # Choose a single element probabilistically based on softmax of their values;
-        #    leave that element's value intact, set others to zero
-        elif output_type is PROB:
-            cum_sum = np.cumsum(sm)
-            random_value = np.random.uniform()
-            chosen_item = next(element for element in cum_sum if element > random_value)
-            chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
-            sm = variable * chosen_in_cum_sum
-
-        return sm
-
-    def derivative(self, output, input=None):
-        """
-        derivative(output)
-
-        Calculate the derivative of `function <SoftMax.function>`.  If OUTPUT_TYPE for the SoftMax Function is ALL,
-        return Jacobian matrix (derivative for each element of the output array with respect to each of the others):
-            COMMENT:
-                D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
-            COMMENT
-            D\\ :sub:`j`\\ S\\ :sub:`i` = S\\ :sub:`i`\\ (𝜹\\ :sub:`i,j` - S\\ :sub:`j`),
-            where 𝜹\\ :sub:`i,j`\\ =1 if i=j and 𝜹\\ :sub:`i,j`\\ =0 if i≠j.
-        If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
-        value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
-        (since it is ambiguous as to which element would have been chosen by the SoftMax function)
-
-        Returns
-        -------
-
-        derivative :  1d or 2d np.array (depending on OUTPUT_TYPE of SoftMax)
-            derivative of values returns by SoftMax.
-
-        """
-
-        output_type = self.params[OUTPUT_TYPE]
-        size = len(output)
-        sm = self.function(output, params={OUTPUT_TYPE: ALL})
-
-        if output_type is ALL:
-            # Return full Jacobian matrix of derivatives
-            derivative = np.empty([size, size])
-            for j in range(size):
-                for i, val in zip(range(size), output):
-                    if i==j:
-                        d = 1
-                    else:
-                        d = 0
-                    derivative[j,i] = sm[i] * (d - sm[j])
-
-        elif output_type in {MAX_VAL, MAX_INDICATOR}:
-            # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
-            derivative = np.empty(size)
-            # Get the element of output returned as non-zero when output_type is not ALL
-            index_of_max = int(np.where(output==np.max(output))[0])
-            max_val = sm[index_of_max]
-            for i in range(size):
-                if i==index_of_max:
-                    d = 1
-                else:
-                    d = 0
-                derivative[i] = sm[i] * (d - max_val)
-
-        else:
-            raise FunctionError("Can't calculate derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
-                                "(and therefore the relevant element is ambiguous)".format(self.owner_name))
-
-        return derivative
-
+# class SoftMax(TransferFunction):
+#     """
+#     SoftMax(               \
+#          default_variable, \
+#          gain=1.0,         \
+#          output=ALL,       \
+#          params=None,      \
+#          owner=None,       \
+#          name=None,        \
+#          prefs=None        \
+#          )
+#
+#     .. _SoftMax:
+#
+#     SoftMax transform of variable (see `The Softmax function and its derivative
+#     <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
+#
+#     Arguments
+#     ---------
+#
+#     default_variable : 1d np.array : default ClassDefaults.variable
+#         specifies a template for the value to be transformed.
+#
+#     gain : float : default 1.0
+#         specifies a value by which to multiply `variable <Softmax.variable>` before SoftMax transformation.
+#
+#     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
+#         specifies the format of array returned by `function <SoftMax.function>`
+#         (see `output <SoftMax.output>` for details).
+#
+#     params : Dict[param keyword, param value] : default None
+#         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+#         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+#         arguments of the constructor.
+#
+#     owner : Component
+#         `component <Component>` to which to assign the Function.
+#
+#     name : str : default see `name <Function.name>`
+#         specifies the name of the Function.
+#
+#     prefs : PreferenceSet or specification dict : default Function.classPreferences
+#         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+#
+#     Attributes
+#     ----------
+#
+#     variable : 1d np.array
+#         contains value to be transformed.
+#
+#     gain : float
+#         value by which `variable <Logistic.variable>` is multiplied before the SoftMax transformation;  determines
+#         the "sharpness" of the distribution.
+#
+#     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
+#         determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
+#         in the array returned by `function <SoftMax.funtion>`:
+#             * **ALL**: array of all SoftMax-transformed values (the default);
+#             * **MAX_VAL**: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
+#             * **MAX_INDICATOR**: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
+#             * **PROB**: probabilistically chosen element based on SoftMax-transformed values after normalizing sum of
+#               values to 1, 0 for all others.
+#
+#     bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
+#
+#     owner : Component
+#         `component <Component>` to which the Function has been assigned.
+#
+#     name : str
+#         the name of the Function; if it is not specified in the **name** argument of the constructor, a
+#         default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+#
+#     prefs : PreferenceSet or specification dict : Function.classPreferences
+#         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+#         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+#         <LINK>` for details).
+#     """
+#
+#     componentName = SOFTMAX_FUNCTION
+#
+#     bounds = (0,1)
+#     multiplicative_param = GAIN
+#     additive_param = None
+#
+#     class ClassDefaults(TransferFunction.ClassDefaults):
+#         variable = 0
+#
+#     paramClassDefaults = Function_Base.paramClassDefaults.copy()
+#
+#     @tc.typecheck
+#     def __init__(self,
+#                  default_variable=ClassDefaults.variable,
+#                  gain: parameter_spec = 1.0,
+#                  output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
+#                  params: tc.optional(dict) = None,
+#                  owner=None,
+#                  prefs: is_pref_set = None,
+#                  context='SoftMax Init'):
+#
+#         # Assign args to params and functionParams dicts (kwConstants must == arg names)
+#         params = self._assign_args_to_param_dicts(gain=gain,
+#                                                   output=output,
+#                                                   params=params)
+#         if output is MAX_VAL:
+#             bounds = None
+#
+#         super().__init__(default_variable=default_variable,
+#                          params=params,
+#                          owner=owner,
+#                          prefs=prefs,
+#                          context=context)
+#
+#     def function(self,
+#                  variable=None,
+#                  params=None,
+#                  time_scale=TimeScale.TRIAL,
+#                  context=None):
+#         """
+#         Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
+#         sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
+#         filtered by `ouptput <SoftMax.output>` specification.
+#
+#         Arguments
+#         ---------
+#
+#         variable : 1d np.array : default ClassDefaults.variable
+#            an array to be transformed.
+#
+#         params : Dict[param keyword, param value] : default None
+#             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+#             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+#             arguments of the constructor.
+#
+#         time_scale :  TimeScale : default TimeScale.TRIAL
+#             specifies whether the function is executed on the time_step or trial time scale.
+#
+#         Returns
+#         -------
+#
+#         SoftMax transformation of variable : number or np.array
+#
+#         """
+#
+#         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+#
+#         # Assign the params and return the result
+#         output_type = self.params[OUTPUT_TYPE]
+#         gain = self.params[GAIN]
+#
+#         # Modulate variable by gain
+#         v = gain * variable
+#         # Shift by max to avoid extreme values:
+#         v = v - np.max(v)
+#         # Exponentiate
+#         v = np.exp(v)
+#         # Normalize (to sum to 1)
+#         sm = v / np.sum(v, axis=0)
+#
+#         # For the element that is max of softmax, set it's value to its softmax value, set others to zero
+#         if output_type is MAX_VAL:
+#             max_value = np.max(sm)
+#             sm = np.where(sm == max_value, max_value, 0)
+#
+#         # For the element that is max of softmax, set its value to 1, set others to zero
+#         elif output_type is MAX_INDICATOR:
+#             # sm = np.where(sm == np.max(sm), 1, 0)
+#             max_value = np.max(sm)
+#             sm = np.where(sm == max_value, 1, 0)
+#
+#         # Choose a single element probabilistically based on softmax of their values;
+#         #    leave that element's value intact, set others to zero
+#         elif output_type is PROB:
+#             cum_sum = np.cumsum(sm)
+#             random_value = np.random.uniform()
+#             chosen_item = next(element for element in cum_sum if element > random_value)
+#             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
+#             sm = variable * chosen_in_cum_sum
+#
+#         return sm
+#
+#     def derivative(self, output, input=None):
+#         """
+#         derivative(output)
+#
+#         Calculate the derivative of `function <SoftMax.function>`.  If OUTPUT_TYPE for the SoftMax Function is ALL,
+#         return Jacobian matrix (derivative for each element of the output array with respect to each of the others):
+#             COMMENT:
+#                 D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
+#             COMMENT
+#             D\\ :sub:`j`\\ S\\ :sub:`i` = S\\ :sub:`i`\\ (𝜹\\ :sub:`i,j` - S\\ :sub:`j`),
+#             where 𝜹\\ :sub:`i,j`\\ =1 if i=j and 𝜹\\ :sub:`i,j`\\ =0 if i≠j.
+#         If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
+#         value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
+#         (since it is ambiguous as to which element would have been chosen by the SoftMax function)
+#
+#         Returns
+#         -------
+#
+#         derivative :  1d or 2d np.array (depending on OUTPUT_TYPE of SoftMax)
+#             derivative of values returns by SoftMax.
+#
+#         """
+#
+#         output_type = self.params[OUTPUT_TYPE]
+#         size = len(output)
+#         sm = self.function(output, params={OUTPUT_TYPE: ALL})
+#
+#         if output_type is ALL:
+#             # Return full Jacobian matrix of derivatives
+#             derivative = np.empty([size, size])
+#             for j in range(size):
+#                 for i, val in zip(range(size), output):
+#                     if i==j:
+#                         d = 1
+#                     else:
+#                         d = 0
+#                     derivative[j,i] = sm[i] * (d - sm[j])
+#
+#         elif output_type in {MAX_VAL, MAX_INDICATOR}:
+#             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
+#             derivative = np.empty(size)
+#             # Get the element of output returned as non-zero when output_type is not ALL
+#             index_of_max = int(np.where(output==np.max(output))[0])
+#             max_val = sm[index_of_max]
+#             for i in range(size):
+#                 if i==index_of_max:
+#                     d = 1
+#                 else:
+#                     d = 0
+#                 derivative[i] = sm[i] * (d - max_val)
+#
+#         else:
+#             raise FunctionError("Can't calculate derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
+#                                 "(and therefore the relevant element is ambiguous)".format(self.owner_name))
+#
+#         return derivative
 
 class LinearMatrix(TransferFunction):  # -------------------------------------------------------------------------------
     """
@@ -3031,7 +3343,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     bounds : None
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -3039,10 +3351,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -3059,14 +3372,17 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         Rows correspond to elements of the input array (outer index), and
         columns correspond to elements of the output array (inner index).
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = LINEAR_MATRIX_FUNCTION
@@ -3309,7 +3625,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
          Specification (validated in _validate_params):
             + single number (used to fill self.matrix)
-            + matrix keyword (see _get_matrix)
+            + matrix keyword (see get_matrix)
             + 2D list or np.ndarray of numbers
 
         :return matrix: (2D list)
@@ -3330,7 +3646,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             # receiver = sender
         receiver_len = receiver.shape[0]
 
-        matrix = _get_matrix(specification, rows=sender_len, cols=receiver_len, context=context)
+        matrix = get_matrix(specification, rows=sender_len, cols=receiver_len, context=context)
 
         # This should never happen (should have been picked up in validate_param or above)
         if matrix is None:
@@ -3353,13 +3669,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         variable : list or 1d np.array
             array to be transformed;  length must equal the number of rows of 'matrix <LinearMatrix.matrix>`.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         ---------
@@ -3383,7 +3697,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         if isinstance(self, MappingProjection):
             rows = len(self.sender.value)
             cols = len(self.receiver.instance_defaults.variable)
-        matrix = _get_matrix(keyword, rows, cols)
+        matrix = get_matrix(keyword, rows, cols)
 
         if matrix is None:
             raise FunctionError("Unrecognized keyword ({}) specified for the {} function of {}".
@@ -3407,7 +3721,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 #     return False
 
 
-def _get_matrix(specification, rows=1, cols=1, context=None):
+def get_matrix(specification, rows=1, cols=1, context=None):
     """Returns matrix conforming to specification with dimensions = rows x cols or None
 
      Specification can be a matrix keyword, filler value or np.ndarray
@@ -3472,7 +3786,7 @@ def _get_matrix(specification, rows=1, cols=1, context=None):
     if type(specification) == str:
         try:
             return np.array(np.matrix(specification))
-        except (ValueError, NameError):
+        except (ValueError, NameError, TypeError):
             # np.matrix(specification) will give ValueError if specification is a bad value (e.g. 'abc', '1; 1 2')
             #                          [JDC] actually gives NameError if specification is a string (e.g., 'abc')
             pass
@@ -3535,7 +3849,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <Integrator.default_variable>` (see `initializer <Integrator.initializer>` for details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -3543,10 +3857,11 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -3591,14 +3906,17 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <Integrator.variable>` is integrated.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = INTEGRATOR_FUNCTION
@@ -3708,67 +4026,50 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     def _validate_noise(self, noise, var):
         # Noise is a list or array
-        if isinstance(noise, (np.ndarray, list)) and len(noise) != 1:
+        if isinstance(noise, (np.ndarray, list)):
+            if len(noise) == 1:
+                pass
             # Variable is a list/array
-            if isinstance(var, (np.ndarray, list)):
-                if len(noise) != np.array(var).size:
-                    # Formatting noise for proper display in error message
-                    try:
-                        formatted_noise = list(map(lambda x: x.__qualname__, noise))
-                    except AttributeError:
-                        formatted_noise = noise
-                    raise FunctionError(
-                        "The length ({}) of the array specified for the noise parameter ({}) of {} "
-                        "must match the length ({}) of the default input ({}). If noise is specified as"
-                        " an array or list, it must be of the same size as the input."
-                        .format(len(noise), formatted_noise, self.name, np.array(var).size,
-                                var))
-                else:
-                    for noise_item in noise:
-                        if not isinstance(noise_item, (float, int)) and not callable(noise_item):
-                            raise FunctionError(
-                                "The elements of a noise list or array must be floats or functions.")
-
-
-            # Variable is not a list/array
+            elif not iscompatible(np.atleast_2d(noise), var) and len(noise) > 1:
+                raise FunctionError(
+                    "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} must be specified "
+                    "as a float, a function, or an array of the appropriate shape ({})."
+                    .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(var))))
             else:
-                raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
-                                    "default input value is also a list or array.".format(noise, self.name))
+                for noise_item in noise:
+                    if not isinstance(noise_item, (float, int)) and not callable(noise_item):
+                        raise FunctionError(
+                            "The elements of a noise list or array must be floats or functions. {} is not a valid noise "
+                            "element for {}".format(noise_item, self.name))
 
-            # # Elements of list/array have different types
-            # if not all(isinstance(x, type(noise[0])) for x in noise):
-            #     raise FunctionError("All elements of noise list/array ({}) for {} must be of the same type. "
-            #                         .format(noise, self.name))
-
-        elif not isinstance(noise, (float, int, np.ndarray)) and not callable(noise):
+        # Otherwise, must be a float, int or function
+        elif not isinstance(noise, (float, int)) and not callable(noise):
             raise FunctionError(
                 "Noise parameter ({}) for {} must be a float, function, or array/list of these."
                     .format(noise, self.name))
+
 
     def _try_execute_param(self, param, var):
 
         # param is a list; if any element is callable, execute it
         if isinstance(param, (np.ndarray, list)):
+            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
+            param = np.atleast_2d(param)
             for i in range(len(param)):
-                if callable(param[i]):
-                    param[i] = param[i]()
+                for j in range(len(param[i])):
+                    if callable(param[i][j]):
+                        param[i][j] = param[i][j]()
         # param is one function
         elif callable(param):
-            # if the variable is a list/array, execute the param function separately for each element
-            if isinstance(var, (np.ndarray, list)):
-                if isinstance(var[0], (np.ndarray, list)):
-                    new_param = []
-                    for i in var[0]:
-                        new_param.append(param())
-                    param = new_param
-                else:
-                    new_param = []
-                    for i in var:
-                        new_param.append(param())
-                    param = new_param
-            # if the variable is not a list/array, execute the param function
-            else:
-                param = param()
+            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
+            new_param = []
+            for row in np.atleast_2d(var):
+                new_row = []
+                for item in row:
+                    new_row.append(param())
+                new_param.append(new_row)
+            param = new_param
+
         return param
 
     def _euler(self, previous_value, previous_time, slope, time_step_size):
@@ -3854,7 +4155,7 @@ class SimpleIntegrator(
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <SimpleIntegrator.default_variable>` (see `initializer <SimpleIntegrator.initializer>` for details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -3862,10 +4163,11 @@ class SimpleIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -3904,14 +4206,17 @@ class SimpleIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <SimpleIntegrator.variable>` is integrated.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = SIMPLE_INTEGRATOR_FUNCTION
@@ -3973,7 +4278,7 @@ class SimpleIntegrator(
         variable : number, list or np.array : default ClassDefaults.variable
            a single value or array of values to be integrated.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -4061,7 +4366,7 @@ class LCAIntegrator(
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <LCAIntegrator.default_variable>` (see `initializer <LCAIntegrator.initializer>` for details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -4069,10 +4374,11 @@ class LCAIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -4111,14 +4417,17 @@ class LCAIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <LCAIntegrator.variable>` is integrated.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = SIMPLE_INTEGRATOR_FUNCTION
@@ -4182,7 +4491,7 @@ class LCAIntegrator(
         variable : number, list or np.array : default ClassDefaults.variable
            a single value or array of values to be integrated.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -4272,7 +4581,7 @@ class ConstantIntegrator(
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <ConstantIntegrator.default_variable>` (see `initializer <ConstantIntegrator.initializer>` for details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -4280,10 +4589,11 @@ class ConstantIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -4326,14 +4636,17 @@ class ConstantIntegrator(
         stores previous value to which `rate <ConstantIntegrator.rate>` and `noise <ConstantIntegrator.noise>` will be
         added.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = CONSTANT_INTEGRATOR_FUNCTION
@@ -4401,13 +4714,11 @@ class ConstantIntegrator(
         Arguments
         ---------
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -4487,7 +4798,7 @@ class AdaptiveIntegrator(
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <AdaptiveIntegrator.default_variable>` (see `initializer <AdaptiveIntegrator.initializer>` for details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -4495,10 +4806,11 @@ class AdaptiveIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -4541,14 +4853,17 @@ class AdaptiveIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <AdaptiveIntegrator.variable>` is integrated.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = ADAPTIVE_INTEGRATOR_FUNCTION
@@ -4681,13 +4996,11 @@ class AdaptiveIntegrator(
         variable : number, list or np.array : default ClassDefaults.variable
            a single value or array of values to be integrated.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -4709,7 +5022,6 @@ class AdaptiveIntegrator(
         previous_value = self.previous_value
 
         previous_value = np.atleast_2d(previous_value)
-        new_value = variable
         # value = (1 - rate) * previous_value + rate * new_value + noise
         value = (1-rate)*previous_value + rate*variable + noise
         adjusted_value = value + offset
@@ -4718,7 +5030,6 @@ class AdaptiveIntegrator(
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
             self.previous_value = adjusted_value
-
         return adjusted_value
 
 class DriftDiffusionIntegrator(
@@ -4770,7 +5081,7 @@ class DriftDiffusionIntegrator(
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <DriftDiffusionIntegrator.default_variable>` (see `initializer <DriftDiffusionIntegrator.initializer>` for details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -4778,10 +5089,11 @@ class DriftDiffusionIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -4822,14 +5134,17 @@ class DriftDiffusionIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = DRIFT_DIFFUSION_INTEGRATOR_FUNCTION
@@ -4907,7 +5222,7 @@ class DriftDiffusionIntegrator(
         variable : number, list or np.array : default ClassDefaults.variable
            the stimulus component of drift rate in the Drift Diffusion Model.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -4998,7 +5313,7 @@ class OrnsteinUhlenbeckIntegrator(
         `default_variable <OrnsteinUhlenbeckIntegrator.default_variable>` (see `initializer
         <OrnsteinUhlenbeckIntegrator.initializer>` for details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -5006,10 +5321,11 @@ class OrnsteinUhlenbeckIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -5050,14 +5366,17 @@ class OrnsteinUhlenbeckIntegrator(
         stores previous time at which the function was executed and accumulates with each execution according to
         `time_step_size <OrnsteinUhlenbeckIntegrator.default_time_step_size>`.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION
@@ -5140,13 +5459,11 @@ class OrnsteinUhlenbeckIntegrator(
            the stimulus component of drift rate in the Drift Diffusion Model.
 
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -5190,14 +5507,13 @@ class FHNIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
     FHNIntegrator(              \
-        default_variable=None,          \
+        default_variable=1.0,           \
         rate=1.0,                       \
-        noise=0.0,                      \
         scale: parameter_spec = 1.0,    \
         offset: parameter_spec = 0.0,   \
         initial_w=0.0,                  \
         initial_v=0.0,                  \
-        time_step_size=0.1,             \
+        time_step_size=0.0.05,          \
         t_0=0.0,                        \
         a_v=-1/3,                       \
         b_v=0.0,                        \
@@ -5212,6 +5528,7 @@ class FHNIntegrator(
         mode=1.0,                       \
         uncorrelated_activity=0.0       \
         time_constant_w = 12.5,         \
+        integration_method="RK4"        \
         params=None,                    \
         owner=None,                     \
         prefs=None,                     \
@@ -5219,26 +5536,23 @@ class FHNIntegrator(
 
     .. _FHNIntegrator:
 
-    Implements the Fitzhugh-Nagumo model using the 4th order Runge Kutta method of numerical integration.
+    Implements the Fitzhugh-Nagumo model using a choice of Euler or 4th Order Runge-Kutta numerical integration.
 
     In order to support several common representations of the model, the FHNIntegrator includes many parameters, some of
     which would not be sensible to use in combination.
 
-    The most general form of the FHNIntegrator function, with all of its arguments, is:
+    The most general form of PsyNeuLink's FHNIntegrator function, with all of its arguments, is:
 
-        *time_constant_v* :math:`* \\frac{dv}{dt}` =
+    .. math::
 
-            *a_v* :math:`* v^3` + *((1+threshold)* :math:`*` *b_v* :math:`* v^2)` *- threshold* :math:`*` *c_v* \
-            :math:`* v^2`) *+ d_v + (e_v* :math:`*` *w) + (f_v* :math:`* I_{ext})`
+        time_constant_v \\cdot \\frac{dv}{dt} = (a_v*(v^{3}) + (1+threshold) \\cdot b_v \\cdot (v^{2}) + (-threshold) \\cdot c_v \\cdot v + d_v + e_v \\cdot previous_w + f_v \\cdot variable)
 
-        *time_constant_w* :math:`* \\frac{dw}{dt}` =
-
-          *mode* :math:`*` *a_w* :math:`*` *(v + b_w)* :math:`*` *(w + c_w + (1 - self.mode))* :math:`*`
-          *self.uncorrelated_activity*
+        time_constant_w \\frac{dw}{dt} = (mode \\cdot a_w \\cdot previous_v + b_w \\cdot w + c_w +
+                    (1-mode) \\cdot self.uncorrelated_activity)
 
     The three formulations that the FHNIntegrator was designed to allow are:
 
-    **Fitzhugh-Nagumo Model**
+    * **Fitzhugh-Nagumo Model**
 
             :math:`\\frac{dv}{dt} = v - \\frac{v^3}{3} - w + I_{ext}`
 
@@ -5252,7 +5566,7 @@ class FHNIntegrator(
         implementation.
 
 
-    **Modified FHN Model**
+    * **Modified FHN Model**
 
             :math:`\\frac{dv}{dt} = v*(a-v)(v-1) - w + I_{ext}`
 
@@ -5294,7 +5608,7 @@ class FHNIntegrator(
         of why this formulation is useful.
 
 
-    `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ **Implementation
+    * `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ **Implementation
     of the Modified FHN Model**
 
             *tau_v* :math:`* \\frac{dv}{dt} = v*(a-v)(v-1) - w + b *` *f(X_1)*
@@ -5405,7 +5719,7 @@ class FHNIntegrator(
     time_constant_w : float : default 12.5
         scaling factor on the dv/dt equation
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -5413,10 +5727,11 @@ class FHNIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -5433,7 +5748,7 @@ class FHNIntegrator(
     previous_t : float
         stores accumulated value of time, which is incremented by time_step_size on each execution of the function
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
     initial_w : float, list or 1d np.array : default 0.0
@@ -5506,11 +5821,8 @@ class FHNIntegrator(
     time_constant_w : float : default 12.5
         scaling factor on the dv/dt equation
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
-
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
 
     MODE = 'mode'
@@ -5723,7 +6035,7 @@ class FHNIntegrator(
         Arguments
         ---------
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -5833,7 +6145,7 @@ class AccumulatorIntegrator(
         `default_variable <AccumulatorIntegrator.default_variable>` (see `initializer
         <AccumulatorIntegrator.initializer>` for details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -5841,10 +6153,11 @@ class AccumulatorIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -5893,14 +6206,17 @@ class AccumulatorIntegrator(
         stores previous value to which `rate <AccumulatorIntegrator.rate>` and `noise <AccumulatorIntegrator.noise>`
         will be added.
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = ACCUMULATOR_INTEGRATOR_FUNCTION
@@ -6049,13 +6365,11 @@ class AccumulatorIntegrator(
         Arguments
         ---------
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -6174,7 +6488,7 @@ class AGTUtilityIntegrator(
     long_term_rate : float : default 1.0
         specifies smoothing factor of EWMA filter applied to long_term_utility
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -6182,10 +6496,11 @@ class AGTUtilityIntegrator(
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -6228,14 +6543,17 @@ class AGTUtilityIntegrator(
         stores previous value with which `variable <AGTUtilityIntegrator.variable>` is integrated using the EWMA filter and
         long term parameters
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = UTILITY_INTEGRATOR_FUNCTION
@@ -6380,13 +6698,7 @@ class AGTUtilityIntegrator(
 
     def _logistic(self, variable, gain, bias):
 
-        try:
-            return_val = 1 / (1 + np.exp(-(gain * variable) + bias))
-        except (Warning):
-            # handle RuntimeWarning: overflow in exp
-            return_val = 0
-
-        return return_val
+        return 1 / (1 + np.exp(-(gain * variable) + bias))
 
     def function(self,
                  variable=None,
@@ -6403,7 +6715,7 @@ class AGTUtilityIntegrator(
         variable : number, list or np.array : default ClassDefaults.variable
            a single value or array of values to be integrated.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -6529,7 +6841,7 @@ class BogaczEtAl(
         list or array, it must be the same length as  `default_variable <BogaczEtAl.default_variable>` and all
         elements must be floats from 0 to 1.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -6537,10 +6849,11 @@ class BogaczEtAl(
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -6571,14 +6884,17 @@ class BogaczEtAl(
         (`starting_point <BogaczEtAl.starting_point>` + `threshold <BogaczEtAl.threshold>`) /
         (2 * `threshold <BogaczEtAl.threshold>`)
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = kwBogaczEtAl
@@ -6630,13 +6946,11 @@ class BogaczEtAl(
         variable : 2d np.array
             ignored.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -6661,35 +6975,34 @@ class BogaczEtAl(
             bias = 1 - 1e-8
 
         # drift_rate close to or at 0 (avoid float comparison)
-        if abs(drift_rate) < 1e-8:
+        if np.abs(drift_rate) < 1e-8:
             # back to absolute bias in order to apply limit
             bias_abs = bias * 2 * threshold - threshold
             # use expression for limit a->0 from Srivastava et al. 2016
             rt = t0 + (threshold ** 2 - bias_abs ** 2) / (noise ** 2)
             er = (threshold - bias_abs) / (2 * threshold)
         else:
-            drift_rate_normed = abs(drift_rate)
+            drift_rate_normed = np.abs(drift_rate)
             ztilde = threshold / drift_rate_normed
             atilde = (drift_rate_normed / noise) ** 2
 
             is_neg_drift = drift_rate < 0
             bias_adj = (is_neg_drift == 1) * (1 - bias) + (is_neg_drift == 0) * bias
             y0tilde = ((noise ** 2) / 2) * np.log(bias_adj / (1 - bias_adj))
-            if abs(y0tilde) > threshold:
+            if np.abs(y0tilde) > threshold:
                 y0tilde = -1 * (is_neg_drift == 1) * threshold + (is_neg_drift == 0) * threshold
             x0tilde = y0tilde / drift_rate_normed
 
-            import warnings
-            warnings.filterwarnings('error')
+            old_settings = np.seterr(over='raise', under='raise')
 
             try:
-                rt = ztilde * tanh(ztilde * atilde) + \
-                     ((2 * ztilde * (1 - exp(-2 * x0tilde * atilde))) / (
-                     exp(2 * ztilde * atilde) - exp(-2 * ztilde * atilde)) - x0tilde) + t0
-                er = 1 / (1 + exp(2 * ztilde * atilde)) - \
-                     ((1 - exp(-2 * x0tilde * atilde)) / (exp(2 * ztilde * atilde) - exp(-2 * ztilde * atilde)))
+                rt = ztilde *np.tanh(ztilde * atilde) + \
+                     ((2 * ztilde * (1 - np.exp(-2 * x0tilde * atilde))) / (
+                     np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)) - x0tilde) + t0
+                er = 1 / (1 + np.exp(2 * ztilde * atilde)) - \
+                     ((1 - np.exp(-2 * x0tilde * atilde)) / (np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)))
 
-            except (Warning):
+            except FloatingPointError:
                 # Per Mike Shvartsman:
                 # If ±2*ztilde*atilde (~ 2*z*a/(c^2) gets very large, the diffusion vanishes relative to drift
                 # and the problem is near-deterministic. Without diffusion, error rate goes to 0 or 1
@@ -6697,6 +7010,8 @@ class BogaczEtAl(
                 # generates a "RuntimeWarning: overflow encountered in exp"
                 er = 0
                 rt = ztilde / atilde - x0tilde + t0
+
+            np.seterr(**old_settings)
 
             # This last line makes it report back in terms of a fixed reference point
             #    (i.e., closer to 1 always means higher p(upper boundary))
@@ -6751,7 +7066,7 @@ class BogaczEtAl(
         A = input or self.drift_rate
         c = self.noise
         c_sq = c**2
-        E = exp(-2*Z*A/c_sq)
+        E = np.exp(-2*Z*A/c_sq)
         D_iti = 0
         D_pen = 0
         D = D_iti + D_pen
@@ -6764,14 +7079,13 @@ class BogaczEtAl(
 
 
 # Results from Navarro and Fuss DDM solution (indices for return value tuple)
-class NF_Results(AutoNumber):
-    RESULT = ()
-    MEAN_ER = ()
-    MEAN_DT = ()
-    PLACEMARKER = ()
-    MEAN_CORRECT_RT = ()
-    MEAN_CORRECT_VARIANCE = ()
-    MEAN_CORRECT_SKEW_RT = ()
+class NF_Results(IntEnum):
+    MEAN_ER = 0
+    MEAN_RT = 1
+    MEAN_DT = 2
+    COND_RTS = 3
+    COND_VAR_RTS = 4
+    COND_SKEW_RTS = 5
 
 # ----------------------------------------------------------------------------
 class NavarroAndFuss(IntegratorFunction):
@@ -6826,7 +7140,7 @@ class NavarroAndFuss(IntegratorFunction):
         list or array, it must be the same length as  `default_variable <BogaczEtAl.default_variable>` and all
         elements must be floats from 0 to 1.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -6834,10 +7148,11 @@ class NavarroAndFuss(IntegratorFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -6868,14 +7183,17 @@ class NavarroAndFuss(IntegratorFunction):
         (`starting_point <BogaczEtAl.starting_point>` + `threshold <BogaczEtAl.threshold>`) /
         (2 * `threshold <BogaczEtAl.threshold>`)
 
-    owner : Mechanism
+    owner : Component
         `component <Component>` to which the Function has been assigned.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
 
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
     """
 
     componentName = kwNavarrosAndFuss
@@ -6912,10 +7230,22 @@ class NavarroAndFuss(IntegratorFunction):
                          context=context)
 
     def _instantiate_function(self, context=None):
-        print("\nimporting matlab...")
-        import matlab.engine
-        self.eng1 = matlab.engine.start_matlab('-nojvm')
-        print("matlab imported\n")
+        import os
+        import sys
+        try:
+            import matlab.engine
+        except ImportError as e:
+            raise ImportError(
+                'python failed to import matlab. Ensure that MATLAB and the python API is installed. See'
+                ' https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html'
+                ' for more info'
+            )
+
+        ddm_functions_path = os.path.abspath(sys.modules['psyneulink'].__path__[0] + '/../Matlab/DDMFunctions')
+
+        # must add the package-included MATLAB files to the engine path to run when not running from the path
+        # MATLAB is very finnicky about the formatting here to actually add the path so be careful if you modify
+        self.eng1 = matlab.engine.start_matlab("-r 'addpath(char(\"{0}\"))' -nojvm".format(ddm_functions_path))
 
         super()._instantiate_function(context=context)
 
@@ -6934,13 +7264,11 @@ class NavarroAndFuss(IntegratorFunction):
         variable : 2d np.array
             ignored.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -6957,11 +7285,14 @@ class NavarroAndFuss(IntegratorFunction):
         noise = float(self.noise)
         t0 = float(self.t0)
 
-        # print("\nimporting matlab...")
-        # import matlab.engine
-        # eng1 = matlab.engine.start_matlab('-nojvm')
-        # print("matlab imported\n")
-        results = self.eng1.ddmSim(drift_rate, starting_point, threshold, noise, t0, 1, nargout=5)
+        # used to pass values in a way that the matlab script can handle
+        ddm_struct = {
+            'z': threshold,
+            'c': noise,
+            'T0': t0
+        }
+
+        results = self.eng1.ddmSimFRG(drift_rate, starting_point, ddm_struct, 1, nargout=6)
 
         return results
 
@@ -6993,9 +7324,9 @@ class NormalDist(DistributionFunction):
         The mean or center of the normal distribution
 
     standard_dev : float : default 1.0
-        Standard deviation of the normal distribution
+        Standard deviation of the normal distribution. Must be > 0.0
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7003,10 +7334,11 @@ class NormalDist(DistributionFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -7015,9 +7347,9 @@ class NormalDist(DistributionFunction):
         The mean or center of the normal distribution
 
     standard_dev : float : default 1.0
-        Standard deviation of the normal distribution
+        Standard deviation of the normal distribution. Must be > 0.0
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7025,10 +7357,11 @@ class NormalDist(DistributionFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     """
 
@@ -7060,6 +7393,15 @@ class NormalDist(DistributionFunction):
                          context=context)
 
         self.functionOutputType = None
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if STANDARD_DEVIATION in target_set:
+            if target_set[STANDARD_DEVIATION] <= 0.0:
+                raise FunctionError("The standard_dev parameter ({}) of {} must be greater than zero.".
+                                            format(target_set[STANDARD_DEVIATION], self.name))
+
 
     def function(self,
                  variable=None,
@@ -7096,7 +7438,7 @@ class ExponentialDist(DistributionFunction):
     beta : float : default 1.0
         The scale parameter of the exponential distribution
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7104,10 +7446,11 @@ class ExponentialDist(DistributionFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -7115,7 +7458,7 @@ class ExponentialDist(DistributionFunction):
     beta : float : default 1.0
         The scale parameter of the exponential distribution
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7123,10 +7466,11 @@ class ExponentialDist(DistributionFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     """
     componentName = EXPONENTIAL_DIST_FUNCTION
@@ -7194,7 +7538,7 @@ class UniformDist(DistributionFunction):
     high : float : default 1.0
         Upper bound of the uniform distribution
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7202,10 +7546,11 @@ class UniformDist(DistributionFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -7216,7 +7561,7 @@ class UniformDist(DistributionFunction):
     high : float : default 1.0
         Upper bound of the uniform distribution
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7224,10 +7569,11 @@ class UniformDist(DistributionFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     """
     componentName = UNIFORM_DIST_FUNCTION
@@ -7298,7 +7644,7 @@ class GammaDist(DistributionFunction):
     dist_shape : float : default 1.0
         The shape of the gamma distribution. Should be greater than zero.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7306,10 +7652,11 @@ class GammaDist(DistributionFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -7320,7 +7667,7 @@ class GammaDist(DistributionFunction):
     dist_shape : float : default 1.0
         The scale of the gamma distribution. Should be greater than zero.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7328,10 +7675,11 @@ class GammaDist(DistributionFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     """
 
@@ -7403,7 +7751,7 @@ class WaldDist(DistributionFunction):
      mean : float : default 1.0
          Mean of the Wald distribution. Should be greater than or equal to zero.
 
-     params : Optional[Dict[param keyword, param value]]
+     params : Dict[param keyword, param value] : default None
          a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
          function.  Values specified for parameters in the dictionary override any assigned to those parameters in
          arguments of the constructor.
@@ -7411,7 +7759,7 @@ class WaldDist(DistributionFunction):
      owner : Component
          `component <Component>` to which to assign the Function.
 
-     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+     prefs : PreferenceSet or specification dict : default Function.classPreferences
          the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
          defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -7425,7 +7773,7 @@ class WaldDist(DistributionFunction):
      mean : float : default 1.0
          Mean of the Wald distribution. Should be greater than or equal to zero.
 
-     params : Optional[Dict[param keyword, param value]]
+     params : Dict[param keyword, param value] : default None
          a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
          function.  Values specified for parameters in the dictionary override any assigned to those parameters in
          arguments of the constructor.
@@ -7433,7 +7781,7 @@ class WaldDist(DistributionFunction):
      owner : Component
          `component <Component>` to which to assign the Function.
 
-     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+     prefs : PreferenceSet or specification dict : default Function.classPreferences
          the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
          defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -7528,19 +7876,19 @@ COMMENT:
 
     *ENTROPY*:
 
-       :math:`s = -\\sum\limits^{len}(i*log(j))`
+       :math:`s = -\\sum\\limits^{len}(i*log(j))`
 
     *DIFFERENCE*:
 
-       :math:`s = \\sum\limits^{len}(i-j)`
+       :math:`s = \\sum\\limits^{len}(i-j)`
 
     *EUCLIDEAN*:
 
-       :math:`s = \\sum\limits^{len}\\sqrt{(i-j)^2}`
+       :math:`s = \\sum\\limits^{len}\\sqrt{(i-j)^2}`
 
     *CORRELATION*:
 
-       :math:`s = \\frac{\\sum\limits^{len}(i-\\bar{i})(j-\\bar{j})}{(len-1)\\sigma_{i}\\sigma_{j}}`
+       :math:`s = \\frac{\\sum\\limits^{len}(i-\\bar{i})(j-\\bar{j})}{(len-1)\\sigma_{i}\\sigma_{j}}`
 
     **normalize**:
 
@@ -7567,7 +7915,7 @@ COMMENT
     normalize : bool : Default False
         specifies whether to normalize the stability value by the length of `variable <Stability.variable>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7575,10 +7923,11 @@ COMMENT
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     Attributes
     ----------
 
@@ -7601,7 +7950,7 @@ COMMENT
     normalize : bool
         if `True`, result of stability calculation is normalized by the length of `variable <Stability.variable>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7609,10 +7958,8 @@ COMMENT
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
-     """
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).     """
 
     componentName = STABILITY_FUNCTION
 
@@ -7671,6 +8018,9 @@ COMMENT
 
             matrix = target_set[MATRIX]
 
+            if isinstance(matrix, str):
+                matrix = get_matrix(matrix)
+
             if isinstance(matrix, MappingProjection):
                 try:
                     matrix = matrix._parameter_states[MATRIX].value
@@ -7699,7 +8049,11 @@ COMMENT
                                     format(param_type_string, MATRIX, self.name, matrix))
             rows = matrix.shape[0]
             cols = matrix.shape[1]
-            size = len(np.squeeze(self.instance_defaults.variable))
+            # MODIFIED 11/25/17 OLD:
+            # size = len(np.squeeze(self.instance_defaults.variable))
+            # MODIFIED 11/25/17 NEW:
+            size = len(self.instance_defaults.variable)
+            # MODIFIED 11/25/17 END
 
             if rows != size:
                 raise FunctionError("The value of the {} specified for the {} arg of {} is the wrong size;"
@@ -7722,7 +8076,11 @@ COMMENT
 
         """
 
-        size = len(np.squeeze(self.instance_defaults.variable))
+        # MODIFIED 11/25/17 OLD:
+        # size = len(np.squeeze(self.instance_defaults.variable))
+        # MODIFIED 11/25/17 NEW:
+        size = len(self.instance_defaults.variable)
+        # MODIFIED 11/25/17 END
 
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.components.states.parameterstate import ParameterState
@@ -7731,9 +8089,9 @@ COMMENT
         elif isinstance(self.matrix,ParameterState):
             pass
         else:
-            self._matrix = _get_matrix(self.matrix, size, size)
+            self._matrix = get_matrix(self.matrix, size, size)
 
-        self._hollow_matrix = _get_matrix(HOLLOW_MATRIX,size, size)
+        self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
 
         # # MODIFIED 11/12/17 OLD:
         # if self.metric is ENTROPY:
@@ -7831,7 +8189,7 @@ class Distance(ObjectiveFunction):
     normalize : bool : Default False
         specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7839,10 +8197,11 @@ class Distance(ObjectiveFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -7857,7 +8216,7 @@ class Distance(ObjectiveFunction):
     normalize : bool
         determines whether the distance is normalized by the length of `variable <Distance.variable>`.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7865,10 +8224,8 @@ class Distance(ObjectiveFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
-    """
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).    """
 
     componentName = DISTANCE_FUNCTION
 
@@ -8105,7 +8462,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         `Process` and/or `System` to which the function's `owner <Function.owner>` belongs (see `learning_rate
         <Hebbian.learning_rate>` for details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments
         of the constructor.
@@ -8113,10 +8470,11 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     Attributes
     ----------
 
@@ -8148,14 +8506,11 @@ class Hebbian(LearningFunction):  # --------------------------------------------
          scales that by the `learning_rate <Hebbian.learning_rate>` to generate the weight change matrix
          returned by the function.
 
-    owner : Mechanism
+    owner : Component
         `Mechanism <Mechanism>` to which the Function belongs.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
-    """
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).    """
 
     componentName = HEBBIAN_FUNCTION
 
@@ -8225,7 +8580,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         variable : List[number] or 1d np.array : default ClassDefaults.variable
             array of activity values, the pairwise products of which are used to generate a weight change matrix.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
             Values specified for parameters in the dictionary override any assigned to those parameters in arguments
             of the constructor.
@@ -8330,7 +8685,7 @@ class Reinforcement(
         supersedes any specification for the `Process` and/or `System` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <Reinforcement.learning_rate>` for details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -8338,10 +8693,11 @@ class Reinforcement(
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -8384,14 +8740,11 @@ class Reinforcement(
          the function that computes the weight change matrix, and returns that along with the
          `error_signal <Reinforcement.error_signal>` received.
 
-    owner : Mechanism
+    owner : Component
         `Mechanism <Mechanism>` to which the Function belongs.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
-    """
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).    """
 
     componentName = RL_FUNCTION
 
@@ -8481,13 +8834,11 @@ class Reinforcement(
            `activation_output <Reinforcement.activation_output>` (1d np.array with a single non-zero value),
            `error_signal <Reinforcement.error_signal>` (1d np.array).
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -8591,7 +8942,7 @@ class BackPropagation(LearningFunction):
         supersedes any specification for the `Process` and/or `System` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -8599,10 +8950,11 @@ class BackPropagation(LearningFunction):
     owner : Component
         `component <Component>` to which to assign the Function.
 
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
 
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
@@ -8646,14 +8998,11 @@ class BackPropagation(LearningFunction):
          `activation_output <BackPropagation.activation_output>` as a function of the
          `error_matrix <BackPropagation.error_matrix>`.
 
-    owner : Mechanism
+    owner : Component
         `Mechanism <Mechanism>` to which the Function belongs.
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
-
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
 
     componentName = BACKPROPAGATION_FUNCTION
@@ -8813,13 +9162,11 @@ class BackPropagation(LearningFunction):
            `activation_output <BackPropagation.activation_output>` (1d np.array),
            `error_signal <BackPropagation.error_signal>` (1d np.array).
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------

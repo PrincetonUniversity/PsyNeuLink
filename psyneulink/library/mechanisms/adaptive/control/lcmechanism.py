@@ -10,16 +10,6 @@
 
 """
 
-.. note::
-   **THIS MECHANISM IS ONLY PARTIALLY IMPLEMENTED.**
-
-   IT CAN MODULATE MECHANISMS, BUT:
-
-   - IT DOES NOT YET AUTOMATICALLY GENERATE A `UtilityIntegrator` AS ITS OBJECTIVE MECHANISM
-   ..
-   - THE `FitzHughNagumoIntegration` FUNCTION AND ASSOCIATED `mode` PARAMETER HAVE NOT YET BEEN IMPLEMENTED
-
-
 Overview
 --------
 
@@ -162,17 +152,34 @@ Examples
 The following example generates an LCMechanism that modulates the function of two TransferMechanisms, one that uses
 a `Linear` function and the other a `Logistic` function::
 
-    my_mech_1 = TransferMechanism(function=Linear,
-                                  name='my_linear_mechanism')
-    my_mech_2 = TransferMechanism(function=Logistic,
-                                  name='my_logistic_mechanism')
+    >>> import psyneulink as pnl
+    >>> my_mech_1 = pnl.TransferMechanism(function=pnl.Linear,
+    ...                                   name='my_linear_mechanism')
+    >>> my_mech_2 = pnl.TransferMechanism(function=pnl.Logistic,
+    ...                                   name='my_logistic_mechanism')
 
-    LC = LCMechanism(modulated_mechanisms=[my_mech_1, my_mech_2],
-                     name='my_LC')
+    >>> LC = pnl.LCMechanism(modulated_mechanisms=[my_mech_1, my_mech_2],
+    ...                      name='my_LC')
 
-Calling `my_LC.show()` generates the following report::
+COMMENT:
+# Calling `LC.show()` generates the following report::
+#
+#     >>> LC.show()
+#     <BLANKLINE>
+#     ---------------------------------------------------------
+#     <BLANKLINE>
+#     my_LC
+#     <BLANKLINE>
+#     	Monitoring the following Mechanism OutputStates:
+#     		None
+#     <BLANKLINE>
+#     	Modulating the following parameters:
+#     		my_linear_mechanism: slope
+#     		my_logistic_mechanism: gain
+#     <BLANKLINE>
+#     ---------------------------------------------------------
+COMMENT
 
-    my_LC
 COMMENT:
         Monitoring the following Mechanism OutputStates:
             None
@@ -226,12 +233,18 @@ Class Reference
 """
 import typecheck as tc
 
-from psyneulink.components.functions.function import Integrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
-from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
-from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.components.functions.function import Integrator, \
+    MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
+from psyneulink.components.mechanisms.adaptive.adaptivemechanism import \
+    AdaptiveMechanism_Base
+from psyneulink.components.mechanisms.adaptive.control.controlmechanism import \
+    ControlMechanism
+from psyneulink.components.projections.modulatory.controlprojection import \
+    ControlProjection
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES
+from psyneulink.globals.keywords import ALL, CONTROL_PROJECTIONS, \
+    CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.scheduling.timescale import CentralClock, TimeScale
@@ -244,6 +257,7 @@ MODULATED_MECHANISMS = 'modulated_mechanisms'
 CONTROL_SIGNAL_NAME = 'LCMechanism_ControlSignal'
 
 ControlMechanismRegistry = {}
+
 
 class LCMechanismError(Exception):
     def __init__(self, error_value):
@@ -282,21 +296,17 @@ class LCMechanism(ControlMechanism):
         specify all of the `ProcessingMechanisms <ProcessingMechanism>` in the Composition(s) to which the LCMechanism
         belongs.
 
-    params : Optional[Dict[param keyword, param value]]
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
         for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name : str : default LCMechanism-<index>
-        a string used for the name of the Mechanism.
-        If not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see `name <LCMechanism.name>`
+        specifies the name of the LCMechanism.
 
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for the Mechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the LCMechanism; see `prefs <LCMechanism.prefs>` for details.
 
 
     Attributes
@@ -352,6 +362,16 @@ class LCMechanism(ControlMechanism):
         the default form of modulation used by the LCMechanism's `ControlProjections`,
         unless they are `individually specified <ControlSignal_Specification>`.
 
+    name : str
+        the name of the LCMechanism; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the LCMechanism; if it is not specified in the **prefs** argument of the 
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        <LINK>` for details).
+
+
     """
 
     componentType = "LCMechanism"
@@ -370,7 +390,7 @@ class LCMechanism(ControlMechanism):
         variable = defaultControlAllocation
 
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({FUNCTION:Integrator,
+    paramClassDefaults.update({FUNCTION: Integrator,
                                CONTROL_SIGNALS: None,
                                CONTROL_PROJECTIONS: None,
                                })
@@ -379,7 +399,7 @@ class LCMechanism(ControlMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 monitor_for_control:tc.optional(list)=None,
+                 # monitor_for_control:tc.optional(list)=None,
                  mode:tc.optional(float)=0.0,
                  modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -395,7 +415,7 @@ class LCMechanism(ControlMechanism):
 
         super().__init__(default_variable=default_variable,
                          size=size,
-                         monitor_for_control=monitor_for_control,
+                         # monitor_for_control=monitor_for_control,
                          modulation=modulation,
                          params=params,
                          name=name,
@@ -440,10 +460,12 @@ class LCMechanism(ControlMechanism):
 
             spec = target_set[MODULATED_MECHANISMS]
 
-            if isinstance (spec, str):
+            if isinstance(spec, str):
                 if not spec == ALL:
-                    raise LCMechanismError("A string other than the keyword \'ALL\' was specified for the {} argument "
-                                           "the constructor for {}".format(MODULATED_MECHANISMS, self.name))
+                    raise LCMechanismError("A string other than the keyword "
+                                           "\'ALL\' was specified for the {} "
+                                           "argument the constructor for {}".format(MODULATED_MECHANISMS,
+                                                                                    self.name))
 
             if not isinstance(spec, list):
                 spec = [spec]
@@ -474,8 +496,7 @@ class LCMechanism(ControlMechanism):
                               method should be implemented that also implements an _instantiate_monitored_output_states
                               method, and that can be used to add OutputStates/Mechanisms to be monitored.
         """
-
-        self.monitored_output_states = []
+        self._monitored_output_states = []
 
         if not hasattr(self, INPUT_STATES):
             self._input_states = None
@@ -483,8 +504,6 @@ class LCMechanism(ControlMechanism):
             for input_state in self.input_states:
                 for projection in input_state.path_afferents:
                     self.monitored_output_states.append(projection.sender)
-
-
 
     def _instantiate_output_states(self, context=None):
         """Instantiate ControlSignal and assign ControlProjections to Mechanisms in self.modulated_mechanisms
@@ -622,10 +641,10 @@ class LCMechanism(ControlMechanism):
 
         print ("\n{0}".format(self.name))
         print("\n\tMonitoring the following Mechanism OutputStates:")
-        if self.monitoring_mechanism is None:
+        if self.monitored_output_states is None:
             print ("\t\tNone")
         else:
-            for state in self.monitoring_mechanism.input_states:
+            for state in self.monitored_output_states:
                 for projection in state.path_afferents:
                     monitored_state = projection.sender
                     monitored_state_mech = projection.sender.owner

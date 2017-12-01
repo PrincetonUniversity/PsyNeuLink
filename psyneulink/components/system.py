@@ -452,7 +452,7 @@ from psyneulink.scheduling.timescale import CentralClock, TimeScale
 
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'INPUT_ARRAY', 'kwSystemInputState',
-    'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'NUM_PHASES_PER_TRIAL', 'ORIGIN_MECHANISMS',
+    'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'MonitoredOutputStateTuple', 'NUM_PHASES_PER_TRIAL', 'ORIGIN_MECHANISMS',
     'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY', 'PROCESSES', 'RECURRENT_INIT_ARRAY', 'RECURRENT_MECHANISMS', 'SCHEDULER',
     'System', 'SYSTEM_TARGET_INPUT_STATE', 'SystemError', 'SystemInputState', 'SystemRegistry',
     'SystemWarning', 'TARGET_MECHANISMS', 'TERMINAL_MECHANISMS',
@@ -502,7 +502,7 @@ OUTPUT_STATE_INDEX = 0
 WEIGHT_INDEX = 1
 EXPONENT_INDEX = 2
 MATRIX_INDEX = 3
-MonitoredOutputStateTuple = namedtuple("MonitoredOutputStateTuple", "output_state, weight exponent matrix")
+MonitoredOutputStateTuple = namedtuple("MonitoredOutputStateTuple", "output_state weight exponent matrix")
 
 
 class SystemWarning(Warning):
@@ -556,8 +556,7 @@ class System(System_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + ClassDefaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {PROCESSES: [Mechanism_Base.default_mechanism],
-                                CONTROLLER: None
-                                TIME_SCALE: TimeScale.TRIAL}
+                                CONTROLLER: None}
        Class methods
        -------------
         - _validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
@@ -746,23 +745,17 @@ class System(System_Base):
         Length must equal the number of `INITIALIZE_CYCLE` Mechanisms listed in the System's
         `recurrent_init_mechanisms <System.recurrent_init_mechanisms>` attribute.
 
-    timeScale : TimeScale  : default TimeScale.TRIAL
-        determines the default `TimeScale` value used by Mechanisms in the System.
-
     results : List[OutputState.value]
         list of return values (OutputState.value) from the sequence of executions.
 
-    name : str : default System-<index>
-        the name of the System;
-        Specified in the **name** argument of the constructor for the System;
-        if not is specified, a default is assigned by SystemRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the System; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by SystemRegistry (see `Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : System.classPreferences
-        the `PreferenceSet` for System.
-        Specified in the **prefs** argument of the constructor for the System;  if it is not specified, a default is
-        assigned using `classPreferences` defined in __init__.py
-        (see :ref:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the System; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 
@@ -1059,7 +1052,7 @@ class System(System_Base):
 
             # Assign the Process a reference to this System
             process.systems.append(self)
-            if process.learning:
+            if process._learning_enabled:
                 self.learning = True
 
             # Get max of Process phaseSpecs
@@ -1565,20 +1558,20 @@ class System(System_Base):
                                              len(self.instance_defaults.variable[i][j]),
                                              len(origin_mech.input_states[j].instance_defaults.variable),
                                              origin_mech.name))
-            # MODIFIED 6/27/17 END
+                # MODIFIED 6/27/17 END
+                # MODIFIED 6/27/17 END
+                stimulus_input_state = SystemInputState(owner=self,
+                                                            variable=origin_mech.input_states[j].instance_defaults.variable,
+                                                            prefs=self.prefs,
+                                                            name="System Input State to Mechansism {}, Input State {}".format(origin_mech.name,j))
+                self.stimulusInputStates.append(stimulus_input_state)
+                self.inputs.append(stimulus_input_state.value)
 
-            stimulus_input_state = SystemInputState(owner=self,
-                                                        variable=origin_mech.input_state.instance_defaults.variable,
-                                                        prefs=self.prefs,
-                                                        name="System Input {}".format(i))
-            self.stimulusInputStates.append(stimulus_input_state)
-            self.inputs.append(stimulus_input_state.value)
-
-            # Add MappingProjection from stimulus_input_state to ORIGIN mechainsm's inputState
-            from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-            MappingProjection(sender=stimulus_input_state,
-                    receiver=origin_mech,
-                    name=self.name+' Input Projection to '+origin_mech.name)
+                # Add MappingProjection from stimulus_input_state to ORIGIN mechainsm's inputState
+                from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+                MappingProjection(sender=stimulus_input_state,
+                        receiver=origin_mech.input_states[j],
+                        name=self.name+' Input Projection to '+origin_mech.name+' Input State '+str(j))
 
     def _instantiate_learning_graph(self, context=None):
         """Build graph of LearningMechanism and LearningProjections
@@ -2110,12 +2103,12 @@ class System(System_Base):
 
 
                 # Get OutputState(s), and matrix specified for Projection to each,
-                #    from the ConnectionTuple in the PROJECTIONS entry of the PARMS dict.
+                #    from the ProjectionTuple in the PROJECTIONS entry of the PARMS dict.
                 # However, use weight and exponent entries for InputState, rather than any specified for
                 #    for each Projection (in its projection_spec).
                 # The InputState weight and exponent are used in the MonitoredOutputStateTuple
                 #    as they specify the how the InputState should be weighted;
-                # Any weight(s) and/or exponent(s) specified in the projection_spec(s) (a ConnectionTuple)
+                # Any weight(s) and/or exponent(s) specified in the projection_spec(s) (a ProjectionTuple)
                 #    are used for individual Projections to the InputState when it is  actually instantiated.
                 for projection_spec in input_state_spec[PARAMS][PROJECTIONS]:
                     monitored_output_state_tuples.extend([MonitoredOutputStateTuple(
@@ -2418,9 +2411,6 @@ class System(System_Base):
         input : list or ndarray
             a list or array of input value arrays, one for each `ORIGIN` Mechanism in the System.
 
-            .. [TBI: time_scale : TimeScale : default TimeScale.TRIAL
-               specifies a default TimeScale for the System]
-
             .. context : str
 
         Returns
@@ -2475,8 +2465,7 @@ class System(System_Base):
                 input[i] = self.origin_mechanisms[i].instance_defaults.variable
 
         else:
-            num_inputs = np.size(input,0)
-
+            num_inputs = len(input)
             # Check if input items are of different lengths (indicated by dtype == np.dtype('O'))
             if num_inputs != num_origin_mechs:
                 num_inputs = np.size(input)
@@ -2489,15 +2478,21 @@ class System(System_Base):
                                       format(num_inputs, self.name,  num_origin_mechs ))
 
             # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
-            for i, origin_mech in zip(range(num_origin_mechs), self.origin_mechanisms):
+            for origin_mech in self.origin_mechanisms:
                 # For each inputState of the ORIGIN mechanism
+
                 for j in range(len(origin_mech.input_states)):
                    # Get the input from each projection to that inputState (from the corresponding SystemInputState)
                     system_input_state = next((projection.sender
                                                for projection in origin_mech.input_states[j].path_afferents
                                                if isinstance(projection.sender, SystemInputState)), None)
+
                     if system_input_state:
-                        system_input_state.value = input[i][j]
+                        if isinstance(input, dict):
+                            system_input_state.value = input[origin_mech][j]
+
+                        else:
+                            system_input_state.value = input[j]
                     else:
                         logger.warning("Failed to find expected SystemInputState "
                                        "for {} at input state number ({}), ({})".
@@ -2795,9 +2790,6 @@ class System(System_Base):
         call_after_time_step : Function : default= `None`
             called after each time_step of each trial is executed.
 
-        time_scale : TimeScale :  default TimeScale.TRIAL
-            specifies whether Mechanisms are executed for a single time step or a trial.
-
         Returns
         -------
 
@@ -2851,11 +2843,12 @@ class System(System_Base):
                   format(self.name, system_string, clock.time_step))
             processes = list(process.name for process in self.processes)
             print("- processes: {}".format(processes))
-            if np.size(self.input, 0) == 1:
+            print("self.input = ", self.input)
+            if np.size(self.input) == 1:
                 input_string = ''
             else:
                 input_string = 's'
-            print("- input{}: {}".format(input_string, self.input.tolist()))
+            print("- input{}: {}".format(input_string, self.input))
 
         else:
             print("\n\'{}\'{} executing ********** (time_step {}) ".
@@ -3192,6 +3185,7 @@ class System(System_Base):
                    direction = 'BT',
                    show_learning = False,
                    show_control = False,
+                   show_dimensions = False,
                    origin_color = 'green',
                    terminal_color = 'red',
                    origin_and_terminal_color = 'brown',
@@ -3200,6 +3194,10 @@ class System(System_Base):
                    output_fmt='pdf',
                    ):
         """Generate a display of the graph structure of mechanisms and projections in the system.
+
+        .. note::
+           This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
+           (standard with PsyNeuLink pip install)
 
         Displays a graph showing the structure of the System (based on the `System's graph <System.graph>`).
         By default, only the primary processing Components are shown.  However,the **show_learning** and
@@ -3211,6 +3209,12 @@ class System(System_Base):
         `LearningProjection` are displayed as diamond-shaped nodes. The numbers in parentheses within a Mechanism
         node indicate its dimensionality.
 
+        COMMENT:
+        node shapes: https://graphviz.gitlab.io/_pages/doc/info/shapes.html
+        arrow shapes: https://graphviz.gitlab.io/_pages/doc/info/arrows.html
+        colors: https://graphviz.gitlab.io/_pages/doc/info/colors.html
+        COMMENT
+
         Arguments
         ---------
 
@@ -3221,13 +3225,29 @@ class System(System_Base):
             specifies whether or not to show the learning components of the system;
             they will all be displayed in the color specified for **learning_color**.
             Projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
-            if set to `ALL`, all Projections associated with learning will be shown:  the LearningProjections
+            if set to *ALL*, all Projections associated with learning will be shown:  the LearningProjections
             as well as from `ProcessingMechanisms <ProcessingMechanism>` to `LearningMechanisms <LearningMechanism>`
             that convey error and activation information;  if set to `True`, only the LearningPojections are shown.
 
         show_control :  bool : default False
             specifies whether or not to show the control components of the system;
             they will all be displayed in the color specified for **control_color**.
+
+        show_dimensions : bool or ALL or MECHANISMS or PROJECTIONS: default False
+            specifies whether or not to show dimemsions of Mechanisms (and/or MappingProjections when show_learning is
+            `True`);  can have the following settings:
+
+            * *ALL* -- shows dimensions for both Mechanisms and Projections (see below for formats).
+            |
+            * *MECHANISMS* -- shows `Mechanism` input and output dimensions.  Input dimensions are shown in parentheses
+              below the name of the Mechanism; each number represents the dimension of the `variable
+              <InputState.variable>` for each `InputState` of the Mechanism; Output dimensions are shown above
+              the name of the Mechanism; each number represents the dimension for `value <OutputState.value>` of each
+              of `OutputState` of the Mechanism;
+            |
+            * *PROJECTIONS* -- shows `MappingProjection` `matrix <MappingProjection.matrix>` dimensions.  Each is
+              shown in (<dim>x<dim>...) format;  for standard 2x2 "weight" matrix, the first entry is the number of
+              rows (input dimension) and the second the number of columns (output dimension).
 
         origin_color : keyword : default 'green',
             specifies the color in which the `ORIGIN` Mechanisms of the System are displayed.
@@ -3264,52 +3284,122 @@ class System(System_Base):
 
         """
 
-        from psyneulink.components.mechanisms.processing.objectivemechanism \
-            import ObjectiveMechanism
-        from psyneulink.components.mechanisms.adaptive.learning.learningmechanism \
-            import LearningMechanism
+        from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+        from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.components.projections.projection import Projection
 
         import graphviz as gv
 
         system_graph = self.graph
         learning_graph=self.learningGraph
+        if show_dimensions == True:
+            show_dimensions = ALL
 
         default_node_color = 'black'
+        mechanism_shape = 'oval'
+        projection_shape = 'diamond'
+        # projection_shape = 'Mdiamond'
+        # projection_shape = 'hexagon'
+
+        def _get_label(item):
+
+
+            # For Mechanisms, show length of each InputState and OutputState
+            if isinstance(item, Mechanism):
+                if show_dimensions in {ALL, MECHANISMS}:
+                    input_str = "in ({})".format(",".join(str(len(input_state.variable))
+                                                       for input_state in item.input_states))
+                    output_str = "out ({})".format(",".join(str(len(output_state.value))
+                                                        for output_state in item.output_states))
+                    return "{}\n{}\n{}".format(output_str, item.name, input_str)
+                else:
+                    return item.name
+
+            # For Projection, show dimensions of matrix
+            elif isinstance(item, Projection):
+                if show_dimensions in {ALL, PROJECTIONS}:
+                    # MappingProjections use matrix
+                    if isinstance(item, MappingProjection):
+                        value = np.array(item.matrix)
+                        dim_string = "({})".format("x".join([str(i) for i in value.shape]))
+                        return "{}\n{}".format(item.name, dim_string)
+                    # ModulatoryProjections use value
+                    else:
+                        value = np.array(item.value)
+                        dim_string = "({})".format(len(value))
+                        return "{}\n{}".format(item.name, dim_string)
+                else:
+                    return item.name
+
+            else:
+                raise SystemError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
+
+
 
         # build graph and configure visualisation settings
         G = gv.Digraph(engine = "dot",
-                       node_attr  = {'fontsize':'12', 'fontname':'arial', 'shape':'oval', 'color':default_node_color},
-                       edge_attr  = {'arrowhead':'halfopen', 'fontsize': '10', 'fontname': 'arial'},
-                       graph_attr = {"rankdir" : direction} )
+                       node_attr  = {
+                           'fontsize':'12',
+                           'fontname':'arial',
+                           'shape':mechanism_shape,
+                           'color':default_node_color
+                       },
+                       edge_attr  = {
+                           # 'arrowhead':'halfopen',
+                           'fontsize': '10',
+                           'fontname': 'arial'
+                       },
+                       graph_attr = {
+                           "rankdir" : direction
+                       } )
 
 
         # work with system graph
         rcvrs = list(system_graph.keys())
         # loop through receivers
         for rcvr in rcvrs:
-            rcvr_name = rcvr.name
+            rcvr_name = _get_label(rcvr)
             # rcvr_shape = rcvr.instance_defaults.variable.shape[1]
             rcvr_label = rcvr_name
+            G.node(rcvr_label, shape=mechanism_shape)
 
+            # handle auto-recurrent projections
+            for input_state in rcvr.input_states:
+                for proj in input_state.path_afferents:
+                    if proj.sender.owner is not rcvr:
+                        continue
+                    edge_label = _get_label(proj)
+                    try:
+                        has_learning = proj.has_learning_projection
+                    except AttributeError:
+                        has_learning = None
+                    if show_learning and has_learning:
+                        G.node(edge_label, shape=projection_shape)
+                        G.edge(rcvr_label, edge_label, arrowhead='none')
+                        G.edge(edge_label, rcvr_label)
+                    else:
+                        # render normally
+                        G.edge(rcvr_label, rcvr_label, label=edge_label)
 
             # loop through senders
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
-                sndr_name = sndr.name
+                sndr_name = _get_label(sndr)
                 # sndr_shape = sndr.instance_defaults.variable.shape[1]
                 sndr_label = sndr_name
 
                 # find edge name
-                projs = sndr.output_state.efferents
-                for proj in projs:
-                    if proj.receiver.owner == rcvr:
-                        edge_name = proj.name
-                        # edge_shape = proj.matrix.shape
-                        try:
-                            has_learning = proj.has_learning_projection
-                        except AttributeError:
-                            has_learning = None
+                for output_state in sndr.output_states:
+                    projs = output_state.efferents
+                    for proj in projs:
+                        if proj.receiver.owner == rcvr:
+                            edge_name = _get_label(proj)
+                            # edge_shape = proj.matrix.shape
+                            try:
+                                has_learning = proj.has_learning_projection
+                            except AttributeError:
+                                has_learning = None
                 edge_label = edge_name
 
                 # if rcvr is learning mechanism, draw arrow with learning color
@@ -3321,9 +3411,9 @@ class System(System_Base):
                 arrow_color="black"
                 if show_learning and has_learning:
                     # expand
-                    G.node(sndr_label, shape="oval")
-                    G.node(edge_label, shape="diamond")
-                    G.node(rcvr_label, shape="oval")
+                    G.node(sndr_label, shape=mechanism_shape)
+                    G.node(edge_label, shape=projection_shape)
+                    G.node(rcvr_label, shape=mechanism_shape)
                     G.edge(sndr_label, edge_label, arrowhead='none')
                     G.edge(edge_label, rcvr_label)
                 else:
@@ -3348,36 +3438,34 @@ class System(System_Base):
                     sndrs = learning_graph[rcvr]
                     for sndr in sndrs:
                         edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
-                        G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
+                        G.edge(_get_label(sndr), _get_label(rcvr), color=learning_color, label = edge_label)
                 else:
-                    # FIX THIS TO INCLUDE Projections FROM ProcessingMechanisms TO LearningMechanisms
                     # Implement edges for Projections to each LearningMechanism from other LearningMechanisms
-                    # Show Projections to LearningComponents
+                    # and from ProcessingMechanisms if 'ALL' is set
                     for input_state in rcvr.input_states:
                         for proj in input_state.path_afferents:
                             sndr = proj.sender.owner
-                            G.node(rcvr.name, color=learning_color)
-                            # If Projection is not from another learning component,
-                            #    don't color and only show if ALL is set
+                            G.node(_get_label(rcvr), color=learning_color)
+                            # If Projection is not from another learning component
+                            #    only show if ALL is set, and don't color
                             if (isinstance(sndr, LearningMechanism) or
                                 (isinstance(sndr, ObjectiveMechanism) and sndr._role is LEARNING)):
-                                G.node(sndr.name, color=learning_color)
+                                G.node(_get_label(sndr), color=learning_color)
                             else:
                                 if show_learning is True:
                                     continue
-                            G.edge(sndr.name, rcvr.name, color=learning_color, label=proj.name)
+                            G.edge(_get_label(sndr), _get_label(rcvr), color=learning_color, label=proj.name)
 
                             # Get Projections to ComparatorMechanism as well
                             if isinstance(sndr, ObjectiveMechanism) and sndr._role is LEARNING and show_learning is ALL:
                                 for input_state in sndr.input_states:
                                     for proj in input_state.path_afferents:
-                                        # Skip any Projections from ProcesInputStates
-                                        if isinstance(proj.sender.owner, Process):
+                                        # Skip any Projections from ProcesInputStates or SystemInputStates
+                                        if isinstance(proj.sender.owner, (Process, System)):
                                             continue
                                         output_mech = proj.sender.owner
-                                        G.edge(output_mech.name, sndr.name, color=learning_color, label=proj.name)
-
-
+                                        G.edge(_get_label(output_mech), _get_label(sndr), color=learning_color,
+                                               label=proj.name)
 
 
         # add control graph if show_control
@@ -3393,9 +3481,9 @@ class System(System_Base):
             objmech = connector.sender.owner
 
             # main edge
-            G.node(controller.name, color=control_color)
-            G.node(objmech.name, color=control_color)
-            G.edge(objmech.name, controller.name, label=connector.name, color=control_color)
+            G.node(_get_label(controller), color=control_color)
+            G.node(_get_label(objmech), color=control_color)
+            G.edge(_get_label(objmech), _get_label(controller), label=connector.name, color=control_color)
 
             # outgoing edges
             for output_state in controller.control_signals:
@@ -3403,22 +3491,22 @@ class System(System_Base):
                     # MODIFIED 7/21/17 CW: this edge_name statement below didn't do anything and caused errors, so
                     # I commented it out.
                     # edge_name
-                    rcvr_name = projection.receiver.owner.name
-                    G.edge(controller.name, rcvr_name, label=projection.name, color=control_color)
+                    rcvr_name = _get_label(projection.receiver.owner)
+                    G.edge(_get_label(controller), rcvr_name, label=projection.name, color=control_color)
 
             # incoming edges
             for istate in objmech.input_states:
                 for proj in istate.path_afferents:
-                    sndr_name = proj.sender.owner.name
-                    G.edge(sndr_name, objmech.name, label=proj.name, color=control_color)
+                    sndr_name = _get_label(proj.sender.owner)
+                    G.edge(sndr_name, _get_label(objmech), label=proj.name, color=control_color)
 
             # prediction mechanisms
             for object_item in self.execution_list:
                 mech = object_item
                 if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
-                    G.node(mech.name, color='purple')
+                    G.node(_get_label(mech), color='purple')
                     recvr = mech.origin_mech
-                    G.edge(mech.name, recvr.name, label=' prediction assignment', color='purple')
+                    G.edge(_get_label(mech), _get_label(recvr), label=' prediction assignment', color='purple')
                     pass
 
         # return
@@ -3441,7 +3529,7 @@ class SystemInputState(OutputState):
         Mechanism of the System.
 
         .. Declared as a subclass of OutputState so that it is recognized as a legitimate sender to a Projection
-           in Projection._instantiate_sender()
+           in Projection_Base._instantiate_sender()
 
            self.value is used to represent the item of the targets arg to system.execute or system.run
     COMMENT

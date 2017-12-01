@@ -31,7 +31,7 @@ that modulate different types of Components and their States:
     `function <State_Base.function>` in modulating its `value <State_Base.value>`.
 ..
 * `ControlProjection`
-    takes the `value of a <ControlSignal.value> of a `ControlSignal` belonging to a `ControlMechanism`,
+    takes the `value of a <ControlSignal.value>` of a `ControlSignal` belonging to a `ControlMechanism`,
     and conveys it to the `ParameterState` for the parameter of a `Mechanism <Mechanism>` or its
     `function <Mechanism_Base.function>`, for use in modulating the value of the parameter.
 
@@ -42,9 +42,10 @@ Creating a ModulatoryProjection
 
 A ModulatoryProjection is a base class, and cannot be instantiated directly.  However, the three types of
 ModulatoryProjections listed above can be created directly, by calling the constructor for the desired type.
-More commonly, however, ModulatoryProjections are either specified `in context <Projection_In_Context_Specification>`,
-or are `created automatically <Projection_Automatic_Creation>`, the details of which are described in the documentation
-for each type of ModulatoryProjection.
+More commonly, however, ModulatoryProjections are either specified in the context of the States to or from
+which they project (`State_Projections` in State, and `Projection_Specification>`), or are `created automatically
+<Projection_Automatic_Creation>`, the details of which are described in the documentation for each type of
+ModulatoryProjection.
 
 .. _ModulatoryProjection_Structure:
 
@@ -61,9 +62,9 @@ Execution
 ---------
 
 A ModulatoryProjection, like any Projection, cannot be executed directly.  It is executed when the `State <State>` to
-which it projects — its `receiver <Projection.receiver>` — is updated;  that occurs when the State's owner Mechanism
-is executed.  When a ModulatoryProjection executes, it conveys both the `value <ModulatorySignal.value>` of the
-`ModulatorySignal <ModulatorySignal>` from which it projects, and the ModulatorySignal's `modulation
+which it projects — its `receiver <Projection_Base.receiver>` — is updated;  that occurs when the State's owner
+Mechanism is executed.  When a ModulatoryProjection executes, it conveys both the `value <ModulatorySignal.value>` of
+the `ModulatorySignal <ModulatorySignal>` from which it projects, and the ModulatorySignal's `modulation
 <ModulatorySignal.modulation>` attribute, to the State that receives the Projection.  The State assigns the value to
 the parameter of the State's `function <State_Base.function>` specified by the `modulation` attribute, and then calls
 the `function <State_Base.function>` to determine the `value <State_Base.value>` of the State.
@@ -131,22 +132,20 @@ class ModulatoryProjection_Base(Projection_Base):
        specifies the value by which to exponentiate the ModulatoryProjection's `value <ModulatoryProjection.value>`
        before combining it with others (see `exponent <ModulatoryProjection.exponent>` for additional details).
 
-    params : Optional[Dict[param keyword, param value]] : default None
+    params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         ModulatoryProjection, its `function <ModulatoryProject.function>`, and/or a custom function and its parameters.
         By default, it contains an entry for the ModulatoryProjection's default `function <ModulatoryProject.function>`
         and parameter assignments.  Values specified for parameters in the dictionary override any assigned to those
         parameters in arguments of the constructor.
 
-    name : str : default LearningProjection-<index>
-        a string used for the name of the ModulatoryProjection.
-        If not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default see ModulatoryProjection `name <ModulatoryProjection.name>`
+        specifies the name of the ModulatoryProjection; see ModulatoryProjection `name <ModulatoryProjection.name>` 
+        for details.
 
-    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences] : default : None
-        the `PreferenceSet` for the ModulatoryProjection.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict : default Projection.classPreferences
+        specifies the `PreferenceSet` for the ModulatoryProjection; see `prefs <ModulatoryProjection.prefs>` for 
+        details.
 
     context : str : default None
         optional reference to a subclass
@@ -185,17 +184,20 @@ class ModulatoryProjection_Base(Projection_Base):
         determine that State's `variable <State.variable>` is modified (see description in `Projection
         <Projection_Weight_and_Exponent>` for details).
 
-    name : str : default ModulatoryProjection-<index>
-        the name of the ModulatoryProjection.
-        Specified in the **name** argument of the constructor for the ModulatoryProjection;
-        if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str
+        the name of the ModulatoryProjection. If the ModulatoryProjection's `initialization has been deferred
+        <Projection_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
+        status) until initialization is completed, at which time it is assigned its designated name.  If that is the
+        name of an existing ModulatoryProjection, it is appended with an indexed suffix, incremented for each
+        ModulatoryProjection with the same base name (see `Naming`). If the name is not specified in the **name**
+        argument of its constructor, a default name is assigned using the following format:
+        '<ModualatorySignal type> for <receiver owner Mechanism's name>[<receiver's name>]'
+        (for example, ``'GatingSignal for my_mech[InputState-0]'``).
 
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for projection.
-        Specified in the **prefs** argument of the constructor for the ModulatoryProjection;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the ModulatoryProjection; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
     componentCategory = MODULATORY_PROJECTION
@@ -219,19 +221,20 @@ class ModulatoryProjection_Base(Projection_Base):
                          prefs=prefs,
                          context=context)
 
-    def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
+    def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
+
+        template = "{} for {}[{}]"
 
         if self.init_status in {InitStatus.INITIALIZED, InitStatus.UNSET}:
             # If the name is not a default name for the class, return
             if not self.className + '-' in self.name:
                 return self.name
-            self.name = self.className + " for " + \
-                              self.receiver.name + " of " + \
-                              self.receiver.owner.name
+            self.name = template.format(self.className, self.receiver.owner.name, self.receiver.name)
 
         elif self.init_status is InitStatus.DEFERRED_INITIALIZATION:
-            projection_name = self.className + " for " + state.owner.name + " " + state.name
-            self.init_args[NAME] = self.init_args[NAME] or projection_name
+            projection_name = template.format(self.className, state.owner.name, state.name)
+            # self.init_args[NAME] = self.init_args[NAME] or projection_name
+            self.name = self.init_args[NAME] or projection_name
 
         else:
             raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized InitStatus ({})".

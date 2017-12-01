@@ -15,9 +15,9 @@ Overview
 --------
 
 PathwayProjections allow information to be passed between mechanisms.  A PathwayProjection takes its input from the
-`OutputState` of one Mechanism (its `sender <Projection.sender>`), and does whatever conversion is needed to transmit
-that information to the `InputState` of another Mechanism (its `receiver <Projection.receiver>`).  The primary
-type of PathwayProjection is a `MappingProjection`.
+`OutputState` of one Mechanism (its `sender <Projection_Base.sender>`), and does whatever conversion is needed to
+transmit that information to the `InputState` of another Mechanism (its `receiver <Projection_Base.receiver>`).  The
+primary type of PathwayProjection is a `MappingProjection`.
 
 .. _Projection_Creation:
 
@@ -25,8 +25,9 @@ Creating a PathwayProjection
 ---------------------------------
 
 A PathwayProjection can be created on its own, by calling the constructor for the desired type of projection.  More
-commonly, however, projections are either specified `in context <Projection_In_Context_Specification>`, or
-are `created automatically <Projection_Automatic_Creation>`, as described below.
+commonly, however, projections are either specified in the context of creating a State to or from which they project
+ (see `Projection_Specification`, and `State_Projections` in State), or are `created automatically
+ <Projection_Automatic_Creation>`, as described below.
 
 
 
@@ -45,7 +46,7 @@ Execution
 """
 
 from psyneulink.components.projections.projection import Projection_Base
-from psyneulink.globals.keywords import PATHWAY_PROJECTION, NAME, SENDER, RECEIVER
+from psyneulink.globals.keywords import PATHWAY_PROJECTION, NAME, SENDER, RECEIVER, CONTEXT
 from psyneulink.components.component import InitStatus
 
 __all__ = []
@@ -85,33 +86,39 @@ class PathwayProjection_Base(Projection_Base):
                          prefs=prefs,
                          context=context)
 
-    def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
+    def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
 
         from psyneulink.components.mechanisms.mechanism import Mechanism
 
-        # If the name is not a default name, leave intact
-        if not self.className + '-' in self.name:
-            return self.name
 
-        if self.init_status is InitStatus.INITIALIZED:
-            if self.sender.owner:
-                sender_name = "{}[{}]".format(self.sender.owner.name, sender_name)
-            if self.receiver.owner:
-                receiver_name = "{}[{}]".format(self.receiver.owner.name, receiver_name)
-            self.name = self.className + " from " + sender_name + " to " + receiver_name
+        name_template = "{}[{}]"
+        projection_name_template = "{} from {} to {}"
 
-        elif self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
             if self.init_args[SENDER]:
                 sender = self.init_args[SENDER]
-                if isinstance(sender.owner, Mechanism):
-                    sender_name = "{}[{}]".format(sender.owner.name, sender_name)
+                if isinstance(sender, type):
+                    sender_name = "({})".format(sender.__name__)
+                elif isinstance(sender.owner, Mechanism):
+                    sender_name = name_template.format(sender.owner.name, sender_name)
             if self.init_args[RECEIVER]:
                 receiver = self.init_args[RECEIVER]
                 if isinstance(receiver.owner, Mechanism):
-                    receiver_name = "{}[{}]".format(receiver.owner.name, receiver_name)
-            projection_name = self.className + " from " + sender_name + " to " + receiver_name
+                    receiver_name = name_template.format(receiver.owner.name, receiver_name)
+            projection_name = projection_name_template.format(self.className, sender_name, receiver_name)
             self.init_args[NAME] = self.init_args[NAME] or projection_name
             self.name = self.init_args[NAME]
+
+        # If the name is not a default name, leave intact
+        elif not self.className + '-' in self.name:
+            return self.name
+
+        elif self.init_status is InitStatus.INITIALIZED:
+            if self.sender.owner:
+                sender_name = name_template.format(self.sender.owner.name, self.sender.name)
+            if self.receiver.owner:
+                receiver_name = name_template.format(self.receiver.owner.name, self.receiver.name)
+            self.name = projection_name_template.format(self.className, sender_name, receiver_name)
 
         else:
             raise PathwayProjectionError("PROGRAM ERROR: {} has unrecognized InitStatus ({})".
