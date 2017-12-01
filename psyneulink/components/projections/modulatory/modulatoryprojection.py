@@ -221,7 +221,7 @@ class ModulatoryProjection_Base(Projection_Base):
                          prefs=prefs,
                          context=context)
 
-    def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
+    def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
 
         template = "{} for {}[{}]"
 

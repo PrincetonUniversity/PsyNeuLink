@@ -1095,14 +1095,15 @@ class Component(object):
             except KeyError:
                 pass
 
-            # If name is None, mark as deferred so that name can be customized
-            #    using info that has become available at time of deferred init
-            self.init_args[NAME] = self.name or (self.init_args[NAME] or
-                                                 (DEFERRED_INITIALIZATION + ' ' + self.className) or
-                                                 DEFERRED_DEFAULT_NAME)
-
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
+
+            # If name was assigned, "[DEFERRED INITIALIZATION]" was appended to it, so remove it
+            if DEFERRED_INITIALIZATION in self.name:
+                self.name = self.name.replace("["+DEFERRED_INITIALIZATION+"]","")
+            # Otherwise, allow class to replace std default name with class-specific one if it has a method for doing so
+            else:
+                self._assign_default_name()
 
             self.init_status = InitStatus.INITIALIZED
 
@@ -1117,6 +1118,9 @@ class Component(object):
                           name=name,
                           registry=DeferredInitRegistry,
                           context=context)
+
+    def _assign_default_name(self, **kwargs):
+        return
 
     def _assign_args_to_param_dicts(self, **kwargs):
         """Assign args passed in __init__() to params

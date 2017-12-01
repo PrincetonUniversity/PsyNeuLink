@@ -729,6 +729,8 @@ class Projection_Base(Projection):
                                               prefs=prefs,
                                               context=context.__class__.__name__)
 
+        self._assign_default_projection_name()
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate PROJECTION_SENDER and/or sender arg (current self.sender), and assign one of them as self.sender
 
@@ -948,7 +950,10 @@ class Projection_Base(Projection):
         return {SENDER:sender,
                 RECEIVER:receiver}
 
-    def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
+    def _assign_default_name(self, **kwargs):
+        self._assign_default_projection_name(**kwargs)
+
+    def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
         raise ProjectionError("PROGRAM ERROR: {} must implement _assign_default_projection_name().".
                               format(self.__class__.__name__))
 
