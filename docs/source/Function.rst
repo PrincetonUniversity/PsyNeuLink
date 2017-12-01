@@ -26,6 +26,7 @@ Functions
              FHNIntegrator,
              AGTUtilityIntegrator,
              AccumulatorIntegrator,
+             LCAIntegrator,
              BogaczEtAl,
              NavarroAndFuss,
              NormalDist,
