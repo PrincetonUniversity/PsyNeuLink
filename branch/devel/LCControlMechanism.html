@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCControlMechanism &mdash; PsyNeuLink 0.4.0a+137.ge6e5ac6 documentation</title>
+  <title>LCControlMechanism &mdash; PsyNeuLink 0.4.0a+152.g5a35c4a documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0a+137.ge6e5ac6 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0a+152.g5a35c4a documentation" href="index.html"/>
         <link rel="up" title="AGT" href="AGT.html"/>
         <link rel="next" title="EVC" href="EVC.html"/>
         <link rel="prev" title="AGTControlMechanism" href="AGTControlMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.0a+137
+                0.4.0a+152
               </div>
             
           
@@ -185,7 +185,7 @@
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An LCControlMechanism is a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that multiplicatively modulates the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> (usually <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanisms</span></a>).
 It implements an abstract model of the <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/12371518">locus coeruleus (LC)</a> that
-uses an <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator" title="psyneulink.components.functions.function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> Function to generate its output.  This is modulated by a <code class="xref any docutils literal"><span class="pre">mode</span></code>
+uses an <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator" title="psyneulink.components.functions.function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> Function to generate its output.  This is modulated by a <a class="reference internal" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.mode_FHN" title="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.mode_FHN"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a>
 parameter that regulates its functioning between <a class="reference internal" href="#lccontrolmechanism-modes-of-operation"><span class="std std-ref">&quot;tonic&quot; and &quot;phasic&quot; modes of operation</span></a>.  The Mechanisms modulated by an LCControlMechanism can be listed using
 its <a class="reference internal" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.show" title="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.show"><code class="xref any py py-meth docutils literal"><span class="pre">show</span></code></a> method.  When used with an <a class="reference internal" href="AGTControlMechanism.html"><span class="doc">AGTControlMechanism</span></a> to regulate the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator.mode" title="psyneulink.components.functions.function.FHNIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> parameter of its <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator" title="psyneulink.components.functions.function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> Function, it implements a form of the <a class="reference external" href="http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709">Adaptive Gain Theory</a> of the locus coeruleus-norepinephrine
 (LC-NE) system.</p>
@@ -342,7 +342,7 @@ executed.</p>
 <span id="lccontrolmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.library.subsystems.agt.lccontrolmechanism.</code><code class="descname">LCControlMechanism</code><span class="sig-paren">(</span><em>system=None</em>, <em>objective_mechanism=None</em>, <em>modulated_mechanisms=None</em>, <em>modulation=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.library.subsystems.agt.lccontrolmechanism.</code><code class="descname">LCControlMechanism</code><span class="sig-paren">(</span><em>system=None</em>, <em>objective_mechanism=None</em>, <em>modulated_mechanisms=None</em>, <em>initial_w_FHN=0.0</em>, <em>initial_v_FHN=0.0</em>, <em>time_step_size_FHN=0.05</em>, <em>t_0_FHN=0.0</em>, <em>a_v_FHN=-1/3</em>, <em>b_v_FHN=0.0</em>, <em>c_v_FHN=1.0</em>, <em>d_v_FHN=0.0</em>, <em>e_v_FHN=-1.0</em>, <em>f_v_FHN=1.0</em>, <em>threshold_FHN=-1.0                          time_constant_v_FHN=1.0</em>, <em>a_w_FHN=1.0</em>, <em>b_w_FHN=-0.8</em>, <em>c_w_FHN=0.7</em>, <em>mode_FHN=1.0</em>, <em>uncorrelated_activity_FHN=0.0               time_constant_w_FHN = 12.5</em>, <em>integration_method_FHN=&quot;RK4&quot;                base_level_gain=0.5</em>, <em>scaling_factor_gain=3.0</em>, <em>modulation=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">ControlMechanism</span></a> that modulates the <a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -361,6 +361,37 @@ a default ObjectiveMechanism is created and the list is passed to its <strong>mo
 with a <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> that implements a <a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a>;  alternatively the keyword <em>ALL</em> can be used to specify all of the
 <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in the Composition(s) to which the LCControlMechanism
 belongs.</li>
+<li><strong>initial_w_FHN</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal"><span class="pre">initial_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>initial_v_FHN</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal"><span class="pre">initial_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>time_step_size_FHN</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal"><span class="pre">time_step_size</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>t_0_FHN</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal"><span class="pre">t_0</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>a_v_FHN</strong> (<em>float : default -1/3</em>) – sets <code class="xref any docutils literal"><span class="pre">a_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>b_v_FHN</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal"><span class="pre">b_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>c_v_FHN</strong> (<em>float : default 1.0</em>) – sets <code class="xref any docutils literal"><span class="pre">c_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>d_v_FHN</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal"><span class="pre">d_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>e_v_FHN</strong> (<em>float : default -1.0</em>) – sets <code class="xref any docutils literal"><span class="pre">e_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>f_v_FHN</strong> (<em>float : default 1.0</em>) – sets <code class="xref any docutils literal"><span class="pre">f_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>threshold_FHN</strong> (<em>float : default -1.0</em>) – sets <code class="xref any docutils literal"><span class="pre">threshold</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>time_constant_v_FHN</strong> (<em>float : default 1.0</em>) – sets <code class="xref any docutils literal"><span class="pre">time_constant_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>a_w_FHN</strong> (<em>float : default 1.0</em>) – sets <code class="xref any docutils literal"><span class="pre">a_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>b_w_FHN</strong> (<em>float : default -0.8</em><em>,</em>) – sets <code class="xref any docutils literal"><span class="pre">b_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>c_w_FHN</strong> (<em>float : default 0.7</em>) – sets <code class="xref any docutils literal"><span class="pre">c_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>mode_FHN</strong> (<em>float : default 1.0</em>) – sets <code class="xref any docutils literal"><span class="pre">mode</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>uncorrelated_activity_FHN</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal"><span class="pre">uncorrelated_activity</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>time_constant_w_FHN</strong> (<em>float : default  12.5</em>) – sets <code class="xref any docutils literal"><span class="pre">time_constant_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>integration_method_FHN</strong> (<em>float : default &quot;RK4&quot;</em>) – sets <code class="xref any docutils literal"><span class="pre">integration_method</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</li>
+<li><strong>base_level_gain</strong> (<em>float : default 0.5</em>) – <p>sets the base value in the equation used to compute the time-dependent gain value that the LCControl applies
+to each of the mechanisms it modulates</p>
+<div class="math">
+\[g(t) = G + k w(t)\]</div>
+<p>base_level_gain = G</p>
+</li>
+<li><strong>scaling_factor_gain</strong> (<em>float : default 3.0</em>) – <p>sets the scaling factor in the equation used to compute the time-dependent gain value that the LCControl
+applies to each of the mechanisms it modulates</p>
+<div class="math">
+\[g(t) = G + k w(t)\]</div>
+<p>scaling_factor_gain = k</p>
+</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters
 for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
 specified for parameters in the dictionary override any assigned to those parameters in arguments of the
@@ -432,6 +463,136 @@ in <code class="xref any docutils literal"><span class="pre">control_signals</sp
 <dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.modulated_mechanisms">
 <code class="descname">modulated_mechanisms</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.modulated_mechanisms" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[Mechanism]</em> – list of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> modulated by the LCControlMechanism.</p>
+<p>initial_w_FHN : float : default 0.0
+sets <code class="xref any docutils literal"><span class="pre">initial_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.initial_v_FHN">
+<code class="descname">initial_v_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.initial_v_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> – sets <code class="xref any docutils literal"><span class="pre">initial_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.time_step_size_FHN">
+<code class="descname">time_step_size_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.time_step_size_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> – sets <code class="xref any docutils literal"><span class="pre">time_step_size</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.t_0_FHN">
+<code class="descname">t_0_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.t_0_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> – sets <code class="xref any docutils literal"><span class="pre">t_0</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.a_v_FHN">
+<code class="descname">a_v_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.a_v_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default -1/3</em> – sets <code class="xref any docutils literal"><span class="pre">a_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.b_v_FHN">
+<code class="descname">b_v_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.b_v_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> – sets <code class="xref any docutils literal"><span class="pre">b_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.c_v_FHN">
+<code class="descname">c_v_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.c_v_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> – sets <code class="xref any docutils literal"><span class="pre">c_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.d_v_FHN">
+<code class="descname">d_v_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.d_v_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> – sets <code class="xref any docutils literal"><span class="pre">d_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.e_v_FHN">
+<code class="descname">e_v_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.e_v_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default -1.0</em> – sets <code class="xref any docutils literal"><span class="pre">e_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.f_v_FHN">
+<code class="descname">f_v_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.f_v_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> – sets <code class="xref any docutils literal"><span class="pre">f_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.threshold_FHN">
+<code class="descname">threshold_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.threshold_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default -1.0</em> – sets <code class="xref any docutils literal"><span class="pre">threshold</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.time_constant_v_FHN">
+<code class="descname">time_constant_v_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.time_constant_v_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> – sets <code class="xref any docutils literal"><span class="pre">time_constant_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.a_w_FHN">
+<code class="descname">a_w_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.a_w_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> – sets <code class="xref any docutils literal"><span class="pre">a_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.b_w_FHN">
+<code class="descname">b_w_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.b_w_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default -0.8,</em> – sets <code class="xref any docutils literal"><span class="pre">b_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.c_w_FHN">
+<code class="descname">c_w_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.c_w_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.7</em> – sets <code class="xref any docutils literal"><span class="pre">c_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.mode_FHN">
+<code class="descname">mode_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.mode_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> – sets <code class="xref any docutils literal"><span class="pre">mode</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.uncorrelated_activity_FHN">
+<code class="descname">uncorrelated_activity_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.uncorrelated_activity_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> – sets <code class="xref any docutils literal"><span class="pre">uncorrelated_activity</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.time_constant_w_FHN">
+<code class="descname">time_constant_w_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.time_constant_w_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default  12.5</em> – sets <code class="xref any docutils literal"><span class="pre">time_constant_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.integration_method_FHN">
+<code class="descname">integration_method_FHN</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.integration_method_FHN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default “RK4”</em> – sets <code class="xref any docutils literal"><span class="pre">integration_method</span></code> on the LCControlMechanism’s <a class="reference internal" href="Function.html#fhnintegrator"><span class="std std-ref">FHNIntegrator</span></a> function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.base_level_gain">
+<code class="descname">base_level_gain</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.base_level_gain" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.5</em> – sets the base value in the equation used to compute the time-dependent gain value that the LCControl applies
+to each of the mechanisms it modulates</p>
+<div class="math">
+\[g(t) = G + k w(t)\]</div>
+<p>base_level_gain = G</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.scaling_factor_gain">
+<code class="descname">scaling_factor_gain</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.scaling_factor_gain" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 3.0</em> – sets the scaling factor in the equation used to compute the time-dependent gain value that the LCControl
+applies to each of the mechanisms it modulates</p>
+<div class="math">
+\[g(t) = G + k w(t)\]</div>
+<p>scaling_factor_gain = k</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -523,7 +684,7 @@ and the <a class="reference internal" href="Function.html#function-modulatory-pa
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0a+137.ge6e5ac6',
+            VERSION:'0.4.0a+152.g5a35c4a',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
