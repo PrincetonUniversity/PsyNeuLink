@@ -2053,10 +2053,7 @@ class State_Base(State):
 
         self._value = assignment
 
-        # Store value in log if specified
-        # Get logPref
-        if self.prefs:
-            log_pref = self.prefs.logPref
+        # STORE value IN log IF SPECIFIED
 
         # Get context
         try:
@@ -2066,10 +2063,18 @@ class State_Base(State):
         except KeyError:
             context = ""
 
+        # Get logPref
+        if self.prefs:
+            log_pref = self.prefs.logPref
+
         # If context is consistent with log_pref, record value to log
         if (log_pref is LogLevel.ALL_ASSIGNMENTS or
+                (log_pref is LogLevel.INITIALIZATION and INITIALIZING in context) or
                 (log_pref is LogLevel.EXECUTION and EXECUTING in context) or
-                (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context and kwAssign in context))):
+                (log_pref is LogLevel.VALUE_ASSIGNMENT
+                 and (EXECUTING in context and kwAssign in context)
+                )
+        ):
             self.owner.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
             # self.owner.log.entries[self.name] = LogEntry(CentralClock, context, assignment)
 

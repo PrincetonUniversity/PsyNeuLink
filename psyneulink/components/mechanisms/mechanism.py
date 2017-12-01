@@ -2428,6 +2428,39 @@ class Mechanism_Base(Mechanism):
         except:
             self._status = CHANGED
 
+    @property
+    def states(self):
+        """Return list of all of the Mechanism's States"""
+        return list(self.input_states) + list(self.parameter_states) + list(self.output_states)
+
+    @property
+    def path_afferents(self):
+        """Return list of path_afferent Projections to all of the Mechanism's input_states"""
+        projs = []
+        for input_state in self.input_states:
+            projs.append(input_state.path_afferents)
+        return projs
+
+    @property
+    def mod_afferents(self):
+        """Return list of all of the Mechanism's Projections"""
+        projs = []
+        for input_state in self.input_states:
+            projs.append(input_state.mod_afferents)
+        return projs
+
+    @property
+    def efferents(self):
+        """Return list of all of the Mechanism's Projections"""
+        projs = []
+        for output_state in self.output_states:
+            projs.append(output_state.efferents)
+        return projs
+
+    @property
+    def projections(self):
+        return self.path_afferents + self.mod_afferents + self.efferents
+
 
 def _is_mechanism_spec(spec):
     """Evaluate whether spec is a valid Mechanism specification

@@ -2213,7 +2213,11 @@ class ScratchPadError(Exception):
 #region TEST Log @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 print ("TEST Log")
 
-T = pnl.TransferMechanism(params={pnl.LOG_ENTRIES:'value'})
+T = pnl.TransferMechanism(params={pnl.LOG_ENTRIES:'variable'})
+# T.logPref=pnl.LogLevel.INITIALIZATION
+T.logPref=pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)
+for state in T.states:
+    state.logPref=pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)
 T.execute()
 T.execute()
 assert True

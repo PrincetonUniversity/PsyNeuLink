@@ -119,13 +119,15 @@ class LogLevel(IntEnum):
     """Specifies levels of logging, as descrdibed below."""
     OFF = 0
     """No recording."""
-    VALUE_ASSIGNMENT = 1
+    INITIALIZATION = 1
+    """Record only initial assignment."""
+    VALUE_ASSIGNMENT = 2
     """Record only final value assignments during execution."""
-    EXECUTION = 2
+    EXECUTION = 3
     """Record all value assignments during execution."""
-    VALIDATION = 3
+    VALIDATION = 5
     """Record all value assignemnts during validation and execution."""
-    ALL_ASSIGNMENTS = 4
+    ALL_ASSIGNMENTS = 5
     """Record all value assignments during initialization, validation and execution."""
 
 LogEntry = namedtuple('LogEntry', 'time, context, value')
@@ -176,13 +178,15 @@ class EntriesDict(MutableMapping,dict):
         else:
             dict.__setitem__(self,key,value)
 
-
     def __delitem__(self, key):
         dict.__delitem__(self,key)
+
     def __iter__(self):
         return dict.__iter__(self)
+
     def __len__(self):
         return dict.__len__(self)
+
     def __contains__(self, x):
         return dict.__contains__(self,x)
 #endregion
