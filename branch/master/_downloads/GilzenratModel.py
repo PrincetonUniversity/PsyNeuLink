@@ -19,7 +19,7 @@ from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechan
 
 # Weights & Biases:
 b_decision = 0.00   # Bias on decision units (not biased)
-b_response = 2.00  # Bias on response unit --- NOTE: Gilzenrat has negative signs in his logistic equation
+b_response = 2.00   # Bias on response unit --- NOTE: Gilzenrat has negative signs in his logistic equation
 w_XiIi = 1.00       # Connection weight from input units I1 and I2 to respective decision units X1 and X2
 w_XiIj = 0.33       # Cross talk weight from input unit to opposite decision unit
 w_XiXi = 1.00       # Recurrent self-connection weight for both decision units

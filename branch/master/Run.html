@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Run &mdash; PsyNeuLink 0.4.0-alpha+139.g3607334 documentation</title>
+  <title>Run &mdash; PsyNeuLink 0.4.0rc1+16.gbfcc696 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0-alpha+139.g3607334 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0rc1+16.gbfcc696 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Library" href="Library.html"/>
         <link rel="prev" title="TimeScale" href="TimeScale.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.0-alpha+139
+                0.4.0rc1+16
               </div>
             
           
@@ -535,23 +535,12 @@ situations:</p>
 <span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Shorthand - drop the outer list on <strong>Mechanism a</strong>’s input specification and use <code class="xref any docutils literal"><span class="pre">num_trials</span></code> to repeat the input value</p>
+<p>Shorthand - specify <strong>Mechanism a</strong>’s inputs in a list because it is the only origin mechanism</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">input_list</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]]</span>
 
 <span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_list</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="initial-values">
-<span id="run-initial-values"></span><h3>Initial Values<a class="headerlink" href="#initial-values" title="Permalink to this headline">¶</a></h3>
-<p>Any Mechanism that is the <code class="xref any docutils literal"><span class="pre">sender</span></code> of a Projection that closes a loop in a Process or
-System, and that is not an <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism, is designated as <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE" title="psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>. An initial value can be assigned
-to such Mechanisms, that will be used to initialize them when the Process or System is first run.  These values are
-specified in the <strong>initial_values</strong> argument of <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code>, as a dictionary. The key for each entry must
-be a Mechanism designated as <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE" title="psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>, and its value an input for the Mechanism to be used as its initial
-value.  The size of the input (length of the outermost level if it is a list, or axis 0 if it is an np.ndarray),
-must equal the number of InputStates of the Mechanism, and the size of each value must match (in number and type of
-elements) that of the <code class="xref any docutils literal"><span class="pre">variable</span></code> for the corresponding InputState.</p>
 </div>
 <div class="section" id="targets">
 <span id="run-targets"></span><h3>Targets<a class="headerlink" href="#targets" title="Permalink to this headline">¶</a></h3>
@@ -697,7 +686,7 @@ or of the OutputStates of the <a class="reference internal" href="Keywords.html#
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0-alpha+139.g3607334',
+            VERSION:'0.4.0rc1+16.gbfcc696',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
