@@ -461,14 +461,6 @@ class MappingProjection(PathwayProjection_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        # if matrix is DEFAULT_MATRIX:
-        #     initializer = get_matrix(matrix)
-        #     initial_rate = initializer * 0.0
-        #     matrix={VALUE:DEFAULT_MATRIX,
-        #             FUNCTION:ConstantIntegrator(owner=self._parameter_states[MATRIX],
-        #                                         initializer=get_matrix(DEFAULT_MATRIX),
-        #                                         rate=initial_rate)}
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
         # (7/12/17 CW) this is a PATCH to allow the user to set matrix as an np.matrix... I still don't know why
