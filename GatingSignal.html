@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GatingSignal &mdash; PsyNeuLink 0.4.0 documentation</title>
+  <title>GatingSignal &mdash; PsyNeuLink 0.4.0-alpha+139.g3607334 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0-alpha+139.g3607334 documentation" href="index.html"/>
         <link rel="up" title="Modulatory Signals" href="ModulatorySignal.html"/>
         <link rel="next" title="Functions" href="Function.html"/>
         <link rel="prev" title="ControlSignal" href="ControlSignal.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4
+                0.4.0-alpha+139
               </div>
             
           
@@ -92,7 +92,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink      </a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
@@ -215,21 +215,15 @@ properly.</p>
 InputState(s) and/or OutputState(s) it gates must be specified. This can take any of the following forms:</p>
 <blockquote>
 <div><ul class="simple">
-<li>an <strong>InputState</strong> or <strong>OutputState</strong> of a Mechanism;</li>
+<li><strong>InputState</strong> or <strong>OutputState</strong> of a Mechanism;</li>
 </ul>
 <ul class="simple">
-<li>a <strong>Mechanism</strong>, in which case its <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary `InputState</span></a> or <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">OutputState</span></a>
-is used;</li>
-</ul>
-<ul class="simple">
-<li>a <strong>tuple</strong>, with the name of the state as the 1st item, and the Mechanism to which it belongs as the 2nd;
-note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
-but precludes specification of any <a class="reference internal" href="#gatingsignal-structure"><span class="std std-ref">parameters</span></a> for the GatingSignal.</li>
+<li><strong>Mechanism</strong> – the <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary `InputState</span></a> or <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">OutputState</span></a> is used;</li>
 </ul>
 <ul>
-<li><p class="first">a <strong>specification dictionary</strong>, that can take either of the following two forms:</p>
+<li><p class="first"><strong>specification dictionary</strong> – can take either of the following two forms:</p>
 <ul>
-<li><p class="first">for a single state, the dictionary must have the following two entries:</p>
+<li><p class="first">for gating a single state, the dictionary can have the following two entries:</p>
 <blockquote>
 <div><ul class="simple">
 <li><dl class="first docutils">
@@ -246,7 +240,7 @@ but precludes specification of any <a class="reference internal" href="#gatingsi
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first">for multiple states, the dictionary must have the following entry:</p>
+<li><p class="first">for gating multiple states, the dictionary can have the following entry:</p>
 <blockquote>
 <div><ul class="simple">
 <li><dl class="first docutils">
@@ -265,6 +259,11 @@ gated by the GatingSignal (and that will receive a <a class="reference internal"
 <a class="reference internal" href="State.html#psyneulink.components.states.state.State_Base.value" title="psyneulink.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the State(s) that it gates; or an <em>INDEX</em> entry specifying which item
 of the GatingMechanism’s <a class="reference internal" href="GatingMechanism.html#psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_policy" title="psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a> it should use as its <code class="xref any docutils literal"><span class="pre">value</span></code>).</p>
 </li>
+</ul>
+<ul class="simple">
+<li><strong>2-item tuple</strong> – the 1st item must be the name of the State (or list of State names), and the 2nd item the
+Mechanism to which it (they) belong(s); this is a convenience format, which is simpler to use than a specification
+dictionary (see below), but precludes specification of <a class="reference internal" href="#gatingsignal-structure"><span class="std std-ref">parameters</span></a> for the GatingSignal.</li>
 </ul>
 </div></blockquote>
 </div>
@@ -321,9 +320,11 @@ see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of 
 <p><strong>Gate an InputState and OutputState</strong>.  In the following example, <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> is configured to gate the
 <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> of one Mechanism, and the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a>
 of another:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mechanism_A</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">()</span>
-<span class="n">my_mechanism_B</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">()</span>
-<span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[</span><span class="n">my_mechanism_A</span><span class="p">,</span> <span class="n">my_mechanism_B</span><span class="o">.</span><span class="n">output_state</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mechanism_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Mechanism A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mechanism_B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Mechanism B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[</span><span class="n">my_mechanism_A</span><span class="o">.</span><span class="n">input_state</span><span class="p">,</span>
+<span class="gp">... </span>                                                          <span class="n">my_mechanism_B</span><span class="o">.</span><span class="n">output_state</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>Note that, in the <strong>gating_signals</strong> argument, the first item references a Mechanism (<code class="docutils literal"><span class="pre">my_mechanism_A</span></code>) rather than
@@ -339,13 +340,14 @@ the State`s <code class="xref any docutils literal"><span class="pre">variable</
 the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of all the layers in a 3-layered feedforward neural network.  Ordinarily, gating modulates the
 <em>MULTIPLICATIVE_PARAM</em> of an InputState’s <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.function" title="psyneulink.components.states.inputstate.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  In the example, this is changed so that
 it <em>adds</em> the <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.value" title="psyneulink.components.states.modulatorysignals.gatingsignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="#"><span class="doc">GatingSignal</span></a> to the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each InputState:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">my_hidden_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="n">my_output_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[{</span><span class="s1">&#39;GATE_ALL&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">my_input_layer</span><span class="p">,</span>
-                                                                    <span class="n">my_hidden_layer</span><span class="p">,</span>
-                                                                    <span class="n">my_output_layer</span><span class="p">]}],</span>
-                                      <span class="n">modulation</span><span class="o">=</span><span class="n">ModulationParam</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_input_layer</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_hidden_layer</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_output_layer</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;GATE_ALL&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                                           <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:</span> <span class="p">[</span><span class="n">my_input_layer</span><span class="p">,</span>
+<span class="gp">... </span>                                                                             <span class="n">my_hidden_layer</span><span class="p">,</span>
+<span class="gp">... </span>                                                                             <span class="n">my_output_layer</span><span class="p">]}],</span>
+<span class="gp">... </span>                                          <span class="n">modulation</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ModulationParam</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that, again, the <strong>gating_signals</strong> are listed as Mechanisms, since in this case it is their primary InputStates
@@ -362,12 +364,12 @@ are updated, the value of the GatingSignal will be assigned as the <a class="ref
 <p><strong>Gate InputStates differentially</strong>.  In the example above, the InputStates for all of the Mechanisms were gated
 using a single GatingSignal.  In the example below, a different GatingSignal is assigned to the InputState of each
 Mechanism:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[{</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;GATING_SIGNAL_A&#39;</span><span class="p">,</span>
-                                                       <span class="n">MODULATION</span><span class="p">:</span> <span class="n">ModulationParam</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">,</span>
-                                                       <span class="n">PROJECTIONS</span><span class="p">:</span> <span class="n">my_input_layer</span><span class="p">},</span>
-                                                      <span class="p">{</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;GATING_SIGNAL_B&#39;</span><span class="p">,</span>
-                                                       <span class="n">PROJECTIONS</span><span class="p">:</span> <span class="p">[</span><span class="n">my_hidden_layer</span><span class="p">,</span>
-                                                                     <span class="n">my_output_layer</span><span class="p">]}])</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;GATING_SIGNAL_A&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                                           <span class="n">pnl</span><span class="o">.</span><span class="n">MODULATION</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ModulationParam</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">,</span>
+<span class="gp">... </span>                                                           <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:</span> <span class="n">my_input_layer</span><span class="p">},</span>
+<span class="gp">... </span>                                                          <span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;GATING_SIGNAL_B&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                                           <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:</span> <span class="p">[</span><span class="n">my_hidden_layer</span><span class="p">,</span>
+<span class="gp">... </span>                                                                             <span class="n">my_output_layer</span><span class="p">]}])</span>
 </pre></div>
 </div>
 <p>Here, two GatingSignals are specified as <a class="reference internal" href="#gatingsignal-specification"><span class="std std-ref">specification dictionaries</span></a>, each of which
@@ -382,14 +384,14 @@ modulated by <code class="docutils literal"><span class="pre">GATING_SIGNAL_B</s
 <p><strong>Creating and assigning stand-alone GatingSignals</strong>.  GatingSignals can also be created on their own, and then later
 assigned to a GatingMechanism.  In the example below, the same GatingSignals specified in the previous example are
 created directly and then assigned to <code class="docutils literal"><span class="pre">my_gating_mechanism</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_gating_signal_A</span> <span class="o">=</span> <span class="n">GatingSignal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;GATING_SIGNAL_A&#39;</span><span class="p">,</span>
-                                  <span class="n">modulation</span><span class="o">=</span><span class="n">ModulationParams</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">,</span>
-                                  <span class="n">projections</span><span class="o">=</span><span class="n">my_input_layer</span><span class="p">)</span>
-<span class="n">my_gating_signal_B</span> <span class="o">=</span> <span class="n">GatingSignal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;GATING_SIGNAL_B&#39;</span><span class="p">,</span>
-                                  <span class="n">projections</span><span class="o">=</span><span class="n">my_hidden_layer</span><span class="p">,</span>
-                                              <span class="n">my_output_layer</span><span class="p">)</span>
-<span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[</span><span class="n">my_gating_signal_A</span><span class="p">,</span>
-                                                      <span class="n">my_gating_signal_B</span><span class="p">])</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_gating_signal_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingSignal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;GATING_SIGNAL_A&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">modulation</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ModulationParam</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">projections</span><span class="o">=</span><span class="n">my_input_layer</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_gating_signal_B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingSignal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;GATING_SIGNAL_B&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">projections</span><span class="o">=</span><span class="p">[</span><span class="n">my_hidden_layer</span><span class="p">,</span>
+<span class="gp">... </span>                                                   <span class="n">my_output_layer</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[</span><span class="n">my_gating_signal_A</span><span class="p">,</span>
+<span class="gp">... </span>                                                          <span class="n">my_gating_signal_B</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -416,15 +418,12 @@ GatingSignal’s <a class="reference internal" href="#psyneulink.components.stat
 <li><strong>projections</strong> (<em>list of Projection specifications</em>) – specifies the <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a> to be assigned to the GatingSignal, and that will be
 listed in its <code class="xref any docutils literal"><span class="pre">efferents</span></code> attribute (see <a class="reference internal" href="#gatingsignal-projections"><span class="std std-ref">Projections</span></a> for additional
 details).</li>
-<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
 override any assigned to those parameters in arguments of the constructor.</li>
-<li><strong>name</strong> (<em>str : default OutputState-&lt;index&gt;</em>) – a string used for the name of the OutputState.
-If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
-belongs (see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : State.classPreferences</em><em>]</em>) – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the OutputState.
-If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
+<li><strong>name</strong> (str : default see ModulatorySignal <a class="reference internal" href="ModulatorySignal.html#psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name" title="psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) – specifies the name of the GatingSignal;  see GatingSignal <a class="reference internal" href="ModulatorySignal.html#psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name" title="psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> for additional
+details.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default State.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the GatingSignal; see <code class="xref any docutils literal"><span class="pre">prefs</span></code> for details.</li>
 </ul>
 </td>
 </tr>
@@ -476,11 +475,9 @@ GatingSignal’s <a class="reference internal" href="#psyneulink.components.stat
 <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a> project.</dd>
 <dt>efferents <span class="classifier-delimiter">:</span> <span class="classifier">[List[GatingProjection]]</span></dt>
 <dd>a list of the <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> assigned to (i.e., that project from) the GatingSignal.</dd>
-<dt>name <span class="classifier-delimiter">:</span> <span class="classifier">str</span> <span class="classifier-delimiter">:</span> <span class="classifier">default &lt;State subclass&gt;-&lt;index&gt;</span></dt>
-<dd><p class="first">name of the OutputState.
-Specified in the <strong>name</strong> argument of the constructor for the OutputState.  If not is specified, a default is
-assigned by the StateRegistry of the Mechanism to which the OutputState belongs
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+<dt>name <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first">name of the GatingSignal; if not is specified in the <strong>name</strong> argument of its constructor, a default name
+is assigned (see <a class="reference internal" href="ModulatorySignal.html#psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name" title="psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>).</p>
 <div class="last admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Unlike other PsyNeuLink components, State names are “scoped” within a Mechanism, meaning that States with
@@ -489,11 +486,10 @@ Mechanism: States within a Mechanism with the same base name are appended an ind
 creation.</p>
 </div>
 </dd>
-<dt>prefs <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">State.classPreferences</span></dt>
-<dd>the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the OutputState.
-Specified in the <strong>prefs</strong> argument of the constructor for the projection;  if it is not specified, a default is
-assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</dd>
+<dt>prefs <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span></dt>
+<dd>the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the GatingSignal; if it is not specified in the <strong>prefs</strong> argument of the constructor,
+a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for
+details).</dd>
 </dl>
 </dd></dl>
 
@@ -544,7 +540,7 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0',
+            VERSION:'0.4.0-alpha+139.g3607334',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

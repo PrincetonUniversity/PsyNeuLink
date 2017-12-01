@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; PsyNeuLink 0.4.0 documentation</title>
+  <title>Utilities &mdash; PsyNeuLink 0.4.0-alpha+139.g3607334 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.0-alpha+139.g3607334 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4
+                0.4.0-alpha+139
               </div>
             
           
@@ -89,7 +89,7 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink      </a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
@@ -468,7 +468,7 @@ it, an exception is raised when a missing attribute is encountered.</p>
 
 <dl class="function">
 <dt id="psyneulink.globals.utilities.random_matrix">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">random_matrix</code><span class="sig-paren">(</span><em>sender</em>, <em>receiver</em>, <em>range=1</em>, <em>offset=0</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.random_matrix" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">random_matrix</code><span class="sig-paren">(</span><em>sender</em>, <em>receiver</em>, <em>clip=1</em>, <em>offset=0</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.random_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a random matrix</p>
 <p>Calls np.random.rand to generate a 2d np.array with random values.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -659,6 +659,12 @@ Return True only if both are instances or classes of a PsyNeuLink Function;  oth
 <dd><p>Return property that provides read-only access to its value</p>
 </dd></dl>
 
+<dl class="function">
+<dt id="psyneulink.globals.utilities.convert_all_elements_to_np_array">
+<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">convert_all_elements_to_np_array</code><span class="sig-paren">(</span><em>arr</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.convert_all_elements_to_np_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively converts all items in <strong>arr</strong> to numpy arrays</p>
+</dd></dl>
+
 </div>
 </div>
 </div>
@@ -698,7 +704,7 @@ Return True only if both are instances or classes of a PsyNeuLink Function;  oth
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0',
+            VERSION:'0.4.0-alpha+139.g3607334',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCControlMechanism &mdash; PsyNeuLink 0.4.0 documentation</title>
+  <title>LCControlMechanism &mdash; PsyNeuLink 0.4.0-alpha+139.g3607334 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0-alpha+139.g3607334 documentation" href="index.html"/>
         <link rel="up" title="AGT" href="AGT.html"/>
         <link rel="next" title="EVC" href="EVC.html"/>
         <link rel="prev" title="AGTControlMechanism" href="AGTControlMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4
+                0.4.0-alpha+139
               </div>
             
           
@@ -92,7 +92,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink      </a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
@@ -197,7 +197,7 @@ The following sections describe how to specify the inputs that drive the LCContr
 Mechanisms that it controls.</p>
 <div class="section" id="objectivemechanism-and-monitored-outputstates">
 <span id="lccontrolmechanism-objectivemechanism"></span><h3>ObjectiveMechanism and Monitored OutputStates<a class="headerlink" href="#objectivemechanism-and-monitored-outputstates" title="Permalink to this headline">¶</a></h3>
-<p>Like all ControlMechanisms, an LCControlMechanism it receives its <a class="reference internal" href="#lccontrolmechanism-input"><span class="std std-ref">input</span></a> from an
+<p>Like all ControlMechanisms, an LCControlMechanism receives its <a class="reference internal" href="#lccontrolmechanism-input"><span class="std std-ref">input</span></a> from an
 <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that, in turn, receives its input from a specified list of <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>.  These
 are used to drive the <a class="reference internal" href="#lccontrolmechanism-modes-of-operation"><span class="std std-ref">phasic response</span></a> of the LCControlMechanism.  The
 ObjectiveMechanism and/or the OutputStates from which it gets its input can be <a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">specified in the standard way for a
@@ -266,11 +266,11 @@ LCControlMechanism’s <a class="reference internal" href="#psyneulink.library.s
 </div>
 <div class="section" id="function">
 <span id="lccontrolmechanism-function"></span><h3>Function<a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
-<p>XXX ADD MENTION OF allocation_policy HERE</p>
 <p>An LCControlMechanism uses the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator" title="psyneulink.components.functions.function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> as its <code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;LCControlMechanism.function</span></code>; this implements a <a class="reference external" href="https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model">FitzHugh-Nagumo
 model</a> often used to describe the spiking of a neuron,
 but in this case the population activity of the LC (see <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub">Gilzenrat et al., 2002</a>). The <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator" title="psyneulink.components.functions.function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> Function
-takes the <a class="reference internal" href="#lccontrolmechanism-input"><span class="std std-ref">input</span></a> to the LCControlMechanism as its <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator.variable" title="psyneulink.components.functions.function.FHNIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+takes the <a class="reference internal" href="#lccontrolmechanism-input"><span class="std std-ref">input</span></a> to the LCControlMechanism as its <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator.variable" title="psyneulink.components.functions.function.FHNIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>. All
+of the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator" title="psyneulink.components.functions.function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> function parameters are exposed on the LCControlMechanism.</p>
 <div class="section" id="lc-modes-of-operation">
 <span id="lccontrolmechanism-modes-of-operation"></span><h4>LC Modes of Operation<a class="headerlink" href="#lc-modes-of-operation" title="Permalink to this headline">¶</a></h4>
 <p>The <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator.mode" title="psyneulink.components.functions.function.FHNIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> parameter of the LCControlMechanism’s <a class="reference internal" href="Function.html#psyneulink.components.functions.function.FHNIntegrator" title="psyneulink.components.functions.function.FHNIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">FHNIntegrator</span></code></a> Function regulates its operation between
@@ -299,21 +299,24 @@ method.</p>
 <p class="rubric" id="lccontrolmechanism-examples">Examples</p>
 <p>The following example generates an LCControlMechanism that modulates the function of two TransferMechanisms, one that uses
 a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Linear" title="psyneulink.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function and the other a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mech_1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">,</span>
-                              <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_linear_mechanism&#39;</span><span class="p">)</span>
-<span class="n">my_mech_2</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span>
-                              <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_logistic_mechanism&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span>
+<span class="gp">... </span>                                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_linear_mechanism&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_2</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">,</span>
+<span class="gp">... </span>                                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_logistic_mechanism&#39;</span><span class="p">)</span>
 
-<span class="n">LC</span> <span class="o">=</span> <span class="n">LCControlMechanism</span><span class="p">(</span><span class="n">modulated_mechanisms</span><span class="o">=</span><span class="p">[</span><span class="n">my_mech_1</span><span class="p">,</span> <span class="n">my_mech_2</span><span class="p">],</span>
-                 <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_LC&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">LC</span> <span class="o">=</span> <span class="n">LCControlMechanism</span><span class="p">(</span><span class="n">modulated_mechanisms</span><span class="o">=</span><span class="p">[</span><span class="n">my_mech_1</span><span class="p">,</span> <span class="n">my_mech_2</span><span class="p">],</span>
+<span class="gp">... </span>                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_LC&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Calling <code class="xref any docutils literal"><span class="pre">my_LC.show()</span></code> generates the following report:</p>
+<p>Calling <code class="xref any docutils literal"><span class="pre">LC.show()</span></code> generates the following report:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_LC</span>
 
-    <span class="n">Modulating</span> <span class="n">the</span> <span class="n">following</span> <span class="n">Mechanism</span> <span class="n">parameters</span><span class="p">:</span>
-        <span class="n">my_logistic_mechanism</span><span class="p">:</span> <span class="n">gain</span>
-        <span class="n">my_linear_mechanism</span><span class="p">:</span> <span class="n">slope</span>
+  <span class="n">Monitoring</span> <span class="n">the</span> <span class="n">following</span> <span class="n">Mechanism</span> <span class="n">OutputStates</span><span class="p">:</span>
+
+  <span class="n">Modulating</span> <span class="n">the</span> <span class="n">following</span> <span class="n">parameters</span><span class="p">:</span>
+    <span class="n">my_logistic_mechanism</span><span class="p">:</span> <span class="n">gain</span>
+    <span class="n">my_linear_mechanism</span><span class="p">:</span> <span class="n">slope</span>
 </pre></div>
 </div>
 <p>Note that the LCControlMechanism controls the <a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of each Mechanism:  the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic.gain" title="psyneulink.components.functions.function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter for <code class="docutils literal"><span class="pre">my_mech_1</span></code>, since it uses
@@ -358,16 +361,12 @@ a default ObjectiveMechanism is created and the list is passed to its <strong>mo
 with a <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> that implements a <a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a>;  alternatively the keyword <em>ALL</em> can be used to specify all of the
 <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in the Composition(s) to which the LCControlMechanism
 belongs.</li>
-<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters
 for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
 specified for parameters in the dictionary override any assigned to those parameters in arguments of the
 constructor.</li>
-<li><strong>name</strong> (<em>str : default LCControlMechanism-&lt;index&gt;</em>) – a string used for the name of the Mechanism.
-If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : Mechanism.classPreferences</em><em>]</em>) – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Mechanism.
-If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
+<li><strong>name</strong> (str : default see <a class="reference internal" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.name" title="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) – specifies the name of the LCControlMechanism.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Mechanism.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the LCControlMechanism; see <a class="reference internal" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.prefs" title="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details.</li>
 </ul>
 </td>
 </tr>
@@ -442,6 +441,20 @@ in <code class="xref any docutils literal"><span class="pre">control_signals</sp
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> unless they are <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">individually specified</span></a>.</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.name">
+<code class="descname">name</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – the name of the LCControlMechanism; if it is not specified in the <strong>name</strong> argument of the constructor, a
+default is assigned by MechanismRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the LCControlMechanism; if it is not specified in the <strong>prefs</strong> argument of the
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.add_modulated_mechanisms">
 <code class="descname">add_modulated_mechanisms</code><span class="sig-paren">(</span><em>mechanisms: list</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.add_modulated_mechanisms" title="Permalink to this definition">¶</a></dt>
@@ -510,7 +523,7 @@ and the <a class="reference internal" href="Function.html#function-modulatory-pa
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0',
+            VERSION:'0.4.0-alpha+139.g3607334',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

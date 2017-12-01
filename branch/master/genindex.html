@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; PsyNeuLink 0.4.0 documentation</title>
+  <title>Index &mdash; PsyNeuLink 0.4.0-alpha+139.g3607334 documentation</title>
   
 
   
@@ -36,7 +36,7 @@
         <link rel="index" title="Index"
               href="#"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.0-alpha+139.g3607334 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                0.4
+                0.4.0-alpha+139
               </div>
             
           
@@ -90,7 +90,7 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink      </a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
@@ -207,6 +207,8 @@
         <li><a href="Function.html#psyneulink.components.functions.function.Reinforcement.activation_output">(psyneulink.components.functions.function.Reinforcement attribute)</a>
 </li>
       </ul></li>
+      <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source">activity_source (psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism attribute)</a>
+</li>
       <li><a href="Function.html#psyneulink.components.functions.function.AdaptiveIntegrator">AdaptiveIntegrator (class in psyneulink.components.functions.function)</a>
 </li>
       <li><a href="AdaptiveMechanism.html#psyneulink.components.mechanisms.adaptive.adaptivemechanism.AdaptiveMechanism_Base">AdaptiveMechanism_Base (class in psyneulink.components.mechanisms.adaptive.adaptivemechanism)</a>
@@ -227,8 +229,12 @@
 </li>
       <li><a href="Composition.html#psyneulink.composition.Composition.add_mechanism">add_mechanism() (psyneulink.composition.Composition method)</a>
 </li>
-      <li><a href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.add_modulated_mechanisms">add_modulated_mechanisms() (psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism method)</a>
+      <li><a href="LCMechanism.html#psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism.add_modulated_mechanisms">add_modulated_mechanisms() (psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism method)</a>
+
+      <ul>
+        <li><a href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.add_modulated_mechanisms">(psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism method)</a>
 </li>
+      </ul></li>
       <li><a href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.add_monitored_output_states">add_monitored_output_states() (psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism method)</a>
 
       <ul>
@@ -313,6 +319,8 @@
 </li>
       <li><a href="Keywords.html#psyneulink.globals.keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX">AUTO_ASSIGN_MATRIX (psyneulink.globals.keywords.MatrixKeywords attribute)</a>
 </li>
+      <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism">AutoAssociativeLearningMechanism (class in psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism)</a>
+</li>
       <li><a href="AutoAssociativeProjection.html#psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection">AutoAssociativeProjection (class in psyneulink.library.projections.pathway.autoassociativeprojection)</a>
 </li>
       <li><a href="Utilities.html#psyneulink.globals.utilities.AutoNumber">AutoNumber (class in psyneulink.globals.utilities)</a>
@@ -339,14 +347,10 @@
 </li>
       <li><a href="Condition.html#psyneulink.scheduling.condition.BeforeTrial">BeforeTrial (class in psyneulink.scheduling.condition)</a>
 </li>
-      <li><a href="Function.html#psyneulink.components.functions.function.ExponentialDist.beta">beta (psyneulink.components.functions.function.ExponentialDist attribute)</a>
-
-      <ul>
-        <li><a href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.beta">(psyneulink.library.mechanisms.processing.transfer.lca.LCA attribute)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="Function.html#psyneulink.components.functions.function.ExponentialDist.beta">beta (psyneulink.components.functions.function.ExponentialDist attribute)</a>
+</li>
       <li><a href="Function.html#psyneulink.components.functions.function.BogaczEtAl.bias">bias (psyneulink.components.functions.function.BogaczEtAl attribute)</a>
 
       <ul>
@@ -361,8 +365,6 @@
 
       <ul>
         <li><a href="Function.html#psyneulink.components.functions.function.Linear.bounds">(psyneulink.components.functions.function.Linear attribute)</a>
-</li>
-        <li><a href="Function.html#psyneulink.components.functions.function.Logistic.bounds">(psyneulink.components.functions.function.Logistic attribute)</a>
 </li>
         <li><a href="Function.html#psyneulink.components.functions.function.SoftMax.bounds">(psyneulink.components.functions.function.SoftMax attribute)</a>
 </li>
@@ -381,11 +383,21 @@
 </li>
       <li><a href="Process.html#psyneulink.components.process.Process.clamp_input">clamp_input (psyneulink.components.process.Process attribute)</a>
 </li>
+      <li><a href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.clip">clip (psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism attribute)</a>
+
+      <ul>
+        <li><a href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.clip">(psyneulink.library.mechanisms.processing.transfer.kwta.KWTA attribute)</a>
+</li>
+        <li><a href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.clip">(psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism attribute)</a>
+</li>
+      </ul></li>
       <li><a href="EVCControlMechanism.html#psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.combine_outcome_and_cost_function">combine_outcome_and_cost_function (psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism attribute)</a>
 </li>
       <li><a href="ComparatorMechanism.html#psyneulink.library.mechanisms.processing.objective.comparatormechanism.COMPARATOR_OUTPUT">COMPARATOR_OUTPUT (class in psyneulink.library.mechanisms.processing.objective.comparatormechanism)</a>
 </li>
       <li><a href="ComparatorMechanism.html#psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism">ComparatorMechanism (class in psyneulink.library.mechanisms.processing.objective.comparatormechanism)</a>
+</li>
+      <li><a href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.competition">competition (psyneulink.library.mechanisms.processing.transfer.lca.LCA attribute)</a>
 </li>
       <li><a href="Component.html#psyneulink.components.component.Component">Component (class in psyneulink.components.component)</a>
 </li>
@@ -423,10 +435,10 @@
 </li>
       <li><a href="Scheduler.html#psyneulink.scheduling.scheduler.Scheduler.consideration_queue">consideration_queue (psyneulink.scheduling.scheduler.Scheduler attribute)</a>
 </li>
-      <li><a href="Function.html#psyneulink.components.functions.function.ConstantIntegrator">ConstantIntegrator (class in psyneulink.components.functions.function)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="Function.html#psyneulink.components.functions.function.ConstantIntegrator">ConstantIntegrator (class in psyneulink.components.functions.function)</a>
+</li>
       <li><a href="Utilities.html#psyneulink.globals.utilities.ContentAddressableList">ContentAddressableList (class in psyneulink.globals.utilities)</a>
 </li>
       <li><a href="Log.html#psyneulink.globals.log.LogEntry.context">context (psyneulink.globals.log.LogEntry attribute)</a>
@@ -434,6 +446,8 @@
       <li><a href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_projections">control_projections (psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism attribute)</a>
 
       <ul>
+        <li><a href="LCMechanism.html#psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism.control_projections">(psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism attribute)</a>
+</li>
         <li><a href="AGTControlMechanism.html#psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism.control_projections">(psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism attribute)</a>
 </li>
         <li><a href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.control_projections">(psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism attribute)</a>
@@ -450,6 +464,8 @@
       <li><a href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals">control_signals (psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism attribute)</a>
 
       <ul>
+        <li><a href="LCMechanism.html#psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism.control_signals">(psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism attribute)</a>
+</li>
         <li><a href="AGTControlMechanism.html#psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism.control_signals">(psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism attribute)</a>
 </li>
         <li><a href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.control_signals">(psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism attribute)</a>
@@ -468,6 +484,8 @@
       <li><a href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignalCosts">ControlSignalCosts (class in psyneulink.components.states.modulatorysignals.controlsignal)</a>
 </li>
       <li><a href="EVCAuxiliary.html#psyneulink.library.subsystems.evc.evcauxiliary.ControlSignalGridSearch">ControlSignalGridSearch (class in psyneulink.library.subsystems.evc.evcauxiliary)</a>
+</li>
+      <li><a href="Utilities.html#psyneulink.globals.utilities.convert_all_elements_to_np_array">convert_all_elements_to_np_array() (in module psyneulink.globals.utilities)</a>
 </li>
       <li><a href="Utilities.html#psyneulink.globals.utilities.convert_to_np_array">convert_to_np_array() (in module psyneulink.globals.utilities)</a>
 </li>
@@ -504,8 +522,6 @@
       <li><a href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.decay">decay (psyneulink.library.mechanisms.processing.transfer.kwta.KWTA attribute)</a>
 
       <ul>
-        <li><a href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.decay">(psyneulink.library.mechanisms.processing.transfer.lca.LCA attribute)</a>
-</li>
         <li><a href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.decay">(psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism attribute)</a>
 </li>
       </ul></li>
@@ -529,6 +545,8 @@
 
       <ul>
         <li><a href="LearningProjection.html#psyneulink.components.projections.modulatory.learningprojection.DefaultTrainingMechanism">(in module psyneulink.components.projections.modulatory.learningprojection)</a>
+</li>
+        <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.DefaultTrainingMechanism">(in module psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism)</a>
 </li>
       </ul></li>
       <li><a href="Log.html#psyneulink.globals.log.Log.delete_entry">delete_entry() (psyneulink.globals.log.Log method)</a>
@@ -627,10 +645,10 @@
 </li>
       <li><a href="EVCControlMechanism.html#psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.EVC_policies">EVC_policies (psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="EVCControlMechanism.html#psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.EVC_values">EVC_values (psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="EVCControlMechanism.html#psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism">EVCControlMechanism (class in psyneulink.library.subsystems.evc.evccontrolmechanism)</a>
 </li>
       <li><a href="Condition.html#psyneulink.scheduling.condition.EveryNCalls">EveryNCalls (class in psyneulink.scheduling.condition)</a>
@@ -670,7 +688,11 @@
 </li>
         <li><a href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.exponent">(psyneulink.components.projections.pathway.mappingprojection.MappingProjection attribute)</a>
 </li>
+        <li><a href="Projection.html#psyneulink.components.projections.projection.Projection_Base.exponent">(psyneulink.components.projections.projection.Projection_Base attribute)</a>
+</li>
         <li><a href="InputState.html#psyneulink.components.states.inputstate.InputState.exponent">(psyneulink.components.states.inputstate.InputState attribute)</a>
+</li>
+        <li><a href="System.html#psyneulink.components.system.MonitoredOutputStateTuple.exponent">(psyneulink.components.system.MonitoredOutputStateTuple attribute)</a>
 </li>
       </ul></li>
       <li><a href="Function.html#psyneulink.components.functions.function.Exponential">Exponential (class in psyneulink.components.functions.function)</a>
@@ -736,7 +758,13 @@
 </li>
         <li><a href="State.html#psyneulink.components.states.state.State_Base.function">(psyneulink.components.states.state.State_Base attribute)</a>
 </li>
+        <li><a href="LCMechanism.html#psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism.function">(psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism attribute)</a>
+</li>
+        <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function">(psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism attribute)</a>
+</li>
         <li><a href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function">(psyneulink.library.mechanisms.processing.integrator.ddm.DDM attribute)</a>
+</li>
+        <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.function">(psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
 </li>
         <li><a href="ComparatorMechanism.html#psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function">(psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism attribute)</a>
 </li>
@@ -881,9 +909,13 @@
         <li><a href="AutoAssociativeProjection.html#psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.has_learning_projection">(psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection attribute)</a>
 </li>
       </ul></li>
+      <li><a href="AutoAssociativeProjection.html#psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.hetero">hetero (psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="AutoAssociativeProjection.html#psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.hetero">hetero (psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection attribute)</a>
+      <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.hidden_layers">hidden_layers (psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
+</li>
+      <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.hidden_sizes">hidden_sizes (psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
 </li>
       <li><a href="Function.html#psyneulink.components.functions.function.UniformDist.high">high (psyneulink.components.functions.function.UniformDist attribute)</a>
 </li>
@@ -909,8 +941,6 @@
       </ul></li>
       <li><a href="OutputState.html#psyneulink.components.states.outputstate.StandardOutputStates.indices">indices (psyneulink.components.states.outputstate.StandardOutputStates attribute)</a>
 </li>
-      <li><a href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.inhibition">inhibition (psyneulink.library.mechanisms.processing.transfer.lca.LCA attribute)</a>
-</li>
       <li><a href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.inhibition_only">inhibition_only (psyneulink.library.mechanisms.processing.transfer.kwta.KWTA attribute)</a>
 </li>
       <li><a href="Function.html#psyneulink.components.functions.function.AGTUtilityIntegrator.initial_long_term_utility">initial_long_term_utility (psyneulink.components.functions.function.AGTUtilityIntegrator attribute)</a>
@@ -923,8 +953,6 @@
 
       <ul>
         <li><a href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.initial_value">(psyneulink.library.mechanisms.processing.transfer.kwta.KWTA attribute)</a>
-</li>
-        <li><a href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.initial_value">(psyneulink.library.mechanisms.processing.transfer.lca.LCA attribute)</a>
 </li>
         <li><a href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.initial_value">(psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism attribute)</a>
 </li>
@@ -959,11 +987,13 @@
         <li><a href="IntegratorMechanism.html#psyneulink.components.mechanisms.processing.integratormechanism.IntegratorMechanism.AdaptiveIntegrator.initializer">(psyneulink.components.mechanisms.processing.integratormechanism.IntegratorMechanism.AdaptiveIntegrator attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Component.html#psyneulink.components.component.InitStatus">InitStatus (class in psyneulink.components.component)</a>
 </li>
       <li><a href="Process.html#psyneulink.components.process.Process.input">input (psyneulink.components.process.Process attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.input_size">input_size (psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
 </li>
       <li><a href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.input_source">input_source (psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism attribute)</a>
 </li>
@@ -975,6 +1005,10 @@
         <li><a href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_states">(psyneulink.components.mechanisms.mechanism.Mechanism_Base attribute)</a>
 </li>
         <li><a href="ObjectiveMechanism.html#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_states">(psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism attribute)</a>
+</li>
+        <li><a href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.input_states">(psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism attribute)</a>
+</li>
+        <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.input_states">(psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism attribute)</a>
 </li>
         <li><a href="ComparatorMechanism.html#psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_states">(psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism attribute)</a>
 </li>
@@ -1057,10 +1091,22 @@
 </li>
       <li><a href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism">LCControlMechanism (class in psyneulink.library.subsystems.agt.lccontrolmechanism)</a>
 </li>
+      <li><a href="LCMechanism.html#psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism">LCMechanism (class in psyneulink.library.mechanisms.adaptive.control.lcmechanism)</a>
+</li>
+      <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraFunction">LeabraFunction (class in psyneulink.library.mechanisms.processing.leabramechanism)</a>
+</li>
+      <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism">LeabraMechanism (class in psyneulink.library.mechanisms.processing.leabramechanism)</a>
+</li>
+      <li><a href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.leak">leak (psyneulink.library.mechanisms.processing.transfer.lca.LCA attribute)</a>
+</li>
       <li><a href="LearningProjection.html#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learned_projection">learned_projection (psyneulink.components.projections.modulatory.learningprojection.LearningProjection attribute)</a>
 </li>
       <li><a href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learned_projections">learned_projections (psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism attribute)</a>
+
+      <ul>
+        <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learned_projections">(psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism attribute)</a>
 </li>
+      </ul></li>
       <li><a href="Process.html#psyneulink.components.process.Process.learning">learning (psyneulink.components.process.Process attribute)</a>
 
       <ul>
@@ -1094,7 +1140,11 @@
 </li>
       </ul></li>
       <li><a href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_projections">learning_projections (psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism attribute)</a>
+
+      <ul>
+        <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_projections">(psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism attribute)</a>
 </li>
+      </ul></li>
       <li><a href="Function.html#psyneulink.components.functions.function.BackPropagation.learning_rate">learning_rate (psyneulink.components.functions.function.BackPropagation attribute)</a>
 
       <ul>
@@ -1112,6 +1162,8 @@
 </li>
         <li><a href="System.html#psyneulink.components.system.System.learning_rate">(psyneulink.components.system.System attribute)</a>
 </li>
+        <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_rate">(psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism attribute)</a>
+</li>
         <li><a href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.learning_rate">(psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism attribute)</a>
 </li>
       </ul></li>
@@ -1124,9 +1176,15 @@
 </li>
         <li><a href="LearningSignal.html#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.learning_signal">(psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal attribute)</a>
 </li>
+        <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signal">(psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism attribute)</a>
+</li>
       </ul></li>
       <li><a href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signals">learning_signals (psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism attribute)</a>
+
+      <ul>
+        <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signals">(psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism attribute)</a>
 </li>
+      </ul></li>
       <li><a href="Function.html#psyneulink.components.functions.function.LearningFunction">LearningFunction (class in psyneulink.components.functions.function)</a>
 </li>
       <li><a href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism">LearningMechanism (class in psyneulink.components.mechanisms.adaptive.learning.learningmechanism)</a>
@@ -1182,6 +1240,8 @@
       <ul>
         <li><a href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix">(psyneulink.components.projections.pathway.mappingprojection.MappingProjection attribute)</a>
 </li>
+        <li><a href="System.html#psyneulink.components.system.MonitoredOutputStateTuple.matrix">(psyneulink.components.system.MonitoredOutputStateTuple attribute)</a>
+</li>
         <li><a href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.matrix">(psyneulink.library.mechanisms.processing.transfer.kwta.KWTA attribute)</a>
 </li>
         <li><a href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.matrix">(psyneulink.library.mechanisms.processing.transfer.lca.LCA attribute)</a>
@@ -1233,12 +1293,20 @@
         <li><a href="State.html#psyneulink.components.states.state.State_Base.mod_afferents">(psyneulink.components.states.state.State_Base attribute)</a>
 </li>
       </ul></li>
+      <li><a href="Function.html#psyneulink.components.functions.function.FHNIntegrator.mode">mode (psyneulink.components.functions.function.FHNIntegrator attribute)</a>
+
+      <ul>
+        <li><a href="LCMechanism.html#psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism.mode">(psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="Function.html#psyneulink.components.functions.function.FHNIntegrator.mode">mode (psyneulink.components.functions.function.FHNIntegrator attribute)</a>
+      <li><a href="LCMechanism.html#psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism.modulated_mechanisms">modulated_mechanisms (psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism attribute)</a>
+
+      <ul>
+        <li><a href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.modulated_mechanisms">(psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism attribute)</a>
 </li>
-      <li><a href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.modulated_mechanisms">modulated_mechanisms (psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism attribute)</a>
-</li>
+      </ul></li>
       <li><a href="Utilities.html#psyneulink.globals.utilities.Modulation">Modulation (class in psyneulink.globals.utilities)</a>
 </li>
       <li><a href="AdaptiveMechanism.html#psyneulink.components.mechanisms.adaptive.adaptivemechanism.AdaptiveMechanism_Base.modulation">modulation (psyneulink.components.mechanisms.adaptive.adaptivemechanism.AdaptiveMechanism_Base attribute)</a>
@@ -1253,6 +1321,10 @@
         <li><a href="LearningSignal.html#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.modulation">(psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal attribute)</a>
 </li>
         <li><a href="ModulatorySignal.html#psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.modulation">(psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal attribute)</a>
+</li>
+        <li><a href="LCMechanism.html#psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism.modulation">(psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism attribute)</a>
+</li>
+        <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.modulation">(psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism attribute)</a>
 </li>
         <li><a href="AGTControlMechanism.html#psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism.modulation">(psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism attribute)</a>
 </li>
@@ -1287,6 +1359,8 @@
         <li><a href="EVCControlMechanism.html#psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.monitored_output_states_weights_and_exponents">(psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism attribute)</a>
 </li>
       </ul></li>
+      <li><a href="System.html#psyneulink.components.system.MonitoredOutputStateTuple">MonitoredOutputStateTuple (class in psyneulink.components.system)</a>
+</li>
       <li><a href="Utilities.html#psyneulink.globals.utilities.multi_getattr">multi_getattr() (in module psyneulink.globals.utilities)</a>
 </li>
       <li><a href="Function.html#psyneulink.components.functions.function.ModulationParam.MULTIPLICATIVE">MULTIPLICATIVE (psyneulink.components.functions.function.ModulationParam attribute)</a>
@@ -1300,11 +1374,61 @@
       <li><a href="Component.html#psyneulink.components.component.Component.name">name (psyneulink.components.component.Component attribute)</a>
 
       <ul>
+        <li><a href="Function.html#psyneulink.components.functions.function.AGTUtilityIntegrator.name">(psyneulink.components.functions.function.AGTUtilityIntegrator attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.AccumulatorIntegrator.name">(psyneulink.components.functions.function.AccumulatorIntegrator attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.AdaptiveIntegrator.name">(psyneulink.components.functions.function.AdaptiveIntegrator attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.ArgumentTherapy.name">(psyneulink.components.functions.function.ArgumentTherapy attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.BogaczEtAl.name">(psyneulink.components.functions.function.BogaczEtAl attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.ConstantIntegrator.name">(psyneulink.components.functions.function.ConstantIntegrator attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.DriftDiffusionIntegrator.name">(psyneulink.components.functions.function.DriftDiffusionIntegrator attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.Exponential.name">(psyneulink.components.functions.function.Exponential attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.ExponentialDist.name">(psyneulink.components.functions.function.ExponentialDist attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.Function_Base.name">(psyneulink.components.functions.function.Function_Base attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.GammaDist.name">(psyneulink.components.functions.function.GammaDist attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.Integrator.name">(psyneulink.components.functions.function.Integrator attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.Linear.name">(psyneulink.components.functions.function.Linear attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.LinearCombination.name">(psyneulink.components.functions.function.LinearCombination attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.LinearMatrix.name">(psyneulink.components.functions.function.LinearMatrix attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.Logistic.name">(psyneulink.components.functions.function.Logistic attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.NavarroAndFuss.name">(psyneulink.components.functions.function.NavarroAndFuss attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.NormalDist.name">(psyneulink.components.functions.function.NormalDist attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.OrnsteinUhlenbeckIntegrator.name">(psyneulink.components.functions.function.OrnsteinUhlenbeckIntegrator attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.Reduce.name">(psyneulink.components.functions.function.Reduce attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.SoftMax.name">(psyneulink.components.functions.function.SoftMax attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.UniformDist.name">(psyneulink.components.functions.function.UniformDist attribute)</a>
+</li>
+        <li><a href="Function.html#psyneulink.components.functions.function.UserDefinedFunction.name">(psyneulink.components.functions.function.UserDefinedFunction attribute)</a>
+</li>
+        <li><a href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.name">(psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism attribute)</a>
+</li>
         <li><a href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.name">(psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism attribute)</a>
 </li>
         <li><a href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.name">(psyneulink.components.mechanisms.mechanism.Mechanism_Base attribute)</a>
 </li>
         <li><a href="IntegratorMechanism.html#psyneulink.components.mechanisms.processing.integratormechanism.IntegratorMechanism.name">(psyneulink.components.mechanisms.processing.integratormechanism.IntegratorMechanism attribute)</a>
+</li>
+        <li><a href="IntegratorMechanism.html#psyneulink.components.mechanisms.processing.integratormechanism.IntegratorMechanism.AdaptiveIntegrator.name">(psyneulink.components.mechanisms.processing.integratormechanism.IntegratorMechanism.AdaptiveIntegrator attribute)</a>
 </li>
         <li><a href="ObjectiveMechanism.html#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.name">(psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism attribute)</a>
 </li>
@@ -1319,6 +1443,8 @@
         <li><a href="LearningProjection.html#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.name">(psyneulink.components.projections.modulatory.learningprojection.LearningProjection attribute)</a>
 </li>
         <li><a href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.name">(psyneulink.components.projections.pathway.mappingprojection.MappingProjection attribute)</a>
+</li>
+        <li><a href="Projection.html#psyneulink.components.projections.projection.Projection_Base.name">(psyneulink.components.projections.projection.Projection_Base attribute)</a>
 </li>
         <li><a href="InputState.html#psyneulink.components.states.inputstate.InputState.name">(psyneulink.components.states.inputstate.InputState attribute)</a>
 </li>
@@ -1336,17 +1462,27 @@
 </li>
         <li><a href="Utilities.html#psyneulink.globals.utilities.ContentAddressableList.name">(psyneulink.globals.utilities.ContentAddressableList attribute)</a>
 </li>
+        <li><a href="LCMechanism.html#psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism.name">(psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism attribute)</a>
+</li>
+        <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.name">(psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism attribute)</a>
+</li>
         <li><a href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.name">(psyneulink.library.mechanisms.processing.integrator.ddm.DDM attribute)</a>
+</li>
+        <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.name">(psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
 </li>
         <li><a href="ComparatorMechanism.html#psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.name">(psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism attribute)</a>
 </li>
         <li><a href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.name">(psyneulink.library.mechanisms.processing.transfer.kwta.KWTA attribute)</a>
 </li>
-        <li><a href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.name">(psyneulink.library.mechanisms.processing.transfer.lca.LCA attribute)</a>
-</li>
         <li><a href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.name">(psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism attribute)</a>
 </li>
         <li><a href="AutoAssociativeProjection.html#psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.name">(psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection attribute)</a>
+</li>
+        <li><a href="AGTControlMechanism.html#psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism.name">(psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism attribute)</a>
+</li>
+        <li><a href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.name">(psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism attribute)</a>
+</li>
+        <li><a href="EVCControlMechanism.html#psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.name">(psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -1359,6 +1495,12 @@
       </ul></li>
       <li><a href="Function.html#psyneulink.components.functions.function.NavarroAndFuss">NavarroAndFuss (class in psyneulink.components.functions.function)</a>
 </li>
+      <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraFunction.network">network (psyneulink.library.mechanisms.processing.leabramechanism.LeabraFunction attribute)</a>
+
+      <ul>
+        <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.network">(psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
+</li>
+      </ul></li>
       <li><a href="Condition.html#psyneulink.scheduling.condition.Never">Never (class in psyneulink.scheduling.condition)</a>
 </li>
       <li><a href="Function.html#psyneulink.components.functions.function.AccumulatorIntegrator.noise">noise (psyneulink.components.functions.function.AccumulatorIntegrator attribute)</a>
@@ -1387,8 +1529,6 @@
         <li><a href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.noise">(psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism attribute)</a>
 </li>
         <li><a href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.noise">(psyneulink.library.mechanisms.processing.transfer.kwta.KWTA attribute)</a>
-</li>
-        <li><a href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.noise">(psyneulink.library.mechanisms.processing.transfer.lca.LCA attribute)</a>
 </li>
         <li><a href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.noise">(psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism attribute)</a>
 </li>
@@ -1457,6 +1597,8 @@
         <li><a href="Process.html#psyneulink.components.process.Process.output">(psyneulink.components.process.Process attribute)</a>
 </li>
       </ul></li>
+      <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.output_size">output_size (psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
+</li>
       <li><a href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.output_source">output_source (psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism attribute)</a>
 </li>
       <li><a href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_state">output_state (psyneulink.components.mechanisms.mechanism.Mechanism_Base attribute)</a>
@@ -1466,13 +1608,9 @@
 </li>
         <li><a href="Process.html#psyneulink.components.process.Process.output_state">(psyneulink.components.process.Process attribute)</a>
 </li>
-        <li><a href="ComparatorMechanism.html#psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_state">(psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism attribute)</a>
+        <li><a href="System.html#psyneulink.components.system.MonitoredOutputStateTuple.output_state">(psyneulink.components.system.MonitoredOutputStateTuple attribute)</a>
 </li>
-      </ul></li>
-      <li><a href="GatingMechanism.html#psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.output_state_type">output_state_type (psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism attribute)</a>
-
-      <ul>
-        <li><a href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.output_state_type">(psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism attribute)</a>
+        <li><a href="ComparatorMechanism.html#psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_state">(psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism attribute)</a>
 </li>
       </ul></li>
       <li><a href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.output_states">output_states (psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism attribute)</a>
@@ -1484,13 +1622,15 @@
 </li>
         <li><a href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.output_states">(psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism attribute)</a>
 </li>
+        <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_states">(psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism attribute)</a>
+</li>
         <li><a href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states">(psyneulink.library.mechanisms.processing.integrator.ddm.DDM attribute)</a>
+</li>
+        <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.output_states">(psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
 </li>
         <li><a href="ComparatorMechanism.html#psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_states">(psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism attribute)</a>
 </li>
         <li><a href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.output_states">(psyneulink.library.mechanisms.processing.transfer.kwta.KWTA attribute)</a>
-</li>
-        <li><a href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.output_states">(psyneulink.library.mechanisms.processing.transfer.lca.LCA attribute)</a>
 </li>
         <li><a href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.output_states">(psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism attribute)</a>
 </li>
@@ -1504,13 +1644,15 @@
 </li>
         <li><a href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.output_values">(psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism attribute)</a>
 </li>
+        <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_values">(psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism attribute)</a>
+</li>
         <li><a href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_values">(psyneulink.library.mechanisms.processing.integrator.ddm.DDM attribute)</a>
+</li>
+        <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.output_values">(psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
 </li>
         <li><a href="ComparatorMechanism.html#psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_values">(psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism attribute)</a>
 </li>
         <li><a href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.output_values">(psyneulink.library.mechanisms.processing.transfer.kwta.KWTA attribute)</a>
-</li>
-        <li><a href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.output_values">(psyneulink.library.mechanisms.processing.transfer.lca.LCA attribute)</a>
 </li>
         <li><a href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.output_values">(psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism attribute)</a>
 </li>
@@ -1519,6 +1661,14 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="OutputState.html#psyneulink.components.states.outputstate.OutputState">OutputState (class in psyneulink.components.states.outputstate)</a>
 </li>
+      <li><a href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.outputStateType">outputStateType (psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism attribute)</a>
+
+      <ul>
+        <li><a href="GatingMechanism.html#psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.outputStateType">(psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism attribute)</a>
+</li>
+        <li><a href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.outputStateType">(psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism attribute)</a>
+</li>
+      </ul></li>
       <li><a href="Function.html#psyneulink.components.functions.function.ModulationParam.OVERRIDE">OVERRIDE (psyneulink.components.functions.function.ModulationParam attribute)</a>
 </li>
       <li><a href="Function.html#psyneulink.components.functions.function.AccumulatorIntegrator.owner">owner (psyneulink.components.functions.function.AccumulatorIntegrator attribute)</a>
@@ -1596,6 +1746,8 @@
 </li>
         <li><a href="State.html#psyneulink.components.states.state.State_Base.owner">(psyneulink.components.states.state.State_Base attribute)</a>
 </li>
+        <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraFunction.owner">(psyneulink.library.mechanisms.processing.leabramechanism.LeabraFunction attribute)</a>
+</li>
         <li><a href="Condition.html#psyneulink.scheduling.condition.Condition.owner">(psyneulink.scheduling.condition.Condition attribute)</a>
 </li>
       </ul></li>
@@ -1608,7 +1760,11 @@
       <li><a href="Utilities.html#psyneulink.globals.utilities.parameter_spec">parameter_spec() (in module psyneulink.globals.utilities)</a>
 </li>
       <li><a href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.parameter_states">parameter_states (psyneulink.components.mechanisms.mechanism.Mechanism_Base attribute)</a>
+
+      <ul>
+        <li><a href="Projection.html#psyneulink.components.projections.projection.Projection_Base.parameter_states">(psyneulink.components.projections.projection.Projection_Base attribute)</a>, <a href="Projection.html#psyneulink.components.projections.projection.Projection_Base.parameter_states">[1]</a>
 </li>
+      </ul></li>
       <li><a href="ParameterState.html#psyneulink.components.states.parameterstate.ParameterState">ParameterState (class in psyneulink.components.states.parameterstate)</a>
 </li>
       <li><a href="Function.html#psyneulink.components.functions.function.Distance.params">params (psyneulink.components.functions.function.Distance attribute)</a>
@@ -1718,6 +1874,8 @@
 </li>
         <li><a href="Function.html#psyneulink.components.functions.function.WaldDist.prefs">(psyneulink.components.functions.function.WaldDist attribute)</a>
 </li>
+        <li><a href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.prefs">(psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism attribute)</a>
+</li>
         <li><a href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.prefs">(psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism attribute)</a>
 </li>
         <li><a href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.prefs">(psyneulink.components.mechanisms.mechanism.Mechanism_Base attribute)</a>
@@ -1738,7 +1896,7 @@
 </li>
         <li><a href="LearningProjection.html#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.prefs">(psyneulink.components.projections.modulatory.learningprojection.LearningProjection attribute)</a>
 </li>
-        <li><a href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.prefs">(psyneulink.components.projections.pathway.mappingprojection.MappingProjection attribute)</a>
+        <li><a href="Projection.html#psyneulink.components.projections.projection.Projection_Base.prefs">(psyneulink.components.projections.projection.Projection_Base attribute)</a>
 </li>
         <li><a href="InputState.html#psyneulink.components.states.inputstate.InputState.prefs">(psyneulink.components.states.inputstate.InputState attribute)</a>
 </li>
@@ -1754,17 +1912,29 @@
 </li>
         <li><a href="State.html#psyneulink.components.states.state.State_Base.prefs">(psyneulink.components.states.state.State_Base attribute)</a>
 </li>
+        <li><a href="LCMechanism.html#psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism.prefs">(psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism attribute)</a>
+</li>
+        <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.prefs">(psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism attribute)</a>
+</li>
         <li><a href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.prefs">(psyneulink.library.mechanisms.processing.integrator.ddm.DDM attribute)</a>
+</li>
+        <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraFunction.prefs">(psyneulink.library.mechanisms.processing.leabramechanism.LeabraFunction attribute)</a>
+</li>
+        <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.prefs">(psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
 </li>
         <li><a href="ComparatorMechanism.html#psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.prefs">(psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism attribute)</a>
 </li>
         <li><a href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.prefs">(psyneulink.library.mechanisms.processing.transfer.kwta.KWTA attribute)</a>
 </li>
-        <li><a href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.prefs">(psyneulink.library.mechanisms.processing.transfer.lca.LCA attribute)</a>
-</li>
         <li><a href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.prefs">(psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism attribute)</a>
 </li>
         <li><a href="AutoAssociativeProjection.html#psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.prefs">(psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection attribute)</a>
+</li>
+        <li><a href="AGTControlMechanism.html#psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism.prefs">(psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism attribute)</a>
+</li>
+        <li><a href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.prefs">(psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism attribute)</a>
+</li>
+        <li><a href="EVCControlMechanism.html#psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.prefs">(psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -1772,8 +1942,6 @@
       <li><a href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.previous_input">previous_input (psyneulink.library.mechanisms.processing.transfer.kwta.KWTA attribute)</a>
 
       <ul>
-        <li><a href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.previous_input">(psyneulink.library.mechanisms.processing.transfer.lca.LCA attribute)</a>
-</li>
         <li><a href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.previous_input">(psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism attribute)</a>
 </li>
       </ul></li>
@@ -1812,7 +1980,11 @@
       <li><a href="Function.html#psyneulink.components.functions.function.FHNIntegrator.previous_w">previous_w (psyneulink.components.functions.function.FHNIntegrator attribute)</a>
 </li>
       <li><a href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.primary_learned_projection">primary_learned_projection (psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism attribute)</a>
+
+      <ul>
+        <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.primary_learned_projection">(psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism attribute)</a>
 </li>
+      </ul></li>
       <li><a href="Log.html#psyneulink.globals.log.Log.print_entries">print_entries() (psyneulink.globals.log.Log method)</a>
 </li>
       <li><a href="Process.html#psyneulink.components.process.Process">Process (class in psyneulink.components.process)</a>
@@ -1827,6 +1999,16 @@
       </ul></li>
       <li><a href="Process.html#psyneulink.components.process.ProcessInputState">ProcessInputState (class in psyneulink.components.process)</a>
 </li>
+      <li><a href="Projection.html#psyneulink.components.projections.projection.Projection_Base">Projection_Base (class in psyneulink.components.projections.projection)</a>
+</li>
+      <li><a href="InputState.html#psyneulink.components.states.inputstate.InputState.projections">projections (psyneulink.components.states.inputstate.InputState attribute)</a>
+
+      <ul>
+        <li><a href="OutputState.html#psyneulink.components.states.outputstate.OutputState.projections">(psyneulink.components.states.outputstate.OutputState attribute)</a>
+</li>
+        <li><a href="State.html#psyneulink.components.states.state.State_Base.projections">(psyneulink.components.states.state.State_Base attribute)</a>
+</li>
+      </ul></li>
       <li><a href="Function.html#psyneulink.components.functions.function.ArgumentTherapy.propensity">propensity (psyneulink.components.functions.function.ArgumentTherapy attribute)</a>
 </li>
       <li><a href="Component.html#module-psyneulink.components.component">psyneulink.components.component (module)</a>
@@ -1899,7 +2081,13 @@
 </li>
       <li><a href="Utilities.html#module-psyneulink.globals.utilities">psyneulink.globals.utilities (module)</a>
 </li>
+      <li><a href="LCMechanism.html#module-psyneulink.library.mechanisms.adaptive.control.lcmechanism">psyneulink.library.mechanisms.adaptive.control.lcmechanism (module)</a>
+</li>
+      <li><a href="AutoAssociativeLearningMechanism.html#module-psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism">psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism (module)</a>
+</li>
       <li><a href="DDM.html#module-psyneulink.library.mechanisms.processing.integrator.ddm">psyneulink.library.mechanisms.processing.integrator.ddm (module)</a>
+</li>
+      <li><a href="LeabraMechanism.html#module-psyneulink.library.mechanisms.processing.leabramechanism">psyneulink.library.mechanisms.processing.leabramechanism (module)</a>
 </li>
       <li><a href="ComparatorMechanism.html#module-psyneulink.library.mechanisms.processing.objective.comparatormechanism">psyneulink.library.mechanisms.processing.objective.comparatormechanism (module)</a>
 </li>
@@ -1935,16 +2123,6 @@
 </li>
       <li><a href="Utilities.html#psyneulink.globals.utilities.random_matrix">random_matrix() (in module psyneulink.globals.utilities)</a>
 </li>
-      <li><a href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.range">range (psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism attribute)</a>
-
-      <ul>
-        <li><a href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.range">(psyneulink.library.mechanisms.processing.transfer.kwta.KWTA attribute)</a>
-</li>
-        <li><a href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.range">(psyneulink.library.mechanisms.processing.transfer.lca.LCA attribute)</a>
-</li>
-        <li><a href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.range">(psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism attribute)</a>
-</li>
-      </ul></li>
       <li><a href="Function.html#psyneulink.components.functions.function.AccumulatorIntegrator.rate">rate (psyneulink.components.functions.function.AccumulatorIntegrator attribute)</a>
 
       <ul>
@@ -1976,6 +2154,8 @@
 </li>
         <li><a href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.receiver">(psyneulink.components.projections.pathway.mappingprojection.MappingProjection attribute)</a>
 </li>
+        <li><a href="Projection.html#psyneulink.components.projections.projection.Projection_Base.receiver">(psyneulink.components.projections.projection.Projection_Base attribute)</a>
+</li>
         <li><a href="AutoAssociativeProjection.html#psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver">(psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection attribute)</a>
 </li>
       </ul></li>
@@ -1991,16 +2171,20 @@
         <li><a href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection">(psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism">RecurrentTransferMechanism (class in psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism)</a>
 </li>
       <li><a href="Function.html#psyneulink.components.functions.function.Reduce">Reduce (class in psyneulink.components.functions.function)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Function.html#psyneulink.components.functions.function.Reinforcement">Reinforcement (class in psyneulink.components.functions.function)</a>
 </li>
-      <li><a href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.remove_modulated_mechanisms">remove_modulated_mechanisms() (psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism method)</a>
+      <li><a href="LCMechanism.html#psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism.remove_modulated_mechanisms">remove_modulated_mechanisms() (psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism method)</a>
+
+      <ul>
+        <li><a href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.remove_modulated_mechanisms">(psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism method)</a>
 </li>
+      </ul></li>
       <li><a href="Preferences.html#psyneulink.globals.preferences.ComponentPreferenceSet.reportOutputPref">reportOutputPref (psyneulink.globals.preferences.ComponentPreferenceSet attribute)</a>
 </li>
       <li><a href="Log.html#psyneulink.globals.log.Log.reset_entries">reset_entries() (psyneulink.globals.log.Log method)</a>
@@ -2085,6 +2269,8 @@
 </li>
       <li><a href="Composition.html#psyneulink.composition.Composition.scheduler_processing">scheduler_processing (psyneulink.composition.Composition attribute)</a>
 </li>
+      <li><a href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.self_excitation">self_excitation (psyneulink.library.mechanisms.processing.transfer.lca.LCA attribute)</a>
+</li>
       <li><a href="ControlProjection.html#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.sender">sender (psyneulink.components.projections.modulatory.controlprojection.ControlProjection attribute)</a>
 
       <ul>
@@ -2093,6 +2279,8 @@
         <li><a href="LearningProjection.html#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.sender">(psyneulink.components.projections.modulatory.learningprojection.LearningProjection attribute)</a>
 </li>
         <li><a href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.sender">(psyneulink.components.projections.pathway.mappingprojection.MappingProjection attribute)</a>
+</li>
+        <li><a href="Projection.html#psyneulink.components.projections.projection.Projection_Base.sender">(psyneulink.components.projections.projection.Projection_Base attribute)</a>
 </li>
         <li><a href="AutoAssociativeProjection.html#psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender">(psyneulink.library.projections.pathway.autoassociativeprojection.AutoAssociativeProjection attribute)</a>
 </li>
@@ -2117,6 +2305,8 @@
         <li><a href="System.html#psyneulink.components.system.System.show">(psyneulink.components.system.System method)</a>
 </li>
         <li><a href="Preferences.html#psyneulink.globals.preferences.PreferenceSet.show">(psyneulink.globals.preferences.PreferenceSet method)</a>
+</li>
+        <li><a href="LCMechanism.html#psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism.show">(psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism method)</a>
 </li>
         <li><a href="AGTControlMechanism.html#psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism.show">(psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism method)</a>
 </li>
@@ -2225,10 +2415,10 @@
         <li><a href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.threshold">(psyneulink.library.mechanisms.processing.transfer.kwta.KWTA attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Log.html#psyneulink.globals.log.LogEntry.time">time (psyneulink.globals.log.LogEntry attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.time_constant">time_constant (psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism attribute)</a>
 
       <ul>
@@ -2260,6 +2450,10 @@
       <li><a href="Process.html#psyneulink.components.process.Process.timeScale">timeScale (psyneulink.components.process.Process attribute)</a>
 </li>
       <li><a href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.toggle_cost_function">toggle_cost_function() (psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal method)</a>
+</li>
+      <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.train_leabra_network">train_leabra_network() (in module psyneulink.library.mechanisms.processing.leabramechanism)</a>
+</li>
+      <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag">training_flag (psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
 </li>
       <li><a href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TRANSFER_OUTPUT">TRANSFER_OUTPUT (class in psyneulink.components.mechanisms.processing.transfermechanism)</a>
 </li>
@@ -2320,6 +2514,8 @@
 </li>
         <li><a href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.value">(psyneulink.components.projections.pathway.mappingprojection.MappingProjection attribute)</a>
 </li>
+        <li><a href="Projection.html#psyneulink.components.projections.projection.Projection_Base.value">(psyneulink.components.projections.projection.Projection_Base attribute)</a>
+</li>
         <li><a href="InputState.html#psyneulink.components.states.inputstate.InputState.value">(psyneulink.components.states.inputstate.InputState attribute)</a>
 </li>
         <li><a href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value">(psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal attribute)</a>
@@ -2340,11 +2536,11 @@
 </li>
         <li><a href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value">(psyneulink.library.mechanisms.processing.integrator.ddm.DDM attribute)</a>
 </li>
+        <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.value">(psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
+</li>
         <li><a href="ComparatorMechanism.html#psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.value">(psyneulink.library.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism attribute)</a>
 </li>
         <li><a href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.value">(psyneulink.library.mechanisms.processing.transfer.kwta.KWTA attribute)</a>
-</li>
-        <li><a href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.value">(psyneulink.library.mechanisms.processing.transfer.lca.LCA attribute)</a>
 </li>
         <li><a href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.value">(psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism attribute)</a>
 </li>
@@ -2432,6 +2628,8 @@
 </li>
         <li><a href="LearningProjection.html#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.variable">(psyneulink.components.projections.modulatory.learningprojection.LearningProjection attribute)</a>
 </li>
+        <li><a href="Projection.html#psyneulink.components.projections.projection.Projection_Base.variable">(psyneulink.components.projections.projection.Projection_Base attribute)</a>
+</li>
         <li><a href="InputState.html#psyneulink.components.states.inputstate.InputState.variable">(psyneulink.components.states.inputstate.InputState attribute)</a>
 </li>
         <li><a href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.variable">(psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal attribute)</a>
@@ -2446,7 +2644,13 @@
 </li>
         <li><a href="ParameterState.html#psyneulink.components.states.parameterstate.ParameterState.variable">(psyneulink.components.states.parameterstate.ParameterState attribute)</a>
 </li>
+        <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable">(psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism attribute)</a>
+</li>
         <li><a href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.variable">(psyneulink.library.mechanisms.processing.integrator.ddm.DDM attribute)</a>
+</li>
+        <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraFunction.variable">(psyneulink.library.mechanisms.processing.leabramechanism.LeabraFunction attribute)</a>
+</li>
+        <li><a href="LeabraMechanism.html#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.variable">(psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
 </li>
         <li><a href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.variable">(psyneulink.library.mechanisms.processing.transfer.kwta.KWTA attribute)</a>
 </li>
@@ -2476,7 +2680,11 @@
 </li>
         <li><a href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.weight">(psyneulink.components.projections.pathway.mappingprojection.MappingProjection attribute)</a>
 </li>
+        <li><a href="Projection.html#psyneulink.components.projections.projection.Projection_Base.weight">(psyneulink.components.projections.projection.Projection_Base attribute)</a>
+</li>
         <li><a href="InputState.html#psyneulink.components.states.inputstate.InputState.weight">(psyneulink.components.states.inputstate.InputState attribute)</a>
+</li>
+        <li><a href="System.html#psyneulink.components.system.MonitoredOutputStateTuple.weight">(psyneulink.components.system.MonitoredOutputStateTuple attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -2534,7 +2742,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0',
+            VERSION:'0.4.0-alpha+139.g3607334',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

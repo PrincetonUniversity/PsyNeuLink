@@ -7,10 +7,10 @@
 
 .. |logo| image:: _static/PsyNeuLink_logo_no_text.svg
     :width: 20%
+    :target: http://psyneulink.org
 
-
-Welcome to PsyNeuLink      |logo|
-=================================
+Welcome to PsyNeuLink |logo|
+============================
 
 * `Purpose`
 * `What PsyNeuLink is NOT <What_PsyNeuLink_is_NOT>`
@@ -25,8 +25,9 @@ Welcome to PsyNeuLink      |logo|
 
 Purpose
 -------
+
 PsyNeuLink is an open-source, software environment written in Python, and designed for the needs of
-neuroscientists, psychologists, computational psychiatrists and others interested learning about and building
+neuroscientists, psychologists, computational psychiatrists and others interested in learning about and building
 models of the relationship between brain function, mental processes and behavior.
 
 PsyNeuLink can be used as a "block modeling environment", in which to construct, simulate, document, and exchange
@@ -184,9 +185,11 @@ Contributors
 * **Allie Burton**, Princeton Neuroscience Institute, Princeton University
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
+* **Justin Junge**, Department of Psychology, Princeton University
 * **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
-* **K. Mantel**, Princeton Neuroscience Institute, Princeton University
-* **Ted Willke**, Intel Labs, Intel Corporation
+* **Kevin Mantel**, Princeton Neuroscience Institute, Princeton University
+* **Markus Spitzer**, Princeton Neuroscience Institute, Princeton University
+* **Jan Vesely**, Department of Computer Science, Rutgers University
 * **Changyan Wang**, Princeton Neuroscience Institute, Princeton University
 * **Nate Wilson**, Princeton Neuroscience Institute, Princeton University
 
@@ -200,7 +203,7 @@ With substantial and greatly appreciated assistance from:
 * **Amitai Shenhav**, Cognitive, Linguistic, & Psychological Sciences, Brown University
 * **Michael Shvartsman**, Princeton Neuroscience Institute, Princeton University
 * **Ben Singer**, Princeton Neuroscience Institute, Princeton University
-* **Jan Vesely**, Department of Computer Science, Rutgers University
+* **Ted Willke**, Intel Labs, Intel Corporation
 
 
 Table of Contents

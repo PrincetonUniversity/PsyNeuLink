@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningSignal &mdash; PsyNeuLink 0.4.0 documentation</title>
+  <title>LearningSignal &mdash; PsyNeuLink 0.4.0-alpha+139.g3607334 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0-alpha+139.g3607334 documentation" href="index.html"/>
         <link rel="up" title="Modulatory Signals" href="ModulatorySignal.html"/>
         <link rel="next" title="ControlSignal" href="ControlSignal.html"/>
         <link rel="prev" title="Modulatory Signals" href="ModulatorySignal.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4
+                0.4.0-alpha+139
               </div>
             
           
@@ -92,7 +92,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink      </a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
@@ -241,7 +241,7 @@ appending “_LearningSignal” to the name of the Projection.</dd>
 </li>
 <li><dl class="first docutils">
 <dt><em>PROJECTION</em>:MappingProjection</dt>
-<dd>the MappingProjection must be valid <a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">projection specification</span></a>
+<dd>the MappingProjection must be valid <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">projection specification</span></a>
 for the one to be learned.</dd>
 </dl>
 </li>
@@ -349,18 +349,15 @@ applied until the MappingProjection is next executed; see <span class="xref std 
 <li><strong>modulation</strong> (<em>ModulationParam : default ModulationParam.MULTIPLICATIVE</em>) – specifies the way in which the <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.value" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the LearningSignal is used to modify the value
 of the <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter for the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection(s)</span></a> to which
 the LearningSignal’s <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a> project.</li>
-<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter specification dictionary</span></a> that can be used to specify the
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter specification dictionary</span></a> that can be used to specify the
 parameters for the LearningSignal and/or a custom function and its parameters. Values specified for
 parameters in the dictionary override any assigned to those parameters in arguments of the constructor.</li>
 <li><strong>projections</strong> (<em>list of Projection specifications</em>) – specifies the <a class="reference internal" href="GatingProjection.html"><span class="doc">LearningProjection(s)</span></a> to be assigned to the LearningSignal, and that will be
 listed in its <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.efferents" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.efferents"><code class="xref any py py-attr docutils literal"><span class="pre">efferents</span></code></a> attribute (see <a class="reference internal" href="#learningsignal-projections"><span class="std std-ref">Projections</span></a> for additional
 details).</li>
-<li><strong>name</strong> (<em>str : default OutputState-&lt;index&gt;</em>) – a string used for the name of the OutputState.
-If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
-belongs (see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : State.classPreferences</em><em>]</em>) – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the OutputState.
-If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
+<li><strong>name</strong> (str : default see ModulatorySignal <a class="reference internal" href="ModulatorySignal.html#psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name" title="psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) – specifies the name of the LearningSignal; see LearningSignal <a class="reference internal" href="ModulatorySignal.html#psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name" title="psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> for additional
+details.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default State.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the LearningSignal; see <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.prefs" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details.</li>
 </ul>
 </td>
 </tr>
@@ -426,15 +423,14 @@ LearningSignal’s <a class="reference internal" href="LearningProjection.html">
 <dl class="attribute">
 <dt id="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default &lt;State subclass&gt;-&lt;index&gt;</em> – name of the OutputState.
-Specified in the <strong>name</strong> argument of the constructor for the OutputState.  If not is specified, a default is
-assigned by the StateRegistry of the Mechanism to which the OutputState belongs
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+<dd><p><em>str</em> – name of the LearningSignal; the first LearningSignal is always assigned the name <em>LEARNING_SIGNAL</em>;  any
+additional LearningSignals without the <strong>name</strong> argument of their constructor specified are assigned a default
+name (see <a class="reference internal" href="ModulatorySignal.html#psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name" title="psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Unlike other PsyNeuLink components, state names are “scoped” within a Mechanism, meaning that states with
+<p class="last">Unlike other PsyNeuLink components, State names are “scoped” within a Mechanism, meaning that States with
 the same name are permitted in different Mechanisms.  However, they are <em>not</em> permitted in the same
-Mechanism: states within a Mechanism with the same base name are appended an index in the order of their
+Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
 creation.</p>
 </div>
 </dd></dl>
@@ -442,10 +438,9 @@ creation.</p>
 <dl class="attribute">
 <dt id="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : State.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the OutputState.
-Specified in the <strong>prefs</strong> argument of the constructor for the projection;  if it is not specified, a default is
-assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the LearningSignal; if it is not specified in the <strong>prefs</strong> argument of the constructor,
+a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for
+details).</p>
 </dd></dl>
 
 </dd></dl>
@@ -497,7 +492,7 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0',
+            VERSION:'0.4.0-alpha+139.g3607334',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

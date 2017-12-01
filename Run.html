@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Run &mdash; PsyNeuLink 0.4.0 documentation</title>
+  <title>Run &mdash; PsyNeuLink 0.4.0-alpha+139.g3607334 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0-alpha+139.g3607334 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Library" href="Library.html"/>
         <link rel="prev" title="TimeScale" href="TimeScale.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4
+                0.4.0-alpha+139
               </div>
             
           
@@ -92,7 +92,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink      </a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
@@ -213,141 +213,333 @@ execution.  For each <a class="reference internal" href="TimeScale.html#psyneuli
 executing the Components it specifies in each <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TIME_STEP" title="psyneulink.scheduling.timescale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>, until every Component has been executed at least once or
 another <a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination condition</span></a> is met.  The <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> can be used in combination
 with <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> specifications for individual Components to execute different Components at different time scales.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The <strong>time_scale</strong> argument of <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code>, described below, is currently not fully implemented,
-but will be in a subsequent version.</p>
-</div>
-<p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function also has a <strong>time_scale</strong> argument, that can be used to globally specify the time_scale
-parameter for those Components that make use of it.  Any value of <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> can be specified; how it is interpreted
-is determined by the Component. For example, some Mechanisms that perform integration (such as the <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a>) offer the
-option of using an analytic solution (that computes the integral in a single <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TIME_STEP" title="psyneulink.scheduling.timescale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>), or a numerical method
-(that carries out one step of integration per <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TIME_STEP" title="psyneulink.scheduling.timescale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>).  If <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TIME_STEP" title="psyneulink.scheduling.timescale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a> is assigned as the value of the
-<strong>time_scale</strong> argument in a call to <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code>, those Mechanisms will use their numerical integration method,
-whereas if <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TRIAL</span></code></a> is assigned they will use their analytic solution.  Similarly, for <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TIME_STEP" title="psyneulink.scheduling.timescale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a>,
-<a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanisms</span></a> integrate their input prior to applying the transfer function (sometimes
-referred to as “time averaging” or “cascade mode”), whereas for <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TRIAL</span></code></a> they apply it to their current input
-(i.e., execute their transfer an “instantaneously”).</p>
 </div>
 <div class="section" id="inputs">
 <span id="run-inputs"></span><h3>Inputs<a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function presents the inputs for each <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> to the input_states of the relevant Mechanisms in
 the <a class="reference internal" href="#run-scope-of-execution"><span class="std std-ref">scope of execution</span></a>. These are specified in the <strong>inputs</strong> argument of a Component’s
-<code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method. For a Mechanism, they comprise the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for
-each of the Mechanism’s <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a>.  For a Process or System, they comprise the
-<a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for the InputState(s) of the <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism(s).  Inputs can be specified in one
-of two ways: <a class="reference internal" href="#run-inputs-sequence-format"><span class="std std-ref">Sequence format</span></a> and <code class="xref any docutils literal"><span class="pre">Mechanism</span> <span class="pre">format</span></code>.
-Sequence format is more complex, but does not require the specification of Mechanisms by name, and thus may better
-suited for automated means of generating inputs.  Mechanism format requires that inputs be assigned to Mechanisms by
-name, but is easier to use (as the order in which the inputs are specified does not matter, so long as they are paired
-with their Mechanisms).  Both formats require that inputs be specified as nested lists or ndarrays, that define the
-number of trials, mechanisms, InputStates and elements for each input.  These factors determine the levels of nesting
-required for a list, or the dimensionality (number of axes) for an ndarray.  They are described below, followed by a
-description of the two formats.</p>
+<code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method.</p>
+<p>Inputs are specified in a Python dictionary where the keys are <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms, and the values are lists in which
+the i-th element represents the input value to the mechanism on trial i. Each input value must be compatible with the
+shape of the mechanism’s variable. This means that the inputs to an origin mechanism are usually specified by a
+list of 2d lists/arrays, though <a class="reference internal" href="#input-specification-examples"><span class="std std-ref">some shorthand notations are allowed</span></a>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span>
+                          <span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]])</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span>
+                          <span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]])</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;c&#39;</span><span class="p">)</span>
+
+<span class="n">p1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">],</span>
+                 <span class="n">name</span><span class="o">=</span><span class="s1">&#39;p1&#39;</span><span class="p">)</span>
+<span class="n">p2</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">],</span>
+                 <span class="n">name</span><span class="o">=</span><span class="s1">&#39;p2&#39;</span><span class="p">)</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">])</span>
+
+<span class="n">input_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="p">[[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]]],</span>
+                    <span class="n">b</span><span class="p">:</span> <span class="p">[[[</span><span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">]]]}</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="figure" id="run-inputs-fig">
+<img alt="Example input specifications with variable" src="_images/input_spec_variables.svg" /></div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The descriptions below are for completeness, and are intended as a technical reference;  or most uses of
-of <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> methods, it is only necessary to understand the relatively simple Mechanism formate
-described <a class="reference internal" href="#run-inputs-mechanism-format"><span class="std std-ref">below</span></a>.</p>
+<p>Keep in mind that a mechanism’s variable is the concatenation of its input states. In other words, a fully specified
+mechanism variable is a 2d list/array in which the i-th element is the variable of the mechanism’s i-th input state.
+Because of this <a class="reference internal" href="Mechanism.html#mechanism-figure"><span class="std std-ref">relationship between a mechanism's variable and its input states</span></a>, it is also
+valid to think about the input specification for a given origin mechanism as a nested list of values for each input
+state on each trial.</p>
+<div class="last figure" id="run-inputs-fig-states">
+<img alt="Example input specifications with input states" src="_images/input_spec_states.svg" /></div>
 </div>
-<ul class="simple" id="run-nesting-factors">
-<li><strong>Number of TRIALS</strong>.  If the <strong>inputs</strong> argument contains the input for more than one <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, then the outermost
-level of the list, or axis 0 of the ndarray, is used for the <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s, each item of which contains the
-set inputs for a given <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  Otherwise, it is used for the next relevant factor in the list below.  If the
-number of inputs specified is less than the number of <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s, then the input list is cycled until the full
-number of <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s is completed.</li>
-</ul>
+<p>The number of inputs specified <strong>must</strong> be the same for all origin mechanisms in the system. In other words, all of the
+values in the input dictionary must have the same length.</p>
+<p>If num_trials is not in use, the number of inputs provided determines the number of trials in the run. For example, if
+five inputs are provided for each origin mechanism, and num_trials is not specified, the system will execute five times.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="42%" />
+<col width="13%" />
+<col width="11%" />
+<col width="11%" />
+<col width="11%" />
+<col width="11%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Trial #</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>4</td>
+<td>5</td>
+</tr>
+<tr class="row-even"><td>Input to Mechanism a</td>
+<td>1.0</td>
+<td>2.0</td>
+<td>3.0</td>
+<td>4.0</td>
+<td>5.0</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+
+<span class="n">p1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p1</span><span class="p">])</span>
+
+<span class="n">input_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="p">[[[</span><span class="mf">1.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">2.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">3.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">4.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">5.0</span><span class="p">]]]}</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If num_trials is in use, <a class="reference internal" href="#environment.run" title="environment.run"><code class="xref any py py-func docutils literal"><span class="pre">run</span></code></a> will iterate over the inputs until num_trials is reached. For example, if five inputs
+are provided for each <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, and num_trials = 7, the system will execute seven times. The first two
+items in the list of inputs will be used on the 6th and 7th trials, respectively.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="34%" />
+<col width="11%" />
+<col width="9%" />
+<col width="9%" />
+<col width="9%" />
+<col width="9%" />
+<col width="9%" />
+<col width="9%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Trial #</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>4</td>
+<td>5</td>
+<td>6</td>
+<td>7</td>
+</tr>
+<tr class="row-even"><td>Input to Mechanism a</td>
+<td>1.0</td>
+<td>2.0</td>
+<td>3.0</td>
+<td>4.0</td>
+<td>5.0</td>
+<td>1.0</td>
+<td>2.0</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+
+<span class="n">p1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p1</span><span class="p">])</span>
+
+<span class="n">input_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="p">[[[</span><span class="mf">1.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">2.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">3.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">4.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">5.0</span><span class="p">]]]}</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">,</span>
+      <span class="n">num_trials</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+</pre></div>
+</div>
+<p id="input-specification-examples">For convenience, condensed versions of the input specification described above are also accepted in the following
+situations:</p>
 <ul class="simple">
-<li><strong>Number of Mechanisms.</strong> If <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> is used for a System, and it has more than one <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism, then
-the next level of nesting of a list, or next higher axis of an ndarray, is used for the <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms, with
-each item containing the inputs for a given <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism within a <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  This factor is not relevant
-when <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> is used for a single Mechanism, a Process (which only ever has one <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism),
-or a System that has only one <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism.  It is also not relevant for the
-<a class="reference internal" href="#run-inputs-mechanism-format"><span class="std std-ref">Mechanism format</span></a>, since that separates the inputs for each Mechanism into individual
-entries of a dictionary.</li>
+<li><strong>Case 1: Origin mechanism has only one input state</strong></li>
 </ul>
+<table border="1" class="docutils">
+<colgroup>
+<col width="46%" />
+<col width="12%" />
+<col width="11%" />
+<col width="11%" />
+<col width="11%" />
+<col width="11%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Trial #</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>4</td>
+<td>5</td>
+</tr>
+<tr class="row-even"><td>Input to <strong>Mechanism a</strong></td>
+<td>1.0</td>
+<td>2.0</td>
+<td>3.0</td>
+<td>4.0</td>
+<td>5.0</td>
+</tr>
+</tbody>
+</table>
+<p>Complete input specification:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+
+<span class="n">p1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p1</span><span class="p">])</span>
+
+<span class="n">input_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="p">[[[</span><span class="mf">1.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">2.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">3.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">4.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">5.0</span><span class="p">]]]}</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Shorthand - drop the outer list on each input because <strong>Mechanism a</strong> only has one input state:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">input_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">4.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">]]}</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Shorthand - drop the remaining list on each input because <strong>Mechanism a</strong>’s variable is length 1:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">input_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">]}</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
+</pre></div>
+</div>
 <ul class="simple">
-<li><strong>Number of InputStates.</strong> In general, Mechanisms have only a single (<a class="reference internal" href="Mechanism.html#mechanism-inputstates"><span class="std std-ref">primary</span></a>) InputState;
-however, some types of Mechanisms can have more than one.  If any <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism in a Pocess or System has more
-than one InputState, then the next level of nesting of a list, or next higher axis of an ndarray, is used for the
-set of InputStates for each Mechanism.</li>
+<li><strong>Case 2: Only one input is provided for the mechanism</strong></li>
 </ul>
+<table border="1" class="docutils">
+<colgroup>
+<col width="59%" />
+<col width="41%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Trial #</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>Input to <strong>Mechanism a</strong></td>
+<td>[[1.0], [2.0]]</td>
+</tr>
+</tbody>
+</table>
+<p>Complete input specification:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span>
+                          <span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]])</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+
+<span class="n">p1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p1</span><span class="p">])</span>
+
+<span class="n">input_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="p">[[[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">]]]}</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Shorthand - drop the outer list on <strong>Mechanism a</strong>’s input specification because there is only one trial:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">input_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">]]}</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
+</pre></div>
+</div>
 <ul class="simple">
-<li><strong>Number of elements for the value of an InputState.</strong> The input for an InputState can be a single element (e.g.,
-a scalar) or have multiple elements (e.g., a vector).  By convention, even if the input to an InputState is a single
-element, it should nevertheless always be specified as a list or a 1d np.array (it is internally converted to the
-latter).  PsyNeuLink can usually parse single-element inputs specified as a stand-alone value (e.g., as a number
-not in a list or ndarray).  Nevertheless, it is best to embed such inputs in a single-element list or a 1d array,
-both for clarity and to insure consistent treatment of nested lists and ndarrays.  If this convention is followed,
-then the number of elements for a given input should not affect nesting of lists or dimensionality (number of axes)
-of ndarrays of an <strong>inputs</strong> argument.</li>
+<li><strong>Case 3: The same input is used on all trials</strong></li>
 </ul>
-<p>With these factors in mind, the <strong>inputs</strong> argument can be specified in the simplest form possible (least
-number of nestings for a list, or lowest dimension of an ndarray).  It can be specified using one of two formats:</p>
-<div class="section" id="sequence-format">
-<span id="run-inputs-sequence-format"></span><h4>Sequence Format<a class="headerlink" href="#sequence-format" title="Permalink to this headline">¶</a></h4>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">This format is included for backward compatability, but may not be supported in the future.  It is <strong>strongly</strong>
-recommended that the <a class="reference internal" href="#run-inputs-mechanism-format"><span class="std std-ref">Mechanism format</span></a> be used instead.  That said, please feel
-free to convey any strong preference for this format to the development team, so that an informed decision can
-be made about future inclusion of this format.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Trial #</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>4</td>
+<td>5</td>
+</tr>
+<tr class="row-even"><td>Input to <strong>Mechanism a</strong></td>
+<td>[[1.0], [2.0]]</td>
+<td>[[1.0], [2.0]]</td>
+<td>[[1.0], [2.0]]</td>
+<td>[[1.0], [2.0]]</td>
+<td>[[1.0], [2.0]]</td>
+</tr>
+</tbody>
+</table>
+<p>Complete input specification:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span>
+                          <span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]])</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+
+<span class="n">p1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p1</span><span class="p">])</span>
+
+<span class="n">input_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="p">[[[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">]],</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">]]]}</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
+</pre></div>
 </div>
-<p><em>(List[values] or ndarray)</em> – this uses a nested list or ndarray to fully specify the input for
-each <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> in a sequence.  It is more complex than the <a class="reference internal" href="#run-inputs-mechanism-format"><span class="std std-ref">Mechanism format</span></a>,
-and for Systems requires that the inputs for each Mechanism be specified in the same order in which those Mechanisms
-appear in the System’s <a class="reference internal" href="System.html#psyneulink.components.system.System.origin_mechanisms" title="psyneulink.components.system.System.origin_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">origin_mechanisms</span></code></a> attribute.  This is generally the
-same order in which they are declared, and can be displayed using the System’s <a class="reference internal" href="System.html#psyneulink.components.system.System.show" title="psyneulink.components.system.System.show"><code class="xref any py py-meth docutils literal"><span class="pre">show</span></code></a>
-method). Although this format is more complex, it may be better suited to automated input generation, since it does
-not require that Mechanisms be referenced explicitly (though it is allowed). The following provides a description of
-the Sequence format for all of the combinations of factors describe <a class="reference internal" href="#run-inputs-mechanism-format"><span class="std std-ref">above</span></a>.
-The <a class="reference internal" href="#run-sequence-format-fig"><span class="std std-ref">figure</span></a> below shows examples.</p>
-<blockquote>
-<div><p><em>Lists:</em> if there is more than one <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, then the outermost level of the list is used for the sequence of
-<code class="xref any docutils literal"><span class="pre">TRIALS</span></code>.  If there is only one <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism and it has only one InputState (the most common
-case), then a single sublist is used for the input of each <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  If the <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism has more
-than one InputState, then the entry for each <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is a sublist of the InputStates, each entry of which is a
-sublist containing the input for that InputState.  If there is more than one Mechanism, but none have more than
-one InputState, then a sublist is used for each Mechanism in each <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, within which a sublist is used for the
-input for that Mechanism.  If there is more than one Mechanism, and any have more than one InputState,
-then a sublist is used for each Mechanism for each <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, within which a sublist is used for each
-InputState of the corresponding Mechanism, and inside that a sublist is used for the input for each InputState.</p>
-<p><em>ndarray:</em>  axis 0 is used for the first factor (<a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, Mechanism, InputState or input) for which there is only
-one item, axis 1 is used for the next factor for which there is only one item, and so forth.  For example, if there
-is more than one <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, only one <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism, and that has only one InputState (the most common case),
-then axis 0 is used for <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, and axis 1 for inputs per <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  At the other extreme, if there are multiple
-<code class="xref any docutils literal"><span class="pre">TRIALS</span></code>, more than one <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism, and more than one InputState for one or more of the <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms,
-then axis 0 is used for <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> <code class="xref any docutils literal"><span class="pre">s,</span> <span class="pre">axis</span> <span class="pre">1</span> <span class="pre">for</span> <span class="pre">Mechanisms</span> <span class="pre">within</span> <span class="pre">`TRIAL</span></code>, axis 2 for InputStates of each Mechanism,
-and axis 3 for the input to each InputState of a Mechanism.  Note that if <em>any</em> Mechanism being run (directly, or as
-one of the <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms of a Process or System) has more than one InputState, then an axis must be
-committed to InputStates, and the input to every InputState of every Mechanism must be specified in that axis
-(i.e., even for those Mechanisms that have a single InputState).</p>
-<div class="figure align-center" id="id5">
-<span id="run-sequence-format-fig"></span><a class="reference internal image-reference" href="_images/Sequence_format_input_specs_fig.png"><img alt="Example input specifications in Sequence format" src="_images/Sequence_format_input_specs_fig.png" style="width: 1553.25px; height: 1622.25px;" /></a>
-<p class="caption"><span class="caption-text">Example input specifications in Sequence format</span></p>
+<p>Shorthand - drop the outer list on <strong>Mechanism a</strong>’s input specification and use <code class="xref any docutils literal"><span class="pre">num_trials</span></code> to repeat the input value</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">input_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">]]}</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">,</span>
+      <span class="n">num_trials</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
 </div>
-</div></blockquote>
+<ul class="simple">
+<li><strong>Case 4: There is only one origin mechanism</strong></li>
+</ul>
+<table border="1" class="docutils">
+<colgroup>
+<col width="41%" />
+<col width="30%" />
+<col width="30%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Trial #</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr class="row-even"><td>Input to <strong>Mechanism a</strong></td>
+<td>[1.0, 2.0, 3.0]</td>
+<td>[1.0, 2.0, 3.0]</td>
+</tr>
+</tbody>
+</table>
+<p>Complete input specification:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span>
+                          <span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]])</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+
+<span class="n">p1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p1</span><span class="p">])</span>
+
+<span class="n">input_dictionary</span> <span class="o">=</span> <span class="n">input_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]]}</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
+</pre></div>
 </div>
-<div class="section" id="mechanism-format">
-<span id="run-inputs-mechanism-format"></span><h4>Mechanism Format<a class="headerlink" href="#mechanism-format" title="Permalink to this headline">¶</a></h4>
-<p><em>(Dict[Mechanism, List[values] or ndarray])</em> – this provides a simpler format for specifying <code class="xref std std-keyword docutils literal"><span class="pre">inputs</span></code> than
-the Sequence format, and does not require that the inputs for each Mechanism be specified in a particular order.
-However, it requires that each Mechanism that receives inputs be referenced explicitly (instead of by order),
-which may be less suitable for automated forms of input generation.  It uses a dictionary, each entry of which is the
-sequence of inputs for an <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism;  there must be one such entry for each of the <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms of the
-Process or System being run.  The key for each entry is the <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism, and the value contains either a list
-or ndarray specifying the sequence of inputs for that Mechanism, one for each <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> to be run.  If a list is used,
-and the Mechanism has more than one InputState, then a sublist is used in each item of the list to specify the inputs
-for each of the Mechanism’s InputStates for that <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  If an ndarray is used, axis 0 is used for the sequence of
-<a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s. If the Mechanism has a single InputState, then axis 1 is used for the input for each <code class="xref any docutils literal"><span class="pre">TRIAL.</span>&#160; <span class="pre">If</span> <span class="pre">the</span>
-<span class="pre">Mechanism</span> <span class="pre">has</span> <span class="pre">multiple</span> <span class="pre">InputStates,</span> <span class="pre">then</span> <span class="pre">axis</span> <span class="pre">1</span> <span class="pre">is</span> <span class="pre">used</span> <span class="pre">for</span> <span class="pre">the</span> <span class="pre">InputStates,</span> <span class="pre">and</span> <span class="pre">axis</span> <span class="pre">2</span> <span class="pre">is</span> <span class="pre">used</span> <span class="pre">for</span> <span class="pre">the</span> <span class="pre">input</span> <span class="pre">to</span> <span class="pre">each</span>
-<span class="pre">InputState</span> <span class="pre">for</span> <span class="pre">each</span> <span class="pre">`TRIAL</span></code>.</p>
-<blockquote>
-<div><div class="figure align-center" id="id6">
-<img alt="Mechanism format input specification" src="_images/Mechanism_format_input_specs_fig.png" />
-<p class="caption"><span class="caption-text">Mechanism format input specification</span></p>
-</div>
-</div></blockquote>
+<p>Shorthand - drop the outer list on <strong>Mechanism a</strong>’s input specification and use <code class="xref any docutils literal"><span class="pre">num_trials</span></code> to repeat the input value</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">input_list</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]]</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_list</span><span class="p">)</span>
+</pre></div>
 </div>
 </div>
 <div class="section" id="initial-values">
@@ -366,8 +558,8 @@ elements) that of the <code class="xref any docutils literal"><span class="pre">
 <p>If learning is specified for a <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>, then
 target values for each <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> must be provided for each <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TARGET" title="psyneulink.globals.keywords.MechanismRoles.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism in the Process or System being run.  These
 are specified in the <strong>targets</strong> argument of the <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method, which can be in
-any of three formats.  The two formats used for <strong>inputs</strong> (<a class="reference internal" href="#run-inputs-sequence-format"><span class="std std-ref">Sequence</span></a> and
-<a class="reference internal" href="#run-inputs-mechanism-format"><span class="std std-ref">Mechanism</span></a> format) can also be used for targets.  However, the format of the lists or
+any of three formats.  The two formats used for <strong>inputs</strong> (<code class="xref any docutils literal"><span class="pre">Sequence</span></code> and
+<code class="xref any docutils literal"><span class="pre">Mechanism</span></code> format) can also be used for targets.  However, the format of the lists or
 ndarrays is simpler, since each <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TARGET" title="psyneulink.globals.keywords.MechanismRoles.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism is assigned only a single target value, so there is never the need
 for the extra level of nesting (or dimension of ndarray) used for InputStates in the specification of <strong>inputs</strong>.
 Details concerning the use of the <a class="reference internal" href="#run-targets-sequence-format"><span class="std std-ref">Sequence</span></a>  and
@@ -388,23 +580,23 @@ the <a class="reference internal" href="Keywords.html#psyneulink.globals.keyword
 value, then the target must be within that range (for example, if the <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TERMINAL" title="psyneulink.globals.keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism is a
 <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that uses a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function, its <code class="xref any docutils literal"><span class="pre">range</span></code> is
 [0,1], so the target must be within that range).</p>
-<div class="section" id="run-targets-sequence-format">
-<span id="id1"></span><h4>Sequence Format<a class="headerlink" href="#run-targets-sequence-format" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="sequence-format">
+<span id="run-targets-sequence-format"></span><h4>Sequence Format<a class="headerlink" href="#sequence-format" title="Permalink to this headline">¶</a></h4>
 <p><em>(List[values] or ndarray):</em> – there are at most three levels of nesting (or dimensions) required for
 targets:  one for <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s, one for Mechanisms, and one for the elements of each input.  For a System
 with more than one <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TARGET" title="psyneulink.globals.keywords.MechanismRoles.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism, the targets must be specified in the same order as they appear in the System’s
 <a class="reference internal" href="System.html#psyneulink.components.system.System.target_mechanisms" title="psyneulink.components.system.System.target_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">target_mechanisms</span></code></a> attribute.  This should be the same order in which
 they are declared, and can be displayed using the System’s <a class="reference internal" href="System.html#psyneulink.components.system.System.show" title="psyneulink.components.system.System.show"><code class="xref any py py-meth docutils literal"><span class="pre">show</span></code></a> method). All
-other requirements are the same as the <a class="reference internal" href="#run-inputs-sequence-format"><span class="std std-ref">Sequence format</span></a> for <strong>inputs</strong>.</p>
+other requirements are the same as the <code class="xref any docutils literal"><span class="pre">Sequence</span> <span class="pre">format</span></code> for <strong>inputs</strong>.</p>
 </div>
-<div class="section" id="run-targets-mechanism-format">
-<span id="id2"></span><h4>Mechanism Format<a class="headerlink" href="#run-targets-mechanism-format" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="mechanism-format">
+<span id="run-targets-mechanism-format"></span><h4>Mechanism Format<a class="headerlink" href="#mechanism-format" title="Permalink to this headline">¶</a></h4>
 <p><em>(Dict[Mechanism, List[values] or ndarray]):</em> – there must be one entry in the dictionary for each of the <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TARGET" title="psyneulink.globals.keywords.MechanismRoles.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a>
 Mechanisms in the Process or System being run, though the entries can be specified in any order (making this format
 easier to use. The value of each entry is a list or ndarray of the target values for that Mechanism, one for each
 <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  There are at most two levels of nesting (or dimensions) required for each entry: one for the <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>,
 and the other for the elements of each input.  In all other respects, the format is the same as the
-<a class="reference internal" href="#run-inputs-mechanism-format"><span class="std std-ref">Mechanism format</span></a> for <strong>inputs</strong>.</p>
+<code class="xref any docutils literal"><span class="pre">Mechanism</span> <span class="pre">format</span></code> for <strong>inputs</strong>.</p>
 </div>
 <div class="section" id="function-format">
 <span id="run-targets-function-format"></span><h4>Function Format<a class="headerlink" href="#function-format" title="Permalink to this headline">¶</a></h4>
@@ -442,10 +634,8 @@ The length must be equal to <strong>inputs</strong>.</li>
 If it is <code class="xref any docutils literal"><span class="pre">True</span></code>, learning is forced on; if it is <code class="xref any docutils literal"><span class="pre">False</span></code>, learning is forced off.</li>
 <li><strong>call_before_trial</strong> (Function : default= <code class="xref any docutils literal"><span class="pre">None</span></code>) – called before each <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> in the sequence is run.</li>
 <li><strong>call_after_trial</strong> (Function : default= <code class="xref any docutils literal"><span class="pre">None</span></code>) – called after each <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> in the sequence is run.</li>
-<li><strong>call_before_time_step</strong> (Function : default= <a href="#id3"><span class="problematic" id="id4">``</span></a>None`) – called before each <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TIME_STEP" title="psyneulink.scheduling.timescale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed.</li>
+<li><strong>call_before_time_step</strong> (Function : default= <a href="#id1"><span class="problematic" id="id2">``</span></a>None`) – called before each <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TIME_STEP" title="psyneulink.scheduling.timescale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed.</li>
 <li><strong>call_after_time_step</strong> (Function : default= <code class="xref any docutils literal"><span class="pre">None</span></code>) – called after each <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TIME_STEP" title="psyneulink.scheduling.timescale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed.</li>
-<li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) – specifies time scale for Components that implement different forms of execution for different values of
-<a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.</li>
 </ul>
 </td>
 </tr>
@@ -507,7 +697,7 @@ or of the OutputStates of the <a class="reference internal" href="Keywords.html#
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0',
+            VERSION:'0.4.0-alpha+139.g3607334',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

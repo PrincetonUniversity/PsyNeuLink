@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningProjection &mdash; PsyNeuLink 0.4.0 documentation</title>
+  <title>LearningProjection &mdash; PsyNeuLink 0.4.0-alpha+139.g3607334 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0-alpha+139.g3607334 documentation" href="index.html"/>
         <link rel="up" title="Modulatory Projections" href="ModulatoryProjection.html"/>
         <link rel="next" title="ControlProjection" href="ControlProjection.html"/>
         <link rel="prev" title="Modulatory Projections" href="ModulatoryProjection.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4
+                0.4.0-alpha+139
               </div>
             
           
@@ -92,7 +92,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink      </a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
@@ -244,7 +244,7 @@ the LearningProjection’s <a class="reference internal" href="#psyneulink.compo
 <a class="reference internal" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_signal" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> it receives, in addition to (and on top of) the effects of the
 <a class="reference internal" href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_rate" title="psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> from which it receives the
 <a class="reference internal" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_signal" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a>. Specification of the <a class="reference internal" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_rate" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for a LearningProjection supersedes any specification(s) of the
-<code class="xref std std-keyword docutils literal"><span class="pre">learning_rate</span></code> for any <code class="xref any docutils literal"><span class="pre">Process</span> <span class="pre">&lt;Process_Learning_Sequence</span></code> and/or <a class="reference internal" href="System.html#system-learning"><span class="std std-ref">System</span></a> to which the
+<code class="xref std std-keyword docutils literal"><span class="pre">learning_rate</span></code> for any <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">Process</span></a> and/or <a class="reference internal" href="System.html#system-learning"><span class="std std-ref">System</span></a> to which the
 Projection belongs (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-rate"><span class="std std-ref">learning_rate</span></a> for additional details).  However, its
 <a class="reference internal" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_rate" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> can be specified by the <a class="reference internal" href="LearningSignal.html#learningsignal-learning-rate"><span class="std std-ref">LearningSignal</span></a> that is its <a class="reference internal" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.sender" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>;  that specification takes precedence
 over the direct specification of the <a class="reference internal" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_rate" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for the LearningProjection
@@ -317,7 +317,7 @@ if it is not specified, and cannot be <a class="reference internal" href="#learn
 <li><strong>receiver</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection"><em>MappingProjection</em></a><em> or </em><em>ParameterState for matrix parameter of one</em><em>]</em>) – specifies the <em>MATRIX</em> <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> (or the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that owns it) for the <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> of the <a class="reference internal" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learned_projection" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a> to be
 modified by the LearningProjection; if it is not specified, and cannot be <a class="reference internal" href="#learningprojection-creation"><span class="std std-ref">inferred from context</span></a>, initialization is <a class="reference internal" href="#learningprojection-deferred-initialization"><span class="std std-ref">deferred</span></a>.</li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear</em><em>(</em><em>slope=1</em><em>, </em><em>intercept=0</em><em>)</em>) – specifies the function used to convert the <a class="reference internal" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_signal" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> to the <a class="reference internal" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.weight_change_matrix" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.weight_change_matrix"><code class="xref any py py-attr docutils literal"><span class="pre">weight_change_matrix</span></code></a>, prior to applying the <a class="reference internal" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_rate" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a>.</li>
-<li><strong>learning_function</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Function.html#psyneulink.components.functions.function.LearningFunction" title="psyneulink.components.functions.function.LearningFunction"><em>LearningFunction</em></a><em> or </em><a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a><em>] </em><em>: default BackPropagation</em>) – <p>specifies a function to be used for learning by the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> to which the
+<li><strong>learning_function</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Function.html#psyneulink.components.functions.function.LearningFunction" title="psyneulink.components.functions.function.LearningFunction"><em>LearningFunction</em></a><em> or </em><a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.function" title="psyneulink.components.states.inputstate.InputState.function"><em>function</em></a><em>] </em><em>: default BackPropagation</em>) – <p>specifies a function to be used for learning by the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> to which the
 LearningProjection’s <a class="reference internal" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.sender" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> belongs.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -335,16 +335,12 @@ additional details).</li>
 before combining it with others (see <a class="reference internal" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.weight" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> for additional details).</li>
 <li><strong>exponent</strong> (<em>number : default None</em>) – specifies the value by which to exponentiate the LearningProjection’s <a class="reference internal" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.value" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
 before combining it with others (see <a class="reference internal" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.exponent" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> for additional details).</li>
-<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
 the Projection’s default <a class="reference internal" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.function" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and parameter assignments.  Values specified
 for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.</li>
-<li><strong>name</strong> (<em>str : default LearningProjection-&lt;index&gt;</em>) – a string used for the name of the LearningProjection.
-If not is specified, a default is assigned by ProjectionRegistry
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : Projection.classPreferences</em><em>]</em>) – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the LearningProjection.
-If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
+<li><strong>name</strong> (str : default see ModulatoryProjection <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the LearningProjection.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Projection.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the LearningProjection; see <a class="reference internal" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.prefs" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details.</li>
 </ul>
 </td>
 </tr>
@@ -455,19 +451,16 @@ MappingProjection’s <a class="reference internal" href="MappingProjection.html
 <dl class="attribute">
 <dt id="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default LearningProjection-&lt;index&gt;</em> – the name of the LearningProjection.
-Specified in the <strong>name</strong> argument of the constructor for the LearningProjection;
-if not is specified, a default is assigned by ProjectionRegistry
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+<dd><p><em>str</em> – name of the LearningProjection; if it is not specified in the <strong>name</strong> argument of its constructor,
+a default name is assigned (see ModulatoryProjection <code class="xref any docutils literal"><span class="pre">name</span></code>;
+also see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions regarding duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for LearningProjection.
-Specified in the <strong>prefs</strong> argument of the constructor for the LearningProjection;
-if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the LearningProjection; if it is not specified in the <strong>prefs</strong> argument of the
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
 </dd></dl>
@@ -519,7 +512,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0',
+            VERSION:'0.4.0-alpha+139.g3607334',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

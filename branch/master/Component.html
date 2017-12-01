@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Components &mdash; PsyNeuLink 0.4.0 documentation</title>
+  <title>Components &mdash; PsyNeuLink 0.4.0-alpha+139.g3607334 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0-alpha+139.g3607334 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="Mechanisms" href="Mechanism.html"/>
         <link rel="prev" title="Core" href="Core.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4
+                0.4.0-alpha+139
               </div>
             
           
@@ -92,7 +92,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink      </a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
@@ -201,7 +201,7 @@ as additional attributes that provide information about its contents and/or stat
 <p>If information necessary to complete initialization is not specified in the constructor (e.g, the <strong>owner</strong> for a
 <a class="reference internal" href="State.html#psyneulink.components.states.state.State_Base.owner" title="psyneulink.components.states.state.State_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">State</span></code></a>, or the <strong>sender</strong> or <strong>receiver</strong> for a <a class="reference internal" href="Projection.html#projection-structure"><span class="std std-ref">Projection</span></a>), then its
 full initialization is deferred until its the information is available (e.g., the <a class="reference internal" href="State.html"><span class="doc">State</span></a> is assigned to a
-<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> is assigned its <code class="xref any docutils literal"><span class="pre">sender</span></code> and <code class="xref any docutils literal"><span class="pre">receiver</span></code>).  This allows Components to be created before all of the information they require is
+<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> is assigned its <a class="reference internal" href="Projection.html#psyneulink.components.projections.projection.Projection_Base.sender" title="psyneulink.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="Projection.html#psyneulink.components.projections.projection.Projection_Base.receiver" title="psyneulink.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>).  This allows Components to be created before all of the information they require is
 available (e.g., at the beginning of a script). However, for the Component to be operational, initialization must be
 completed its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code> method must be called.  This is usually done automatically when the Component is
 assigned to another Component to which it belongs (e.g., assigning a State to a Mechanism) or to a Composition (e.g.,
@@ -571,7 +571,7 @@ Instantiate any items in request set that require it (i.e., function or states).
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0',
+            VERSION:'0.4.0-alpha+139.g3607334',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

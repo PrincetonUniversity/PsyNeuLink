@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlProjection &mdash; PsyNeuLink 0.4.0 documentation</title>
+  <title>ControlProjection &mdash; PsyNeuLink 0.4.0-alpha+139.g3607334 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0-alpha+139.g3607334 documentation" href="index.html"/>
         <link rel="up" title="Modulatory Projections" href="ModulatoryProjection.html"/>
         <link rel="next" title="GatingProjection" href="GatingProjection.html"/>
         <link rel="prev" title="LearningProjection" href="LearningProjection.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4
+                0.4.0-alpha+139
               </div>
             
           
@@ -92,7 +92,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink      </a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
@@ -264,19 +264,15 @@ ControlProjection’s <a class="reference internal" href="#psyneulink.components
 before combining it with others (see <a class="reference internal" href="#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.weight" title="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> for additional details).</li>
 <li><strong>exponent</strong> (<em>number : default None</em>) – specifies the value by which to exponentiate the ControlProjection’s <a class="reference internal" href="#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.value" title="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
 before combining it with others (see <a class="reference internal" href="#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.exponent" title="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> for additional details).</li>
-<li><strong>control_signal_params</strong> (<em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for the
+<li><strong>pip install --updgrade Sphinx==1.6.2 sphinx-rtd-theme==0.2.4 sphinxcontrib-websupport==1.0.1</strong> (<em>control_signal_params</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for the
 ControlProjection’s <a class="reference internal" href="#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.sender" title="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> (see <a class="reference internal" href="ControlSignal.html#controlsignal-structure"><span class="std std-ref">Structure</span></a> for a description
 of ControlSignal parameters).</li>
-<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the ControlProjection, its <a class="reference internal" href="#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.function" title="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or a custom function and its parameters.
 Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
 constructor.</li>
-<li><strong>name</strong> (<em>str : default ControlProjection-&lt;index&gt;</em>) – a string used for the name of the ControlProjection.
-If not is specified, a default is assigned by ProjectionRegistry
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : Projection.classPreferences</em><em>]</em>) – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the ControlProjection.
-If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
+<li><strong>name</strong> (str : default see ModulatoryProjection <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the ControlProjection.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Projection.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the ControlProjection; see <a class="reference internal" href="#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.prefs" title="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details.</li>
 </ul>
 </td>
 </tr>
@@ -346,19 +342,16 @@ to determine how that ParameterState’s <a class="reference internal" href="Par
 <dl class="attribute">
 <dt id="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default ControlProjection-&lt;index&gt;</em> – the name of the ControlProjection.
-Specified in the <strong>name</strong> argument of the constructor for the ControlProjection;
-if not is specified, a default is assigned by ProjectionRegistry
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+<dd><p><em>str</em> – name of the ControlProjection; if it is not specified in the <strong>name</strong> argument of its constructor,
+a default name is assigned (see ModulatoryProjection <code class="xref any docutils literal"><span class="pre">name</span></code>;
+also see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions regarding duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for ControlProjection.
-Specified in the <strong>prefs</strong> argument of the constructor for the ControlProjection;
-if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the ControlProjection; if it is not specified in the <strong>prefs</strong> argument of the
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
 </dd></dl>
@@ -410,7 +403,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0',
+            VERSION:'0.4.0-alpha+139.g3607334',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

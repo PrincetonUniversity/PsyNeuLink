@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.4.0 documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.4.0-alpha+139.g3607334 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0-alpha+139.g3607334 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Condition" href="Condition.html"/>
         <link rel="prev" title="Scheduling" href="Scheduling.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4
+                0.4.0-alpha+139
               </div>
             
           
@@ -92,7 +92,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink      </a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
@@ -280,10 +280,10 @@ However, the execution of a Component within a <code class="xref any docutils li
 <code class="xref any docutils literal"><span class="pre">consideration_set</span></code>, as in the example below:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span>    C
   ↗ ↖
- A     B
+ A   B
 
-scheduler.add_condition(B, EveryNCalls(A, 2))
-scheduler.add_condition(C, EveryNCalls(B, 1))
+scheduler.add_condition(B, pnl.EveryNCalls(A, 2))
+scheduler.add_condition(C, pnl.EveryNCalls(B, 1))
 
 time steps: [{A}, {A, B}, {C}, ...]
 </pre></div>
@@ -329,84 +329,107 @@ or its <strong>termination_learning</strong> argument to terminate the execution
 <p>Please see <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> for a list of all supported Conditions and their behavior.</p>
 <ul>
 <li><p class="first">Basic phasing in a linear process:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">A</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
-<span class="n">B</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">)</span>
-<span class="n">C</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 
-<span class="n">p</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span>
-    <span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">],</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;p&#39;</span>
-<span class="p">)</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">System</span><span class="p">(</span>
-    <span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p</span><span class="p">],</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;s&#39;</span>
-<span class="p">)</span>
-<span class="n">my_scheduler</span> <span class="o">=</span> <span class="n">Scheduler</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
 
-<span class="c1">#impicit condition of Always for A</span>
-<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;p&#39;</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;s&#39;</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Scheduler</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
 
-<span class="c1"># implicit AllHaveRun Termination condition</span>
-<span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># implicit condition of Always for A</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
 
-<span class="n">execution_sequence</span><span class="p">:</span> <span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># implicit AllHaveRun Termination condition</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span>
+<span class="go">[{(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism C)}]</span>
 </pre></div>
 </div>
 </li>
 <li><p class="first">Alternate basic phasing in a linear process:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">A</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
-<span class="n">B</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">)</span>
 
-<span class="n">p</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span>
-    <span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">],</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;p&#39;</span>
-<span class="p">)</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">System</span><span class="p">(</span>
-    <span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p</span><span class="p">],</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;s&#39;</span>
-<span class="p">)</span>
-<span class="n">my_scheduler</span> <span class="o">=</span> <span class="n">Scheduler</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;p&#39;</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;s&#39;</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Scheduler</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
 
-<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">Any</span><span class="p">(</span><span class="n">AtPass</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
-<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">Any</span><span class="p">(</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">A</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">AtPass</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
 
-<span class="n">termination_conds</span> <span class="o">=</span> <span class="p">{</span><span class="n">ts</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">ts</span> <span class="ow">in</span> <span class="n">TimeScale</span><span class="p">}</span>
-<span class="n">termination_conds</span><span class="p">[</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">]</span> <span class="o">=</span> <span class="n">AfterNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">time_scale</span><span class="o">=</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">)</span>
-<span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">termination_conds</span><span class="o">=</span><span class="n">termination_conds</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">B</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
 
-<span class="n">execution_sequence</span><span class="p">:</span> <span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">B</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">termination_conds</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">time_scale</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">termination_conds</span><span class="o">=</span><span class="n">termination_conds</span><span class="p">))</span>
+
+<span class="go">execution_sequence: [A, B, B, A, B, B]</span>
 </pre></div>
 </div>
 </li>
 <li><p class="first">Basic phasing in two processes:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">A</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
-<span class="n">B</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">)</span>
-<span class="n">C</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
 
-<span class="n">p</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span>
-    <span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">C</span><span class="p">],</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;p&#39;</span>
-<span class="p">)</span>
-<span class="n">q</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span>
-    <span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">],</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;q&#39;</span>
-<span class="p">)</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">System</span><span class="p">(</span>
-    <span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">],</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;s&#39;</span>
-<span class="p">)</span>
-<span class="n">my_scheduler</span> <span class="o">=</span> <span class="n">Scheduler</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">C</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;p&#39;</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;q&#39;</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;s&#39;</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Scheduler</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
 
-<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">EveryNPasses</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">Any</span><span class="p">(</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">AfterNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNPasses</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">C</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
 
-<span class="n">termination_conds</span> <span class="o">=</span> <span class="p">{</span><span class="n">ts</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">ts</span> <span class="ow">in</span> <span class="n">TimeScale</span><span class="p">}</span>
-<span class="n">termination_conds</span><span class="p">[</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">]</span> <span class="o">=</span> <span class="n">AfterNCalls</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">time_scale</span><span class="o">=</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">)</span>
-<span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">termination_conds</span><span class="o">=</span><span class="n">termination_conds</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">termination_conds</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">time_scale</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">termination_conds</span><span class="o">=</span><span class="n">termination_conds</span><span class="p">))</span>
 
-<span class="n">execution_sequence</span><span class="p">:</span> <span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="p">{</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">},</span> <span class="n">A</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="p">{</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">},</span> <span class="n">C</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="p">{</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">},</span> <span class="n">C</span><span class="p">]</span>
+<span class="go">execution_sequence: [A, {A,B}, A, C, {A,B}, C, A, C, {A,B}, C]</span>
 </pre></div>
 </div>
 </li>
@@ -565,7 +588,7 @@ terminate the execution of the specified <a class="reference internal" href="Tim
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0',
+            VERSION:'0.4.0-alpha+139.g3607334',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

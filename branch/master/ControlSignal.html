@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlSignal &mdash; PsyNeuLink 0.4.0 documentation</title>
+  <title>ControlSignal &mdash; PsyNeuLink 0.4.0-alpha+139.g3607334 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0-alpha+139.g3607334 documentation" href="index.html"/>
         <link rel="up" title="Modulatory Signals" href="ModulatorySignal.html"/>
         <link rel="next" title="GatingSignal" href="GatingSignal.html"/>
         <link rel="prev" title="LearningSignal" href="LearningSignal.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4
+                0.4.0-alpha+139
               </div>
             
           
@@ -92,7 +92,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink      </a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
@@ -196,7 +196,7 @@
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A ControlSignal is a type of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> that is specialized for use with a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> and one or more <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>, to modify the parameter(s) of one or more
 <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>. A ControlSignal receives an <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> value from the
-ControlMechanism to which it belongs, and uses that to compute an <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> (also referred to as a <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.control_signal" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a>)
+ControlMechanism to which it belongs, and uses that to compute an <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> (also referred to as a <a class="reference internal" href="ControlProjection.html#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.control_signal" title="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a>)
 that is assigned as the <code class="xref any docutils literal"><span class="pre">value</span></code> of its ControlProjections. Each
 ControlProjection conveys its value to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the parameter it controls, which uses that value to
 <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulate</span></a> the <a class="reference internal" href="ParameterState.html#psyneulink.components.states.parameterstate.ParameterState.value" title="psyneulink.components.states.parameterstate.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the parameter.  A ControlSignal also
@@ -208,7 +208,7 @@ adapt the ControlSignal’s <a class="reference internal" href="#psyneulink.comp
 <p>A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function is <a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">specified for
 control</span></a>.  ControlSignals can also be specified in the <strong>control_signals</strong> argument
 of the constructor for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>.  Although a ControlSignal can be created directly
-using its constructor (or any of the other ways for <a class="reference internal" href="OutputState.html#outputstates-creation"><span class="std std-ref">creating an outputState</span></a>), this is usually
+using its constructor (or any of the other ways for <a class="reference internal" href="OutputState.html#outputstates-creation"><span class="std std-ref">creating an OutputState</span></a>), this is usually
 not necessary nor is it advisable, as a ControlSignal has dedicated components and requirements for configuration
 that must be met for it to function properly.</p>
 <div class="section" id="specifying-controlsignals">
@@ -216,32 +216,48 @@ that must be met for it to function properly.</p>
 <p>When a ControlSignal is specified in the <strong>control_signals</strong> argument of the constructor for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, the parameter to be controlled must be specified.  This can take any of the following forms:</p>
 <blockquote>
 <div><ul class="simple">
-<li>a <strong>ParameterState</strong> of the Mechanism to which the parameter belongs;</li>
-</ul>
-<ul class="simple">
-<li>a <strong>tuple</strong>, with the name of the parameter as its 1st item and the <em>Mechanism</em> to which it belongs as the 2nd;
-note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
-but precludes specification of any <a class="reference internal" href="#controlsignal-structure"><span class="std std-ref">parameters</span></a> for the ControlSignal.</li>
+<li><strong>ParameterState</strong> – of the Mechanism to which the parameter belongs;</li>
 </ul>
 <ul>
-<li><p class="first">a <strong>specification dictionary</strong>, that must contain at least the following two entries:</p>
-<ul class="simple">
+<li><p class="first"><strong>specification dictionary</strong> – can take either of the following two forms:</p>
+<ul>
+<li><p class="first">for controlling a single parameter, the dictionary can have the following two entries:</p>
+<blockquote>
+<div><ul class="simple">
 <li><dl class="first docutils">
 <dt><em>NAME</em>: str</dt>
-<dd>a string that is the name of the parameter to be controlled;</dd>
+<dd>the string must be the name of the parameter to be gated;</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><em>MECHANISM</em>: Mechanism</dt>
-<dd>the Mechanism must be the one to the which the parameter belongs.
-(note: the Mechanism itself should be specified even if the parameter belongs to its function).</dd>
+<dd>the Mechanism must be the one to the which the parameter to be controlled belongs.</dd>
 </dl>
 </li>
 </ul>
-<p>The dictionary can also contain entries for any other ControlSignal attributes to be specified
-(e.g., a <em>MODULATION</em> and/or <em>ALLOCATION_SAMPLES</em> entry); see <a class="reference internal" href="#controlsignal-structure"><span class="std std-ref">below</span></a> for a
-description of ControlSignal attributes.</p>
+</div></blockquote>
 </li>
+<li><p class="first">for controlling multiple parameters, the dictionary can have the following entry:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="first docutils">
+<dt>&lt;str&gt;:list</dt>
+<dd>the string used as the key specifies the name to be used for the ControlSignal,
+and each item of the list must be a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">specification of a parameter</span></a> to be
+controlled by the ControlSignal (and that will receive a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> from it).</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="simple">
+<li><strong>2-item tuple</strong> – the 1st time must be the name of the parameter (or list of parameter names), and the 2nd item
+the Mechanism to which it (they) belong(s); this is a convenience format, which is simpler to use than a
+specification dictionary (see below), but precludes specification of any <a class="reference internal" href="#controlsignal-structure"><span class="std std-ref">parameters</span></a>
+for the ControlSignal.</li>
 </ul>
 </div></blockquote>
 </div>
@@ -298,7 +314,7 @@ and is used by its <a class="reference internal" href="#psyneulink.components.st
 ControlSignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>. However, another <a class="reference internal" href="Function.html#psyneulink.components.functions.function.TransferFunction" title="psyneulink.components.functions.function.TransferFunction"><code class="xref any py py-class docutils literal"><span class="pre">TransferFunction</span></code></a> can be assigned
 (e.g., <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Exponential" title="psyneulink.components.functions.function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>), or any other function that takes and returns a scalar value or 1d array.</p>
 <p><em>Intensity (value)</em>. The result of the function is assigned as the value of the ControlSignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>
-attribute, which serves as the ControlSignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (also referred to as <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.control_signal" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a>).
+attribute, which serves as the ControlSignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (also referred to as <a class="reference internal" href="ControlProjection.html#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.control_signal" title="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a>).
 The <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> is used by its <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> to modulate the parameter(s) for which the
 ControlSignal is responsible. The ControlSignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> attribute  reflects its value for the current <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>;
 its value from the previous <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is assigned to the <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.last_intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.last_intensity"><code class="xref any py py-attr docutils literal"><span class="pre">last_intensity</span></code></a> attribute.</p>
@@ -359,7 +375,8 @@ with the parameter being controlled is next executed; see <span class="xref std 
 <p class="rubric" id="controlsignal-examples">Examples</p>
 <p><em>Modulate the parameter of a Mechanism’s function</em>.  The following example assigns a
 ControlSignal to the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic.gain" title="psyneulink.components.functions.function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a> parameter of the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function used by a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">My_Mech</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">bias</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">ControlSignal</span><span class="p">)))</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">(</span><span class="n">bias</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ControlSignal</span><span class="p">)))</span>
 </pre></div>
 </div>
 <p>Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
@@ -372,7 +389,8 @@ In the example below, this is changed by specifying the <a class="reference inte
 <a class="reference internal" href="#"><span class="doc">ControlSignal</span></a> for the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function of a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>.  It is changed so that the value of the
 ControlSignal adds to, rather than multiplies, the value of the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic.gain" title="psyneulink.components.functions.function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter of the Logistic
 function:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">My_Mech</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">ControlSignal</span><span class="p">(</span><span class="n">modulation</span><span class="o">=</span><span class="n">ModulationParam</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">))))</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span>
+<span class="gp">... </span>                                                            <span class="n">pnl</span><span class="o">.</span><span class="n">ControlSignal</span><span class="p">(</span><span class="n">modulation</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ModulationParam</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">))))</span>
 </pre></div>
 </div>
 <p>Note that the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.ModulationParam" title="psyneulink.components.functions.function.ModulationParam"><code class="xref any py py-class docutils literal"><span class="pre">ModulationParam</span></code></a> specified for the <a class="reference internal" href="#"><span class="doc">ControlSignal</span></a> pertains to the function of a <em>ParameterState</em>
@@ -383,20 +401,21 @@ had been <code class="docutils literal"><span class="pre">ModulationParam.OVERRI
 value of the <em>Logistic</em> Function’s <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic.gain" title="psyneulink.components.functions.function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter, rather than added to it.</p>
 <p><em>Modulate the parameters of several Mechanisms in a System</em>.  The following example assigns ControlSignals to modulate
 the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic.gain" title="psyneulink.components.functions.function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter of the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function for <code class="docutils literal"><span class="pre">My_Mech_A</span></code> and the <code class="xref any docutils literal"><span class="pre">intercept</span></code> parameter of the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Linear" title="psyneulink.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function for <code class="docutils literal"><span class="pre">My_Mech_B</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">My_Mech_A</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
-<span class="n">My_Mech_B</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">,</span>
-                             <span class="n">output_states</span><span class="o">=</span><span class="p">[</span><span class="n">RESULT</span><span class="p">,</span> <span class="n">MEAN</span><span class="p">])</span>
-<span class="n">Process_A</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">My_Mech_A</span><span class="p">])</span>
-<span class="n">Process_B</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">My_Mech_B</span><span class="p">])</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_a</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_b</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span>
+<span class="gp">... </span>                                  <span class="n">output_states</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">RESULT</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">MEAN</span><span class="p">])</span>
 
-<span class="n">My_System</span> <span class="o">=</span> <span class="n">System</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">Process_A</span><span class="p">,</span> <span class="n">Process_B</span><span class="p">],</span>
-                                <span class="n">monitor_for_control</span><span class="o">=</span><span class="p">[</span><span class="n">My_Mech_A</span><span class="o">.</span><span class="n">output_states</span><span class="p">[</span><span class="n">RESULT</span><span class="p">],</span>
-                                                     <span class="n">My_Mech_B</span><span class="o">.</span><span class="n">output_states</span><span class="p">[</span><span class="n">MEAN</span><span class="p">]],</span>
-                                <span class="n">control_signals</span><span class="o">=</span><span class="p">[(</span><span class="n">GAIN</span><span class="p">,</span> <span class="n">My_Mech_A</span><span class="p">),</span>
-                                                 <span class="p">{</span><span class="n">NAME</span><span class="p">:</span> <span class="n">INTERCEPT</span><span class="p">,</span>
-                                                  <span class="n">MECHANISM</span><span class="p">:</span> <span class="n">My_Mech_B</span><span class="p">,</span>
-                                                  <span class="n">MODULATION</span><span class="p">:</span> <span class="n">ModulationParam</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">}],</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;My Test System&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">process_a</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">my_mech_a</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">process_b</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">my_mech_b</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_system</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">process_a</span><span class="p">,</span> <span class="n">process_b</span><span class="p">],</span>
+<span class="gp">... </span>                       <span class="n">monitor_for_control</span><span class="o">=</span><span class="p">[</span><span class="n">my_mech_a</span><span class="o">.</span><span class="n">output_states</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">RESULTS</span><span class="p">],</span>
+<span class="gp">... </span>                                            <span class="n">my_mech_b</span><span class="o">.</span><span class="n">output_states</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">MEAN</span><span class="p">]],</span>
+<span class="gp">... </span>                       <span class="n">control_signals</span><span class="o">=</span><span class="p">[(</span><span class="n">pnl</span><span class="o">.</span><span class="n">GAIN</span><span class="p">,</span> <span class="n">my_mech_a</span><span class="p">),</span>
+<span class="gp">... </span>                                        <span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">INTERCEPT</span><span class="p">,</span>
+<span class="gp">... </span>                                         <span class="n">pnl</span><span class="o">.</span><span class="n">MECHANISM</span><span class="p">:</span> <span class="n">my_mech_b</span><span class="p">,</span>
+<span class="gp">... </span>                                         <span class="n">pnl</span><span class="o">.</span><span class="n">MODULATION</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ModulationParam</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">}],</span>
+<span class="gp">... </span>                       <span class="n">name</span><span class="o">=</span><span class="s1">&#39;My Test System&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -468,7 +487,7 @@ used as the ControlSignal’s <a class="reference internal" href="#psyneulink.co
 <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>.</li>
 <li><strong>adjustment_cost_function</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Function.html#psyneulink.components.functions.function.TransferFunction" title="psyneulink.components.functions.function.TransferFunction"><em>TransferFunction</em></a><em>] </em><em>: default Linear</em>) – specifies the function used to calculate the contribution of the change in the ControlSignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>
 (from its <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.last_intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.last_intensity"><code class="xref any py py-attr docutils literal"><span class="pre">last_intensity</span></code></a> value) to its <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>.</li>
-<li><strong>duration_cost_function</strong> (<em>Optional</em><em>[</em><em>IntegratorFunction</em><em>] </em><em>: default Integrator</em>) – specifies the function used to calculate the contribution of the ControlSignal’s duration to its
+<li><strong>duration_cost_function</strong> (<em>IntegratorFunction : default Integrator</em>) – specifies the function used to calculate the contribution of the ControlSignal’s duration to its
 <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>.</li>
 <li><strong>cost_combination_function</strong> (function : default <code class="xref any docutils literal"><span class="pre">Reduce(operation=SUM)</span></code>) – specifies the function used to combine the results of any cost functions that are enabled, the result of
 which is assigned as the ControlSignal’s <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a> attribute.</li>
@@ -479,15 +498,12 @@ the parameter(s) that it controls.</li>
 <li><strong>projections</strong> (<em>list of Projection specifications</em>) – specifies the <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> to be assigned to the ControlSignal, and that will be
 listed in its <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.efferents" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.efferents"><code class="xref any py py-attr docutils literal"><span class="pre">efferents</span></code></a> attribute (see <a class="reference internal" href="#controlsignal-projections"><span class="std std-ref">Projections</span></a> for additional
 details).</li>
-<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
 override any assigned to those parameters in arguments of the constructor.</li>
-<li><strong>name</strong> (<em>str : default OutputState-&lt;index&gt;</em>) – a string used for the name of the OutputState.
-If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
-belongs (see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : State.classPreferences</em><em>]</em>) – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the OutputState.
-If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
+<li><strong>name</strong> (str : default see ModulatorySignal <a class="reference internal" href="ModulatorySignal.html#psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name" title="psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) – specifies the name of the ControlSignal; see ControlSignal <a class="reference internal" href="ModulatorySignal.html#psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name" title="psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> for additional
+details.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default State.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the ControlSignal; see <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.prefs" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details.</li>
 </ul>
 </td>
 </tr>
@@ -644,15 +660,13 @@ the parameter(s) that it controls.</p>
 <dl class="attribute">
 <dt id="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default &lt;State subclass&gt;-&lt;index&gt;</em> – name of the OutputState.
-Specified in the <strong>name</strong> argument of the constructor for the OutputState.  If not is specified, a default is
-assigned by the StateRegistry of the Mechanism to which the OutputState belongs
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+<dd><p><em>str</em> – name of the ControlSignal; if it is not specified in the <strong>name</strong> argument of its constructor, a default name
+is assigned (see <a class="reference internal" href="ModulatorySignal.html#psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name" title="psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Unlike other PsyNeuLink components, state names are “scoped” within a Mechanism, meaning that states with
+<p class="last">Unlike other PsyNeuLink components, State names are “scoped” within a Mechanism, meaning that States with
 the same name are permitted in different Mechanisms.  However, they are <em>not</em> permitted in the same
-Mechanism: states within a Mechanism with the same base name are appended an index in the order of their
+Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
 creation.</p>
 </div>
 </dd></dl>
@@ -660,10 +674,9 @@ creation.</p>
 <dl class="attribute">
 <dt id="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : State.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the OutputState.
-Specified in the <strong>prefs</strong> argument of the constructor for the projection;  if it is not specified, a default is
-assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the ControlSignal; if it is not specified in the <strong>prefs</strong> argument of the constructor,
+a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for
+details).</p>
 </dd></dl>
 
 <dl class="method">
@@ -814,7 +827,7 @@ Assign intensity to value of ControlSignal (done in setter property for value)</
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0',
+            VERSION:'0.4.0-alpha+139.g3607334',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

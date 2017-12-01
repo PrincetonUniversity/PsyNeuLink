@@ -1,7 +1,7 @@
 GatingMechanisms
 ================
 
-**Base class**:
+**Core class**:
 
 * `GatingMechanism`
 
