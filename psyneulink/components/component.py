@@ -1095,11 +1095,20 @@ class Component(object):
             except KeyError:
                 pass
 
-            # If name is None, mark as deferred so that name can be customized
+            # Remove DEFERRED INITIALIZATION from name if it is still there
+            if DEFERRED_INITIALIZATION in self.name:
+                self.name = self.name.replace("["+DEFERRED_INITIALIZATION+"]","")
+            # Otherwise, if name has been specified, use it:
+            # elif self.name is None:
+            #     self._assign_default_name()
+
+            # MODIFIED OLD:
+            # Otherwise, if name is None, mark as deferred so that name can be customized
             #    using info that has become available at time of deferred init
-            self.init_args[NAME] = self.name or (self.init_args[NAME] or
-                                                 (DEFERRED_INITIALIZATION + ' ' + self.className) or
-                                                 DEFERRED_DEFAULT_NAME)
+            # else:
+            #     self.init_args[NAME] = self.name or (self.init_args[NAME] or
+            #                                          (DEFERRED_INITIALIZATION + ' ' + self.className) or
+            #                                          DEFERRED_DEFAULT_NAME)
 
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)

@@ -29,7 +29,7 @@ Output_Weights_matrix = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 3)
 # This projection will be used by the process below by referencing it in the process' pathway;
 #    note: sender and receiver args don't need to be specified
 Input_Weights = pnl.MappingProjection(
-    name='Input Weights',
+    # name='Input Weights',
     matrix=Input_Weights_matrix
 )
 
@@ -104,8 +104,8 @@ mySystem = pnl.System(
 )
 
 mySystem.reportOutputPref = True
-mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL)
-# mySystem.show_graph()
+# mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL)
+mySystem.show_graph()
 
 stim_list = {Input_Layer: [[-1, 30]]}
 target_list = {Output_Layer: [[0, 0, 1]]}

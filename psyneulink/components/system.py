@@ -3319,10 +3319,12 @@ class System(System_Base):
             # For Projection, show dimensions of matrix
             elif isinstance(item, Projection):
                 if show_dimensions in {ALL, PROJECTIONS}:
+                    # MappingProjections use matrix
                     if isinstance(item, MappingProjection):
                         value = np.array(item.matrix)
                         dim_string = "({})".format("x".join([str(i) for i in value.shape]))
                         return "{}\n{}".format(item.name, dim_string)
+                    # ModulatoryProjections use value
                     else:
                         value = np.array(item.value)
                         dim_string = "({})".format(len(value))
