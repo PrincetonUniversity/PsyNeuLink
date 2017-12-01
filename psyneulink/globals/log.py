@@ -14,11 +14,11 @@
 Overview
 --------
 
-A Log object is used to record information about PsyNeuLink components during their "life cycle" (i.e., as they are
-created, validated and executed).  Every component has a log object -- assigned to its :keyword:`log` attribute
-when the component is created -- that maintains a dictionary with entries for each attribute of the component that
+A Log object is used to record information about PsyNeuLink Components during their "life cycle" (i.e., as they are
+created, validated and executed).  Every Component has a log object -- assigned to its `log <Component.log>` attribute
+when the Component is created -- that maintains a dictionary with entries for each attribute of the Component that
 has been designated to be logged.  Information is added to the entries under specified conditions (e.g., when the
-component is initialized, validated, or executed), which can be designated by a `LogLevel` specification in the
+Component is initialized, validated, or executed), which can be designated by a `LogLevel` specification in the
 component's preferences.  Entries can also be made by the user programmatically. Each entry contains the time at
 which a value was assigned to the attribute, the context in which this occurred, and the value assigned.  This
 information can be displayed using the log's `print_entries` method.
@@ -26,9 +26,9 @@ information can be displayed using the log's `print_entries` method.
 Creating Logs and Entries
 -------------------------
 
-Whenever any PsyNeuLink component is created, a log object is also automatically created and assigned to the
-component's :keyword:`log` attribute.  Entries are made to the log based on the `LogLevel` specified in the
-`logPref` item of the component's :keyword:`prefs` attribute.
+Whenever any PsyNeuLink Component is created, a log object is also automatically created and assigned to the
+Component's `log <Component.log>` attribute.  Entries are made to the log based on the `LogLevel` specified in the
+`logPref` item of the component's `prefs <Component.prefs>` attribute.
 
 Adding an item to prefs.logPref will validate and add an entry for that attribute to the log dict
 
@@ -36,22 +36,21 @@ An attribute is logged if:
 
 * it is one `automatically included <LINK>` in logging;
 ..
-* it is included in the LOG_ENTRIES entry of a
-  `parameter specification dictionary <ParameterState_Specification>` (``params[LOG_ENTRIES]``) assigned to
-  the **params** argument of the constructor for the component;
+* it is included in the *LOG_ENTRIES* entry of a `parameter specification dictionary <ParameterState_Specification>`
+  assigned to the **params** argument of the constructor for the Component;
 ..
-* the context of the assignment is above the LogLevel specified in the logPref setting of the owner object
+* the context of the assignment is above the LogLevel specified in the logPref setting of the owner Component
 
 Entry values are added by the setter method for the attribute being logged.
 
-The following entries are automatically included in self.entries for a Mechanism object:
+The following entries are automatically included in self.entries for a `Mechanism` object:
     - the value attribute of every State for which the Mechanism is an owner
     [TBI: - value of every projection that sends to those States]
     - the system variables defined in SystemLogEntries (see declaration above)
     - any variables listed in the params[LOG_ENTRIES] of a Mechanism
 
 
-DEFAULT LogLevel FOR ALL COMPONENTS IS VALUE_ASSIGNMENT
+DEFAULT LogLevel FOR ALL COMPONENTS IS *VALUE_ASSIGNMENT*
 
 Structure
 ---------

@@ -1215,11 +1215,6 @@ class State_Base(State):
 
         variable = self._update_variable(super(State, self)._validate_variable(variable, context))
 
-        if not context:
-            context = kwAssign + ' Base Value'
-        else:
-            context = context + kwAssign + ' Base Value'
-
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):

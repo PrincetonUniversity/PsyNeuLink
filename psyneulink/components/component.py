@@ -348,7 +348,7 @@ import typecheck as tc
 
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, DEFERRED_DEFAULT_NAME, COMPONENT_INIT, \
-    CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, \
+    CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, LOG_ENTRIES, \
     INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, \
     PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, \
     SIZE, USER_PARAMS, VALUE, VARIABLE, MODULATORY_SPEC_KEYWORDS, kwComponentCategory
@@ -2066,7 +2066,7 @@ class Component(object):
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
             if not param_name in self.paramClassDefaults:
                 # these are always allowable since they are attribs of every Component
-                if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE}:  # added SIZE here (7/5/17, CW)
+                if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE, LOG_ENTRIES}:  # added SIZE here (7/5/17, CW)
                     continue
                 # function is a class, so function_params has not yet been implemented
                 if param_name is FUNCTION_PARAMS and inspect.isclass(self.function):
