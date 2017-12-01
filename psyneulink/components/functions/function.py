@@ -7079,14 +7079,13 @@ class BogaczEtAl(
 
 
 # Results from Navarro and Fuss DDM solution (indices for return value tuple)
-class NF_Results(AutoNumber):
-    RESULT = ()
-    MEAN_ER = ()
-    MEAN_DT = ()
-    PLACEMARKER = ()
-    MEAN_CORRECT_RT = ()
-    MEAN_CORRECT_VARIANCE = ()
-    MEAN_CORRECT_SKEW_RT = ()
+class NF_Results(IntEnum):
+    MEAN_ER = 0
+    MEAN_RT = 1
+    MEAN_DT = 2
+    COND_RTS = 3
+    COND_VAR_RTS = 4
+    COND_SKEW_RTS = 5
 
 # ----------------------------------------------------------------------------
 class NavarroAndFuss(IntegratorFunction):
@@ -7231,10 +7230,22 @@ class NavarroAndFuss(IntegratorFunction):
                          context=context)
 
     def _instantiate_function(self, context=None):
-        print("\nimporting matlab...")
-        import matlab.engine
-        self.eng1 = matlab.engine.start_matlab('-nojvm')
-        print("matlab imported\n")
+        import os
+        import sys
+        try:
+            import matlab.engine
+        except ImportError as e:
+            raise ImportError(
+                'python failed to import matlab. Ensure that MATLAB and the python API is installed. See'
+                ' https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html'
+                ' for more info'
+            )
+
+        ddm_functions_path = os.path.abspath(sys.modules['psyneulink'].__path__[0] + '/../Matlab/DDMFunctions')
+
+        # must add the package-included MATLAB files to the engine path to run when not running from the path
+        # MATLAB is very finnicky about the formatting here to actually add the path so be careful if you modify
+        self.eng1 = matlab.engine.start_matlab("-r 'addpath(char(\"{0}\"))' -nojvm".format(ddm_functions_path))
 
         super()._instantiate_function(context=context)
 
@@ -7274,11 +7285,14 @@ class NavarroAndFuss(IntegratorFunction):
         noise = float(self.noise)
         t0 = float(self.t0)
 
-        # print("\nimporting matlab...")
-        # import matlab.engine
-        # eng1 = matlab.engine.start_matlab('-nojvm')
-        # print("matlab imported\n")
-        results = self.eng1.ddmSim(drift_rate, starting_point, threshold, noise, t0, 1, nargout=5)
+        # used to pass values in a way that the matlab script can handle
+        ddm_struct = {
+            'z': threshold,
+            'c': noise,
+            'T0': t0
+        }
+
+        results = self.eng1.ddmSimFRG(drift_rate, starting_point, ddm_struct, 1, nargout=6)
 
         return results
 
@@ -7310,7 +7324,7 @@ class NormalDist(DistributionFunction):
         The mean or center of the normal distribution
 
     standard_dev : float : default 1.0
-        Standard deviation of the normal distribution
+        Standard deviation of the normal distribution. Must be > 0.0
 
     params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -7333,7 +7347,7 @@ class NormalDist(DistributionFunction):
         The mean or center of the normal distribution
 
     standard_dev : float : default 1.0
-        Standard deviation of the normal distribution
+        Standard deviation of the normal distribution. Must be > 0.0
 
     params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -7379,6 +7393,15 @@ class NormalDist(DistributionFunction):
                          context=context)
 
         self.functionOutputType = None
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if STANDARD_DEVIATION in target_set:
+            if target_set[STANDARD_DEVIATION] <= 0.0:
+                raise FunctionError("The standard_dev parameter ({}) of {} must be greater than zero.".
+                                            format(target_set[STANDARD_DEVIATION], self.name))
+
 
     def function(self,
                  variable=None,
