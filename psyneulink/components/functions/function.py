@@ -3537,8 +3537,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                     weight_matrix = np.matrix(param_value)
                     if 'U' in repr(weight_matrix.dtype):
-                        raise FunctionError("Non-numeric entry in MATRIX specification ({}) for the {} function of {}".
-                                            format(param_value), self.name, self.owner.name)
+                        raise FunctionError("Non-numeric entry in MATRIX "
+                                            "specification ({}) for the {} "
+                                            "function of {}".format(param_value,
+                                                                    self.name,
+                                                                    self.owner.name))
 
                     if weight_matrix.ndim != 2:
                         raise FunctionError("The matrix provided for the {} function of {} must be 2d (it is {}d".
