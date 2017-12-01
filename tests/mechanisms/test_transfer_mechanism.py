@@ -4,7 +4,7 @@ import pytest
 from psyneulink.components.component import ComponentError
 from psyneulink.components.functions.function import FunctionError
 from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, SoftMax
-from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist
+from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist, UniformToNormalDist
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -219,6 +219,18 @@ class TestDistributionFunctions:
         )
         val = T.execute([0, 0, 0, 0])
         assert np.allclose(val, [[0.4836021009022533, 1.5688961399691683, 0.7526741095365884, 0.8394328467388229]])
+
+    def test_transfer_mech_uniform_to_normal_noise(self):
+
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0, 0, 0, 0],
+            function=Linear(),
+            noise=UniformToNormalDist().function,
+            time_constant=1.0
+        )
+        val = T.execute([0, 0, 0, 0])
+        assert np.allclose(val, [[0.3834415188257777, 0.7917250380826646, 0.5288949197529045, 0.5680445610939323]])
 
     def test_transfer_mech_Uniform_noise(self):
 
