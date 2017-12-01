@@ -10,6 +10,62 @@ from psyneulink.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVI
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferError, RecurrentTransferMechanism
+from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
+class TestMatrixSpec:
+    def test_recurrent_mech_matrix(self):
+
+        T = TransferMechanism(default_variable=[[0.0, 0.0, 0.0]])
+        recurrent_mech = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
+                                                          matrix=[[1.0, 2.0, 3.0],
+                                                                  [2.0, 1.0, 2.0],
+                                                                  [3.0, 2.0, 1.0]])
+        p = Process(pathway=[T, recurrent_mech])
+
+        s = System(processes=[p])
+
+        results = []
+        def record_trial():
+            results.append(recurrent_mech.value)
+        s.run(inputs=[[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
+              call_after_trial=record_trial)
+
+    def test_recurrent_mech_auto_associative_projection(self):
+
+        T = TransferMechanism(default_variable=[[0.0, 0.0, 0.0]])
+        recurrent_mech = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
+                                                          matrix=AutoAssociativeProjection)
+        p = Process(pathway=[T, recurrent_mech])
+
+        s = System(processes=[p])
+
+        results = []
+        def record_trial():
+            results.append(recurrent_mech.value)
+        s.run(inputs=[[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
+              call_after_trial=record_trial)
+        print(results)
+
+    def test_recurrent_mech_auto_auto_hetero(self):
+
+        T = TransferMechanism(default_variable=[[0.0, 0.0, 0.0]])
+        recurrent_mech = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
+                                                    auto=3.0,
+                                                    hetero=-7.0)
+
+        print(recurrent_mech.recurrent_projection)
+        p = Process(pathway=[T, recurrent_mech])
+
+        s = System(processes=[p])
+
+        results = []
+        def record_trial():
+            results.append(recurrent_mech.value)
+        s.run(inputs=[[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
+              call_after_trial=record_trial)
+        print(results)
+
+
+
 
 class TestRecurrentTransferMechanismInputs:
 
