@@ -125,22 +125,26 @@ Examples for each, that illustrate all of their parameters, are shown below:
 
 `BogaczEtAl <BogaczEtAl>` Function::
 
-    >>> my_DDM_BogaczEtAl = pnl.DDM(function=pnl.BogaczEtAl(drift_rate=3.0,
-    ...                                                     starting_point=1.0,
-    ...                                                     threshold=30.0,
-    ...                                                      noise=1.5,
-    ...                                                      t0 = 2.0),
-    ...                             name='my_DDM_BogaczEtAl')
+    >>> my_DDM_BogaczEtAl = pnl.DDM(
+    ...     function=pnl.BogaczEtAl(
+    ...         drift_rate=0.08928,
+    ...         starting_point=0.5,
+    ...         threshold=0.2645,
+    ...         noise=0.5,
+    ...         t0=0.15
+    ...     ),
+    ...     name='my_DDM_BogaczEtAl'
+    ... )
 
 `NavarroAndFuss <NavarroAndFuss>` Function (requires MATLAB engine)::
 
     >>> my_DDM_NavarroAndFuss = pnl.DDM(
     ...     function=pnl.NavarroAndFuss(
-    ...         drift_rate=3.0,
-    ...         starting_point=1.0,
-    ...         threshold=30.0,
-    ...         noise=1.5,
-    ...         t0=2.0
+    ...         drift_rate=0.08928,
+    ...         starting_point=0.5,
+    ...         threshold=0.2645,
+    ...         noise=0.5,
+    ...         t0=0.15
     ...     ),
     ...     name='my_DDM_NavarroAndFuss'
     ... )                                   #doctest: +SKIP
@@ -157,11 +161,15 @@ mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <D
 
 `Integrator <Integrator>` Function::
 
-    >>> my_DDM_path_integrator = pnl.DDM(function=pnl.DriftDiffusionIntegrator(noise=0.5,
-    ...                                                                        initializer=1.0,
-    ...                                                                        t0=2.0,
-    ...                                                                        rate=3.0),
-    ...                                   name='my_DDM_path_integrator')
+    >>> my_DDM_path_integrator = pnl.DDM(
+    ...     function=pnl.DriftDiffusionIntegrator(
+    ...         noise=0.5,
+    ...         initializer=1.0,
+    ...         t0=2.0,
+    ...         rate=3.0
+    ...     ),
+    ...     name='my_DDM_path_integrator'
+    ... )
 
 COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
