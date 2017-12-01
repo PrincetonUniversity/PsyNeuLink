@@ -948,7 +948,10 @@ class Projection_Base(Projection):
         return {SENDER:sender,
                 RECEIVER:receiver}
 
-    def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
+    def _assign_default_name(self, **kwargs):
+        self._assign_default_projection_name(**kwargs)
+
+    def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
         raise ProjectionError("PROGRAM ERROR: {} must implement _assign_default_projection_name().".
                               format(self.__class__.__name__))
 

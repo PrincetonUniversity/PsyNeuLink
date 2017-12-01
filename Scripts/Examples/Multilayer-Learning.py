@@ -29,14 +29,14 @@ Output_Weights_matrix = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 3)
 # This projection will be used by the process below by referencing it in the process' pathway;
 #    note: sender and receiver args don't need to be specified
 Input_Weights = pnl.MappingProjection(
-    # name='Input Weights',
+    name='Input Weights',
     matrix=Input_Weights_matrix
 )
 
 # This projection will be used by the process below by assigning its sender and receiver args
 #    to mechanismss in the pathway
 Middle_Weights = pnl.MappingProjection(
-    name='Middle Weights',
+    # name='Middle Weights',
     sender=Hidden_Layer_1,
     receiver=Hidden_Layer_2,
     matrix=Middle_Weights_matrix
