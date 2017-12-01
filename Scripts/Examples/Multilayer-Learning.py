@@ -36,7 +36,7 @@ Input_Weights = pnl.MappingProjection(
 # This projection will be used by the process below by assigning its sender and receiver args
 #    to mechanismss in the pathway
 Middle_Weights = pnl.MappingProjection(
-    # name='Middle Weights',
+    name='Middle Weights',
     sender=Hidden_Layer_1,
     receiver=Hidden_Layer_2,
     matrix=Middle_Weights_matrix
