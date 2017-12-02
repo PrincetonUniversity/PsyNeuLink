@@ -103,10 +103,12 @@ mySystem = pnl.System(
     learning_rate=2.0
 )
 
+# TEST LOGGING
 Hidden_Layer_2.log_items='noise'
 Hidden_Layer_2.log_items='Middle Weights'
 Hidden_Layer_2.log_items # <- FIX: Empty
 Middle_Weights.logPref # FIX: <- Also set this to LogLevel.EXECUTION (in addition to its Matrix param?)
+# END TEST LOGGING
 
 mySystem.reportOutputPref = True
 # Shows graph will full information:
