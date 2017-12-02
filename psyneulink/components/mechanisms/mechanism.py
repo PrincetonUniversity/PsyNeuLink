@@ -2440,13 +2440,24 @@ class Mechanism_Base(Mechanism):
     @property
     def loggable_items(self):
         """List of names of all items that can be logged"""
-        return self.states.names
+        return self.states.names + self.afferents.names
 
     @property
     def log_items(self):
-        ll = 'LogLevel.'
+        log_level = 'LogLevel.'
+        # List version:
         # return list(zip(self.log.entries.keys(), [s.logPref for s in self.states]))
-        return {key: value for (key, value) in [(s, ll+self.states[s].logPref.name) for s in self.log.entries.keys()]}
+        # Dictionary version:
+        # Get logged State values
+        states = {key: value for (key, value) in
+                  [(s, log_level+self.states[s].logPref.name)
+                   for s in self.log.entries.keys() if s in self.states.names]}
+        # Get logged Projection values
+        projections = {key: value for (key, value) in
+                       [(p, log_level+self.projections[p].logPref.name)
+                        for p in self.log.entries.keys() if p in self.projections.names]}
+        states.update(projections)
+        return states
 
     # @tc.typecheck
     # def log_items(self, items:tc.any(str, tuple, list)):
@@ -2460,6 +2471,7 @@ class Mechanism_Base(Mechanism):
         Tuples must have 2 items, the first of which is the name of a State, and the second a `LogLevel`
         specification for that item.
         """
+        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection, MATRIX
         from psyneulink.globals.preferences.preferenceset import PreferenceEntry
         from psyneulink.globals.log import LogLevel
         from psyneulink.globals.keywords import ALL
@@ -2469,7 +2481,20 @@ class Mechanism_Base(Mechanism):
             return
 
         def assign_log_level(item, level):
-            self.states[item].logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
+            for item_type in [self.states, self.path_afferents, self.mod_afferents]:
+                try:
+                    if isinstance(item_type[item], MappingProjection):
+                        item_type[item].parameter_states[MATRIX].logPref=PreferenceEntry(level,
+                                                                                         PreferenceLevel.INSTANCE)
+                    else:
+                        item_type[item].logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
+                except TypeError as e:
+                    if 'not a key in' in e.args[0]:
+                        continue
+                else:
+                    return
+            raise MechanismError("\'{}\' is not a loggable item for {}".format(item, self.name))
+
 
         if not isinstance(items, list):
             items = [items]
@@ -2486,7 +2511,7 @@ class Mechanism_Base(Mechanism):
         projs = []
         for input_state in self.input_states:
             projs.extend(input_state.path_afferents)
-        return projs
+        return ContentAddressableList(component_type=Projection, list=projs)
 
     @property
     def mod_afferents(self):
@@ -2498,12 +2523,13 @@ class Mechanism_Base(Mechanism):
             projs.extend(parameter_state.mod_afferents)
         for output_state in self.input_states:
             projs.extend(output_state.mod_afferents)
-        return projs
+        return ContentAddressableList(component_type=Projection, list=projs)
 
     @property
     def afferents(self):
         """Return all afferent Projections"""
-        return self.path_afferents + self.mod_afferents
+        return ContentAddressableList(component_type=Projection,
+                                      list= list(self.path_afferents) + list(self.mod_afferents))
 
     @property
     def efferents(self):
@@ -2511,12 +2537,15 @@ class Mechanism_Base(Mechanism):
         projs = []
         for output_state in self.output_states:
             projs.extend(output_state.efferents)
-        return projs
+        return ContentAddressableList(component_type=Projection, list=projs)
 
     @property
     def projections(self):
         """Return all Projections"""
-        return self.path_afferents + self.mod_afferents + self.efferents
+        return ContentAddressableList(component_type=Projection,
+                                      list=list(self.path_afferents) +
+                                           list(self.mod_afferents) +
+                                           list(self.efferents))
 
 
 def _is_mechanism_spec(spec):

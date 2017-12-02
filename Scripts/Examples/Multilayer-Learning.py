@@ -103,6 +103,11 @@ mySystem = pnl.System(
     learning_rate=2.0
 )
 
+Hidden_Layer_2.log_items='noise'
+Hidden_Layer_2.log_items='Middle Weights'
+Hidden_Layer_2.log_items # <- FIX: Empty
+Middle_Weights.logPref # FIX: <- Also set this to LogLevel.EXECUTION (in addition to its Matrix param?)
+
 mySystem.reportOutputPref = True
 # Shows graph will full information:
 mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL)
@@ -121,3 +126,4 @@ mySystem.run(
     termination_processing={pnl.TimeScale.TRIAL: pnl.AfterNCalls(Output_Layer, 1)}
 )
 
+assert True
