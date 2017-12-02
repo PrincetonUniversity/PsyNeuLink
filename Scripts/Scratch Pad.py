@@ -2221,8 +2221,6 @@ T2 = pnl.TransferMechanism(size=4, input_states=[T])
 T.log_items='noise'
 T.log_items='RESULTS'
 
-# for state in T.states:
-#     state.logPref=pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)
 T.execute()
 T.execute()
 assert True
