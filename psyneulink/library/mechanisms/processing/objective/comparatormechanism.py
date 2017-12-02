@@ -460,7 +460,8 @@ class ComparatorMechanism(ObjectiveMechanism):
         #    - validate that there are exactly two items in default_variable or input_states list
         #    - if there is an input_states list, parse it and use it to update sample and target dicts
         if input_states:
-            input_states[INPUT_STATES]
+            input_states = input_states[INPUT_STATES]
+            # print("type input_states = {}".format(type(input_states)))
             if not isinstance(input_states, list):
                 raise ComparatorMechanismError("If an \'{}\' argument is included in the constructor for a {} "
                                                "it must be a list with two {} specifications.".

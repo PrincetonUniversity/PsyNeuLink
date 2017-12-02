@@ -798,22 +798,26 @@ class InputState(State_Base):
 
         # Insure that function is Function.LinearCombination
         if not isinstance(self.function.__self__, (LinearCombination, Linear)):
-            raise StateError("{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".
-                                      format(FUNCTION,
-                                             self.name,
-                                             self.owner.name,
-                                             self.function.__self__.componentName, ))
+            raise StateError(
+                "{0} of {1} for {2} is {3}; it must be of LinearCombination "
+                "or Linear type".
+                format(FUNCTION,
+                       self.name,
+                       self.owner.name,
+                       self.function.__self__.componentName))
 
         # Insure that self.value is compatible with self.reference_value
-        if self.reference_value is not None and not iscompatible(self.value, self.reference_value):
-            raise InputStateError("Value ({}) of {} {} for {} is not compatible with specified {} ({})".
-                                           format(self.value,
-                                                  self.componentName,
-                                                  self.name,
-                                                  self.owner.name,
-                                                  REFERENCE_VALUE,
-                                                  self.reference_value))
-                                                  # self.owner.variable))
+        if self.reference_value is not None and not iscompatible(self.value,
+                                                                 self.reference_value):
+            raise InputStateError("Value ({}) of {} {} for {} is not "
+                                  "compatible with specified {} ({})".
+                                  format(self.value,
+                                         self.componentName,
+                                         self.name,
+                                         self.owner.name,
+                                         REFERENCE_VALUE,
+                                         self.reference_value))
+                                         # self.owner.variable))
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor

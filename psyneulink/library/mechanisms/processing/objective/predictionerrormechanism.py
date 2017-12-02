@@ -141,13 +141,13 @@ class PredictionErrorMechanism(ComparatorMechanism):
         # FIXME: correct the value size
         # -- call function with sample[0:t-1], sample[1:t]
         # -- add reward to returned value
-        sample_prev_t = self.gamma * sample[0:len(sample) - 1]
+        sample_prev_t = sample[0:len(sample) - 1]
         sample_next_t = sample[1:len(sample)]
 
         new_sample = self.function(variable=[sample_prev_t, sample_next_t])
 
         for t in range(0, len(sample) - 1):
-            delta[t] = reward[t + 1] + new_sample[t]
+            delta[t] = reward[t + 1] + self.gamma * new_sample[t]
 
         # for t in range(0, len(sample) - 1):
         #     delta[t] = reward[t + 1] + self.function(sample[t + 1],

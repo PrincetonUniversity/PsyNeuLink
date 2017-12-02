@@ -533,11 +533,12 @@ def _instantiate_learning_components(learning_projection, context=None):
                         sample={NAME: SAMPLE,
                                 VARIABLE: sample_input,
                                 PROJECTIONS: [lc.activation_mech_output]},
+                                # FUNCTION: LinearMatrix(matrix=HOLLOW_MATRIX)},
                         target={NAME: TARGET,
                                 VARIABLE: target_input},
-                        function=LinearCombination(
-                            default_variable=np.zeros((2, len(sample_input))),
-                            weights=[[-1], [1]]),
+                        # function=LinearCombination(
+                        #     default_variable=np.zeros((2, len(sample_input))),
+                        #     weights=[[-1], [1]]),
                         name="{} {}".format(lc.activation_mech.name,
                                             PREDICTION_ERROR_MECHANISM),
                         context=context)

@@ -3,7 +3,7 @@ import numpy as np
 import seaborn
 
 from psyneulink import LearningProjection, Process, SAMPLE, System, \
-    TransferMechanism, PROB
+    TransferMechanism, PROB, MappingProjection, HOLLOW_MATRIX, IDENTITY_MATRIX
 from psyneulink.components.functions.function import TDLearning, SoftMax
 from psyneulink.scheduling.timescale import CentralClock
 
@@ -20,19 +20,24 @@ def test_td_learning(capsys):
                 name='Action Selection',
         )
 
-        # samples = [[0]] * 60
         samples = np.zeros(60)
-        # samples[41] = [1]
         samples[42:60] = 1
+        samples = np.tile(samples, (60, 1))
 
         targets = np.zeros(60)
         targets[54] = 1
-        # targets[14][54] = 0
-        # targets[29][54] = 0
+        targets = np.tile(targets, (60, 1))
+        # no reward given every 15 trials to simulate a wrong response
+        targets[14][54] = 0
+        targets[29][54] = 0
+
+        projection = MappingProjection(sender=sample,
+                                       receiver=action_selection,
+                                       matrix=IDENTITY_MATRIX)
 
         p = Process(
                 default_variable=np.zeros(60),
-                pathway=[sample, action_selection],
+                pathway=[sample, projection, action_selection],
                 learning=LearningProjection(
                         learning_function=TDLearning(learning_rate=0.3),
                 ),
@@ -64,17 +69,16 @@ def test_td_learning(capsys):
         }
 
         target_list = {
-            action_selection: [targets]
+            action_selection: targets
         }
 
-        s = System(processes=[p], targets=np.zeros(60))
+        s = System(processes=[p])
         # s.show_graph(show_learning=True)
 
         print(s.mechanisms)
 
         delta_vals = np.zeros((60, 60))
 
-        # for i in range(50):
         results = s.run(
                 num_trials=60,
                 inputs=input_list,
