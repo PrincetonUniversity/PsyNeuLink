@@ -2214,8 +2214,7 @@ class ScratchPadError(Exception):
 print ("TEST Log")
 
 T = pnl.TransferMechanism(
-    params={pnl.LOG_ENTRIES:'variable'},
-    prefs={pnl.LOG_PREF:pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
+    # prefs={pnl.LOG_PREF:pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
 )
 # T.parameter_states['slope'].logPref=pnl.PreferenceEntry(pnl.LogLevel.EXECUTION, pnl.PreferenceLevel.INSTANCE)
 T.log_items='noise'

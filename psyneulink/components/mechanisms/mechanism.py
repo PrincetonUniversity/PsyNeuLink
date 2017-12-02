@@ -2444,8 +2444,9 @@ class Mechanism_Base(Mechanism):
 
     @property
     def log_items(self):
+        ll = 'LogLevel.'
         # return list(zip(self.log.entries.keys(), [s.logPref for s in self.states]))
-        return {key: value for (key, value) in zip(self.log.entries.keys(), [s.logPref for s in self.states])}
+        return {key: value for (key, value) in [(s, ll+self.states[s].logPref.name) for s in self.log.entries.keys()]}
 
     # @tc.typecheck
     # def log_items(self, items:tc.any(str, tuple, list)):
@@ -2461,6 +2462,11 @@ class Mechanism_Base(Mechanism):
         """
         from psyneulink.globals.preferences.preferenceset import PreferenceEntry
         from psyneulink.globals.log import LogLevel
+        from psyneulink.globals.keywords import ALL
+
+        if items is ALL:
+            self.logPref = PreferenceEntry(LogLevel.EXECUTION, PreferenceLevel.INSTANCE)
+            return
 
         def assign_log_level(item, level):
             self.states[item].logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
@@ -2474,33 +2480,42 @@ class Mechanism_Base(Mechanism):
             else:
                 assign_log_level(item[0], item[1])
 
-
     @property
     def path_afferents(self):
         """Return list of path_afferent Projections to all of the Mechanism's input_states"""
         projs = []
         for input_state in self.input_states:
-            projs.append(input_state.path_afferents)
+            projs.extend(input_state.path_afferents)
         return projs
 
     @property
     def mod_afferents(self):
-        """Return list of all of the Mechanism's Projections"""
+        """Return all of the Mechanism's afferent modulatory Projections"""
         projs = []
         for input_state in self.input_states:
-            projs.append(input_state.mod_afferents)
+            projs.extend(input_state.mod_afferents)
+        for parameter_state in self.parameter_states:
+            projs.extend(parameter_state.mod_afferents)
+        for output_state in self.input_states:
+            projs.extend(output_state.mod_afferents)
         return projs
+
+    @property
+    def afferents(self):
+        """Return all afferent Projections"""
+        return self.path_afferents + self.mod_afferents
 
     @property
     def efferents(self):
         """Return list of all of the Mechanism's Projections"""
         projs = []
         for output_state in self.output_states:
-            projs.append(output_state.efferents)
+            projs.extend(output_state.efferents)
         return projs
 
     @property
     def projections(self):
+        """Return all Projections"""
         return self.path_afferents + self.mod_afferents + self.efferents
 
 
