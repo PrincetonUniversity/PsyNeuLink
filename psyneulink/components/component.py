@@ -351,7 +351,7 @@ from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, D
     CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, \
     INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, \
     PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, \
-    SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+    SIZE, USER_PARAMS, VALUE, VARIABLE, MODULATORY_SPEC_KEYWORDS, kwComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
@@ -1095,14 +1095,15 @@ class Component(object):
             except KeyError:
                 pass
 
-            # If name is None, mark as deferred so that name can be customized
-            #    using info that has become available at time of deferred init
-            self.init_args[NAME] = (self.init_args[NAME] or
-                                      (DEFERRED_INITIALIZATION + ' ' + self.className) or
-                                    DEFERRED_DEFAULT_NAME)
-
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
+
+            # If name was assigned, "[DEFERRED INITIALIZATION]" was appended to it, so remove it
+            if DEFERRED_INITIALIZATION in self.name:
+                self.name = self.name.replace("["+DEFERRED_INITIALIZATION+"]","")
+            # Otherwise, allow class to replace std default name with class-specific one if it has a method for doing so
+            else:
+                self._assign_default_name()
 
             self.init_status = InitStatus.INITIALIZED
 
@@ -1117,6 +1118,9 @@ class Component(object):
                           name=name,
                           registry=DeferredInitRegistry,
                           context=context)
+
+    def _assign_default_name(self, **kwargs):
+        return
 
     def _assign_args_to_param_dicts(self, **kwargs):
         """Assign args passed in __init__() to params
@@ -1220,8 +1224,11 @@ class Component(object):
                                              format(arg, self.__class__.__name__))
                     self.paramClassDefaults[arg] = default_arg
 
-            # param corresponding to arg IS already in paramClassDefaults, so ignore
+            # param corresponding to arg IS already in paramClassDefaults
             else:
+                # param has a value but paramClassDefaults is None, so assign param's value to paramClassDefaults
+                if self.paramClassDefaults[arg] is None and arg in defaults_dict and defaults_dict[arg] is not None:
+                    self.paramClassDefaults[arg] = defaults_dict[arg]
                 continue
 
         # ASSIGN ARG VALUES TO params dicts
@@ -1761,7 +1768,6 @@ class Component(object):
             #    so that latter are evaluated in context of former
             for param_name, param_value in sorted(default_set.items()):
 
-                # MODIFIED 11/30/16 NEW:
                 # FUNCTION class has changed, so replace rather than update FUNCTION_PARAMS
                 if param_name is FUNCTION:
                     try:
@@ -1774,48 +1780,51 @@ class Component(object):
                     except UnboundLocalError:
                         pass
                 # FIX: MAY NEED TO ALSO ALLOW assign_default_FUNCTION_PARAMS FOR COMMAND_LINE IN CONTEXT
-                # MODIFIED 11/30/16 END
 
                 if param_name is FUNCTION_PARAMS and not self.assign_default_FUNCTION_PARAMS:
                     continue
 
-                # MODIFIED 11/29/16 NEW:
                 # Don't replace requested entry with default
                 if param_name in request_set:
                     continue
-                # MODIFIED 11/29/16 END
 
                 # Add to request_set any entries it is missing fron the default_set
                 request_set.setdefault(param_name, param_value)
                 # Update any values in a dict
                 if isinstance(param_value, dict):
                     for dict_entry_name, dict_entry_value in param_value.items():
-                        # MODIFIED 11/29/16 NEW:
                         # Don't replace requested entries
                         if dict_entry_name in request_set[param_name]:
                             continue
-                        # MODIFIED 11/29/16 END
                         request_set[param_name].setdefault(dict_entry_name, dict_entry_value)
 
         # VALIDATE PARAMS
 
         # if request_set has been passed or created then validate and, if OK, assign params to target_set
         if request_set:
-            # For params that are a 2-item tuple, extract the value
-            #    both for validation and assignment (tuples are left intact in user_params_for_instantiation dict
-            #    which is used it instantiate the specified Components in the 2nd item of the tuple)
+            # For params that are a 2-item tuple, extract the value; and get value of single item modulatory specs
+            # Do this both for validation and assignment;
+            #   tuples and modulatory specs are left intact in user_params_for_instantiation dict
+            #   which are used to instantiate the specified Components
             # IMPLEMENTATION NOTE:  Do this here rather than in _validate_params, as it needs to be done before
             #                       any override of _validate_params, which (should not, but) may process params
             #                       before calling super()._validate_params
             for param_name, param_value in request_set.items():
                 if isinstance(param_value, tuple):
                     param_value = self._get_param_value_from_tuple(param_value)
-                    request_set[param_name] = param_value
+                elif isinstance(param_value, (str, Component, type)):
+                    old_param_value = request_set[param_name]
+                    param_value = self._get_param_value_for_modulatory_spec(param_name, param_value)
+                else:
+                    continue
+                request_set[param_name] = param_value
+
             try:
                 self._validate_params(variable=variable,
                                       request_set=request_set,
                                       target_set=target_set,
                                       context=context)
+            # variable not implemented by Mechanism subclass, so validate without it
             except TypeError:
                 self._validate_params(request_set=request_set,
                                       target_set=target_set,
@@ -1868,11 +1877,7 @@ class Component(object):
 
         self._instantiate_defaults(request_set=request_set,
                                    target_set=validated_set,
-                                   # # MODIFIED 4/14/17 OLD:
-                                   # assign_missing=False,
-                                   # MODIFIED 4/14/17 NEW:
-                                   assign_missing=False,
-                                   # MODIFIED 4/14/17 END
+                                    assign_missing=False,
                                    context=context)
 
         self.paramInstanceDefaults.update(validated_set)
@@ -2067,7 +2072,6 @@ class Component(object):
                 raise ComponentError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
 
             # The value of the param is None in paramClassDefaults: suppress type checking
-            # DOCUMENT:
             # IMPLEMENTATION NOTE: this can be used for params with multiple possible types,
             #                      until type lists are implemented (see below)
             if self.paramClassDefaults[param_name] is None or self.paramClassDefaults[param_name] is NotImplemented:
@@ -2081,18 +2085,14 @@ class Component(object):
             # If the value in paramClassDefault is a type, check if param value is an instance of it
             if inspect.isclass(self.paramClassDefaults[param_name]):
                 if isinstance(param_value, self.paramClassDefaults[param_name]):
-                    # MODIFIED 2/14/17 NEW:
                     target_set[param_name] = param_value
-                    # MODIFIED 2/14/17 END
                     continue
                 # If the value is a Function class, allow any instance of Function class
                 from psyneulink.components.functions.function import Function_Base
                 if issubclass(self.paramClassDefaults[param_name], Function_Base):
                     # if isinstance(param_value, (function_type, Function_Base)):  <- would allow function of any kind
                     if isinstance(param_value, Function_Base):
-                        # MODIFIED 2/14/17 NEW:
                         target_set[param_name] = param_value
-                        # MODIFIED 2/14/17 END
                         continue
 
             # If the value in paramClassDefault is an object, check if param value is the corresponding class
@@ -2228,25 +2228,46 @@ class Component(object):
                 raise ComponentError("Value of {} param for {} ({}) is not compatible with {}".
                                     format(param_name, self.name, param_value, type_name))
 
+    def _get_param_value_for_modulatory_spec(self, param_name, param_value):
+        from psyneulink.globals.keywords import MODULATORY_SPEC_KEYWORDS
+        if isinstance(param_value, str):
+            param_spec = param_value
+        elif isinstance(param_value, Component):
+            param_spec = param_value.__class__.__name__
+        elif isinstance(param_value, type):
+            param_spec = param_value.__name__
+        else:
+            raise ComponentError("PROGRAM ERROR: got {} instead of string, Component, or Class".format(param_value))
+
+        if not param_spec in MODULATORY_SPEC_KEYWORDS:
+            return(param_value)
+
+        try:
+            param_default_value = self.paramClassDefaults[param_name]
+            # Only assign default value if it is not None
+            if param_default_value is not None:
+                return param_default_value
+            else:
+                return param_value
+        except:
+            raise ComponentError("PROGRAM ERROR: Could not get default value for {} of {} (to replace spec as {})".
+                                 format(param_name, self.name, param_value))
+
     def _get_param_value_from_tuple(self, param_spec):
-        """Returns param value (first item) of a (value, projection) tuple
+        """Returns param value (first item) of a (value, projection) tuple;
         """
+        from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-        ALLOWABLE_TUPLE_SPEC_KEYWORDS = {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING}
-        ALLOWABLE_TUPLE_SPEC_CLASSES = (ModulatoryProjection_Base, ModulatorySignal)
+
+        ALLOWABLE_TUPLE_SPEC_KEYWORDS = MODULATORY_SPEC_KEYWORDS
+        ALLOWABLE_TUPLE_SPEC_CLASSES = (ModulatoryProjection_Base, ModulatorySignal, AdaptiveMechanism_Base)
 
         # If the 2nd item is a CONTROL or LEARNING SPEC, return the first item as the value
         if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
-                # # MODIFIED 6/19/17 OLD:
-                # (param_spec[1] in {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING} or
-                #      isinstance(param_spec[1], Projection) or
-                #      (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
-                # MODIFIED 6/19/17 NEW:
                 (param_spec[1] in ALLOWABLE_TUPLE_SPEC_KEYWORDS or
                      isinstance(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES) or
                          (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES)))
-                # MODIFIED 6/19/17 END
             ):
             value =  param_spec[0]
 

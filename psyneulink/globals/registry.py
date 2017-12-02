@@ -215,7 +215,7 @@ def register_instance(entry, name, base_class, registry, sub_dict):
     renamed_instance_counts = registry[sub_dict].renamed_instance_counts
 
     # If entry (instance) name is None, set entry's name to sub_dict-n where n is the next available numeric suffix
-    # starting at 0)based on the number of unnamed/renamed sub_dict objects that have already been assigned namesGG
+    # (starting at 0) based on the number of unnamed/renamed sub_dict objects that have already been assigned names
     if not name:
         entry.name = '{0}-{1}'.format(sub_dict, renamed_instance_counts[sub_dict])
         renamed_instance_counts[sub_dict] += 1

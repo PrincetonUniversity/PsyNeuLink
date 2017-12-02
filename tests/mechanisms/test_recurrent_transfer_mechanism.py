@@ -10,35 +10,62 @@ from psyneulink.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVI
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferError, RecurrentTransferMechanism
-from psyneulink.library.mechanisms.processing.transfer.lca import LCA
+from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
+class TestMatrixSpec:
+    def test_recurrent_mech_matrix(self):
 
-class TestLCA:
-    def test_lca(self):
-        L = LCA(
-            size=3,
-            integrator_mode=True,
-            function=Linear(slope=2.0),
-            beta=0.75
-        )
-        p=Process(pathway=[L])
-        s=System(processes=[p])
-        def after_trial():
-            print()
-            print("- - - - - - - - - - - Trial - - - - - - - - - - - - -")
-            print("variable: ")
-            print(L.variable)
-            print()
-            print("integrator output: ")
-            print(L.integrator_function.previous_value)
-            print()
-            print("value: ")
-            print(L.value)
-            print()
-            print("- - - - - - - - - - - - - - - - - - - - - - - - - - -")
-            print()
-            print()
+        T = TransferMechanism(default_variable=[[0.0, 0.0, 0.0]])
+        recurrent_mech = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
+                                                          matrix=[[1.0, 2.0, 3.0],
+                                                                  [2.0, 1.0, 2.0],
+                                                                  [3.0, 2.0, 1.0]])
+        p = Process(pathway=[T, recurrent_mech])
 
-        s.run(inputs={L: [[1.0, 2.0, 3.0]]}, num_trials=5, call_after_trial=after_trial)
+        s = System(processes=[p])
+
+        results = []
+        def record_trial():
+            results.append(recurrent_mech.value)
+        s.run(inputs=[[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
+              call_after_trial=record_trial)
+
+    def test_recurrent_mech_auto_associative_projection(self):
+
+        T = TransferMechanism(default_variable=[[0.0, 0.0, 0.0]])
+        recurrent_mech = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
+                                                          matrix=AutoAssociativeProjection)
+        p = Process(pathway=[T, recurrent_mech])
+
+        s = System(processes=[p])
+
+        results = []
+        def record_trial():
+            results.append(recurrent_mech.value)
+        s.run(inputs=[[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
+              call_after_trial=record_trial)
+        print(results)
+
+    def test_recurrent_mech_auto_auto_hetero(self):
+
+        T = TransferMechanism(default_variable=[[0.0, 0.0, 0.0]])
+        recurrent_mech = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
+                                                    auto=3.0,
+                                                    hetero=-7.0)
+
+        print(recurrent_mech.recurrent_projection)
+        p = Process(pathway=[T, recurrent_mech])
+
+        s = System(processes=[p])
+
+        results = []
+        def record_trial():
+            results.append(recurrent_mech.value)
+        s.run(inputs=[[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
+              call_after_trial=record_trial)
+        print(results)
+
+
+
 
 class TestRecurrentTransferMechanismInputs:
 
@@ -400,14 +427,14 @@ class TestRecurrentTransferMechanismFunction:
         R = RecurrentTransferMechanism(
             name='R',
             size=10,
-            function=Logistic(gain=2, bias=1)
+            function=Logistic(gain=2, offset=1)
         )
         val = R.execute(np.ones(10))
         np.testing.assert_allclose(val, [np.full(10, 0.7310585786300049)])
 
     def test_recurrent_mech_function_psyneulink(self):
 
-        a = Logistic(gain=2, bias=1)
+        a = Logistic(gain=2, offset=1)
 
         R = RecurrentTransferMechanism(
             name='R',

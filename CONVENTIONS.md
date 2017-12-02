@@ -1,6 +1,62 @@
 
-# PsyNeuLink Coding and Documentation Conventions
+# PsyNeuLink Organization, Coding, and Documentation Conventions
 
+## REPOSITORY ORGANIZATION:
+
+### Core:
+Made up of two types of classes:
+- *abstract base classes* (italicized) - cannot be instantiated.
+- **core classes** (bold) - most basic (abstract) level of objects that can be instantiated. 
+
+#### Components
+"Building blocks"
+- *Mechanism*
+    - *ProcessingMechanism*
+        - **TransferMechanism**
+        - **IntegratorMechanism**
+        - **ObjectiveMechanism**
+    - *AdaptiveMechanism*
+        - **LearningMechanism**
+        - **ControlMechanism**
+        - **GatingMechanism**
+- *Projection*
+    - *PathwayProjection*
+        - **MappingProjection**
+    - *ModulatoryProjection*
+        - **LearningProjection**
+        - **ControlProjection**
+        - **GatingProjection**
+- *State*
+    - **InputState**
+    - **ParameterState**
+    - **OutputState**
+    - *ModulatorySignal*
+        - **LearningSignal**
+        - **ControlSignal**
+        - **GatingSignal**
+- *Function*
+    - *TransferFunction*
+    - *CombinationFunction*
+    - *IntegratorFunction*
+    - *DistributionFunction*
+    - *LearningFunction*
+        
+#### Composisitons
+Objects that compose building blocks and control their execution.
+- *Composition*
+    - **System**
+    - **Process**
+
+#### Scheduler
+Objects used by Compositions to control the execution of Components and Compositions.
+- **Scheduler**
+- **Condition** 
+
+### Library
+Extensions of Core objects
+- *Components:* classes derived from Core objects
+- *Compositions:*  models
+- *Models:*  published, implemented models
 
 ### NAMING:
 
@@ -14,17 +70,10 @@
 #### Format:
 - class names:
     fully capitalized camelCase [ClassName]
-DEPRECATED:
-    - externally available attributes that do not correspond to an argument of a constructor:
-        camelCase without initial capitalization [externalAttribute]
-    all attributes should now use underscore format: [all_attributes]
-- arguments of constructors and methods, and any attributes corresponding to them (must be same name):
-    lowercase and underscore separator(s) [constructor_arg, method_arg, object_attribute]
-- externally available methods and functions:
-    lowercase and underscore separator(s) (enforced by PEP8) [external_method, any_function]
-- internal attributes, methods and functions:
-    initial undercore, lowercase, and underscore separatos(s) [_internal_method, _internal_attribute]
-- externally accessible keywords:
+- classAttributes: camelCase without initial capitalization
+- arguments_of_constructors, instance_attributes and instance_methods:
+      lowercase and underscore separator(s) [constructor_arg, method_arg, object_attribute]
+- keywords:
     all capitals and underscore separator(s) [KEY_WORD]
 DEPRECATED:
     - internal keywords:

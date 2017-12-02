@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from psyneulink.components.component import ComponentError
+from psyneulink.components.functions.function import FunctionError
 from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, SoftMax
 from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist
 from psyneulink.components.mechanisms.mechanism import MechanismError
@@ -192,6 +193,20 @@ class TestDistributionFunctions:
         )
         val = T.execute([0, 0, 0, 0])
         assert np.allclose(val, [[0.41059850193837233, 0.144043571160878, 1.454273506962975, 0.7610377251469934]])
+
+    def test_transfer_mech_normal_noise_standard_dev_error(self):
+        with pytest.raises(FunctionError) as error_text:
+            standard_deviation = -2.0
+            T = TransferMechanism(
+                name="T",
+                default_variable=[0, 0, 0, 0],
+                function=Linear(),
+                noise=NormalDist(standard_dev=standard_deviation).function,
+                time_constant=1.0,
+                integrator_mode=True
+            )
+
+        assert "The standard_dev parameter" in str(error_text) and "must be greater than zero" in str(error_text)
 
     def test_transfer_mech_exponential_noise(self):
 

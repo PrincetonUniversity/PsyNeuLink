@@ -30,7 +30,7 @@ Creating a ControlSignal
 A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function is `specified for
 control <ControlMechanism_Control_Signals>`.  ControlSignals can also be specified in the **control_signals** argument
 of the constructor for a `ControlMechanism <ControlMechanism>`.  Although a ControlSignal can be created directly
-using its constructor (or any of the other ways for `creating an outputState <OutputStates_Creation>`), this is usually
+using its constructor (or any of the other ways for `creating an OutputState <OutputStates_Creation>`), this is usually
 not necessary nor is it advisable, as a ControlSignal has dedicated components and requirements for configuration
 that must be met for it to function properly.
 
@@ -42,24 +42,30 @@ Specifying ControlSignals
 When a ControlSignal is specified in the **control_signals** argument of the constructor for a `ControlMechanism
 <ControlMechanism>`, the parameter to be controlled must be specified.  This can take any of the following forms:
 
-  * a **ParameterState** of the Mechanism to which the parameter belongs;
+  * **ParameterState** -- of the Mechanism to which the parameter belongs;
   ..
-  * a **tuple**, with the name of the parameter as its 1st item and the *Mechanism* to which it belongs as the 2nd;
-    note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
-    but precludes specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
+  * **specification dictionary** -- can take either of the following two forms:
+
+    * for controlling a single parameter, the dictionary can have the following two entries:
+
+        * *NAME*: str
+            the string must be the name of the parameter to be gated;
+
+        * *MECHANISM*: Mechanism
+            the Mechanism must be the one to the which the parameter to be controlled belongs.
+
+    * for controlling multiple parameters, the dictionary can have the following entry:
+
+        * <str>:list
+            the string used as the key specifies the name to be used for the ControlSignal,
+            and each item of the list must be a `specification of a parameter <ParameterState_Specification>` to be
+            controlled by the ControlSignal (and that will receive a `ControlProjection` from it).
   ..
-  * a **specification dictionary**, that must contain at least the following two entries:
-
-    * *NAME*: str
-        a string that is the name of the parameter to be controlled;
-
-    * *MECHANISM*: Mechanism
-        the Mechanism must be the one to the which the parameter belongs.
-        (note: the Mechanism itself should be specified even if the parameter belongs to its function).
-
-    The dictionary can also contain entries for any other ControlSignal attributes to be specified
-    (e.g., a *MODULATION* and/or *ALLOCATION_SAMPLES* entry); see `below <ControlSignal_Structure>` for a
-    description of ControlSignal attributes.
+  * **2-item tuple** -- the 1st time must be the name of the parameter (or list of parameter names), and the 2nd item
+    the Mechanism to which it (they) belong(s); this is a convenience format, which is simpler to use than a
+    specification dictionary (see below), but precludes specification of any `parameters <ControlSignal_Structure>`
+    for the ControlSignal.
+  ..
 
 .. _ControlSignal_Structure:
 
@@ -204,7 +210,8 @@ Examples
 *Modulate the parameter of a Mechanism's function*.  The following example assigns a
 ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function used by a `TransferMechanism`::
 
-    My_Mech = TransferMechanism(function=Logistic(bias=(1.0, ControlSignal)))
+    >>> import psyneulink as pnl
+    >>> my_mech = pnl.TransferMechanism(function=pnl.Logistic(bias=(1.0, pnl.ControlSignal)))
 
 Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
 with a ControlProjection that projects to the TransferMechanism's `ParameterState` for the `bias <Logistic.bias>`
@@ -218,7 +225,8 @@ In the example below, this is changed by specifying the `modulation <ControlSign
 ControlSignal adds to, rather than multiplies, the value of the `gain <Logistic.gain>` parameter of the Logistic
 function::
 
-    My_Mech = TransferMechanism(function=Logistic(gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
+    >>> my_mech = pnl.TransferMechanism(function=pnl.Logistic(gain=(1.0,
+    ...                                                             pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))))
 
 Note that the `ModulationParam` specified for the `ControlSignal` pertains to the function of a *ParameterState*
 for the *Logistic* Function (in this case, its `gain <Logistic.gain>` parameter), and *not* the Logistic function
@@ -254,20 +262,21 @@ COMMENT
 the `gain <Logistic.gain>` parameter of the `Logistic` function for ``My_Mech_A`` and the `intercept
 <Logistic.intercept>` parameter of the `Linear` function for ``My_Mech_B``::
 
-    My_Mech_A = TransferMechanism(function=Logistic)
-    My_Mech_B = TransferMechanism(function=Linear,
-                                 output_states=[RESULT, MEAN])
-    Process_A = Process(pathway=[My_Mech_A])
-    Process_B = Process(pathway=[My_Mech_B])
+    >>> my_mech_a = pnl.TransferMechanism(function=pnl.Logistic)
+    >>> my_mech_b = pnl.TransferMechanism(function=pnl.Linear,
+    ...                                   output_states=[pnl.RESULT, pnl.MEAN])
 
-    My_System = System(processes=[Process_A, Process_B],
-                                    monitor_for_control=[My_Mech_A.output_states[RESULT],
-                                                         My_Mech_B.output_states[MEAN]],
-                                    control_signals=[(GAIN, My_Mech_A),
-                                                     {NAME: INTERCEPT,
-                                                      MECHANISM: My_Mech_B,
-                                                      MODULATION: ModulationParam.ADDITIVE}],
-                       name='My Test System')
+    >>> process_a = pnl.Process(pathway=[my_mech_a])
+    >>> process_b = pnl.Process(pathway=[my_mech_b])
+
+    >>> my_system = pnl.System(processes=[process_a, process_b],
+    ...                        monitor_for_control=[my_mech_a.output_states[pnl.RESULTS],
+    ...                                             my_mech_b.output_states[pnl.MEAN]],
+    ...                        control_signals=[(pnl.GAIN, my_mech_a),
+    ...                                         {pnl.NAME: pnl.INTERCEPT,
+    ...                                          pnl.MECHANISM: my_mech_b,
+    ...                                          pnl.MODULATION: pnl.ModulationParam.ADDITIVE}],
+    ...                        name='My Test System')
 
 
 Class Reference
@@ -996,12 +1005,12 @@ class ControlSignal(ModulatorySignal):
                                                                             float(self.cost))
     #endregion
 
-    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
+    def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
 
         Tuple specification can be:
-            (parameter_name, Mechanism)
-            [TBI:] (parameter_name, Mechanism, weight, exponent, projection_specs)
+            (parameter name, Mechanism)
+            [TBI:] (Mechanism, parameter name, weight, exponent, projection_specs)
 
         Returns params dict with CONNECTIONS entries if any of these was specified.
 
@@ -1012,57 +1021,71 @@ class ControlSignal(ModulatorySignal):
         from psyneulink.globals.keywords import PROJECTIONS
 
         params_dict = {}
+        state_spec = state_specific_spec
 
-        if isinstance(state_specific_params, dict):
-            return state_specific_params
+        if isinstance(state_specific_spec, dict):
+            return None, state_specific_spec
 
-        elif isinstance(state_specific_params, tuple):
+        elif isinstance(state_specific_spec, tuple):
 
-            try:
-                param_name, mech = state_specific_params
-            except:
-                raise ControlSignalError("Illegal {} specification tuple for {} ({});  "
-                                         "it must contain two items: (<param_name>, <{}>)".
-                                         format(ControlSignal.__name__, owner.name,
-                                                state_specific_params, Mechanism.__name__))
-            if not isinstance(mech, Mechanism):
-                raise ControlSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
-                                         format(ControlSignal.__name__, owner.name, mech, mech.name))
-            if not isinstance(param_name, str):
-                raise ControlSignalError("First item of the {} specification tuple for {} ({}) must be a string "
-                                         "that is the name of a parameter of its second item ({})".
-                                         format(ControlSignal.__name__, owner.name, param_name, mech.name))
-            try:
-                parameter_state = mech.parameter_states[param_name]
-            except KeyError:
-                raise ControlSignalError("No {} found for {} param of {} in {} specification tuple for {}".
-                                         format(ParameterState.__name__, param_name, mech.name,
-                                                ControlSignal.__name__, owner.name))
-            except AttributeError:
-                raise ControlSignalError("{} does not have any {} specified, so can't"
-                                         "assign {} specified for {} ({})".
-                                         format(mech.name, ParameterState.__name__, ControlSignal.__name__,
-                                                owner.name, state_specific_params))
+            # # In this format there is no explicit State spec;  it is the Projection (parsed below)
+            # state_spec = None
+            #
+            # try:
+            #     param_item, mech_item = state_specific_spec
+            # except:
+            #     raise ControlSignalError("Illegal {} specification tuple for {} ({});  "
+            #                              "it must contain two items: (<param_name>, <{}>)".
+            #                              format(ControlSignal.__name__, owner.name,
+            #                                     state_specific_spec, Mechanism.__name__))
+            # if not isinstance(mech_item, Mechanism):
+            #     raise ControlSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
+            #                              format(ControlSignal.__name__, owner.name, mech, mech.name))
+            #
+            # param_specs = param_item if isinstance(param_item, list) else [param_item]
+            # param_list = []
+            # for param_name in param_specs:
+            #
+            #     if not isinstance(param_name, str):
+            #         raise ControlSignalError("First item of the {} specification tuple for {} ({}) must be a string "
+            #                                  "that is the name of a parameter of its second item ({})".
+            #                                  format(ControlSignal.__name__, owner.name, param_name, mech_item.name))
+            #     try:
+            #         parameter_state = mech_item.parameter_states[param_name]
+            #     except KeyError:
+            #         raise ControlSignalError("No {} found for {} param of {} in {} specification tuple for {}".
+            #                                  format(ParameterState.__name__, param_name, mech_item.name,
+            #                                         ControlSignal.__name__, owner.name))
+            #     except AttributeError:
+            #         raise ControlSignalError("{} does not have any {} specified, so can't"
+            #                                  "assign {} specified for {} ({})".
+            #                                  format(mech_item.name, ParameterState.__name__, ControlSignal.__name__,
+            #                                         owner.name, state_specific_spec))
+            #     param_list.append(parameter_state)
+            #
+            # # Assign connection specs to PROJECTIONS entry of params dict
+            # try:
+            #     params_dict[PROJECTIONS] = _parse_connection_specs(self,
+            #                                                        owner=owner,
+            #                                                        connections=param_list)
+            # except ControlSignalError:
+            #     raise ControlSignalError("Unable to parse {} specification dictionary for {} ({})".
+            #                                 format(ControlSignal.__name__, owner.name, state_specific_spec))
+            state_spec = None
+            params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
+                                                               owner=owner,
+                                                               connections=state_specific_spec)
 
-            # Assign connection specs to PROJECTIONS entry of params dict
-            try:
-                params_dict[PROJECTIONS] = _parse_connection_specs(self,
-                                                                   owner=owner,
-                                                                   connections=parameter_state)
-            except ControlSignalError:
-                raise ControlSignalError("Unable to parse {} specification dictionary for {} ({})".
-                                            format(ControlSignal.__name__, owner.name, state_specific_params))
-
-        elif state_specific_params is not None:
+        elif state_specific_spec is not None:
             raise ControlSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
-                                  format(self.__class__.__name__, state_specific_params))
+                                  format(self.__class__.__name__, state_specific_spec))
 
         if params_dict[PROJECTIONS] is None:
             raise ControlSignalError("PROGRAM ERROR: No entry found in {} params dict for {} "
                                      "with specification of parameter's Mechanism or ControlProjection(s) to it".
                                         format(CONTROL_SIGNAL, owner.name))
 
-        return params_dict
+        return state_spec, params_dict
 
     @property
     def allocation_samples(self):

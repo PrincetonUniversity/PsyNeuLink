@@ -36,11 +36,12 @@ A DDM Mechanism can be instantiated directly by calling its constructor, or by u
 specifying DDM as its **mech_spec** argument.  The model implementation is selected using the `function <DDM.function>`
 argument. The function selection can be simply the name of a DDM function::
 
-    my_DDM = DDM(function=BogaczEtAl)
+    >>> import psyneulink as pnl
+    >>> my_DDM = pnl.DDM(function=pnl.BogaczEtAl)
 
 or a call to the function with arguments specifying its parameters::
 
-    my_DDM = DDM(function=BogaczEtAl(drift_rate=0.2, threshold=1.0))
+    >>> my_DDM = pnl.DDM(function=pnl.BogaczEtAl(drift_rate=0.2, threshold=1.0))
 
 
 COMMENT:
@@ -124,21 +125,29 @@ Examples for each, that illustrate all of their parameters, are shown below:
 
 `BogaczEtAl <BogaczEtAl>` Function::
 
-    my_DDM_BogaczEtAl = DDM(function=BogaczEtAl(drift_rate=3.0,
-                                                starting_point=1.0,
-                                                threshold=30.0,
-                                                noise=1.5,
-                                                t0 = 2.0),
-                            name='my_DDM_BogaczEtAl')
+    >>> my_DDM_BogaczEtAl = pnl.DDM(
+    ...     function=pnl.BogaczEtAl(
+    ...         drift_rate=0.08928,
+    ...         starting_point=0.5,
+    ...         threshold=0.2645,
+    ...         noise=0.5,
+    ...         t0=0.15
+    ...     ),
+    ...     name='my_DDM_BogaczEtAl'
+    ... )
 
-`NavarroAndFuss <NavarroAndFuss>` Function::
+`NavarroAndFuss <NavarroAndFuss>` Function (requires MATLAB engine)::
 
-    my_DDM_NavarroAndFuss = DDM(function=NavarroAndFuss(drift_rate=3.0,
-                                                        starting_point=1.0,
-                                                        threshold=30.0,
-                                                        noise=1.5,
-                                                        t0 = 2.0),
-                                name='my_DDM_NavarroAndFuss')
+    >>> my_DDM_NavarroAndFuss = pnl.DDM(
+    ...     function=pnl.NavarroAndFuss(
+    ...         drift_rate=0.08928,
+    ...         starting_point=0.5,
+    ...         threshold=0.2645,
+    ...         noise=0.5,
+    ...         t0=0.15
+    ...     ),
+    ...     name='my_DDM_NavarroAndFuss'
+    ... )                                   #doctest: +SKIP
 
 .. _DDM_Integration_Mode:
 
@@ -152,11 +161,15 @@ mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <D
 
 `Integrator <Integrator>` Function::
 
-    my_DDM_path_integrator = DDM(function=DriftDiffusionIntegrator(noise=0.5,
-                                                            initializer = 1.0,
-                                                            t0 = 2.0,
-                                                            rate = 3.0),
-                          name='my_DDM_path_integrator')
+    >>> my_DDM_path_integrator = pnl.DDM(
+    ...     function=pnl.DriftDiffusionIntegrator(
+    ...         noise=0.5,
+    ...         initializer=1.0,
+    ...         t0=2.0,
+    ...         rate=3.0
+    ...     ),
+    ...     name='my_DDM_path_integrator'
+    ... )
 
 COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
@@ -297,7 +310,7 @@ from psyneulink.components.component import method_type
 from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, STARTING_POINT, THRESHOLD
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.components.states.outputstate import SEQUENTIAL
+from psyneulink.components.states.outputstate import StandardOutputStates, SEQUENTIAL
 from psyneulink.globals.keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, TIME_SCALE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -637,6 +650,10 @@ class DDM(ProcessingMechanism_Base):
                  context=componentType + INITIALIZING
     ):
 
+        self.standard_output_states = StandardOutputStates(self,
+                                                           DDM_standard_output_states,
+                                                           indices=SEQUENTIAL)
+
         # Default output_states is specified in constructor as a tuple rather than a list
         # to avoid "gotcha" associated with mutable default arguments
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
@@ -660,9 +677,6 @@ class DDM(ProcessingMechanism_Base):
         # # Conflict with above
         # self.size = size
         self.threshold = thresh
-
-        from psyneulink.components.states.outputstate import StandardOutputStates
-        self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states, SEQUENTIAL)
 
         super(DDM, self).__init__(variable=default_variable,
                                   output_states=output_states,
@@ -738,6 +752,7 @@ class DDM(ProcessingMechanism_Base):
             # number of seconds to wait before next point is plotted
             time.sleep(.1)
 
+    # MODIFIED 11/21/16 NEW:
     def _validate_variable(self, variable, context=None):
         """Ensures that input to DDM is a single value.
         Remove when MULTIPROCESS DDM is implemented.
@@ -842,6 +857,11 @@ class DDM(ProcessingMechanism_Base):
             - mean RT (float)
             - correct mean RT (float) - Navarro and Fuss only
             - correct mean ER (float) - Navarro and Fuss only
+        :param self:
+        :param variable (float)
+        :param params: (dict)
+        :param context: (str)
+        :rtype self.outputState.value: (number)
         """
 
         # PLACEHOLDER for a time_step_size parameter when time_step_mode/Scheduling is implemented:
@@ -878,12 +898,13 @@ class DDM(ProcessingMechanism_Base):
                                                                1 - return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]
 
             elif isinstance(self.function.__self__, NavarroAndFuss):
-                return_value = np.array([[0], [0], [0], [0], [0], [0]])
-                return_value[self.RESPONSE_TIME_INDEX] = result[NF_Results.MEAN_DT.value]
+                return_value = np.array([[0.0], [0.0], [0.0], [0.0], [0.0], [0.0]])
+                return_value[self.RESPONSE_TIME_INDEX] = result[NF_Results.MEAN_RT.value]
                 return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX] = result[NF_Results.MEAN_ER.value]
                 return_value[self.PROBABILITY_UPPER_THRESHOLD_INDEX] = 1 - result[NF_Results.MEAN_ER.value]
-                return_value[self.RT_CORRECT_MEAN_INDEX] = result[NF_Results.MEAN_CORRECT_RT.value]
-                return_value[self.RT_CORRECT_VARIANCE_INDEX]= result[NF_Results.MEAN_CORRECT_VARIANCE.value]
+                # index 1 holds upper/correct (0 holds lower/error)
+                return_value[self.RT_CORRECT_MEAN_INDEX] = result[NF_Results.COND_RTS.value][1]
+                return_value[self.RT_CORRECT_VARIANCE_INDEX] = result[NF_Results.COND_VAR_RTS.value][1]
                 # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
 
             else:
@@ -920,3 +941,12 @@ class DDM(ProcessingMechanism_Base):
 
             # def _ddm_distr(self, n, x0, t0, a, s, z, dt):
             #     return np.fromiter((self._ddm_rt(x0, t0, a, s, z, dt) for i in range(n)), dtype='float64')
+
+
+            # def terminate_function(self, context=None):
+            #     """Terminate the process
+            #     called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
+            #     returns output
+            #     Returns: value
+            #     """
+            #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM

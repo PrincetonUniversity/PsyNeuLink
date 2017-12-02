@@ -42,18 +42,13 @@ Specifying GatingSignals
 When a GatingSignal is specified in the **gating_signals** argument of the constructor for a `GatingMechanism`, the
 InputState(s) and/or OutputState(s) it gates must be specified. This can take any of the following forms:
 
-  * an **InputState** or **OutputState** of a Mechanism;
+  * **InputState** or **OutputState** of a Mechanism;
   ..
-  * a **Mechanism**, in which case its `primary `InputState <InputState_Primary>` or `OutputState <OutputState_Primary>`
-    is used;
+  * **Mechanism** -- the `primary `InputState <InputState_Primary>` or `OutputState <OutputState_Primary>` is used;
   ..
-  * a **tuple**, with the name of the state as the 1st item, and the Mechanism to which it belongs as the 2nd;
-    note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
-    but precludes specification of any `parameters <GatingSignal_Structure>` for the GatingSignal.
-  ..
-  * a **specification dictionary**, that can take either of the following two forms:
+  * **specification dictionary** -- can take either of the following two forms:
 
-    * for a single state, the dictionary must have the following two entries:
+    * for gating a single state, the dictionary can have the following two entries:
 
         * *NAME*: str
             the string must be the name of the State to be gated; the GatingSignal will named by appending
@@ -62,7 +57,7 @@ InputState(s) and/or OutputState(s) it gates must be specified. This can take an
         * *MECHANISM*: Mechanism
             the Mechanism must be the one to the which the State to be gated belongs.
 
-    * for multiple states, the dictionary must have the following entry:
+    * for gating multiple states, the dictionary can have the following entry:
 
         * <str>:list
             the string used as the key specifies the name to be used for the GatingSignal,
@@ -74,6 +69,10 @@ InputState(s) and/or OutputState(s) it gates must be specified. This can take an
     `value <State_Base.value>` of the State(s) that it gates; or an *INDEX* entry specifying which item
     of the GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` it should use as its `value
     <GatingSignal,value>`).
+  ..
+  * **2-item tuple** -- the 1st item must be the name of the State (or list of State names), and the 2nd item the
+    Mechanism to which it (they) belong(s); this is a convenience format, which is simpler to use than a specification
+    dictionary (see below), but precludes specification of `parameters <GatingSignal_Structure>` for the GatingSignal.
 
 .. _GatingSignal_Structure:
 
@@ -146,9 +145,11 @@ Examples
 `primary InputState <InputState_Primary>` of one Mechanism, and the `primary OutputState <OutputState_Primary>`
 of another::
 
-    my_mechanism_A = TransferMechanism()
-    my_mechanism_B = TransferMechanism()
-    my_gating_mechanism = GatingMechanism(gating_signals=[my_mechanism_A, my_mechanism_B.output_state)
+    >>> import psyneulink as pnl
+    >>> my_mechanism_A = pnl.TransferMechanism(name="Mechanism A")
+    >>> my_mechanism_B = pnl.TransferMechanism(name="Mechanism B")
+    >>> my_gating_mechanism = pnl.GatingMechanism(gating_signals=[my_mechanism_A.input_state,
+    ...                                                           my_mechanism_B.output_state])
 
 Note that, in the **gating_signals** argument, the first item references a Mechanism (``my_mechanism_A``) rather than
 one of its states -- this is all that is necessary, since the default for a `GatingSignal` is to modulate the
@@ -165,13 +166,14 @@ the `InputState` of all the layers in a 3-layered feedforward neural network.  O
 *MULTIPLICATIVE_PARAM* of an InputState's `function <InputState.function>`.  In the example, this is changed so that
 it *adds* the `value <GatingSignal.value>` of the `GatingSignal` to the `value <InputState.value>` of each InputState::
 
-    my_input_layer = TransferMechanism(size=3)
-    my_hidden_layer = TransferMechanism(size=5)
-    my_output_layer = TransferMechanism(size=2)
-    my_gating_mechanism = GatingMechanism(gating_signals=[{'GATE_ALL': [my_input_layer,
-                                                                        my_hidden_layer,
-                                                                        my_output_layer]}],
-                                          modulation=ModulationParam.ADDITIVE)
+    >>> my_input_layer = pnl.TransferMechanism(size=3)
+    >>> my_hidden_layer = pnl.TransferMechanism(size=5)
+    >>> my_output_layer = pnl.TransferMechanism(size=2)
+    >>> my_gating_mechanism = pnl.GatingMechanism(gating_signals=[{pnl.NAME: 'GATE_ALL',
+    ...                                                            pnl.PROJECTIONS: [my_input_layer,
+    ...                                                                              my_hidden_layer,
+    ...                                                                              my_output_layer]}],
+    ...                                           modulation=pnl.ModulationParam.ADDITIVE)
 
 Note that, again, the **gating_signals** are listed as Mechanisms, since in this case it is their primary InputStates
 that are to be gated. Since they are all listed in a single entry of a
@@ -189,12 +191,12 @@ are updated, the value of the GatingSignal will be assigned as the `intercept` o
 using a single GatingSignal.  In the example below, a different GatingSignal is assigned to the InputState of each
 Mechanism::
 
-    my_gating_mechanism = GatingMechanism(gating_signals=[{NAME: 'GATING_SIGNAL_A',
-                                                           MODULATION: ModulationParam.ADDITIVE,
-                                                           PROJECTIONS: my_input_layer},
-                                                          {NAME: 'GATING_SIGNAL_B',
-                                                           PROJECTIONS: [my_hidden_layer,
-                                                                         my_output_layer]}])
+    >>> my_gating_mechanism = pnl.GatingMechanism(gating_signals=[{pnl.NAME: 'GATING_SIGNAL_A',
+    ...                                                            pnl.MODULATION: pnl.ModulationParam.ADDITIVE,
+    ...                                                            pnl.PROJECTIONS: my_input_layer},
+    ...                                                           {pnl.NAME: 'GATING_SIGNAL_B',
+    ...                                                            pnl.PROJECTIONS: [my_hidden_layer,
+    ...                                                                              my_output_layer]}])
 
 Here, two GatingSignals are specified as `specification dictionaries <GatingSignal_Specification>`, each of which
 contains an entry for the name of the GatingSignal, and a *PROJECTIONS* entry that specifies the States to which the
@@ -210,14 +212,14 @@ modulated by ``GATING_SIGNAL_B``.
 assigned to a GatingMechanism.  In the example below, the same GatingSignals specified in the previous example are
 created directly and then assigned to ``my_gating_mechanism``::
 
-    my_gating_signal_A = GatingSignal(name='GATING_SIGNAL_A',
-                                      modulation=ModulationParams.ADDITIVE,
-                                      projections=my_input_layer)
-    my_gating_signal_B = GatingSignal(name='GATING_SIGNAL_B',
-                                      projections=my_hidden_layer,
-                                                  my_output_layer)
-    my_gating_mechanism = GatingMechanism(gating_signals=[my_gating_signal_A,
-                                                          my_gating_signal_B])
+    >>> my_gating_signal_A = pnl.GatingSignal(name='GATING_SIGNAL_A',
+    ...                                       modulation=pnl.ModulationParam.ADDITIVE,
+    ...                                       projections=my_input_layer)
+    >>> my_gating_signal_B = pnl.GatingSignal(name='GATING_SIGNAL_B',
+    ...                                       projections=[my_hidden_layer,
+    ...                                                    my_output_layer])
+    >>> my_gating_mechanism = pnl.GatingMechanism(gating_signals=[my_gating_signal_A,
+    ...                                                           my_gating_signal_B])
 
 
 Class Reference
@@ -228,13 +230,14 @@ Class Reference
 import typecheck as tc
 
 from psyneulink.components.functions.function import Linear, LinearCombination, _is_modulation_param
-from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
+from psyneulink.components.mechanisms.mechanism import Mechanism
+from psyneulink.components.states.state import State_Base, _parse_state_type, _get_state_for_socket
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, SEQUENTIAL
-from psyneulink.components.states.state import State_Base, State
+from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
 from psyneulink.globals.keywords import \
     COMMAND_LINE, GATING_PROJECTION, GATING_SIGNAL, GATE, RECEIVER, SUM, PROJECTION_TYPE, \
-    INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS
+    INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -459,6 +462,39 @@ class GatingSignal(ModulatorySignal):
                          name=name,
                          prefs=prefs,
                          context=context)
+
+    def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
+            """Get connections specified in a ParameterState specification tuple
+    
+            Tuple specification can be:
+                (State name, Mechanism)
+            [TBI:] (Mechanism, State name, weight, exponent, projection_specs)
+
+            Returns params dict with CONNECTIONS entries if any of these was specified.
+    
+            """
+            from psyneulink.components.projections.projection import _parse_connection_specs
+    
+            params_dict = {}
+            state_spec = state_specific_spec
+    
+            if isinstance(state_specific_spec, dict):
+                return None, state_specific_spec
+
+            elif isinstance(state_specific_spec, tuple):
+                state_spec = None
+                params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
+                                                                   owner=owner,
+                                                                   connections=state_specific_spec)
+            elif state_specific_spec is not None:
+                raise GatingSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
+                                      format(self.__class__.__name__, state_specific_spec))
+    
+            if params_dict[PROJECTIONS] is None:
+                raise GatingSignalError("PROGRAM ERROR: No entry found in {} params dict for {} "
+                                         "with specification of {}, {} or GatingProjection(s) to it".
+                                            format(GATING_SIGNAL, INPUT_STATE, OUTPUT_STATE, owner.name))
+            return state_spec, params_dict
 
     def _execute(self, function_params, context):
         return float(super()._execute(function_params=function_params, context=context))

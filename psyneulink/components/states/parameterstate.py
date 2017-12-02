@@ -105,7 +105,7 @@ The specification of the initial value of a parameter can take any of the follow
 
     * **Modulatory specification** -- this can be an existing `ControlSignal` or `ControlProjection`,
       a `LearningSignal` or `LearningProjection`, a constructor or the class name for any of these, or the
-      keywords *CONTROL*, *CONTROL_PROJECTION*, *LEARNING*, or *LEARNING_PROJECTION.  Any of these create a default
+      keywords *CONTROL*, *CONTROL_PROJECTION*, *LEARNING*, or *LEARNING_PROJECTION*.  Any of these create a default
       ParameterState, assign the parameter's default value as the ParameterState's `value <ParameterState.value>`,
       and assign the parameter's name as the name of the ParameterState.  They also create and/or assign the
       corresponding ModulatorySignal and ModulatoryProjection, and assign the ParameterState as the
@@ -116,9 +116,9 @@ The specification of the initial value of a parameter can take any of the follow
     ..
     .. _ParameterState_Tuple_Specification:
 
-    * **Tuple** (value, Modulatory specification) -- this creates a default ParameterState, uses the value
-      (1st) item of the tuple as parameter's `value assignment <ParameterState_Value_Assignment>`, and assigns the
-      parameter's name as the name of the ParameterState.  The Modulatory (2nd) item of the tuple is used as the
+    * **2-item tuple:** *(value, Modulatory specification)* -- this creates a default ParameterState, uses the value
+      specification (1st item) as parameter's `value assignment <ParameterState_Value_Assignment>`, and assigns the
+      parameter's name as the name of the ParameterState.  The Modulatory specification (2nd item) is used as the
       ParameterState's `modulatory assignment <ParameterState_Modulatory_Specification>`, and the ParameterState
       is assigned as the `receiver <Projection_Base.receiver>` for the corresponding `ModulatoryProjection
       <ModulatoryProjection>`.
@@ -150,11 +150,18 @@ Examples
 In the following example, a Mechanism is created by specifying two of its parameters, as well as its
 `function <Component.function>` and two of that function's parameters, each using a different specification format::
 
-    my_mechanism = RecurrentTransferMechanism(size=5,
-                                              noise=ControlSignal),
-                                              function=Logistic(gain=(0.5, ControlSignal),
-                                                                bias=(1.0, ControlSignal(
-                                                                              modulation=ModulationParam.ADDITIVE))))
+    >>> import psyneulink as pnl
+    >>> my_mechanism = pnl.RecurrentTransferMechanism(
+    ...                         size=5,
+    ...                         noise=pnl.ControlSignal(),
+    ...                         function=pnl.Logistic(
+    ...                                         gain=(0.5, pnl.ControlSignal),
+    ...                                         bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))))
+
+COMMENT:
+    If assigning a default ControlSignal makes the noise value the same as the
+    default noise value, why are we using a ControlSignal here??
+COMMENT
 
 The first argument of the constructor for the Mechanism specifies its `size <Component.size>` parameter by
 directly assigning a value to it.  The second specifies the `noise <RecurrentTransferMechanism.noise>` parameter
@@ -170,9 +177,12 @@ In the following example, a `MappingProjection` is created, and its
 `matrix <MappingProjection.MappingProjection.matrix>` parameter is assigned a random weight matrix (using a
 `matrix keyword <Matrix_Keywords>`) and `LearningSignal`::
 
-    my_mapping_projection = MappingProjection(sender=my_input_mechanism,
-                                              receiver=my_output_mechanism,
-                                              matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningSignal))
+    >>> my_input_mechanism = pnl.TransferMechanism()
+    >>> my_output_mechanism = pnl.TransferMechanism()
+    >>> my_mapping_projection = pnl.MappingProjection(sender=my_input_mechanism,
+    ...                                               receiver=my_output_mechanism,
+    ...                                               matrix=(pnl.RANDOM_CONNECTIVITY_MATRIX,
+    ...                                                       pnl.LearningSignal))
 
 .. note::
    The `matrix <MappingProjection.MappingProjection.matrix>` parameter belongs to the MappingProjection's
@@ -182,22 +192,22 @@ In the following example, a `MappingProjection` is created, and its
 
 The example below shows how to specify the parameters in the first example using a parameter specification dictionary::
 
-    my_mechanism = RecurrentTransferMechanism(
-                              size=5
-                              params={NOISE:5,
-                                      'size':ControlSignal,
-                                      FUNCTION:Logistic,
-                                      FUNCTION_PARAMS:{GAIN:(0.5, ControlSignal),
-                                                       BIAS:(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
+    >>> my_mechanism = pnl.RecurrentTransferMechanism(
+    ...                      noise=5,
+    ...                      params={pnl.NOISE: pnl.CONTROL,
+    ...                              pnl.FUNCTION: pnl.Logistic,
+    ...                              pnl.FUNCTION_PARAMS:{
+    ...                                     pnl.GAIN:(0.5,pnl.ControlSignal),
+    ...                                     pnl.BIAS:(1.0,pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))}})
 
 There are several things to note here.  First, the parameter specification dictionary must be assigned to the
 **params** argument of the constructor.  Second, both methods for specifying a parameter -- directly in an argument
 for the parameter, or in an entry of a parameter specification dictionary -- can be used within the same constructor.
-If a particular parameter is specified in both ways (as is the case for **size** in the example), the value in the
+If a particular parameter is specified in both ways (as is the case for **noise** in the example), the value in the
 parameter specification dictionary takes priority (i.e., it is the value that will be assigned to the parameter).  If
 the parameter is specified in a parameter specification dictionary, the key for the parameter must be a string that is
 the same as the name of parameter (i.e., identical to how it appears as an arg in the constructor; as is shown
-for **size** in the example), or using a keyword that resolves to such a string (as shown for *NOISE* in the
+for **noise** in the example), or using a keyword that resolves to such a string (as shown for *NOISE* in the
 example).  Finally, the keyword *FUNCTION_PARAMS* can be used in a parameter specification dictionary to specify
 parameters of the Component's `function <Component.function>`, as shown for the **gain** and **bias** parameters of
 the Logistic function in the example.
@@ -279,20 +289,24 @@ Class Reference
 """
 
 import inspect
+from collections import Iterable
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, function_type, method_type, parameter_keywords
+from psyneulink.components.component import Component, function_type, method_type, parameter_keywords, InitStatus
 from psyneulink.components.functions.function import Linear, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
-from psyneulink.globals.keywords import CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, \
-    PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, VALUE, \
-    CONTROL_SIGNAL, CONTROL_SIGNALS, LEARNING_SIGNAL, LEARNING_SIGNALS, SENDER
+from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
+from psyneulink.globals.keywords import \
+    NAME, CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, SENDER, \
+    PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
+    VALUE, REFERENCE_VALUE, CONTROL_SIGNAL, CONTROL_SIGNALS, LEARNING_SIGNAL, LEARNING_SIGNALS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, is_numeric, is_value_spec, iscompatible
+from psyneulink.globals.utilities \
+    import ContentAddressableList, ReadOnlyOrderedDict, is_numeric, is_value_spec, iscompatible
 
 __all__ = [
     'ParameterState', 'ParameterStateError', 'state_type_keywords',
@@ -578,9 +592,9 @@ class ParameterState(State_Base):
 
         self._instantiate_projections_to_state(projections=projections, context=context)
 
-    # MODIFIED 9/30/17 NEW:
+
     @tc.typecheck
-    def _parse_state_specific_params(self, owner, state_dict, state_specific_params):
+    def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get connections specified in a ParameterState specification tuple
 
         Tuple specification can be:
@@ -590,47 +604,177 @@ class ParameterState(State_Base):
         Returns params dict with PROJECTIONS entries if any of these was specified.
 
         """
-        from psyneulink.components.projections.projection import _parse_connection_specs
+        from psyneulink.components.projections.projection import _parse_connection_specs, _is_projection_spec
 
         params_dict = {}
+        state_spec = state_specific_spec
 
-        if isinstance(state_specific_params, dict):
-            return state_specific_params
+        if isinstance(state_specific_spec, dict):
+            return None, state_specific_spec
 
-        elif isinstance(state_specific_params, tuple):
+        elif isinstance(state_specific_spec, tuple):
 
-            tuple_spec = state_specific_params
+            # # MODIFIED 11/25/17 OLD:
+            # tuple_spec = state_specific_spec
+            # state_spec = tuple_spec[0]
+            #
+            # # Get connection (afferent Projection(s)) specification from tuple
+            # PROJECTIONS_INDEX = len(tuple_spec)-1
+            # # Get projection_spec and parse
+            # try:
+            #     projections_spec = tuple_spec[PROJECTIONS_INDEX]
+            # except IndexError:
+            #     projections_spec = None
+            #
+            # if projections_spec:
+            #     try:
+            #         params_dict[PROJECTIONS] = _parse_connection_specs(self,
+            #                                                            owner=owner,
+            #                                                            connections=projections_spec)
+            #     except ParameterStateError:
+            #         raise ParameterStateError("Item {} of tuple specification in {} specification dictionary "
+            #                               "for {} ({}) is not a recognized specification".
+            #                               format(PROJECTIONS_INDEX,
+            #                                      ParameterState.__name__,
+            #                                      owner.name,
+            #                                      projections_spec))
 
-            # Note: 1st item is assumed to be a specification for the ParameterState itself, handled in _parse_state_spec()
+            # MODIFIED 11/25/17 NEW:
+            tuple_spec = state_specific_spec
 
-            # Get connection (afferent Projection(s)) specification from tuple
-            PROJECTIONS_INDEX = len(tuple_spec)-1
-            # Get projection_spec and parse
+            # GET STATE_SPEC (PARAM VALUE) AND ASSIGN PROJECTIONS_SPEC **********************************************
+
+            # 2-item tuple specification
+            if len(tuple_spec) == 2:
+
+                # 1st item is a value, so treat as State spec (and return to _parse_state_spec to be parsed)
+                #   and treat 2nd item as Projection specification
+                if is_numeric(tuple_spec[0]):
+                    state_spec = tuple_spec[0]
+                    reference_value = state_dict[REFERENCE_VALUE]
+                    # Assign value so sender_dim is skipped below
+                    # (actual assignment is made in _parse_state_spec)
+                    if reference_value is None:
+                        state_dict[REFERENCE_VALUE]=state_spec
+                    elif  not iscompatible(state_spec, reference_value):
+                        raise StateError("Value in first item of 2-item tuple specification for {} of {} ({}) "
+                                         "is not compatible with its {} ({})".
+                                         format(ParameterState.__name__, owner.name, state_spec,
+                                                REFERENCE_VALUE, reference_value))
+                    projections_spec = tuple_spec[1]
+
+                elif _is_projection_spec(tuple_spec[0], include_matrix_spec=True):
+                    state_spec, projections_spec = tuple_spec
+
+                # Tuple is Projection specification that is used to specify the State,
+                else:
+                    # return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
+                    state_spec = None
+                    if tuple_spec[0] != self:
+                        # If 1st item is not the current state (self), treat as part of the projection specification
+                        projections_spec = tuple_spec
+                    else:
+                        # Otherwise, just use 2nd item as projection spec
+                        state_spec = None
+                        projections_spec = tuple_spec[1]
+
+            # 3- or 4-item tuple specification
+            elif len(tuple_spec) in {3,4}:
+                # Tuple is projection specification that is used to specify the State,
+                #    so return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
+                state_spec = None
+                # Reduce to 2-item tuple Projection specification
+                projection_item = tuple_spec[3] if len(tuple_spec)==4 else None
+                projections_spec = (tuple_spec[0],projection_item)
+
+            # GET PROJECTIONS IF SPECIFIED *************************************************************************
+
             try:
-                projections_spec = tuple_spec[PROJECTIONS_INDEX]
-                # Recurisvely call _parse_state_specific_entries() to get OutputStates for afferent_source_spec
-            except IndexError:
-                projections_spec = None
-
-            if projections_spec:
+                projections_spec
+            except UnboundLocalError:
+                pass
+            else:
                 try:
                     params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                        owner=owner,
                                                                        connections=projections_spec)
+
+                    # Parse the value of all of the Projections to get/validate parameter value
+                    from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+                    from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
+
+                    for projection_spec in params_dict[PROJECTIONS]:
+                        if state_dict[REFERENCE_VALUE] is None:
+                            # FIX: - PUTTING THIS HERE IS A HACK...
+                            # FIX:     MOVE TO _parse_state_spec UNDER PROCESSING OF ProjectionTuple SPEC
+                            # FIX:     USING _get_state_for_socket
+                            # from psyneulink.components.projections.projection import _parse_projection_spec
+
+                            mod_signal_value = projection_spec.state.value \
+                                if isinstance(projection_spec.state, State_Base) else None
+
+                            mod_projection = projection_spec.projection
+                            if isinstance(mod_projection, dict):
+                                if mod_projection[PROJECTION_TYPE] not in {ControlProjection, LearningProjection}:
+                                    raise ParameterStateError("PROGRAM ERROR: {} other than {} or {} ({}) found "
+                                                              "in specification tuple for {} param of {}".
+                                                              format(Projection.__name__,
+                                                                     ControlProjection.__name__,
+                                                                     LearningProjection.__name__,
+                                                                     mod_projection, state_dict[NAME], owner.name))
+                                elif VALUE in mod_projection:
+                                    mod_proj_value = mod_projection[VALUE]
+                                else:
+                                    mod_proj_value = None
+                            elif isinstance(mod_projection, Projection):
+                                if not isinstance(mod_projection, (ControlProjection, LearningProjection)):
+                                    raise ParameterStateError("PROGRAM ERROR: {} other than {} or {} ({}) found "
+                                                              "in specification tuple for {} param of {}".
+                                                              format(Projection.__name__,
+                                                                     ControlProjection.__name__,
+                                                                     LearningProjection.__name__,
+                                                                     mod_projection, state_dict[NAME], owner.name))
+                                elif mod_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                                    continue
+                                mod_proj_value = mod_projection.value
+                            else:
+                                raise ParameterStateError("Unrecognized Projection specification for {} of {} ({})".
+                                                      format(self.name, owner.name, projection_spec))
+
+                            # FIX: 11/25/17 THIS IS A MESS:  CHECK WHAT IT'S ACTUALLY DOING
+                            # If ModulatoryProjection's value is not specified, try to assign one
+                            if mod_proj_value is None:
+                                # If not specified for State, assign that
+                                if VALUE not in state_dict or state_dict[VALUE] is None:
+                                    state_dict[VALUE] = mod_signal_value
+                                # If value has been assigned, make sure value is the same for ModulatorySignal
+                                elif state_dict[VALUE] != mod_signal_value:
+                                    # If the values differ, assign None so that State's default is used
+                                    state_dict[VALUE] = None
+                                    # No need to check any more ModulatoryProjections
+                                    break
+
+                            #
+                            else:
+                                state_dict[VALUE] = mod_proj_value
+
                 except ParameterStateError:
-                    raise ParameterStateError("Item {} of tuple specification in {} specification dictionary "
-                                          "for {} ({}) is not a recognized specification".
-                                          format(PROJECTIONS_INDEX,
-                                                 ParameterState.__name__,
+                    raise ParameterStateError("Tuple specification in {} specification dictionary "
+                                          "for {} ({}) is not a recognized specification for one or more "
+                                          "{}s, {}s, or {}s that project to it".
+                                          format(ParameterState.__name__,
                                                  owner.name,
-                                                 projections_spec))
+                                                 projections_spec,
+                                                 Mechanism.__name__,
+                                                 ModulatorySignal.__name__,
+                                                 Projection.__name__))
+            # MODIFIED 11/25/17 END
 
-        elif state_specific_params is not None:
+        elif state_specific_spec is not None:
             raise ParameterStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
-                                  format(self.__class__.__name__, state_specific_params))
+                                  format(self.__class__.__name__, state_specific_spec))
 
-        return params_dict
-# MODIFIED 9/30/17 END
+        return state_spec, params_dict
 
 
     def _execute(self, function_params, context):
@@ -653,13 +797,6 @@ class ParameterState(State_Base):
         value = self.function(variable=param_value,
                               params=function_params,
                               context=context)
-
-        # TEST PRINT
-        # TEST DEBUG MULTILAYER
-        # if MATRIX == self.name:
-        #     print("\n{}\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".
-        #           format(self.__class__.__name__.upper(), self.owner.name, CentralClock.trial, value))
-
         return value
 
     @property
@@ -721,7 +858,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
         ParameterState that already exists (e.g., in case of a call from Component.assign_params)
         non-numeric value (including NotImplemented, False or True)
             unless it is:
-                a tuple (could be on specifying ControlProjection, LearningProjection or Modulation)
+                a tuple (could be one specifying Modulatory Component)
                 a dict with the name FUNCTION_PARAMS (otherwise exclude)
         function or method
             IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
@@ -732,7 +869,23 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     If param_name is FUNCTION_PARAMS and param is a matrix (presumably for a MappingProjection)
         modify ParameterState's function to be LinearCombination (rather Linear which is the default)
     """
+    from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
+    from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+    from psyneulink.components.states.state import _parse_state_spec
 
+    def _get_tuple_for_single_item_modulatory_spec(obj, name, value):
+        """Return (<default param value>, <modulatory spec>) for modulatory spec
+        """
+        try:
+            param_default_value = obj.paramClassDefaults[name]
+            # Only assign default value if it is not None
+            if param_default_value is not None:
+                return (param_default_value, value)
+            else:
+                return value
+        except:
+            raise ParameterStateError("Unrecognized specification for {} paramater of {} ({})".
+                                      format(param_name, owner.name, param_value))
 
     # EXCLUSIONS:
 
@@ -748,31 +901,29 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     # Only allow a FUNCTION_PARAMS dict
     elif isinstance(param_value, ReadOnlyOrderedDict) and param_name is FUNCTION_PARAMS:
         pass
-    # FIX: UPDATE WITH MODULATION_MODS
-    # WHAT ABOUT GatingProjection??
-    # Allow ControlProjection, LearningProjection
+    # Allow ModulatoryProjection
     elif isinstance(param_value, Projection):
-
-        from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-        from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-        if isinstance(param_value, (ControlProjection, LearningProjection)):
+        if isinstance(param_value, ModulatoryProjection_Base):
             pass
         else:
             return
     # Allow Projection class
     elif inspect.isclass(param_value) and issubclass(param_value, Projection):
-        from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-        from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-        if issubclass(param_value, (ControlProjection, LearningProjection)):
+        if issubclass(param_value, (ModulatoryProjection_Base)):
             pass
         else:
             return
+
+    elif _is_modulatory_spec(param_value, include_matrix_spec=False) and not isinstance(param_value, tuple):
+        # If parameter is a single Modulatory specification (e.g., ControlSignal, or CONTROL, etc.)
+         #  try to place it in a tuple (for interpretation by _parse_state_spec) using default value as 1st item
+        #   (note: exclude matrix since it is allowed as a value specification but not a projection reference)
+       param_value = _get_tuple_for_single_item_modulatory_spec(owner, param_name, param_value)
+
     # Allow tuples (could be spec that includes a Projection or Modulation)
     elif isinstance(param_value, tuple):
-        # # MODIFIED 4/18/17 NEW:
         # # FIX: EXTRACT VALUE HERE (AS IN Component.__init__?? [4/18/17]
         # param_value = owner._get_param_value_from_tuple(param_value)
-        # # MODIFIED 4/18/17 END
         pass
     # Allow if it is a keyword for a parameter
     elif isinstance(param_value, str) and param_value in parameter_keywords:
@@ -822,14 +973,31 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                           "with the same name as a parameter of the component itself".
                                           format(function_name, owner.name, function_param_name))
 
-            # # FIX: 10/3/17 - ??MOVE THIS TO _parse_state_specific_params ----------------
+            elif (_is_modulatory_spec(function_param_value, include_matrix_spec=False)
+                  and not isinstance(function_param_value, tuple)):
+                # If parameter is a single Modulatory specification (e.g., ControlSignal, or CONTROL, etc.)
+                # try to place it in a tuple (for interpretation by _parse_state_spec) using default value as 1st item
+                #   (note: exclude matrix since it is allowed as a value specification vs. a projection reference)
+                function_param_value = _get_tuple_for_single_item_modulatory_spec(owner.function,
+                                                                                  function_param_name,
+                                                                                  function_param_value)
+
+
+            # # FIX: 10/3/17 - ??MOVE THIS TO _parse_state_specific_specs ----------------
             # # Use function_param_value as constraint
             # # IMPLEMENTATION NOTE:  need to copy, since _instantiate_state() calls _parse_state_value()
             # #                       for constraints before state_spec, which moves items to subdictionaries,
             # #                       which would make them inaccessible to the subsequent parse of state_spec
-            from copy import deepcopy
-            reference_value = deepcopy(function_param_value)
-            # # FIX: ----------------------------------------------------------------------
+            from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
+            from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+            if (isinstance(function_param_value, Iterable)
+                and any(isinstance(item, (ModulatorySignal,
+                                          ModulatoryProjection_Base,
+                                          AdaptiveMechanism_Base)) for item in function_param_value)):
+                reference_value = function_param_value
+            else:
+                from copy import deepcopy
+                reference_value = deepcopy(function_param_value)
 
             # Assign parameterState for function_param to the component
             state = _instantiate_state(owner=owner,
@@ -847,6 +1015,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
         state = _instantiate_state(owner=owner,
                                   state_type=ParameterState,
                                   name=param_name,
+                                  state_spec=param_value,
                                   reference_value=param_value,
                                   reference_value_name=param_name,
                                   params=None,
@@ -856,6 +1025,10 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
 
 
 def _is_legal_param_value(owner, value):
+
+    from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
+    from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
+    from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
 
     # LEGAL PARAMETER VALUES:
 
@@ -871,6 +1044,9 @@ def _is_legal_param_value(owner, value):
             return True
 
     if isinstance(value, dict) and VALUE in value:
+        return True
+
+    if _is_control_spec(value) or _is_gating_spec(value):
         return True
 
     # keyword that resolves to one of the above
@@ -904,4 +1080,3 @@ def _get_parameter_state(sender_owner, sender_type, param_name, component):
             raise ParameterStateError("There is no ParameterState for the parameter ({}) of {} "
                                         "specified in {} for {}".
                                         format(param_name, component.name, sender_type, sender_owner.name))
-

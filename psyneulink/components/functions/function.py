@@ -173,53 +173,34 @@ Class Reference
 """
 
 import numbers
+import numpy as np
+import typecheck as tc
 import warnings
 
 from collections import namedtuple
 from enum import Enum, IntEnum
 from random import randint
 
-import numpy as np
-import typecheck as tc
-
-from numpy import abs, exp, tanh
-
 from psyneulink.components.component import ComponentError, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
 from psyneulink.globals.keywords import \
-    VARIABLE, ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, \
-    ALL, \
-    ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, \
-    BACKPROPAGATION_FUNCTION, BETA, BIAS, \
-    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, \
-    CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, \
-    DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, \
-    DIST_MEAN, DistanceMetrics, \
-    DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, \
-    EXAMPLE_FUNCTION_TYPE, EXECUTING, \
-    EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, \
-    FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, \
-    FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
-    FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, \
-    HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, \
-    INITIALIZER, \
-    INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
-    INTERCEPT, LEARNING_FUNCTION_TYPE, \
-    LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
-    LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, \
-    MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, \
-    NORMAL_DIST_FUNCTION, \
-    OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, \
-    ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, \
-    PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, \
-    RATE, RECEIVER, REDUCE_FUNCTION, \
-    RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, \
-    STABILITY_FUNCTION, STANDARD_DEVIATION, \
-    SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, \
-    USER_DEFINED_FUNCTION, \
-    USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, \
-    WEIGHTS, NORMALIZING_FUNCTION_TYPE, \
-    kwComponentCategory, kwPreferenceSetName, TDLEARNING_FUNCTION
+    VARIABLE, ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, \
+    ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, \
+    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, \
+    DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DistanceMetrics,\
+    DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, \
+    EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, \
+    FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, \
+    HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, \
+    INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, \
+    LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, \
+    MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, \
+    OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, \
+    PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, \
+    RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, \
+    SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, \
+    USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, NORMALIZING_FUNCTION_TYPE,\
+    kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -290,7 +271,7 @@ def is_Function(x):
 def is_function_type(x):
     if not x:
         return False
-    elif isinstance(x, (Function, function_type)):
+    elif isinstance(x, (Function, function_type, method_type)):
         return True
     elif issubclass(x, Function):
         return True
@@ -568,7 +549,7 @@ class Function_Base(Function):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -927,8 +908,6 @@ class ArgumentTherapy(Function_Base):
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -1186,7 +1165,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -1288,8 +1267,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -1422,7 +1399,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -1672,8 +1649,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -1803,18 +1778,23 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
          name=None,        \
          prefs=None        \
          )
+
     .. _CombineMeans:
+
     Linearly combines the means of one or more arrays of values with optional scaling and/or offset applied to result.
+
     Takes the mean of the array in each item of its `variable <CombineMeans.variable>` argument, and combines them
     as specified by the `operation <CombineMeans.operation>` parameter, taking either their sum (the default) or their
     product.  The mean of each array can be individually weighted and/or exponentiated prior to being combined,
     and the resulting scalar can be multiplicatively transformed and/or additively offset.
+
     COMMENT:
         Description:
             Take means of elements of each array in variable arg,
                 and combine using arithmetic operation determined by OPERATION
             Use optional SCALE and OFFSET parameters to linearly transform the resulting array
             Returns a scalar
+
             Notes:
             * WEIGHTS and EXPONENTS can be:
                 - 1D: each array in variable is scaled by the corresponding element of WEIGHTS or EXPONENTS
@@ -1835,82 +1815,102 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
              + OPERATION (Operation Enum) - method used to combine the means of the arrays in variable (default: SUM)
                   SUM: sum of the means of the arrays in variable
                   PRODUCT: product of the means of the arrays in variable
+
         CombineMeans.function returns a scalar value
     COMMENT
+
     Arguments
     ---------
+
     variable : 1d or 2d np.array : default ClassDefaults.variable
         specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.
+
     weights : 1d or 2d np.array : default None
         specifies values used to multiply the elements of each array in `variable  <CombineMeans.variable>`.
         If it is 1d, its length must equal the number of items in `variable <CombineMeans.variable>`;
         if it is 2d, the length of each item must be the same as those in `variable <CombineMeans.variable>`,
         and there must be the same number of items as there are in `variable <CombineMeans.variable>`
         (see `weights <CombineMeans.weights>` for details)
+
     exponents : 1d or 2d np.array : default None
         specifies values used to exponentiate the elements of each array in `variable  <CombineMeans.variable>`.
         If it is 1d, its length must equal the number of items in `variable <CombineMeans.variable>`;
         if it is 2d, the length of each item must be the same as those in `variable <CombineMeans.variable>`,
         and there must be the same number of items as there are in `variable <CombineMeans.variable>`
         (see `exponents <CombineMeans.exponents>` for details)
+
     operation : SUM or PRODUCT : default SUM
         specifies whether the `function <CombineMeans.function>` takes the sum or product of the means of the arrays in
         `variable  <CombineMeans.variable>`.
+
     scale : float or np.ndarray : default None
         specifies a value by which to multiply the result of `function <CombineMeans.function>`
         (see `scale <CombineMeans.scale>` for details)
+
     offset : float or np.ndarray : default None
         specifies a value to add to the result of `function <CombineMeans.function>`
         (see `offset <CombineMeans.offset>` for details)
+
     params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
+
     owner : Component
         `component <Component>` to which to assign the Function.
+
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
     Attributes
     ----------
+
     variable : 1d or 2d np.array
         contains the arrays to be combined by `function <CombineMeans>`.  If it is 1d, the array is simply
         linearly transformed by and `scale <CombineMeans.scale>` and `offset <CombineMeans.scale>`.
         If it is 2d, the arrays (all of which must be of equal length) are weighted and/or exponentiated as
         specified by `weights <CombineMeans.weights>` and/or `exponents <CombineMeans.exponents>`
         and then combined as specified by `operation <CombineMeans.operation>`.
+
     weights : 1d or 2d np.array : default NOne
         if it is 1d, each element is used to multiply all elements in the corresponding array of
         `variable <CombineMeans.variable>`;    if it is 2d, then each array is multiplied elementwise
         (i.e., the Hadamard Product is taken) with the corresponding array of `variable <CombineMeanss.variable>`.
         All :keyword:`weights` are applied before any exponentiation (if it is specified).
+
     exponents : 1d or 2d np.array : default None
         if it is 1d, each element is used to exponentiate the elements of the corresponding array of
         `variable <CombineMeans.variable>`;  if it is 2d, the element of each array is used to exponentiate
         the corresponding element of the corresponding array of `variable <CombineMeans.variable>`.
         In either case, exponentiating is applied after application of the `weights <CombineMeans.weights>`
         (if any are specified).
+
     operation : SUM or PRODUCT : default SUM
         determines whether the `function <CombineMeans.function>` takes the elementwise (Hadamard) sum or
         product of the arrays in `variable  <CombineMeans.variable>`.
+
     scale : float or np.ndarray : default None
         value is applied multiplicatively to each element of the array after applying the
         `operation <CombineMeans.operation>` (see `scale <CombineMeans.scale>` for details);
         this done before applying the `offset <CombineMeans.offset>` (if it is specified).
+
     offset : float or np.ndarray : default None
         value is added to each element of the array after applying the `operation <CombineMeans.operation>`
         and `scale <CombineMeans.scale>` (if it is specified).
+
     COMMENT:
     function : function
         applies the `weights <CombineMeans.weights>` and/or `exponents <CombineMeanss.weights>` to the
         arrays in `variable <CombineMeans.variable>`, then takes their sum or product (as specified by
         `operation <CombineMeans.operation>`), and finally applies `scale <CombineMeans.scale>` and/or
         `offset <CombineMeans.offset>`.
+
     functionOutputTypeConversion : Bool : False
         specifies whether `function output type conversion <Function_Output_Type_Conversion>` is enabled.
+
     functionOutputType : FunctionOutputType : None
         used to specify the return type for the `function <Function_Base.function>`;  `functionOuputTypeConversion`
         must be enabled and implemented for the class (see `FunctionOutputType <Function_Output_Type_Conversion>`
@@ -1989,8 +1989,10 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate weghts, exponents, scale and offset parameters
+
         Check that WEIGHTS and EXPONENTS are lists or np.arrays of numbers with length equal to variable
         Check that SCALE and OFFSET are either scalars or np.arrays of numbers with length and shape equal to variable
+
         Note: the checks of compatiability with variable are only performed for validation calls during execution
               (i.e., from check_args(), since during initialization or COMMAND_LINE assignment,
               a parameter may be re-assigned before variable assigned during is known
@@ -2065,26 +2067,32 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """Calculate and combine means of items in `variable <CombineMean.variable>`.
+
         Take mean of each item of `variable <CombineMean.variable>`;
         Apply `weights <CombineMeans.weights>` and/or `exponents <CombineMeanss.weights>` (if specified) to the means;
         Take their sum or product, as specified by `operation <CombineMeans.operation>`;
         Apply `scale <CombineMeans.scale>` (if specified) multiplicatively to the result;
         Apply `offset <CombineMeans.offset>` (if specified) to the result;
         Return scalar
+
         Arguments
         ---------
+
         variable : 1d or 2d np.array : default ClassDefaults.variable
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
+
         params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
+
+
         Returns
         -------
+
         combined array : 1d np.array
             the result of linearly combining the arrays in `variable <CombineMeans.variable>`.
+
         """
 
         # Validate variable and assign to variable, and validate params
@@ -2250,7 +2258,7 @@ class SoftMax(NormalizingFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2343,8 +2351,6 @@ class SoftMax(NormalizingFunction):
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -2551,7 +2557,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2647,8 +2653,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -2778,7 +2782,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2861,8 +2865,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -2901,6 +2903,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
          default_variable, \
          gain=1.0,         \
          bias=0.0,         \
+         offset=0.0,       \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -2918,10 +2921,14 @@ class Logistic(TransferFunction):  # -------------------------------------------
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
-        specifies a value by which to multiply `variable <Linear.variable>` before logistic transformation
+        specifies a value by which to multiply `variable <Logistic.variable>` before logistic transformation
 
     bias : float : default 0.0
-        specifies a value to add to each element of `variable <Linear.variable>` after applying `gain <Linear.gain>`
+        specifies a value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`
+        and before logistic transformation.
+
+    offset : float : default 0.0
+        specifies a value to add to each element of `variable <Logistic.variable>` after applying `gain <Logistic.gain>`
         but before logistic transformation.
 
     params : Dict[param keyword, param value] : default None
@@ -2934,7 +2941,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -2944,11 +2951,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
     variable : number or np.array
         contains value to be transformed.
 
-    gain : float
+    gain : float : default 1.0
         value by which each element of `variable <Logistic.variable>` is multiplied before applying the
-        `bias <Linear.bias>` (if it is specified).
+        `bias <Logistic.bias>` (if it is specified).
 
-    bias : float
+    bias : float : default 0.0
         value added to each element of `variable <Logistic.variable>` after applying the `gain <Logistic.gain>`
         (if it is specified).
 
@@ -2984,6 +2991,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  default_variable=ClassDefaults.variable,
                  gain: parameter_spec = 1.0,
                  bias: parameter_spec = 0.0,
+                 offset: parameter_spec = 0.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -2991,6 +2999,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   bias=bias,
+                                                  offset=offset,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -3005,7 +3014,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: 1 / (1 + e**( (`gain <Logistic.gain>` :math:`*` `variable <Logistic.variable>`) + `bias <Logistic.bias>`))
+        Return:
+
+        .. math::
+
+            \\frac{1}{1 + e^{ - gain ( variable - bias ) + offset}}
 
         Arguments
         ---------
@@ -3018,8 +3031,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -3031,14 +3042,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
+        offset = self.paramsCurrent[OFFSET]
 
-        try:
-            return_val = 1 / (1 + np.exp(-(gain * variable) + bias))
-        except (Warning):
-            # handle RuntimeWarning: overflow in exp
-            return_val = 0
-
-        return return_val
+        return 1 / (1 + np.exp(-gain*(variable-bias) + offset))
 
     def derivative(self, output, input=None):
         """
@@ -3081,7 +3087,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 #         specifies a template for the value to be transformed.
 #
 #     gain : float : default 1.0
-#         specifies a value by which to multiply `variable <Linear.variable>` before SoftMax transformation.
+#         specifies a value by which to multiply `variable <Softmax.variable>` before SoftMax transformation.
 #
 #     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
 #         specifies the format of array returned by `function <SoftMax.function>`
@@ -3294,6 +3300,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 #
 #         return derivative
 
+
 class LinearMatrix(TransferFunction):  # -------------------------------------------------------------------------------
     """
     LinearMatrix(          \
@@ -3360,7 +3367,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -3474,7 +3481,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         param_set = target_set
         sender = self.instance_defaults.variable
         # Note: this assumes variable is a 1D np.array, as enforced by _validate_variable
-        sender_len = len(sender)
+        sender_len = sender.size
 
         # FIX: RELABEL sender -> input AND receiver -> output
         # FIX: THIS NEEDS TO BE CLEANED UP:
@@ -3640,6 +3647,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         :return matrix: (2D list)
         """
+
         # Matrix provided (and validated in _validate_params); convert to np.array
         if isinstance(specification, np.matrix):
             return np.array(specification)
@@ -3683,8 +3691,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         ---------
@@ -3696,9 +3702,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         # Note: this calls _validate_variable and _validate_params which are overridden above;
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
         return np.dot(variable, self.matrix)
 
     def keyword(self, keyword):
+
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         rows = None
         cols = None
@@ -3795,7 +3803,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     if type(specification) == str:
         try:
             return np.array(np.matrix(specification))
-        except (ValueError, NameError):
+        except (ValueError, NameError, TypeError):
             # np.matrix(specification) will give ValueError if specification is a bad value (e.g. 'abc', '1; 1 2')
             #                          [JDC] actually gives NameError if specification is a string (e.g., 'abc')
             pass
@@ -3851,8 +3859,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         `noise <Integrator.noise>` for details).
 
     time_step_size : float : default 0.0
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
-        is set to DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
+        determines the timing precision of the integration process
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -3868,7 +3875,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -3878,9 +3885,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     variable : number or np.array
         current input value some portion of which (determined by `rate <Integrator.rate>`) that will be
         added to the prior value;  if it is an array, each element is independently integrated.
-
-    integration_type : [**NEEDS TO BE SPECIFIED**] : default [**NEEDS TO BE SPECIFIED**]
-        [**NEEDS TO BE SPECIFIED**]
 
     rate : float or 1d np.array
         determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
@@ -4174,7 +4178,7 @@ class SimpleIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4323,8 +4327,6 @@ class SimpleIntegrator(
         # if params and VARIABLE in params:
         #     new_value = params[VARIABLE]
 
-        # Compute function based on integration_type param
-
         value = previous_value + (new_value * rate) + noise
 
         adjusted_value = value + offset
@@ -4339,22 +4341,31 @@ class SimpleIntegrator(
 class LCAIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
-    LCAIntegrator(                 \
-        default_variable=None,  \
-        noise=0.0,              \
-        initializer,            \
-        params=None,            \
-        owner=None,             \
-        prefs=None,             \
+    LCAIntegrator(                  \
+        default_variable=None,      \
+        noise=0.0,                  \
+        initializer=0.0,            \
+        rate=1.0,                   \
+        offset=None,                \
+        time_step_size=0.1,         \
+        params=None,                \
+        owner=None,                 \
+        prefs=None,                 \
         )
 
     .. _LCAIntegrator:
 
     Integrate current value of `variable <LCAIntegrator.variable>` with its prior value:
 
+    .. math::
+
+        rate \\dot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
+
+    COMMENT:
     `rate <LCAIntegrator.rate>` * `previous_value <LCAIntegrator.previous_value>` + \
     `variable <variable.LCAIntegrator.variable>` + \
     `noise <LCAIntegrator.noise>`;
+    COMMENT
 
     Arguments
     ---------
@@ -4364,14 +4375,14 @@ class LCAIntegrator(
         integrated.
 
     rate : float, list or 1d np.array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <LCAIntegrator.default_variable>` (see `rate <LCAIntegrator.rate>` for details).
+        scales the contribution of `previous_value <LCAIntegrator.previous_value>` to the accumulation of the
+        `value <LCAIntegrator.value>` on each time step
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
         specifies random value to be added in each call to `function <LCAIntegrator.function>`. (see
         `noise <LCAIntegrator.noise>` for details).
 
-    initializer float, list or 1d np.array : default 0.0
+    initializer : float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <LCAIntegrator.default_variable>` (see `initializer <LCAIntegrator.initializer>` for details).
 
@@ -4385,7 +4396,7 @@ class LCAIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4397,8 +4408,9 @@ class LCAIntegrator(
         added to the prior value;  if it is an array, each element is independently integrated.
 
     rate : float or 1d np.array
-        determines the rate of integration based on current and prior values. If it has a single element, it
-        applies to all elements of `variable <LCAIntegrator.variable>`;  if it has more than one element, each element
+        scales the contribution of `previous_value <LCAIntegrator.previous_value>` to the
+        accumulation of the `value <LCAIntegrator.value>` on each time step. If rate has a single element, it
+        applies to all elements of `variable <LCAIntegrator.variable>`;  if rate has more than one element, each element
         applies to the corresponding element of `variable <LCAIntegrator.variable>`.
 
     noise : float, function, list, or 1d np.array
@@ -4409,7 +4421,6 @@ class LCAIntegrator(
         If noise is specified as a single float or function, while `variable <LCAIntegrator.variable>` is a list or array,
         noise will be applied to each variable element. In the case of a noise function, this means that the function
         will be executed separately for each variable element.
-
 
         .. note::
             In order to generate random noise, we recommend selecting a probability distribution function
@@ -4490,9 +4501,11 @@ class LCAIntegrator(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: `variable <Linear.slope>` combined with `previous_value <LCAIntegrator.previous_value>`
-        according to `rate <LCAIntegrator.rate>` * `previous_value <LCAIntegrator.previous_value>` + `variable
-        <variable.LCAIntegrator.variable>` + `noise <LCAIntegrator.noise>`;
+        Return:
+
+        .. math::
+
+            rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
 
         Arguments
         ---------
@@ -4536,7 +4549,6 @@ class LCAIntegrator(
         # if params and VARIABLE in params:
         #     new_value = params[VARIABLE]
 
-        # Compute function based on integration_type param
         # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
         value = previous_value + (rate*previous_value + new_value)*self.time_step_size + noise*(self.time_step_size**0.5)
 
@@ -4548,8 +4560,9 @@ class LCAIntegrator(
             self.previous_value = adjusted_value
 
         return adjusted_value
-class ConstantIntegrator(
-    Integrator):  # --------------------------------------------------------------------------------
+
+
+class ConstantIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
     ConstantIntegrator(                 \
         default_variable=None,          \
@@ -4600,7 +4613,7 @@ class ConstantIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4728,8 +4741,6 @@ class ConstantIntegrator(
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -4819,7 +4830,7 @@ class AdaptiveIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -4978,13 +4989,13 @@ class AdaptiveIntegrator(
                 for r in target_set[RATE]:
                     if r < 0.0 or r > 1.0:
                         raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
-                                            "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
+                                            "between 0.0 and 1.0 because it is an AdaptiveIntegrator".
                                             format(target_set[RATE], self.name))
             else:
                 if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
                     raise FunctionError(
                         "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                        "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
+                        "1.0 because it is an AdaptiveIntegrator".format(target_set[RATE], self.name))
 
         if NOISE in target_set:
             self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
@@ -5012,8 +5023,6 @@ class AdaptiveIntegrator(
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -5052,8 +5061,8 @@ class DriftDiffusionIntegrator(
         default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
-        scale: parameter_spec = 1.0,    \
-        offset: parameter_spec = 0.0,   \
+        scale= 1.0,                     \
+        offset= 0.0,                    \
         time_step_size=1.0,             \
         t0=0.0,                         \
         decay=0.0,                      \
@@ -5065,21 +5074,19 @@ class DriftDiffusionIntegrator(
 
     .. _DriftDiffusionIntegrator:
 
-    Accumulate evidence overtime based on a stimulus, previous position, and noise.
+    Accumulate evidence overtime based on a stimulus, rate, previous position, and noise.
 
     Arguments
     ---------
 
     default_variable : number, list or np.array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
+        specifies the stimulus component of drift rate -- the drift rate is the product of variable and rate
 
     rate : float, list or 1d np.array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <DriftDiffusionIntegrator.default_variable>` (see `rate <DriftDiffusionIntegrator.rate>` for details).
+        specifies the attentional component of drift rate -- the drift rate is the product of variable and rate
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <DriftDiffusionIntegrator.function>`. (see
+        scales the random value to be added in each call to `function <DriftDiffusionIntegrator.function>`. (see
         `noise <DriftDiffusionIntegrator.noise>` for details).
 
     time_step_size : float : default 0.0
@@ -5090,7 +5097,7 @@ class DriftDiffusionIntegrator(
         determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
         the DDM Mechanism.
 
-    initializer float, list or 1d np.array : default 0.0
+    initializer : float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <DriftDiffusionIntegrator.default_variable>` (see `initializer <DriftDiffusionIntegrator.initializer>` for details).
 
@@ -5104,7 +5111,7 @@ class DriftDiffusionIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -5115,20 +5122,20 @@ class DriftDiffusionIntegrator(
         current input value, which represents the stimulus component of drift.
 
     rate : float or 1d np.array
-        determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
-        all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
-        applies to all elements of `variable <DriftDiffusionIntegrator.variable>`;  if it has more than one element, each element
-        applies to the corresponding element of `variable <DriftDiffusionIntegrator.variable>`.
+        specifies the attentional component of drift rate -- the drift rate is the product of variable and rate
 
     noise : float, function, list, or 1d np.array
-        scales the random value to be added in each call to `function <DriftDiffusionIntegrator.function>
+        scales the random value to be added in each call to `function <DriftDiffusionIntegrator.function> according to
+        the standard DDM probability distribution.
 
-        Noise must be specified as a float (or list or array of floats) because this
-        value will be used to construct the standard DDM probability distribution.
+        On each call to `function <DriftDiffusionIntegrator.function>, :math:`\\sqrt{time\\_step\\_size \\cdot noise}
+        \\cdot Sample\\,From\\,Normal\\,distribution` is added to the accumulated evidence.
+
+        Noise must be specified as a float (or list or array of floats).
 
     time_step_size : float
         determines the timing precision of the integration process and is used to scale the `noise
-        <DriftDiffusionIntegrator.noise>` parameter appropriately.
+        <DriftDiffusionIntegrator.noise>` parameter according to the standard DDM probability distribution.
 
     t0 : float
         determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
@@ -5226,14 +5233,16 @@ class DriftDiffusionIntegrator(
         """
         Return: One time step of evidence accumulation according to the Drift Diffusion Model
 
-        previous_value + rate * variable * time_step_size + :math:`\\sqrt{time_step_size * noise}` * random
-        sample from Normal distribution
+        ..  math::
+
+            previous\\_value + rate \\cdot variable \\cdot time\\_step\\_size + \\sqrt{time\\_step\\_size \\cdot noise}
+            \\cdot Sample\\,from\\,Normal\\,Distribution
 
         Arguments
         ---------
 
         variable : number, list or np.array : default ClassDefaults.variable
-           the stimulus component of drift rate in the Drift Diffusion Model.
+            specifies the stimulus component of drift rate -- the drift rate is the product of variable and rate
 
         params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -5283,11 +5292,11 @@ class OrnsteinUhlenbeckIntegrator(
         default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
-        scale: parameter_spec = 1.0,    \
-        offset: parameter_spec = 0.0,   \
+        offset= 0.0,                    \
         time_step_size=1.0,             \
         t0=0.0,                         \
-        initializer,                    \
+        decay=1.0,                      \
+        initializer=0.0,                \
         params=None,                    \
         owner=None,                     \
         prefs=None,                     \
@@ -5301,16 +5310,14 @@ class OrnsteinUhlenbeckIntegrator(
     ---------
 
     default_variable : number, list or np.array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
+        specifies a template for  the stimulus component of drift rate -- the drift rate is the product of variable and
+        rate
 
     rate : float, list or 1d np.array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <OrnsteinUhlenbeckIntegrator.default_variable>` (see `rate <OrnsteinUhlenbeckIntegrator.rate>` for
-        details).
+        specifies  the attentional component of drift rate -- the drift rate is the product of variable and rate
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <OrnsteinUhlenbeckIntegrator.function>`. (see
+        scales random value to be added in each call to `function <OrnsteinUhlenbeckIntegrator.function>`. (see
         `noise <OrnsteinUhlenbeckIntegrator.noise>` for details).
 
     time_step_size : float : default 0.0
@@ -5336,7 +5343,7 @@ class OrnsteinUhlenbeckIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -5344,7 +5351,7 @@ class OrnsteinUhlenbeckIntegrator(
     ----------
 
     variable : number or np.array
-        current input value which represents the stimulus component of drift. The product of
+        represents the stimulus component of drift. The product of
         `variable <OrnsteinUhlenbeckIntegrator.variable>` and `rate <OrnsteinUhlenbeckIntegrator.rate>` is multiplied
         by `time_step_size <OrnsteinUhlenbeckIntegrator.time_step_size>` to model the accumulation of evidence during
         one step.
@@ -5477,8 +5484,6 @@ class OrnsteinUhlenbeckIntegrator(
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -5502,9 +5507,8 @@ class OrnsteinUhlenbeckIntegrator(
         previous_value = self.previous_value
 
         previous_value = np.atleast_2d(previous_value)
-        new_value = variable
         # dx = (lambda*x + A)dt + c*dW
-        value = previous_value + decay * (previous_value -  rate * new_value) * time_step_size + np.sqrt(
+        value = previous_value + (decay * previous_value - rate * variable) * time_step_size + np.sqrt(
             time_step_size * noise) * np.random.normal()
 
         # If this NOT an initialization run, update the old value and time
@@ -5518,18 +5522,16 @@ class OrnsteinUhlenbeckIntegrator(
 
         return adjusted_value
 
-class FHNIntegrator(
-    Integrator):  # --------------------------------------------------------------------------------
+
+class FHNIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
-    FHNIntegrator(              \
-        default_variable=None,          \
-        rate=1.0,                       \
-        noise=0.0,                      \
+    FHNIntegrator(                      \
+        default_variable=1.0,           \
         scale: parameter_spec = 1.0,    \
         offset: parameter_spec = 0.0,   \
         initial_w=0.0,                  \
         initial_v=0.0,                  \
-        time_step_size=0.1,             \
+        time_step_size=0.05,          \
         t_0=0.0,                        \
         a_v=-1/3,                       \
         b_v=0.0,                        \
@@ -5537,6 +5539,7 @@ class FHNIntegrator(
         d_v=0.0,                        \
         e_v=-1.0,                       \
         f_v=1.0,                        \
+        threshold=-1.0                  \
         time_constant_v=1.0,            \
         a_w=1.0,                        \
         b_w=-0.8,                       \
@@ -5544,6 +5547,7 @@ class FHNIntegrator(
         mode=1.0,                       \
         uncorrelated_activity=0.0       \
         time_constant_w = 12.5,         \
+        integration_method="RK4"        \
         params=None,                    \
         owner=None,                     \
         prefs=None,                     \
@@ -5551,127 +5555,170 @@ class FHNIntegrator(
 
     .. _FHNIntegrator:
 
-    Implements the Fitzhugh-Nagumo model using the 4th order Runge Kutta method of numerical integration.
+    The FHN Integrator function in PsyNeuLink implements the Fitzhugh-Nagumo model using a choice of Euler or 4th Order
+    Runge-Kutta numerical integration.
 
     In order to support several common representations of the model, the FHNIntegrator includes many parameters, some of
-    which would not be sensible to use in combination.
+    which would not be sensible to use in combination. The equations of the Fitzhugh-Nagumo model are expressed below in
+    terms of all of the parameters exposed in PsyNeuLink:
 
-    The most general form of the FHNIntegrator function, with all of its arguments, is:
-
-        *time_constant_v* :math:`* \\frac{dv}{dt}` =
-
-            *a_v* :math:`* v^3` + *((1+threshold)* :math:`*` *b_v* :math:`* v^2)` *- threshold* :math:`*` *c_v* \
-            :math:`* v^2`) *+ d_v + (e_v* :math:`*` *w) + (f_v* :math:`* I_{ext})`
-
-        *time_constant_w* :math:`* \\frac{dw}{dt}` =
-
-          *mode* :math:`*` *a_w* :math:`*` *(v + b_w)* :math:`*` *(w + c_w + (1 - self.mode))* :math:`*`
-          *self.uncorrelated_activity*
-
-    The three formulations that the FHNIntegrator was designed to allow are:
-
-    **Fitzhugh-Nagumo Model**
-
-            :math:`\\frac{dv}{dt} = v - \\frac{v^3}{3} - w + I_{ext}`
-
-            :math:`T*\\frac{dw}{dt} = v + a - b*w`
-
-        where :math:`\\frac{dw}{dt}` often has the following parameters:
-
-            :math:`\\frac{dw}{dt} = 0.08(v + 0.7 - 0.8*w)`
-
-        The FHNIntegrator's default parameter values map the above equations and parameters onto the PsyNeuLink
-        implementation.
+    **Fast, Excitatory Variable:**
 
 
-    **Modified FHN Model**
+    .. math::
 
-            :math:`\\frac{dv}{dt} = v*(a-v)(v-1) - w + I_{ext}`
+        \\frac{dv}{dt} = \\frac{a_v v^{3} + b_v v^{2} (1+threshold) - c_v v\\, threshold + d_v + e_v\\, previous_w + f_v\\, variable)}{time\\, constant_v}
 
-            :math:`\\frac{dw}{dt} = b*v - c*w`
 
-        In order to reproduce the modified FHN equation for :math:`\\frac{dv}{dt},
-        the following FHNIntegrator parameters must be set:
+    **Slow, Inactivating Variable:**
 
-            *b_v = c_v = f_v = time_constant_v = 1.0*
 
-            *a_v = e_v = -1.0*
+    .. math::
 
-            *d_v = 0.0;*
+        \\frac{dw}{dt} = \\frac{a_w\\, mode\\, previous_v + b_w w + c_w +
+                    uncorrelated\\,activity\\,(1-mode)}{time\\, constant_w}
 
-        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for
-        dv/dt then correspond to the modified FHN equation for :math:`\\frac{dv}{dt} as follows:
+    *The three formulations that the FHNIntegrator was designed to allow are:*
 
-            (modified FHN representation --> PsyNeuLink representation)
+    (1) **Fitzhugh-Nagumo Model**
 
-            *a* --> `threshold <FHNIntegrator.threshold>`
+        **Fast, Excitatory Variable:**
 
-            :math:`I_{ext}` --> `variable <FHNIntegrator.variable>`
+        .. math::
 
-        In order to reproduce the modified FHN equation for dw/dt, the following FHNIntegrator parameters must be set:
+            \\frac{dv}{dt} = v - \\frac{v^3}{3} - w + I_{ext}
 
-            *mode = time_constant_w = 1.0*
+        **Slow, Inactivating Variable:**
 
-            *c_w = uncorrelated_activity = 0.0;*
+        .. math::
 
-        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dw/dt then correspond to the modified FHN equation for dw/dt as follows:
+            \\frac{dw}{dt} = \\frac{v + a - bw}{T}
 
-            (modified FHN representation --> PsyNeuLink representation)
+        :math:`\\frac{dw}{dt}` often has the following parameter values:
 
-            *b* --> `a_w <FHNIntegrator.a_w>`
+        .. math::
 
-            *c --> NEGATIVE* `b_w <FHNIntegrator.b_w>`
+            \\frac{dw}{dt} = 0.08\\,(v + 0.7 - 0.8 w)
+
+        *How to implement this model in PsyNeuLink:*
+
+            In PsyNeuLink, the default parameter values of the FHNIntegrator function implement the above equations.
+
+
+    (2) **Modified FHN Model**
+
+        **Fast, Excitatory Variable:**
+
+        .. math::
+
+            \\frac{dv}{dt} = v(a-v)(v-1) - w + I_{ext}
+
+        **Slow, Inactivating Variable:**
+
+        .. math::
+
+            \\frac{dw}{dt} = bv - cw
 
         `Mahbub Khan (2013) <http://pcwww.liv.ac.uk/~bnvasiev/Past%20students/Mahbub_549.pdf>`_ provides a nice summary
         of why this formulation is useful.
 
+        *How to implement this model in PsyNeuLink:*
 
-    `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ **Implementation
-    of the Modified FHN Model**
+            In order to implement the modified FHN model, the following PsyNeuLink parameter values must be set in the
+            equation for :math:`\\frac{dv}{dt}`:
 
-            *tau_v* :math:`* \\frac{dv}{dt} = v*(a-v)(v-1) - w + b *` *f(X_1)*
+            +-----------------+-----+-----+-----+-----+-----+-----+---------------+
+            |**PNL Parameter**| a_v | b_v | c_v | d_v | e_v | f_v |time_constant_v|
+            +-----------------+-----+-----+-----+-----+-----+-----+---------------+
+            |**Value**        |-1.0 |1.0  |1.0  |0.0  |-1.0 |1.0  |1.0            |
+            +-----------------+-----+-----+-----+-----+-----+-----+---------------+
 
-            *tau_w* :math:`* \\frac{dw}{dt} = c*v + (1-c)*d - w`
+            When the parameters above are set to the listed values, the PsyNeuLink equation for :math:`\\frac{dv}{dt}`
+            reduces to the Modified FHN formulation, and the remaining parameters in the :math:`\\frac{dv}{dt}` equation
+            correspond as follows:
 
-        In order to reproduce the Gilzenrat equation for dv/dt, the following FHNIntegrator parameters must be set:
+            +--------------------------+---------------------------------------+---------------------------------------+
+            |**PNL Parameter**         |`threshold <FHNIntegrator.threshold>`  |`variable <FHNIntegrator.variable>`    |
+            +--------------------------+---------------------------------------+---------------------------------------+
+            |**Modified FHN Parameter**|a                                      |:math:`I_{ext}`                        |
+            +--------------------------+---------------------------------------+---------------------------------------+
 
-            *b_v = c_v = 1.0*
+            In order to implement the modified FHN model, the following PsyNeuLink parameter values must be set in the
+            equation for :math:`\\frac{dw}{dt}`:
 
-            *a_v = e_v = -1.0*
+            +-----------------+-----+------+---------------+----------------------+
+            |**PNL Parameter**|c_w  | mode |time_constant_w|uncorrelated_activity |
+            +-----------------+-----+------+---------------+----------------------+
+            |**Value**        | 0.0 | 1.0  |1.0            | 0.0                  |
+            +-----------------+-----+------+---------------+----------------------+
 
-            *d_v = 0.0;*
+            When the parameters above are set to the listed values, the PsyNeuLink equation for :math:`\\frac{dw}{dt}`
+            reduces to the Modified FHN formulation, and the remaining parameters in the :math:`\\frac{dw}{dt}` equation
+            correspond as follows:
 
-        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dv/dt then correspond to the Gilzenrat equation for dv/dt as follows:
+            +--------------------------+---------------------------------------+---------------------------------------+
+            |**PNL Parameter**         |`a_w <FHNIntegrator.a_w>`              |*NEGATIVE* `b_w <FHNIntegrator.b_w>`   |
+            +--------------------------+---------------------------------------+---------------------------------------+
+            |**Modified FHN Parameter**|b                                      |c                                      |
+            +--------------------------+---------------------------------------+---------------------------------------+
 
-            (Gilzenrat representation --> PsyNeuLink representation)
+    (3) **Modified FHN Model as implemented in** `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_
 
-            *a* --> `threshold <FHNIntegrator.threshold>`
+        **Fast, Excitatory Variable:**
 
-            *b* --> `f_v <FHNIntegrator.f_v>`
+        [Eq. (6) in `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ ]
 
-            *f(X_1)* --> `variable <FHNIntegrator.variable>`
+        .. math::
 
-            *tau_v* --> `time_constant_v <FHNIntegrator.time_constant_v>`
+            \\tau_v \\frac{dv}{dt} = v(a-v)(v-1) - u + w_{vX_1}\\, f(X_1)
 
+        **Slow, Inactivating Variable:**
 
-        In order to reproduce the Gilzenrat equation for dw/dt, the following FHNIntegrator parameters must be set:
+        [Eq. (7) & Eq. (8) in `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ ]
 
-            *a_w = 1.0*
+        .. math::
 
-            *b_w = -1.0*
+            \\tau_u \\frac{du}{dt} = Cv + (1-C)\\, d - u
 
-            *c_w = 0.0;*
+        *How to implement this model in PsyNeuLink:*
 
-        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dw/dt then correspond to the Gilzenrat equation for dw/dt as follows:
+            In order to implement the Gilzenrat 2002 model, the following PsyNeuLink parameter values must be set in the
+            equation for :math:`\\frac{dv}{dt}`:
 
-            (Gilzenrat representation --> PsyNeuLink representation)
+            +-----------------+-----+-----+-----+-----+-----+
+            |**PNL Parameter**| a_v | b_v | c_v | d_v | e_v |
+            +-----------------+-----+-----+-----+-----+-----+
+            |**Value**        |-1.0 |1.0  |1.0  |0.0  |-1.0 |
+            +-----------------+-----+-----+-----+-----+-----+
 
-            *c* --> `mode <FHNIntegrator.mode>`
+            When the parameters above are set to the listed values, the PsyNeuLink equation for :math:`\\frac{dv}{dt}`
+            reduces to the Gilzenrat formulation, and the remaining parameters in the :math:`\\frac{dv}{dt}` equation
+            correspond as follows:
 
-            *d* --> `uncorrelated_activity <FHNIntegrator.uncorrelated_activity>`
+            +-----------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
+            |**PNL Parameter**      |`threshold <FHNIntegrator.threshold>`|`variable <FHNIntegrator.variable>`|`f_v <FHNIntegrator.f_v>`|`time_constant_v <FHNIntegrator.time_constant_v>`   |
+            +-----------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
+            |**Gilzenrat Parameter**|a                                    |:math:`f(X_1)`                     |:math:`w_{vX_1}`         |:math:`T_{v}`                                       |
+            +-----------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
 
-            *tau_w* --> `time_constant_w <FHNIntegrator.time_constant_w>`
+            In order to implement the Gilzenrat 2002 model, the following PsyNeuLink parameter values must be set in the
+            equation for :math:`\\frac{dw}{dt}`:
 
+            +-----------------+-----+-----+-----+
+            |**PNL Parameter**| a_w | b_w | c_w |
+            +-----------------+-----+-----+-----+
+            |**Value**        | 1.0 |-1.0 |0.0  |
+            +-----------------+-----+-----+-----+
+
+            When the parameters above are set to the listed values, the PsyNeuLink equation for :math:`\\frac{dw}{dt}`
+            reduces to the Gilzenrat formulation, and the remaining parameters in the :math:`\\frac{dw}{dt}` equation
+            correspond as follows:
+
+            +--------------------------+---------------------------------------+-------------------------------------------------------------+----------------------------------------------------+
+            |**PNL Parameter**         |`mode <FHNIntegrator.mode>`            |`uncorrelated_activity <FHNIntegrator.uncorrelated_activity>`|`time_constant_v <FHNIntegrator.time_constant_w>`   |
+            +--------------------------+---------------------------------------+-------------------------------------------------------------+----------------------------------------------------+
+            |**Gilzenrat Parameter**   |C                                      |d                                                            |:math:`T_{u}`                                       |
+            +--------------------------+---------------------------------------+-------------------------------------------------------------+----------------------------------------------------+
 
     Arguments
     ---------
@@ -5737,6 +5784,10 @@ class FHNIntegrator(
     time_constant_w : float : default 12.5
         scaling factor on the dv/dt equation
 
+    integration_method: str : default "RK4"
+        selects the numerical integration method. Currently, the choices are: "RK4" (4th Order Runge-Kutta) or "EULER"
+        (Forward Euler)
+
     params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -5747,7 +5798,7 @@ class FHNIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -5799,7 +5850,7 @@ class FHNIntegrator(
         coefficient on the w term in the dv/dt equation
 
     f_v : float : default  1.0
-        coefficient on the external stimulus ('variable <FHNIntegrator.variable>`) term in the dv/dt equation
+        coefficient on the external stimulus (`variable <FHNIntegrator.variable>`) term in the dv/dt equation
 
     time_constant_v : float : default 1.0
         scaling factor on the dv/dt equation
@@ -5953,7 +6004,7 @@ class FHNIntegrator(
                                  target_set=target_set,
                                  context=context)
         if self.integration_method not in {"RK4", "EULER"}:
-            raise FunctionError("Invalid integration method ({}) selected for {}".
+            raise FunctionError("Invalid integration method ({}) selected for {}. Choose 'RK4' or 'EULER'".
                                 format(self.integration_method, self.name))
 
     def _euler_FHN(self, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size):
@@ -6114,8 +6165,8 @@ class FHNIntegrator(
 
         return self.previous_v, self.previous_w, self.previous_t
 
-class AccumulatorIntegrator(
-    Integrator):  # --------------------------------------------------------------------------------
+
+class AccumulatorIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
     AccumulatorIntegrator(              \
         default_variable=None,          \
@@ -6173,7 +6224,7 @@ class AccumulatorIntegrator(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -6388,8 +6439,6 @@ class AccumulatorIntegrator(
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -6429,6 +6478,7 @@ class AccumulatorIntegrator(
         if not context or not INITIALIZING in context:
             self.previous_value = value
         return value
+
 
 class AGTUtilityIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -6517,7 +6567,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -6717,13 +6767,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
 
     def _logistic(self, variable, gain, bias):
 
-        try:
-            return_val = 1 / (1 + np.exp(-(gain * variable) + bias))
-        except (Warning):
-            # handle RuntimeWarning: overflow in exp
-            return_val = 0
-
-        return return_val
+        return 1 / (1 + np.exp(-(gain * variable) + bias))
 
     def function(self,
                  variable=None,
@@ -6876,7 +6920,7 @@ class BogaczEtAl(
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -6976,8 +7020,6 @@ class BogaczEtAl(
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -7002,35 +7044,34 @@ class BogaczEtAl(
             bias = 1 - 1e-8
 
         # drift_rate close to or at 0 (avoid float comparison)
-        if abs(drift_rate) < 1e-8:
+        if np.abs(drift_rate) < 1e-8:
             # back to absolute bias in order to apply limit
             bias_abs = bias * 2 * threshold - threshold
             # use expression for limit a->0 from Srivastava et al. 2016
             rt = t0 + (threshold ** 2 - bias_abs ** 2) / (noise ** 2)
             er = (threshold - bias_abs) / (2 * threshold)
         else:
-            drift_rate_normed = abs(drift_rate)
+            drift_rate_normed = np.abs(drift_rate)
             ztilde = threshold / drift_rate_normed
             atilde = (drift_rate_normed / noise) ** 2
 
             is_neg_drift = drift_rate < 0
             bias_adj = (is_neg_drift == 1) * (1 - bias) + (is_neg_drift == 0) * bias
             y0tilde = ((noise ** 2) / 2) * np.log(bias_adj / (1 - bias_adj))
-            if abs(y0tilde) > threshold:
+            if np.abs(y0tilde) > threshold:
                 y0tilde = -1 * (is_neg_drift == 1) * threshold + (is_neg_drift == 0) * threshold
             x0tilde = y0tilde / drift_rate_normed
 
-            import warnings
-            warnings.filterwarnings('error')
+            old_settings = np.seterr(over='raise', under='raise')
 
             try:
-                rt = ztilde * tanh(ztilde * atilde) + \
-                     ((2 * ztilde * (1 - exp(-2 * x0tilde * atilde))) / (
-                     exp(2 * ztilde * atilde) - exp(-2 * ztilde * atilde)) - x0tilde) + t0
-                er = 1 / (1 + exp(2 * ztilde * atilde)) - \
-                     ((1 - exp(-2 * x0tilde * atilde)) / (exp(2 * ztilde * atilde) - exp(-2 * ztilde * atilde)))
+                rt = ztilde * np.tanh(ztilde * atilde) + \
+                     ((2 * ztilde * (1 - np.exp(-2 * x0tilde * atilde))) / (
+                     np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)) - x0tilde) + t0
+                er = 1 / (1 + np.exp(2 * ztilde * atilde)) - \
+                     ((1 - np.exp(-2 * x0tilde * atilde)) / (np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)))
 
-            except (Warning):
+            except FloatingPointError:
                 # Per Mike Shvartsman:
                 # If ±2*ztilde*atilde (~ 2*z*a/(c^2) gets very large, the diffusion vanishes relative to drift
                 # and the problem is near-deterministic. Without diffusion, error rate goes to 0 or 1
@@ -7039,6 +7080,8 @@ class BogaczEtAl(
                 er = 0
                 rt = ztilde / atilde - x0tilde + t0
 
+            np.seterr(**old_settings)
+
             # This last line makes it report back in terms of a fixed reference point
             #    (i.e., closer to 1 always means higher p(upper boundary))
             # If you comment this out it will report errors in the reference frame of the drift rate
@@ -7046,7 +7089,6 @@ class BogaczEtAl(
             er = (is_neg_drift == 1) * (1 - er) + (is_neg_drift == 0) * (er)
 
         return rt, er
-
 
     def derivative(self, output=None, input=None):
         """
@@ -7092,7 +7134,7 @@ class BogaczEtAl(
         A = input or self.drift_rate
         c = self.noise
         c_sq = c**2
-        E = exp(-2*Z*A/c_sq)
+        E = np.exp(-2*Z*A/c_sq)
         D_iti = 0
         D_pen = 0
         D = D_iti + D_pen
@@ -7105,14 +7147,14 @@ class BogaczEtAl(
 
 
 # Results from Navarro and Fuss DDM solution (indices for return value tuple)
-class NF_Results(AutoNumber):
-    RESULT = ()
-    MEAN_ER = ()
-    MEAN_DT = ()
-    PLACEMARKER = ()
-    MEAN_CORRECT_RT = ()
-    MEAN_CORRECT_VARIANCE = ()
-    MEAN_CORRECT_SKEW_RT = ()
+class NF_Results(IntEnum):
+    MEAN_ER = 0
+    MEAN_RT = 1
+    MEAN_DT = 2
+    COND_RTS = 3
+    COND_VAR_RTS = 4
+    COND_SKEW_RTS = 5
+
 
 # ----------------------------------------------------------------------------
 class NavarroAndFuss(IntegratorFunction):
@@ -7177,7 +7219,7 @@ class NavarroAndFuss(IntegratorFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7257,10 +7299,22 @@ class NavarroAndFuss(IntegratorFunction):
                          context=context)
 
     def _instantiate_function(self, context=None):
-        print("\nimporting matlab...")
-        import matlab.engine
-        self.eng1 = matlab.engine.start_matlab('-nojvm')
-        print("matlab imported\n")
+        import os
+        import sys
+        try:
+            import matlab.engine
+        except ImportError as e:
+            raise ImportError(
+                'python failed to import matlab. Ensure that MATLAB and the python API is installed. See'
+                ' https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html'
+                ' for more info'
+            )
+
+        ddm_functions_path = os.path.abspath(sys.modules['psyneulink'].__path__[0] + '/../Matlab/DDMFunctions')
+
+        # must add the package-included MATLAB files to the engine path to run when not running from the path
+        # MATLAB is very finnicky about the formatting here to actually add the path so be careful if you modify
+        self.eng1 = matlab.engine.start_matlab("-r 'addpath(char(\"{0}\"))' -nojvm".format(ddm_functions_path))
 
         super()._instantiate_function(context=context)
 
@@ -7284,8 +7338,6 @@ class NavarroAndFuss(IntegratorFunction):
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -7302,11 +7354,14 @@ class NavarroAndFuss(IntegratorFunction):
         noise = float(self.noise)
         t0 = float(self.t0)
 
-        # print("\nimporting matlab...")
-        # import matlab.engine
-        # eng1 = matlab.engine.start_matlab('-nojvm')
-        # print("matlab imported\n")
-        results = self.eng1.ddmSim(drift_rate, starting_point, threshold, noise, t0, 1, nargout=5)
+        # used to pass values in a way that the matlab script can handle
+        ddm_struct = {
+            'z': threshold,
+            'c': noise,
+            'T0': t0
+        }
+
+        results = self.eng1.ddmSimFRG(drift_rate, starting_point, ddm_struct, 1, nargout=6)
 
         return results
 
@@ -7338,7 +7393,7 @@ class NormalDist(DistributionFunction):
         The mean or center of the normal distribution
 
     standard_dev : float : default 1.0
-        Standard deviation of the normal distribution
+        Standard deviation of the normal distribution. Must be > 0.0
 
     params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -7350,7 +7405,7 @@ class NormalDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7361,7 +7416,7 @@ class NormalDist(DistributionFunction):
         The mean or center of the normal distribution
 
     standard_dev : float : default 1.0
-        Standard deviation of the normal distribution
+        Standard deviation of the normal distribution. Must be > 0.0
 
     params : Dict[param keyword, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -7373,7 +7428,7 @@ class NormalDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7407,6 +7462,15 @@ class NormalDist(DistributionFunction):
                          context=context)
 
         self.functionOutputType = None
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if STANDARD_DEVIATION in target_set:
+            if target_set[STANDARD_DEVIATION] <= 0.0:
+                raise FunctionError("The standard_dev parameter ({}) of {} must be greater than zero.".
+                                            format(target_set[STANDARD_DEVIATION], self.name))
+
 
     def function(self,
                  variable=None,
@@ -7453,7 +7517,7 @@ class ExponentialDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7473,7 +7537,7 @@ class ExponentialDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7553,7 +7617,7 @@ class UniformDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7576,7 +7640,7 @@ class UniformDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7659,7 +7723,7 @@ class GammaDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7682,7 +7746,7 @@ class GammaDist(DistributionFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -7930,7 +7994,7 @@ COMMENT
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     Attributes
@@ -8023,6 +8087,9 @@ COMMENT
 
             matrix = target_set[MATRIX]
 
+            if isinstance(matrix, str):
+                matrix = get_matrix(matrix)
+
             if isinstance(matrix, MappingProjection):
                 try:
                     matrix = matrix._parameter_states[MATRIX].value
@@ -8051,7 +8118,11 @@ COMMENT
                                     format(param_type_string, MATRIX, self.name, matrix))
             rows = matrix.shape[0]
             cols = matrix.shape[1]
-            size = len(np.squeeze(self.instance_defaults.variable))
+            # MODIFIED 11/25/17 OLD:
+            # size = len(np.squeeze(self.instance_defaults.variable))
+            # MODIFIED 11/25/17 NEW:
+            size = len(self.instance_defaults.variable)
+            # MODIFIED 11/25/17 END
 
             if rows != size:
                 raise FunctionError("The value of the {} specified for the {} arg of {} is the wrong size;"
@@ -8063,7 +8134,6 @@ COMMENT
                                     "must be a square matrix".
                                     format(param_type_string, MATRIX, self.name, matrix))
 
-
     def _instantiate_attributes_before_function(self, context=None):
         """Instantiate matrix
 
@@ -8074,7 +8144,11 @@ COMMENT
 
         """
 
-        size = len(np.squeeze(self.instance_defaults.variable))
+        # MODIFIED 11/25/17 OLD:
+        # size = len(np.squeeze(self.instance_defaults.variable))
+        # MODIFIED 11/25/17 NEW:
+        size = len(self.instance_defaults.variable)
+        # MODIFIED 11/25/17 END
 
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.components.states.parameterstate import ParameterState
@@ -8085,7 +8159,7 @@ COMMENT
         else:
             self._matrix = get_matrix(self.matrix, size, size)
 
-        self._hollow_matrix = get_matrix(HOLLOW_MATRIX,size, size)
+        self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
 
         # # MODIFIED 11/12/17 OLD:
         # if self.metric is ENTROPY:
@@ -8193,7 +8267,7 @@ class Distance(ObjectiveFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -8466,7 +8540,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     Attributes
@@ -8688,7 +8762,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -8832,8 +8906,6 @@ class Reinforcement(LearningFunction):  # --------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -8947,7 +9019,7 @@ class BackPropagation(LearningFunction):
 
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
-        
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -9162,8 +9234,6 @@ class BackPropagation(LearningFunction):
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -9292,8 +9362,7 @@ class TDLearning(Reinforcement):
 # endregion
 # TBI
 
-# region  *****************************************   REGISTER FUNCTIONS
-# ***********************************************
+# region  *****************************************   REGISTER FUNCTIONS ***********************************************
 
 # region
 
