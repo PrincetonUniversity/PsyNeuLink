@@ -265,10 +265,13 @@ from psyneulink.components.projections.pathway.pathwayprojection import PathwayP
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.keywords import VALUE, AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, \
-    FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, SYSTEM_INPUT_STATE
+    FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, \
+    MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, \
+    SYSTEM_INPUT_STATE, INITIALIZING, EXECUTING, kwAssign
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock
+from psyneulink.scheduling.timescale import CentralClock, CurrentTime
+from psyneulink.globals.log import LogLevel, LogEntry
 
 __all__ = [
     'MappingError', 'MappingProjection',
@@ -666,6 +669,40 @@ class MappingProjection(PathwayProjection_Base):
         self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
         self.function_object.matrix = matrix
+
+        # Log matrix value if specified by owner, sender, or sender's owner
+
+        # Get context
+        try:
+            curr_frame = inspect.currentframe()
+            prev_frame = inspect.getouterframes(curr_frame, 2)
+            context = inspect.getargvalues(prev_frame[2][0]).locals['context']
+        except KeyError:
+            context = ""
+
+        # Get logPref
+        self_log_pref = self.prefs.logPref if self.prefs else None
+        loggers = [
+            # Log to self for logPref
+            (self.log, self_log_pref),
+            # Log to receiver's owner if condition meets self_log_pref
+            #    and name of self is in receiver's log.entries
+            (self.receiver.log, self_log_pref if self.name in self.receiver.log.entries else None),
+            # Log to receiver's owner if condition meets self_log_pref
+            #     and name of self is in receiver's owner's log.entries
+            (self.receiver.owner.log, self_log_pref if self.name in self.receiver.owner.log.entries else None),
+            # (self.receiver.log, self.receiver.prefs.logPref if self.receiver.prefs else None),
+            # (self.receiver.owner.log, self.receiver.owner.prefs.logPref if self.receiver.owner.prefs else None)
+        ]
+
+        # If context is consistent with log_pref of logger, record value to logger's log
+        for log, log_pref in loggers:
+            if (log_pref is LogLevel.ALL_ASSIGNMENTS or
+                    (INITIALIZING in context and log_pref is LogLevel.INITIALIZATION) or
+                    (EXECUTING in context and log_pref is LogLevel.EXECUTION) or
+                    (all(c in context for c in {EXECUTING, kwAssign}) and log_pref is LogLevel.VALUE_ASSIGNMENT)):
+                log.entries[self.name] = LogEntry(CurrentTime(), context, matrix)
+
 
     @property
     def _matrix_spec(self):

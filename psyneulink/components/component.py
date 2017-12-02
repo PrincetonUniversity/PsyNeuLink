@@ -468,7 +468,6 @@ class ParamsDict(UserDict):
         # assign value to attrib
         setattr(self.owner, key, item)
 
-
 parameter_keywords = set()
 
 # suppress_validation_preference_set = ComponentPreferenceSet(prefs = {

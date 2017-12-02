@@ -299,30 +299,86 @@ class Log:
 
         # self.add_entries(entries)
 
+    @property
+    def loggable_items(self):
+        try:
+            return self._loggable_items
+        except AttributeError:
+            self.loggable_items = None
+            return self._loggable_items
+
+    @loggable_items.setter
+    def loggable_items(self, items):
+
+        """Set loggable items for Component
+
+        loggable_items are:
+            any entry in user_params, including:
+                any entry of a list, UserList (including ContentAddressableList),
+                any entry of a dict, or UserDict (including ReadOnlyOrderedDict)
+                    this includes entries in function_params (a ReadOnlyOrderedDict),
+                        which makes all parameters of the Component's function available for logging
+            any entry added using the log.add_entries method
+            Note:
+               for Mechanisms, since their input_states and output_states are ContentAddressableLists in user_params,
+               they will be included in loggable items;  although there are checks for no duplicate names within
+               either input_states or output_states, there are not checks for duplicated names between them, or
+               with parameter_states
+               since the names of the function's parameters are included, and these correspond to the names of their
+               ParameterStates, using them causes the ParameterState to log the information (since Functions don't log)
+
+        :return:
+        """
+
+        # if not hasattr(self, '_loggable_items'):
+        if items is None:
+            from collections import UserDict, UserList
+
+            items = []
+
+            param_set = self.owner.user_params
+
+            for item in self.owner.user_params:
+                if isinstance(param_set[item], (list, UserList)):
+                    for sub_item in param_set[item]:
+                        items.append(sub_item)
+                elif isinstance(param_set[item], (dict, UserDict)):
+                    for sub_item in param_set[item]:
+                        items.append(sub_item)
+                else:
+                    items.append(item)
+            self._loggable_items = items + SystemLogEntries +  self.owner._loggable_items
+        else:
+            if not hasattr(self, '_loggable_items'):
+                self.loggable_items = None
+            # items = [item if isinstance(item, str) else item.name for item in items]
+            self._loggable_items += items
+
     def add_entries(self, entries):
         """Validate that a list of entries are attributes of owner or in SystemLogEntries, and then add to self.entries
 
         entries should be a single keypath or list of keypaths for attribute(s) of the owner
         Note: adding an entry does not mean data will be recorded;
                   to activate recording, the log_entries() method must be called
-
-        :param entry: (str)
-        :return:
         """
+        from psyneulink.components.component import Component
 
         # If entries is a single entry, put in list for processing below
-        if isinstance(entries, str):
+        if isinstance(entries, (str, Component)):
             entries = [entries]
 
         for entry in entries:
+            if isinstance(entry, Component):
+                entry = entry.name
+
             #Check if entries already exist
             try:
                 self.entries[entry]
             # Entry doesn't already exist
             except KeyError:
                 # Validate that entry is either an attribute of owner or in SystemLogEntries
-                if not entry in SystemLogEntries and not entry in self.owner.__dict__:
-                    raise LogError("{0} is not an attribute of {1} or in SystemLogEntries".
+                if not entry in self.loggable_items:
+                    raise LogError("{} is not a loggable item for {}".
                                    format(entry, self.owner.name))
                 # Add entry to self.entries dict
                 self.entries[entry] = []

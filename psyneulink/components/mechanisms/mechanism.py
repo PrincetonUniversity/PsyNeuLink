@@ -1055,6 +1055,13 @@ class Mechanism_Base(Mechanism):
     #     kwPreferenceSetName: 'MechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
+    @property
+    def _loggable_items(self):
+        # Include afferent Projections in Mechanism's loggable items
+        #     - for MappingProjections, this logs the value of the Projection's matrix parameter
+        #     - for ModulatoryProjections, this logs the value of the Projection
+        # IMPLEMENTATION NOTE: this needs to be a property as projections may be added
+        return self.afferents.names
 
     #FIX:  WHEN CALLED BY HIGHER LEVEL OBJECTS DURING INIT (e.g., PROCESS AND SYSTEM), SHOULD USE FULL Mechanism.execute
     # By default, init only the _execute method of Mechanism subclass objects when their execute method is called;
@@ -2440,14 +2447,12 @@ class Mechanism_Base(Mechanism):
     @property
     def loggable_items(self):
         """List of names of all items that can be logged"""
-        return self.states.names + self.afferents.names
+        # FIX: use Log.add_entries to add afferents
+        return self.log.loggable_items
 
     @property
     def log_items(self):
         log_level = 'LogLevel.'
-        # List version:
-        # return list(zip(self.log.entries.keys(), [s.logPref for s in self.states]))
-        # Dictionary version:
         # Get logged State values
         states = {key: value for (key, value) in
                   [(s, log_level+self.states[s].logPref.name)
@@ -2481,9 +2486,11 @@ class Mechanism_Base(Mechanism):
             return
 
         def assign_log_level(item, level):
-            for item_type in [self.states, self.path_afferents, self.mod_afferents]:
+            for item_type in [self.states, self.afferents]:
                 try:
-                    if isinstance(item_type[item], MappingProjection):
+                    if item in self.afferents:
+                        self.afferents[item].logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
+                    elif isinstance(item_type[item], MappingProjection):
                         item_type[item].parameter_states[MATRIX].logPref=PreferenceEntry(level,
                                                                                          PreferenceLevel.INSTANCE)
                     else:
@@ -2495,15 +2502,16 @@ class Mechanism_Base(Mechanism):
                     return
             raise MechanismError("\'{}\' is not a loggable item for {}".format(item, self.name))
 
-
         if not isinstance(items, list):
             items = [items]
 
         for item in items:
             if isinstance(item, str):
                 assign_log_level(item, LogLevel.EXECUTION)
+                self.log.add_entries(item)
             else:
                 assign_log_level(item[0], item[1])
+                self.log.add_entries(item)
 
     @property
     def path_afferents(self):
