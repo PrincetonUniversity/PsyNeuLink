@@ -2506,7 +2506,9 @@ class Mechanism_Base(Mechanism):
             items = [items]
 
         for item in items:
-            if isinstance(item, str):
+            if isinstance(item, (str, Component)):
+                if isinstance(item, Component):
+                    item = item.name
                 assign_log_level(item, LogLevel.EXECUTION)
                 self.log.add_entries(item)
             else:
