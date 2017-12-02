@@ -2431,7 +2431,49 @@ class Mechanism_Base(Mechanism):
     @property
     def states(self):
         """Return list of all of the Mechanism's States"""
-        return list(self.input_states) + list(self.parameter_states) + list(self.output_states)
+        return ContentAddressableList(
+                component_type=State,
+                list=list(self.input_states) +
+                     list(self.parameter_states) +
+                     list(self.output_states))
+
+    @property
+    def loggable_items(self):
+        """List of names of all items that can be logged"""
+        return self.states.names
+
+    @property
+    def log_items(self):
+        # return list(zip(self.log.entries.keys(), [s.logPref for s in self.states]))
+        return {key: value for (key, value) in zip(self.log.entries.keys(), [s.logPref for s in self.states])}
+
+    # @tc.typecheck
+    # def log_items(self, items:tc.any(str, tuple, list)):
+    @log_items.setter
+    def log_items(self, items):
+        """List of items to log
+
+        items a single string, a 2-item tuple, or a list containing either or both.
+        Strings must be the name of a State of the Mechanism (a list of which is in the `loggable_items
+        <Mechanism_Base>` attribute;  they are assigned a `LogLevel` of `EXECUTION`.
+        Tuples must have 2 items, the first of which is the name of a State, and the second a `LogLevel`
+        specification for that item.
+        """
+        from psyneulink.globals.preferences.preferenceset import PreferenceEntry
+        from psyneulink.globals.log import LogLevel
+
+        def assign_log_level(item, level):
+            self.states[item].logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
+
+        if not isinstance(items, list):
+            items = [items]
+
+        for item in items:
+            if isinstance(item, str):
+                assign_log_level(item, LogLevel.EXECUTION)
+            else:
+                assign_log_level(item[0], item[1])
+
 
     @property
     def path_afferents(self):

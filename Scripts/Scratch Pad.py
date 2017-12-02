@@ -862,13 +862,13 @@ class ScratchPadError(Exception):
 #endregion
 
 # region TEST System Graph with AutoAssociativeMechanism
-print("TEST System Graph with AutoAssociativeMechanism")
-
-a = pnl.RecurrentTransferMechanism()
-# b = pnl.TransferMechanism()
-p = pnl.Process(pathway=[a], learning=pnl.ENABLED)
-s = pnl.System(processes=[p])
-s.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL)
+# print("TEST System Graph with AutoAssociativeMechanism")
+#
+# a = pnl.RecurrentTransferMechanism()
+# # b = pnl.TransferMechanism()
+# p = pnl.Process(pathway=[a], learning=pnl.ENABLED)
+# s = pnl.System(processes=[p])
+# s.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL)
 
 #endregion
 
@@ -2217,14 +2217,16 @@ T = pnl.TransferMechanism(
     params={pnl.LOG_ENTRIES:'variable'},
     prefs={pnl.LOG_PREF:pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
 )
-T.logPref=pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)
+# T.parameter_states['slope'].logPref=pnl.PreferenceEntry(pnl.LogLevel.EXECUTION, pnl.PreferenceLevel.INSTANCE)
+T.log_items='noise'
 # for state in T.states:
 #     state.logPref=pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)
 T.execute()
 T.execute()
 assert True
-T.function_object.slope
-T.log.set_level('noise', pnl.LogLevel.EXECUTION)
+print(T.log_items)
+# T.function_object.slope
+# T.log.set_level('noise', pnl.LogLevel.EXECUTION)
 
 #endregion
 
