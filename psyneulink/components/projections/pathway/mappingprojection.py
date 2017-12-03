@@ -693,12 +693,12 @@ class MappingProjection(PathwayProjection_Base):
             # Use self.logPref to log to receiver's log if name of self is in receiver's log.entries;
             #    otherwise use receiver's logPref
             (self.receiver.name, self.receiver.log,
-             self_log_pref if self.name in self.receiver.log.entries else self.receiver.logPref),
+             self_log_pref if self.name in self.receiver.log.loggable_items else self.receiver.logPref),
 
             # Use self.logPref to log to receiver owner's log if name of self is in receiver owner's log.entries
             #    otherwise use receiver owner's logPref
             (self.receiver.owner.name, self.receiver.owner.log,
-             self_log_pref if self.name in self.receiver.owner.log.entries else self.receiver.owner.logPref)
+             self_log_pref if self.name in self.receiver.owner.log.loggable_items else self.receiver.owner.logPref)
         ]
 
         # Go through loggers, and if context is consistent with log_pref of logger, record value to logger's log
