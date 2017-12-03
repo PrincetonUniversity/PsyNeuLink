@@ -624,28 +624,30 @@ class MappingProjection(PathwayProjection_Base):
         if "System" not in str(self.sender.owner):
             self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
 
-        # Check whether error_signal has changed
-        if (self.learning_mechanism
-            and self.learning_mechanism.learning_enabled
-            and self.learning_mechanism.status == CHANGED):
-
-            # Assume that if learning_mechanism attribute is assigned,
-            #    both a LearningProjection and ParameterState[MATRIX] to receive it have been instantiated
-            matrix_parameter_state = self._parameter_states[MATRIX]
-
-            # Assign current MATRIX to parameter state's base_value, so that it is updated in call to execute()
-            setattr(self, '_'+MATRIX, self.matrix)
-
-            # Update MATRIX
-            self.matrix = matrix_parameter_state.value
-            # FIX: UPDATE FOR LEARNING END
-
-            # # TEST PRINT
-            # print("\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.matrix))
-            # # print("\n@@@ WEIGHTS CHANGED FOR {} TRIAL {}".format(self.name, CentralClock.trial))
-            # TEST DEBUG MULTILAYER
-            # print("\n{}\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".
-            #       format(self.__class__.__name__.upper(), self.name, CentralClock.trial, self.matrix))
+        # # MODIFIED 12/3/17 OLD:  [SUPERFLOUS:  DOUBLES UPDATING OF MATRIX (AND LOGGING)
+        # # Check whether error_signal has changed
+        # if (self.learning_mechanism
+        #     and self.learning_mechanism.learning_enabled
+        #     and self.learning_mechanism.status == CHANGED):
+        #
+        #     # Assume that if learning_mechanism attribute is assigned,
+        #     #    both a LearningProjection and ParameterState[MATRIX] to receive it have been instantiated
+        #     matrix_parameter_state = self._parameter_states[MATRIX]
+        #
+        #     # Assign current MATRIX to parameter state's base_value, so that it is updated in call to execute()
+        #     setattr(self, '_'+MATRIX, self.matrix)
+        #
+        #     # Update MATRIX
+        #     self.matrix = matrix_parameter_state.value
+        #     # FIX: UPDATE FOR LEARNING END
+        #
+        #     # # TEST PRINT
+        #     # print("\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.matrix))
+        #     # # print("\n@@@ WEIGHTS CHANGED FOR {} TRIAL {}".format(self.name, CentralClock.trial))
+        #     # TEST DEBUG MULTILAYER
+        #     # print("\n{}\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".
+        #     #       format(self.__class__.__name__.upper(), self.name, CentralClock.trial, self.matrix))
+        # # MODIFIED 12/3/17 END:
 
 
         return self.function(self.sender.value, params=params, context=context)
@@ -682,21 +684,25 @@ class MappingProjection(PathwayProjection_Base):
 
         # Get logPref
         self_log_pref = self.prefs.logPref if self.prefs else None
+
         loggers = [
+
             # Log to self for logPref
-            (self.log, self_log_pref),
-            # Log to receiver's owner if condition meets self_log_pref
-            #    and name of self is in receiver's log.entries
-            (self.receiver.log, self_log_pref if self.name in self.receiver.log.entries else None),
-            # Log to receiver's owner if condition meets self_log_pref
-            #     and name of self is in receiver's owner's log.entries
-            (self.receiver.owner.log, self_log_pref if self.name in self.receiver.owner.log.entries else None),
-            # (self.receiver.log, self.receiver.prefs.logPref if self.receiver.prefs else None),
-            # (self.receiver.owner.log, self.receiver.owner.prefs.logPref if self.receiver.owner.prefs else None)
+            (self.name, self.log, self_log_pref),
+
+            # Use self.logPref to log to receiver's log if name of self is in receiver's log.entries;
+            #    otherwise use receiver's logPref
+            (self.receiver.name, self.receiver.log,
+             self_log_pref if self.name in self.receiver.log.entries else self.receiver.logPref),
+
+            # Use self.logPref to log to receiver owner's log if name of self is in receiver owner's log.entries
+            #    otherwise use receiver owner's logPref
+            (self.receiver.owner.name, self.receiver.owner.log,
+             self_log_pref if self.name in self.receiver.owner.log.entries else self.receiver.owner.logPref)
         ]
 
-        # If context is consistent with log_pref of logger, record value to logger's log
-        for log, log_pref in loggers:
+        # Go through loggers, and if context is consistent with log_pref of logger, record value to logger's log
+        for log_name, log, log_pref in loggers:
             if (log_pref is LogLevel.ALL_ASSIGNMENTS or
                     (INITIALIZING in context and log_pref is LogLevel.INITIALIZATION) or
                     (EXECUTING in context and log_pref is LogLevel.EXECUTION) or
