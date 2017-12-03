@@ -108,7 +108,7 @@ Hidden_Layer_2.log_items(Middle_Weights)
 
 mySystem.reportOutputPref = True
 # Shows graph will full information:
-mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL)
+# mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL)
 # Shows minimal graph:
 # mySystem.show_graph()
 

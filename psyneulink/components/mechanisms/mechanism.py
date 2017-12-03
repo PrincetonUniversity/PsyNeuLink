@@ -2520,9 +2520,7 @@ class Mechanism_Base(Mechanism):
                                            list(self.mod_afferents) +
                                            list(self.efferents))
 
-
-    # FIX: CHANGE THIS TO ADD ENTRIES?? (VS. LOGGING OF THEM?)
-    # Overrided Component.log_items to add states and afferents to list of loggable items
+    # Override Component.log_items to add states and afferents to list of attributes to which logged_items can refer
     def log_items(self, items, log_level=LogLevel.EXECUTION):
         self.log.log_items(items=items, log_level=log_level, param_sets=[self.states, self.afferents])
 
