@@ -935,7 +935,7 @@ class Mechanism_Base(Mechanism):
         contains the parameters for the Mechanism's `function <Mechanism_Base.function>`.  The key of each entry is the
         name of a parameter of the function, and its value is the parameter's value.
 
-    value : ndarray : default None
+    value : ndarray
         output of the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array, with the
         items of axis 0 corresponding to the values referenced by the corresponding `index <OutputState.index>`
         attribute of the Mechanism's `OutputStates <OutputState>`.  The first item is generally referenced by the
@@ -948,11 +948,11 @@ class Mechanism_Base(Mechanism):
            `output_values <Mechanism_Base.output_values>` attribute, which lists the `value <OutputState.value>`\\s
            of its `OutputStates <Mechanism_Base.output_states>`.
 
-    default_value : ndarray : default None
+    default_value : ndarray
         set equal to the `value <Mechanism_Base.value>` attribute when the Mechanism is first initialized; maintains
         its value even when `value <Mechanism_Base.value>` is reset to None when (re-)initialized prior to execution.
 
-    output_state : OutputState : default default OutputState
+    output_state : OutputState
         `primary OutputState <OutputState_Primary>` for the Mechanism;  same as first entry of its `output_states
         <Mechanism_Base.output_states>` attribute.
 
@@ -966,7 +966,7 @@ class Mechanism_Base(Mechanism):
         the Mechanism's `primary OutputState <OutputState_Primary>` (i.e., the one in the its `output_state
         <Mechanism_Base.output_state>` attribute).
 
-    output_values : List[value] : default Mechanism_Base.function(instance_defaults.variable)
+    output_values : List[value]
         each item in the list corresponds to the `value <OutputState.value>` of one of the Mechanism's `OutputStates
         <Mechanism_OutputStates>` listed in its `output_states <Mechanism_Base.output_states>` attribute.
 
@@ -1006,12 +1006,44 @@ class Mechanism_Base(Mechanism):
             for how phases are used).
     COMMENT
 
-    processes : Dict[Process, str]:
+    states : ContentAddressableList
+        a complete list of all of the Mechanism's `States <State>`, composed from its `input_states
+        <Mechanism_Base.input_states>`, `parameter_states <Mechanism_Base.parameter_states>`, and
+        `output_states <Mechanism_Base.output_states>` attributes.
+
+    projections : ContentAddressableList
+        a complete list of all of the Mechanism's `Projections <Projection>`, composed from the
+        `path_afferents <InputStates.path_afferents>` of all of its `input_states <Mechanism_Base.input_states>`,
+        the `mod_afferents` of all of its `input_states <Mechanism_Base.input_states>`,
+        `parameter_states <Mechanism)Base.parameter_states>`, and `output_states <Mechanism_Base.output_states>`,
+        and the `efferents <OutputState.efferents>` of all of its `output_states <Mechanism_Base.output_states>`.
+
+    afferents : ContentAddressableList
+        a list of all of the Mechanism's afferent `Projections <Projection>`, composed from the
+        `path_afferents <InputStates.path_afferents>` of all of its `input_states <Mechanism_Base.input_states>`,
+        and the `mod_afferents` of all of its `input_states <Mechanism_Base.input_states>`,
+        `parameter_states <Mechanism)Base.parameter_states>`, and `output_states <Mechanism_Base.output_states>`.,
+
+    path_afferents : ContentAddressableList
+        a list of all of the Mechanism's afferent `PathwayProjections <PathwayProjection>`, composed from the
+        `path_afferents <InputStates.path_afferents>` attributes of all of its `input_states
+        <Mechanism_Base.input_states>`.
+
+    mod_afferents : ContentAddressableList
+        a list of all of the Mechanism's afferent `ModulatoryProjections <ModulatoryProjection>`, composed from the
+        `mod_afferents` attributes of all of its `input_states <Mechanism_Base.input_states>`, `parameter_states
+        <Mechanism)Base.parameter_states>`, and `output_states <Mechanism_Base.output_states>`.
+
+    efferents : ContentAddressableList
+        a list of all of the Mechanism's efferent `Projections <Projection>`, composed from the `efferents
+        <OutputState.efferents>` attributes of all of its `output_states <Mechanism_Base.output_states>`.
+
+    processes : Dict[Process, str]
         a dictionary of the `Processes <Process>` to which the Mechanism belongs, that designates its  `role
         <Mechanism_Role_In_Processes_And_Systems>` in each.  The key of each entry is a Process to which the Mechansim
         belongs, and its value is the Mechanism's `role in that Process <Process_Mechanisms>`.
 
-    systems : Dict[System, str]:
+    systems : Dict[System, str]
         a dictionary of the `Systems <System>` to which the Mechanism belongs, that designates its `role
         <Mechanism_Role_In_Processes_And_Systems>` in each. The key of each entry is a System to which the Mechanism
         belongs, and its value is the Mechanism's `role in that System <System_Mechanisms>`.
