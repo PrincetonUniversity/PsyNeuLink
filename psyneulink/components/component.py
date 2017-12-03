@@ -2827,7 +2827,7 @@ class Component(object):
         return self.log.loggable_items
 
     def log_items(self, items):
-        self.log.log_items(items)
+        self.log.log_items(items=items)
 
     @property
     def logging_items(self):

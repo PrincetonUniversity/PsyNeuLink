@@ -690,11 +690,11 @@ class Log:
                          for l in self.entries.keys()]}
         return logged_items
 
-    def log_items(self, items, log_level=LogLevel.EXECUTION, param_set=None):
+    def log_items(self, items, log_level=LogLevel.EXECUTION, param_sets=None):
         # User owner's implementation if it has one
-        return self._log_items(items, log_level=log_level, param_set=param_set)
+        return self._log_items(items, log_level=log_level, param_sets=param_sets)
 
-    def _log_items(self, items, log_level=LogLevel.EXECUTION, param_set=None):
+    def _log_items(self, items, log_level=LogLevel.EXECUTION, param_sets=None):
         """List of items to log
 
         items can be a string, Component, 2-item tuple, or a list containing any combination of these.
@@ -739,7 +739,7 @@ class Log:
                             except KeyError:
                                 raise LogError("{} is not a loggable parameter of {}".format(item, self.owner.name))
 
-        param_set = param_set or [self.owner.user_params]
+        param_sets = param_sets or [self.owner.user_params]
         if not isinstance(items, list):
             items = [items]
 
@@ -747,10 +747,10 @@ class Log:
             if isinstance(item, (str, Component)):
                 if isinstance(item, Component):
                     item = item.name
-                assign_log_level(item, log_level, param_set)
+                assign_log_level(item, log_level, param_sets)
                 self.add_entries(item)
             else:
-                assign_log_level(item[0], item[1], param_set)
+                assign_log_level(item[0], item[1], param_sets)
                 self.add_entries(item[0])
 
 

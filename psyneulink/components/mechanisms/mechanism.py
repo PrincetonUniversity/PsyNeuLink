@@ -2520,81 +2520,11 @@ class Mechanism_Base(Mechanism):
                                            list(self.mod_afferents) +
                                            list(self.efferents))
 
-    # FIX: MOVE TO Log WITH CALL TO self._log_items FOR HANDLING OF RCLASS-SPECIFIC ATTRIBUTES (STATES AND PROJECTIONS)
-    # @property
-    # def logging_items(self):
-    #     log_level = 'LogLevel.'
-    #     logged_items= {}
-    #     # Get logged State values
-    #     states = {key: value for (key, value) in
-    #               [(s, log_level+self.states[s].logPref.name)
-    #                for s in self.log.entries.keys() if s in self.states.names]}
-    #     # Get logged Projection values
-    #     projections = {key: value for (key, value) in
-    #                    [(p, log_level+self.projections[p].logPref.name)
-    #                     for p in self.log.entries.keys() if p in self.projections.names]}
-    #
-    #     logged_items.update(states)
-    #     logged_items.update(projections)
-    #
-    #     return states
 
     # FIX: CHANGE THIS TO ADD ENTRIES?? (VS. LOGGING OF THEM?)
-    # Add states and afferents to list of loggable items
+    # Overrided Component.log_items to add states and afferents to list of loggable items
     def log_items(self, items, log_level=LogLevel.EXECUTION):
-        self.log.log_items(items, log_level, [self.states, self.afferents])
-
-    # @tc.typecheck
-    # def log_items(self, items:tc.any(str, tuple, list)):
-    # def log_items(self, items, log_level=LogLevel.EXECUTION):
-    #     """List of items to log
-    #
-    #     items can be a string, Component, 2-item tuple, or a list containing any combination of these.
-    #     Strings and Components must refer to loggable items for the Component, (listed in `loggable_items`):
-    #         - the string or Component.name must be in the loggable_items list.
-    #         - they are assigned log_level (default: `LogLevel` of `EXECUTION`).
-    #     Tuples must have 2 items:
-    #         - 1st item must be a string or Component that refers to a loggable item (see above);
-    #         - 2nd item must be a `LogLevel` specification for 1st item.
-    #
-    #     """
-    #     from psyneulink.components.projections.pathway.mappingprojection import MappingProjection, MATRIX
-    #     from psyneulink.globals.preferences.preferenceset import PreferenceEntry
-    #     from psyneulink.globals.keywords import ALL
-    #
-    #     if items is ALL:
-    #         self.logPref = PreferenceEntry(log_level, PreferenceLevel.INSTANCE)
-    #         return
-    #
-    #     def assign_log_level(item, level):
-    #         for item_type in [self.states, self.afferents]:
-    #             try:
-    #                 if item in self.afferents:
-    #                     self.afferents[item].logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
-    #                 elif isinstance(item_type[item], MappingProjection):
-    #                     item_type[item].parameter_states[MATRIX].logPref=PreferenceEntry(level,
-    #                                                                                      PreferenceLevel.INSTANCE)
-    #                 else:
-    #                     item_type[item].logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
-    #             except TypeError as e:
-    #                 if 'not a key in' in e.args[0]:
-    #                     continue
-    #             else:
-    #                 return
-    #         raise MechanismError("\'{}\' is not a loggable item for {}".format(item, self.name))
-    #
-    #     if not isinstance(items, list):
-    #         items = [items]
-    #
-    #     for item in items:
-    #         if isinstance(item, (str, Component)):
-    #             if isinstance(item, Component):
-    #                 item = item.name
-    #             assign_log_level(item, log_level)
-    #             self.log.add_entries(item)
-    #         else:
-    #             assign_log_level(item[0], item[1])
-    #             self.log.add_entries(item[0])
+        self.log.log_items(items=items, log_level=log_level, param_sets=[self.states, self.afferents])
 
 
 def _is_mechanism_spec(spec):
