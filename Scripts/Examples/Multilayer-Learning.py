@@ -123,3 +123,4 @@ mySystem.run(
     call_after_trial=functools.partial(show_target, mySystem),
     termination_processing={pnl.TimeScale.TRIAL: pnl.AfterNCalls(Output_Layer, 1)}
 )
+assert True

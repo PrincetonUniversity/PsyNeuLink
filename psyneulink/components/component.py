@@ -352,7 +352,7 @@ from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, D
     INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, \
     PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, \
     SIZE, USER_PARAMS, VALUE, VARIABLE, MODULATORY_SPEC_KEYWORDS, kwComponentCategory
-from psyneulink.globals.log import Log
+from psyneulink.globals.log import Log, LogLevel
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength
@@ -2826,8 +2826,10 @@ class Component(object):
         """
         return self.log.loggable_items
 
-    def log_items(self, items):
-        self.log.log_items(items=items)
+    def log_items(self, items, log_level=LogLevel.EXECUTION):
+        self.log.log_items(items=items, log_level=log_level)
+    # def log_items(self, items):
+    #     self.log.log_items(items)
 
     @property
     def logging_items(self):
