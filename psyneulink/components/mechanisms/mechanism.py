@@ -2446,10 +2446,12 @@ class Mechanism_Base(Mechanism):
 
     @property
     def loggable_items(self):
-        """List of names of all items that can be logged"""
-        # FIX: use Log.add_entries to add afferents
+        """List of names of all items that can be logged
+        This is a convenience method that calls self.log
+        """
         return self.log.loggable_items
 
+    # FIX: MOVE TO Log WITH CALL TO self._log_items FOR HANDLING OF RCLASS-SPECIFIC ATTRIBUTES (STATES AND PROJECTIONS)
     @property
     def log_items(self):
         log_level = 'LogLevel.'
