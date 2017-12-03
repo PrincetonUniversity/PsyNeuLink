@@ -2059,7 +2059,7 @@ class State_Base(State):
         try:
             curr_frame = inspect.currentframe()
             prev_frame = inspect.getouterframes(curr_frame, 2)
-            context = inspect.getargvalues(prev_frame[1][0]).locals['context']
+            context = inspect.getargvalues(prev_frame[2][0]).locals['context']
         except KeyError:
             context = ""
 

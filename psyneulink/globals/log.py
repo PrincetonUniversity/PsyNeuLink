@@ -114,6 +114,7 @@ Class Reference
 
 """
 import warnings
+import typecheck as tc
 from collections import namedtuple
 from enum import IntEnum
 
@@ -311,8 +312,9 @@ class Log:
     @property
     def loggable_items(self):
         try:
-            return self._loggable_items
+            return self._loggable_items + self.owner._loggable_items
         except AttributeError:
+            # This forces setter to create log._loggable_items
             self.loggable_items = None
             return self._loggable_items
 
@@ -327,7 +329,8 @@ class Log:
                 any entry of a dict, or UserDict (including ReadOnlyOrderedDict)
                     this includes entries in function_params (a ReadOnlyOrderedDict),
                         which makes all parameters of the Component's function available for logging
-            any entry added using the log.add_entries method
+            # any entry added using the log.add_entries method
+            any entries included in items above
             Note:
                for Mechanisms, since their input_states and output_states are ContentAddressableLists in user_params,
                they will be included in loggable items;  although there are checks for no duplicate names within
@@ -368,42 +371,43 @@ class Log:
             # items = [item if isinstance(item, str) else item.name for item in items]
             self._loggable_items += items
 
-    def add_entries(self, entries):
-        """Validate that a list of entries are attributes of owner or in SystemLogEntries, and then add to self.entries
-
-        entries should be a single keypath or list of keypaths for attribute(s) of the owner
-        Note: adding an entry does not mean data will be recorded;
-                  to activate recording, the log_entries() method must be called
-        """
-        from psyneulink.components.component import Component
-
-        # If entries is a single entry, put in list for processing below
-        if isinstance(entries, (str, Component)):
-            entries = [entries]
-
-        for entry in entries:
-            if isinstance(entry, Component):
-                entry = entry.name
-
-            #Check if entries already exist
-            try:
-                self.entries[entry]
-            # Entry doesn't already exist
-            except KeyError:
-                # Validate that entry is either an attribute of owner or in SystemLogEntries
-                # if not entry in self.loggable_items:
-                #     raise LogError("{} is not a loggable item for {}".
-                #                    format(entry, self.owner.name))
-                # # Add entry to self.entries dict
-                # self.entries[entry] = []
-                self.loggable_items=[entry]
-                pass
-
-            # Entry exists
-            else:
-                # Issue warning and ignore
-                warnings.warn("{0} is already an entry in log for {1}; use \"log_entry\" to add a value".
-                      format(entry,self.owner.name))
+    # def add_entries(self, entries):
+    #     """Validate that a list of entries are attributes of owner or in SystemLogEntries, and then add to self.entries
+    #
+    #     entries should be a single keypath or list of keypaths for attribute(s) of the owner
+    #     Note: adding an entry does not mean data will be recorded;
+    #               to activate recording, the log_entries() method must be called
+    #     """
+    #     from psyneulink.components.component import Component
+    #
+    #     # If entries is a single entry, put in list for processing below
+    #     if isinstance(entries, (str, Component)):
+    #         entries = [entries]
+    #
+    #     for entry in entries:
+    #         if isinstance(entry, Component):
+    #             entry = entry.name
+    #
+    #         #Check if entries already exist
+    #         try:
+    #             self.entries[entry]
+    #         # Entry doesn't already exist
+    #         except KeyError:
+    #             # Validate that entry is either an attribute of owner or in SystemLogEntries
+    #             # if not entry in self.loggable_items:
+    #             #     raise LogError("{} is not a loggable item for {}".
+    #             #                    format(entry, self.owner.name))
+    #             # # Add entry to self.entries dict
+    #             # self.entries[entry] = []
+    #             # TEMP = self.loggable_items
+    #             # self.loggable_items=[entry]
+    #             pass
+    #
+    #         # Entry exists
+    #         else:
+    #             # Issue warning and ignore
+    #             warnings.warn("{0} is already an entry in log for {1}; use \"log_entry\" to add a value".
+    #                   format(entry,self.owner.name))
 
     def delete_entry(self, entries, confirm=True):
         """Delete entry for attribute from self.entries
@@ -607,11 +611,9 @@ class Log:
         if isinstance(entries, str):
             entries = [entries]
 
-
         if csv is True:
             print(self.csv(entries))
             return
-
 
         variable_width = 50
         time_width = 10
@@ -661,18 +663,57 @@ class Log:
                         data_str = data_str + "{:2.5}".format(str(value).strip("[]")).rjust(value_width) # <- WORKS
                         # data_str = data_str + "{:10.5}".format(str(value).strip("[]")) # <- WORKS
 
-# {time:{width}}: {part[0]:>3}{part[1]:1}{part[2]:<3} {unit:3}".format(
-#     jid=jid, width=width, part=str(mem).partition('.'), unit=unit))
+        # {time:{width}}: {part[0]:>3}{part[1]:1}{part[2]:<3} {unit:3}".format(
+        #     jid=jid, width=width, part=str(mem).partition('.'), unit=unit))
 
                     print(data_str)
                 if len(datum) > 1:
                     print("\n")
 
-    def csv(self, entries):
-        csv = "\'Time\', {}\n".format(", ".join(repr(entry) for entry in entries))
+    @tc.typecheck
+    def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'"):
+
+        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
+        if entries is ALL_ENTRIES or entries is None:
+            entries = self.entries.keys()
+
+        # If entries is a single entry, put in list for processing below
+        if isinstance(entries, str):
+            entries = [entries]
+
+        # Validate entries
+        for entry in entries:
+            if entry not in self.loggable_items:
+                raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
+            if entry not in self.entries:
+                raise LogError("{} is not currently being logged by {} (try using log_items)".
+                               format(repr(entry), self.owner.name))
+
         max_len = max([len(self.entries[e]) for e in entries])
+
+        # Currently only supports entries of the same length
+        if not all(len(self.entries[e])==len(self.entries[entries[0]])for e in entries):
+            raise LogError("Currently csv method only supports log entries of equal length")
+
+        if not quotes:
+            quotes = ""
+        elif quotes is True:
+            quotes = "\'"
+
+        if owner_name is True:
+            owner_name_str = self.owner.name
+            lb = "["
+            rb = "]"
+        else:
+            owner_name_str = lb = rb = ""
+
+        csv = "\'Entry', {}\n".format(", ".join(repr("{}{}{}{}".format(owner_name_str, lb, entry, rb))
+                                                     for entry in entries))
+
         for i in range(max_len):
-            csv += "{}, {}\n".format(i, ", ".join(str(self.entries[entry][i][2]) for entry in entries))
+            csv += "{}, {}\n".format(i, ", ".
+                                     join(str(self.entries[entry][i][2]) for entry in entries).
+                                     replace("[",quotes)).replace("]",quotes)
         return(csv)
 
 
@@ -725,10 +766,6 @@ class Log:
         from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
         from psyneulink.globals.keywords import ALL
 
-        if items is ALL:
-            self.logPref = PreferenceEntry(log_level, PreferenceLevel.INSTANCE)
-            return
-
         def assign_log_level(item, level, param_set):
 
             # if not item in self.loggable_items:
@@ -752,18 +789,29 @@ class Log:
                             except KeyError:
                                 raise LogError("{} is not a loggable parameter of {}".format(item, self.owner.name))
 
+        if items is ALL:
+            self.logPref = PreferenceEntry(log_level, PreferenceLevel.INSTANCE)
+            return
+
         param_sets = param_sets or [self.owner.user_params]
+
         if not isinstance(items, list):
             items = [items]
 
+        # Validate that item is loggable
+        for item in items:
+            if not item in self.loggable_items:
+                raise LogError("{} is not a loggable attribute of {}".format(repr(item), self.owner.name))
+
+
         for item in items:
             if isinstance(item, (str, Component)):
-                self.add_entries(item)
+                # self.add_entries(item)
                 if isinstance(item, Component):
                     item = item.name
                 assign_log_level(item, log_level, param_sets)
             else:
-                self.add_entries(item[0])
+                # self.add_entries(item[0])
                 assign_log_level(item[0], item[1], param_sets)
 
 

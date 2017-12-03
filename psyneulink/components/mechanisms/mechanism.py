@@ -1091,10 +1091,10 @@ class Mechanism_Base(Mechanism):
     # Add class-specific loggable items
     @property
     def _loggable_items(self):
-        # Include afferent Projections in Mechanism's loggable items
+        # Add afferent Projections in Mechanism's loggable items
         #     - for MappingProjections, this logs the value of the Projection's matrix parameter
         #     - for ModulatoryProjections, this logs the value of the Projection
-        # IMPLEMENTATION NOTE: this needs to be a property as projections may be added
+        # IMPLEMENTATION NOTE: this needs to be a property as projections may be added after initialization
         return self.afferents.names
 
     #FIX:  WHEN CALLED BY HIGHER LEVEL OBJECTS DURING INIT (e.g., PROCESS AND SYSTEM), SHOULD USE FULL Mechanism.execute

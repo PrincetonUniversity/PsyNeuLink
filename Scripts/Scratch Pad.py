@@ -2213,7 +2213,7 @@ class ScratchPadError(Exception):
 #region TEST Log @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 print ("TEST Log")
 
-T = pnl.TransferMechanism(size=3
+T = pnl.TransferMechanism(size=3, name='My_T'
     # prefs={pnl.LOG_PREF:pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
 )
 T2 = pnl.TransferMechanism(size=4, input_states=[T])
@@ -2221,7 +2221,6 @@ T2 = pnl.TransferMechanism(size=4, input_states=[T])
 T.log_items('noise')
 T.log_items('RESULTS')
 
-T.logged_items
 T.input_state.loggable_items
 T.input_state.log_items('exponent')
 T.input_state.logged_items  # FIX <-
@@ -2232,7 +2231,7 @@ assert True
 print(T.logged_items)
 # T.function_object.slope
 # T.log.set_level('noise', pnl.LogLevel.EXECUTION)
-T.log.print_entries(entries=['noise', 'RESULTS'], csv=True)
+print(T.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None))
 
 #endregion
 
