@@ -391,11 +391,13 @@ class Log:
             # Entry doesn't already exist
             except KeyError:
                 # Validate that entry is either an attribute of owner or in SystemLogEntries
-                if not entry in self.loggable_items:
-                    raise LogError("{} is not a loggable item for {}".
-                                   format(entry, self.owner.name))
-                # Add entry to self.entries dict
-                self.entries[entry] = []
+                # if not entry in self.loggable_items:
+                #     raise LogError("{} is not a loggable item for {}".
+                #                    format(entry, self.owner.name))
+                # # Add entry to self.entries dict
+                # self.entries[entry] = []
+                self.loggable_items=[entry]
+                pass
 
             # Entry exists
             else:
@@ -718,9 +720,9 @@ class Log:
 
         def assign_log_level(item, level, param_set):
 
-            if not item in self.loggable_items:
-                raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
-                               format(item, self.owner.name))
+            # if not item in self.loggable_items:
+            #     raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
+            #                    format(item, self.owner.name))
 
             for params in param_set:
                 try:
@@ -734,7 +736,7 @@ class Log:
                         if item in iterable_item:
                             try:
                                 iterable_item[item].logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
-                                self.add_entries(iterable_item[item])
+                                # self.add_entries(iterable_item[item])
                                 return
                             except KeyError:
                                 raise LogError("{} is not a loggable parameter of {}".format(item, self.owner.name))
@@ -745,13 +747,13 @@ class Log:
 
         for item in items:
             if isinstance(item, (str, Component)):
+                self.add_entries(item)
                 if isinstance(item, Component):
                     item = item.name
                 assign_log_level(item, log_level, param_sets)
-                self.add_entries(item)
             else:
-                assign_log_level(item[0], item[1], param_sets)
                 self.add_entries(item[0])
+                assign_log_level(item[0], item[1], param_sets)
 
 
     def save_log(self):
