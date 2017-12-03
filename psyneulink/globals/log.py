@@ -609,24 +609,8 @@ class Log:
 
 
         if csv is True:
-            csv = "Time, {}\n".format(", ".join(str(entry) for entry in entries))
-            max_len = max([len(self.entries[e]) for e in entries])
-            for i in range(max_len):
-                csv += "{}, {}\n".format(i, ", ".join(str(self.entries[entry][i][2]) for entry in entries))
-            print(csv)
+            print(self.csv(entries))
             return
-
-        #     # first:
-        #     #     print "time" then name of each entry separated by commas
-        #     # then:
-        #     #     loop from 0 to lengths of entries
-        #     #          if synch_time is True:
-        #     #              check if times are all equal;  if not, get list and sort by value
-        #     #              starting with min time,
-        #     #                  print time[x], entry_1[n][VALUE] if entry_1[n][TIME] == time[n], otherwise "",...
-        #     #              loop until all times have been used
-        #     #          otherwise, just print: i, entry_1[n][VALUE] or ""
-        #     return
 
 
         variable_width = 50
@@ -683,6 +667,14 @@ class Log:
                     print(data_str)
                 if len(datum) > 1:
                     print("\n")
+
+    def csv(self, entries):
+        csv = "\'Time\', {}\n".format(", ".join(repr(entry) for entry in entries))
+        max_len = max([len(self.entries[e]) for e in entries])
+        for i in range(max_len):
+            csv += "{}, {}\n".format(i, ", ".join(str(self.entries[entry][i][2]) for entry in entries))
+        return(csv)
+
 
     # @property
     # def log_items(self):
