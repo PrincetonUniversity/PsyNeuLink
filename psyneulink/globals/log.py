@@ -11,6 +11,15 @@
 
 """
 
+COMMENT:
+2 sets of methods:
+  ones that manage entries
+  ones that manage logging (setting the level for an entry)
+Add description of loggable_items (including class-specific ones)
+Add description of log_items property
+
+COMMENT
+
 Overview
 --------
 
@@ -347,7 +356,12 @@ class Log:
                         items.append(sub_item)
                 else:
                     items.append(item)
-            self._loggable_items = items + SystemLogEntries +  self.owner._loggable_items
+            try:
+                owner_items = self.owner._loggable_items
+            except AttributeError:
+                owner_items = []
+
+            self._loggable_items = items + SystemLogEntries +  owner_items
         else:
             if not hasattr(self, '_loggable_items'):
                 self.loggable_items = None
@@ -648,6 +662,96 @@ class Log:
                     print(data_str)
                 if len(datum) > 1:
                     print("\n")
+
+    # @property
+    # def log_items(self):
+    #     return self.owner.log_items
+    #
+    # @log_item.setter
+    # def log_items(selfs, items):
+    #     pass
+    #
+
+    # FIX: MOVE TO Log WITH CALL TO self._log_items FOR HANDLING OF RCLASS-SPECIFIC ATTRIBUTES (STATES AND PROJECTIONS)
+    @property
+    def logging_items(self):
+        # Use owner's implementation if it has one
+        try:
+            return self.owner.logging_items
+        except AttributeError:
+            return self._logging_items
+
+    def _logging_items(self):
+        log_level = 'LogLevel.'
+        # Return LogLevel for items in log.entries
+        logged_items = {key: value for (key, value) in
+                        [(l, log_level+self.owner.logPref.name)
+                         for l in self.log.entries.keys()]}
+        return logged_items
+
+    def log_items(self, items, log_level=LogLevel.EXECUTION, param_set=None):
+        # User owner's implementation if it has one
+        return self._log_items(items, log_level=log_level, param_set=param_set)
+
+    def _log_items(self, items, log_level=LogLevel.EXECUTION, param_set=None):
+        """List of items to log
+
+        items can be a string, Component, 2-item tuple, or a list containing any combination of these.
+        Strings and Components must refer to loggable items for the Component,
+            (by default, these are the user_params for the Component, and are listed in `loggable_items`):
+            - the string or Component.name must be in the loggable_items list.
+            - they are assigned log_level (default: `LogLevel` of `EXECUTION`).
+        Tuples must have 2 items:
+            - 1st item must be a string or Component that refers to a loggable item (see above);
+            - 2nd item must be a `LogLevel` specification for 1st item.
+
+        """
+        from psyneulink.components.component import Component
+        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection, MATRIX
+        from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+        from psyneulink.globals.keywords import ALL
+
+        if items is ALL:
+            self.logPref = PreferenceEntry(log_level, PreferenceLevel.INSTANCE)
+            return
+
+        def assign_log_level(item, level, param_set):
+
+            if not item in self.loggable_items:
+                raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
+                               format(item, self.owner.name))
+
+            for params in param_set:
+                try:
+                    params[item].logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
+                    return
+                except:
+                    # Go through any list or dict items in params looking for the item
+                    from collections import UserDict, UserList
+                    for iterable_item in [entry for entry in params
+                                          if isinstance(entry, (list, UserList, dict, UserDict))]:
+                        if item in iterable_item:
+                            try:
+                                iterable_item[item].logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
+                                self.add_entries(iterable_item[item])
+                                return
+                            except KeyError:
+                                raise LogError("{} is not a loggable parameter of {}".format(item, self.owner.name))
+
+        param_set = param_set or [self.owner.user_params]
+        if not isinstance(items, list):
+            items = [items]
+
+        for item in items:
+            if isinstance(item, (str, Component)):
+                if isinstance(item, Component):
+                    item = item.name
+                assign_log_level(item, log_level, param_set)
+                self.add_entries(item)
+            else:
+                assign_log_level(item[0], item[1], param_set)
+                self.add_entries(item[0])
+
 
     def save_log(self):
         print("Saved")

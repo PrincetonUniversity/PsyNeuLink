@@ -104,7 +104,7 @@ mySystem = pnl.System(
 )
 
 # Log weights of MappingProjection to Hidden_Layer_2
-Hidden_Layer_2.log_items=Middle_Weights
+Hidden_Layer_2.log_items(Middle_Weights)
 
 mySystem.reportOutputPref = True
 # Shows graph will full information:
@@ -123,3 +123,4 @@ mySystem.run(
     call_after_trial=functools.partial(show_target, mySystem),
     termination_processing={pnl.TimeScale.TRIAL: pnl.AfterNCalls(Output_Layer, 1)}
 )
+assert True

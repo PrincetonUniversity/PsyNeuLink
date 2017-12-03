@@ -676,6 +676,7 @@ class Component(object):
     componentCategory = None
     componentType = None
 
+
     class Defaults(object):
         def _attributes(obj):
             return {k: getattr(obj, k) for k in dir(obj) if k[:2]+k[-2:] != '____' and not callable(getattr(obj, k))}
@@ -2817,6 +2818,24 @@ class Component(object):
     @runtimeParamStickyAssignmentPref.setter
     def runtimeParamStickyAssignmentPref(self, setting):
         self.prefs.runtimeParamStickyAssignmentPref = setting
+
+    @property
+    def loggable_items(self):
+        """List of names of all items that can be logged
+        This is a convenience method that calls self.log
+        """
+        return self.log.loggable_items
+
+    def log_items(self, items):
+        self.log.log_items(items)
+
+    @property
+    def logging_items(self):
+        """List of names of all the items being logged
+        This is a convenience method that calls self.log.entries
+        """
+        return self.log.logging_items
+
 
     @property
     def auto_dependent(self):

@@ -2218,13 +2218,16 @@ T = pnl.TransferMechanism(size=3
 )
 T2 = pnl.TransferMechanism(size=4, input_states=[T])
 # T.parameter_states['slope'].logPref=pnl.PreferenceEntry(pnl.LogLevel.EXECUTION, pnl.PreferenceLevel.INSTANCE)
-T.log_items='noise'
-T.log_items='RESULTS'
+T.log_items('noise')
+T.log_items('RESULTS')
+
+T.input_state.loggable_items
+T.input_state.log_items('exponent')
 
 T.execute()
 T.execute()
 assert True
-print(T.log_items)
+print(T.logging_items)
 # T.function_object.slope
 # T.log.set_level('noise', pnl.LogLevel.EXECUTION)
 
