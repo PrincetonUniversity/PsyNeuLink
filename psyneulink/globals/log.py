@@ -608,8 +608,14 @@ class Log:
             entries = [entries]
 
 
-        # if csv is True:
-        #     for entry in entries:
+        if csv is True:
+            csv = "Time, {}\n".format(", ".join(str(entry) for entry in entries))
+            max_len = max([len(self.entries[e]) for e in entries])
+            for i in range(max_len):
+                csv += "{}, {}\n".format(i, ", ".join(str(self.entries[entry][i][2]) for entry in entries))
+            print(csv)
+            return
+
         #     # first:
         #     #     print "time" then name of each entry separated by commas
         #     # then:

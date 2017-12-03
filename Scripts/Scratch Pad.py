@@ -2232,7 +2232,7 @@ assert True
 print(T.logged_items)
 # T.function_object.slope
 # T.log.set_level('noise', pnl.LogLevel.EXECUTION)
-T.log.print_entries(entries=['noise', 'RESULTS'])
+T.log.print_entries(entries=['noise', 'RESULTS'], csv=True)
 
 #endregion
 
