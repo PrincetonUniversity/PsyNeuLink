@@ -2221,17 +2221,18 @@ T2 = pnl.TransferMechanism(size=4, input_states=[T])
 T.log_items('noise')
 T.log_items('RESULTS')
 
+T.logged_items
 T.input_state.loggable_items
 T.input_state.log_items('exponent')
-T.logging_items
-T.input_state.logging_items
+T.input_state.logged_items  # FIX <-
 
 T.execute()
 T.execute()
 assert True
-print(T.logging_items)
+print(T.logged_items)
 # T.function_object.slope
 # T.log.set_level('noise', pnl.LogLevel.EXECUTION)
+T.log.print_entries(entries=['noise', 'RESULTS'])
 
 #endregion
 

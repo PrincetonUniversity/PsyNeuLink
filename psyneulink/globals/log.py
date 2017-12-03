@@ -592,14 +592,11 @@ class Log:
                 if self.owner.prefs.verbosePref:
                     warnings.warn("Started logging of {0}".format(entry))
 
-    def print_entries(self, entries=None, *args):
+    def print_entries(self, entries=None, csv=False, synch_time=False, *args):
         """Print values of entries
 
         If entries is the keyword ALL_ENTRIES, print all entries in the self.owner.prefs.logPref list
         Issue a warning if an entry is not in the log dict
-
-        :param entries: (str, list, or ALL_ENTRIES)
-        :return:
         """
 
         # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
@@ -609,6 +606,22 @@ class Log:
         # If entries is a single entry, put in list for processing below
         if isinstance(entries, str):
             entries = [entries]
+
+
+        # if csv is True:
+        #     for entry in entries:
+        #     # first:
+        #     #     print "time" then name of each entry separated by commas
+        #     # then:
+        #     #     loop from 0 to lengths of entries
+        #     #          if synch_time is True:
+        #     #              check if times are all equal;  if not, get list and sort by value
+        #     #              starting with min time,
+        #     #                  print time[x], entry_1[n][VALUE] if entry_1[n][TIME] == time[n], otherwise "",...
+        #     #              loop until all times have been used
+        #     #          otherwise, just print: i, entry_1[n][VALUE] or ""
+        #     return
+
 
         variable_width = 50
         time_width = 10
@@ -676,15 +689,15 @@ class Log:
 
     # FIX: MOVE TO Log WITH CALL TO self._log_items FOR HANDLING OF RCLASS-SPECIFIC ATTRIBUTES (STATES AND PROJECTIONS)
     @property
-    def logging_items(self):
+    def logged_items(self):
         # Use owner's implementation if it has one
         try:
-            return self.owner.logging_items
+            return self.owner.logged_items
         except AttributeError:
-            return self._logging_items
+            return self._logged_items
 
     @property
-    def _logging_items(self):
+    def _logged_items(self):
         log_level = 'LogLevel.'
         # Return LogLevel for items in log.entries
         logged_items = {key: value for (key, value) in
