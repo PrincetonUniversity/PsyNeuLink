@@ -2521,24 +2521,26 @@ class Mechanism_Base(Mechanism):
                                            list(self.efferents))
 
     # FIX: MOVE TO Log WITH CALL TO self._log_items FOR HANDLING OF RCLASS-SPECIFIC ATTRIBUTES (STATES AND PROJECTIONS)
-    @property
-    def logging_items(self):
-        log_level = 'LogLevel.'
-        logged_items= {}
-        # Get logged State values
-        states = {key: value for (key, value) in
-                  [(s, log_level+self.states[s].logPref.name)
-                   for s in self.log.entries.keys() if s in self.states.names]}
-        # Get logged Projection values
-        projections = {key: value for (key, value) in
-                       [(p, log_level+self.projections[p].logPref.name)
-                        for p in self.log.entries.keys() if p in self.projections.names]}
+    # @property
+    # def logging_items(self):
+    #     log_level = 'LogLevel.'
+    #     logged_items= {}
+    #     # Get logged State values
+    #     states = {key: value for (key, value) in
+    #               [(s, log_level+self.states[s].logPref.name)
+    #                for s in self.log.entries.keys() if s in self.states.names]}
+    #     # Get logged Projection values
+    #     projections = {key: value for (key, value) in
+    #                    [(p, log_level+self.projections[p].logPref.name)
+    #                     for p in self.log.entries.keys() if p in self.projections.names]}
+    #
+    #     logged_items.update(states)
+    #     logged_items.update(projections)
+    #
+    #     return states
 
-        logged_items.update(states)
-        logged_items.update(projections)
-
-        return states
-
+    # FIX: CHANGE THIS TO ADD ENTRIES?? (VS. LOGGING OF THEM?)
+    # Add states and afferents to list of loggable items
     def log_items(self, items, log_level=LogLevel.EXECUTION):
         self.log.log_items(items, log_level, [self.states, self.afferents])
 

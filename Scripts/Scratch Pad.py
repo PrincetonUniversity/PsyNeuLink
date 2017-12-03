@@ -2223,6 +2223,8 @@ T.log_items('RESULTS')
 
 T.input_state.loggable_items
 T.input_state.log_items('exponent')
+T.logging_items
+T.input_state.logging_items
 
 T.execute()
 T.execute()

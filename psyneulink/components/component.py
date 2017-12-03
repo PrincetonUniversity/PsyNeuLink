@@ -2834,8 +2834,7 @@ class Component(object):
         """List of names of all the items being logged
         This is a convenience method that calls self.log.entries
         """
-        return self.log.logging_items
-
+        return self.log._logging_items
 
     @property
     def auto_dependent(self):

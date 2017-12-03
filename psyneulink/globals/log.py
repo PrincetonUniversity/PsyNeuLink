@@ -681,12 +681,13 @@ class Log:
         except AttributeError:
             return self._logging_items
 
+    @property
     def _logging_items(self):
         log_level = 'LogLevel.'
         # Return LogLevel for items in log.entries
         logged_items = {key: value for (key, value) in
                         [(l, log_level+self.owner.logPref.name)
-                         for l in self.log.entries.keys()]}
+                         for l in self.entries.keys()]}
         return logged_items
 
     def log_items(self, items, log_level=LogLevel.EXECUTION, param_set=None):
