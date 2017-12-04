@@ -787,35 +787,34 @@ class Log:
         return logged_items
 
     def log_items(self, items, log_level=LogLevel.EXECUTION, param_sets=None):
-        # User owner's implementation if it has one
-        return self._log_items(items, log_level=log_level, param_sets=param_sets)
+        """Specifies items to be logged at the specified `LogLevel`.
 
-    def _log_items(self, items, log_level=LogLevel.EXECUTION, param_sets=None):
-        """List of items to log
-
-        items can be a string, Component, 2-item tuple, or a list containing any combination of these.
-        Strings and Components must refer to loggable items for the Component,
-            (by default, these are the user_params for the Component, and are listed in `loggable_items`):
-            - the string or Component.name must be in the loggable_items list.
-            - they are assigned log_level (default: `LogLevel` of `EXECUTION`).
-        Tuples must have 2 items:
-            - 1st item must be a string or Component that refers to a loggable item (see above);
-            - 2nd item must be a `LogLevel` specification for 1st item.
+        Note:  this calls the _log_itesm
 
         Arguments
         ---------
 
-        items : str, Component, or List
+        items : str, Component, tuple or List of these
+            specifies items to be logged;  these must be be `loggable_items <Log.loggable_items>` of the Log.
+            Each item must be a:
+            * string that is the name of a `loggable_item` <Log.loggable_item>` of the Log's `owner <Log.owner>`;
+            * a reference to a Component;
+            * tuple, the first item of which is one of the above, and the second a `LogLevel` to use for the item.
 
         log_level : LogLevel : default LogLevel.EXECUTION
+            specifies `LogLevel` to use as the default for items not specified in tuples (see above).
 
         params_set : list : default None
-
-
-
-
+            list of parameters to include as loggable items;  these must be attributes of the `owner <Log.owner>`
+            (for example, Mechanism
 
         """
+
+
+        # Use owner's implementation if it has one
+        return self._log_items(items, log_level=log_level, param_sets=param_sets)
+
+    def _log_items(self, items, log_level=LogLevel.EXECUTION, param_sets=None):
         from psyneulink.components.component import Component
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection, MATRIX
         from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -853,11 +852,11 @@ class Log:
         if not isinstance(items, list):
             items = [items]
 
-        # Validate that item is loggable
-        for item in items:
-            if not item in self.loggable_items:
-                raise LogError("{} is not a loggable attribute of {}".format(repr(item), self.owner.name))
-
+        # FIX: Crashes in Multilayer-learning Example Script
+        # # Validate that item is loggable
+        # for item in items:
+        #     if not item in self.loggable_items:
+        #         raise LogError("{} is not a loggable attribute of {}".format(repr(item), self.owner.name))
 
         for item in items:
             if isinstance(item, (str, Component)):
