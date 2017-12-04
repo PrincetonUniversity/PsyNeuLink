@@ -12,31 +12,118 @@
 """
 
 COMMENT:
-2 sets of methods:
-  ones that manage entries
-  ones that manage logging (setting the level for an entry)
-Add description of loggable_items (including class-specific ones)
-Add description of log_items property
+Every Component assigned a Log object assigned to its `log <omopnent.log>` attribute
+Whether/when an item is logged is controled by the value of its `logPrefs <PreferenceSet.logPrefs>` `preference <XXX>`.
+Stored in `entries <Log.entries>`
+3 convenience methods can be used to manage these:
+  loggable items
+  log_items
+  logged_items
+  Printed out or exported using `print_entries` and/or csv methods
 
 COMMENT
 
 Overview
 --------
 
-A Log object is used to record information about PsyNeuLink Components during their "life cycle" (i.e., as they are
-created, validated and executed).  Every Component has a log object -- assigned to its `log <Component.log>` attribute
-when the Component is created -- that maintains a dictionary with entries for each attribute of the Component that
-has been designated to be logged.  Information is added to the entries under specified conditions (e.g., when the
-Component is initialized, validated, or executed), which can be designated by a `LogLevel` specification in the
-component's preferences.  Entries can also be made by the user programmatically. Each entry contains the time at
+A Log object is used to record the `value <Component.value>` of PsyNeuLink Components during their "life cycle" (i.e.,
+when they are created, validated, and/or executed).  Every Component has a log object, assigned to its `log
+<Component.log>` attribute when the Component is created, that can be used to record its value and/or that of other
+Components that belong to it.  These are stored in `entries <Log.entries>` of the Log, that contain a sequential list
+of the recorded values, along with the time and context of the recording.  The conditions under which values are
+recorded is specified by the `logPref <Component.logPref` property of a Component.  While these can be set directly,
+they are most easily managed using three convenience methods assigned to every Component along with its `log --
+`loggable_items <Log.loggable_items>`, `log_items <Log.log_items>` and `logged_items <Log.logged_items>` -- that can
+be used, as their names suggest, to identify, specify and track items being logged.  The entries of a Log can be
+displayed using its `print_entries <Log.print_entries>` method, and returned in a CSV-formatted string using its
+`csv <Log.csv>` method.
+
+COMMENT:
+Entries can also be made by the user programmatically. Each entry contains the time at
 which a value was assigned to the attribute, the context in which this occurred, and the value assigned.  This
 information can be displayed using the log's `print_entries` method.
+COMMENT
 
 Creating Logs and Entries
 -------------------------
 
-Whenever any PsyNeuLink Component is created, a log object is also automatically created and assigned to the
-Component's `log <Component.log>` attribute.  Entries are made to the log based on the `LogLevel` specified in the
+A log object is automatically created for and assigned to a Component's `log <Component.log>` attribute when the
+Component is created.  An entry is automatically created and added to the Log's `entries <Log.entries>` attribute
+when its `value <Component.value>` or that of a Component that belongs to it is recorded in the log.
+
+Structure
+---------
+
+A Log is composed of `entries <Log.entries>`, each of which is a dictionary that maintains a record of the logged
+values of a Component.  The key for each entry is a string that is the name of the Component, and its value is a list
+of `LogEntry` tuples recording its values.  Each `LogEntry` tuple has three items:
+    * *time* -- the `TIME_STEP` of the trial in which the value of the item was recorded;
+    * *context* -- a string indicating the context in which the value was recorded;
+    * *value* -- the value of the item.
+
+A Log has several methods that make it easy to manage when it values are recorded and accessing its `entries
+<Log.entries>`:
+
+    * `loggable_items <Log.loggable_items>` -- reports, in dictionary format, the items that can be logged in a
+      Component's `log <Component.log>` and their `LogLevel`\\s;  the key to each entry is the name of the
+      item (another Component), and its currently assigned `LogLevel`.
+    ..
+    * `log_items <Log.log_items>` -- used to assign the LogLevel for one or more Components.  Components can be
+      specified by their names, a reference to the Component object, in a tuple that specifies the `LogLevel` to
+      assign to that Component, or in a list with a `LogLevel` to be applied to multiple items at once.
+    ..
+    * `logged_items <Log.logg_items>` -- returns a list with the name of Components that currently have `entries <Log>`
+      in the log.
+    ..
+    * `print_entries <Log.print_entries>` -- this prints a formatted list of the `entries <Log.entries>` in the Log.
+    ..
+    * `csv <Log.csv>` -- this returns a CSV-formatted string with the `entries <Log.entries>` in the Log.
+
+Loggable Items
+~~~~~~~~~~~~~~
+
+Although every Component is assigned a Log, and entries for any Component can be assigned to the Log of any other
+Component, logging is structured by default to make it easy to maintain and access information about the `value
+<State_Base.value>`\\s of the `States <State>` of Mechanisms and Projections, which are automatically assigned the
+following `loggable_items <Log.loggable_items>`:
+
+* **Mechanisms**
+
+  * *InputStates* -- the `value <InputState.value>` of any `InputState` (listed in the Mechanism's `input_states
+    <Mechanism_Base.input_states>` attribute).
+  |
+  * *ParameterStates* -- the `value <ParameterState.value>` of `ParameterState` (listed in the Mechanism's
+    `parameter_states <Mechanism_Base.parameter_states>` attribute);  this includes all of the `user configurable
+    <Component_User_Params>` parameters of the Mechanism and its `function <Mechanism_Base.function>`.
+  |
+  * *OutputStates* -- the `value <OutputState.value>` of any `OutputState` (listed in the Mechanism's `output_states
+    <Mechanism_Base.output_states>` attribute).
+  |
+  * *Afferent Projections* -- the relevant value any `MappingProjection` that projects to any of the Mechanism's
+    `input_states <Mechanism_Base.input_states>`, or any `ModulatoryProjection` that projects to any of its `states
+    <Mechanism_Base.states>` (see Projections below for the values that are logged).
+..
+* **Projections**
+
+  * *MappingProjections* -- the value of its `matrix <MappingProjection.matrix>` parameter.
+  |
+  * *ModulatoryProjectcions* -- the `value <ModulatoryProjection.value>` of the Projection.
+
+
+Execution
+---------
+
+The value of a Component is recorded to a Log when the condition assigned to its `logPref <Component.logPref>` is met.
+This specified as a `LogLevel`.  The default LogLevel is `OFF`.
+
+.. note::
+   Currently, the only `LogLevels <LogLevel>` supported are `OFF` and and `EXECUTION`.
+
+
+
+COMMENT:
+
+Entries are made to the log based on the `LogLevel` specified in the
 `logPref` item of the component's `prefs <Component.prefs>` attribute.
 
 Adding an item to prefs.logPref will validate and add an entry for that attribute to the log dict
@@ -59,7 +146,8 @@ The following entries are automatically included in self.entries for a `Mechanis
     - any variables listed in the params[LOG_ENTRIES] of a Mechanism
 
 
-DEFAULT LogLevel FOR ALL COMPONENTS IS *VALUE_ASSIGNMENT*
+DEFAULT LogLevel FOR ALL COMPONENTS IS *OFF*
+
 
 Structure
 ---------
@@ -102,9 +190,7 @@ The owner.prefs.logPref setting contains a list of entries to actively record
     Notes:
     * A list of viable entries should be defined as the classLogEntries class attribute of a Function subclass
 
-
-Logging Entries
----------------
+COMMENT
 
 
 .. _Log_Class_Reference:
@@ -136,7 +222,7 @@ class LogLevel(IntEnum):
     EXECUTION = 3
     """Record all value assignments during execution."""
     VALIDATION = 5
-    """Record all value assignemnts during validation and execution."""
+    """Record all value assignments during validation and execution."""
     ALL_ASSIGNMENTS = 5
     """Record all value assignments during initialization, validation and execution."""
 
@@ -213,6 +299,7 @@ class LogError(Exception):
 class Log:
     """Maintain a log for an object, which contains a dictionary of attributes being logged and their value(s).
 
+    COMMENT:
     Description:
         Log maintains a dict (self.entries), with an entry for each attribute of the owner object being logged
         Each entry of self.entries has:
@@ -282,6 +369,7 @@ class Log:
         - log_entries(entries) - logs the current values of the attributes corresponding to entries
         - print_entries(entries) - prints entry values
         - [TBI: save_log - save log to disk]
+    COMMENT
 
     """
 
@@ -290,8 +378,7 @@ class Log:
     def __init__(self, owner, entries=None):
         """Initialize log with list of entries
 
-        Each item of the entries list should be a keypath (kp<attribute name>) designating an attribute
-            of the object to be logged;
+        Each item of the entries list should be a string designating a Component to be logged;
         Initialize self.entries dict, each entry of which has a:
         - key corresponding to an attribute of the object to be logged
         - value that is a list of sequentially logged values
@@ -412,9 +499,16 @@ class Log:
                 assign_log_level(item[0], item[1], param_sets)
 
     def print_entries(self, entries=None, csv=False, synch_time=False, *args):
-        """Print values of entries
+        """
+        print_entries(          \
+              entries=None,     \
+              csv=False,        \
+              synch_time=False  \
+            )
 
-        If entries is the keyword ALL_ENTRIES, print all entries in the self.owner.prefs.logPref list
+        Print values of entries
+
+        If entries is the keyword *ALL_ENTRIES*, print all entries in the self.owner.prefs.logPref list
         Issue a warning if an entry is not in the log dict
         """
 
@@ -487,7 +581,14 @@ class Log:
 
     @tc.typecheck
     def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'"):
-        """Returns a csv formatted string with headers and values for the specified entries.
+        """
+        csv(                           \
+            entries=None,              \
+            owner_name=False,          \
+            quotes=\"\'\"              \
+            )
+
+        Returns a csv formatted string with headers and values for the specified entries.
 
         The first record (row) begins with "Entry" and is followed by the header for each field (column).
         Subsequent records begin with the record number, and are followed by the value for each entry.
