@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.4.0rc1+8.g175acd2 documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.4.0rc1+9.g187218d documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0rc1+8.g175acd2 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0rc1+9.g187218d documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Library" href="Library.html"/>
         <link rel="prev" title="Run" href="Run.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.0rc1+8
+                0.4.0rc1+9
               </div>
             
           
@@ -91,23 +91,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Component.html">Components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="Scheduling.html">Scheduling</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Condition.html">Condition</a></li>
-<li class="toctree-l3"><a class="reference internal" href="TimeScale.html">TimeScale</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Log</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -293,25 +281,77 @@ This specified as a <a class="reference internal" href="#psyneulink.globals.log.
 <p class="last">Currently, the only <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevels</span></code></a> supported are <a class="reference internal" href="#psyneulink.globals.log.LogLevel.OFF" title="psyneulink.globals.log.LogLevel.OFF"><code class="xref any py py-attr docutils literal"><span class="pre">OFF</span></code></a> and and <a class="reference internal" href="#psyneulink.globals.log.LogLevel.EXECUTION" title="psyneulink.globals.log.LogLevel.EXECUTION"><code class="xref any py py-attr docutils literal"><span class="pre">EXECUTION</span></code></a>.</p>
 </div>
 <p class="rubric">Examples</p>
-<p>The following example creates a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, and logs its <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <em>RESULTS</em>
-<a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_mech_1A&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">loggable_items</span><span class="p">)</span>
-<span class="go">{&#39;InputState-0&#39;: &#39;OFF&#39;, &#39;time_constant&#39;: &#39;OFF&#39;, &#39;intercept&#39;: &#39;OFF&#39;, &#39;noise&#39;: &#39;OFF&#39;, &#39;RESULTS&#39;: &#39;OFF&#39;, &#39;slope&#39;: &#39;OFF&#39;}</span>
+<p>The following example creates a Process with two <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanisms</span></a>, one that projects to
+another, and logs the <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <em>RESULTS</em> <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of the first and the
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the first to the second:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Create a Process with two TransferMechanisms:</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;mech_A&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;mech_B&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">my_process</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">my_mech_A</span><span class="p">,</span> <span class="n">my_mech_B</span><span class="p">])</span>
 
-<span class="go"># Log the noise parameter and RESULTS OutputState:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">log_items</span><span class="p">((</span><span class="s1">&#39;noise&#39;</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">log_items</span><span class="p">(</span><span class="s1">&#39;RESULTS&#39;</span><span class="p">)</span>
+<span class="c1"># Print the loggable items for each Mechanism:</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">loggable_items</span><span class="p">)</span>
+<span class="p">{</span><span class="s1">&#39;Process-0_Input Projection&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;InputState-0&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;RESULTS&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;intercept&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;time_constant&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">}</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">my_mech_B</span><span class="o">.</span><span class="n">loggable_items</span><span class="p">)</span>
+<span class="p">{</span><span class="s1">&#39;InputState-0&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;MappingProjection from mech_A to mech_B&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;RESULTS&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;intercept&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;time_constant&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Notice that <code class="docutils literal"><span class="pre">my_mech_B</span></code> includes its <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from <code class="docutils literal"><span class="pre">my_mech_A</span></code> (created by the <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>) in its list of
+<a class="reference internal" href="#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a>. The first line belows gets a reference to it, and then assigns it to be logged
+with <code class="docutils literal"><span class="pre">my_mech_B</span></code>, and the <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> parameter and <em>RESULTS</em> OutputState to be logged for
+<code class="docutils literal"><span class="pre">my_mech_A</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Get the MapppingProjection to my_mech_B from my_mech_A</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">proj_A_to_B</span> <span class="o">=</span> <span class="n">my_mech_B</span><span class="o">.</span><span class="n">path_afferents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-<span class="go"># Execute twice (to generate some values in the Log):</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="c1"># Assign the proj_A_to_B to be logged with my_mech_B:</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_B</span><span class="o">.</span><span class="n">log_items</span><span class="p">(</span><span class="n">proj_A_to_B</span><span class="p">)</span>
 
-<span class="go"># Display the csv formatted entries in the Log</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">entries</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;noise&#39;</span><span class="p">,</span> <span class="s1">&#39;RESULTS&#39;</span><span class="p">],</span> <span class="n">owner_name</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quotes</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
-<span class="go">&#39;Entry&#39;, &#39;noise&#39;, &#39;RESULTS&#39;</span>
-<span class="go">0,  0.,  0.</span>
-<span class="go">1,  0.,  0.</span>
+<span class="c1"># Assign the noise parameter and RESULTS OutputState of my_mech_A to be logged:</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_A</span><span class="o">.</span><span class="n">log_items</span><span class="p">(</span><span class="s1">&#39;noise&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_A</span><span class="o">.</span><span class="n">log_items</span><span class="p">(</span><span class="s1">&#39;RESULTS&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Executing the Process generates entries in the Logs, that can then be displayed in several ways:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Execute each Process twice (to generate some values in the logs):</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">my_process</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">my_process</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+
+<span class="c1"># Print the logged items of each Mechanism:</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">logged_items</span><span class="p">)</span>
+<span class="p">{</span><span class="s1">&#39;RESULTS&#39;</span><span class="p">:</span> <span class="s1">&#39;EXECUTION&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">:</span> <span class="s1">&#39;EXECUTION&#39;</span><span class="p">}</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">my_mech_B</span><span class="o">.</span><span class="n">logged_items</span><span class="p">)</span>
+<span class="p">{</span><span class="s1">&#39;MappingProjection from mech_A to mech_B&#39;</span><span class="p">:</span> <span class="s1">&#39;EXECUTION&#39;</span><span class="p">}</span>
+
+<span class="c1"># Print the Logs for each Mechanism:</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_A</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">()</span>
+<span class="n">Log</span> <span class="k">for</span> <span class="n">mech_A</span><span class="p">:</span>
+
+<span class="n">Entry</span>     <span class="n">Logged</span> <span class="n">Item</span><span class="p">:</span>                                       <span class="n">Context</span>                                                                 <span class="n">Value</span>
+
+<span class="mi">0</span>         <span class="s1">&#39;RESULTS&#39;</span><span class="o">.........................................</span><span class="s1">&#39; EXECUTING  PROCESS Process-0&#39;</span><span class="o">.......................................</span>    <span class="mf">0.0</span>
+<span class="mi">1</span>         <span class="s1">&#39;RESULTS&#39;</span><span class="o">.........................................</span><span class="s1">&#39; EXECUTING  PROCESS Process-0&#39;</span><span class="o">.......................................</span>    <span class="mf">0.0</span>
+
+
+<span class="mi">0</span>         <span class="s1">&#39;noise&#39;</span><span class="o">...........................................</span><span class="s1">&#39; EXECUTING  PROCESS Process-0&#39;</span><span class="o">.......................................</span>    <span class="mf">0.0</span>
+<span class="mi">1</span>         <span class="s1">&#39;noise&#39;</span><span class="o">...........................................</span><span class="s1">&#39; EXECUTING  PROCESS Process-0&#39;</span><span class="o">.......................................</span>    <span class="mf">0.0</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_B</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">()</span>
+<span class="n">Log</span> <span class="k">for</span> <span class="n">mech_B</span><span class="p">:</span>
+
+<span class="n">Entry</span>     <span class="n">Logged</span> <span class="n">Item</span><span class="p">:</span>                                       <span class="n">Context</span>                                                                 <span class="n">Value</span>
+
+<span class="mi">0</span>         <span class="s1">&#39;MappingProjection from mech_A to mech_B&#39;</span><span class="o">.........</span><span class="s1">&#39; EXECUTING  PROCESS Process-0&#39;</span><span class="o">.......................................</span>     <span class="mf">1.</span>
+<span class="mi">1</span>         <span class="s1">&#39;MappingProjection from mech_A to mech_B&#39;</span><span class="o">.........</span><span class="s1">&#39; EXECUTING  PROCESS Process-0&#39;</span><span class="o">.......................................</span>     <span class="mf">1.</span>
+
+<span class="c1"># Display the csv formatted entries of each Log</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">entries</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;noise&#39;</span><span class="p">,</span> <span class="s1">&#39;RESULTS&#39;</span><span class="p">],</span> <span class="n">owner_name</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quotes</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+<span class="s1">&#39;Entry&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span>
+<span class="mi">0</span><span class="p">,</span>  <span class="mf">0.</span>
+<span class="mi">1</span><span class="p">,</span>  <span class="mf">0.</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">my_mech_B</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">entries</span><span class="o">=</span><span class="n">proj_A_to_B</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">owner_name</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quotes</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="s1">&#39;Entry&#39;</span><span class="p">,</span> <span class="s1">&#39;MappingProjection from mech_A to mech_B&#39;</span>
+<span class="mi">0</span><span class="p">,</span> <span class="s1">&#39; 1.&#39;</span>
+<span class="mi">1</span><span class="p">,</span> <span class="s1">&#39; 1.&#39;</span>
 </pre></div>
 </div>
 </div>
@@ -495,7 +535,7 @@ if specified with a string, that is used.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0rc1+8.g175acd2',
+            VERSION:'0.4.0rc1+9.g187218d',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
