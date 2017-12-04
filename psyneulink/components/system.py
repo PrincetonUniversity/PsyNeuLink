@@ -2411,6 +2411,14 @@ class System(System_Base):
         input : list or ndarray
             a list or array of input value arrays, one for each `ORIGIN` Mechanism in the System.
 
+        termination_processing : dict{TimeScale: Condition}
+            a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`processing
+            phase of execution <System_Execution_Processing>`
+
+        termination_learning : dict{TimeScale: Condition}
+            a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
+            phase of execution <System_Execution_Learning>`
+
             .. context : str
 
         Returns
@@ -2789,6 +2797,14 @@ class System(System_Base):
 
         call_after_time_step : Function : default= `None`
             called after each time_step of each trial is executed.
+
+        termination_processing : dict{TimeScale: Condition}
+            a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`processing
+            phase of execution <System_Execution_Processing>`
+
+        termination_learning : dict{TimeScale: Condition}
+            a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
+            phase of execution <System_Execution_Learning>`
 
         Returns
         -------
