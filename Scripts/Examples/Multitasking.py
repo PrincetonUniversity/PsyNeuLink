@@ -29,8 +29,8 @@ input_layer = pnl.TransferMechanism(size=2)
 decision_layer = pnl.LCA(size=2,
                          # INCLUDE TERMINATION CONDITION USING THREHSOLD = ControlSignal)
                         )
-decision_process = pnl.Process(input_layer, decision_layer)
-optimization_system = pnl.System(processes=decision_process,
+decision_process = pnl.Process(pathway=[input_layer, decision_layer])
+optimization_system = pnl.System(processes=[decision_process],
                                  monitor_for_control=[decision_layer.output_states[pnl.RESULT]])
 # ADD COMPARATOR MECHANISM FOR ACCURACY DETERMINATION
 

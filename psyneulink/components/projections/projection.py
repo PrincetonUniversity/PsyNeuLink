@@ -729,6 +729,8 @@ class Projection_Base(Projection):
                                               prefs=prefs,
                                               context=context.__class__.__name__)
 
+        self._assign_default_projection_name()
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate PROJECTION_SENDER and/or sender arg (current self.sender), and assign one of them as self.sender
 
@@ -948,7 +950,10 @@ class Projection_Base(Projection):
         return {SENDER:sender,
                 RECEIVER:receiver}
 
-    def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
+    def _assign_default_name(self, **kwargs):
+        self._assign_default_projection_name(**kwargs)
+
+    def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
         raise ProjectionError("PROGRAM ERROR: {} must implement _assign_default_projection_name().".
                               format(self.__class__.__name__))
 
@@ -1880,14 +1885,13 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     from psyneulink.components.states.state import _instantiate_state
     from psyneulink.components.states.state import State_Base
     from psyneulink.components.states.inputstate import InputState
-    from psyneulink.components.states.parameterstate import ParameterState
 
     if not isinstance(state, (int, str, State)):
         raise ProjectionError("State specification(s) for {} (as receiver(s) of {}) contain(s) one or more items"
                              " that is not a name, reference to a {} or an index for one".
                              format(receiver.name, projection_spec.name, State.__name__))
 
-    # state is State object, so use that
+    # state is State object, so use thatParameterState
     if isinstance(state, State_Base):
         state._instantiate_projections_to_state(projections=projection_spec, context=context)
         return

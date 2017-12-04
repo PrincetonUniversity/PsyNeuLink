@@ -1548,14 +1548,9 @@ class Process(Process_Base):
                     elif (isinstance(item, (np.matrix, str, tuple)) or
                               (isinstance(item, np.ndarray) and item.ndim == 2)):
                         # If a LearningProjection is explicitly specified for this Projection, use it
-                        # MODIFIED 8/14/17 OLD [WAS ALREADY COMMENTED OUT]:
-                        # if params:
-                        #     matrix_spec = (item, params)
-                        # MODIFIED 8/14/17 NEW:
                         if isinstance(item, tuple):
                             matrix_spec = item
                             learning_projection_specified = True
-                        # MODIFIED 8/14/17 END
                         # If a LearningProjection is not specified for this Projection but self.learning is, use that
                         elif self.learning:
                             matrix_spec = (item, self.learning)

@@ -4,6 +4,7 @@ This implements a model of Locus Coeruleus / Norepinephrine (LC/NE) function des
 and electrophysiological data (from LC recordings) in non-human primates.
 
 """
+from matplotlib import pyplot as plt
 import sys
 import numpy as np
 
@@ -19,7 +20,7 @@ from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechan
 
 # Weights & Biases:
 b_decision = 0.00   # Bias on decision units (not biased)
-b_response = 2.00  # Bias on response unit --- NOTE: Gilzenrat has negative signs in his logistic equation
+b_response = 2.00   # Bias on response unit --- NOTE: Gilzenrat has negative signs in his logistic equation
 w_XiIi = 1.00       # Connection weight from input units I1 and I2 to respective decision units X1 and X2
 w_XiIj = 0.33       # Cross talk weight from input unit to opposite decision unit
 w_XiXi = 1.00       # Recurrent self-connection weight for both decision units
@@ -143,97 +144,96 @@ task.show_graph(show_dimensions=True)
 
 # Create Stimulus -----------------------------------------------------------------------------------------------------
 
-# # number of trials
-# trials = 1000
-#
-# # assign inputs to input_layer (Origin Mechanism) for each trial
-# stimulus_dictionary = {input_layer: np.repeat(np.array([[0.0, 0.0], [1.0, 0.0]]), 500, axis=0)}
-# # First 500 trials: target receives input of 0.0, distractor receives input of 0.0
-# # Second 500 trials: target receives input of 1.0, distractor receives input of 0.0
-#
-# # Record results & run model ------------------------------------------------------------------------------------------
-#
-# # Function to compute h(v) from LC's v value
-# def h_v(v,C,d):
-#     return C*v + (1-C)*d
-#
-# # Initialize output arrays for plotting and storing values
-# LC_results_h_of_v = [h_v(initial_v,C,d)]
-# LC_results_u = [initial_u]
-# decision_layer_target_values = [0.0]
-# decision_layer_distractor_values = [0.0]
-# response_layer_values = [0.0]
-#
-# def record_trial():
-#     # After each trial, store all of the following values:
-#     LC_results_h_of_v.append(h_v(LC.value[2][0], C, d))
-#     LC_results_u.append(LC.value[3][0])
-#     decision_layer_target_values.append(decision_layer.value[0][0])
-#     decision_layer_distractor_values.append(decision_layer.value[0][1])
-#     response_layer_values.append(response_layer.value[0][0])
-#
-#     # Progress bar
-#     current_trial_num = len(LC_results_h_of_v)
-#     if current_trial_num%50 == 0:
-#         percent = int(round((float(current_trial_num) / trials)*100))
-#         sys.stdout.write("\r"+ str(percent) +"% complete")
-#         sys.stdout.flush()
-#
-# # Initialize progress bar
-# sys.stdout.write("\r0% complete")
-# sys.stdout.flush()
-#
-# # Run the model
-# task.run(inputs=stimulus_dictionary,
-#          num_trials=trials,
-#          call_after_trial=record_trial)
-#
-# # Plot results of all units into one figure ---------------------------------------------------------------------------
-#
-# # import matplotlib
-# # matplotlib.use('Agg')
-# from matplotlib import pyplot as plt
-# import numpy as np
-#
-# # Create x axis "t" for plotting
-# t = np.arange(0.0, 20.02, 0.02)
-#
-# # Plot target unit, distraction unit, response unit, h(v), and u using the values that were recorded after each trial
-# plt.plot(t,
-#          decision_layer_target_values,
-#          label="target unit",
-#          color = 'green')
-# plt.plot(t,
-#          decision_layer_distractor_values,
-#          label="distraction unit",
-#          color = 'red')
-# plt.plot(t,
-#          response_layer_values,
-#          label="response unit",
-#          color = 'magenta')
-# plt.plot(t,
-#          LC_results_h_of_v,
-#          label="h(v)",
-#          color = 'b')
-# plt.plot(t,
-#          LC_results_u,
-#          label="u",
-#          color = 'black')
-#
-# plt.xlabel('Time')
-# plt.ylabel('Activation')
-# plt.legend(loc='upper left')
-# plt.xlim((0.0,20.0))
-# plt.ylim((-0.2, 1.2))
-# x_values = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
-# plt.xticks(x_values)
-# plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
-#
-#
-# plt.show()
-#
-# task.show()
-#
-# # This displays a diagram of the System
-# task.show_graph()
-#
+# number of trials
+trials = 1000
+
+# assign inputs to input_layer (Origin Mechanism) for each trial
+stimulus_dictionary = {input_layer: np.repeat(np.array([[0.0, 0.0], [1.0, 0.0]]), 500, axis=0)}
+# First 500 trials: target receives input of 0.0, distractor receives input of 0.0
+# Second 500 trials: target receives input of 1.0, distractor receives input of 0.0
+
+# Record results & run model ------------------------------------------------------------------------------------------
+
+# Function to compute h(v) from LC's v value
+def h_v(v,C,d):
+    return C*v + (1-C)*d
+
+# Initialize output arrays for plotting and storing values
+LC_results_h_of_v = [h_v(initial_v,C,d)]
+LC_results_u = [initial_u]
+decision_layer_target_values = [0.0]
+decision_layer_distractor_values = [0.0]
+response_layer_values = [0.0]
+
+def record_trial():
+    # After each trial, store all of the following values:
+    LC_results_h_of_v.append(h_v(LC.value[2][0], C, d))
+    LC_results_u.append(LC.value[3][0])
+    decision_layer_target_values.append(decision_layer.value[0][0])
+    decision_layer_distractor_values.append(decision_layer.value[0][1])
+    response_layer_values.append(response_layer.value[0][0])
+
+    # Progress bar
+    current_trial_num = len(LC_results_h_of_v)
+    if current_trial_num%50 == 0:
+        percent = int(round((float(current_trial_num) / trials)*100))
+        sys.stdout.write("\r"+ str(percent) +"% complete")
+        sys.stdout.flush()
+
+# Initialize progress bar
+sys.stdout.write("\r0% complete")
+sys.stdout.flush()
+
+# Run the model
+task.run(inputs=stimulus_dictionary,
+         num_trials=trials,
+         call_after_trial=record_trial)
+
+# Plot results of all units into one figure ---------------------------------------------------------------------------
+
+# import matplotlib
+# matplotlib.use('Agg')
+import numpy as np
+
+# Create x axis "t" for plotting
+t = np.arange(0.0, 20.02, 0.02)
+
+# Plot target unit, distraction unit, response unit, h(v), and u using the values that were recorded after each trial
+plt.plot(t,
+         decision_layer_target_values,
+         label="target unit",
+         color = 'green')
+plt.plot(t,
+         decision_layer_distractor_values,
+         label="distraction unit",
+         color = 'red')
+plt.plot(t,
+         response_layer_values,
+         label="response unit",
+         color = 'magenta')
+plt.plot(t,
+         LC_results_h_of_v,
+         label="h(v)",
+         color = 'b')
+plt.plot(t,
+         LC_results_u,
+         label="u",
+         color = 'black')
+
+plt.xlabel('Time')
+plt.ylabel('Activation')
+plt.legend(loc='upper left')
+plt.xlim((0.0,20.0))
+plt.ylim((-0.2, 1.2))
+x_values = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+plt.xticks(x_values)
+plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
+
+
+plt.show()
+
+task.show()
+
+# This displays a diagram of the System
+task.show_graph()
+
