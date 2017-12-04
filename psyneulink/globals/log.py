@@ -183,10 +183,10 @@ Executing the Process generates entries in the Logs, that can then be displayed 
     'Entry', 'noise'
     0,  0.
     1,  0.
-    >>> print(my_mech_B.log.csv(entries=proj_A_to_B.name, owner_name=False, quotes=None))
+    >>> print(my_mech_B.log.csv(entries=proj_A_to_B.name, owner_name=False, quotes=True))
     'Entry', 'MappingProjection from mech_A to mech_B'
-    0,  1.
-    1,  1.
+    0, ' 1.'
+    1, ' 1.'
 
 
 COMMENT:
@@ -752,7 +752,7 @@ class Log:
         for i in range(max_len):
             csv += "{}, {}\n".format(i, ", ".
                                      join(str(self.entries[entry][i][2]) for entry in entries).
-                                     replace("[",quotes)).replace("]",quotes)
+                                     replace("[[",quotes)).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
         return(csv)
 
     # ******************************************************************************************************

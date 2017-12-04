@@ -2293,7 +2293,7 @@ print(my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=N
 # 'Entry', 'noise'
 # 0,  0.
 # 1,  0.
-print(my_mech_B.log.csv(entries=proj_A_to_B.name, owner_name=False, quotes=None))
+print(my_mech_B.log.csv(entries=proj_A_to_B.name, owner_name=False, quotes=True))
 # 'Entry', 'MappingProjection from mech_A to mech_B'
 # 0,  1.
 # 1,  1.
