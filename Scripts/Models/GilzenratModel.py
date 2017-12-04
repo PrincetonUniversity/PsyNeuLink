@@ -4,6 +4,7 @@ This implements a model of Locus Coeruleus / Norepinephrine (LC/NE) function des
 and electrophysiological data (from LC recordings) in non-human primates.
 
 """
+from matplotlib import pyplot as plt
 import sys
 import numpy as np
 
@@ -192,7 +193,6 @@ task.run(inputs=stimulus_dictionary,
 
 # import matplotlib
 # matplotlib.use('Agg')
-from matplotlib import pyplot as plt
 import numpy as np
 
 # Create x axis "t" for plotting
