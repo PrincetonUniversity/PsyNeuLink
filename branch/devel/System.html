@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.4.0rc1+2.g98367cb documentation</title>
+  <title>System &mdash; PsyNeuLink 0.4.0rc1+3.gcaddf50 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0rc1+2.g98367cb documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0rc1+3.gcaddf50 documentation" href="index.html"/>
         <link rel="up" title="Compositions" href="Composition.html"/>
         <link rel="next" title="Process" href="Process.html"/>
         <link rel="prev" title="Compositions" href="Composition.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.0rc1+2
+                0.4.0rc1+3
               </div>
             
           
@@ -844,24 +844,14 @@ as well as from <a class="reference internal" href="ProcessingMechanism.html"><s
 that convey error and activation information;  if set to <code class="xref any docutils literal"><span class="pre">True</span></code>, only the LearningPojections are shown.</li>
 <li><strong>show_control</strong> (<em>bool : default False</em>) – specifies whether or not to show the control components of the system;
 they will all be displayed in the color specified for <strong>control_color</strong>.</li>
-<li><strong>show_dimensions</strong> (<em>bool</em><em> or </em><a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL"><em>ALL</em></a><em> or </em><em>MECHANISMS</em><em> or </em><em>PROJECTIONS: default False</em>) – <p>specifies whether or not to show dimemsions of Mechanisms (and/or MappingProjections when show_learning is
-<code class="xref any docutils literal"><span class="pre">True</span></code>);  can have the following settings:</p>
+<li><strong>show_dimensions</strong> (<em>bool</em><em>, </em><em>MECHANISMS</em><em>, </em><em>PROJECTIONS</em><em> or </em><em>ALL : default False</em>) – <p>specifies whether or not to show dimensions of Mechanisms (and/or MappingProjections when show_learning
+is <code class="xref any docutils literal"><span class="pre">True</span></code>);  can have the following settings:</p>
 <ul>
 <li><em>ALL</em> – shows dimensions for both Mechanisms and Projections (see below for formats).</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul>
 <li><em>MECHANISMS</em> – shows <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> input and output dimensions.  Input dimensions are shown in parentheses
 below the name of the Mechanism; each number represents the dimension of the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for each <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of the Mechanism; Output dimensions are shown above
 the name of the Mechanism; each number represents the dimension for <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each
 of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of the Mechanism;</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul>
 <li><em>PROJECTIONS</em> – shows <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> dimensions.  Each is
 shown in (&lt;dim&gt;x&lt;dim&gt;…) format;  for standard 2x2 “weight” matrix, the first entry is the number of
 rows (input dimension) and the second the number of columns (output dimension).</li>
@@ -956,7 +946,7 @@ corresponding InputState of the <a class="reference internal" href="#psyneulink.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0rc1+2.g98367cb',
+            VERSION:'0.4.0rc1+3.gcaddf50',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
