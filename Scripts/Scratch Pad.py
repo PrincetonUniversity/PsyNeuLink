@@ -2257,21 +2257,21 @@ print ("TEST Log")
 # print(my_mech_A.log.csv(entries=['noise'], owner_name=False, quotes=None))
 # print(my_mech_B.log.csv(entries=proj.name, owner_name=False, quotes=None))
 
->>> my_mech_A = pnl.TransferMechanism(name='my_mech_1A')
->>> print(my_mech_A.loggable_items)
-{'InputState-0': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'RESULTS': 'OFF', 'slope': 'OFF'}
-
-
->>> my_mech_A.log_items(('noise'))
->>> my_mech_A.log_items('RESULTS')
-
->>> my_mech_A.execute()
->>> my_mech_A.execute()
-
->>> print(my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None))
-'Entry', 'noise', 'RESULTS'
-0,  0.,  0.
-1,  0.,  0.
+# >>> my_mech_A = pnl.TransferMechanism(name='my_mech_1A')
+# >>> print(my_mech_A.loggable_items)
+# {'InputState-0': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'RESULTS': 'OFF', 'slope': 'OFF'}
+#
+#
+# >>> my_mech_A.log_items(('noise'))
+# >>> my_mech_A.log_items('RESULTS')
+#
+# >>> my_mech_A.execute()
+# >>> my_mech_A.execute()
+#
+# >>> print(my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None))
+# 'Entry', 'noise', 'RESULTS'
+# 0,  0.,  0.
+# 1,  0.,  0.
 
 #endregion
 
