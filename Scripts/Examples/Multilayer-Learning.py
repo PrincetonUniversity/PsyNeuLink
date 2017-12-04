@@ -103,7 +103,7 @@ mySystem = pnl.System(
     learning_rate=2.0
 )
 
-# Log weights of MappingProjection to Hidden_Layer_2
+# Log Middle_Weights of MappingProjection to Hidden_Layer_2
 Hidden_Layer_2.log_items(Middle_Weights)
 
 mySystem.reportOutputPref = True
