@@ -11,18 +11,6 @@
 
 """
 
-COMMENT:
-Every Component assigned a Log object assigned to its `log <omopnent.log>` attribute
-Whether/when an item is logged is controled by the value of its `logPrefs <PreferenceSet.logPrefs>` `preference <XXX>`.
-Stored in `entries <Log.entries>`
-3 convenience methods can be used to manage these:
-  loggable items
-  log_items
-  logged_items
-  Printed out or exported using `print_entries` and/or csv methods
-
-COMMENT
-
 .. note::
    This is a provisional implementation of logging.  It has the functionality described below; additonal features
    will be added and some may be subject to modification in future versions.
