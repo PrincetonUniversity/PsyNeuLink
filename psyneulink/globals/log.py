@@ -320,10 +320,10 @@ class Log:
             try:
                 owner_items = self.owner._loggable_items
                 for item in owner_items:
-                    items[item] = self.owner[item]
+                    owner_items[item] = self.owner[item]
             except AttributeError:
                 owner_items = {}
-            # return self._loggable_items + self.owner._loggable_items
+            return self._loggable_items.update(self.owner_items)
 
         except AttributeError:
             # This forces setter to create log._loggable_items
