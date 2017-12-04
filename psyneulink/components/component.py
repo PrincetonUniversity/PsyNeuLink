@@ -2827,9 +2827,8 @@ class Component(object):
         return self.log.loggable_items
 
     def log_items(self, items, log_level=LogLevel.EXECUTION):
+        # Overriden by subclasses to add param_sets (see Mechanism_Base for an example)
         self.log.log_items(items=items, log_level=log_level)
-    # def log_items(self, items):
-    #     self.log.log_items(items)
 
     @property
     def logged_items(self):

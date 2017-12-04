@@ -789,7 +789,8 @@ class Log:
     def log_items(self, items, log_level=LogLevel.EXECUTION, param_sets=None):
         """Specifies items to be logged at the specified `LogLevel`.
 
-        Note:  this calls the _log_itesm
+        Note:  this calls the `owner <Log.owner>``s _log_items method to allow it to add param_sets to
+               `loggable_items <Log.loggable_items>`.
 
         Arguments
         ---------
@@ -810,21 +811,25 @@ class Log:
 
         """
 
-
         # Use owner's implementation if it has one
-        return self._log_items(items, log_level=log_level, param_sets=param_sets)
+        return self.owner.log_items(items, log_level=log_level, param_sets=param_sets)
 
     def _log_items(self, items, log_level=LogLevel.EXECUTION, param_sets=None):
+        """Specifies items to be logged at the specified `LogLevel`.
+
+        Called by Log.log_items and/or a Component's `log_items` method that can provide additional param_sets
+        to include in the list of `loggable_items <Log.loggable_items>`.
+
+        """
         from psyneulink.components.component import Component
-        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection, MATRIX
         from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
         from psyneulink.globals.keywords import ALL
 
         def assign_log_level(item, level, param_set):
 
-            # if not item in self.loggable_items:
-            #     raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
-            #                    format(item, self.owner.name))
+            if not item in self.loggable_items:
+                raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
+                               format(item, self.owner.name))
 
             for params in param_set:
                 try:
@@ -851,12 +856,6 @@ class Log:
 
         if not isinstance(items, list):
             items = [items]
-
-        # FIX: Crashes in Multilayer-learning Example Script
-        # # Validate that item is loggable
-        # for item in items:
-        #     if not item in self.loggable_items:
-        #         raise LogError("{} is not a loggable attribute of {}".format(repr(item), self.owner.name))
 
         for item in items:
             if isinstance(item, (str, Component)):

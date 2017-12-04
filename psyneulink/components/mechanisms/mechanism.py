@@ -2522,7 +2522,7 @@ class Mechanism_Base(Mechanism):
 
     # Override Component.log_items to add states and afferents to list of attributes to which logged_items can refer
     def log_items(self, items, log_level=LogLevel.EXECUTION):
-        self.log.log_items(items=items, log_level=log_level, param_sets=[self.states, self.afferents])
+        self.log._log_items(items=items, log_level=log_level, param_sets=[self.states, self.afferents])
 
 
 def _is_mechanism_spec(spec):
