@@ -2213,20 +2213,65 @@ class ScratchPadError(Exception):
 #region TEST Log @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 print ("TEST Log")
 
-T = pnl.TransferMechanism(size=3, name='My_T'
-    # prefs={pnl.LOG_PREF:pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
-)
-T2 = pnl.TransferMechanism(size=4, input_states=[T])
-# T.parameter_states['slope'].logPref=pnl.PreferenceEntry(pnl.LogLevel.EXECUTION, pnl.PreferenceLevel.INSTANCE)
-print(T.loggable_items)
-T.log_items(('noise'))
-T.log_items('RESULTS')
-print(T.loggable_items)
+# T = pnl.TransferMechanism(size=3, name='My_T'
+#     # prefs={pnl.LOG_PREF:pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
+# )
+# T2 = pnl.TransferMechanism(size=4, input_states=[T])
+# # T.parameter_states['slope'].logPref=pnl.PreferenceEntry(pnl.LogLevel.EXECUTION, pnl.PreferenceLevel.INSTANCE)
+# print(T.loggable_items)
+# T.log_items(('noise'))
+# T.log_items('RESULTS')
+# print(T.loggable_items)
+#
+# T.execute()
+# T.execute()
+# # print(T.logged_items)
+# print(T.log.csv(entries=['RESULTS'], owner_name=False, quotes=None))
 
-T.execute()
-T.execute()
-# print(T.logged_items)
-print(T.log.csv(entries=['RESULTS'], owner_name=False, quotes=None))
+# my_mech_A = pnl.TransferMechanism(name='my_mech_1A')
+# my_mech_B = pnl.TransferMechanism(size=4, input_states=[my_mech_A])
+# print(my_mech_A.loggable_items)
+# print(my_mech_B.loggable_items)
+#
+# my_mech_A.log_items(('noise'))
+# my_mech_A.log_items('RESULTS')
+#
+# print(my_mech_B.afferents[0].name)
+# # proj_name = my_mech_B.afferents[0].name
+# proj = my_mech_B.afferents[0]
+#
+# # my_mech_B.log_items("MappingProjection from my_mech_1A[RESULTS] to TransferMechanism-0[InputState-0]")
+# my_mech_B.log_items(proj.name)
+#
+# my_mech_A.execute()
+# my_mech_A.execute()
+# my_mech_B.execute()
+# my_mech_B.execute()
+#
+# my_mech_A.logged_items
+# my_mech_B.logged_items
+#
+# my_mech_A.log.print_entries()
+# my_mech_B.log.print_entries()
+#
+# print(my_mech_A.log.csv(entries=['noise'], owner_name=False, quotes=None))
+# print(my_mech_B.log.csv(entries=proj.name, owner_name=False, quotes=None))
+
+>>> my_mech_A = pnl.TransferMechanism(name='my_mech_1A')
+>>> print(my_mech_A.loggable_items)
+{'InputState-0': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'RESULTS': 'OFF', 'slope': 'OFF'}
+
+
+>>> my_mech_A.log_items(('noise'))
+>>> my_mech_A.log_items('RESULTS')
+
+>>> my_mech_A.execute()
+>>> my_mech_A.execute()
+
+>>> print(my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None))
+'Entry', 'noise', 'RESULTS'
+0,  0.,  0.
+1,  0.,  0.
 
 #endregion
 

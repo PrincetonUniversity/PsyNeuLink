@@ -111,6 +111,68 @@ This specified as a `LogLevel`.  The default LogLevel is `OFF`.
 .. note::
    Currently, the only `LogLevels <LogLevel>` supported are `OFF` and and `EXECUTION`.
 
+Examples
+--------
+
+COMMENT:
+The following example creates two `TransferMechanisms <TransferMechanism>`, one that projects to another, and logs the
+`noise <TransferMechanism.noise>` and *RESULTS* `OutputState` of the first and the `MappingProjection` from the
+first to the second:
+
+    >>> my_mech_A = pnl.TransferMechanism(name='my_mech_1A')
+    >>> my_mech_B = pnl.TransferMechanism(size=4, input_states=[my_mech_A])
+    # Print the loggable items for each TransferMechanism:
+    >>> print(my_mech_A.loggable_items)
+
+    >>> print(my_mech_B.loggable_items)
+
+    # Log the noise parameter and RESULTS OutputState of my_mech_A:
+    >>> my_mech_A.log_items(('noise'))
+    >>> my_mech_A.log_items('RESULTS')
+
+    # Log the MappingProjection from my_mech_A to my_mech_B:
+    >>> my_mech_B.log_items(('XXXX'))
+
+    # Execute each Mechanism twice (to generate some values in the logs):
+    >>> my_mech_A.execute()
+    >>> my_mech_A.execute()
+    >>> my_mech_B.execute()
+    >>> my_mech_B.execute()
+
+    # Show the logged items of each:
+    >>> my_mech_A.logged_items
+    >>> my_mech_B.logged_items
+
+    # Print the Logs of each:
+    >>> my_mech_A.log.print_entries()
+    >>> my_mech_B.log.print_entries()
+
+    # Display the csv formatted entries of each Log
+    >>> print(my_mech_A.log.csv(entries=['noise'], owner_name=False, quotes=None))
+    >>> print(my_mech_B.log.csv(entries=['XXX'], owner_name=False, quotes=None))
+COMMENT
+
+The following example creates a `TransferMechanism`, and logs its `noise <TransferMechanism.noise>` and *RESULTS*
+`OutputState`::
+
+    >>> my_mech_A = pnl.TransferMechanism(name='my_mech_1A')
+    >>> print(my_mech_A.loggable_items)
+    {'InputState-0': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'RESULTS': 'OFF', 'slope': 'OFF'}
+
+
+    # Log the noise parameter and RESULTS OutputState:
+    >>> my_mech_A.log_items(('noise'))
+    >>> my_mech_A.log_items('RESULTS')
+
+    # Execute twice (to generate some values in the Log):
+    >>> my_mech_A.execute()
+    >>> my_mech_A.execute()
+
+    # Display the csv formatted entries in the Log
+    >>> print(my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None))
+    'Entry', 'noise', 'RESULTS'
+    0,  0.,  0.
+    1,  0.,  0.
 
 
 COMMENT:
