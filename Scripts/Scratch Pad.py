@@ -2218,12 +2218,14 @@ T = pnl.TransferMechanism(size=3, name='My_T'
 )
 T2 = pnl.TransferMechanism(size=4, input_states=[T])
 # T.parameter_states['slope'].logPref=pnl.PreferenceEntry(pnl.LogLevel.EXECUTION, pnl.PreferenceLevel.INSTANCE)
-T.log_items(('noise', pnl.LogLevel.INITIALIZATION))
+print(T.loggable_items)
+T.log_items(('noise'))
 T.log_items('RESULTS')
+print(T.loggable_items)
 
 T.execute()
 T.execute()
-print(T.logged_items)
+# print(T.logged_items)
 print(T.log.csv(entries=['RESULTS'], owner_name=False, quotes=None))
 
 #endregion

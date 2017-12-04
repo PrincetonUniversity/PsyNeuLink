@@ -1088,14 +1088,18 @@ class Mechanism_Base(Mechanism):
     #     kwPreferenceSetName: 'MechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # Add class-specific loggable items
+    # Class-specific loggable items
     @property
     def _loggable_items(self):
-        # Add afferent Projections in Mechanism's loggable items
+        # States and afferent Projections are loggable for a Mechanism
+        #     - this allows the value of InputStates and OutputStates to be logged
         #     - for MappingProjections, this logs the value of the Projection's matrix parameter
         #     - for ModulatoryProjections, this logs the value of the Projection
         # IMPLEMENTATION NOTE: this needs to be a property as projections may be added after initialization
-        return self.afferents.names
+        try:
+            return list(self.states) + list(self.afferents)
+        except:
+            return []
 
     #FIX:  WHEN CALLED BY HIGHER LEVEL OBJECTS DURING INIT (e.g., PROCESS AND SYSTEM), SHOULD USE FULL Mechanism.execute
     # By default, init only the _execute method of Mechanism subclass objects when their execute method is called;
@@ -2519,11 +2523,6 @@ class Mechanism_Base(Mechanism):
                                       list=list(self.path_afferents) +
                                            list(self.mod_afferents) +
                                            list(self.efferents))
-
-    # Override Component.log_items to add states and afferents to list of attributes to which logged_items can refer
-    def log_items(self, items, log_level=LogLevel.EXECUTION):
-        self.log._log_items(items=items, log_level=log_level, param_sets=[self.states, self.afferents])
-
 
 def _is_mechanism_spec(spec):
     """Evaluate whether spec is a valid Mechanism specification

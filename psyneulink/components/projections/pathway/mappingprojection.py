@@ -443,6 +443,16 @@ class MappingProjection(PathwayProjection_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
+    @property
+    def _loggable_items(self):
+        # States and afferent Projections are loggable for a Mechanism
+        #     - this allows the value of InputStates and OutputStates to be logged
+        #     - for MappingProjections, this logs the value of the Projection's matrix parameter
+        #     - for ModulatoryProjections, this logs the value of the Projection
+        # IMPLEMENTATION NOTE: this needs to be a property as that is expected by Log.loggable_items
+        return list(self.parameter_states)
+
+
     class sockets:
         sender=[OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE]
         receiver=[INPUT_STATE]

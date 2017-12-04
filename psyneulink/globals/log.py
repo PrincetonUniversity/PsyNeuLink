@@ -311,322 +311,105 @@ class Log:
 
     @property
     def loggable_items(self):
-        """Return a list of loggable items for Log's owner.
+        """Return dict of loggable items
 
-        The loggable items of all Components include those listed in its `user_params <Component.user_params>` dict.
-        Any specified in the `owner <Log.owner>`'s _loggable_items property are also included in the list.
+        Keys are names of the items, values the items themselves
+        """
+        # Crashes during init as prefs have not all been assigned:
+        # return {key: value for (key, value) in [(c.name, c.logPref.name) for c in self.loggable_components]}
+
+        loggable_items = {}
+        for c in self.loggable_components:
+            name = c.name
+            try:
+                log_pref = c.logPref.name
+            except:
+                log_pref = None
+            loggable_items[name] = log_pref
+        return loggable_items
+
+
+    @property
+    def loggable_components(self):
+        """Return a list of owner's Components that are loggable
+
+        The loggable items of a Component are specified in in the _logable_items property of its class
         """
         try:
-            try:
-                owner_items = self.owner._loggable_items
-                for item in owner_items:
-                    owner_items[item] = self.owner[item]
-            except AttributeError:
-                owner_items = {}
-            return self._loggable_items.update(self.owner_items)
-
+            loggable_items = self.owner._loggable_items
         except AttributeError:
-            # This forces setter to create log._loggable_items
-            self.loggable_items = None
-            return self._loggable_items
+            return []
+        return loggable_items
 
-    @loggable_items.setter
-    def loggable_items(self, items):
-        """Set loggable items for the Log's owner.
+    # FIX: MOVE TO Log WITH CALL TO self._log_items FOR HANDLING OF RCLASS-SPECIFIC ATTRIBUTES (STATES AND PROJECTIONS)
+    @property
+    def logged_items(self):
+        """Dict of items that have logged `entries <Log.entries>`, indicating their specified `LogLevel`.
+        """
+        log_level = 'LogLevel.'
+        # Return LogLevel for items in log.entries
+        logged_items = {key: value for (key, value) in
+                        [(l, log_level+self.owner.logPref.name)
+                         for l in self.entries.keys()]}
+        return logged_items
 
-        The loggable items of all Components include:
+    def log_items(self, items, log_level=LogLevel.EXECUTION, param_sets=None):
+        """Specifies items to be logged at the specified `LogLevel`.
 
-            * any entry in the Log `owner <Log.owner>`'s `user_params <Component.user_params>` dictionary, which
-              includes any entries of a list or dictionary that are in the `user_params <Component.user_params>`
-              dictionary.  This makes the value of all of the `InputStates <InputState>` and `OutputStates
-              <OutputState>` of a `Mechanism` available for logging (by way of its `input_states
-              <Mechanism_Base.input_states>` and `output_states <Mechanism_Base.output_states>` attributes in its
-              `user_params <Component.user_params>` dictionary, as well as all of the parameters of its
-              `function <Mechanism_Base.function>`, and the `matrix <MappingProjection.matrix>` parameter of a
-              `MappingProjection`, by way of their `parameter_states` attributes.
-
-            .. note::
-               Although there are checks for duplicate names among the `input_states <Mechanism_Base.input_states>`
-               and `output_states <Mechanism_Base.output_states>` of a Mechanism, there are not checks for duplicate
-               names between them, or with its `parameter_states <Mechanism.parameter_states>` used to represent
-               its parameter and those of its `function <Mechanism_Base.function>`.  Therefore, using the same name
-               for an InputState and OutputState of a Mechanism, or one that is same as one of its parameters or a
-               parameter of its `function <Mechanism_Base.function>`, can produce unpredictable results.
-
-            * any entries assigned to the loggable_items property;  for example, Mechanisms add their `afferent
-              projections <Mechanism_Base.afferent_projections>` as loggable items (see XXX for details).
+        Note:  this calls the `owner <Log.owner>``s _log_items method to allow it to add param_sets to
+               `loggable_items <Log.loggable_items>`.
 
         Arguments
         ---------
 
-        items : str, Component, List
-            specifies the items to be included in the Log.  Each item must be a string that is the name of an attribute
-            of the Log's `owner <Log.owner>` specified either in its user_params dict, or its _loggable_items property.
+        items : str, Component, tuple or List of these
+            specifies items to be logged;  these must be be `loggable_items <Log.loggable_items>` of the Log.
+            Each item must be a:
+            * string that is the name of a `loggable_item` <Log.loggable_item>` of the Log's `owner <Log.owner>`;
+            * a reference to a Component;
+            * tuple, the first item of which is one of the above, and the second a `LogLevel` to use for the item.
+
+        log_level : LogLevel : default LogLevel.EXECUTION
+            specifies `LogLevel` to use as the default for items not specified in tuples (see above).
+
+        params_set : list : default None
+            list of parameters to include as loggable items;  these must be attributes of the `owner <Log.owner>`
+            (for example, Mechanism
 
         """
+        from psyneulink.components.component import Component
+        from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+        from psyneulink.globals.keywords import ALL
 
-        if items is None:
-            from collections import UserDict, UserList
+        def assign_log_level(item, level, param_set):
 
-            items = {}
-
-            param_set = self.owner.user_params
-
-            # FIX: JUST COPY user_params DICT!!
-            # Create standard set of loggable items from attributes in owner's user_params dict
-            #    including all items in any lists or dicts in user_params
-            for item in self.owner.user_params:
-                if isinstance(param_set[item], (list, UserList)):
-                    for sub_item in param_set[item]:
-                        if hasattr(sub_item, 'name'):
-                            items[sub_item.name] = sub_item
-                elif isinstance(param_set[item], (dict, UserDict)):
-                    for sub_item in param_set[item]:
-                        items[sub_item] = param_set[item][sub_item]
-                else:
-                    items[item] = self.owner.user_params[item]
-
-            # Add any items specified by owner's _loggable_items property
+            if not item in self.loggable_items:
+                raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
+                               format(item, self.owner.name))
             try:
-                owner_items = self.owner._loggable_items
-                for item in owner_items:
-                    items[item] = self.owner[item]
+                component = next(c for c in self.loggable_components if c.name == item)
+                component.logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
             except AttributeError:
-                owner_items = {}
+                raise LogError("PROGRAM ERROR: Unable to set LogLevel for {} of {}".format(item, self.owner.name))
 
-            # self._loggable_items = items + SystemLogEntries +  owner_items
-            self._loggable_items = items
-        else:
-            if not hasattr(self, '_loggable_items'):
-                self.loggable_items = None
-            # items = [item if isinstance(item, str) else item.name for item in items]
-            # self._loggable_items += items
-            self._loggable_items.update(items)
+        if items is ALL:
+            self.logPref = PreferenceEntry(log_level, PreferenceLevel.INSTANCE)
+            return
 
-    # def add_entries(self, entries):
-    #     """Validate that a list of entries are attributes of owner or in SystemLogEntries, and then add to self.entries
-    #
-    #     entries should be a single keypath or list of keypaths for attribute(s) of the owner
-    #     Note: adding an entry does not mean data will be recorded;
-    #               to activate recording, the log_entries() method must be called
-    #     """
-    #     from psyneulink.components.component import Component
-    #
-    #     # If entries is a single entry, put in list for processing below
-    #     if isinstance(entries, (str, Component)):
-    #         entries = [entries]
-    #
-    #     for entry in entries:
-    #         if isinstance(entry, Component):
-    #             entry = entry.name
-    #
-    #         #Check if entries already exist
-    #         try:
-    #             self.entries[entry]
-    #         # Entry doesn't already exist
-    #         except KeyError:
-    #             # Validate that entry is either an attribute of owner or in SystemLogEntries
-    #             # if not entry in self.loggable_items:
-    #             #     raise LogError("{} is not a loggable item for {}".
-    #             #                    format(entry, self.owner.name))
-    #             # # Add entry to self.entries dict
-    #             # self.entries[entry] = []
-    #             # TEMP = self.loggable_items
-    #             # self.loggable_items=[entry]
-    #             pass
-    #
-    #         # Entry exists
-    #         else:
-    #             # Issue warning and ignore
-    #             warnings.warn("{0} is already an entry in log for {1}; use \"log_entry\" to add a value".
-    #                   format(entry,self.owner.name))
+        param_sets = param_sets or [self.owner.user_params]
 
-    def delete_entry(self, entries, confirm=True):
-        """Delete entry for attribute from self.entries
+        if not isinstance(items, list):
+            items = [items]
 
-        If verify is True, user will be asked to confirm deletion;  otherwise it will simply be done
-        Note: deleting the entry will delete all the data recorded within it
-        Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
-        Notes:
-        * only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
-        * deleting entries removes them from log dict, owner.prefs.logPref, and deletes ALL data recorded in them
-
-        :param entries: (str, list, or Log.ALL_LOG_ENTRIES)
-        :param confirm: (bool)
-        :return:
-        """
-
-        msg = ""
-
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
-        if entries is Log.ALL_LOG_ENTRIES:
-            entries = self.entries.keys()
-            msg = Log.ALL_LOG_ENTRIES
-
-        # If entries is a single entry, put in list for processing below
-        elif isinstance(entries, str):
-            entries = [entries]
-
-        # Validate each entry and delete bad ones from entries
-        if not msg is Log.ALL_LOG_ENTRIES:
-            for entry in entries:
-                try:
-                    self.entries[entry]
-                except KeyError:
-                    warnings.warn("Warning: {0} is not an entry in log of {1}".
-                                  format(entry,self.owner.name))
-                    del(entries, entry)
-            if len(entries) > 1:
-                msg = ', '.join(str(entry) for entry in entries)
-
-        # If any entries remain
-        if entries:
-            if confirm:
-                delete = input("\n{0} will be deleted (along with any recorded date) from log for {1}.  Proceed? (y/n)".
-                               format(msg, self.owner.name))
-                while delete != 'y' and delete != 'y':
-                    input("\nRemove entries from log for {0}? (y/n)".format(self.owner.name))
-                if delete == 'n':
-                    warnings.warn("No entries deleted")
-                    return
-
-            # Reset entries
-            for entry in entries:
-                self.entries[entry]=[]
-                if entry in self.owner.prefs.logPref:
-                    del(self.owner.prefs.logPref, entry)
-
-    def reset_entries(self, entries, confirm=True):
-        """Reset one or more entries by removing all data, but leaving entries in log dict
-
-        If verify is True, user will be asked to confirm the reset;  otherwise it will simply be done
-        Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
-        Notes:
-        * only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
-        * resetting an entry deletes ALL the data recorded within it
-
-        :param entries: (list, str or Log.ALL_LOG_ENTRIES)
-        :param confirm: (bool)
-        :return:
-        """
-
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
-        if entries is Log.ALL_LOG_ENTRIES:
-            entries = self.entries.keys()
-
-        # If entries is a single entry, put in list for processing below
-        if isinstance(entries, str):
-            entries = [entries]
-
-        # Validate each entry and delete bad ones from entries
-        for entry in entries:
-            try:
-                self.entries[entry]
-            except KeyError:
-                warnings.warn("Warning: {0} is not an entry in log of {1}".
-                              format(entry,self.owner.name))
-                del(entries, entry)
-
-        # If any entries remain
-        if entries:
-            if confirm:
-                delete = input("\nAll data will be deleted from {0} in the log for {1}.  Proceed? (y/n)".
-                               format(entries,self.owner.name))
-                while delete != 'y' and delete != 'y':
-                    input("\nDelete all data from entries? (y/n)")
-                if delete == 'n':
-                    return
-
-            # Reset entries
-            for entry in entries:
-                self.entries[entry]=[]
-
-    # def log_entries(self, entries):
-    #     """Record values of attributes corresponding to entries when logging is on
-    #
-    #     Add entries to self.owner.prefs.logPref;  these will be receive logging data when logging is one
-    #     Any entries not already in the log dict will be added to it as well
-    #
-    #     :param entries: (str or list)
-    #     :return:
-    #     """
-    #
-    #     # If entries is a single entry, put in list for processing below
-    #     if isinstance(entries, str):
-    #         entries = [entries]
-    #
-    #     # Check whether each entry is already in self.entries and, if not, validate and add it
-    #     for entry in entries:
-    #         try:
-    #             self.entries[entry]
-    #         except KeyError:
-    #             # Validate that entry is either an attribute of owner or in SystemLogEntries
-    #             if not entry in SystemLogEntries and not entry in self.owner.__dict__:
-    #                 raise LogError("{0} is not an attribute of {1} or in SystemLogEntries".
-    #                                format(entry, self.owner.name))
-    #             # Add entry to self.entries dict
-    #             self.entries[entry] = []
-    #         self.owner.prefs.logPref.append(entry)
-    #         if self.owner.prefs.verbosePref:
-    #             print("Started logging of {0}".format(entry))
-    #
-    # def log_entries(self, entries):
-    #     """Record values of attributes corresponding to entries
-    #
-    #     Issue a warning if the entry is not in the log dict or owner's logPrefs list
-    #
-    #     :param entries: (str, list or Log.ALL_LOG_ENTRIES)
-    #     :return:
-    #     """
-    #
-    #     # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
-    #     if entries is Log.ALL_LOG_ENTRIES:
-    #         entries = self.entries.keys()
-    #         msg = Log.ALL_LOG_ENTRIES
-    #
-    #     # If entries is a single entry, put in list for processing below
-    #     elif isinstance(entries, str):
-    #         entries = [entries]
-    #
-    #     # Otherwise, if paramsValidation is on, validate each entry and delete bad ones from entries
-    #     if self.owner.prefs.paramValidationPref:
-    #         for entry in entries:
-    #             try:
-    #                 self.entries[entry]
-    #             except KeyError:
-    #                 print("Warning: {0} is not an entry in the log for {1}".
-    #                       format(entry,self.owner.name))
-    #                 del(entries, entry)
-    #
-    #     for entry in entries:
-    #         self.entries[entry].append(getattr(self.owner, entry))
-    #
-    def suspend_entries(self, entries):
-        """Suspend recording the values of attributes corresponding to entries even if logging is on
-
-        Remove entries from self.owner.prefs.logPref (but leave in log dict, i.e., self.entries)
-
-        :param entries: (str or list)
-        :return:
-        """
-
-        # If entries is a single entry, put in list for processing below
-        if isinstance(entries, str):
-            entries = [entries]
-
-        # Check whether each entry is already in self.entries and, if not, validate and add it
-        for entry in entries:
-            try:
-                self.owner.prefs.logPref.remove(entry)
-            except ValueError:
-                if not entry in SystemLogEntries and not entry in self.owner.__dict__:
-                    warnings.warn("{0} is not an attribute of {1} or in SystemLogEntries".
-                                  format(entry, self.owner.name))
-                elif self.owner.prefs.verbosePref:
-                    warnings.warn("{0} was not being recorded")
+        for item in items:
+            if isinstance(item, (str, Component)):
+                # self.add_entries(item)
+                if isinstance(item, Component):
+                    item = item.name
+                assign_log_level(item, log_level, param_sets)
             else:
-                if self.owner.prefs.verbosePref:
-                    warnings.warn("Started logging of {0}".format(entry))
+                # self.add_entries(item[0])
+                assign_log_level(item[0], item[1], param_sets)
 
     def print_entries(self, entries=None, csv=False, synch_time=False, *args):
         """Print values of entries
@@ -774,105 +557,136 @@ class Log:
                                      replace("[",quotes)).replace("]",quotes)
         return(csv)
 
+    # ******************************************************************************************************
+    # DEPRECATED OR IN NEED OF REFACTORING:
+    # ******************************************************************************************************
 
-    # FIX: MOVE TO Log WITH CALL TO self._log_items FOR HANDLING OF RCLASS-SPECIFIC ATTRIBUTES (STATES AND PROJECTIONS)
-    @property
-    def logged_items(self):
-        """Dict of items that have logged `entries <Log.entries>`, indicating their specified `LogLevel`.
-        """
-        log_level = 'LogLevel.'
-        # Return LogLevel for items in log.entries
-        logged_items = {key: value for (key, value) in
-                        [(l, log_level+self.owner.logPref.name)
-                         for l in self.entries.keys()]}
-        return logged_items
+    def delete_entry(self, entries, confirm=True):
+        """Delete entry for attribute from self.entries
 
-    # @property
-    # def log_levels(self):
-    #     for item in self.loggable_items:
-    #         print(item.name, self.owner)
+        If verify is True, user will be asked to confirm deletion;  otherwise it will simply be done
+        Note: deleting the entry will delete all the data recorded within it
+        Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
+        Notes:
+        * only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
+        * deleting entries removes them from log dict, owner.prefs.logPref, and deletes ALL data recorded in them
 
-    def log_items(self, items, log_level=LogLevel.EXECUTION, param_sets=None):
-        """Specifies items to be logged at the specified `LogLevel`.
-
-        Note:  this calls the `owner <Log.owner>``s _log_items method to allow it to add param_sets to
-               `loggable_items <Log.loggable_items>`.
-
-        Arguments
-        ---------
-
-        items : str, Component, tuple or List of these
-            specifies items to be logged;  these must be be `loggable_items <Log.loggable_items>` of the Log.
-            Each item must be a:
-            * string that is the name of a `loggable_item` <Log.loggable_item>` of the Log's `owner <Log.owner>`;
-            * a reference to a Component;
-            * tuple, the first item of which is one of the above, and the second a `LogLevel` to use for the item.
-
-        log_level : LogLevel : default LogLevel.EXECUTION
-            specifies `LogLevel` to use as the default for items not specified in tuples (see above).
-
-        params_set : list : default None
-            list of parameters to include as loggable items;  these must be attributes of the `owner <Log.owner>`
-            (for example, Mechanism
-
+        :param entries: (str, list, or Log.ALL_LOG_ENTRIES)
+        :param confirm: (bool)
+        :return:
         """
 
-        # Use owner's implementation if it has one
-        return self.owner.log_items(items, log_level=log_level, param_sets=param_sets)
+        msg = ""
 
-    def _log_items(self, items, log_level=LogLevel.EXECUTION, param_sets=None):
-        """Specifies items to be logged at the specified `LogLevel`.
+        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
+        if entries is Log.ALL_LOG_ENTRIES:
+            entries = self.entries.keys()
+            msg = Log.ALL_LOG_ENTRIES
 
-        Called by `log_items <Log.log_items>` (see for documentation),
-        and/or a Component's `log_items` method, allowing it to provide additional param_sets
-        to include in the list of `loggable_items <Log.loggable_items>`.
+        # If entries is a single entry, put in list for processing below
+        elif isinstance(entries, str):
+            entries = [entries]
 
-        """
-        from psyneulink.components.component import Component
-        from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-        from psyneulink.globals.keywords import ALL
-
-        def assign_log_level(item, level, param_set):
-
-            if not item in self.loggable_items:
-                raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
-                               format(item, self.owner.name))
-
-            for params in param_set:
+        # Validate each entry and delete bad ones from entries
+        if not msg is Log.ALL_LOG_ENTRIES:
+            for entry in entries:
                 try:
-                    params[item].logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
+                    self.entries[entry]
+                except KeyError:
+                    warnings.warn("Warning: {0} is not an entry in log of {1}".
+                                  format(entry,self.owner.name))
+                    del(entries, entry)
+            if len(entries) > 1:
+                msg = ', '.join(str(entry) for entry in entries)
+
+        # If any entries remain
+        if entries:
+            if confirm:
+                delete = input("\n{0} will be deleted (along with any recorded date) from log for {1}.  Proceed? (y/n)".
+                               format(msg, self.owner.name))
+                while delete != 'y' and delete != 'y':
+                    input("\nRemove entries from log for {0}? (y/n)".format(self.owner.name))
+                if delete == 'n':
+                    warnings.warn("No entries deleted")
                     return
-                except:
-                    # Go through any list or dict items in params looking for the item
-                    from collections import UserDict, UserList
-                    for iterable_item in [entry for entry in params
-                                          if isinstance(entry, (list, UserList, dict, UserDict))]:
-                        if item in iterable_item:
-                            try:
-                                iterable_item[item].logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
-                                # self.add_entries(iterable_item[item])
-                                return
-                            except KeyError:
-                                raise LogError("{} is not a loggable parameter of {}".format(item, self.owner.name))
 
-        if items is ALL:
-            self.logPref = PreferenceEntry(log_level, PreferenceLevel.INSTANCE)
-            return
+            # Reset entries
+            for entry in entries:
+                self.entries[entry]=[]
+                if entry in self.owner.prefs.logPref:
+                    del(self.owner.prefs.logPref, entry)
 
-        param_sets = param_sets or [self.owner.user_params]
+    def reset_entries(self, entries, confirm=True):
+        """Reset one or more entries by removing all data, but leaving entries in log dict
 
-        if not isinstance(items, list):
-            items = [items]
+        If verify is True, user will be asked to confirm the reset;  otherwise it will simply be done
+        Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
+        Notes:
+        * only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
+        * resetting an entry deletes ALL the data recorded within it
 
-        for item in items:
-            if isinstance(item, (str, Component)):
-                # self.add_entries(item)
-                if isinstance(item, Component):
-                    item = item.name
-                assign_log_level(item, log_level, param_sets)
+        :param entries: (list, str or Log.ALL_LOG_ENTRIES)
+        :param confirm: (bool)
+        :return:
+        """
+
+        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
+        if entries is Log.ALL_LOG_ENTRIES:
+            entries = self.entries.keys()
+
+        # If entries is a single entry, put in list for processing below
+        if isinstance(entries, str):
+            entries = [entries]
+
+        # Validate each entry and delete bad ones from entries
+        for entry in entries:
+            try:
+                self.entries[entry]
+            except KeyError:
+                warnings.warn("Warning: {0} is not an entry in log of {1}".
+                              format(entry,self.owner.name))
+                del(entries, entry)
+
+        # If any entries remain
+        if entries:
+            if confirm:
+                delete = input("\nAll data will be deleted from {0} in the log for {1}.  Proceed? (y/n)".
+                               format(entries,self.owner.name))
+                while delete != 'y' and delete != 'y':
+                    input("\nDelete all data from entries? (y/n)")
+                if delete == 'n':
+                    return
+
+            # Reset entries
+            for entry in entries:
+                self.entries[entry]=[]
+
+    def suspend_entries(self, entries):
+        """Suspend recording the values of attributes corresponding to entries even if logging is on
+
+        Remove entries from self.owner.prefs.logPref (but leave in log dict, i.e., self.entries)
+
+        :param entries: (str or list)
+        :return:
+        """
+
+        # If entries is a single entry, put in list for processing below
+        if isinstance(entries, str):
+            entries = [entries]
+
+        # Check whether each entry is already in self.entries and, if not, validate and add it
+        for entry in entries:
+            try:
+                self.owner.prefs.logPref.remove(entry)
+            except ValueError:
+                if not entry in SystemLogEntries and not entry in self.owner.__dict__:
+                    warnings.warn("{0} is not an attribute of {1} or in SystemLogEntries".
+                                  format(entry, self.owner.name))
+                elif self.owner.prefs.verbosePref:
+                    warnings.warn("{0} was not being recorded")
             else:
-                # self.add_entries(item[0])
-                assign_log_level(item[0], item[1], param_sets)
+                if self.owner.prefs.verbosePref:
+                    warnings.warn("Started logging of {0}".format(entry))
 
 
     def save_log(self):

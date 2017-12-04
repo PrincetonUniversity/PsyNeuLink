@@ -125,4 +125,4 @@ mySystem.run(
 )
 
 # Print out logged weights for Middle_Weights
-print(Hidden_Layer_2.log.csv(entries='Middle Weights'))
+print('\nMiddle Weights (to Hidden_Layer_2): \n', Hidden_Layer_2.log.csv(entries='Middle Weights'))
