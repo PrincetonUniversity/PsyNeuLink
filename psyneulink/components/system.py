@@ -3233,18 +3233,18 @@ class System(System_Base):
             specifies whether or not to show the control components of the system;
             they will all be displayed in the color specified for **control_color**.
 
-        show_dimensions : bool or ALL or MECHANISMS or PROJECTIONS: default False
-            specifies whether or not to show dimemsions of Mechanisms (and/or MappingProjections when show_learning is
-            `True`);  can have the following settings:
+        show_dimensions : bool, MECHANISMS, PROJECTIONS or ALL : default False
+            specifies whether or not to show dimensions of Mechanisms (and/or MappingProjections when show_learning
+            is `True`);  can have the following settings:
 
             * *ALL* -- shows dimensions for both Mechanisms and Projections (see below for formats).
-            |
+
             * *MECHANISMS* -- shows `Mechanism` input and output dimensions.  Input dimensions are shown in parentheses
               below the name of the Mechanism; each number represents the dimension of the `variable
               <InputState.variable>` for each `InputState` of the Mechanism; Output dimensions are shown above
               the name of the Mechanism; each number represents the dimension for `value <OutputState.value>` of each
               of `OutputState` of the Mechanism;
-            |
+
             * *PROJECTIONS* -- shows `MappingProjection` `matrix <MappingProjection.matrix>` dimensions.  Each is
               shown in (<dim>x<dim>...) format;  for standard 2x2 "weight" matrix, the first entry is the number of
               rows (input dimension) and the second the number of columns (output dimension).

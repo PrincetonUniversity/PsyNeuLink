@@ -1215,11 +1215,6 @@ class State_Base(State):
 
         variable = self._update_variable(super(State, self)._validate_variable(variable, context))
 
-        if not context:
-            context = kwAssign + ' Base Value'
-        else:
-            context = context + kwAssign + ' Base Value'
-
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -2058,10 +2053,7 @@ class State_Base(State):
 
         self._value = assignment
 
-        # Store value in log if specified
-        # Get logPref
-        if self.prefs:
-            log_pref = self.prefs.logPref
+        # STORE value IN log IF SPECIFIED
 
         # Get context
         try:
@@ -2071,10 +2063,17 @@ class State_Base(State):
         except KeyError:
             context = ""
 
+        # Get logPref
+        log_pref = self.prefs.logPref if self.prefs else None
+        owner_log_pref = self.owner.prefs.logPref if self.owner.prefs else None
+
+
         # If context is consistent with log_pref, record value to log
         if (log_pref is LogLevel.ALL_ASSIGNMENTS or
-                (log_pref is LogLevel.EXECUTION and EXECUTING in context) or
-                (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context and kwAssign in context))):
+                (INITIALIZING in context and LogLevel.INITIALIZATION in {log_pref, owner_log_pref}) or
+                (EXECUTING in context and log_pref is LogLevel.EXECUTION) or
+                (all(c in context for c in {EXECUTING, kwAssign}) and log_pref is LogLevel.VALUE_ASSIGNMENT)
+        ):
             self.owner.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
             # self.owner.log.entries[self.name] = LogEntry(CentralClock, context, assignment)
 

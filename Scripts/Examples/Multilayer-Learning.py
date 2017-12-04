@@ -103,11 +103,14 @@ mySystem = pnl.System(
     learning_rate=2.0
 )
 
+# Log Middle_Weights of MappingProjection to Hidden_Layer_2
+Hidden_Layer_2.log_items(Middle_Weights)
+
 mySystem.reportOutputPref = True
 # Shows graph will full information:
 # mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL)
 # Shows minimal graph:
-mySystem.show_graph()
+# mySystem.show_graph()
 
 stim_list = {Input_Layer: [[-1, 30]]}
 target_list = {Output_Layer: [[0, 0, 1]]}
@@ -121,3 +124,5 @@ mySystem.run(
     termination_processing={pnl.TimeScale.TRIAL: pnl.AfterNCalls(Output_Layer, 1)}
 )
 
+# Print out logged weights for Middle_Weights
+print('\nMiddle Weights (to Hidden_Layer_2): \n', Hidden_Layer_2.log.csv(entries='Middle Weights'))
