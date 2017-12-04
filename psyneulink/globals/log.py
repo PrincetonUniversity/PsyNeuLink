@@ -311,6 +311,11 @@ class Log:
 
     @property
     def loggable_items(self):
+        """Return a list of loggable items for Log's owner.
+
+        The loggable items of all Components include those listed in its `user_params <Component.user_params>` dict.
+        Any specified in the `owner <Log.owner>`'s _loggable_items property are also included in the list.
+        """
         try:
             return self._loggable_items + self.owner._loggable_items
         except AttributeError:
@@ -320,26 +325,37 @@ class Log:
 
     @loggable_items.setter
     def loggable_items(self, items):
+        """Set loggable items for the Log's owner.
 
-        """Set loggable items for Component
+        The loggable items of all Components include:
 
-        loggable_items are:
-            any entry in user_params, including:
-                any entry of a list, UserList (including ContentAddressableList),
-                any entry of a dict, or UserDict (including ReadOnlyOrderedDict)
-                    this includes entries in function_params (a ReadOnlyOrderedDict),
-                        which makes all parameters of the Component's function available for logging
-            # any entry added using the log.add_entries method
-            any entries included in items above
-            Note:
-               for Mechanisms, since their input_states and output_states are ContentAddressableLists in user_params,
-               they will be included in loggable items;  although there are checks for no duplicate names within
-               either input_states or output_states, there are not checks for duplicated names between them, or
-               with parameter_states
-               since the names of the function's parameters are included, and these correspond to the names of their
-               ParameterStates, using them causes the ParameterState to log the information (since Functions don't log)
+            * any entry in the Log `owner <Log.owner>`'s `user_params <Component.user_params>` dictionary, which
+              includes any entries of a list or dictionary that are in the `user_params <Component.user_params>`
+              dictionary.  This makes the value of all of the `InputStates <InputState>` and `OutputStates
+              <OutputState>` of a `Mechanism` available for logging (by way of its `input_states
+              <Mechanism_Base.input_states>` and `output_states <Mechanism_Base.output_states>` attributes in its
+              `user_params <Component.user_params>` dictionary, as well as all of the parameters of its
+              `function <Mechanism_Base.function>`, and the `matrix <MappingProjection.matrix>` parameter of a
+              `MappingProjection`, by way of their `parameter_states` attributes.
 
-        :return:
+            .. note::
+               Although there are checks for duplicate names among the `input_states <Mechanism_Base.input_states>`
+               and `output_states <Mechanism_Base.output_states>` of a Mechanism, there are not checks for duplicate
+               names between them, or with its `parameter_states <Mechanism.parameter_states>` used to represent
+               its parameter and those of its `function <Mechanism_Base.function>`.  Therefore, using the same name
+               for an InputState and OutputState of a Mechanism, or one that is same as one of its parameters or a
+               parameter of its `function <Mechanism_Base.function>`, can produce unpredictable results.
+
+            * any entries assigned to the loggable_items property;  for example, Mechanisms add their `afferent
+              projections <Mechanism_Base.afferent_projections>` as loggable items (see XXX for details).
+
+        Arguments
+        ---------
+
+        items : str, Component, List
+            specifies the items to be included in the Log.  Each item must be a string that is the name of an attribute
+            of the Log's `owner <Log.owner>` specified either in its user_params dict, or its _loggable_items property.
+
         """
 
         # if not hasattr(self, '_loggable_items'):
@@ -672,6 +688,31 @@ class Log:
 
     @tc.typecheck
     def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'"):
+        """Returns a csv formatted string with headers and values for the specified entries.
+
+        The first record (row) begins with "Entry" and is followed by the header for each field (column).
+        Subsequent records begin with the record number, and are followed by the value for each entry.
+
+        Arguments
+        ---------
+
+        entries : string, Component
+            specifies the entries to be included;  they must be `loggable_items <Log.loggable_items>` of the Log.
+
+        owner_name : bool : default False
+            specified whether or not to include the Log's `owner <Log.owner>` in the header of each field;
+            if it is True, the format of the header for each field is "<Owner name>[<entry name>]";
+            otherwise, it is "<entry name>".
+
+        quotes : bool, str : default '
+            specifies whether or not to use quotes around values (e.g., arrays);
+            if not specified or True, single quotes are used;
+            if `False` or `None`, no quotes are used;
+            if specified with a string, that is used.
+
+        Returns:
+            csv formatted string
+        """
 
         # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
         if entries is ALL_ENTRIES or entries is None:
@@ -693,7 +734,7 @@ class Log:
 
         # Currently only supports entries of the same length
         if not all(len(self.entries[e])==len(self.entries[entries[0]])for e in entries):
-            raise LogError("Currently csv method only supports log entries of equal length")
+            raise LogError("CSV output currently only supported for log entries of equal length")
 
         if not quotes:
             quotes = ""
@@ -707,9 +748,10 @@ class Log:
         else:
             owner_name_str = lb = rb = ""
 
+        # Header
         csv = "\'Entry', {}\n".format(", ".join(repr("{}{}{}{}".format(owner_name_str, lb, entry, rb))
                                                      for entry in entries))
-
+        # Records
         for i in range(max_len):
             csv += "{}, {}\n".format(i, ", ".
                                      join(str(self.entries[entry][i][2]) for entry in entries).
