@@ -104,7 +104,7 @@ mySystem = pnl.System(
 )
 
 # Log Middle_Weights of MappingProjection to Hidden_Layer_2
-Hidden_Layer_2.log_items(Middle_Weights)
+Hidden_Layer_2.log_items('Middle Weights')
 
 mySystem.reportOutputPref = True
 # Shows graph will full information:
