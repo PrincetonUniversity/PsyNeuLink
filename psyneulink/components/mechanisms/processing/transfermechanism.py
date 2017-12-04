@@ -148,6 +148,7 @@ Class Reference
 """
 import inspect
 import numbers
+
 from collections import Iterable
 
 import numpy as np
@@ -155,18 +156,16 @@ import typecheck as tc
 
 from psyneulink.components.component import Component, function_type, method_type
 from psyneulink.components.functions.function import AdaptiveIntegrator, Linear, TransferFunction
+from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
-from psyneulink.globals.keywords import NAME, INDEX, FUNCTION, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NOISE, RATE, \
-    RESULT, RESULTS, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, NORMALIZING_FUNCTION_TYPE, TRANSFER_MECHANISM, \
-    VARIANCE, kwPreferenceSetName
+from psyneulink.globals.keywords import FUNCTION, INDEX, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NAME, NOISE, NORMALIZING_FUNCTION_TYPE, RATE, RESULT, RESULTS, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.timescale import TimeScale
 
 __all__ = [
     'INITIAL_VALUE', 'CLIP', 'TIME_CONSTANT', 'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH',
@@ -446,8 +445,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the TransferMechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the TransferMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
     """
@@ -683,7 +682,6 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _execute(self,
                  variable=None,
                  runtime_params=None,
-                 clock=CentralClock,
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """Execute TransferMechanism function and return transform of input

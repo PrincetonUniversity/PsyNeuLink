@@ -360,7 +360,7 @@ from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.timescale import TimeScale
 
 __all__ = [
     'CONTROL_SIGNAL_NAME', 'ControlMechanismRegistry', 'LCControlMechanism', 'LCControlMechanismError',
@@ -671,8 +671,8 @@ class LCControlMechanism(ControlMechanism):
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the LCControlMechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the LCControlMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
     """
@@ -870,7 +870,6 @@ class LCControlMechanism(ControlMechanism):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    clock=CentralClock,
                     time_scale=TimeScale.TRIAL,
                     context=None):
         """Updates LCControlMechanism's ControlSignal based on input and mode parameter value

@@ -8,7 +8,6 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.system import System
 from psyneulink.globals.keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZER, LEARNING, RATE, SOFT_CLAMP, VALUE
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
-from psyneulink.scheduling.timescale import CentralClock
 
 
 def test_gating():
@@ -130,7 +129,7 @@ def test_gating():
     }
 
     def print_header():
-        print("\n\n**** TRIAL: ", CentralClock.trial)
+        print("\n\n**** TRIAL: ", 'time_placeholder')
 
     def show_target():
         i = s.input

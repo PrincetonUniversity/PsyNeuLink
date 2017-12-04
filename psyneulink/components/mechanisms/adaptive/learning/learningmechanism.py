@@ -520,20 +520,17 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import InitStatus, parameter_keywords
-from psyneulink.components.functions.function import BackPropagation, ModulationParam, _is_modulation_param, \
-    is_function_type
-from psyneulink.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.components.functions.function import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.globals.keywords import CONTROL_PROJECTIONS, IDENTITY_MATRIX, INDEX, INITIALIZING, \
-    INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, \
-    LEARNING_SIGNALS, MATRIX, NAME, PARAMS, OUTPUT_STATES, PROJECTIONS, ENABLED, MATRIX_KEYWORD_SET
+from psyneulink.globals.keywords import CONTROL_PROJECTIONS, ENABLED, IDENTITY_MATRIX, INDEX, INITIALIZING, INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MATRIX, MATRIX_KEYWORD_SET, NAME, OUTPUT_STATES, PARAMS, PROJECTIONS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import is_numeric, parameter_spec, ContentAddressableList
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.globals.utilities import ContentAddressableList, is_numeric, parameter_spec
+from psyneulink.scheduling.timescale import TimeScale
 
 __all__ = [
     'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX',
@@ -1139,7 +1136,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _execute(self,
                 variable=None,
                 runtime_params=None,
-                clock=CentralClock,
+
                 time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute LearningMechanism function and return learning_signal

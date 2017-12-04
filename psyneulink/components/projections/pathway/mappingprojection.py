@@ -264,14 +264,10 @@ from psyneulink.components.functions.function import AccumulatorIntegrator, Line
 from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import VALUE, AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, \
-    FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, \
-    MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, \
-    SYSTEM_INPUT_STATE, INITIALIZING, EXECUTING, kwAssign
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, EXECUTING, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INITIALIZING, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, SYSTEM_INPUT_STATE, VALUE, kwAssign
+from psyneulink.globals.log import LogEntry, LogLevel
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock, CurrentTime
-from psyneulink.globals.log import LogLevel, LogEntry
 
 __all__ = [
     'MappingError', 'MappingProjection',
@@ -617,7 +613,7 @@ class MappingProjection(PathwayProjection_Base):
 
         super()._instantiate_receiver(context=context)
 
-    def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
+    def execute(self, input=None, time_scale=None, params=None, context=None):
         """
         If there is a functionParameterStates[LEARNING_PROJECTION], update the matrix ParameterState:
 

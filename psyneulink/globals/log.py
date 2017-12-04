@@ -246,7 +246,7 @@ Each entry of `entries <Log.entries>` has:
     + a key that is the name of the attribute being logged
     + a value that is a list of sequentially entered LogEntry tuples since recording of the attribute began
     + each tuple has three items:
-        - time (CentralClock): when it was recorded in the run
+        - time ('time_placeholder'): when it was recorded in the run
         - context (str): the context in which it was recorded (i.e., where the attribute value was assigned)
         - value (value): the value assigned to the attribute
 
@@ -289,21 +289,19 @@ Class Reference
 ---------------
 
 """
-import warnings
 import inspect
-import typecheck as tc
+import warnings
 from collections import namedtuple
-from enum import IntEnum, unique
+from enum import IntEnum
 
 import numpy as np
+import typecheck as tc
 
-from psyneulink.scheduling.timescale import CurrentTime
-from psyneulink.globals.keywords import kwContext, kwTime, kwValue
+from psyneulink.globals.keywords import EXECUTING, INITIALIZING, LEARNING, VALIDATE, VALUE, kwContext, kwTime, kwValue
 from psyneulink.globals.utilities import ContentAddressableList
-from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, CONTROL, VALUE
 
 __all__ = [
-    'ALL_ENTRIES', 'EntriesDict', 'kpCentralClock', 'Log', 'LogEntry', 'LogError', 'LogLevel', 'SystemLogEntries',
+    'ALL_ENTRIES', 'EntriesDict', 'Log', 'LogEntry', 'LogError', 'LogLevel', 'SystemLogEntries',
 ]
 
 
@@ -352,8 +350,7 @@ def _get_log_context(context):
     return context_flag
 
 
-kpCentralClock = 'CentralClock'
-SystemLogEntries = [kpCentralClock]
+SystemLogEntries = []
 
 #region Custom Entries Dict
 # Modified from: http://stackoverflow.com/questions/7760916/correct-useage-of-getter-setter-for-dictionary-values
@@ -439,7 +436,7 @@ class Log:
             + a key that is the name of the attribute being logged
             + a value that is a list of sequentially entered LogEntry tuples since recording of the attribute began
             + each tuple has three items:
-                - time (CentralClock): when it was recorded in the run
+                - time ('time_placeholder'): when it was recorded in the run
                 - context (str): the context in which it was recorded (i.e., where the attribute value was assigned)
                 - value (value): the value assigned to the attribute
         An attribute is recorded if:
@@ -1117,4 +1114,4 @@ class Log:
         if log_pref and log_pref == context_flags:
         # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
         # if log_pref and log_pref | context_flags:
-            self.entries[self.owner.name] = LogEntry(CurrentTime(), context, value)
+            self.entries[self.owner.name] = LogEntry('time_placeholder', context, value)

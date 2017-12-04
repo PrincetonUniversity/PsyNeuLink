@@ -8,8 +8,6 @@
 #
 from enum import Enum
 
-from psyneulink.globals.keywords import CENTRAL_CLOCK
-
 __all__ = [
     'TimeScale'
 ]
@@ -52,32 +50,3 @@ class TimeScale(Enum):
     TRIAL = 2
     RUN = 3
     LIFE = 4
-
-
-class Clock:
-    """Clock object used by a `Components <Component>` and `Compositions <Composition>` to reference the current
-    state of their assigned `Scheduler`.
-    """
-
-    def __init__(self, name):
-        self.name = name
-        self.time_step = 0
-        # FIX: WHY ISN'T THE FOLLOWING ASSIGNMENT OK?
-        # self.pass = 0
-        self.trial = 0
-        self.run = 0
-        self.life = 0
-        # FIX: THE FOLLOWING TWO PRESUMABLY DEFUNCT ITEMS STILL SEEM TO BE GETTING REFERENCED SOMEWHERE:
-        self.block = 0
-        self.task = 0
-
-
-CentralClock = Clock(name=CENTRAL_CLOCK)
-
-
-class CurrentTime:
-    def __init__(self):
-        self.time_step = CentralClock.time_step
-        self.trial = CentralClock.trial
-        self.block = CentralClock.block
-        self.task = CentralClock.task

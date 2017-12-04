@@ -7,7 +7,6 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.system import System
-from psyneulink.scheduling.timescale import CentralClock
 
 
 def test_reinforcement():
@@ -44,7 +43,7 @@ def test_reinforcement():
     reward = lambda: [reward_values[int(np.nonzero(action_selection.output_states.value)[0])]]
 
     def print_header():
-        print("\n\n**** TRIAL: ", CentralClock.trial)
+        print("\n\n**** TRIAL: ", 'time_placeholder')
 
     def show_weights():
         print('Reward prediction weights: \n', action_selection.input_states[0].path_afferents[0].matrix)
