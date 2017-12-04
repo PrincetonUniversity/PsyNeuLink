@@ -317,7 +317,14 @@ class Log:
         Any specified in the `owner <Log.owner>`'s _loggable_items property are also included in the list.
         """
         try:
-            return self._loggable_items + self.owner._loggable_items
+            try:
+                owner_items = self.owner._loggable_items
+                for item in owner_items:
+                    items[item] = self.owner[item]
+            except AttributeError:
+                owner_items = {}
+            # return self._loggable_items + self.owner._loggable_items
+
         except AttributeError:
             # This forces setter to create log._loggable_items
             self.loggable_items = None
@@ -361,34 +368,40 @@ class Log:
         if items is None:
             from collections import UserDict, UserList
 
-            items = []
+            items = {}
 
             param_set = self.owner.user_params
 
+            # FIX: JUST COPY user_params DICT!!
             # Create standard set of loggable items from attributes in owner's user_params dict
             #    including all items in any lists or dicts in user_params
             for item in self.owner.user_params:
                 if isinstance(param_set[item], (list, UserList)):
                     for sub_item in param_set[item]:
-                        items.append(sub_item)
+                        if hasattr(sub_item, 'name'):
+                            items[sub_item.name] = sub_item
                 elif isinstance(param_set[item], (dict, UserDict)):
                     for sub_item in param_set[item]:
-                        items.append(sub_item)
+                        items[sub_item] = param_set[item][sub_item]
                 else:
-                    items.append(item)
+                    items[item] = self.owner.user_params[item]
 
             # Add any items specified by owner's _loggable_items property
             try:
                 owner_items = self.owner._loggable_items
+                for item in owner_items:
+                    items[item] = self.owner[item]
             except AttributeError:
-                owner_items = []
+                owner_items = {}
 
-            self._loggable_items = items + SystemLogEntries +  owner_items
+            # self._loggable_items = items + SystemLogEntries +  owner_items
+            self._loggable_items = items
         else:
             if not hasattr(self, '_loggable_items'):
                 self.loggable_items = None
             # items = [item if isinstance(item, str) else item.name for item in items]
-            self._loggable_items += items
+            # self._loggable_items += items
+            self._loggable_items.update(items)
 
     # def add_entries(self, entries):
     #     """Validate that a list of entries are attributes of owner or in SystemLogEntries, and then add to self.entries
