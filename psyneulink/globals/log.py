@@ -23,6 +23,10 @@ Stored in `entries <Log.entries>`
 
 COMMENT
 
+.. note::
+   This is a provisional implementation of logging.  It has the functionality described below; additonal features
+   will be added and some may be subject to modification in future versions.
+
 Overview
 --------
 
