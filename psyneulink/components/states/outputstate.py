@@ -1301,6 +1301,8 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         owner.output_states.extend(state_list)
     else:
         owner._output_states = state_list
+        # Need to manually update paramsCurrent, since assigning to the backing field
+        owner.paramsCurrent[OUTPUT_STATES]=owner.output_states
 
     return state_list
 
