@@ -358,7 +358,6 @@ class Log:
 
         """
 
-        # if not hasattr(self, '_loggable_items'):
         if items is None:
             from collections import UserDict, UserList
 
@@ -366,6 +365,8 @@ class Log:
 
             param_set = self.owner.user_params
 
+            # Create standard set of loggable items from attributes in owner's user_params dict
+            #    including all items in any lists or dicts in user_params
             for item in self.owner.user_params:
                 if isinstance(param_set[item], (list, UserList)):
                     for sub_item in param_set[item]:
@@ -375,6 +376,8 @@ class Log:
                         items.append(sub_item)
                 else:
                     items.append(item)
+
+            # Add any items specified by owner's _loggable_items property
             try:
                 owner_items = self.owner._loggable_items
             except AttributeError:
@@ -759,15 +762,6 @@ class Log:
         return(csv)
 
 
-    # @property
-    # def log_items(self):
-    #     return self.owner.log_items
-    #
-    # @log_item.setter
-    # def log_items(selfs, items):
-    #     pass
-    #
-
     # FIX: MOVE TO Log WITH CALL TO self._log_items FOR HANDLING OF RCLASS-SPECIFIC ATTRIBUTES (STATES AND PROJECTIONS)
     @property
     def logged_items(self):
@@ -779,6 +773,11 @@ class Log:
                         [(l, log_level+self.owner.logPref.name)
                          for l in self.entries.keys()]}
         return logged_items
+
+    # @property
+    # def log_levels(self):
+    #     for item in self.loggable_items:
+    #         print(item.name, self.owner)
 
     def log_items(self, items, log_level=LogLevel.EXECUTION, param_sets=None):
         """Specifies items to be logged at the specified `LogLevel`.
