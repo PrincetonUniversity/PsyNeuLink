@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.4.0rc1+3.gcaddf50 documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.4.0rc1+4.g27d6f09 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0rc1+3.gcaddf50 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0rc1+4.g27d6f09 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Library" href="Library.html"/>
         <link rel="prev" title="Run" href="Run.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.0rc1+3
+                0.4.0rc1+4
               </div>
             
           
@@ -280,6 +280,28 @@ This specified as a <a class="reference internal" href="#psyneulink.globals.log.
 <p class="first admonition-title">Note</p>
 <p class="last">Currently, the only <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevels</span></code></a> supported are <a class="reference internal" href="#psyneulink.globals.log.LogLevel.OFF" title="psyneulink.globals.log.LogLevel.OFF"><code class="xref any py py-attr docutils literal"><span class="pre">OFF</span></code></a> and and <a class="reference internal" href="#psyneulink.globals.log.LogLevel.EXECUTION" title="psyneulink.globals.log.LogLevel.EXECUTION"><code class="xref any py py-attr docutils literal"><span class="pre">EXECUTION</span></code></a>.</p>
 </div>
+<p class="rubric">Examples</p>
+<p>The following example creates a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, and logs its <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <em>RESULTS</em>
+<a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_mech_1A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">loggable_items</span><span class="p">)</span>
+<span class="go">{&#39;InputState-0&#39;: &#39;OFF&#39;, &#39;time_constant&#39;: &#39;OFF&#39;, &#39;intercept&#39;: &#39;OFF&#39;, &#39;noise&#39;: &#39;OFF&#39;, &#39;RESULTS&#39;: &#39;OFF&#39;, &#39;slope&#39;: &#39;OFF&#39;}</span>
+
+<span class="go"># Log the noise parameter and RESULTS OutputState:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">log_items</span><span class="p">((</span><span class="s1">&#39;noise&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">log_items</span><span class="p">(</span><span class="s1">&#39;RESULTS&#39;</span><span class="p">)</span>
+
+<span class="go"># Execute twice (to generate some values in the Log):</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+
+<span class="go"># Display the csv formatted entries in the Log</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">entries</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;noise&#39;</span><span class="p">,</span> <span class="s1">&#39;RESULTS&#39;</span><span class="p">],</span> <span class="n">owner_name</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quotes</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+<span class="go">&#39;Entry&#39;, &#39;noise&#39;, &#39;RESULTS&#39;</span>
+<span class="go">0,  0.,  0.</span>
+<span class="go">1,  0.,  0.</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="class-reference">
 <span id="log-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
@@ -461,7 +483,7 @@ if specified with a string, that is used.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0rc1+3.gcaddf50',
+            VERSION:'0.4.0rc1+4.g27d6f09',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
