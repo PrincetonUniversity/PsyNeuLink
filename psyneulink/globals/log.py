@@ -802,6 +802,19 @@ class Log:
             - 1st item must be a string or Component that refers to a loggable item (see above);
             - 2nd item must be a `LogLevel` specification for 1st item.
 
+        Arguments
+        ---------
+
+        items : str, Component, or List
+
+        log_level : LogLevel : default LogLevel.EXECUTION
+
+        params_set : list : default None
+
+
+
+
+
         """
         from psyneulink.components.component import Component
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection, MATRIX
