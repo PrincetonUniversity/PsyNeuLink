@@ -2828,14 +2828,14 @@ class Component(object):
 
     def log_items(self, items, log_level=LogLevel.EXECUTION):
         # Overriden by subclasses to add param_sets (see Mechanism_Base for an example)
-        self.log.log_items(items=items, log_level=log_level)
+        self.log._log_items(items=items, log_level=log_level)
 
     @property
     def logged_items(self):
         """List of names of all the items being logged
         This is a convenience method that calls self.log.entries
         """
-        return self.log._logged_items
+        return self.log.logged_items
 
     @property
     def auto_dependent(self):

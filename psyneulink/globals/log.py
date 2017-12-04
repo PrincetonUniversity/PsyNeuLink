@@ -771,14 +771,8 @@ class Log:
     # FIX: MOVE TO Log WITH CALL TO self._log_items FOR HANDLING OF RCLASS-SPECIFIC ATTRIBUTES (STATES AND PROJECTIONS)
     @property
     def logged_items(self):
-        # Use owner's implementation if it has one
-        try:
-            return self.owner.logged_items
-        except AttributeError:
-            return self._logged_items
-
-    @property
-    def _logged_items(self):
+        """Dict of items that have logged `entries <Log.entries>`, indicating their specified `LogLevel`.
+        """
         log_level = 'LogLevel.'
         # Return LogLevel for items in log.entries
         logged_items = {key: value for (key, value) in
@@ -817,7 +811,8 @@ class Log:
     def _log_items(self, items, log_level=LogLevel.EXECUTION, param_sets=None):
         """Specifies items to be logged at the specified `LogLevel`.
 
-        Called by Log.log_items and/or a Component's `log_items` method that can provide additional param_sets
+        Called by `log_items <Log.log_items>` (see for documentation),
+        and/or a Component's `log_items` method, allowing it to provide additional param_sets
         to include in the list of `loggable_items <Log.loggable_items>`.
 
         """
