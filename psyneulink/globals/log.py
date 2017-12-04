@@ -710,14 +710,18 @@ class Log:
         Returns:
             csv formatted string
         """
+        from psyneulink.components.component import Component
 
         # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
         if entries is ALL_ENTRIES or entries is None:
             entries = self.entries.keys()
 
         # If entries is a single entry, put in list for processing below
-        if isinstance(entries, str):
+        if isinstance(entries, (str, Component)):
             entries = [entries]
+
+        # Make sure all entries are the names of Components
+        entries = [entry.name if isinstance(entry, Component) else entry for entry in entries ]
 
         # Validate entries
         for entry in entries:
