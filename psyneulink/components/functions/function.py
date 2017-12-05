@@ -7472,7 +7472,7 @@ class NormalDist(DistributionFunction):
 
 class UniformToNormalDist(DistributionFunction):
     """
-    UniformToNormalDist(                     \
+    UniformToNormalDist(            \
              mean=0.0,              \
              standard_dev=1.0,      \
              params=None,           \
@@ -7482,18 +7482,20 @@ class UniformToNormalDist(DistributionFunction):
 
     .. _UniformToNormalDist:
 
-    Return a random sample from a normal distribution using first np.random.rand(1), and then converting the sample to a
-    normal distribution with the following equation:
+    Return a random sample from a normal distribution using first np.random.rand(1) to generate a sample from a uniform
+    distribution, and then converting that sample to a sample from a normal distribution with the following equation:
 
     .. math::
 
-        standard\\_dev \\cdot (\\sqrt{2} * scipy.special.erfinv(2 \\cdot sample - 1)) + mean
+        normal\\_sample = \\sqrt{2} \\cdot standard\\_dev \\cdot scipy.special.erfinv(2 \\cdot uniform\\_sample - 1)  + mean
 
     The uniform --> normal conversion allows for a more direct comparison with MATLAB scripts.
 
     .. note::
 
-        This function requires SciPy.
+        This function requires `SciPy <https://pypi.python.org/pypi/scipy>`_.
+
+    (https://github.com/jonasrauber/randn-matlab-python)
 
     Arguments
     ---------
