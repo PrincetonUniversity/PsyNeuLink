@@ -1714,7 +1714,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         # CALCULATE RESULT USING RELEVANT COMBINATION OPERATION AND MODULATION
 
-        if (operation is SUM):
+        if operation is SUM:
             if isinstance(scale, numbers.Number):
                 # Scalar scale and offset
                 if isinstance(offset, numbers.Number):
@@ -1731,7 +1731,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                     hadamard_product = np.product([np.sum([variable], axis=0), scale], axis=0)
                     result = np.sum(np.append([hadamard_product], [offset], axis=0), axis=0)
 
-        elif (operation is PRODUCT):
+        elif operation is PRODUCT:
             product = np.product(variable, axis=0)
             if isinstance(scale, numbers.Number):
                 # Scalar scale and offset

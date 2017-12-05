@@ -115,7 +115,7 @@ additional details).
 
 .. note::
    The `weight <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` attributes of a
-   LearningProjection are not commonly used, and are implemented largely for generalit and compatibility with other
+   LearningProjection are not commonly used, and are implemented largely for generality and compatibility with other
    types of `Projection`.  They are distinct from, and are applied in addition to the LearningProjection's
    `learning_rate <LearningProjection.learning_rate>` attribute.  As noted under  `Projection
    <Projection_Weight_Exponent>`, they are not normalized and thus their effects aggregate if a ParameterState
@@ -618,9 +618,8 @@ class LearningProjection(ModulatoryProjection_Base):
         if self.learning_rate is not None:
             self.weight_change_matrix *= self.learning_rate
 
-
         if not INITIALIZING in context and self.reportOutputPref:
-            print("\n{} weight change matrix: \n{}\n".format(self.name, self.weight_change_matrix))
+            print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(self.weight_change_matrix)))
 
         # TEST PRINT
         # print("\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.value))

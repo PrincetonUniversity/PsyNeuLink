@@ -911,11 +911,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
         variable = self._update_variable(super()._validate_variable(variable, context))
 
         if len(variable) != 3:
-            raise LearningMechanismError("Variable for {} ({}) must have three items ({}, {}, and {})".
-                                format(self.name, variable,
-                                       ACTIVATION_INPUT,
-                                       ACTIVATION_OUTPUT,
-                                       ERROR_SIGNAL))
+            raise LearningMechanismError("Variable for {} ({}) must have three "
+                                         "items ({}, {}, and {})".
+                                         format(self.name, variable,
+                                                ACTIVATION_INPUT,
+                                                ACTIVATION_OUTPUT,
+                                                ERROR_SIGNAL))
 
         # Validate that activation_input, activation_output, and error_signal are numeric and lists or 1d np.ndarrays
         for i in range(len(variable)):

@@ -76,7 +76,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
                  function=LinearCombination(weights=[[-1], [1]]),
                  output_states: tc.optional(tc.any(str, Iterable)) = OUTCOME,
                  learning_rate=0.3,
-                 gamma=.99,
+                 gamma=0.99,
                  max_time_steps=0,
                  params=None,
                  name=None,
@@ -103,106 +103,31 @@ class PredictionErrorMechanism(ComparatorMechanism):
                          prefs=prefs,
                          context=context)
 
-        print("input state for PEM = {}".format(self.input_state))
-        print("PEM value = {}".format(self.function))
-        # self.standard_output_states[OUTCOME].
-
-        # self.integrator_function = AdaptiveIntegrator(
-        #         initializer=0,
-        #         owner=self,
-        #         context=context)
-        # self.delta_integrator_function = AdaptiveIntegrator(
-        #         initializer=0,
-        #         owner=self,
-        #         context=context
-        # )
-        # self.prev_val = self.integrator_function.previous_value
-        self.t = 0
-        # self._max_time_steps = max_time_steps
-        # self.max_t = max_time_steps or 0
-        # self.load = True
-        # self.max_t_default = True if self.max_t != 0 else False
-        # self.prev_delta = 0
-        # NOTE: assume gamma and lambda are 1
-
     def _execute(self, variable=None, runtime_params=None, clock=CentralClock,
                  time_scale=None, context=None):
         # TODO: update to take sample/reward from variable
         # sample = x(t) in Montague
-        from globals.keywords import SAMPLE, TARGET, INITIALIZING, INPUT_STATES
+        from globals.keywords import SAMPLE, TARGET
 
-        sample = self.paramsCurrent[INPUT_STATES][SAMPLE].value
-        reward = self.paramsCurrent[INPUT_STATES][TARGET].value
+        sample = self.input_states[SAMPLE].value
+        reward = self.input_states[TARGET].value
 
         delta = np.zeros_like(sample)
         if clock.trial == 0:
             sample = sample * 0
 
+        print("sample = {}".format(sample))
         # FIXME: correct the value size
         # -- call function with sample[0:t-1], sample[1:t]
         # -- add reward to returned value
         sample_prev_t = sample[0:len(sample) - 1]
         sample_next_t = sample[1:len(sample)]
 
-        new_sample = self.function(variable=[sample_prev_t, sample_next_t])
+        # new_sample = self.function(variable=[sample_prev_t, sample_next_t])
 
-        for t in range(0, len(sample) - 1):
-            delta[t] = reward[t + 1] + self.gamma * new_sample[t]
-
-        # for t in range(0, len(sample) - 1):
-        #     delta[t] = reward[t + 1] + self.function(sample[t + 1],
-        #                                              sample[t])
-
-        # v_t = sample
-        # if self.t == 0:
-        #     v_t_minus_1 = 0
-        # else:
-        #     if self.load:
-        #         if not self.max_t_default:
-        #             np.append(self.e, 0)
-        #             np.append(self.utility_matrix, v_t)
-        #         self.utility_matrix[self.t] = v_t
-        #
-        #     v_t_minus_1 = self.utility_matrix[self.t - 1]
-        #
-        #     # v_t = self.get_value(v_t, self.t, self.learning_rate,
-        #     #                      self.prev_delta)
-        #     # v_t_minus_1 = self.get_value(
-        #     #     self.integrator_function.previous_value, self.t,
-        #     #     self.learning_rate, self.prev_delta)
-        # v_t *= self.gamma
-        # values = [v_t_minus_1, v_t]
-        #
-        # output_vector = self.function(variable=values)
-        # delta_t = reward[0] + output_vector[0]
-        # if np.any(sample):
-        #     self.e[self.t] += 1
-        #     self._update_utility_matrix(self.learning_rate, delta_t)
-        #     self.prev_delta = delta_t
-        #     self._update_eligibility_trace()
-        #
-        # self.t += 1
-        #
-        # if self.load:
-        #     if not self.max_t_default:
-        #         if reward > 0:
-        #             self.load = False
-        #             self.max_t = self.t
-        #             self.t = 0
-        #     else:
-        #         if self.t == self.max_t:
-        #             self.load = False
-        #             self.t = 0
-        #
-        #
-        # else:
-        #
-        #     # delta_t = self.eligibility_trace[self.t + 1] +
-        # output_vector[0]
-        #     # self.t += 1
-        #
-        #     if self.t == self.max_t:
-        #         self.t = 0
+        for t in range(len(sample) - 1):
+            delta[t] = reward[t] + self.function(variable=[[sample[t]],
+                                                           [self.gamma * sample[t + 1]]])
         print("delta value = {}".format(delta))
         return delta
 
