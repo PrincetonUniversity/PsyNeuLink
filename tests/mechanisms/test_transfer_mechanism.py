@@ -229,8 +229,9 @@ class TestDistributionFunctions:
             noise=UniformToNormalDist().function,
             time_constant=1.0
         )
+        np.random.seed(22)
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.3834415188257777, 0.7917250380826646, 0.5288949197529045, 0.5680445610939323]])
+        assert np.allclose(val, [[-0.81177443, -0.04593492, -0.20051725,  1.07665147]])
 
     def test_transfer_mech_Uniform_noise(self):
 
