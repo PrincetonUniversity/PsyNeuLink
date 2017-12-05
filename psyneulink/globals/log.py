@@ -12,7 +12,7 @@
 """
 
 .. note::
-   This is a provisional implementation of logging.  It has the functionality described below; additonal features
+   This is a provisional implementation of logging.  It has the functionality described below; additional features
    will be added and some may be subject to modification in future versions.
 
 Overview
@@ -24,11 +24,12 @@ when they are created, validated, and/or executed).  Every Component has a log o
 Components that belong to it.  These are stored in `entries <Log.entries>` of the Log, that contain a sequential list
 of the recorded values, along with the time and context of the recording.  The conditions under which values are
 recorded is specified by the `logPref <Component.logPref` property of a Component.  While these can be set directly,
-they are most easily managed using three convenience methods assigned to every Component along with its `log --
-`loggable_items <Log.loggable_items>`, `log_items <Log.log_items>` and `logged_items <Log.logged_items>` -- that can
-be used, as their names suggest, to identify, specify and track items being logged.  The entries of a Log can be
-displayed using its `print_entries <Log.print_entries>` method, and returned in a CSV-formatted string using its
-`csv <Log.csv>` method.
+they are most easily managed using three convenience methods assigned to every Component along with its `log
+<Component.log>` -- `loggable_items <Log.loggable_items>`, `log_items <Log.log_items>` and `logged_items
+<Log.logged_items>` -- that identify, specify and track items the items being logged, respectively.  This can be
+useful not only for observing the behavior of Compnents in a model, but also in debugging them during construction.
+The entries of a Log can be displayed in a "human readable" table using its `print_entries <Log.print_entries>`
+method, and returned in CSV and numpy array formats using its `csv <Log.csv>` and `nparray <Log.nparray>` methods.
 
 COMMENT:
 Entries can also be made by the user programmatically. Each entry contains the time at
@@ -53,6 +54,12 @@ of `LogEntry` tuples recording its values.  Each `LogEntry` tuple has three item
     * *context* -- a string indicating the context in which the value was recorded;
     * *value* -- the value of the item.
 
+    .. note::
+       Currently the "time" field of the entry is not used, and reports indicate the entry number
+       (corresonding to the number of executions of the Component), which may or may not correspond to the
+       `TIME_STEP` of execution.  This will be corrected in a future release.
+
+
 A Log has several methods that make it easy to manage when it values are recorded and accessing its `entries
 <Log.entries>`:
 
@@ -70,6 +77,8 @@ A Log has several methods that make it easy to manage when it values are recorde
     * `print_entries <Log.print_entries>` -- this prints a formatted list of the `entries <Log.entries>` in the Log.
     ..
     * `csv <Log.csv>` -- this returns a CSV-formatted string with the `entries <Log.entries>` in the Log.
+    ..
+    * `nparray <Log.csv>` -- this returns a 2d np.array with the `entries <Log.entries>` in the Log.
 
 Loggable Items
 ~~~~~~~~~~~~~~
@@ -114,65 +123,84 @@ This specified as a `LogLevel`.  The default LogLevel is `OFF`.
 Examples
 --------
 
-COMMENT:
-The following example creates two `TransferMechanisms <TransferMechanism>`, one that projects to another, and logs the
-`noise <TransferMechanism.noise>` and *RESULTS* `OutputState` of the first and the `MappingProjection` from the
-first to the second:
+The following example creates a Process with two `TransferMechanisms <TransferMechanism>`, one that projects to
+another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputState` of the first and the
+`MappingProjection` from the first to the second::
 
-    >>> my_mech_A = pnl.TransferMechanism(name='my_mech_1A')
-    >>> my_mech_B = pnl.TransferMechanism(size=4, input_states=[my_mech_A])
-    # Print the loggable items for each TransferMechanism:
-    >>> print(my_mech_A.loggable_items)
+    # Create a Process with two TransferMechanisms:
+    >>> import psyneulink as pnl
+    >>> my_mech_A = pnl.TransferMechanism(name='mech_A')
+    >>> my_mech_B = pnl.TransferMechanism(name='mech_B')
+    >>> my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
 
-    >>> print(my_mech_B.loggable_items)
+    # Show the loggable items for each Mechanism:
+    >>> my_mech_A.loggable_items # doctest: +SKIP
+    {'Process-0_Input Projection': 'OFF', 'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
+    >>> my_mech_B.loggable_items # doctest: +SKIP
+    {'InputState-0': 'OFF', 'slope': 'OFF', 'MappingProjection from mech_A to mech_B': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
 
-    # Log the noise parameter and RESULTS OutputState of my_mech_A:
-    >>> my_mech_A.log_items(('noise'))
+Notice that ``my_mech_B`` includes its `MappingProjection` from ``my_mech_A`` (created by the `Process`) in its list of
+`loggable_items <Log.loggable_items>`. The first line belows gets a reference to it, and then assigns it to be logged
+with ``my_mech_B``, and the `noise <TransferMechanism.noise>` parameter and *RESULTS* OutputState to be logged for
+``my_mech_A``::
+
+    # Get the MapppingProjection to my_mech_B from my_mech_A
+    >>> proj_A_to_B = my_mech_B.path_afferents[0]
+
+    # Assign the proj_A_to_B to be logged with my_mech_B:
+    >>> my_mech_B.log_items(proj_A_to_B)
+
+    # Assign the noise parameter and RESULTS OutputState of my_mech_A to be logged:
+    >>> my_mech_A.log_items('noise')
     >>> my_mech_A.log_items('RESULTS')
 
-    # Log the MappingProjection from my_mech_A to my_mech_B:
-    >>> my_mech_B.log_items(('XXXX'))
 
-    # Execute each Mechanism twice (to generate some values in the logs):
-    >>> my_mech_A.execute()
-    >>> my_mech_A.execute()
-    >>> my_mech_B.execute()
-    >>> my_mech_B.execute()
+Executing the Process generates entries in the Logs, that can then be displayed in several ways::
 
-    # Show the logged items of each:
-    >>> my_mech_A.logged_items
-    >>> my_mech_B.logged_items
+    # Execute each Process twice (to generate some values in the logs):
+    >>> my_process.execute()
+    array([ 0.])
+    >>> my_process.execute()
+    array([ 0.])
 
-    # Print the Logs of each:
-    >>> my_mech_A.log.print_entries()
-    >>> my_mech_B.log.print_entries()
+    # Print the logged items of each Mechanism:
+    >>> my_mech_A.logged_items  # doctest: +SKIP
+    {'RESULTS': 'EXECUTION', 'noise': 'EXECUTION'}
+    >>> my_mech_B.logged_items  # doctest: +SKIP
+    {'MappingProjection from mech_A to mech_B': 'EXECUTION'}
 
-    # Display the csv formatted entries of each Log
-    >>> print(my_mech_A.log.csv(entries=['noise'], owner_name=False, quotes=None))
-    >>> print(my_mech_B.log.csv(entries=['XXX'], owner_name=False, quotes=None))
-COMMENT
+    # Print the Logs for each Mechanism:
+    >>> my_mech_A.log.print_entries() # doctest: +SKIP
+    Log for mech_A:
 
-The following example creates a `TransferMechanism`, and logs its `noise <TransferMechanism.noise>` and *RESULTS*
-`OutputState`::
+    Entry     Logged Item:                                       Context                                                                 Value
 
-    >>> my_mech_A = pnl.TransferMechanism(name='my_mech_1A')
-    >>> print(my_mech_A.loggable_items)
-    {'InputState-0': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'RESULTS': 'OFF', 'slope': 'OFF'}
+    0         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+    1         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
 
 
-    # Log the noise parameter and RESULTS OutputState:
-    >>> my_mech_A.log_items(('noise'))
-    >>> my_mech_A.log_items('RESULTS')
+    0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+    1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
 
-    # Execute twice (to generate some values in the Log):
-    >>> my_mech_A.execute()
-    >>> my_mech_A.execute()
+    >>> my_mech_B.log.print_entries() # doctest: +SKIP
+    Log for mech_B:
 
-    # Display the csv formatted entries in the Log
-    >>> print(my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None))
-    'Entry', 'noise', 'RESULTS'
-    0,  0.,  0.
-    1,  0.,  0.
+    Entry     Logged Item:                                       Context                                                                 Value
+
+    0         'MappingProjection from mech_A to mech_B'.........' EXECUTING  PROCESS Process-0'.......................................     1.
+    1         'MappingProjection from mech_A to mech_B'.........' EXECUTING  PROCESS Process-0'.......................................     1.
+
+    # Display the csv formatted entries of each Log (``my_mech_A`` without quotes around values, and ``my_mech_B``
+    with quotes)::
+
+    >>> my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None) # doctest: +SKIP
+    'Entry', 'noise'
+    0,  0.
+    1,  0.
+    >>> my_mech_B.log.csv(entries=proj_A_to_B.name, owner_name=False, quotes=True) # doctest: +SKIP
+    'Entry', 'MappingProjection from mech_A to mech_B'
+    0, ' 1.'
+    1, ' 1.'
 
 
 COMMENT:
@@ -257,6 +285,8 @@ import warnings
 import typecheck as tc
 from collections import namedtuple
 from enum import IntEnum
+
+import numpy as np
 
 from psyneulink.globals.keywords import kwContext, kwTime, kwValue
 
@@ -490,7 +520,7 @@ class Log:
         log_level = 'LogLevel.'
         # Return LogLevel for items in log.entries
         logged_items = {key: value for (key, value) in
-                        [(l, log_level+self.owner.logPref.name)
+                        [(l, self.loggable_items[l])
                          for l in self.entries.keys()]}
         return logged_items
 
@@ -580,23 +610,33 @@ class Log:
 
         variable_width = 50
         time_width = 10
+        # time_width = 5
         context_width = 70
         value_width = 7
         kwSpacer = ' '
 
 
-        header = "Variable:".ljust(variable_width, kwSpacer)
+        # MODIFIED 12/4/17 OLD: [USES Time]
+        # header = "Variable:".ljust(variable_width, kwSpacer)
+        # if not args or kwTime in args:
+        #     header = header + " " + kwTime.ljust(time_width, kwSpacer)
+        # if not args or kwContext in args:
+        #     header = header + " " + kwContext.ljust(context_width, kwSpacer)
+        # if not args or kwValue in args:
+        #     # header = header + "   " + kwValue.rjust(value_width)
+        #     header = header + "  " + kwValue
+        # MODIFIED 12/4/17 NEW: [USES entry]
+        header = "Logged Item:".ljust(variable_width, kwSpacer)
         if not args or kwTime in args:
-            header = header + " " + kwTime.ljust(time_width, kwSpacer)
+            header = "Entry".ljust(time_width, kwSpacer) + header
         if not args or kwContext in args:
             header = header + " " + kwContext.ljust(context_width, kwSpacer)
         if not args or kwValue in args:
-            # header = header + "   " + kwValue.rjust(value_width)
             header = header + "  " + kwValue
+        # MODIFIED 12/4/17 END
 
         print("\nLog for {0}:".format(self.owner.name))
-
-        print('\n'+header)
+        print('\n'+header+'\n')
 
         # Sort for consistency of reporting
         attrib_names_sorted = sorted(self.entries.keys())
@@ -610,21 +650,35 @@ class Log:
                       format(attrib_name, self.owner.name))
             else:
                 import numpy as np
-                for item in datum:
+                for i, item in enumerate(datum):
+                    # MODIFIED 12/4/17 OLD: [USES CentralClock FOR TIME]
+                    # time, context, value = item
+                    # if isinstance(value, np.ndarray):
+                    #     value = value[0]
+                    # time_str = str(time.task) +":"+ str(time.block) +":"+ str(time.trial) +":"+ str(time.time_step)
+                    # data_str = attrib_name.ljust(variable_width, kwSpacer)
+                    # if not args or kwTime in args:
+                    #     data_str = data_str + " " + time_str.ljust(time_width)
+                    # if not args or kwContext in args:
+                    #     data_str = data_str + context.ljust(context_width, kwSpacer)
+                    # if not args or kwValue in args:
+                    #     # data_str = data_str + " " + str(value).rjust(value_width) # <- WORKS
+                    #     # data_str = data_str + " " + "{:10.5}".format(str(value).strip("[]"))  # <- WORKS
+                    #     data_str = data_str + "{:2.5}".format(str(value).strip("[]")).rjust(value_width) # <- WORKS
+                    #     # data_str = data_str + "{:10.5}".format(str(value).strip("[]")) # <- WORKS
+                    # MODIFIED 12/4/17 NEW [USES entry index RATHER THAN CentralClock]
                     time, context, value = item
                     if isinstance(value, np.ndarray):
                         value = value[0]
-                    time_str = str(time.task) +":"+ str(time.block) +":"+ str(time.trial) +":"+ str(time.time_step)
-                    data_str = attrib_name.ljust(variable_width, kwSpacer)
+                    time_str = str(i)
+                    data_str = repr(attrib_name).ljust(variable_width, kwSpacer)
                     if not args or kwTime in args:
-                        data_str = data_str + " " + time_str.ljust(time_width)
+                        data_str = time_str.ljust(time_width) + data_str
                     if not args or kwContext in args:
-                        data_str = data_str + context.ljust(context_width, kwSpacer)
+                        data_str = data_str + repr(context).ljust(context_width, kwSpacer)
                     if not args or kwValue in args:
-                        # data_str = data_str + " " + str(value).rjust(value_width) # <- WORKS
-                        # data_str = data_str + " " + "{:10.5}".format(str(value).strip("[]"))  # <- WORKS
                         data_str = data_str + "{:2.5}".format(str(value).strip("[]")).rjust(value_width) # <- WORKS
-                        # data_str = data_str + "{:10.5}".format(str(value).strip("[]")) # <- WORKS
+                    # MODIFIED 12/4/17 END
 
         # {time:{width}}: {part[0]:>3}{part[1]:1}{part[2]:<3} {unit:3}".format(
         #     jid=jid, width=width, part=str(mem).partition('.'), unit=unit))
@@ -647,6 +701,10 @@ class Log:
         The first record (row) begins with "Entry" and is followed by the header for each field (column).
         Subsequent records begin with the record number, and are followed by the value for each entry.
 
+        .. note::
+           Currently only supports reports of entries with the same length.  A future version will allow
+           entries of differing lengths in the same report.
+
         Arguments
         ---------
 
@@ -667,14 +725,18 @@ class Log:
         Returns:
             csv formatted string
         """
+        from psyneulink.components.component import Component
 
         # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
         if entries is ALL_ENTRIES or entries is None:
             entries = self.entries.keys()
 
         # If entries is a single entry, put in list for processing below
-        if isinstance(entries, str):
+        if isinstance(entries, (str, Component)):
             entries = [entries]
+
+        # Make sure all entries are the names of Components
+        entries = [entry.name if isinstance(entry, Component) else entry for entry in entries ]
 
         # Validate entries
         for entry in entries:
@@ -709,12 +771,121 @@ class Log:
         for i in range(max_len):
             csv += "{}, {}\n".format(i, ", ".
                                      join(str(self.entries[entry][i][2]) for entry in entries).
-                                     replace("[",quotes)).replace("]",quotes)
+                                     replace("[[",quotes)).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
         return(csv)
 
+    # def temp(self, csvx):
+    #     from io import StringIO
+    #     import csv
+    #
+    #     csv_file = StringIO()
+    #     csv_file.write(csvx)
+    #     # thingie = np.genfromtxt(csv_file, delimiter=',')
+    #     # assert True
+    #     # csv_file.close()
+    #
+    #     # with open(csv, newline='') as csvfile:
+    #     with csv_file as csvfile:
+    #          spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+    #     assert True
+
+
+    @tc.typecheck
+    def nparray(self,
+                    entries=None,
+                    header:bool=True,
+                    owner_name:bool=False):
+        """
+        nparray(                 \
+            entries=None,        \
+            header:bool=True,    \
+            owner_name=False):   \
+            )
+
+        Return a 2d numpy array with (optional) headers and values for the specified entries.
+
+        First row (axis 0) is entry number, and subsequent rows are data for each entry, in the ordered listed in
+        the **entries** argument.  If header is `True`, the first item of each row is the header field: in the first
+        row, it is the string "Entry" and in subsequent rows the name of the entry.
+
+        .. note::
+           Currently only supports reports of entries with the same length.  A future version will allow
+           entries of differing lengths in the same report.
+
+        Arguments
+        ---------
+
+        entries : string, Component
+            specifies the entries to be included;  they must be `loggable_items <Log.loggable_items>` of the Log.
+
+        header : bool : default True
+            specifies whether or not to a header row, with the names of the entries.
+
+        owner_name : bool : default False
+            specifies whether or not to include the Log's `owner <Log.owner>` in the header of each field;
+            if it is True, the format of the header for each field is "<Owner name>[<entry name>]";
+            otherwise, it is "<entry name>".
+
+        Returns:
+            2d np.array
+        """
+        from psyneulink.components.component import Component
+
+        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
+        if entries is ALL_ENTRIES or entries is None:
+            entries = self.entries.keys()
+
+        # If entries is a single entry, put in list for processing below
+        if isinstance(entries, (str, Component)):
+            entries = [entries]
+
+        # Make sure all entries are the names of Components
+        entries = [entry.name if isinstance(entry, Component) else entry for entry in entries ]
+
+        # Validate entries
+        for entry in entries:
+            if entry not in self.loggable_items:
+                raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
+            if entry not in self.entries:
+                raise LogError("{} is not currently being logged by {} (try using log_items)".
+                               format(repr(entry), self.owner.name))
+
+        max_len = max([len(self.entries[e]) for e in entries])
+
+        # Currently only supports entries of the same length
+        if not all(len(self.entries[e])==len(self.entries[entries[0]])for e in entries):
+            raise LogError("CSV output currently only supported for log entries of equal length")
+
+        if owner_name is True:
+            owner_name_str = self.owner.name
+            lb = "["
+            rb = "]"
+        else:
+            owner_name_str = lb = rb = ""
+
+
+        header = 1 if header is True else 0
+
+        npa = np.arange(max_len).reshape(max_len,1).tolist()
+        if header:
+            npa = [[["Entry"]] + npa]
+        else:
+            npa = [npa]
+
+        for i, entry in enumerate(entries):
+            row = [e[2] for e in self.entries[entry]]
+            if header:
+                entry = "{}{}{}{}".format(owner_name_str, lb, entry, rb)
+                row = [entry] + row
+            npa.append(row)
+        npa = np.array(npa)
+
+        return(npa)
+
+
+    # ******************************************************************************************************
     # ******************************************************************************************************
     # DEPRECATED OR IN NEED OF REFACTORING:
-    # ******************************************************************************************************
 
     def delete_entry(self, entries, confirm=True):
         """Delete entry for attribute from self.entries
