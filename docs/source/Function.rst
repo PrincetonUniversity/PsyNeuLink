@@ -30,6 +30,7 @@ Functions
              BogaczEtAl,
              NavarroAndFuss,
              NormalDist,
+             UniformToNormalDist,
              ExponentialDist,
              UniformDist,
              GammaDist,
