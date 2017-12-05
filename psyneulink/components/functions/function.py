@@ -4454,7 +4454,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             if len(noise) == 1:
                 pass
             # Variable is a list/array
-            elif not iscompatible(np.atleast_2d(noise), var) and len(noise) > 1:
+            elif not iscompatible(np.atleast_2d(noise), var) and not iscompatible(np.atleast_1d(noise), var) and len(noise) > 1:
                 raise FunctionError(
                     "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} must be specified "
                     "as a float, a function, or an array of the appropriate shape ({})."
