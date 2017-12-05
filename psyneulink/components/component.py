@@ -135,6 +135,12 @@ corresponding arguments of its constructor, or by assigning them directly (see `
   `function <Component.function>` after the function is called.
 ..
 
+.. _Component_Log:
+
+* **log** - the `log <Component.log>` attribute contains the Component's `Log`, in which its `value <Component.value>`
+  can be recorded during initialization, validation and/or execution.
+..
+
 .. _Component_Name:
 
 * **name** - the `name <Component.name>` attribute contains the name assigned to the Component when it was created.
@@ -660,6 +666,9 @@ class Component(object):
 
     value : 2d np.array
         see `value <Component_Value>`
+
+    log : Log
+        see `log <Component_Log>`
 
     name : str
         see `name <Component_Name>`
