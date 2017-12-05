@@ -277,11 +277,12 @@ Composition's `run <Composition.run>` method.
 Logging
 -------
 
-PsyNeuLink supports logging of any attribute of any Component or Composition at any `TimeScale` of execution.
-Logs are dictionaries, with an entry for each attribute being logged.  The key for each entry is the name of
-the attribute, and its value is a record of the attribute's value recorded at the frequency specified by the
-`TimeScale` parameter for the entry;  each record is a tuple, the first item of which is a time stamp (the
-`TIME_STEP` of the `RUN`), and the second is the value of the attribute at that `TIME_STEP`.
+PsyNeuLink supports logging of any attribute of any `Component` or `Composition` under various specified
+conditions.  `Logs <Log>` are dictionaries, with an entry for each Component being logged.  The key for each entry is
+the name of the Component, and the value is a record of the Component's `value <Component.value>` recorded under the
+conditions specified by its `logPref <Component.logPref>` attribute, specified as a `LogLevel`; each record is a
+tuple, the first item of which is a time stamp (the `TIME_STEP` of the `RUN`), the second a string indicating the
+context in which the value was recorded, and the third the `value <Component.value>` itself.
 
 .. _Quick_Reference_Graphic_Displays:
 

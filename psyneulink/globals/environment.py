@@ -309,7 +309,7 @@ Complete input specification:
         s.run(inputs=input_dictionary)
 ..
 
-Shorthand - drop the outer list on **Mechanism a**'s input specification and use `num_trials` to repeat the input value
+Shorthand - specify **Mechanism a**'s inputs in a list because it is the only origin mechanism
 
 ::
 
@@ -318,7 +318,7 @@ Shorthand - drop the outer list on **Mechanism a**'s input specification and use
         s.run(inputs=input_list)
 ..
 
-
+COMMENT:
 .. _Run_Initial_Values:
 
 Initial Values
@@ -332,6 +332,7 @@ be a Mechanism designated as `INITIALIZE_CYCLE`, and its value an input for the 
 value.  The size of the input (length of the outermost level if it is a list, or axis 0 if it is an np.ndarray),
 must equal the number of InputStates of the Mechanism, and the size of each value must match (in number and type of
 elements) that of the `variable <InputState.InputState.variable>` for the corresponding InputState.
+COMMENT
 
 .. _Run_Targets:
 
@@ -536,6 +537,14 @@ def run(object,
 
     call_after_time_step : Function : default= `None`
         called after each `TIME_STEP` is executed.
+
+    termination_processing : dict{TimeScale: Condition}
+        a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`processing
+        phase of execution <System_Execution_Processing>`
+
+    termination_learning : dict{TimeScale: Condition}
+        a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
+        phase of execution <System_Execution_Learning>`
 
    Returns
    -------

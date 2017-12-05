@@ -457,7 +457,7 @@ from psyneulink.components.states.state import \
     StateError, State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.keywords import \
-    NAME, DEFERRED_INITIALIZATION, EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
+    INPUT_STATES, EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
     MECHANISM, OUTPUT_STATES, MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE, \
     OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE, LEARNING_SIGNAL, GATING_SIGNAL, SENDER, COMMAND_LINE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set

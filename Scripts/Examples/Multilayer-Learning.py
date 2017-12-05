@@ -26,15 +26,15 @@ Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
 Middle_Weights_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
 Output_Weights_matrix = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 3)
 
-# This projection will be used by the process below by referencing it in the process' pathway;
+# This Projection will be used by the Process below by referencing it in the Process' pathway;
 #    note: sender and receiver args don't need to be specified
 Input_Weights = pnl.MappingProjection(
     name='Input Weights',
     matrix=Input_Weights_matrix
 )
 
-# This projection will be used by the process below by assigning its sender and receiver args
-#    to mechanismss in the pathway
+# This Projection will be used by the Process below by assigning its sender and receiver args
+#    to mechanisms in the pathway
 Middle_Weights = pnl.MappingProjection(
     name='Middle Weights',
     sender=Hidden_Layer_1,
@@ -42,7 +42,7 @@ Middle_Weights = pnl.MappingProjection(
     matrix=Middle_Weights_matrix
 )
 
-# Commented lines in this projection illustrate variety of ways in which matrix and learning signals can be specified
+# Treated same as Middle_Weights Projection
 Output_Weights = pnl.MappingProjection(
     name='Output Weights',
     sender=Hidden_Layer_2,
@@ -59,13 +59,13 @@ z = pnl.Process(
         Input_Weights,
         Hidden_Layer_1,
         # Middle_Weights,
-        # No projection specification is needed here since the sender arg for Middle_Weights
+        # No Projection specification is needed here since the sender arg for Middle_Weights
         #    is Hidden_Layer_1 and its receiver arg is Hidden_Layer_2
         Hidden_Layer_2,
         # Output_Weights,
         # Output_Weights does not need to be listed for the same reason as Middle_Weights
-        # If Middle_Weights and/or Output_Weights is not declared above, then the process
-        #    will assign a default for missing projection
+        # If Middle_Weights and/or Output_Weights is not declared above, then the Process
+        #    will assign a default for rhe missing Projection
         Output_Layer
     ],
     clamp_input=pnl.SOFT_CLAMP,
@@ -103,8 +103,13 @@ mySystem = pnl.System(
     learning_rate=2.0
 )
 
+# Log Middle_Weights of MappingProjection to Hidden_Layer_2
+Hidden_Layer_2.log_items('Middle Weights')
+
 mySystem.reportOutputPref = True
-mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL)
+# Shows graph will full information:
+# mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL)
+# Shows minimal graph:
 # mySystem.show_graph()
 
 stim_list = {Input_Layer: [[-1, 30]]}
@@ -119,3 +124,5 @@ mySystem.run(
     termination_processing={pnl.TimeScale.TRIAL: pnl.AfterNCalls(Output_Layer, 1)}
 )
 
+# Print out logged weights for Middle_Weights
+print('\nMiddle Weights (to Hidden_Layer_2): \n', Hidden_Layer_2.log.csv(entries='Middle Weights'))

@@ -348,11 +348,11 @@ import typecheck as tc
 
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, DEFERRED_DEFAULT_NAME, COMPONENT_INIT, \
-    CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, \
+    CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, LOG_ENTRIES, \
     INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, \
     PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, \
     SIZE, USER_PARAMS, VALUE, VARIABLE, MODULATORY_SPEC_KEYWORDS, kwComponentCategory
-from psyneulink.globals.log import Log
+from psyneulink.globals.log import Log, LogLevel
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength
@@ -467,7 +467,6 @@ class ParamsDict(UserDict):
         super().__setitem__(key, item)
         # assign value to attrib
         setattr(self.owner, key, item)
-
 
 parameter_keywords = set()
 
@@ -676,6 +675,7 @@ class Component(object):
 # IMPLEMENTATION NOTE:  *** CHECK THAT THIS DOES NOT CAUSE ANY CHANGES AT SUBORDNIATE LEVELS TO PROPOGATE EVERYWHERE
     componentCategory = None
     componentType = None
+
 
     class Defaults(object):
         def _attributes(obj):
@@ -1095,14 +1095,15 @@ class Component(object):
             except KeyError:
                 pass
 
-            # If name is None, mark as deferred so that name can be customized
-            #    using info that has become available at time of deferred init
-            self.init_args[NAME] = self.name or (self.init_args[NAME] or
-                                                 (DEFERRED_INITIALIZATION + ' ' + self.className) or
-                                                 DEFERRED_DEFAULT_NAME)
-
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
+
+            # If name was assigned, "[DEFERRED INITIALIZATION]" was appended to it, so remove it
+            if DEFERRED_INITIALIZATION in self.name:
+                self.name = self.name.replace("["+DEFERRED_INITIALIZATION+"]","")
+            # Otherwise, allow class to replace std default name with class-specific one if it has a method for doing so
+            else:
+                self._assign_default_name()
 
             self.init_status = InitStatus.INITIALIZED
 
@@ -1117,6 +1118,9 @@ class Component(object):
                           name=name,
                           registry=DeferredInitRegistry,
                           context=context)
+
+    def _assign_default_name(self, **kwargs):
+        return
 
     def _assign_args_to_param_dicts(self, **kwargs):
         """Assign args passed in __init__() to params
@@ -2062,7 +2066,7 @@ class Component(object):
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
             if not param_name in self.paramClassDefaults:
                 # these are always allowable since they are attribs of every Component
-                if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE}:  # added SIZE here (7/5/17, CW)
+                if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE, LOG_ENTRIES}:  # added SIZE here (7/5/17, CW)
                     continue
                 # function is a class, so function_params has not yet been implemented
                 if param_name is FUNCTION_PARAMS and inspect.isclass(self.function):
@@ -2814,6 +2818,24 @@ class Component(object):
     @runtimeParamStickyAssignmentPref.setter
     def runtimeParamStickyAssignmentPref(self, setting):
         self.prefs.runtimeParamStickyAssignmentPref = setting
+
+    @property
+    def loggable_items(self):
+        """List of names of all items that can be logged
+        This is a convenience method that calls self.log
+        """
+        return self.log.loggable_items
+
+    def log_items(self, items, log_level=LogLevel.EXECUTION):
+        # Overriden by subclasses to add param_sets (see Mechanism_Base for an example)
+        self.log.log_items(items=items, log_level=log_level)
+
+    @property
+    def logged_items(self):
+        """List of names of all the items being logged
+        This is a convenience method that calls self.log.entries
+        """
+        return self.log.logged_items
 
     @property
     def auto_dependent(self):

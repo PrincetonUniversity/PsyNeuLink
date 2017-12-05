@@ -81,9 +81,14 @@ Class Reference
 
 """
 
+import inspect
+
 from psyneulink.components.projections.projection import Projection_Base
-from psyneulink.globals.keywords import MODULATORY_PROJECTION, NAME
+from psyneulink.globals.keywords import MODULATORY_PROJECTION, NAME, INITIALIZING, EXECUTING, kwAssign
 from psyneulink.components.component import InitStatus
+from psyneulink.globals.log import LogLevel, LogEntry
+from psyneulink.scheduling.timescale import CurrentTime
+
 
 __all__ = [
     'MODULATORY_SIGNAL_PARAMS'
@@ -221,7 +226,7 @@ class ModulatoryProjection_Base(Projection_Base):
                          prefs=prefs,
                          context=context)
 
-    def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
+    def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
 
         template = "{} for {}[{}]"
 
@@ -239,3 +244,43 @@ class ModulatoryProjection_Base(Projection_Base):
         else:
             raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized InitStatus ({})".
                                             format(self, self.init_status))
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, assignment):
+
+        # MODIFIED 7/8/17 OLD:
+        # from math import isnan
+        # if isinstance(assignment, np.ndarray) and assignment.ndim == 2 and isnan(assignment[0][0]):
+        #             TEST = True
+        # MODIFIED 7/8/17 END
+
+        self._value = assignment
+
+        # STORE value IN log IF SPECIFIED
+
+        # Get context
+        try:
+            curr_frame = inspect.currentframe()
+            prev_frame = inspect.getouterframes(curr_frame, 2)
+            context = inspect.getargvalues(prev_frame[1][0]).locals['context']
+        except KeyError:
+            context = ""
+        if not isinstance(context, str):
+            context = ""
+
+        # Get logPref
+        log_pref = self.prefs.logPref if self.prefs else None
+        sender_log_pref = self.sender.owner.prefs.logPref if self.sender.owner.prefs else None
+
+        # If context is consistent with log_pref, record value to log
+        if (log_pref is LogLevel.ALL_ASSIGNMENTS or
+                (INITIALIZING in context and LogLevel.INITIALIZATION in {log_pref, sender_log_pref}) or
+                (EXECUTING in context and log_pref is LogLevel.EXECUTION) or
+                (all(c in context for c in {EXECUTING, kwAssign}) and log_pref is LogLevel.VALUE_ASSIGNMENT)
+        ):
+            self.owner.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
+            # self.owner.log.entries[self.name] = LogEntry(CentralClock, context, assignment)

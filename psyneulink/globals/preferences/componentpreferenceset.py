@@ -66,7 +66,7 @@ CategoryDefaultPreferencesDict = {
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.CATEGORY),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
-    kpLogPref: PreferenceEntry(LogLevel.VALUE_ASSIGNMENT, PreferenceLevel.CATEGORY),
+    kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),
     kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY,PreferenceLevel.CATEGORY),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.CATEGORY)}
 
