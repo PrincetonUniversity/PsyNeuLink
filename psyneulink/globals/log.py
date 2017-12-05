@@ -321,10 +321,16 @@ SystemLogEntries = [kpCentralClock]
 # Modified from: http://stackoverflow.com/questions/7760916/correct-useage-of-getter-setter-for-dictionary-values
 from collections import MutableMapping
 class EntriesDict(MutableMapping,dict):
-    """Add setter method for entries that checks owner Mechanism's prefs to see whether entry is currently recording
+    """Maintains a Dict of Log entries;  asignment of a LogEntry to an entry appends it to the list for that entry
 
-    If entry is in owner Mechanism's prefs.logPref.setting list, then append attribute value to entry's list
-    Otherwise, either initialize or just update entry with value
+    The key for each entry is the name of an attribute being logged (usually the `value <Component.value>` of
+    the Log's `owner <Log.owner>`.
+    The value of each entry is a list, each item of which is a LogEntry.
+    When a LogEntry is assigned to an entry:
+       - if the entry does not already exist, it is created and assigned a list with the LogEntry as its first item;
+       - if it exists, the LogEntry is appended to the list;
+       - assigning anything other than a LogEntry raises and LogError exception.
+
     """
     def __init__(self, owner):
 
@@ -348,6 +354,8 @@ class EntriesDict(MutableMapping,dict):
 
     def __setitem__(self, key, value):
 
+        if not isinstance(value, LogEntry):
+            raise LogError("Object other than a {} assigned to Log for {}".format(LogEntry.__name__, self.owner.name))
         try:
         # If the entry already exists, use its value and append current value to it
             self._ownerLog.entries[key].append(value)
@@ -770,7 +778,7 @@ class Log:
         # Records
         for i in range(max_len):
             csv += "{}, {}\n".format(i, ", ".
-                                     join(str(self.entries[entry][i][2]) for entry in entries).
+                                     join(str(self.entries[entry][i].value) for entry in entries).
                                      replace("[[",quotes)).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
         return(csv)
 
@@ -873,7 +881,7 @@ class Log:
             npa = [npa]
 
         for i, entry in enumerate(entries):
-            row = [e[2] for e in self.entries[entry]]
+            row = [e.value for e in self.entries[entry]]
             if header:
                 entry = "{}{}{}{}".format(owner_name_str, lb, entry, rb)
                 row = [entry] + row
