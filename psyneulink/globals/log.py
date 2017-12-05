@@ -53,6 +53,12 @@ of `LogEntry` tuples recording its values.  Each `LogEntry` tuple has three item
     * *context* -- a string indicating the context in which the value was recorded;
     * *value* -- the value of the item.
 
+    .. note::
+       Currently the "time" field of the entry is not used, and reports indicate the entry number
+       (corresonding to the number of executions of the Component), which may or may not correspond to the
+       `TIME_STEP` of execution.  This will be corrected in a future release.
+
+
 A Log has several methods that make it easy to manage when it values are recorded and accessing its `entries
 <Log.entries>`:
 
@@ -271,6 +277,7 @@ import warnings
 import typecheck as tc
 from collections import namedtuple
 from enum import IntEnum
+import numpy as np
 
 from psyneulink.globals.keywords import kwContext, kwTime, kwValue
 
@@ -600,7 +607,7 @@ class Log:
         kwSpacer = ' '
 
 
-        # MODIFIED 12/4/17 OLD:
+        # MODIFIED 12/4/17 OLD: [USES Time]
         # header = "Variable:".ljust(variable_width, kwSpacer)
         # if not args or kwTime in args:
         #     header = header + " " + kwTime.ljust(time_width, kwSpacer)
@@ -609,7 +616,7 @@ class Log:
         # if not args or kwValue in args:
         #     # header = header + "   " + kwValue.rjust(value_width)
         #     header = header + "  " + kwValue
-        # MODIFIED 12/4/17 NEW:
+        # MODIFIED 12/4/17 NEW: [USES entry]
         header = "Logged Item:".ljust(variable_width, kwSpacer)
         if not args or kwTime in args:
             header = "Entry".ljust(time_width, kwSpacer) + header
@@ -619,12 +626,7 @@ class Log:
             header = header + "  " + kwValue
         # MODIFIED 12/4/17 END
 
-
-            # header = header + " " + kwTime.ljust(time_width, kwSpacer)
-
-
         print("\nLog for {0}:".format(self.owner.name))
-
         print('\n'+header+'\n')
 
         # Sort for consistency of reporting
@@ -689,6 +691,10 @@ class Log:
 
         The first record (row) begins with "Entry" and is followed by the header for each field (column).
         Subsequent records begin with the record number, and are followed by the value for each entry.
+
+        .. note::
+           Currently only supports reports of entries with the same length.  A future version will allow
+           entries of differing lengths in the same report.
 
         Arguments
         ---------
@@ -759,9 +765,118 @@ class Log:
                                      replace("[[",quotes)).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
         return(csv)
 
+    # def temp(self, csvx):
+    #     from io import StringIO
+    #     import csv
+    #
+    #     csv_file = StringIO()
+    #     csv_file.write(csvx)
+    #     # thingie = np.genfromtxt(csv_file, delimiter=',')
+    #     # assert True
+    #     # csv_file.close()
+    #
+    #     # with open(csv, newline='') as csvfile:
+    #     with csv_file as csvfile:
+    #          spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+    #     assert True
+
+
+    @tc.typecheck
+    def numpy_array(self,
+                    entries=None,
+                    header:bool=True,
+                    owner_name:bool=False):
+        """
+        nparray(                 \
+            entries=None,        \
+            header:bool=True,    \
+            owner_name=False):   \
+            )
+
+        Return a 2d numpy array with (optional) headers and values for the specified entries.
+
+        First row (axis 0) is entry number, and subsequent rows are data for each entry, in the ordered listed in
+        the **entries** argument.  If header is `True`, the first item of each row is the header field: in the first
+        row, it is the string "Entry" and in subsequent rows the name of the entry.
+
+        .. note::
+           Currently only supports reports of entries with the same length.  A future version will allow
+           entries of differing lengths in the same report.
+
+        Arguments
+        ---------
+
+        entries : string, Component
+            specifies the entries to be included;  they must be `loggable_items <Log.loggable_items>` of the Log.
+
+        header : bool : default True
+            specifies whether or not to a header row, with the names of the entries.
+
+        owner_name : bool : default False
+            specifies whether or not to include the Log's `owner <Log.owner>` in the header of each field;
+            if it is True, the format of the header for each field is "<Owner name>[<entry name>]";
+            otherwise, it is "<entry name>".
+
+        Returns:
+            2d np.array
+        """
+        from psyneulink.components.component import Component
+
+        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
+        if entries is ALL_ENTRIES or entries is None:
+            entries = self.entries.keys()
+
+        # If entries is a single entry, put in list for processing below
+        if isinstance(entries, (str, Component)):
+            entries = [entries]
+
+        # Make sure all entries are the names of Components
+        entries = [entry.name if isinstance(entry, Component) else entry for entry in entries ]
+
+        # Validate entries
+        for entry in entries:
+            if entry not in self.loggable_items:
+                raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
+            if entry not in self.entries:
+                raise LogError("{} is not currently being logged by {} (try using log_items)".
+                               format(repr(entry), self.owner.name))
+
+        max_len = max([len(self.entries[e]) for e in entries])
+
+        # Currently only supports entries of the same length
+        if not all(len(self.entries[e])==len(self.entries[entries[0]])for e in entries):
+            raise LogError("CSV output currently only supported for log entries of equal length")
+
+        if owner_name is True:
+            owner_name_str = self.owner.name
+            lb = "["
+            rb = "]"
+        else:
+            owner_name_str = lb = rb = ""
+
+
+        header = 1 if header is True else 0
+
+        npa = np.arange(max_len).reshape(max_len,1).tolist()
+        if header:
+            npa = [[["Entry"]] + npa]
+        else:
+            npa = [npa]
+
+        for i, entry in enumerate(entries):
+            row = [e[2] for e in self.entries[entry]]
+            if header:
+                entry = "{}{}{}{}".format(owner_name_str, lb, entry, rb)
+                row = [entry] + row
+            npa.append(row)
+        npa = np.array(npa)
+
+        return(npa)
+
+
+    # ******************************************************************************************************
     # ******************************************************************************************************
     # DEPRECATED OR IN NEED OF REFACTORING:
-    # ******************************************************************************************************
 
     def delete_entry(self, entries, confirm=True):
         """Delete entry for attribute from self.entries

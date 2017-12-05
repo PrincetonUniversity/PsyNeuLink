@@ -2230,8 +2230,8 @@ print ("TEST Log")
 
 
 # Create a Process with two TransferMechanisms:
-my_mech_A = pnl.TransferMechanism(name='mech_A')
-my_mech_B = pnl.TransferMechanism(name='mech_B')
+my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
+my_mech_B = pnl.TransferMechanism(name='mech_B', size=2)
 my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
 
 # Print the loggable items for each Mechanism:
@@ -2256,6 +2256,7 @@ my_mech_A.log_items('RESULTS')
 my_mech_B.log_items(proj_A_to_B)
 
 # Execute each Process twice (to generate some values in the logs):
+my_process.execute()
 my_process.execute()
 my_process.execute()
 
@@ -2293,10 +2294,13 @@ print(my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=N
 # 'Entry', 'noise'
 # 0,  0.
 # 1,  0.
-print(my_mech_B.log.csv(entries=proj_A_to_B, owner_name=False, quotes=True))
+print(my_mech_B.log.csv(entries=proj_A_to_B, owner_name=True, quotes=True))
 # 'Entry', 'MappingProjection from mech_A to mech_B'
 # 0,  1.
 # 1,  1.
+
+x = my_mech_A.log.numpy_array(entries=['noise', 'RESULTS'], header=False, owner_name=True)
+print(x)
 
 # my_mech_A = pnl.TransferMechanism(name='my_mech_1A')
 # print(my_mech_A.loggable_items)
