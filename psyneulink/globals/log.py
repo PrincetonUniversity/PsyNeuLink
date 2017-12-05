@@ -19,7 +19,7 @@ Overview
 --------
 
 A Log object is used to record the `value <Component.value>` of PsyNeuLink Components during their "life cycle" (i.e.,
-when they are created, validated, and/or executed).  Every Component has a log object, assigned to its `log
+when they are created, validated, and/or executed).  Every Component has a Log object, assigned to its `log
 <Component.log>` attribute when the Component is created, that can be used to record its value and/or that of other
 Components that belong to it.  These are stored in `entries <Log.entries>` of the Log, that contain a sequential list
 of the recorded values, along with the time and context of the recording.  The conditions under which values are
