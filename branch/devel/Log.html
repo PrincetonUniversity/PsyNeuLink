@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.4.0rc1+35.gf0e62f1.dirty documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.4.0rc1+36.g6b38083.dirty documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0rc1+35.gf0e62f1.dirty documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0rc1+36.g6b38083.dirty documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Library" href="Library.html"/>
         <link rel="prev" title="Run" href="Run.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.0rc1+35
+                0.4.0rc1+36
               </div>
             
           
@@ -174,20 +174,20 @@ will be added and some may be subject to modification in future versions.</p>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A Log object is used to record the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of PsyNeuLink Components during their “life cycle” (i.e.,
-when they are created, validated, and/or executed).  Every Component has a log object, assigned to its <code class="xref any docutils literal"><span class="pre">log</span></code> attribute when the Component is created, that can be used to record its value and/or that of other
+when they are created, validated, and/or executed).  Every Component has a Log object, assigned to its <a class="reference internal" href="Component.html#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> attribute when the Component is created, that can be used to record its value and/or that of other
 Components that belong to it.  These are stored in <code class="xref any docutils literal"><span class="pre">entries</span></code> of the Log, that contain a sequential list
 of the recorded values, along with the time and context of the recording.  The conditions under which values are
-recorded is specified by the <code class="xref any docutils literal"><span class="pre">logPref</span> <span class="pre">&lt;Component.logPref</span></code> property of a Component.  While these can be set directly,
-they are most easily managed using three convenience methods assigned to every Component along with its <code class="xref any docutils literal"><span class="pre">log</span></code> – <a class="reference internal" href="#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a>, <a class="reference internal" href="#psyneulink.globals.log.Log.log_items" title="psyneulink.globals.log.Log.log_items"><code class="xref any py py-meth docutils literal"><span class="pre">log_items</span></code></a> and <a class="reference internal" href="#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a> – that identify, specify and track items the items being logged, respectively.  This can be
-useful not only for observing the behavior of Compnents in a model, but also in debugging them during construction.
+recorded is specified by the <code class="xref any docutils literal"><span class="pre">logPref</span></code> property of a Component.  While these can be set directly,
+they are most easily managed using three convenience methods assigned to every Component along with its <a class="reference internal" href="Component.html#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> – <a class="reference internal" href="#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a>, <a class="reference internal" href="#psyneulink.globals.log.Log.log_items" title="psyneulink.globals.log.Log.log_items"><code class="xref any py py-meth docutils literal"><span class="pre">log_items</span></code></a> and <a class="reference internal" href="#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a> – that identify, specify and track items the items being logged, respectively.  This can be
+useful not only for observing the behavior of Components in a model, but also in debugging them during construction.
 The entries of a Log can be displayed in a “human readable” table using its <a class="reference internal" href="#psyneulink.globals.log.Log.print_entries" title="psyneulink.globals.log.Log.print_entries"><code class="xref any py py-meth docutils literal"><span class="pre">print_entries</span></code></a>
 method, and returned in CSV and numpy array formats using its <a class="reference internal" href="#psyneulink.globals.log.Log.csv" title="psyneulink.globals.log.Log.csv"><code class="xref any py py-meth docutils literal"><span class="pre">csv</span></code></a> and <a class="reference internal" href="#psyneulink.globals.log.Log.nparray" title="psyneulink.globals.log.Log.nparray"><code class="xref any py py-meth docutils literal"><span class="pre">nparray</span></code></a> methods.</p>
 </div>
 <div class="section" id="creating-logs-and-entries">
 <h2>Creating Logs and Entries<a class="headerlink" href="#creating-logs-and-entries" title="Permalink to this headline">¶</a></h2>
-<p>A log object is automatically created for and assigned to a Component’s <code class="xref any docutils literal"><span class="pre">log</span></code> attribute when the
+<p>A log object is automatically created for and assigned to a Component’s <a class="reference internal" href="Component.html#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> attribute when the
 Component is created.  An entry is automatically created and added to the Log’s <code class="xref any docutils literal"><span class="pre">entries</span></code> attribute
-when its <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> or that of a Component that belongs to it is recorded in the log.</p>
+when its <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> or that of a Component that belongs to it is recorded in the Log.</p>
 </div>
 <div class="section" id="structure">
 <h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
@@ -211,7 +211,7 @@ of <code class="xref any docutils literal"><span class="pre">LogEntry</span></co
 <blockquote>
 <div><ul class="simple">
 <li><a class="reference internal" href="#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> – reports, in dictionary format, the items that can be logged in a
-Component’s <code class="xref any docutils literal"><span class="pre">log</span></code> and their <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a>s;  the key to each entry is the name of the
+Component’s <a class="reference internal" href="Component.html#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> and their <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a>s;  the key to each entry is the name of the
 item (another Component), and its currently assigned <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a>.</li>
 </ul>
 <ul class="simple">
@@ -221,7 +221,7 @@ assign to that Component, or in a list with a <a class="reference internal" href
 </ul>
 <ul class="simple">
 <li><code class="xref any docutils literal"><span class="pre">logged_items</span></code> – returns a list with the name of Components that currently have <a class="reference internal" href="#"><span class="doc">entries</span></a>
-in the log.</li>
+in the Log.</li>
 </ul>
 <ul class="simple">
 <li><a class="reference internal" href="#psyneulink.globals.log.Log.print_entries" title="psyneulink.globals.log.Log.print_entries"><code class="xref any py py-meth docutils literal"><span class="pre">print_entries</span></code></a> – this prints a formatted list of the <code class="xref any docutils literal"><span class="pre">entries</span></code> in the Log.</li>
@@ -415,7 +415,7 @@ with <code class="docutils literal"><span class="pre">my_mech_B</span></code>, a
 <dl class="class">
 <dt id="psyneulink.globals.log.Log">
 <em class="property">class </em><code class="descclassname">psyneulink.globals.log.</code><code class="descname">Log</code><span class="sig-paren">(</span><em>owner</em>, <em>entries=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.log.Log" title="Permalink to this definition">¶</a></dt>
-<dd><p>Maintain a log for an object, which contains a dictionary of attributes being logged and their value(s).</p>
+<dd><p>Maintain a Log for an object, which contains a dictionary of attributes being logged and their value(s).</p>
 <dl class="attribute">
 <dt id="psyneulink.globals.log.Log.loggable_items">
 <code class="descname">loggable_items</code><a class="headerlink" href="#psyneulink.globals.log.Log.loggable_items" title="Permalink to this definition">¶</a></dt>
@@ -469,7 +469,7 @@ Each item must be a:
 <code class="descname">print_entries</code><span class="sig-paren">(</span><em>entries=None</em>, <em>csv=False</em>, <em>synch_time=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.log.Log.print_entries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print values of entries</p>
 <p>If entries is the keyword <em>ALL_ENTRIES</em>, print all entries in the self.owner.prefs.logPref list
-Issue a warning if an entry is not in the log dict</p>
+Issue a warning if an entry is not in the Log dict</p>
 </dd></dl>
 
 <dl class="method">
@@ -583,7 +583,7 @@ otherwise, it is “&lt;entry name&gt;”.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0rc1+35.gf0e62f1.dirty',
+            VERSION:'0.4.0rc1+36.g6b38083.dirty',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

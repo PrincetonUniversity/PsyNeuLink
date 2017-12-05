@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Components &mdash; PsyNeuLink 0.4.0rc1+35.gf0e62f1.dirty documentation</title>
+  <title>Components &mdash; PsyNeuLink 0.4.0rc1+36.g6b38083.dirty documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0rc1+35.gf0e62f1.dirty documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0rc1+36.g6b38083.dirty documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="Mechanisms" href="Mechanism.html"/>
         <link rel="prev" title="Core" href="Core.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.0rc1+35
+                0.4.0rc1+36
               </div>
             
           
@@ -296,6 +296,10 @@ specifications above as its value, as in the following example:</p>
 <li><strong>value</strong> - the <a class="reference internal" href="#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute contains the result (return value) of the Component’s
 <a class="reference internal" href="#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> after the function is called.</li>
 </ul>
+<ul class="simple" id="component-log">
+<li><strong>log</strong> - the <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> attribute contains the Component’s <a class="reference internal" href="Log.html"><span class="doc">Log</span></a>, in which its <a class="reference internal" href="#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+can be recorded during initialization, validation and/or execution.</li>
+</ul>
 <ul class="simple" id="component-name">
 <li><strong>name</strong> - the <a class="reference internal" href="#psyneulink.components.component.Component.name" title="psyneulink.components.component.Component.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> attribute contains the name assigned to the Component when it was created.
 If it was not specified, a default is assigned by the registry for subclass (see <span class="xref std std-doc">Registry</span> for
@@ -477,6 +481,12 @@ It should be instantiated using the constructor for a subclass.</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.components.component.Component.log">
+<code class="descname">log</code><a class="headerlink" href="#psyneulink.components.component.Component.log" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Log</em> – see <a class="reference internal" href="#component-log"><span class="std std-ref">log</span></a></p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.components.component.Component.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.components.component.Component.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str</em> – see <a class="reference internal" href="#component-name"><span class="std std-ref">name</span></a></p>
@@ -585,7 +595,7 @@ This is a convenience method that calls self.log.entries</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0rc1+35.gf0e62f1.dirty',
+            VERSION:'0.4.0rc1+36.g6b38083.dirty',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
