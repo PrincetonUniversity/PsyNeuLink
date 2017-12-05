@@ -12,7 +12,7 @@
 """
 
 .. note::
-   This is a provisional implementation of logging.  It has the functionality described below; additonal features
+   This is a provisional implementation of logging.  It has the functionality described below; additional features
    will be added and some may be subject to modification in future versions.
 
 Overview
@@ -25,10 +25,11 @@ Components that belong to it.  These are stored in `entries <Log.entries>` of th
 of the recorded values, along with the time and context of the recording.  The conditions under which values are
 recorded is specified by the `logPref <Component.logPref` property of a Component.  While these can be set directly,
 they are most easily managed using three convenience methods assigned to every Component along with its `log --
-`loggable_items <Log.loggable_items>`, `log_items <Log.log_items>` and `logged_items <Log.logged_items>` -- that can
-be used, as their names suggest, to identify, specify and track items being logged.  The entries of a Log can be
-displayed using its `print_entries <Log.print_entries>` method, and returned in a CSV-formatted string using its
-`csv <Log.csv>` method.
+`loggable_items <Log.loggable_items>`, `log_items <Log.log_items>` and `logged_items <Log.logged_items>` -- that
+identify, specify and track items the items being logged, respectively.  This can be useful not only for observing
+the behavior of Compnents in a model, but also in debugging them during construction.  The entries of a Log can be
+displayed in a "human readable" table using its `print_entries <Log.print_entries>` method, and returned in CSV and
+numpy array formats using its `csv <Log.csv>` and `nparray <Log.nparray>` methods.
 
 COMMENT:
 Entries can also be made by the user programmatically. Each entry contains the time at
