@@ -2300,7 +2300,6 @@ print(my_mech_B.log.csv(entries=proj_A_to_B, owner_name=True, quotes=True))
 # 1,  1.
 
 x = my_mech_A.log.nparray(entries=['noise', 'RESULTS'], header=False, owner_name=True)
-assert True
 
 # my_mech_A = pnl.TransferMechanism(name='my_mech_1A')
 # print(my_mech_A.loggable_items)
