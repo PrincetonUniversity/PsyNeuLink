@@ -636,7 +636,7 @@ attributes are listed below by their argument names / keywords, along with a des
     * **monitor_for_learning** / *MONITOR_FOR_LEARNING* - specifies which of the Mechanism's OutputStates is used for
       learning (see `Learning <LearningMechanism_Activation_Output>` for details of specification).
 
-A Mechanism also has the convenience properties listed brelow, that list its `Projections <Projection>` and the
+A Mechanism also has several convenience properties, listed brelow, that list its `Projections <Projection>` and the
 Mechanisms that send/receive these:
 
     * `projections <Mechanism_Base.projections>` -- all of the Projections sent or received by the Mechanism;
