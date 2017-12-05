@@ -634,32 +634,6 @@ class MappingProjection(PathwayProjection_Base):
         if "System" not in str(self.sender.owner):
             self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
 
-        # # MODIFIED 12/3/17 OLD:  [SUPERFLOUS:  DOUBLES UPDATING OF MATRIX (AND LOGGING)
-        # # Check whether error_signal has changed
-        # if (self.learning_mechanism
-        #     and self.learning_mechanism.learning_enabled
-        #     and self.learning_mechanism.status == CHANGED):
-        #
-        #     # Assume that if learning_mechanism attribute is assigned,
-        #     #    both a LearningProjection and ParameterState[MATRIX] to receive it have been instantiated
-        #     matrix_parameter_state = self._parameter_states[MATRIX]
-        #
-        #     # Assign current MATRIX to parameter state's base_value, so that it is updated in call to execute()
-        #     setattr(self, '_'+MATRIX, self.matrix)
-        #
-        #     # Update MATRIX
-        #     self.matrix = matrix_parameter_state.value
-        #     # FIX: UPDATE FOR LEARNING END
-        #
-        #     # # TEST PRINT
-        #     # print("\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.matrix))
-        #     # # print("\n@@@ WEIGHTS CHANGED FOR {} TRIAL {}".format(self.name, CentralClock.trial))
-        #     # TEST DEBUG MULTILAYER
-        #     # print("\n{}\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".
-        #     #       format(self.__class__.__name__.upper(), self.name, CentralClock.trial, self.matrix))
-        # # MODIFIED 12/3/17 END:
-
-
         return self.function(self.sender.value, params=params, context=context)
 
     @property

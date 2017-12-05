@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" factoryName="Python" name="&#8226; Reinforcement-Learning" singleton="true" type="PythonConfigurationType">
+  <configuration default="false" factoryName="Python" folderName="Examples" name="&#8226; Reinforcement-Learning" singleton="true" type="PythonConfigurationType">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
@@ -16,6 +16,7 @@
     <option name="PARAMETERS" value="" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
+    <option name="MODULE_MODE" value="false" />
     <method />
   </configuration>
 </component>
