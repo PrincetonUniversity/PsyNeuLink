@@ -76,6 +76,8 @@ A Log has several methods that make it easy to manage when it values are recorde
     * `print_entries <Log.print_entries>` -- this prints a formatted list of the `entries <Log.entries>` in the Log.
     ..
     * `csv <Log.csv>` -- this returns a CSV-formatted string with the `entries <Log.entries>` in the Log.
+    ..
+    * `nparray <Log.csv>` -- this returns a 2d np.array with the `entries <Log.entries>` in the Log.
 
 Loggable Items
 ~~~~~~~~~~~~~~
@@ -782,7 +784,7 @@ class Log:
 
 
     @tc.typecheck
-    def numpy_array(self,
+    def nparray(self,
                     entries=None,
                     header:bool=True,
                     owner_name:bool=False):
