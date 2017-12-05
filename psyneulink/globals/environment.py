@@ -538,6 +538,14 @@ def run(object,
     call_after_time_step : Function : default= `None`
         called after each `TIME_STEP` is executed.
 
+    termination_processing : dict{TimeScale: Condition}
+        a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`processing
+        phase of execution <System_Execution_Processing>`
+
+    termination_learning : dict{TimeScale: Condition}
+        a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
+        phase of execution <System_Execution_Learning>`
+
    Returns
    -------
 
