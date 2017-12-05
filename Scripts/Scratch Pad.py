@@ -2302,6 +2302,9 @@ print(my_mech_B.log.csv(entries=proj_A_to_B, owner_name=True, quotes=True))
 x = my_mech_A.log.numpy_array(entries=['noise', 'RESULTS'], header=False, owner_name=True)
 print(x)
 
+my_mech_A.senders
+assert True
+
 # my_mech_A = pnl.TransferMechanism(name='my_mech_1A')
 # print(my_mech_A.loggable_items)
 # {'InputState-0': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'RESULTS': 'OFF', 'slope': 'OFF'}
