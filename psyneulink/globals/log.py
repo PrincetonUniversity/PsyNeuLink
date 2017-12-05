@@ -325,7 +325,9 @@ class EntriesDict(MutableMapping,dict):
 
     The key for each entry is the name of an attribute being logged (usually the `value <Component.value>` of
     the Log's `owner <Log.owner>`.
+
     The value of each entry is a list, each item of which is a LogEntry.
+
     When a LogEntry is assigned to an entry:
        - if the entry does not already exist, it is created and assigned a list with the LogEntry as its first item;
        - if it exists, the LogEntry is appended to the list;
