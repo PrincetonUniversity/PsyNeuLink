@@ -1,3 +1,4 @@
+import functools
 import numpy as np
 import pytest
 
@@ -42,8 +43,8 @@ def test_reinforcement():
     # Get reward value for selected action)
     reward = lambda: [reward_values[int(np.nonzero(action_selection.output_states.value)[0])]]
 
-    def print_header():
-        print("\n\n**** TRIAL: ", 'time_placeholder')
+    def print_header(system):
+        print("\n\n**** TRIAL: ", system.scheduler_processing.clock.simple_time)
 
     def show_weights():
         print('Reward prediction weights: \n', action_selection.input_states[0].path_afferents[0].matrix)
@@ -64,7 +65,7 @@ def test_reinforcement():
         num_trials=10,
         inputs=input_list,
         targets=reward,
-        call_before_trial=print_header,
+        call_before_trial=functools.partial(print_header, s),
         call_after_trial=show_weights,
     )
 

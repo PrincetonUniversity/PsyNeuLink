@@ -246,7 +246,7 @@ Each entry of `entries <Log.entries>` has:
     + a key that is the name of the attribute being logged
     + a value that is a list of sequentially entered LogEntry tuples since recording of the attribute began
     + each tuple has three items:
-        - time ('time_placeholder'): when it was recorded in the run
+        - time (`Time.SimpleTime`): when it was recorded in the run
         - context (str): the context in which it was recorded (i.e., where the attribute value was assigned)
         - value (value): the value assigned to the attribute
 
@@ -291,6 +291,7 @@ Class Reference
 """
 import inspect
 import warnings
+
 from collections import namedtuple
 from enum import IntEnum
 
@@ -436,7 +437,7 @@ class Log:
             + a key that is the name of the attribute being logged
             + a value that is a list of sequentially entered LogEntry tuples since recording of the attribute began
             + each tuple has three items:
-                - time ('time_placeholder'): when it was recorded in the run
+                - time (`Time.SimpleTime`): when it was recorded in the run
                 - context (str): the context in which it was recorded (i.e., where the attribute value was assigned)
                 - value (value): the value assigned to the attribute
         An attribute is recorded if:

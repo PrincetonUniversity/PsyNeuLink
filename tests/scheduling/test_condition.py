@@ -6,9 +6,7 @@ from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.composition import Composition
-from psyneulink.scheduling.condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, \
-    AfterPass, AfterTrial, All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, BeforePass, BeforeTrial, \
-    EveryNCalls, EveryNPasses, NWhen, Not, WhenFinished, WhenFinishedAll, WhenFinishedAny, WhileNot
+from psyneulink.scheduling.condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, AfterPass, AfterTrial, All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, BeforePass, BeforeTrial, EveryNCalls, EveryNPasses, NWhen, Not, WhenFinished, WhenFinishedAll, WhenFinishedAny, WhileNot
 from psyneulink.scheduling.condition import ConditionError, ConditionSet
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.timescale import TimeScale
@@ -45,7 +43,7 @@ class TestCondition:
             comp.add_mechanism(A)
 
             sched = Scheduler(composition=comp)
-            sched.add_condition(A, WhileNot(lambda sched: sched.times[TimeScale.RUN][TimeScale.PASS] == 0, sched))
+            sched.add_condition(A, WhileNot(lambda sched: sched.clock.get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL) == 0, sched))
 
             termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
@@ -61,7 +59,7 @@ class TestCondition:
             comp.add_mechanism(A)
 
             sched = Scheduler(composition=comp)
-            sched.add_condition(A, WhileNot(lambda sched: sched.times[TimeScale.RUN][TimeScale.PASS] == 2, sched))
+            sched.add_condition(A, WhileNot(lambda sched: sched.clock.get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL) == 2, sched))
 
             termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)

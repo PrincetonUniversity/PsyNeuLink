@@ -2843,7 +2843,7 @@ class System(System_Base):
         # replace this with updated Clock
         if False:
             print("\n\'{}\'{} executing with: **** (Time: {}) ".
-                  format(self.name, system_string, 'time_placeholder'))
+                  format(self.name, system_string, self.scheduler_processing.clock.simple_time))
             processes = list(process.name for process in self.processes)
             print("- processes: {}".format(processes))
             print("self.input = ", self.input)
@@ -2855,7 +2855,7 @@ class System(System_Base):
 
         else:
             print("\n\'{}\'{} executing ********** (Time: {}) ".
-                  format(self.name, system_string, 'time_placeholder'))
+                  format(self.name, system_string, self.scheduler_processing.clock.simple_time))
 
     def _report_system_completion(self):
         """Prints completion message and output_values of system
@@ -2868,7 +2868,7 @@ class System(System_Base):
 
         # Print output value of primary (first) outputState of each terminal Mechanism in System
         # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
-        print("\n\'{}\'{} completed ***********(Time: {})".format(self.name, system_string, 'time_placeholder'))
+        print("\n\'{}\'{} completed ***********(Time: {})".format(self.name, system_string, self.scheduler_processing.clock.simple_time))
         if self.learning:
             from psyneulink.library.mechanisms.processing.objective.comparatormechanism import MSE
             for mech in self.target_mechanisms:
