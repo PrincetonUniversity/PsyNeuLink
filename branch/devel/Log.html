@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.4.0rc1+11.g42200ff documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.4.0rc1+12.g9ce27d4 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0rc1+11.g42200ff documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0rc1+12.g9ce27d4 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Library" href="Library.html"/>
         <link rel="prev" title="Run" href="Run.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.0rc1+11
+                0.4.0rc1+12
               </div>
             
           
@@ -201,6 +201,12 @@ of <code class="xref any docutils literal"><span class="pre">LogEntry</span></co
 <li><em>context</em> – a string indicating the context in which the value was recorded;</li>
 <li><em>value</em> – the value of the item.</li>
 </ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Currently the “time” field of the entry is not used, and reports indicate the entry number
+(corresonding to the number of executions of the Component), which may or may not correspond to the
+<a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TIME_STEP" title="psyneulink.scheduling.timescale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> of execution.  This will be corrected in a future release.</p>
+</div>
 </div></blockquote>
 <p>A Log has several methods that make it easy to manage when it values are recorded and accessing its <code class="xref any docutils literal"><span class="pre">entries</span></code>:</p>
 <blockquote>
@@ -465,6 +471,11 @@ Issue a warning if an entry is not in the log dict</p>
 <dd><p>Returns a csv formatted string with headers and values for the specified entries.</p>
 <p>The first record (row) begins with “Entry” and is followed by the header for each field (column).
 Subsequent records begin with the record number, and are followed by the value for each entry.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Currently only supports reports of entries with the same length.  A future version will allow
+entries of differing lengths in the same report.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -479,6 +490,37 @@ if not specified or True, single quotes are used;
 if <code class="xref any docutils literal"><span class="pre">False</span></code> or <code class="xref any docutils literal"><span class="pre">None</span></code>, no quotes are used;
 if specified with a string, that is used.</li>
 <li><strong>Returns</strong> – csv formatted string</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.globals.log.Log.numpy_array">
+<code class="descname">numpy_array</code><span class="sig-paren">(</span><em>entries=None</em>, <em>header: bool = True</em>, <em>owner_name: bool = False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.log.Log.numpy_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>nparray(                             entries=None,                    header:bool=True,                owner_name=False):               )</p>
+<p>Return a 2d numpy array with (optional) headers and values for the specified entries.</p>
+<p>First row (axis 0) is entry number, and subsequent rows are data for each entry, in the ordered listed in
+the <strong>entries</strong> argument.  If header is <code class="xref any docutils literal"><span class="pre">True</span></code>, the first item of each row is the header field: in the first
+row, it is the string “Entry” and in subsequent rows the name of the entry.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Currently only supports reports of entries with the same length.  A future version will allow
+entries of differing lengths in the same report.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>entries</strong> (<em>string</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.components.component.Component" title="psyneulink.components.component.Component"><em>Component</em></a>) – specifies the entries to be included;  they must be <a class="reference internal" href="#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> of the Log.</li>
+<li><strong>header</strong> (<em>bool : default True</em>) – specifies whether or not to a header row, with the names of the entries.</li>
+<li><strong>owner_name</strong> (<em>bool : default False</em>) – specifies whether or not to include the Log’s <code class="xref any docutils literal"><span class="pre">owner</span></code> in the header of each field;
+if it is True, the format of the header for each field is “&lt;Owner name&gt;[&lt;entry name&gt;]”;
+otherwise, it is “&lt;entry name&gt;”.</li>
+<li><strong>Returns</strong> – 2d np.array</li>
 </ul>
 </td>
 </tr>
@@ -535,7 +577,7 @@ if specified with a string, that is used.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0rc1+11.g42200ff',
+            VERSION:'0.4.0rc1+12.g9ce27d4',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
