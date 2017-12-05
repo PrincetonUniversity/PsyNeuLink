@@ -27,7 +27,7 @@ recorded is specified by the `logPref <Component.logPref>` property of a Compone
 they are most easily managed using three convenience methods assigned to every Component along with its `log
 <Component.log>` -- `loggable_items <Log.loggable_items>`, `log_items <Log.log_items>` and `logged_items
 <Log.logged_items>` -- that identify, specify and track items the items being logged, respectively.  This can be
-useful not only for observing the behavior of Compnents in a model, but also in debugging them during construction.
+useful not only for observing the behavior of Components in a model, but also in debugging them during construction.
 The entries of a Log can be displayed in a "human readable" table using its `print_entries <Log.print_entries>`
 method, and returned in CSV and numpy array formats using its `csv <Log.csv>` and `nparray <Log.nparray>` methods.
 
@@ -42,7 +42,7 @@ Creating Logs and Entries
 
 A log object is automatically created for and assigned to a Component's `log <Component.log>` attribute when the
 Component is created.  An entry is automatically created and added to the Log's `entries <Log.entries>` attribute
-when its `value <Component.value>` or that of a Component that belongs to it is recorded in the log.
+when its `value <Component.value>` or that of a Component that belongs to it is recorded in the Log.
 
 Structure
 ---------
@@ -72,7 +72,7 @@ A Log has several methods that make it easy to manage when it values are recorde
       assign to that Component, or in a list with a `LogLevel` to be applied to multiple items at once.
     ..
     * `logged_items <Log.logg_items>` -- returns a list with the name of Components that currently have `entries <Log>`
-      in the log.
+      in the Log.
     ..
     * `print_entries <Log.print_entries>` -- this prints a formatted list of the `entries <Log.entries>` in the Log.
     ..
@@ -205,10 +205,10 @@ Executing the Process generates entries in the Logs, that can then be displayed 
 
 COMMENT:
 
-Entries are made to the log based on the `LogLevel` specified in the
+Entries are made to the Log based on the `LogLevel` specified in the
 `logPref` item of the component's `prefs <Component.prefs>` attribute.
 
-Adding an item to prefs.logPref will validate and add an entry for that attribute to the log dict
+Adding an item to prefs.logPref will validate and add an entry for that attribute to the Log dict
 
 An attribute is logged if:
 
@@ -234,7 +234,7 @@ DEFAULT LogLevel FOR ALL COMPONENTS IS *OFF*
 Structure
 ---------
 
-Each entry of log.entries has:
+Each entry of `entries <Log.entries>` has:
     + a key that is the name of the attribute being logged
     + a value that is a list of sequentially entered LogEntry tuples since recording of the attribute began
     + each tuple has three items:
@@ -381,7 +381,7 @@ class LogError(Exception):
 #endregion
 
 class Log:
-    """Maintain a log for an object, which contains a dictionary of attributes being logged and their value(s).
+    """Maintain a Log for an object, which contains a dictionary of attributes being logged and their value(s).
 
     COMMENT:
     Description:
@@ -460,15 +460,15 @@ class Log:
     ALL_LOG_ENTRIES = 'all_log_entries'
 
     def __init__(self, owner, entries=None):
-        """Initialize log with list of entries
+        """Initialize Log with list of entries
 
         Each item of the entries list should be a string designating a Component to be logged;
         Initialize self.entries dict, each entry of which has a:
         - key corresponding to an attribute of the object to be logged
         - value that is a list of sequentially logged values
 
-        :parameter owner: (object in Function hierarchy) - parent object that owns the log object)
-        :parameter entries: (list) - list of keypaths used as keys for entries in the log dict
+        :parameter owner: (object in Function hierarchy) - parent object that owns the Log object)
+        :parameter entries: (list) - list of keypaths used as keys for entries in the Log dict
         """
 
         self.owner = owner
@@ -593,7 +593,7 @@ class Log:
         Print values of entries
 
         If entries is the keyword *ALL_ENTRIES*, print all entries in the self.owner.prefs.logPref list
-        Issue a warning if an entry is not in the log dict
+        Issue a warning if an entry is not in the Log dict
         """
 
         # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
@@ -646,7 +646,7 @@ class Log:
             try:
                 datum = self.entries[attrib_name]
             except KeyError:
-                warnings.warn("{0} is not an entry in the log for {1}".
+                warnings.warn("{0} is not an entry in the Log for {1}".
                       format(attrib_name, self.owner.name))
             else:
                 import numpy as np
@@ -750,7 +750,7 @@ class Log:
 
         # Currently only supports entries of the same length
         if not all(len(self.entries[e])==len(self.entries[entries[0]])for e in entries):
-            raise LogError("CSV output currently only supported for log entries of equal length")
+            raise LogError("CSV output currently only supported for Log entries of equal length")
 
         if not quotes:
             quotes = ""
@@ -854,7 +854,7 @@ class Log:
 
         # Currently only supports entries of the same length
         if not all(len(self.entries[e])==len(self.entries[entries[0]])for e in entries):
-            raise LogError("CSV output currently only supported for log entries of equal length")
+            raise LogError("CSV output currently only supported for Log entries of equal length")
 
         if owner_name is True:
             owner_name_str = self.owner.name
@@ -895,7 +895,7 @@ class Log:
         Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
         Notes:
         * only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
-        * deleting entries removes them from log dict, owner.prefs.logPref, and deletes ALL data recorded in them
+        * deleting entries removes them from Log dict, owner.prefs.logPref, and deletes ALL data recorded in them
 
         :param entries: (str, list, or Log.ALL_LOG_ENTRIES)
         :param confirm: (bool)
@@ -919,7 +919,7 @@ class Log:
                 try:
                     self.entries[entry]
                 except KeyError:
-                    warnings.warn("Warning: {0} is not an entry in log of {1}".
+                    warnings.warn("Warning: {0} is not an entry in Log of {1}".
                                   format(entry,self.owner.name))
                     del(entries, entry)
             if len(entries) > 1:
@@ -928,10 +928,10 @@ class Log:
         # If any entries remain
         if entries:
             if confirm:
-                delete = input("\n{0} will be deleted (along with any recorded date) from log for {1}.  Proceed? (y/n)".
+                delete = input("\n{0} will be deleted (along with any recorded date) from Log for {1}.  Proceed? (y/n)".
                                format(msg, self.owner.name))
                 while delete != 'y' and delete != 'y':
-                    input("\nRemove entries from log for {0}? (y/n)".format(self.owner.name))
+                    input("\nRemove entries from Log for {0}? (y/n)".format(self.owner.name))
                 if delete == 'n':
                     warnings.warn("No entries deleted")
                     return
@@ -943,7 +943,7 @@ class Log:
                     del(self.owner.prefs.logPref, entry)
 
     def reset_entries(self, entries, confirm=True):
-        """Reset one or more entries by removing all data, but leaving entries in log dict
+        """Reset one or more entries by removing all data, but leaving entries in Log dict
 
         If verify is True, user will be asked to confirm the reset;  otherwise it will simply be done
         Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
@@ -969,14 +969,14 @@ class Log:
             try:
                 self.entries[entry]
             except KeyError:
-                warnings.warn("Warning: {0} is not an entry in log of {1}".
+                warnings.warn("Warning: {0} is not an entry in Log of {1}".
                               format(entry,self.owner.name))
                 del(entries, entry)
 
         # If any entries remain
         if entries:
             if confirm:
-                delete = input("\nAll data will be deleted from {0} in the log for {1}.  Proceed? (y/n)".
+                delete = input("\nAll data will be deleted from {0} in the Log for {1}.  Proceed? (y/n)".
                                format(entries,self.owner.name))
                 while delete != 'y' and delete != 'y':
                     input("\nDelete all data from entries? (y/n)")
@@ -990,7 +990,7 @@ class Log:
     def suspend_entries(self, entries):
         """Suspend recording the values of attributes corresponding to entries even if logging is on
 
-        Remove entries from self.owner.prefs.logPref (but leave in log dict, i.e., self.entries)
+        Remove entries from self.owner.prefs.logPref (but leave in Log dict, i.e., self.entries)
 
         :param entries: (str or list)
         :return:
