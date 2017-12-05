@@ -736,7 +736,21 @@ class ContentAddressableList(UserList):
     """
     ContentAddressableList( component_type, key=None, list=None)
 
-    Implements dict-like list, that can be keyed by the names of the `compoments <Component>` in its entries.
+    Implements dict-like list, that can be keyed by a specified attribute of the `Compoments <Component>` in its
+    entries.
+
+    The key with which it is created is also assigned as a property of the class, that returns a list
+    with the keyed attribute of its entries.  For example, the `output_states <Mechanism_Base.output_states>` attribute
+    of a `Mechanism` is a ContentAddressableList of the Mechanism's `OutputStates <OutputState>`, keyed by their
+    names.  Therefore, ``my_mech.output_states.names`` returns the names of all of the Mechanism's OutputStates::
+
+        >>> print(pnl.DDM().output_states.names)
+        ['DECISION_VARIABLE', 'RESPONSE_TIME']
+
+    The keyed attribute can also be used to access an item of the list.  For examples::
+
+        >>> print(pnl.DDM().output_states['DECISION_VARIABLE'])
+        (OutputState DECISION_VARIABLE)
 
     Supports:
       * getting and setting entries in the list using keys (string), in addition to numeric indices.

@@ -820,7 +820,8 @@ def _instantiate_parameter_states(owner, context=None):
 
     # TBI / IMPLEMENT: use specs to implement ParameterStates below
 
-    owner._parameter_states = ContentAddressableList(ParameterState, name=owner.name+'.parameter_states')
+    owner._parameter_states = ContentAddressableList(component_type=ParameterState,
+                                                     name=owner.name+'.parameter_states')
 
     # Check that all ParameterStates for owner have not been explicitly suppressed
     #    (by assigning `NotImplemented` to PARAMETER_STATES entry of paramClassDefaults)

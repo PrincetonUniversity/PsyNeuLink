@@ -265,10 +265,13 @@ from psyneulink.components.projections.pathway.pathwayprojection import PathwayP
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.keywords import VALUE, AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, \
-    FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, SYSTEM_INPUT_STATE
+    FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, \
+    MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, \
+    SYSTEM_INPUT_STATE, INITIALIZING, EXECUTING, kwAssign
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock
+from psyneulink.scheduling.timescale import CentralClock, CurrentTime
+from psyneulink.globals.log import LogLevel, LogEntry
 
 __all__ = [
     'MappingError', 'MappingProjection',
@@ -439,6 +442,16 @@ class MappingProjection(PathwayProjection_Base):
     suffix = " " + className
 
     classPreferenceLevel = PreferenceLevel.TYPE
+
+    @property
+    def _loggable_items(self):
+        # States and afferent Projections are loggable for a Mechanism
+        #     - this allows the value of InputStates and OutputStates to be logged
+        #     - for MappingProjections, this logs the value of the Projection's matrix parameter
+        #     - for ModulatoryProjections, this logs the value of the Projection
+        # IMPLEMENTATION NOTE: this needs to be a property as that is expected by Log.loggable_items
+        return list(self.parameter_states)
+
 
     class sockets:
         sender=[OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE]
@@ -621,30 +634,6 @@ class MappingProjection(PathwayProjection_Base):
         if "System" not in str(self.sender.owner):
             self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
 
-        # Check whether error_signal has changed
-        if (self.learning_mechanism
-            and self.learning_mechanism.learning_enabled
-            and self.learning_mechanism.status == CHANGED):
-
-            # Assume that if learning_mechanism attribute is assigned,
-            #    both a LearningProjection and ParameterState[MATRIX] to receive it have been instantiated
-            matrix_parameter_state = self._parameter_states[MATRIX]
-
-            # Assign current MATRIX to parameter state's base_value, so that it is updated in call to execute()
-            setattr(self, '_'+MATRIX, self.matrix)
-
-            # Update MATRIX
-            self.matrix = matrix_parameter_state.value
-            # FIX: UPDATE FOR LEARNING END
-
-            # # TEST PRINT
-            # print("\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.matrix))
-            # # print("\n@@@ WEIGHTS CHANGED FOR {} TRIAL {}".format(self.name, CentralClock.trial))
-            # TEST DEBUG MULTILAYER
-            # print("\n{}\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".
-            #       format(self.__class__.__name__.upper(), self.name, CentralClock.trial, self.matrix))
-
-
         return self.function(self.sender.value, params=params, context=context)
 
     @property
@@ -666,6 +655,44 @@ class MappingProjection(PathwayProjection_Base):
         self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
         self.function_object.matrix = matrix
+
+        # Log matrix value if specified by owner, sender, or sender's owner
+
+        # Get context
+        try:
+            curr_frame = inspect.currentframe()
+            prev_frame = inspect.getouterframes(curr_frame, 2)
+            context = inspect.getargvalues(prev_frame[2][0]).locals['context']
+        except KeyError:
+            context = ""
+
+        # Get logPref
+        self_log_pref = self.prefs.logPref if self.prefs else None
+
+        loggers = [
+
+            # Log to self for logPref
+            (self.name, self.log, self_log_pref),
+
+            # Use self.logPref to log to receiver's log if name of self is in receiver's log.entries;
+            #    otherwise use receiver's logPref
+            (self.receiver.name, self.receiver.log,
+             self_log_pref if self.name in self.receiver.log.loggable_items else self.receiver.logPref),
+
+            # Use self.logPref to log to receiver owner's log if name of self is in receiver owner's log.entries
+            #    otherwise use receiver owner's logPref
+            (self.receiver.owner.name, self.receiver.owner.log,
+             self_log_pref if self.name in self.receiver.owner.log.loggable_items else self.receiver.owner.logPref)
+        ]
+
+        # Go through loggers, and if context is consistent with log_pref of logger, record value to logger's log
+        for log_name, log, log_pref in loggers:
+            if (log_pref is LogLevel.ALL_ASSIGNMENTS or
+                    (INITIALIZING in context and log_pref is LogLevel.INITIALIZATION) or
+                    (EXECUTING in context and log_pref is LogLevel.EXECUTION) or
+                    (all(c in context for c in {EXECUTING, kwAssign}) and log_pref is LogLevel.VALUE_ASSIGNMENT)):
+                log.entries[self.name] = LogEntry(CurrentTime(), context, matrix)
+
 
     @property
     def _matrix_spec(self):

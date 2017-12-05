@@ -1885,14 +1885,13 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     from psyneulink.components.states.state import _instantiate_state
     from psyneulink.components.states.state import State_Base
     from psyneulink.components.states.inputstate import InputState
-    from psyneulink.components.states.parameterstate import ParameterState
 
     if not isinstance(state, (int, str, State)):
         raise ProjectionError("State specification(s) for {} (as receiver(s) of {}) contain(s) one or more items"
                              " that is not a name, reference to a {} or an index for one".
                              format(receiver.name, projection_spec.name, State.__name__))
 
-    # state is State object, so use that
+    # state is State object, so use thatParameterState
     if isinstance(state, State_Base):
         state._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
