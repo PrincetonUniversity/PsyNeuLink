@@ -1008,12 +1008,12 @@ class Mechanism_Base(Mechanism):
     COMMENT
 
     states : ContentAddressableList
-        a complete list of all of the Mechanism's `States <State>`, composed from its `input_states
+        a list of all of the Mechanism's `States <State>`, composed from its `input_states
         <Mechanism_Base.input_states>`, `parameter_states <Mechanism_Base.parameter_states>`, and
         `output_states <Mechanism_Base.output_states>` attributes.
 
     projections : ContentAddressableList
-        a complete list of all of the Mechanism's `Projections <Projection>`, composed from the
+        a list of all of the Mechanism's `Projections <Projection>`, composed from the
         `path_afferents <InputStates.path_afferents>` of all of its `input_states <Mechanism_Base.input_states>`,
         the `mod_afferents` of all of its `input_states <Mechanism_Base.input_states>`,
         `parameter_states <Mechanism)Base.parameter_states>`, and `output_states <Mechanism_Base.output_states>`,
@@ -1038,6 +1038,21 @@ class Mechanism_Base(Mechanism):
     efferents : ContentAddressableList
         a list of all of the Mechanism's efferent `Projections <Projection>`, composed from the `efferents
         <OutputState.efferents>` attributes of all of its `output_states <Mechanism_Base.output_states>`.
+
+    senders : ContentAddressableList
+        a list of all of the Mechanisms that send `Projections <Projection>` to the Mechanism (i.e., the senders of
+        its `afferents <Mechanism_Base.afferents>`; this includes both `ProcessingMechanisms <ProcessingMechanism>`
+        (that send `MappingProjections <MappingProjection>` and `AdaptiveMechanisms <AdaptiveMechanism>` (that send
+        `ModulatoryProjections <ModulatoryProjection>` (also see `modulators <Mechanism_Base.modulators>`).
+
+    modulators : ContentAddressableList
+        a list of all of the `AdapativeMechanisms <AdaptiveMechanism>` that send `ModulatoryProjections
+        <ModulatoryProjection>` to the Mechanism (i.e., the senders of its `mod_afferents
+        <Mechanism_Base.mod_afferents>` (also see `senders <Mechanism_Base.senders>`).
+
+    receivers : ContentAddressableList
+        a list of all of the Mechanisms that receive `Projections <Projection>` from the Mechanism (i.e.,
+        the receivers of its `efferents <Mechanism_Base.efferents>`.
 
     processes : Dict[Process, str]
         a dictionary of the `Processes <Process>` to which the Mechanism belongs, that designates its  `role
@@ -2523,6 +2538,28 @@ class Mechanism_Base(Mechanism):
                                       list=list(self.path_afferents) +
                                            list(self.mod_afferents) +
                                            list(self.efferents))
+
+    @property
+    def senders(self):
+        """Return all Mechanisms that send Projections to self"""
+        return ContentAddressableList(component_type=Mechanism,
+                                      list=[p.sender.owner for p in self.afferents
+                                            if isinstance(p.sender.owner, Mechanism_Base)])
+
+    @property
+    def receivers(self):
+        """Return all Mechanisms that send Projections to self"""
+        return ContentAddressableList(component_type=Mechanism,
+                                      list=[p.receiver.owner for p in self.efferents
+                                            if isinstance(p.sender.owner, Mechanism_Base)])
+
+    @property
+    def modulators(self):
+        """Return all Mechanisms that send Projections to self"""
+        return ContentAddressableList(component_type=Mechanism,
+                                      list=[p.sender.owner for p in self.mod_afferents
+                                            if isinstance(p.sender.owner, Mechanism_Base)])
+
 
 def _is_mechanism_spec(spec):
     """Evaluate whether spec is a valid Mechanism specification
