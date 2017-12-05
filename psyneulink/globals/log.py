@@ -24,12 +24,12 @@ when they are created, validated, and/or executed).  Every Component has a log o
 Components that belong to it.  These are stored in `entries <Log.entries>` of the Log, that contain a sequential list
 of the recorded values, along with the time and context of the recording.  The conditions under which values are
 recorded is specified by the `logPref <Component.logPref` property of a Component.  While these can be set directly,
-they are most easily managed using three convenience methods assigned to every Component along with its `log --
-`loggable_items <Log.loggable_items>`, `log_items <Log.log_items>` and `logged_items <Log.logged_items>` -- that
-identify, specify and track items the items being logged, respectively.  This can be useful not only for observing
-the behavior of Compnents in a model, but also in debugging them during construction.  The entries of a Log can be
-displayed in a "human readable" table using its `print_entries <Log.print_entries>` method, and returned in CSV and
-numpy array formats using its `csv <Log.csv>` and `nparray <Log.nparray>` methods.
+they are most easily managed using three convenience methods assigned to every Component along with its `log
+<Component.log>` -- `loggable_items <Log.loggable_items>`, `log_items <Log.log_items>` and `logged_items
+<Log.logged_items>` -- that identify, specify and track items the items being logged, respectively.  This can be
+useful not only for observing the behavior of Compnents in a model, but also in debugging them during construction.
+The entries of a Log can be displayed in a "human readable" table using its `print_entries <Log.print_entries>`
+method, and returned in CSV and numpy array formats using its `csv <Log.csv>` and `nparray <Log.nparray>` methods.
 
 COMMENT:
 Entries can also be made by the user programmatically. Each entry contains the time at
@@ -128,14 +128,15 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
 `MappingProjection` from the first to the second::
 
     # Create a Process with two TransferMechanisms:
+    >>> import psyneulink as pnl
     >>> my_mech_A = pnl.TransferMechanism(name='mech_A')
     >>> my_mech_B = pnl.TransferMechanism(name='mech_B')
     >>> my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
 
-    # Print the loggable items for each Mechanism:
-    >>> print(my_mech_A.loggable_items)
+    # Show the loggable items for each Mechanism:
+    >>> my_mech_A.loggable_items # doctest: +SKIP
     {'Process-0_Input Projection': 'OFF', 'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
-    >>> print(my_mech_B.loggable_items)
+    >>> my_mech_B.loggable_items # doctest: +SKIP
     {'InputState-0': 'OFF', 'slope': 'OFF', 'MappingProjection from mech_A to mech_B': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
 
 Notice that ``my_mech_B`` includes its `MappingProjection` from ``my_mech_A`` (created by the `Process`) in its list of
@@ -158,16 +159,18 @@ Executing the Process generates entries in the Logs, that can then be displayed 
 
     # Execute each Process twice (to generate some values in the logs):
     >>> my_process.execute()
+    array([ 0.])
     >>> my_process.execute()
+    array([ 0.])
 
     # Print the logged items of each Mechanism:
-    >>> print(my_mech_A.logged_items)
+    >>> my_mech_A.logged_items  # doctest: +SKIP
     {'RESULTS': 'EXECUTION', 'noise': 'EXECUTION'}
-    >>> print(my_mech_B.logged_items)
+    >>> my_mech_B.logged_items  # doctest: +SKIP
     {'MappingProjection from mech_A to mech_B': 'EXECUTION'}
 
     # Print the Logs for each Mechanism:
-    >>> my_mech_A.log.print_entries()
+    >>> my_mech_A.log.print_entries() # doctest: +SKIP
     Log for mech_A:
 
     Entry     Logged Item:                                       Context                                                                 Value
@@ -179,7 +182,7 @@ Executing the Process generates entries in the Logs, that can then be displayed 
     0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
     1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
 
-    >>> my_mech_B.log.print_entries()
+    >>> my_mech_B.log.print_entries() # doctest: +SKIP
     Log for mech_B:
 
     Entry     Logged Item:                                       Context                                                                 Value
@@ -187,12 +190,14 @@ Executing the Process generates entries in the Logs, that can then be displayed 
     0         'MappingProjection from mech_A to mech_B'.........' EXECUTING  PROCESS Process-0'.......................................     1.
     1         'MappingProjection from mech_A to mech_B'.........' EXECUTING  PROCESS Process-0'.......................................     1.
 
-    # Display the csv formatted entries of each Log
-    >>> print(my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None))
+    # Display the csv formatted entries of each Log (``my_mech_A`` without quotes around values, and ``my_mech_B``
+    with quotes)::
+
+    >>> my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None) # doctest: +SKIP
     'Entry', 'noise'
     0,  0.
     1,  0.
-    >>> print(my_mech_B.log.csv(entries=proj_A_to_B.name, owner_name=False, quotes=True))
+    >>> my_mech_B.log.csv(entries=proj_A_to_B.name, owner_name=False, quotes=True) # doctest: +SKIP
     'Entry', 'MappingProjection from mech_A to mech_B'
     0, ' 1.'
     1, ' 1.'
@@ -280,6 +285,7 @@ import warnings
 import typecheck as tc
 from collections import namedtuple
 from enum import IntEnum
+
 import numpy as np
 
 from psyneulink.globals.keywords import kwContext, kwTime, kwValue
@@ -514,7 +520,7 @@ class Log:
         log_level = 'LogLevel.'
         # Return LogLevel for items in log.entries
         logged_items = {key: value for (key, value) in
-                        [(l, log_level+self.owner.logPref.name)
+                        [(l, self.loggable_items[l])
                          for l in self.entries.keys()]}
         return logged_items
 
