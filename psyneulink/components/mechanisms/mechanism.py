@@ -636,6 +636,23 @@ attributes are listed below by their argument names / keywords, along with a des
     * **monitor_for_learning** / *MONITOR_FOR_LEARNING* - specifies which of the Mechanism's OutputStates is used for
       learning (see `Learning <LearningMechanism_Activation_Output>` for details of specification).
 
+A Mechanism also has the convenience properties listed brelow, that list its `Projections <Projection>` and the
+Mechanisms that send/receive these:
+
+    * `projections <Mechanism_Base.projections>` -- all of the Projections sent or received by the Mechanism;
+    * `afferents <Mechanism_Base.afferents>` -- all of the Projections received by the Mechanism;
+    * `path_afferents <Mechanism_Base.afferents>` -- all of the PathwayProjections received by the Mechanism;
+    * `mod_afferents <Mechanism_Base.afferents>` -- all of the ModulatoryProjections received by the Mechanism;
+    * `efferents <Mechanism_Base.efferents>` -- all of the Projections sent by the Mechanism;
+    * `senders <Mechanism_Base.senders>` -- all of the Mechanisms that send a Projection to the Mechanism
+    * `modulators <Mechanism_Base.modulators>` -- all of the AdaptiveMechanisms that send a ModulatoryProjection to the
+      Mechanism
+    * `receivers <Mechanism_Base.receivers>` -- all of the Mechanisms that receive a Projection from the Mechanism
+
+Each of these is a `ContentAddressableList`, which means that the names of the Components in each list can be listed by
+appending ``.names`` to the property.  For examples, the names of all of the Mechanisms that receive a Projection from
+``my_mech`` can be accessed by ``my_mech.receivers.names``.
+
 
 .. _Mechanism_Role_In_Processes_And_Systems:
 
