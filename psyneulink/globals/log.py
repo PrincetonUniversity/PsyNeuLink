@@ -12,23 +12,24 @@
 """
 
 .. note::
-   This is a provisional implementation of logging.  It has the functionality described below; additonal features
+   This is a provisional implementation of logging.  It has the functionality described below; additional features
    will be added and some may be subject to modification in future versions.
 
 Overview
 --------
 
 A Log object is used to record the `value <Component.value>` of PsyNeuLink Components during their "life cycle" (i.e.,
-when they are created, validated, and/or executed).  Every Component has a log object, assigned to its `log
+when they are created, validated, and/or executed).  Every Component has a Log object, assigned to its `log
 <Component.log>` attribute when the Component is created, that can be used to record its value and/or that of other
 Components that belong to it.  These are stored in `entries <Log.entries>` of the Log, that contain a sequential list
 of the recorded values, along with the time and context of the recording.  The conditions under which values are
-recorded is specified by the `logPref <Component.logPref` property of a Component.  While these can be set directly,
-they are most easily managed using three convenience methods assigned to every Component along with its `log --
-`loggable_items <Log.loggable_items>`, `log_items <Log.log_items>` and `logged_items <Log.logged_items>` -- that can
-be used, as their names suggest, to identify, specify and track items being logged.  The entries of a Log can be
-displayed using its `print_entries <Log.print_entries>` method, and returned in a CSV-formatted string using its
-`csv <Log.csv>` method.
+recorded is specified by the `logPref <Component.logPref>` property of a Component.  While these can be set directly,
+they are most easily managed using three convenience methods assigned to every Component along with its `log
+<Component.log>` -- `loggable_items <Log.loggable_items>`, `log_items <Log.log_items>` and `logged_items
+<Log.logged_items>` -- that identify, specify and track items the items being logged, respectively.  This can be
+useful not only for observing the behavior of Components in a model, but also in debugging them during construction.
+The entries of a Log can be displayed in a "human readable" table using its `print_entries <Log.print_entries>`
+method, and returned in CSV and numpy array formats using its `csv <Log.csv>` and `nparray <Log.nparray>` methods.
 
 COMMENT:
 Entries can also be made by the user programmatically. Each entry contains the time at
@@ -41,7 +42,7 @@ Creating Logs and Entries
 
 A log object is automatically created for and assigned to a Component's `log <Component.log>` attribute when the
 Component is created.  An entry is automatically created and added to the Log's `entries <Log.entries>` attribute
-when its `value <Component.value>` or that of a Component that belongs to it is recorded in the log.
+when its `value <Component.value>` or that of a Component that belongs to it is recorded in the Log.
 
 Structure
 ---------
@@ -71,11 +72,13 @@ A Log has several methods that make it easy to manage when it values are recorde
       assign to that Component, or in a list with a `LogLevel` to be applied to multiple items at once.
     ..
     * `logged_items <Log.logg_items>` -- returns a list with the name of Components that currently have `entries <Log>`
-      in the log.
+      in the Log.
     ..
     * `print_entries <Log.print_entries>` -- this prints a formatted list of the `entries <Log.entries>` in the Log.
     ..
     * `csv <Log.csv>` -- this returns a CSV-formatted string with the `entries <Log.entries>` in the Log.
+    ..
+    * `nparray <Log.csv>` -- this returns a 2d np.array with the `entries <Log.entries>` in the Log.
 
 Loggable Items
 ~~~~~~~~~~~~~~
@@ -125,14 +128,15 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
 `MappingProjection` from the first to the second::
 
     # Create a Process with two TransferMechanisms:
+    >>> import psyneulink as pnl
     >>> my_mech_A = pnl.TransferMechanism(name='mech_A')
     >>> my_mech_B = pnl.TransferMechanism(name='mech_B')
     >>> my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
 
-    # Print the loggable items for each Mechanism:
-    >>> print(my_mech_A.loggable_items)
+    # Show the loggable items for each Mechanism:
+    >>> my_mech_A.loggable_items # doctest: +SKIP
     {'Process-0_Input Projection': 'OFF', 'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
-    >>> print(my_mech_B.loggable_items)
+    >>> my_mech_B.loggable_items # doctest: +SKIP
     {'InputState-0': 'OFF', 'slope': 'OFF', 'MappingProjection from mech_A to mech_B': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
 
 Notice that ``my_mech_B`` includes its `MappingProjection` from ``my_mech_A`` (created by the `Process`) in its list of
@@ -155,16 +159,18 @@ Executing the Process generates entries in the Logs, that can then be displayed 
 
     # Execute each Process twice (to generate some values in the logs):
     >>> my_process.execute()
+    array([ 0.])
     >>> my_process.execute()
+    array([ 0.])
 
     # Print the logged items of each Mechanism:
-    >>> print(my_mech_A.logged_items)
+    >>> my_mech_A.logged_items  # doctest: +SKIP
     {'RESULTS': 'EXECUTION', 'noise': 'EXECUTION'}
-    >>> print(my_mech_B.logged_items)
+    >>> my_mech_B.logged_items  # doctest: +SKIP
     {'MappingProjection from mech_A to mech_B': 'EXECUTION'}
 
     # Print the Logs for each Mechanism:
-    >>> my_mech_A.log.print_entries()
+    >>> my_mech_A.log.print_entries() # doctest: +SKIP
     Log for mech_A:
 
     Entry     Logged Item:                                       Context                                                                 Value
@@ -176,7 +182,7 @@ Executing the Process generates entries in the Logs, that can then be displayed 
     0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
     1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
 
-    >>> my_mech_B.log.print_entries()
+    >>> my_mech_B.log.print_entries() # doctest: +SKIP
     Log for mech_B:
 
     Entry     Logged Item:                                       Context                                                                 Value
@@ -184,12 +190,14 @@ Executing the Process generates entries in the Logs, that can then be displayed 
     0         'MappingProjection from mech_A to mech_B'.........' EXECUTING  PROCESS Process-0'.......................................     1.
     1         'MappingProjection from mech_A to mech_B'.........' EXECUTING  PROCESS Process-0'.......................................     1.
 
-    # Display the csv formatted entries of each Log
-    >>> print(my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None))
+    # Display the csv formatted entries of each Log (``my_mech_A`` without quotes around values, and ``my_mech_B``
+    with quotes)::
+
+    >>> my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None) # doctest: +SKIP
     'Entry', 'noise'
     0,  0.
     1,  0.
-    >>> print(my_mech_B.log.csv(entries=proj_A_to_B.name, owner_name=False, quotes=True))
+    >>> my_mech_B.log.csv(entries=proj_A_to_B.name, owner_name=False, quotes=True) # doctest: +SKIP
     'Entry', 'MappingProjection from mech_A to mech_B'
     0, ' 1.'
     1, ' 1.'
@@ -197,10 +205,10 @@ Executing the Process generates entries in the Logs, that can then be displayed 
 
 COMMENT:
 
-Entries are made to the log based on the `LogLevel` specified in the
+Entries are made to the Log based on the `LogLevel` specified in the
 `logPref` item of the component's `prefs <Component.prefs>` attribute.
 
-Adding an item to prefs.logPref will validate and add an entry for that attribute to the log dict
+Adding an item to prefs.logPref will validate and add an entry for that attribute to the Log dict
 
 An attribute is logged if:
 
@@ -226,7 +234,7 @@ DEFAULT LogLevel FOR ALL COMPONENTS IS *OFF*
 Structure
 ---------
 
-Each entry of log.entries has:
+Each entry of `entries <Log.entries>` has:
     + a key that is the name of the attribute being logged
     + a value that is a list of sequentially entered LogEntry tuples since recording of the attribute began
     + each tuple has three items:
@@ -277,6 +285,7 @@ import warnings
 import typecheck as tc
 from collections import namedtuple
 from enum import IntEnum
+
 import numpy as np
 
 from psyneulink.globals.keywords import kwContext, kwTime, kwValue
@@ -372,7 +381,7 @@ class LogError(Exception):
 #endregion
 
 class Log:
-    """Maintain a log for an object, which contains a dictionary of attributes being logged and their value(s).
+    """Maintain a Log for an object, which contains a dictionary of attributes being logged and their value(s).
 
     COMMENT:
     Description:
@@ -451,15 +460,15 @@ class Log:
     ALL_LOG_ENTRIES = 'all_log_entries'
 
     def __init__(self, owner, entries=None):
-        """Initialize log with list of entries
+        """Initialize Log with list of entries
 
         Each item of the entries list should be a string designating a Component to be logged;
         Initialize self.entries dict, each entry of which has a:
         - key corresponding to an attribute of the object to be logged
         - value that is a list of sequentially logged values
 
-        :parameter owner: (object in Function hierarchy) - parent object that owns the log object)
-        :parameter entries: (list) - list of keypaths used as keys for entries in the log dict
+        :parameter owner: (object in Function hierarchy) - parent object that owns the Log object)
+        :parameter entries: (list) - list of keypaths used as keys for entries in the Log dict
         """
 
         self.owner = owner
@@ -511,7 +520,7 @@ class Log:
         log_level = 'LogLevel.'
         # Return LogLevel for items in log.entries
         logged_items = {key: value for (key, value) in
-                        [(l, log_level+self.owner.logPref.name)
+                        [(l, self.loggable_items[l])
                          for l in self.entries.keys()]}
         return logged_items
 
@@ -584,7 +593,7 @@ class Log:
         Print values of entries
 
         If entries is the keyword *ALL_ENTRIES*, print all entries in the self.owner.prefs.logPref list
-        Issue a warning if an entry is not in the log dict
+        Issue a warning if an entry is not in the Log dict
         """
 
         # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
@@ -637,7 +646,7 @@ class Log:
             try:
                 datum = self.entries[attrib_name]
             except KeyError:
-                warnings.warn("{0} is not an entry in the log for {1}".
+                warnings.warn("{0} is not an entry in the Log for {1}".
                       format(attrib_name, self.owner.name))
             else:
                 import numpy as np
@@ -741,7 +750,7 @@ class Log:
 
         # Currently only supports entries of the same length
         if not all(len(self.entries[e])==len(self.entries[entries[0]])for e in entries):
-            raise LogError("CSV output currently only supported for log entries of equal length")
+            raise LogError("CSV output currently only supported for Log entries of equal length")
 
         if not quotes:
             quotes = ""
@@ -782,7 +791,7 @@ class Log:
 
 
     @tc.typecheck
-    def numpy_array(self,
+    def nparray(self,
                     entries=None,
                     header:bool=True,
                     owner_name:bool=False):
@@ -845,7 +854,7 @@ class Log:
 
         # Currently only supports entries of the same length
         if not all(len(self.entries[e])==len(self.entries[entries[0]])for e in entries):
-            raise LogError("CSV output currently only supported for log entries of equal length")
+            raise LogError("CSV output currently only supported for Log entries of equal length")
 
         if owner_name is True:
             owner_name_str = self.owner.name
@@ -886,7 +895,7 @@ class Log:
         Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
         Notes:
         * only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
-        * deleting entries removes them from log dict, owner.prefs.logPref, and deletes ALL data recorded in them
+        * deleting entries removes them from Log dict, owner.prefs.logPref, and deletes ALL data recorded in them
 
         :param entries: (str, list, or Log.ALL_LOG_ENTRIES)
         :param confirm: (bool)
@@ -910,7 +919,7 @@ class Log:
                 try:
                     self.entries[entry]
                 except KeyError:
-                    warnings.warn("Warning: {0} is not an entry in log of {1}".
+                    warnings.warn("Warning: {0} is not an entry in Log of {1}".
                                   format(entry,self.owner.name))
                     del(entries, entry)
             if len(entries) > 1:
@@ -919,10 +928,10 @@ class Log:
         # If any entries remain
         if entries:
             if confirm:
-                delete = input("\n{0} will be deleted (along with any recorded date) from log for {1}.  Proceed? (y/n)".
+                delete = input("\n{0} will be deleted (along with any recorded date) from Log for {1}.  Proceed? (y/n)".
                                format(msg, self.owner.name))
                 while delete != 'y' and delete != 'y':
-                    input("\nRemove entries from log for {0}? (y/n)".format(self.owner.name))
+                    input("\nRemove entries from Log for {0}? (y/n)".format(self.owner.name))
                 if delete == 'n':
                     warnings.warn("No entries deleted")
                     return
@@ -934,7 +943,7 @@ class Log:
                     del(self.owner.prefs.logPref, entry)
 
     def reset_entries(self, entries, confirm=True):
-        """Reset one or more entries by removing all data, but leaving entries in log dict
+        """Reset one or more entries by removing all data, but leaving entries in Log dict
 
         If verify is True, user will be asked to confirm the reset;  otherwise it will simply be done
         Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
@@ -960,14 +969,14 @@ class Log:
             try:
                 self.entries[entry]
             except KeyError:
-                warnings.warn("Warning: {0} is not an entry in log of {1}".
+                warnings.warn("Warning: {0} is not an entry in Log of {1}".
                               format(entry,self.owner.name))
                 del(entries, entry)
 
         # If any entries remain
         if entries:
             if confirm:
-                delete = input("\nAll data will be deleted from {0} in the log for {1}.  Proceed? (y/n)".
+                delete = input("\nAll data will be deleted from {0} in the Log for {1}.  Proceed? (y/n)".
                                format(entries,self.owner.name))
                 while delete != 'y' and delete != 'y':
                     input("\nDelete all data from entries? (y/n)")
@@ -981,7 +990,7 @@ class Log:
     def suspend_entries(self, entries):
         """Suspend recording the values of attributes corresponding to entries even if logging is on
 
-        Remove entries from self.owner.prefs.logPref (but leave in log dict, i.e., self.entries)
+        Remove entries from self.owner.prefs.logPref (but leave in Log dict, i.e., self.entries)
 
         :param entries: (str or list)
         :return:
