@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.4.0rc1+13.g2221e6e documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.4.0rc1+14.g4e5ab8a documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0rc1+13.g2221e6e documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0rc1+14.g4e5ab8a documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Library" href="Library.html"/>
         <link rel="prev" title="Run" href="Run.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.0rc1+13
+                0.4.0rc1+14
               </div>
             
           
@@ -241,6 +241,9 @@ in the log.</li>
 </ul>
 <ul class="simple">
 <li><a class="reference internal" href="#psyneulink.globals.log.Log.csv" title="psyneulink.globals.log.Log.csv"><code class="xref any py py-meth docutils literal"><span class="pre">csv</span></code></a> – this returns a CSV-formatted string with the <code class="xref any docutils literal"><span class="pre">entries</span></code> in the Log.</li>
+</ul>
+<ul class="simple">
+<li><a class="reference internal" href="#psyneulink.globals.log.Log.csv" title="psyneulink.globals.log.Log.csv"><code class="xref any py py-meth docutils literal"><span class="pre">nparray</span></code></a> – this returns a 2d np.array with the <code class="xref any docutils literal"><span class="pre">entries</span></code> in the Log.</li>
 </ul>
 </div></blockquote>
 <div class="section" id="loggable-items">
@@ -510,10 +513,9 @@ if specified with a string, that is used.</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="psyneulink.globals.log.Log.numpy_array">
-<code class="descname">numpy_array</code><span class="sig-paren">(</span><em>entries=None</em>, <em>header: bool = True</em>, <em>owner_name: bool = False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.log.Log.numpy_array" title="Permalink to this definition">¶</a></dt>
-<dd><p>nparray(                             entries=None,                    header:bool=True,                owner_name=False):               )</p>
-<p>Return a 2d numpy array with (optional) headers and values for the specified entries.</p>
+<dt id="psyneulink.globals.log.Log.nparray">
+<code class="descname">nparray</code><span class="sig-paren">(</span><em>entries=None</em>, <em>header:bool=True</em>, <em>owner_name=False):</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.log.Log.nparray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a 2d numpy array with (optional) headers and values for the specified entries.</p>
 <p>First row (axis 0) is entry number, and subsequent rows are data for each entry, in the ordered listed in
 the <strong>entries</strong> argument.  If header is <code class="xref any docutils literal"><span class="pre">True</span></code>, the first item of each row is the header field: in the first
 row, it is the string “Entry” and in subsequent rows the name of the entry.</p>
@@ -589,7 +591,7 @@ otherwise, it is “&lt;entry name&gt;”.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0rc1+13.g2221e6e',
+            VERSION:'0.4.0rc1+14.g4e5ab8a',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
