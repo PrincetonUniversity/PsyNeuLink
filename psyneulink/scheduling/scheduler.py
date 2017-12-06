@@ -347,7 +347,7 @@ class Scheduler(object):
         set of `Conditions <Condition>` that specify when individual Components in **system**
         execute and any dependencies among them
 
-    graph : dict{Component: set(Component)}
+    graph : Dict[Component: set(Component)]
         a graph specification dictionary - each entry of the dictionary must be a Component,
         and the value of each entry must be a set of zero or more Components that project directly to the key.
 
@@ -363,11 +363,11 @@ class Scheduler(object):
     consideration_queue: list
         a list form of the Scheduler's toposort ordering of its nodes
 
-    termination_conds : dict{TimeScale: Condition}
+    termination_conds : Dict[TimeScale: Condition]
         a mapping from `TimeScales <TimeScale>` to `Conditions <Condition>` that, when met, terminate the execution
         of the specified `TimeScale`.
 
-    times: dict{TimeScale: dict{TimeScale: int}}
+    times: Dict[TimeScale: Dict[TimeScale: int]]
         a structure counting the number of occurrences of a certain `TimeScale` within the scope of another `TimeScale`.
         For example, `times[TimeScale.RUN][TimeScale.PASS]` is the number of `PASS`\\ es that have occurred in the
         current `RUN` that the Scheduler is scheduling at the time it is accessed

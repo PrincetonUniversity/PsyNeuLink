@@ -238,7 +238,7 @@ class ComparatorMechanism(ObjectiveMechanism):
     output_states :  List[OutputState, value, str or dict] or Dict[] : default [OUTCOME]
         specifies the OutputStates for the Mechanism;
 
-    params :  Optional[Dict[param keyword, param value]]
+    params :  Optional[Dict[param keyword: param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the

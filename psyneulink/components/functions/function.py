@@ -529,7 +529,7 @@ class Function_Base(Function):
     variable : value : default ClassDefaults.variable
         specifies the format and a default value for the input to `function <Function>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -715,7 +715,7 @@ class ArgumentTherapy(Function_Base):
     pertinacity : float : default 10.0
         specifies therapeutic consistency
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -893,7 +893,7 @@ class ArgumentTherapy(Function_Base):
         variable : boolean : default ClassDefaults.variable
            an assertion to which a therapeutic response is made.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -963,7 +963,7 @@ class UserDefinedFunction(Function_Base):
     variable : value : default ClassDefaults.variable
         specifies the format and a default value for the input to `function <Function>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -1145,7 +1145,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         specifies a value to add to each element of the output of `function <Reduce.function>`
         (see `offset <Reduce.offset>` for details)
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -1252,7 +1252,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         variable : list or np.array : default ClassDefaults.variable
            a list or np.array of numeric values.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -1379,7 +1379,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         specifies a value to add to each element of the result of `function <LinearCombination.function>`
         (see `offset <LinearCombination.offset>` for details)
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -1634,7 +1634,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         variable : 1d or 2d np.array : default ClassDefaults.variable
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -1841,7 +1841,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         specifies a value to add to the result of `function <CombineMeans.function>`
         (see `offset <CombineMeans.offset>` for details)
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -2071,7 +2071,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         variable : 1d or 2d np.array : default ClassDefaults.variable
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -2237,7 +2237,7 @@ class SoftMax(NormalizingFunction):
         specifies the format of array returned by `function <SoftMax.function>`
         (see `output <SoftMax.output>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -2335,7 +2335,7 @@ class SoftMax(NormalizingFunction):
         variable : 1d np.array : default ClassDefaults.variable
            an array to be transformed.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -2536,7 +2536,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
     intercept : float : default 0.0
         specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -2637,7 +2637,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         variable : number or np.array : default ClassDefaults.variable
            a single value or array to be transformed.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -2761,7 +2761,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
     scale : float : default 1.0
         specifies a value by which to multiply the exponentiated value of `variable <Exponential.variable>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -2849,7 +2849,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         variable : number or np.array : default ClassDefaults.variable
            a single value or array to be exponentiated.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -2920,7 +2920,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         specifies a value to add to each element of `variable <Logistic.variable>` after applying `gain <Logistic.gain>`
         but before logistic transformation.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -3013,7 +3013,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         variable : number or np.array : default ClassDefaults.variable
            a single value or array to be transformed.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -3080,7 +3080,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 #         specifies the format of array returned by `function <SoftMax.function>`
 #         (see `output <SoftMax.output>` for details).
 #
-#     params : Dict[param keyword, param value] : default None
+#     params : Dict[param keyword: param value] : default None
 #         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
 #         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 #         arguments of the constructor.
@@ -3178,7 +3178,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 #         variable : 1d np.array : default ClassDefaults.variable
 #            an array to be transformed.
 #
-#         params : Dict[param keyword, param value] : default None
+#         params : Dict[param keyword: param value] : default None
 #             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
 #             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 #             arguments of the constructor.
@@ -3343,7 +3343,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     bounds : None
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -3669,7 +3669,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         variable : list or 1d np.array
             array to be transformed;  length must equal the number of rows of 'matrix <LinearMatrix.matrix>`.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -3848,7 +3848,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <Integrator.default_variable>` (see `initializer <Integrator.initializer>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -4026,7 +4026,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             if len(noise) == 1:
                 pass
             # Variable is a list/array
-            elif not iscompatible(np.atleast_2d(noise), var) and len(noise) > 1:
+            elif not iscompatible(np.atleast_2d(noise), var) and not iscompatible(np.atleast_1d(noise), var) and len(noise) > 1:
                 raise FunctionError(
                     "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} must be specified "
                     "as a float, a function, or an array of the appropriate shape ({})."
@@ -4151,7 +4151,7 @@ class SimpleIntegrator(
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <SimpleIntegrator.default_variable>` (see `initializer <SimpleIntegrator.initializer>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -4274,7 +4274,7 @@ class SimpleIntegrator(
         variable : number, list or np.array : default ClassDefaults.variable
            a single value or array of values to be integrated.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -4369,7 +4369,7 @@ class LCAIntegrator(
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <LCAIntegrator.default_variable>` (see `initializer <LCAIntegrator.initializer>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -4496,7 +4496,7 @@ class LCAIntegrator(
         variable : number, list or np.array : default ClassDefaults.variable
            a single value or array of values to be integrated.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -4585,7 +4585,7 @@ class ConstantIntegrator(
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <ConstantIntegrator.default_variable>` (see `initializer <ConstantIntegrator.initializer>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -4718,7 +4718,7 @@ class ConstantIntegrator(
         Arguments
         ---------
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -4802,7 +4802,7 @@ class AdaptiveIntegrator(
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <AdaptiveIntegrator.default_variable>` (see `initializer <AdaptiveIntegrator.initializer>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -5000,7 +5000,7 @@ class AdaptiveIntegrator(
         variable : number, list or np.array : default ClassDefaults.variable
            a single value or array of values to be integrated.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -5083,7 +5083,7 @@ class DriftDiffusionIntegrator(
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <DriftDiffusionIntegrator.default_variable>` (see `initializer <DriftDiffusionIntegrator.initializer>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -5226,7 +5226,7 @@ class DriftDiffusionIntegrator(
         variable : number, list or np.array : default ClassDefaults.variable
             specifies the stimulus component of drift rate -- the drift rate is the product of variable and rate
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -5315,7 +5315,7 @@ class OrnsteinUhlenbeckIntegrator(
         `default_variable <OrnsteinUhlenbeckIntegrator.default_variable>` (see `initializer
         <OrnsteinUhlenbeckIntegrator.initializer>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -5461,7 +5461,7 @@ class OrnsteinUhlenbeckIntegrator(
            the stimulus component of drift rate in the Drift Diffusion Model.
 
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -5770,7 +5770,7 @@ class FHNIntegrator(
         selects the numerical integration method. Currently, the choices are: "RK4" (4th Order Runge-Kutta) or "EULER"
         (Forward Euler)
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -6086,7 +6086,7 @@ class FHNIntegrator(
         Arguments
         ---------
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -6196,7 +6196,7 @@ class AccumulatorIntegrator(
         `default_variable <AccumulatorIntegrator.default_variable>` (see `initializer
         <AccumulatorIntegrator.initializer>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -6416,7 +6416,7 @@ class AccumulatorIntegrator(
         Arguments
         ---------
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -6539,7 +6539,7 @@ class AGTUtilityIntegrator(
     long_term_rate : float : default 1.0
         specifies smoothing factor of EWMA filter applied to long_term_utility
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -6766,7 +6766,7 @@ class AGTUtilityIntegrator(
         variable : number, list or np.array : default ClassDefaults.variable
            a single value or array of values to be integrated.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -6892,7 +6892,7 @@ class BogaczEtAl(
         list or array, it must be the same length as  `default_variable <BogaczEtAl.default_variable>` and all
         elements must be floats from 0 to 1.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -6997,7 +6997,7 @@ class BogaczEtAl(
         variable : 2d np.array
             ignored.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -7191,7 +7191,7 @@ class NavarroAndFuss(IntegratorFunction):
         list or array, it must be the same length as  `default_variable <BogaczEtAl.default_variable>` and all
         elements must be floats from 0 to 1.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7315,7 +7315,7 @@ class NavarroAndFuss(IntegratorFunction):
         variable : 2d np.array
             ignored.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -7377,7 +7377,7 @@ class NormalDist(DistributionFunction):
     standard_dev : float : default 1.0
         Standard deviation of the normal distribution. Must be > 0.0
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7400,7 +7400,7 @@ class NormalDist(DistributionFunction):
     standard_dev : float : default 1.0
         Standard deviation of the normal distribution. Must be > 0.0
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7470,6 +7470,130 @@ class NormalDist(DistributionFunction):
         return result
 
 
+class UniformToNormalDist(DistributionFunction):
+    """
+    UniformToNormalDist(            \
+             mean=0.0,              \
+             standard_dev=1.0,      \
+             params=None,           \
+             owner=None,            \
+             prefs=None             \
+             )
+
+    .. _UniformToNormalDist:
+
+    Return a random sample from a normal distribution using first np.random.rand(1) to generate a sample from a uniform
+    distribution, and then converting that sample to a sample from a normal distribution with the following equation:
+
+    .. math::
+
+        normal\\_sample = \\sqrt{2} \\cdot standard\\_dev \\cdot scipy.special.erfinv(2 \\cdot uniform\\_sample - 1)  + mean
+
+    The uniform --> normal conversion allows for a more direct comparison with MATLAB scripts.
+
+    .. note::
+
+        This function requires `SciPy <https://pypi.python.org/pypi/scipy>`_.
+
+    (https://github.com/jonasrauber/randn-matlab-python)
+
+    Arguments
+    ---------
+
+    mean : float : default 0.0
+        The mean or center of the normal distribution
+
+    standard_dev : float : default 1.0
+        Standard deviation of the normal distribution
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    mean : float : default 0.0
+        The mean or center of the normal distribution
+
+    standard_dev : float : default 1.0
+        Standard deviation of the normal distribution
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    """
+
+    componentName = NORMAL_DIST_FUNCTION
+
+    class ClassDefaults(DistributionFunction.ClassDefaults):
+        variable = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=ClassDefaults.variable,
+                 mean=0.0,
+                 standard_dev=1.0,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context=componentName + INITIALIZING):
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(mean=mean,
+                                                  standard_dev=standard_dev,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+
+        try:
+            from scipy.special import erfinv
+        except:
+            raise FunctionError("The UniformToNormalDist function requires the SciPy package.")
+
+        # Validate variable and validate params
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        mean = self.paramsCurrent[DIST_MEAN]
+        standard_dev = self.paramsCurrent[STANDARD_DEVIATION]
+
+        sample = np.random.rand(1)[0]
+        return ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_dev) + mean
+
 class ExponentialDist(DistributionFunction):
     """
     ExponentialDist(                \
@@ -7489,7 +7613,7 @@ class ExponentialDist(DistributionFunction):
     beta : float : default 1.0
         The scale parameter of the exponential distribution
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7509,7 +7633,7 @@ class ExponentialDist(DistributionFunction):
     beta : float : default 1.0
         The scale parameter of the exponential distribution
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7589,7 +7713,7 @@ class UniformDist(DistributionFunction):
     high : float : default 1.0
         Upper bound of the uniform distribution
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7612,7 +7736,7 @@ class UniformDist(DistributionFunction):
     high : float : default 1.0
         Upper bound of the uniform distribution
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7695,7 +7819,7 @@ class GammaDist(DistributionFunction):
     dist_shape : float : default 1.0
         The shape of the gamma distribution. Should be greater than zero.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7718,7 +7842,7 @@ class GammaDist(DistributionFunction):
     dist_shape : float : default 1.0
         The scale of the gamma distribution. Should be greater than zero.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7802,7 +7926,7 @@ class WaldDist(DistributionFunction):
      mean : float : default 1.0
          Mean of the Wald distribution. Should be greater than or equal to zero.
 
-     params : Dict[param keyword, param value] : default None
+     params : Dict[param keyword: param value] : default None
          a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
          function.  Values specified for parameters in the dictionary override any assigned to those parameters in
          arguments of the constructor.
@@ -7824,7 +7948,7 @@ class WaldDist(DistributionFunction):
      mean : float : default 1.0
          Mean of the Wald distribution. Should be greater than or equal to zero.
 
-     params : Dict[param keyword, param value] : default None
+     params : Dict[param keyword: param value] : default None
          a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
          function.  Values specified for parameters in the dictionary override any assigned to those parameters in
          arguments of the constructor.
@@ -7966,7 +8090,7 @@ COMMENT
     normalize : bool : Default False
         specifies whether to normalize the stability value by the length of `variable <Stability.variable>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -8001,7 +8125,7 @@ COMMENT
     normalize : bool
         if `True`, result of stability calculation is normalized by the length of `variable <Stability.variable>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -8240,7 +8364,7 @@ class Distance(ObjectiveFunction):
     normalize : bool : Default False
         specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -8267,7 +8391,7 @@ class Distance(ObjectiveFunction):
     normalize : bool
         determines whether the distance is normalized by the length of `variable <Distance.variable>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -8513,7 +8637,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         `Process` and/or `System` to which the function's `owner <Function.owner>` belongs (see `learning_rate
         <Hebbian.learning_rate>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments
         of the constructor.
@@ -8631,7 +8755,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         variable : List[number] or 1d np.array : default ClassDefaults.variable
             array of activity values, the pairwise products of which are used to generate a weight change matrix.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
             Values specified for parameters in the dictionary override any assigned to those parameters in arguments
             of the constructor.
@@ -8736,7 +8860,7 @@ class Reinforcement(
         supersedes any specification for the `Process` and/or `System` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <Reinforcement.learning_rate>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -8885,7 +9009,7 @@ class Reinforcement(
            `activation_output <Reinforcement.activation_output>` (1d np.array with a single non-zero value),
            `error_signal <Reinforcement.error_signal>` (1d np.array).
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -8993,7 +9117,7 @@ class BackPropagation(LearningFunction):
         supersedes any specification for the `Process` and/or `System` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -9213,7 +9337,7 @@ class BackPropagation(LearningFunction):
            `activation_output <BackPropagation.activation_output>` (1d np.array),
            `error_signal <BackPropagation.error_signal>` (1d np.array).
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
