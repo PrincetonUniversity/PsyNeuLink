@@ -22,7 +22,7 @@ Creating a ComparatorMechanism
 ------------------------------
 
 ComparatorMechanisms are generally created automatically when other PsyNeuLink components are created (such as
-`LearningMechanism <LearningMechanism_Creation>`.  A ComparatorMechanism can also be created directly by calling
+`LearningMechanisms <LearningMechanism_Creation>`).  A ComparatorMechanism can also be created directly by calling
 its constructor.  Its **sample** and **target** arguments are used to specify the OutputStates that provide the
 sample and target inputs, respectively (see `ObjectiveMechanism_Monitored_States` for details concerning their
 specification, which are special versions of an ObjectiveMechanism's **monitored_output_states** argument).  When the
@@ -39,7 +39,7 @@ If these differ, the **input_states** argument can be used to explicitly specify
 *SAMPLE* and *TARGET* InputStates, to insure they are compatible with one another (as well as to customize their
 names, if desired).  If the **input_states** argument is used, *both* the sample and target InputStates must be
 specified.  Any of the formats for `specifying InputStates <InputState_Specification>` can be used in the argument.
-If values are assigned for the InputStates, they must be of equal length and type.  Their types must be
+If values are assigned for the InputStates, they must be of equal length and type.  Their types must 
 also be compatible with the value of the OutputStates specified in the **sample** and **target** arguments.  However,
 the length specified for an InputState can differ from its corresponding OutputState;  in that case, by default, the
 MappingProjection created uses a `FULL_CONNECTIVITY` matrix.  Thus, OutputStates of differing lengths can be mapped

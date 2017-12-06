@@ -2004,12 +2004,12 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate weghts, exponents, scale and offset parameters
+        """Validate weights, exponents, scale and offset parameters
 
         Check that WEIGHTS and EXPONENTS are lists or np.arrays of numbers with length equal to variable
         Check that SCALE and OFFSET are either scalars or np.arrays of numbers with length and shape equal to variable
 
-        Note: the checks of compatiability with variable are only performed for validation calls during execution
+        Note: the checks of compatibility with variable are only performed for validation calls during execution
               (i.e., from check_args(), since during initialization or COMMAND_LINE assignment,
               a parameter may be re-assigned before variable assigned during is known
         """
@@ -2188,6 +2188,160 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     @scale.setter
     def scale(self, val):
         self._scale = val
+
+
+class PredictionErrorDeltaFunction(CombinationFunction):
+    """
+    Function that calculates the temporal difference prediction error
+    """
+    componentName = PREDICTION_ERROR_DELTA_FUNCTION
+
+    classPreferences = {
+        kwPreferenceSetName: 'PredictionErrorDeltaCustomClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False,
+                                                            PreferenceLevel.INSTANCE)
+    }
+
+    class ClassDefaults(CombinationFunction.ClassDefaults):
+        variable = [[1], [1]]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=ClassDefaults.variable,
+                 gamma: tc.optional(float) = 1.0,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context=componentName + INITIALIZING):
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(gamma=gamma,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+        self.gamma = gamma
+
+    def _validate_variable(self, variable, context=None):
+        """
+        Insure that all items of variable are numeric
+
+        Parameters
+        ----------
+        variable
+        context
+
+        Returns
+        -------
+        variable if all items are numeric
+        """
+        variable = self._update_variable(super()._validate_variable(variable=variable, context=context))
+
+        if isinstance(variable, (list, np.ndarray)):
+            if isinstance(variable, np.ndarray) and not variable.ndim:
+                return variable
+            length = 0
+            for i in range(1, len(variable)):
+                if i == 0:
+                    continue
+                if isinstance(variable[i - 1], numbers.Number):
+                    old_length = 1
+                else:
+                    old_length = len(variable[i - 1])
+                if isinstance(variable[i], numbers.Number):
+                    new_length = 1
+                else:
+                    new_length = len(variable[i])
+                if old_length != new_length:
+                    raise FunctionError("Length of all arrays in variable {} "
+                                        "for {} must be the same".format(variable,
+                                                                         self.__class__.__name__))
+        return variable
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """
+        Checks that WEIGHTS is a list or np.array of numbers with length equal
+        to variable.
+
+        Note: the checks of compatibility with variable are only performed for
+        validation calls during execution (i.e. from `check_args()`), since
+        during initialization or COMMAND_LINE assignment, a parameter may be
+        re-assigned before variable assigned during is known
+
+        Parameters
+        ----------
+        request_set
+        target_set
+        context
+
+        Returns
+        -------
+        None
+        """
+        super()._validate_params(request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+        if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
+            target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,
+                                                                             1)
+            if EXECUTING in context:
+                if len(target_set[WEIGHTS]) != len(
+                        self.instance_defaults.variable):
+                    raise FunctionError("Number of weights {} is not equal to "
+                                        "number of items in variable {}".format(
+                        len(target_set[WEIGHTS]),
+                        len(self.instance_defaults.variable.shape)))
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        """
+        Calculates the prediction error using the arrays in `variable
+        <PredictionErrorDeltaFunction.variable>` and returns the resulting
+        array.
+
+        Parameters
+        ----------
+        variable : 2d np.array : default ClassDefaults.variable
+            a 2d array representing the sample and target values to be used to
+            calculate the temporal difference delta values. Both arrays must
+            have the same length
+
+        params : Dict[param keyword, param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that
+            specifices the parameters for the function. Values specified for
+            parameters in the dictionary override any assigned to those
+            parameters in arguments of the constructor.
+
+
+        Returns
+        -------
+        delta values : 1d np.array
+            the result of :math: \\delta{t} = r(t) + \\gamma sample(t) - sample(t - 1)
+
+        """
+        variable = self._update_variable(self._check_args(variable=variable,
+                                                          params=params,
+                                                          context=context))
+        gamma = self.gamma
+        sample = variable[0]
+        reward = variable[1]
+        delta = np.zeros_like(sample)
+
+        for t in range(len(sample) - 1):
+            delta[t] = reward[t] + gamma * sample[t + 1] - sample[t]
+
+        return delta
+
 
 # *********************************** NORMALIZING FUNCTIONS **************************************************
 
