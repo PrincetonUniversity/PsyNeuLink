@@ -25,9 +25,9 @@ Components that belong to it.  These are stored in `entries <Log.entries>` of th
 of the recorded values, along with the time and context of the recording.  The conditions under which values are
 recorded is specified by the `logPref <Component.logPref>` property of a Component.  While these can be set directly,
 they are most easily specified using the Log's `log_items <Log.log_items>` method, together with its `loggable_items
-<Log.loggable_items>` and <Log.logged_items>` attributes that identify and track the items to be logged. These can be
-useful not only for observing the behavior of a Component in a model, but also in debugging the model during
-construction. The entries of a Log can be displayed in a "human readable" table using its `print_entries
+<Log.loggable_items>` and `logged_items <Log.logged_items>` attributes that identify and track the items to be logged.
+These can be useful not only for observing the behavior of a Component in a model, but also in debugging the model
+during construction. The entries of a Log can be displayed in a "human readable" table using its `print_entries
 <Log.print_entries>` method, and returned in CSV and numpy array formats using its `csv <Log.csv>` and `nparray
 <Log.nparray>` methods.
 
@@ -59,9 +59,8 @@ of `LogEntry` tuples recording its values.  Each `LogEntry` tuple has three item
        (corresonding to the number of executions of the Component), which may or may not correspond to the
        `TIME_STEP` of execution.  This will be corrected in a future release.
 
-
-A Log has several attributes and methods that make it easy to manage when it values are recorded and accessing its
-`entries <Log.entries>`:
+A Log has several attributes and methods that make it easy to manage how and when it values are recorded, and
+to access its `entries <Log.entries>`:
 
     * `loggable_items <Log.loggable_items>` -- a dictionary with the items that can be logged in a Component's `log
       <Component.log>`;  the key for each entry is the name of a Component,  and the value is it current `LogLevel`.
