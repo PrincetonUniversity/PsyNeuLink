@@ -2111,7 +2111,7 @@ class Process(Process_Base):
         time_scale : TimeScale :  default TimeScale.TRIAL
             specifies whether Mechanisms are executed for a single time step or a trial.
 
-        params : Dict[param keyword, param value] :  default None
+        params : Dict[param keyword: param value] :  default None
             a `parameter dictionary <ParameterState_Specification>` that can include any of the parameters used
             as arguments to instantiate the object. Use parameter's name as the keyword for its entry.  Values specified
             for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.

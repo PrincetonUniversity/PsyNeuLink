@@ -645,7 +645,7 @@ class System(System_Base):
 
         .. property that points to _all_mechanisms.mechanisms (see below)
 
-    mechanismsDict : Dict[Mechanism:Process]
+    mechanismsDict : Dict[Mechanism: Process]
         contains a dictionary of all Mechanisms in the System, listing the Processes to which they belong. The key of
         each entry is a `Mechanism <Mechanism>` object, and the value of each entry is a list of `Processes <Process>`.
 
@@ -2411,11 +2411,11 @@ class System(System_Base):
         input : list or ndarray
             a list or array of input value arrays, one for each `ORIGIN` Mechanism in the System.
 
-        termination_processing : dict{TimeScale: Condition}
+        termination_processing : Dict[TimeScale: Condition]
             a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`processing
             phase of execution <System_Execution_Processing>`
 
-        termination_learning : dict{TimeScale: Condition}
+        termination_learning : Dict[TimeScale: Condition]
             a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
             phase of execution <System_Execution_Learning>`
 
@@ -2773,7 +2773,7 @@ class System(System_Base):
             if `True`, calls the :py:meth:`initialize <System.initialize>` method of the System before a
             sequence of executions.
 
-        initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default None
+        initial_values : Dict[Mechanism: List[input] or np.ndarray(input)] : default None
             the initial values assigned to Mechanisms designated as `INITIALIZE_CYCLE`.
 
         targets : List[input] or np.ndarray(input) : default `None`
@@ -2798,11 +2798,11 @@ class System(System_Base):
         call_after_time_step : Function : default= `None`
             called after each time_step of each trial is executed.
 
-        termination_processing : dict{TimeScale: Condition}
+        termination_processing : Dict[TimeScale: Condition]
             a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`processing
             phase of execution <System_Execution_Processing>`
 
-        termination_learning : dict{TimeScale: Condition}
+        termination_learning : Dict[TimeScale: Condition]
             a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
             phase of execution <System_Execution_Learning>`
 

@@ -1123,13 +1123,14 @@ class Mechanism_Base(Mechanism):
     # Class-specific loggable items
     @property
     def _loggable_items(self):
-        # States and afferent Projections are loggable for a Mechanism
+        # States, afferent Projections are loggable for a Mechanism
         #     - this allows the value of InputStates and OutputStates to be logged
         #     - for MappingProjections, this logs the value of the Projection's matrix parameter
         #     - for ModulatoryProjections, this logs the value of the Projection
-        # IMPLEMENTATION NOTE: this needs to be a property as projections may be added after initialization
+        # IMPLEMENTATION NOTE: this needs to be a property as Projections may be added after instantiation
         try:
-            return list(self.states) + list(self.afferents)
+            # return list(self.states) + list(self.afferents)
+            return list(self.states)
         except:
             return []
 

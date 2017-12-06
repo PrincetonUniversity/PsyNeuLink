@@ -391,7 +391,7 @@ from psyneulink.components.shellclasses import Mechanism, Process_Base, Projecti
 from psyneulink.components.states.state import StateError
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.globals.keywords import \
-    NAME, PARAMS, CONTEXT, PATHWAY, \
+    NAME, PARAMS, CONTEXT, INITIALIZING, EXECUTING, PATHWAY, kwAssign, \
     MECHANISM, INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, PARAMETER_STATE_PARAMS, \
     STANDARD_ARGS, STATE, STATES, WEIGHT, EXPONENT, \
     PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, \
@@ -403,6 +403,8 @@ from psyneulink.globals.keywords import \
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, iscompatible, is_numeric, is_matrix, type_match
+from psyneulink.globals.log import LogLevel, LogEntry
+from psyneulink.scheduling.timescale import CurrentTime
 
 __all__ = [
     'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError',
@@ -925,17 +927,6 @@ class Projection_Base(Projection):
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
-    @property
-    def parameter_states(self):
-        return self._parameter_states
-
-    @parameter_states.setter
-    def parameter_states(self, value):
-        # IMPLEMENTATION NOTE:
-        # This keeps parameter_states property readonly,
-        #    but averts exception when setting paramsCurrent in Component (around line 850)
-        pass
-
     # FIX: 10/3/17 - replace with @property on Projection for receiver and sender
     @property
     def socket_assignments(self):
@@ -956,6 +947,50 @@ class Projection_Base(Projection):
     def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
         raise ProjectionError("PROGRAM ERROR: {} must implement _assign_default_projection_name().".
                               format(self.__class__.__name__))
+
+    @property
+    def parameter_states(self):
+        return self._parameter_states
+
+    @parameter_states.setter
+    def parameter_states(self, value):
+        # IMPLEMENTATION NOTE:
+        # This keeps parameter_states property readonly,
+        #    but averts exception when setting paramsCurrent in Component (around line 850)
+        pass
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, assignment):
+
+        self._value = assignment
+
+        # STORE value IN log IF SPECIFIED
+
+        # Get context
+        try:
+            curr_frame = inspect.currentframe()
+            prev_frame = inspect.getouterframes(curr_frame, 2)
+            # context = inspect.getargvalues(prev_frame[1][0]).locals['context']
+            context = inspect.getargvalues(prev_frame[2][0]).locals['context']
+        except KeyError:
+            context = ""
+        if not isinstance(context, str):
+            context = ""
+
+        # Get logPref
+        log_pref = self.prefs.logPref if self.prefs else None
+
+        # If context is consistent with log_pref, record value to log
+        if (log_pref is LogLevel.ALL_ASSIGNMENTS or
+                (INITIALIZING in context and log_pref is LogLevel.INITIALIZATION) or
+                (EXECUTING in context and log_pref is LogLevel.EXECUTION) or
+                (all(c in context for c in {EXECUTING, kwAssign}) and log_pref is LogLevel.VALUE_ASSIGNMENT)
+        ):
+            self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
 
 
 @tc.typecheck
