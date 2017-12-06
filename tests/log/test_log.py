@@ -9,11 +9,10 @@ class TestLog:
 
         T_1 = pnl.TransferMechanism(name='T_1', size=2)
         T_2 = pnl.TransferMechanism(name='T_2', size=2)
-        Ps = pnl.Process(name='Ps', pathway=[T_1, T_2])
-        Pj = T_2.path_afferents[0]
+        PS = pnl.Process(name='PS', pathway=[T_1, T_2])
+        PJ = T_2.path_afferents[0]
 
-        assert T_1.loggable_items == {'Ps_Input Projection': 'OFF',
-                                     'InputState-0': 'OFF',
+        assert T_1.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
@@ -21,18 +20,17 @@ class TestLog:
                                      'time_constant': 'OFF'}
         assert T_2.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
-                                     'MappingProjection from T_1 to T_2': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
                                      'time_constant': 'OFF'}
+        assert PJ.loggable_items == {'matrix': 'OFF'}
 
         T_1.log_items(pnl.NOISE)
         T_1.log_items(pnl.RESULTS)
-        T_2.log_items(Pj)
+        PJ.log_items(pnl.MATRIX)
 
-        assert T_1.loggable_items == {'Ps_Input Projection': 'OFF',
-                                     'InputState-0': 'OFF',
+        assert T_1.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'EXECUTION',
                                      'intercept': 'OFF',
@@ -40,18 +38,18 @@ class TestLog:
                                      'time_constant': 'OFF'}
         assert T_2.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
-                                     'MappingProjection from T_1 to T_2': 'EXECUTION',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
                                      'time_constant': 'OFF'}
+        assert PJ.loggable_items == {'matrix': 'EXECUTION'}
 
-        Ps.execute()
-        Ps.execute()
-        Ps.execute()
+        PS.execute()
+        PS.execute()
+        PS.execute()
 
         assert T_1.logged_items == {'RESULTS': 'EXECUTION', 'noise': 'EXECUTION'}
-        assert T_2.logged_items == {'MappingProjection from T_1 to T_2': 'EXECUTION'}
+        assert PJ.logged_items == {'matrix': 'EXECUTION'}
 
         # assert T_1.log.print_entries() ==
         # # Log for mech_A:
@@ -78,14 +76,17 @@ class TestLog:
         assert T_1.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None) == \
                         "\'Entry\', \'noise\', \'RESULTS\'\n0,  0.,  0.  0.\n1,  0.,  0.  0.\n2,  0.,  0.  0.\n"
 
-        assert T_2.log.csv(entries=Pj, owner_name=True, quotes=True) == \
-               "\'Entry\', 'T_2[MappingProjection from T_1 to T_2]\'\n" \
+        assert PJ.log.csv(entries='matrix', owner_name=True, quotes=True) == \
+               "\'Entry\', \'MappingProjection from T_1 to T_2[matrix]\'\n" \
                "0, \' 1.  0.\'\n \' 0.  1.\'\n" \
                "1, \' 1.  0.\'\n \' 0.  1.\'\n" \
                "2, \' 1.  0.\'\n \' 0.  1.\'\n"
 
-        # assert T_1.log.nparray(entries=['noise', 'RESULTS'], header=False, owner_name=True) == \
-        #        np.array([[[0], [1], [2]], [[ 0.], [ 0.], [ 0.]], [[ 0.,  0.], [ 0.,  0.],[ 0.,  0.]]])
+        result = T_1.log.nparray(entries=['noise', 'RESULTS'], header=False, owner_name=True)
+        np.testing.assert_array_equal(result,
+                                      np.array([[[0], [1], [2]],
+                                                [[ 0.], [ 0.], [ 0.]],
+                                                [[ 0.,  0.], [ 0.,  0.],[ 0., 0.]]]))
 
 
 

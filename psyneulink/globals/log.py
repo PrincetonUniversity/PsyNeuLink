@@ -99,16 +99,10 @@ following `loggable_items <Log.loggable_items>`:
   |
   * *OutputStates* -- the `value <OutputState.value>` of any `OutputState` (listed in the Mechanism's `output_states
     <Mechanism_Base.output_states>` attribute).
-  |
-  * *Afferent Projections* -- the relevant value any `MappingProjection` that projects to any of the Mechanism's
-    `input_states <Mechanism_Base.input_states>`, or any `ModulatoryProjection` that projects to any of its `states
-    <Mechanism_Base.states>` (see Projections below for the values that are logged).
 ..
 * **Projections**
 
   * *MappingProjections* -- the value of its `matrix <MappingProjection.matrix>` parameter.
-  |
-  * *ModulatoryProjectcions* -- the `value <ModulatoryProjection.value>` of the Projection.
 
 
 Execution
@@ -536,11 +530,8 @@ class Log:
                          for l in self.logged_entries.keys()]}
         return logged_items
 
-    def log_items(self, items, log_level=LogLevel.EXECUTION, param_sets=None):
-        """Specifies items to be logged at the specified `LogLevel`.
-
-        Note:  this calls the `owner <Log.owner>``s _log_items method to allow it to add param_sets to
-               `loggable_items <Log.loggable_items>`.
+    def log_items(self, items, log_level=LogLevel.EXECUTION):
+        """Specifies items to be logged at the specified `LogLevel`(s).
 
         Arguments
         ---------
@@ -564,7 +555,7 @@ class Log:
         from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
         from psyneulink.globals.keywords import ALL
 
-        def assign_log_level(item, level, param_set):
+        def assign_log_level(item, level):
 
             if not item in self.loggable_items:
                 raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
@@ -576,10 +567,10 @@ class Log:
                 raise LogError("PROGRAM ERROR: Unable to set LogLevel for {} of {}".format(item, self.owner.name))
 
         if items is ALL:
-            self.logPref = PreferenceEntry(log_level, PreferenceLevel.INSTANCE)
+            for component in self.loggable_components:
+                component.logPref = PreferenceEntry(log_level, PreferenceLevel.INSTANCE)
+            # self.logPref = PreferenceEntry(log_level, PreferenceLevel.INSTANCE)
             return
-
-        param_sets = param_sets or [self.owner.user_params]
 
         if not isinstance(items, list):
             items = [items]
@@ -589,10 +580,10 @@ class Log:
                 # self.add_entries(item)
                 if isinstance(item, Component):
                     item = item.name
-                assign_log_level(item, log_level, param_sets)
+                assign_log_level(item, log_level)
             else:
                 # self.add_entries(item[0])
-                assign_log_level(item[0], item[1], param_sets)
+                assign_log_level(item[0], item[1])
 
     def print_entries(self, entries=None, csv=False, synch_time=False, *args):
         """
@@ -886,7 +877,7 @@ class Log:
             npa = [npa]
 
         for i, entry in enumerate(entries):
-            row = [e.value for e in self.logged_entries[entry]]
+            row = [e.value.tolist() for e in self.logged_entries[entry]]
             if header:
                 entry = "{}{}{}{}".format(owner_name_str, lb, entry, rb)
                 row = [entry] + row

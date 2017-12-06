@@ -2070,7 +2070,7 @@ class State_Base(State):
         # If context is consistent with log_pref, record value to log
         if (log_pref is LogLevel.ALL_ASSIGNMENTS or
                 (INITIALIZING in context and log_pref is LogLevel.INITIALIZATION) or
-                (EXECUTING in context and log_pref is LogLevel.EXECUTION) or
+                ((EXECUTING in context and not LEARNING in context) and log_pref is LogLevel.EXECUTION) or
                 (all(c in context for c in {EXECUTING, kwAssign}) and log_pref is LogLevel.VALUE_ASSIGNMENT)
         ):
             self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)

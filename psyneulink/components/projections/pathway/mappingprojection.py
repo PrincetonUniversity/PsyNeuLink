@@ -516,8 +516,10 @@ class MappingProjection(PathwayProjection_Base):
                                                                             initializer=matrix,
                                                                             # rate=initial_rate
                                                                                )
-
         self._parameter_states[MATRIX]._function = self._parameter_states[MATRIX].function_object.function
+
+        # # Assign ParameterState the same Log as the MappingProjection, so that its entries are accessible to Mechanisms
+        # self._parameter_states[MATRIX].log = self.log
 
     def _instantiate_receiver(self, context=None):
         """Determine matrix needed to map from sender to receiver
@@ -656,15 +658,15 @@ class MappingProjection(PathwayProjection_Base):
 
         self.function_object.matrix = matrix
 
-        # Log matrix value if specified by owner, sender, or sender's owner
-
-        # Get context
-        try:
-            curr_frame = inspect.currentframe()
-            prev_frame = inspect.getouterframes(curr_frame, 2)
-            context = inspect.getargvalues(prev_frame[2][0]).locals['context']
-        except KeyError:
-            context = ""
+        # # Log matrix value if specified by owner, sender, or sender's owner
+        #
+        # # Get context
+        # try:
+        #     curr_frame = inspect.currentframe()
+        #     prev_frame = inspect.getouterframes(curr_frame, 2)
+        #     context = inspect.getargvalues(prev_frame[2][0]).locals['context']
+        # except KeyError:
+        #     context = ""
 
         # # Get logPref
         # self_log_pref = self.prefs.logPref if self.prefs else None
@@ -710,3 +712,13 @@ class MappingProjection(PathwayProjection_Base):
 
         else:
             self.paramsCurrent[FUNCTION_PARAMS].__additem__(MATRIX, value)
+
+    @property
+    def logPref(self):
+        return self.prefs.logPref
+
+    # Always assign matrix Parameter state the same logPref as the MappingProjection
+    @logPref.setter
+    def logPref(self, setting):
+        self.prefs.logPref = setting
+        self.parameter_states[MATRIX].logPref = setting
