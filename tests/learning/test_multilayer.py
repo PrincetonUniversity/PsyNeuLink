@@ -242,8 +242,6 @@ def test_multilayer():
     )
 
     for i in range(len(log_val)):
-
-
-        np.testing.assert_allclose(log_val, expected_log_val,
+        np.testing.assert_allclose(log_val[i], expected_log_val[i],
                                    atol=1e-08,
                                    err_msg='Failed on test of logged values')
