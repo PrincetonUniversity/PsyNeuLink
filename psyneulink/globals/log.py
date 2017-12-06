@@ -83,10 +83,9 @@ A Log has several methods that make it easy to manage when it values are recorde
 Loggable Items
 ~~~~~~~~~~~~~~
 
-Although every Component is assigned a Log, and entries for any Component can be assigned to the Log of any other
-Component, logging is structured by default to make it easy to maintain and access information about the `value
-<State_Base.value>`\\s of the `States <State>` of Mechanisms and Projections, which are automatically assigned the
-following `loggable_items <Log.loggable_items>`:
+Although every Component is assigned its own Log, that records the `value <Component.value>` of that Component,
+the Logs for `Mechanisms <Mechanism>` and `MappingProjections <MappingProjection>` also  provide access to and control
+the Logs of their `States <State>`.  Specifically the Logs of these Components contain the following information:
 
 * **Mechanisms**
 
@@ -121,49 +120,47 @@ The following example creates a Process with two `TransferMechanisms <TransferMe
 another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputState` of the first and the
 `MappingProjection` from the first to the second::
 
-    # Create a Process with two TransferMechanisms:
+    # Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:
     >>> import psyneulink as pnl
-    >>> my_mech_A = pnl.TransferMechanism(name='mech_A')
-    >>> my_mech_B = pnl.TransferMechanism(name='mech_B')
+    >>> my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
+    >>> my_mech_B = pnl.TransferMechanism(name='mech_B', size=3)
     >>> my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
-
-    # Show the loggable items for each Mechanism:
-    >>> my_mech_A.loggable_items # doctest: +SKIP
-    {'Process-0_Input Projection': 'OFF', 'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
-    >>> my_mech_B.loggable_items # doctest: +SKIP
-    {'InputState-0': 'OFF', 'slope': 'OFF', 'MappingProjection from mech_A to mech_B': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
-
-Notice that ``my_mech_B`` includes its `MappingProjection` from ``my_mech_A`` (created by the `Process`) in its list of
-`loggable_items <Log.loggable_items>`. The first line belows gets a reference to it, and then assigns it to be logged
-with ``my_mech_B``, and the `noise <TransferMechanism.noise>` parameter and *RESULTS* OutputState to be logged for
-``my_mech_A``::
-
-    # Get the MapppingProjection to my_mech_B from my_mech_A
     >>> proj_A_to_B = my_mech_B.path_afferents[0]
 
-    # Assign the proj_A_to_B to be logged with my_mech_B:
-    >>> my_mech_B.log_items(proj_A_to_B)
+    # Show the loggable items (and their current LogLevels) of each Mechanism and the Projection between them:
+    >>> my_mech_A.loggable_items # doctest: +SKIP
+    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
+    >>> my_mech_B.loggable_items # doctest: +SKIP
+    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
+    >>> proj_A_to_B.loggable_items # doctest: +SKIP
+    {'matrix': 'OFF'}
 
-    # Assign the noise parameter and RESULTS OutputState of my_mech_A to be logged:
-    >>> my_mech_A.log_items('noise')
-    >>> my_mech_A.log_items('RESULTS')
+    # Assign the noise parameter and RESULTS OutputState of my_mech_A, and the matrix of the Projection, to be logged
+    >>> my_mech_A.log_items([pnl.NOISE, pnl.RESULTS])
+    >>> proj_A_to_B.log_items(pnl.MATRIX)
 
 
 Executing the Process generates entries in the Logs, that can then be displayed in several ways::
 
     # Execute each Process twice (to generate some values in the logs):
     >>> my_process.execute()
-    array([ 0.])
+    array([ 0.,  0.,  0.])
     >>> my_process.execute()
-    array([ 0.])
+    array([ 0.,  0.,  0.])
 
-    # Print the logged items of each Mechanism:
+    # List the items of each Mechanism and the Projection that were actually logged:
     >>> my_mech_A.logged_items  # doctest: +SKIP
     {'RESULTS': 'EXECUTION', 'noise': 'EXECUTION'}
-    >>> my_mech_B.logged_items  # doctest: +SKIP
-    {'MappingProjection from mech_A to mech_B': 'EXECUTION'}
+    >>> my_mech_B.logged_items
+    {}
+    >>> proj_A_to_B.logged_items
+    {'matrix': 'EXECUTION'}
 
-    # Print the Logs for each Mechanism:
+Notice that entries dictionary of the Log for ``my_mech_B`` is empty, since no items were specified to be logged for
+it.  The results of the two other logs can be printed to the console using the `print_entries <Log.print_entries>`
+method of a Log::
+
+    # Print the Log for ``my_mech_A``:
     >>> my_mech_A.log.print_entries() # doctest: +SKIP
     Log for mech_A:
 
@@ -176,25 +173,33 @@ Executing the Process generates entries in the Logs, that can then be displayed 
     0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
     1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
 
-    >>> my_mech_B.log.print_entries() # doctest: +SKIP
-    Log for mech_B:
 
-    Entry     Logged Item:                                       Context                                                                 Value
+They can also be exported in csv and numpy array formats.  The following shows the csv-formatted output of the Logs
+for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
 
-    0         'MappingProjection from mech_A to mech_B'.........' EXECUTING  PROCESS Process-0'.......................................     1.
-    1         'MappingProjection from mech_A to mech_B'.........' EXECUTING  PROCESS Process-0'.......................................     1.
+    # Display the csv formatted entry of Log for ``my_mech_A`` without quotes around values:
+    >>> my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None) # doctest: +SKIP
+    'Entry', 'noise', 'RESULTS'
+    0,  0.,  0.
+    1,  0.,  0.
 
-    # Display the csv formatted entries of each Log (``my_mech_A`` without quotes around values, and ``my_mech_B``
-    with quotes)::
+    # Display the csv formatted entry of Log for ``proj_A_to_B`` with quotes around values and the Projection's name
+    included in the header:
+    >>> proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True) # doctest: +SKIP
+    # 'Entry', 'MappingProjection from mech_A to mech_B[matrix]'
+    # 0, ' 1.  1.  1.'
+    #  ' 1.  1.  1.'
+    # 1, ' 1.  1.  1.'
+    #  ' 1.  1.  1.'
 
-    >>> my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None) # doctest: +SKIP
-    'Entry', 'noise'
-    0,  0.
-    1,  0.
-    >>> my_mech_B.log.csv(entries=proj_A_to_B.name, owner_name=False, quotes=True) # doctest: +SKIP
-    'Entry', 'MappingProjection from mech_A to mech_B'
-    0, ' 1.'
-    1, ' 1.'
+Note that since the `name <Projection.name>` attribute of the Projection was not assigned, its default name is
+reported.
+
+The following shows the Log of ``proj_A_to_B`` in numpy array format::
+
+    >>> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False) # doctest: +SKIP
+    [[[0] [1]]
+     [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]] [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]]
 
 
 COMMENT:
@@ -882,7 +887,7 @@ class Log:
                 entry = "{}{}{}{}".format(owner_name_str, lb, entry, rb)
                 row = [entry] + row
             npa.append(row)
-        npa = np.array(npa)
+        npa = np.array(npa, dtype=object)
 
         return(npa)
 
