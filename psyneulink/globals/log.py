@@ -726,10 +726,11 @@ class Log:
             quotes=\"\'\"              \
             )
 
-        Returns a csv formatted string with headers and values for the specified entries.
+        Returns a CSV-formatted string with headers and values for the specified entries.
 
-        The first record (row) begins with "Entry" and is followed by the header for each field (column).
-        Subsequent records begin with the record number, and are followed by the value for each entry.
+        The first record (row) begins with "Index" and is followed by the header for each field (column).
+        Subsequent records begin with the record number, and are followed by the value for that entry.
+        Records are ordered in the same order as the Components specified in the **entries** argument.
 
         .. note::
            Currently only supports reports of entries with the same length.  A future version will allow
@@ -738,22 +739,24 @@ class Log:
         Arguments
         ---------
 
-        entries : string, Component
-            specifies the entries to be included;  they must be `loggable_items <Log.loggable_items>` of the Log.
+        entries : string or Component
+            specifies the entries of the Log to be included in the output;  they must be `loggable_items
+            <Log.loggable_items>` of the Log.
+
 
         owner_name : bool : default False
-            specified whether or not to include the Log's `owner <Log.owner>` in the header of each field;
-            if it is True, the format of the header for each field is "<Owner name>[<entry name>]";
-            otherwise, it is "<entry name>".
+            specifies whether or not to include the Component's `owner <Log.owner>` in the header of each field;
+            if it is True, the format of the header for each field is "<Owner name>[<entry name>]"; otherwise,
+            it is "<entry name>".
 
         quotes : bool, str : default '
-            specifies whether or not to use quotes around values (e.g., arrays);
-            if not specified or True, single quotes are used;
+            specifies whether or not to use quotes around values (useful if they are arrays);
+            if not specified or `True`, single quotes are used;
             if `False` or `None`, no quotes are used;
             if specified with a string, that is used.
 
         Returns:
-            csv formatted string
+            CSV-formatted string
         """
         from psyneulink.components.component import Component
 
@@ -796,7 +799,7 @@ class Log:
             owner_name_str = lb = rb = ""
 
         # Header
-        csv = "\'Entry', {}\n".format(", ".join(repr("{}{}{}{}".format(owner_name_str, lb, entry, rb))
+        csv = "\'Index', {}\n".format(", ".join(repr("{}{}{}{}".format(owner_name_str, lb, entry, rb))
                                                      for entry in entries))
         # Records
         for i in range(max_len):
@@ -804,22 +807,6 @@ class Log:
                                      join(str(self.logged_entries[entry][i].value) for entry in entries).
                                      replace("[[",quotes)).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
         return(csv)
-
-    # def temp(self, csvx):
-    #     from io import StringIO
-    #     import csv
-    #
-    #     csv_file = StringIO()
-    #     csv_file.write(csvx)
-    #     # thingie = np.genfromtxt(csv_file, delimiter=',')
-    #     # assert True
-    #     # csv_file.close()
-    #
-    #     # with open(csv, newline='') as csvfile:
-    #     with csv_file as csvfile:
-    #          spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
-    #     assert True
-
 
     @tc.typecheck
     def nparray(self,
@@ -833,24 +820,27 @@ class Log:
             owner_name=False):   \
             )
 
-        Return a 2d numpy array with (optional) headers and values for the specified entries.
+        Return a 2d numpy array with headers (optional) and values for the specified entries.
 
-        First row (axis 0) is entry number, and subsequent rows are data for each entry, in the ordered listed in
-        the **entries** argument.  If header is `True`, the first item of each row is the header field: in the first
-        row, it is the string "Entry" and in subsequent rows the name of the entry.
+        First row (axis 0) is a sequential index (starting with 0), and each subsequent row is the
+        sequence ("time series") of logged values for given Component. Rows are ordered in the same order as
+        Components are specified in the **entries** argument.  If header is `True`, the first item of each row is
+        a header field: for the first row, it is "Index", and for subsequent rows it is the name of the
+        Component logged in that entry.
 
         .. note::
-           Currently only supports reports of entries with the same length.  A future version will allow
-           entries of differing lengths in the same report.
+           Currently only supports entries with the same length.  A future version will allow entries of differing
+           lengths in the same report.
 
         Arguments
         ---------
 
-        entries : string, Component
-            specifies the entries to be included;  they must be `loggable_items <Log.loggable_items>` of the Log.
+        entries : string or Component
+            specifies the entries of the Log to be included in the output;  they must be `loggable_items
+            <Log.loggable_items>` of the Log.
 
         header : bool : default True
-            specifies whether or not to a header row, with the names of the entries.
+            specifies whether or not to include a header in each row with the name of the Component for that entry.
 
         owner_name : bool : default False
             specifies whether or not to include the Log's `owner <Log.owner>` in the header of each field;
@@ -899,7 +889,7 @@ class Log:
 
         npa = np.arange(max_len).reshape(max_len,1).tolist()
         if header:
-            npa = [[["Entry"]] + npa]
+            npa = [[["Index"]] + npa]
         else:
             npa = [npa]
 
