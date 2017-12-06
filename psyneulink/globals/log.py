@@ -301,11 +301,13 @@ class LogLevel(IntEnum):
     """Record only initial assignment."""
     VALUE_ASSIGNMENT = 2
     """Record only final value assignments during execution."""
-    EXECUTION = 3
+    EXECUTION = 4
     """Record all value assignments during execution."""
-    VALIDATION = 5
+    LEARNING = 8
+    """Record all value assignments during learning."""
+    VALIDATION = 16
     """Record all value assignments during validation and execution."""
-    ALL_ASSIGNMENTS = 5
+    ALL_ASSIGNMENTS = 31
     """Record all value assignments during initialization, validation and execution."""
 
 LogEntry = namedtuple('LogEntry', 'time, context, value')
