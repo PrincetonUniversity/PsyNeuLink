@@ -2290,7 +2290,7 @@ my_mech_B.log.print_entries()
 # 1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
 
 # Display the csv formatted entries of each Log
-print(my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None))
+# print(my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None))
 # 'Entry', 'noise'
 # 0,  0.
 # 1,  0.
@@ -2298,10 +2298,10 @@ print(my_mech_B.log.csv(entries=proj_A_to_B, owner_name=True, quotes=True))
 # 'Entry', 'MappingProjection from mech_A to mech_B'
 # 0,  1.
 # 1,  1.
-
-my_mech_A.log.nparray(entries=['noise', 'RESULTS'], header=False, owner_name=True)
-
-assert True
+#
+# my_mech_A.log.nparray(entries=['noise', 'RESULTS'], header=False, owner_name=True)
+#
+# assert True
 # my_mech_A = pnl.TransferMechanism(name='my_mech_1A')
 # print(my_mech_A.loggable_items)
 # {'InputState-0': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'RESULTS': 'OFF', 'slope': 'OFF'}
