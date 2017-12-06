@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.4.0rc1+36.g6b38083.dirty documentation</title>
+  <title>System &mdash; PsyNeuLink 0.4.0rc1+37.g20b5a07.dirty documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0rc1+36.g6b38083.dirty documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0rc1+37.g20b5a07.dirty documentation" href="index.html"/>
         <link rel="up" title="Compositions" href="Composition.html"/>
         <link rel="next" title="Process" href="Process.html"/>
         <link rel="prev" title="Compositions" href="Composition.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.0rc1+36
+                0.4.0rc1+37
               </div>
             
           
@@ -596,7 +596,7 @@ The list is a random sample of the permissible orders constrained by the <a clas
 <dl class="attribute">
 <dt id="psyneulink.components.system.System.mechanismsDict">
 <code class="descname">mechanismsDict</code><a class="headerlink" href="#psyneulink.components.system.System.mechanismsDict" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Dict[Mechanism:Process]</em> – contains a dictionary of all Mechanisms in the System, listing the Processes to which they belong. The key of
+<dd><p><em>Dict[Mechanism: Process]</em> – contains a dictionary of all Mechanisms in the System, listing the Processes to which they belong. The key of
 each entry is a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> object, and the value of each entry is a list of <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a>.</p>
 </dd></dl>
 
@@ -681,9 +681,9 @@ contained in recurrent_init_mechanisms.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>input</strong> (<em>list</em><em> or </em><em>ndarray</em>) – a list or array of input value arrays, one for each <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism in the System.</li>
-<li><strong>termination_processing</strong> (<em>dict{TimeScale: Condition}</em>) – a dictionary containing <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s that signal the end of the associated <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> within the <a class="reference internal" href="#system-execution-processing"><span class="std std-ref">processing
+<li><strong>termination_processing</strong> (<em>Dict</em><em>[</em><em>TimeScale: Condition</em><em>]</em>) – a dictionary containing <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s that signal the end of the associated <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> within the <a class="reference internal" href="#system-execution-processing"><span class="std std-ref">processing
 phase of execution</span></a></li>
-<li><strong>termination_learning</strong> (<em>dict{TimeScale: Condition}</em>) – <p>a dictionary containing <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s that signal the end of the associated <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> within the <a class="reference internal" href="#system-execution-learning"><span class="std std-ref">learning
+<li><strong>termination_learning</strong> (<em>Dict</em><em>[</em><em>TimeScale: Condition</em><em>]</em>) – <p>a dictionary containing <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s that signal the end of the associated <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> within the <a class="reference internal" href="#system-execution-learning"><span class="std std-ref">learning
 phase of execution</span></a></p>
 </li>
 </ul>
@@ -715,7 +715,7 @@ requirements and options).</li>
 <li><strong>reset_clock</strong> (bool : default <code class="xref any docutils literal"><span class="pre">True</span></code>) – if True, resets the <code class="xref py py-class docutils literal"><span class="pre">CentralClock</span></code> to 0 before a sequence of executions.</li>
 <li><strong>initialize</strong> (bool default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>) – if <code class="xref any docutils literal"><span class="pre">True</span></code>, calls the <a class="reference internal" href="#psyneulink.components.system.System.initialize" title="psyneulink.components.system.System.initialize"><code class="xref py py-meth docutils literal"><span class="pre">initialize</span></code></a> method of the System before a
 sequence of executions.</li>
-<li><strong>initial_values</strong> (<em>Dict</em><em>[</em><em>Mechanism</em><em>, </em><em>List</em><em>[</em><a class="reference internal" href="Process.html#psyneulink.components.process.Process.input" title="psyneulink.components.process.Process.input"><em>input</em></a><em>] or </em><em>np.ndarray</em><em>(</em><a class="reference internal" href="Process.html#psyneulink.components.process.Process.input" title="psyneulink.components.process.Process.input"><em>input</em></a><em>)</em><em>] </em><em>: default None</em>) – the initial values assigned to Mechanisms designated as <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE" title="psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>.</li>
+<li><strong>initial_values</strong> (<em>Dict</em><em>[</em><em>Mechanism: List</em><em>[</em><a class="reference internal" href="Process.html#psyneulink.components.process.Process.input" title="psyneulink.components.process.Process.input"><em>input</em></a><em>] or </em><em>np.ndarray</em><em>(</em><a class="reference internal" href="Process.html#psyneulink.components.process.Process.input" title="psyneulink.components.process.Process.input"><em>input</em></a><em>)</em><em>] </em><em>: default None</em>) – the initial values assigned to Mechanisms designated as <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE" title="psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>.</li>
 <li><strong>targets</strong> (List[input] or np.ndarray(input) : default <code class="xref any docutils literal"><span class="pre">None</span></code>) – the target values for the LearningMechanisms of the System for each execution.
 The length (of the outermost level if a nested list, or lowest axis if an ndarray) must be equal to that
 of <code class="docutils literal"><span class="pre">inputs</span></code>.</li>
@@ -726,9 +726,9 @@ If it is <code class="xref any docutils literal"><span class="pre">True</span></
 <li><strong>call_after_trial</strong> (Function : default= <code class="xref any docutils literal"><span class="pre">None</span></code>) – called after each trial in the sequence is executed.</li>
 <li><strong>call_before_time_step</strong> (Function : default= <code class="xref any docutils literal"><span class="pre">None</span></code>) – called before each time_step of each trial is executed.</li>
 <li><strong>call_after_time_step</strong> (Function : default= <code class="xref any docutils literal"><span class="pre">None</span></code>) – called after each time_step of each trial is executed.</li>
-<li><strong>termination_processing</strong> (<em>dict{TimeScale: Condition}</em>) – a dictionary containing <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s that signal the end of the associated <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> within the <a class="reference internal" href="#system-execution-processing"><span class="std std-ref">processing
+<li><strong>termination_processing</strong> (<em>Dict</em><em>[</em><em>TimeScale: Condition</em><em>]</em>) – a dictionary containing <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s that signal the end of the associated <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> within the <a class="reference internal" href="#system-execution-processing"><span class="std std-ref">processing
 phase of execution</span></a></li>
-<li><strong>termination_learning</strong> (<em>dict{TimeScale: Condition}</em>) – a dictionary containing <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s that signal the end of the associated <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> within the <a class="reference internal" href="#system-execution-learning"><span class="std std-ref">learning
+<li><strong>termination_learning</strong> (<em>Dict</em><em>[</em><em>TimeScale: Condition</em><em>]</em>) – a dictionary containing <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s that signal the end of the associated <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> within the <a class="reference internal" href="#system-execution-learning"><span class="std std-ref">learning
 phase of execution</span></a></li>
 </ul>
 </td>
@@ -959,7 +959,7 @@ corresponding InputState of the <a class="reference internal" href="#psyneulink.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0rc1+36.g6b38083.dirty',
+            VERSION:'0.4.0rc1+37.g20b5a07.dirty',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

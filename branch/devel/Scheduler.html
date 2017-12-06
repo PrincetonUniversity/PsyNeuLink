@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.4.0rc1+36.g6b38083.dirty documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.4.0rc1+37.g20b5a07.dirty documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0rc1+36.g6b38083.dirty documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0rc1+37.g20b5a07.dirty documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Condition" href="Condition.html"/>
         <link rel="prev" title="Scheduling" href="Scheduling.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.0rc1+36
+                0.4.0rc1+37
               </div>
             
           
@@ -215,7 +215,7 @@ used as the default order of executions, subject to any <a class="reference inte
 <p>Conditions can be added to a Scheduler when it is created by specifying a <a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.ConditionSet" title="psyneulink.scheduling.condition.ConditionSet"><code class="xref any py py-class docutils literal"><span class="pre">ConditionSet</span></code></a> (a set of
 <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>) in the <strong>condition_set</strong> argument of its constructor.  Individual Conditions and/or
 ConditionSets can also be added after the  Scheduler has been created, using its <a class="reference internal" href="#psyneulink.scheduling.scheduler.Scheduler.add_condition" title="psyneulink.scheduling.scheduler.Scheduler.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and
-<a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.ConditionSet.add_condition_set" title="psyneulink.scheduling.condition.ConditionSet.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods, respectively.</p>
+<a class="reference internal" href="#psyneulink.scheduling.scheduler.Scheduler.add_condition_set" title="psyneulink.scheduling.scheduler.Scheduler.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods, respectively.</p>
 </div>
 <div class="section" id="algorithm">
 <span id="scheduler-algorithm"></span><h2>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline">¶</a></h2>
@@ -451,7 +451,7 @@ specification dictionary, possibly determined by a set of <a class="reference in
 System’s <a class="reference internal" href="System.html#psyneulink.components.system.System.execution_graph" title="psyneulink.components.system.System.execution_graph"><code class="xref any py py-attr docutils literal"><span class="pre">execution_graph</span></code></a> and <a class="reference internal" href="System.html#psyneulink.components.system.System.execution_list" title="psyneulink.components.system.System.execution_list"><code class="xref any py py-attr docutils literal"><span class="pre">execution_list</span></code></a>.</li>
 <li><strong>condition_set</strong> (<a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.ConditionSet" title="psyneulink.scheduling.condition.ConditionSet"><em>ConditionSet</em></a>) – set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify when individual Components in <strong>system</strong>
 execute and any dependencies among them</li>
-<li><strong>graph</strong> (<em>dict{Component: set</em><em>(</em><a class="reference internal" href="Component.html#psyneulink.components.component.Component" title="psyneulink.components.component.Component"><em>Component</em></a><em>)</em><em>}</em>) – a graph specification dictionary - each entry of the dictionary must be a Component,
+<li><strong>graph</strong> (<em>Dict</em><em>[</em><em>Component: set</em><em>(</em><a class="reference internal" href="Component.html#psyneulink.components.component.Component" title="psyneulink.components.component.Component"><em>Component</em></a><em>)</em><em>]</em>) – a graph specification dictionary - each entry of the dictionary must be a Component,
 and the value of each entry must be a set of zero or more Components that project directly to the key.</li>
 </ul>
 </td>
@@ -479,14 +479,14 @@ and the value of each entry must be a set of zero or more Components that projec
 <dl class="attribute">
 <dt id="psyneulink.scheduling.scheduler.Scheduler.termination_conds">
 <code class="descname">termination_conds</code><a class="headerlink" href="#psyneulink.scheduling.scheduler.Scheduler.termination_conds" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>dict{TimeScale: Condition}</em> – a mapping from <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScales</span></a> to <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that, when met, terminate the execution
+<dd><p><em>Dict[TimeScale: Condition]</em> – a mapping from <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScales</span></a> to <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that, when met, terminate the execution
 of the specified <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.scheduling.scheduler.Scheduler.times">
 <code class="descname">times</code><a class="headerlink" href="#psyneulink.scheduling.scheduler.Scheduler.times" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>dict{TimeScale: dict{TimeScale: int}}</em> – a structure counting the number of occurrences of a certain <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> within the scope of another <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.
+<dd><p><em>Dict[TimeScale: Dict[TimeScale: int]]</em> – a structure counting the number of occurrences of a certain <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> within the scope of another <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.
 For example, <code class="xref any docutils literal"><span class="pre">times[TimeScale.RUN][TimeScale.PASS]</span></code> is the number of <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.PASS" title="psyneulink.scheduling.timescale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es that have occurred in the
 current <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.RUN" title="psyneulink.scheduling.timescale.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> that the Scheduler is scheduling at the time it is accessed</p>
 </dd></dl>
@@ -589,7 +589,7 @@ terminate the execution of the specified <a class="reference internal" href="Tim
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0rc1+36.g6b38083.dirty',
+            VERSION:'0.4.0rc1+37.g20b5a07.dirty',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
