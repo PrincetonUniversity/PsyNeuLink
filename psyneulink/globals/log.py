@@ -162,7 +162,7 @@ method of a Log::
     >>> my_mech_A.log.print_entries() # doctest: +SKIP
     Log for mech_A:
 
-    Entry     Logged Item:                                       Context                                                                 Value
+    Index     Logged Item:                                       Context                                                                 Value
 
     0         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
     1         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
@@ -177,14 +177,14 @@ for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
 
     # Display the csv formatted entry of Log for ``my_mech_A`` without quotes around values:
     >>> my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None) # doctest: +SKIP
-    'Entry', 'noise', 'RESULTS'
+    'Index', 'noise', 'RESULTS'
     0,  0.,  0.
     1,  0.,  0.
 
     # Display the csv formatted entry of Log for ``proj_A_to_B``
     #    with quotes around values and the Projection's name included in the header:
     >>> proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True) # doctest: +SKIP
-    # 'Entry', 'MappingProjection from mech_A to mech_B[matrix]'
+    # 'Index', 'MappingProjection from mech_A to mech_B[matrix]'
     # 0, ' 1.  1.  1.'
     #  ' 1.  1.  1.'
     # 1, ' 1.  1.  1.'
@@ -658,7 +658,7 @@ class Log:
         # MODIFIED 12/4/17 NEW: [USES entry]
         header = "Logged Item:".ljust(variable_width, kwSpacer)
         if not args or kwTime in args:
-            header = "Entry".ljust(time_width, kwSpacer) + header
+            header = "Index".ljust(time_width, kwSpacer) + header
         if not args or kwContext in args:
             header = header + " " + kwContext.ljust(context_width, kwSpacer)
         if not args or kwValue in args:

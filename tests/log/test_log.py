@@ -54,7 +54,7 @@ class TestLog:
         # assert T_1.log.print_entries() ==
         # # Log for mech_A:
         # #
-        # # Entry     Variable:                                          Context                                                                 Value
+        # # Index     Variable:                                          Context                                                                  Value
         # # 0         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
         # # 1         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
         # #
@@ -65,7 +65,7 @@ class TestLog:
         # assert T_2.log.print_entries() ==
         # # Log for mech_A:
         # #
-        # # Entry     Variable:                                          Context                                                                 Value
+        # # Index     Variable:                                          Context                                                                  Value
         # # 0         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
         # # 1         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
         # #
@@ -74,10 +74,10 @@ class TestLog:
         # # 1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
 
         assert T_1.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None) == \
-                        "\'Entry\', \'noise\', \'RESULTS\'\n0,  0.,  0.  0.\n1,  0.,  0.  0.\n2,  0.,  0.  0.\n"
+                        "\'Index\', \'noise\', \'RESULTS\'\n0,  0.,  0.  0.\n1,  0.,  0.  0.\n2,  0.,  0.  0.\n"
 
         assert PJ.log.csv(entries='matrix', owner_name=True, quotes=True) == \
-               "\'Entry\', \'MappingProjection from T_1 to T_2[matrix]\'\n" \
+               "\'Index\', \'MappingProjection from T_1 to T_2[matrix]\'\n" \
                "0, \' 1.  0.\'\n \' 0.  1.\'\n" \
                "1, \' 1.  0.\'\n \' 0.  1.\'\n" \
                "2, \' 1.  0.\'\n \' 0.  1.\'\n"
