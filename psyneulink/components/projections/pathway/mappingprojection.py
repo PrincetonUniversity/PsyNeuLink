@@ -666,32 +666,16 @@ class MappingProjection(PathwayProjection_Base):
         except KeyError:
             context = ""
 
-        # Get logPref
-        self_log_pref = self.prefs.logPref if self.prefs else None
-
-        loggers = [
-
-            # Log to self for logPref
-            (self.name, self.log, self_log_pref),
-
-            # Use self.logPref to log to receiver's log if name of self is in receiver's log.entries;
-            #    otherwise use receiver's logPref
-            (self.receiver.name, self.receiver.log,
-             self_log_pref if self.name in self.receiver.log.loggable_items else self.receiver.logPref),
-
-            # Use self.logPref to log to receiver owner's log if name of self is in receiver owner's log.entries
-            #    otherwise use receiver owner's logPref
-            (self.receiver.owner.name, self.receiver.owner.log,
-             self_log_pref if self.name in self.receiver.owner.log.loggable_items else self.receiver.owner.logPref)
-        ]
-
-        # Go through loggers, and if context is consistent with log_pref of logger, record value to logger's log
-        for log_name, log, log_pref in loggers:
-            if (log_pref is LogLevel.ALL_ASSIGNMENTS or
-                    (INITIALIZING in context and log_pref is LogLevel.INITIALIZATION) or
-                    (EXECUTING in context and log_pref is LogLevel.EXECUTION) or
-                    (all(c in context for c in {EXECUTING, kwAssign}) and log_pref is LogLevel.VALUE_ASSIGNMENT)):
-                log.entries[self.name] = LogEntry(CurrentTime(), context, matrix)
+        # # Get logPref
+        # self_log_pref = self.prefs.logPref if self.prefs else None
+        #
+        # # Go through loggers, and if context is consistent with log_pref of logger, record value to logger's log
+        # for log_name, log, log_pref in loggers:
+        #     if (log_pref is LogLevel.ALL_ASSIGNMENTS or
+        #             (INITIALIZING in context and log_pref is LogLevel.INITIALIZATION) or
+        #             (EXECUTING in context and log_pref is LogLevel.EXECUTION) or
+        #             (all(c in context for c in {EXECUTING, kwAssign}) and log_pref is LogLevel.VALUE_ASSIGNMENT)):
+        #         log.entries[self.name] = LogEntry(CurrentTime(), context, matrix)
 
 
     @property

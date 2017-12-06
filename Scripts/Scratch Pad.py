@@ -2229,96 +2229,38 @@ print ("TEST Log")
 # print(T.log.csv(entries=['RESULTS'], owner_name=False, quotes=None))
 
 
-# Create a Process with two TransferMechanisms:
-my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
-my_mech_B = pnl.TransferMechanism(name='mech_B', size=2)
-my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
+T1 = pnl.TransferMechanism(name='T1', size=2)
+T2 = pnl.TransferMechanism(name='T2', size=2)
+PS = pnl.Process(pathway=[T1, T2])
 
-# Print the loggable items for each Mechanism:
-print(my_mech_A.loggable_items)
+print(T1.loggable_items)
 # {'Process-0_Input Projection': 'OFF', 'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
-print(my_mech_B.loggable_items)
+print(T2.loggable_items)
 # {'InputState-0': 'OFF', 'slope': 'OFF', 'MappingProjection from mech_A to mech_B': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
 
+PJ = T2.path_afferents[0]
 
-# Notice that ``my_mech_B`` includes its projection from ``my_mech_A`` (created by the `Process`) in its list of
-# loggable_items.  The next line gets a reference to it (for use further below)
-
-
-# Get the MapppingProjection to my_mech_B from my_mech_A
-proj_A_to_B = my_mech_B.path_afferents[0]
-
-# Assign the noise parameter and RESULTS OutputState of my_mech_A to be logged:
-my_mech_A.log_items('noise')
-my_mech_A.log_items('RESULTS')
-
-# Assign the proj_A_to_B to be logged with my_mech_B:
-my_mech_B.log_items(proj_A_to_B)
+T1.log_items('noise')
+T1.log_items('RESULTS')
+T2.log_items(PJ)
 
 # Execute each Process twice (to generate some values in the logs):
-my_process.execute()
-my_process.execute()
-my_process.execute()
+PS.execute()
+PS.execute()
+PS.execute()
 
-# Print the logged items of each Mechanism:
-print(my_mech_A.logged_items)
-# {'RESULTS': 'EXECUTION', 'noise': 'EXECUTION'}
-print(my_mech_B.logged_items)
-# {'MappingProjection from mech_A to mech_B': 'EXECUTION'}
+print(T1.logged_items)
+print(T2.logged_items)
 
-# Print the Logs of each:
-my_mech_A.log.print_entries()
-# Log for mech_A:
-#
-# Entry     Variable:                                          Context                                                                 Value
-# 0         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-# 1         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-#
-#
-# 0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-# 1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+T1.log.print_entries()
+T2.log.print_entries()
 
-my_mech_B.log.print_entries()
-# Log for mech_A:
-#
-# Entry     Variable:                                          Context                                                                 Value
-# 0         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-# 1         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-#
-#
-# 0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-# 1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-
-# Display the csv formatted entries of each Log
-# print(my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None))
-# 'Entry', 'noise'
-# 0,  0.
-# 1,  0.
-print(my_mech_B.log.csv(entries=proj_A_to_B, owner_name=True, quotes=True))
-# 'Entry', 'MappingProjection from mech_A to mech_B'
-# 0,  1.
-# 1,  1.
-#
-# my_mech_A.log.nparray(entries=['noise', 'RESULTS'], header=False, owner_name=True)
-#
-# assert True
-# my_mech_A = pnl.TransferMechanism(name='my_mech_1A')
-# print(my_mech_A.loggable_items)
-# {'InputState-0': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'RESULTS': 'OFF', 'slope': 'OFF'}
-#
-#
-# my_mech_A.log_items(('noise'))
-# my_mech_A.log_items('RESULTS')
-#
-# my_mech_A.execute()
-# my_mech_A.execute()
-#
-# print(my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None))
-# 'Entry', 'noise', 'RESULTS'
-# 0,  0.,  0.
-# 1,  0.,  0.
+print(T1.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=True, quotes=True))
+# print(T2.log.csv(entries=PJ, owner_name=True, quotes=True))
+print(T1.log.nparray(entries=['noise', 'RESULTS'], header=False, owner_name=True))
 
 #endregion
+
 
 #region TEST OVER-WRITING OF LOG @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #

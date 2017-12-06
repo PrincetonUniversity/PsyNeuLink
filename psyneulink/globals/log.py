@@ -289,6 +289,7 @@ from enum import IntEnum
 import numpy as np
 
 from psyneulink.globals.keywords import kwContext, kwTime, kwValue
+from psyneulink.globals.utilities import ContentAddressableList
 
 __all__ = [
     'ALL_ENTRIES', 'EntriesDict', 'kpCentralClock', 'Log', 'LogEntry', 'LogError', 'LogLevel', 'SystemLogEntries',
@@ -516,13 +517,14 @@ class Log:
 
         The loggable items of a Component are specified in in the _logable_items property of its class
         """
+        from psyneulink.components.component import Component
+
         try:
-            loggable_items = self.owner._loggable_items
+            loggable_items = ContentAddressableList(component_type=Component, list=self.owner._loggable_items)
         except AttributeError:
             return []
         return loggable_items
 
-    # FIX: MOVE TO Log WITH CALL TO self._log_items FOR HANDLING OF RCLASS-SPECIFIC ATTRIBUTES (STATES AND PROJECTIONS)
     @property
     def logged_items(self):
         """Dict of items that have logged `entries <Log.entries>`, indicating their specified `LogLevel`.
@@ -531,7 +533,7 @@ class Log:
         # Return LogLevel for items in log.entries
         logged_items = {key: value for (key, value) in
                         [(l, self.loggable_items[l])
-                         for l in self.entries.keys()]}
+                         for l in self.logged_entries.keys()]}
         return logged_items
 
     def log_items(self, items, log_level=LogLevel.EXECUTION, param_sets=None):
@@ -606,9 +608,9 @@ class Log:
         Issue a warning if an entry is not in the Log dict
         """
 
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
+        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.logged_entries
         if entries is ALL_ENTRIES or entries is None:
-            entries = self.entries.keys()
+            entries = self.logged_entries.keys()
 
         # If entries is a single entry, put in list for processing below
         if isinstance(entries, str):
@@ -649,12 +651,12 @@ class Log:
         print('\n'+header+'\n')
 
         # Sort for consistency of reporting
-        attrib_names_sorted = sorted(self.entries.keys())
+        attrib_names_sorted = sorted(self.logged_entries.keys())
         kwSpacer = '.'
-        # for attrib_name in self.entries:
+        # for attrib_name in self.logged_entries:
         for attrib_name in attrib_names_sorted:
             try:
-                datum = self.entries[attrib_name]
+                datum = self.logged_entries[attrib_name]
             except KeyError:
                 warnings.warn("{0} is not an entry in the Log for {1}".
                       format(attrib_name, self.owner.name))
@@ -737,9 +739,10 @@ class Log:
         """
         from psyneulink.components.component import Component
 
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
+        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.logged_entries
         if entries is ALL_ENTRIES or entries is None:
-            entries = self.entries.keys()
+            # entries = self.logged_entries.keys()
+            entries = self.logged_entries.keys()
 
         # If entries is a single entry, put in list for processing below
         if isinstance(entries, (str, Component)):
@@ -752,14 +755,14 @@ class Log:
         for entry in entries:
             if entry not in self.loggable_items:
                 raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
-            if entry not in self.entries:
+            if entry not in self.logged_entries:
                 raise LogError("{} is not currently being logged by {} (try using log_items)".
                                format(repr(entry), self.owner.name))
 
-        max_len = max([len(self.entries[e]) for e in entries])
+        max_len = max([len(self.logged_entries[e]) for e in entries])
 
         # Currently only supports entries of the same length
-        if not all(len(self.entries[e])==len(self.entries[entries[0]])for e in entries):
+        if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
             raise LogError("CSV output currently only supported for Log entries of equal length")
 
         if not quotes:
@@ -780,7 +783,7 @@ class Log:
         # Records
         for i in range(max_len):
             csv += "{}, {}\n".format(i, ", ".
-                                     join(str(self.entries[entry][i].value) for entry in entries).
+                                     join(str(self.logged_entries[entry][i].value) for entry in entries).
                                      replace("[[",quotes)).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
         return(csv)
 
@@ -841,9 +844,9 @@ class Log:
         """
         from psyneulink.components.component import Component
 
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
+        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.logged_entries
         if entries is ALL_ENTRIES or entries is None:
-            entries = self.entries.keys()
+            entries = self.logged_entries.keys()
 
         # If entries is a single entry, put in list for processing below
         if isinstance(entries, (str, Component)):
@@ -856,14 +859,14 @@ class Log:
         for entry in entries:
             if entry not in self.loggable_items:
                 raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
-            if entry not in self.entries:
+            if entry not in self.logged_entries:
                 raise LogError("{} is not currently being logged by {} (try using log_items)".
                                format(repr(entry), self.owner.name))
 
-        max_len = max([len(self.entries[e]) for e in entries])
+        max_len = max([len(self.logged_entries[e]) for e in entries])
 
         # Currently only supports entries of the same length
-        if not all(len(self.entries[e])==len(self.entries[entries[0]])for e in entries):
+        if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
             raise LogError("CSV output currently only supported for Log entries of equal length")
 
         if owner_name is True:
@@ -883,7 +886,7 @@ class Log:
             npa = [npa]
 
         for i, entry in enumerate(entries):
-            row = [e.value for e in self.entries[entry]]
+            row = [e.value for e in self.logged_entries[entry]]
             if header:
                 entry = "{}{}{}{}".format(owner_name_str, lb, entry, rb)
                 row = [entry] + row
@@ -892,6 +895,12 @@ class Log:
 
         return(npa)
 
+    @property
+    def logged_entries(self):
+        entries = {}
+        for i in self.loggable_components:
+            entries.update(i.log.entries)
+        return entries
 
     # ******************************************************************************************************
     # ******************************************************************************************************
@@ -916,7 +925,7 @@ class Log:
 
         # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
         if entries is Log.ALL_LOG_ENTRIES:
-            entries = self.entries.keys()
+            entries = self.logged_entries.keys()
             msg = Log.ALL_LOG_ENTRIES
 
         # If entries is a single entry, put in list for processing below
@@ -927,7 +936,7 @@ class Log:
         if not msg is Log.ALL_LOG_ENTRIES:
             for entry in entries:
                 try:
-                    self.entries[entry]
+                    self.logged_entries[entry]
                 except KeyError:
                     warnings.warn("Warning: {0} is not an entry in Log of {1}".
                                   format(entry,self.owner.name))
@@ -948,7 +957,7 @@ class Log:
 
             # Reset entries
             for entry in entries:
-                self.entries[entry]=[]
+                self.logged_entries[entry]=[]
                 if entry in self.owner.prefs.logPref:
                     del(self.owner.prefs.logPref, entry)
 
