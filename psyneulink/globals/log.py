@@ -321,7 +321,7 @@ SystemLogEntries = [kpCentralClock]
 # Modified from: http://stackoverflow.com/questions/7760916/correct-useage-of-getter-setter-for-dictionary-values
 from collections import MutableMapping
 class EntriesDict(MutableMapping,dict):
-    """Maintains a Dict of Log entries;  asignment of a LogEntry to an entry appends it to the list for that entry
+    """Maintains a Dict of Log entries; assignment of a LogEntry to an entry appends it to the list for that entry.
 
     The key for each entry is the name of an attribute being logged (usually the `value <Component.value>` of
     the Log's `owner <Log.owner>`.
