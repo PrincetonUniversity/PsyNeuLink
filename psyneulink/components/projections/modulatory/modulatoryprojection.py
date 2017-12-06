@@ -137,7 +137,7 @@ class ModulatoryProjection_Base(Projection_Base):
        specifies the value by which to exponentiate the ModulatoryProjection's `value <ModulatoryProjection.value>`
        before combining it with others (see `exponent <ModulatoryProjection.exponent>` for additional details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         ModulatoryProjection, its `function <ModulatoryProject.function>`, and/or a custom function and its parameters.
         By default, it contains an entry for the ModulatoryProjection's default `function <ModulatoryProject.function>`

@@ -24,12 +24,12 @@ when they are created, validated, and/or executed).  Every Component has a Log o
 Components that belong to it.  These are stored in `entries <Log.entries>` of the Log, that contain a sequential list
 of the recorded values, along with the time and context of the recording.  The conditions under which values are
 recorded is specified by the `logPref <Component.logPref>` property of a Component.  While these can be set directly,
-they are most easily managed using three convenience methods assigned to every Component along with its `log
-<Component.log>` -- `loggable_items <Log.loggable_items>`, `log_items <Log.log_items>` and `logged_items
-<Log.logged_items>` -- that identify, specify and track items the items being logged, respectively.  This can be
-useful not only for observing the behavior of Components in a model, but also in debugging them during construction.
-The entries of a Log can be displayed in a "human readable" table using its `print_entries <Log.print_entries>`
-method, and returned in CSV and numpy array formats using its `csv <Log.csv>` and `nparray <Log.nparray>` methods.
+they are most easily specified using the Log's `log_items <Log.log_items>` method, together with its `loggable_items
+<Log.loggable_items>` and <Log.logged_items>` attributes that identify and track the items to be logged. These can be
+useful not only for observing the behavior of a Component in a model, but also in debugging the model during
+construction. The entries of a Log can be displayed in a "human readable" table using its `print_entries
+<Log.print_entries>` method, and returned in CSV and numpy array formats using its `csv <Log.csv>` and `nparray
+<Log.nparray>` methods.
 
 COMMENT:
 Entries can also be made by the user programmatically. Each entry contains the time at
@@ -60,25 +60,24 @@ of `LogEntry` tuples recording its values.  Each `LogEntry` tuple has three item
        `TIME_STEP` of execution.  This will be corrected in a future release.
 
 
-A Log has several methods that make it easy to manage when it values are recorded and accessing its `entries
-<Log.entries>`:
+A Log has several attributes and methods that make it easy to manage when it values are recorded and accessing its
+`entries <Log.entries>`:
 
-    * `loggable_items <Log.loggable_items>` -- reports, in dictionary format, the items that can be logged in a
-      Component's `log <Component.log>` and their `LogLevel`\\s;  the key to each entry is the name of the
-      item (another Component), and its currently assigned `LogLevel`.
+    * `loggable_items <Log.loggable_items>` -- a dictionary with the items that can be logged in a Component's `log
+      <Component.log>`;  the key for each entry is the name of a Component,  and the value is it current `LogLevel`.
     ..
     * `log_items <Log.log_items>` -- used to assign the LogLevel for one or more Components.  Components can be
       specified by their names, a reference to the Component object, in a tuple that specifies the `LogLevel` to
       assign to that Component, or in a list with a `LogLevel` to be applied to multiple items at once.
     ..
-    * `logged_items <Log.logg_items>` -- returns a list with the name of Components that currently have `entries <Log>`
-      in the Log.
+    * `logged_items <Log.logged_items>` -- a dictionary with the items that currently have entries in a Component's
+      `log <Component.log>`; the key for each entry is the name of a Component, and the value is its current `LogLevel`.
     ..
     * `print_entries <Log.print_entries>` -- this prints a formatted list of the `entries <Log.entries>` in the Log.
     ..
-    * `csv <Log.csv>` -- this returns a CSV-formatted string with the `entries <Log.entries>` in the Log.
+    * `csv <Log.csv>` -- returns a CSV-formatted string with the `entries <Log.entries>` in the Log.
     ..
-    * `nparray <Log.csv>` -- this returns a 2d np.array with the `entries <Log.entries>` in the Log.
+    * `nparray <Log.csv>` -- returns a 2d np.array with the `entries <Log.entries>` in the Log.
 
 Loggable Items
 ~~~~~~~~~~~~~~
@@ -183,8 +182,8 @@ for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
     0,  0.,  0.
     1,  0.,  0.
 
-    # Display the csv formatted entry of Log for ``proj_A_to_B`` with quotes around values and the Projection's name
-    included in the header:
+    # Display the csv formatted entry of Log for ``proj_A_to_B``
+    #    with quotes around values and the Projection's name included in the header:
     >>> proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True) # doctest: +SKIP
     # 'Entry', 'MappingProjection from mech_A to mech_B[matrix]'
     # 0, ' 1.  1.  1.'
@@ -391,7 +390,7 @@ class LogError(Exception):
 #endregion
 
 class Log:
-    """Maintain a Log for an object, which contains a dictionary of attributes being logged and their value(s).
+    """Maintain a Log for an object, which contains a dictionary of logged value(s).
 
     COMMENT:
     Description:
@@ -465,6 +464,28 @@ class Log:
         - [TBI: save_log - save log to disk]
     COMMENT
 
+    Attributes
+    ----------
+
+    owner : Compoment
+        the `Component <Component>` to which the Log belongs (and assigned as its `log <Component.log>` attribute).
+
+    loggable_components : ContentAddressableList
+        each item is a Component that is loggable for the Log's `owner <Log.owner>`
+
+    loggable_items : Dict[Component.name: List[LogEntry]]
+        identifies Components that can be logged in the Log; the key of each entry is the name of a Component,
+        and the value is its currently assigned `LogLevel`.
+
+    entries : Dict[Component.name: List[LogEntry]]
+        contains the logged information for `loggable_components <Log.loggable_components>`; the key of each entry
+        is the name of a Component, and its value is a list of `LogEntry` items for that Component.  Only Components
+        for which information has been logged appear in the `entries <Log.entries>` dict.
+
+    logged_items : Dict[Component.name: List[LogEntry]]
+        identifies Components for which information has been entered in the Log; the key for each entry is the name
+        of a Component, and the value is its currently assigned `LogLevel`.
+
     """
 
     ALL_LOG_ENTRIES = 'all_log_entries'
@@ -536,7 +557,7 @@ class Log:
         return logged_items
 
     def log_items(self, items, log_level=LogLevel.EXECUTION):
-        """Specifies items to be logged at the specified `LogLevel`(s).
+        """Specifies items to be logged at the specified `LogLevel`\\(s).
 
         Arguments
         ---------
