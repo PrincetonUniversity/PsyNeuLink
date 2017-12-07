@@ -2382,7 +2382,7 @@ p = pnl.Process(
     },
 )
 
-Middle_Weights.log_items(('matrix',pnl.LogLevel.EXECUTION))
+Middle_Weights.log_items(('matrix',pnl.EXECUTION))
 
 stim_list = {Input_Layer: [[-1, 30]]}
 target_list = {Output_Layer: [[0, 0, 1]]}

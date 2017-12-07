@@ -615,6 +615,8 @@ class Log:
 
         log_level : LogLevel : default LogLevel.EXECUTION
             specifies `LogLevel` to use as the default for items not specified in tuples (see above).
+            For convenience, the name of a LogLevel can be used in place of its full specification
+            (e.g., *EXECUTION* instead of `LogLevel.EXECUTION`).
 
         params_set : list : default None
             list of parameters to include as loggable items;  these must be attributes of the `owner <Log.owner>`
@@ -626,6 +628,12 @@ class Log:
         from psyneulink.globals.keywords import ALL
 
         def assign_log_level(item, level):
+
+            try:
+                level = LogLevel[level] if isinstance(level, str) else level
+            except KeyError:
+                raise LogError("\'{}\' is not a value of {}".
+                               format(level, LogLevel.__name__))
 
             if not item in self.loggable_items:
                 raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
