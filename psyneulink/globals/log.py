@@ -778,8 +778,8 @@ class Log:
 
         entries : string or Component
             specifies the entries of the Log to be included in the output;  they must be `loggable_items
-            <Log.loggable_items>` of the Log.
-
+            <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
+            If **entries** is `ALL` or `None`, then all `logged_items <Log.logged_items>` are included.
 
         owner_name : bool : default False
             specifies whether or not to include the Component's `owner <Log.owner>` in the header of each field;
@@ -874,7 +874,8 @@ class Log:
 
         entries : string or Component
             specifies the entries of the Log to be included in the output;  they must be `loggable_items
-            <Log.loggable_items>` of the Log.
+            <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
+            If **entries** is `ALL` or `None`, then all `logged_items <Log.logged_items>` are included.
 
         header : bool : default True
             specifies whether or not to include a header in each row with the name of the Component for that entry.
@@ -1100,4 +1101,5 @@ class Log:
 
         # Log value if logging condition is satisfied
         if log_pref and log_pref == context_flag:
+        # if log_pref and log_pref | context_flag:
             self.entries[self.owner.name] = LogEntry(CurrentTime(), context, value)
