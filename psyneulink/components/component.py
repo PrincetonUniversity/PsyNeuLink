@@ -1460,8 +1460,24 @@ class Component(object):
         """
         if make_as_properties:
             for arg_name, arg_value in kwargs.items():
+
+
                 if not any(hasattr(parent_class, arg_name) for parent_class in self.__class__.mro()):
-                    setattr(self.__class__, arg_name, make_property(arg_name, arg_value))
+
+                    # If Component is a Function and has an owner, update function_params dict for owner
+                    #    also, get parameter_state_owner if one exists
+                    from psyneulink.components.functions.function import Function_Base
+                    if isinstance(self, Function_Base) and self.owner:
+                        param_state_owner = self.owner
+                        self.owner.function_params.__additem__(arg_name, arg_value)
+                    else:
+                        param_state_owner = self
+
+                    # If the parameter is associated with a ParameterState, assign the value to the ParameterState's variable
+                    if hasattr(param_state_owner, '_parameter_states') and arg_name in param_state_owner._parameter_states:
+                        setattr(self.__class__, arg_name, make_property_mod(arg_name, arg_value))
+                    else:
+                        setattr(self.__class__, arg_name, make_property(arg_name, arg_value))
                 setattr(self, '_'+arg_name, arg_value)
         else:
             for arg_name, arg_value in kwargs.items():
@@ -2855,6 +2871,75 @@ class Component(object):
                 owner = None
 
 COMPONENT_BASE_CLASS = Component
+
+def make_property_mod(name, default_value):
+    backing_field = '_' + name
+
+    def getter(self):
+        try:
+            # Get value of function param from ParameterState.value of owner
+            #    case: request is for the value of a Function parameter for which the owner has a ParameterState
+            #    example: slope or intercept parameter of a Linear Function)
+            #    rationale: most common and therefore requires the greatest efficiency
+            #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
+            from psyneulink.components.functions.function import Function
+            if not isinstance(self, Function):
+                raise TypeError
+            return self.owner._parameter_states[name].value
+        except (AttributeError, TypeError):
+            try:
+                # Get value of param from Component's own ParameterState.value
+                #    case: request is for value of a parameter of a Mechanism or Projection that has a ParameterState
+                #    example: matrix parameter of a MappingProjection)
+                #    rationale: next most common case
+                #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
+                return self._parameter_states[name].value
+            except (AttributeError, TypeError):
+                # Get value of param from Component's attribute
+                #    case: request is for the value of an attribute for which the Component has no ParameterState
+                #    rationale: least common case
+                #    example: parameter of a Function belonging to a state (which don't themselves have ParameterStates)
+                #    note: use backing_field since referencing property rather than item in _parameter_states)
+                return getattr(self, backing_field)
+
+    def setter(self, val):
+
+        if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
+            val_type = val.__class__.__name__
+            curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + name + ' of ' + self.name
+            # self.prev_context = "nonsense" + str(curr_context)
+            self._assign_params(request_set={name:val}, context=curr_context)
+        else:
+            setattr(self, backing_field, val)
+
+        # Update user_params dict with new value
+        self.user_params.__additem__(name, val)
+
+        # If Component is a Function and has an owner, update function_params dict for owner
+        #    also, get parameter_state_owner if one exists
+        from psyneulink.components.functions.function import Function_Base
+        if isinstance(self, Function_Base) and self.owner:
+            param_state_owner = self.owner
+            self.owner.function_params.__additem__(name, val)
+        else:
+            param_state_owner = self
+
+        # If the parameter is associated with a ParameterState, assign the value to the ParameterState's variable
+        if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
+            param_state = param_state_owner._parameter_states[name]
+
+            # MODIFIED 7/24/17 CW: If the ParameterState's function has an initializer attribute (i.e. it's an
+            # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
+            # 'reset_initializer'
+            if hasattr(param_state.function_object, 'initializer'):
+                param_state.function_object.reset_initializer = val
+
+    # Create the property
+    prop = property(getter).setter(setter)
+
+    # # Install some documentation
+    # prop.__doc__ = docs[name]
+    return prop
 
 
 def make_property(name, default_value):
