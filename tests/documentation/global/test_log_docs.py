@@ -1,8 +1,6 @@
 import pytest
-
-import psyneulink as pnl
 import doctest
-
+import psyneulink as pnl
 
 def test_log_docs():
     fail, total = doctest.testmod(pnl.globals.log)

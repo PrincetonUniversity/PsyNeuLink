@@ -2065,17 +2065,15 @@ class State_Base(State):
 
         # Get logPref
         log_pref = self.prefs.logPref if self.prefs else None
-        owner_log_pref = self.owner.prefs.logPref if self.owner.prefs else None
 
 
         # If context is consistent with log_pref, record value to log
         if (log_pref is LogLevel.ALL_ASSIGNMENTS or
-                (INITIALIZING in context and LogLevel.INITIALIZATION in {log_pref, owner_log_pref}) or
-                (EXECUTING in context and log_pref is LogLevel.EXECUTION) or
+                (INITIALIZING in context and log_pref is LogLevel.INITIALIZATION) or
+                ((EXECUTING in context and not LEARNING in context) and log_pref is LogLevel.EXECUTION) or
                 (all(c in context for c in {EXECUTING, kwAssign}) and log_pref is LogLevel.VALUE_ASSIGNMENT)
         ):
-            self.owner.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
-            # self.owner.log.entries[self.name] = LogEntry(CentralClock, context, assignment)
+            self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
 
     @property
     def projections(self):

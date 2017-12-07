@@ -365,7 +365,7 @@ class MappingProjection(PathwayProjection_Base):
         value of the `sender <MappingProjection.sender>` into a form suitable for the `variable <InputState.variable>`
         of its `receiver <MappingProjection.receiver>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
@@ -516,8 +516,10 @@ class MappingProjection(PathwayProjection_Base):
                                                                             initializer=matrix,
                                                                             # rate=initial_rate
                                                                                )
-
         self._parameter_states[MATRIX]._function = self._parameter_states[MATRIX].function_object.function
+
+        # # Assign ParameterState the same Log as the MappingProjection, so that its entries are accessible to Mechanisms
+        # self._parameter_states[MATRIX].log = self.log
 
     def _instantiate_receiver(self, context=None):
         """Determine matrix needed to map from sender to receiver
@@ -656,42 +658,26 @@ class MappingProjection(PathwayProjection_Base):
 
         self.function_object.matrix = matrix
 
-        # Log matrix value if specified by owner, sender, or sender's owner
+        # # Log matrix value if specified by owner, sender, or sender's owner
+        #
+        # # Get context
+        # try:
+        #     curr_frame = inspect.currentframe()
+        #     prev_frame = inspect.getouterframes(curr_frame, 2)
+        #     context = inspect.getargvalues(prev_frame[2][0]).locals['context']
+        # except KeyError:
+        #     context = ""
 
-        # Get context
-        try:
-            curr_frame = inspect.currentframe()
-            prev_frame = inspect.getouterframes(curr_frame, 2)
-            context = inspect.getargvalues(prev_frame[2][0]).locals['context']
-        except KeyError:
-            context = ""
-
-        # Get logPref
-        self_log_pref = self.prefs.logPref if self.prefs else None
-
-        loggers = [
-
-            # Log to self for logPref
-            (self.name, self.log, self_log_pref),
-
-            # Use self.logPref to log to receiver's log if name of self is in receiver's log.entries;
-            #    otherwise use receiver's logPref
-            (self.receiver.name, self.receiver.log,
-             self_log_pref if self.name in self.receiver.log.loggable_items else self.receiver.logPref),
-
-            # Use self.logPref to log to receiver owner's log if name of self is in receiver owner's log.entries
-            #    otherwise use receiver owner's logPref
-            (self.receiver.owner.name, self.receiver.owner.log,
-             self_log_pref if self.name in self.receiver.owner.log.loggable_items else self.receiver.owner.logPref)
-        ]
-
-        # Go through loggers, and if context is consistent with log_pref of logger, record value to logger's log
-        for log_name, log, log_pref in loggers:
-            if (log_pref is LogLevel.ALL_ASSIGNMENTS or
-                    (INITIALIZING in context and log_pref is LogLevel.INITIALIZATION) or
-                    (EXECUTING in context and log_pref is LogLevel.EXECUTION) or
-                    (all(c in context for c in {EXECUTING, kwAssign}) and log_pref is LogLevel.VALUE_ASSIGNMENT)):
-                log.entries[self.name] = LogEntry(CurrentTime(), context, matrix)
+        # # Get logPref
+        # self_log_pref = self.prefs.logPref if self.prefs else None
+        #
+        # # Go through loggers, and if context is consistent with log_pref of logger, record value to logger's log
+        # for log_name, log, log_pref in loggers:
+        #     if (log_pref is LogLevel.ALL_ASSIGNMENTS or
+        #             (INITIALIZING in context and log_pref is LogLevel.INITIALIZATION) or
+        #             (EXECUTING in context and log_pref is LogLevel.EXECUTION) or
+        #             (all(c in context for c in {EXECUTING, kwAssign}) and log_pref is LogLevel.VALUE_ASSIGNMENT)):
+        #         log.entries[self.name] = LogEntry(CurrentTime(), context, matrix)
 
 
     @property
@@ -726,3 +712,13 @@ class MappingProjection(PathwayProjection_Base):
 
         else:
             self.paramsCurrent[FUNCTION_PARAMS].__additem__(MATRIX, value)
+
+    @property
+    def logPref(self):
+        return self.prefs.logPref
+
+    # Always assign matrix Parameter state the same logPref as the MappingProjection
+    @logPref.setter
+    def logPref(self, setting):
+        self.prefs.logPref = setting
+        self.parameter_states[MATRIX].logPref = setting
