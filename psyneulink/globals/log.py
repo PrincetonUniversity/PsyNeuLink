@@ -319,6 +319,8 @@ class LogLevel(IntEnum):
     """Record all value assignments during any execution of the Component."""
     PROCESSING = 1<<4
     """Record all value assignments during processing phase of Composition execution."""
+    # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
+    # LEARNING = 1<<5
     LEARNING = (1<<5) + EXECUTION
     """Record all value assignments during learning phase of Composition execution."""
     CONTROL = 1<<6
@@ -1097,9 +1099,10 @@ class Log:
 
         # Get logPref and context
         log_pref = self.owner.prefs.logPref if self.owner.prefs else None
-        context_flag = _get_log_context(context)
+        context_flags = _get_log_context(context)
 
         # Log value if logging condition is satisfied
-        if log_pref and log_pref == context_flag:
-        # if log_pref and log_pref | context_flag:
+        if log_pref and log_pref == context_flags:
+        # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
+        # if log_pref and log_pref | context_flags:
             self.entries[self.owner.name] = LogEntry(CurrentTime(), context, value)
