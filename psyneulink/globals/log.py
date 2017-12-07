@@ -101,15 +101,26 @@ the Logs of their `States <State>`.  Specifically the Logs of these Components c
 
   * *MappingProjections* -- the value of its `matrix <MappingProjection.matrix>` parameter.
 
+LogLevels
+~~~~~~~~~
+
+Configuring a Component to be logged is done using a `LogLevel`, that specifies the conditions under which its
+`value <Component.value>` should be entered in its Log.  These can be specified in the `log_items <Log.log_items>`
+method of a Log, or directly by specifying a LogLevel for the value a Component's `logPref  <Compnent.logPref>` item
+of its `prefs <Component.prefs>` attribute.  The former is easier, and allows multiple Components to be specied at
+once, while the latter affords more control over the specification (see `Preferences`).  LogLevels are treated as
+binary "flags", and can be combined to permit logging under more than one contact or boolean combinations of LogLevels
+using bitwise operators (e.g., LogLevel.EXECUTION | LogLevel.LEARNING).
+
+.. note::
+   Currently, the only `LogLevels <LogLevel>` supported are `OFF`, `EXECUTION` and `LEARNING`.
+
 
 Execution
 ---------
 
 The value of a Component is recorded to a Log when the condition assigned to its `logPref <Component.logPref>` is met.
 This specified as a `LogLevel`.  The default LogLevel is `OFF`.
-
-.. note::
-   Currently, the only `LogLevels <LogLevel>` supported are `OFF`, `EXECUTION` and `LEARNING`.
 
 Examples
 --------
