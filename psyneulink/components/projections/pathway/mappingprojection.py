@@ -658,28 +658,6 @@ class MappingProjection(PathwayProjection_Base):
 
         self.function_object.matrix = matrix
 
-        # # Log matrix value if specified by owner, sender, or sender's owner
-        #
-        # # Get context
-        # try:
-        #     curr_frame = inspect.currentframe()
-        #     prev_frame = inspect.getouterframes(curr_frame, 2)
-        #     context = inspect.getargvalues(prev_frame[2][0]).locals['context']
-        # except KeyError:
-        #     context = ""
-
-        # # Get logPref
-        # self_log_pref = self.prefs.logPref if self.prefs else None
-        #
-        # # Go through loggers, and if context is consistent with log_pref of logger, record value to logger's log
-        # for log_name, log, log_pref in loggers:
-        #     if (log_pref is LogLevel.ALL_ASSIGNMENTS or
-        #             (INITIALIZING in context and log_pref is LogLevel.INITIALIZATION) or
-        #             (EXECUTING in context and log_pref is LogLevel.EXECUTION) or
-        #             (all(c in context for c in {EXECUTING, kwAssign}) and log_pref is LogLevel.VALUE_ASSIGNMENT)):
-        #         log.entries[self.name] = LogEntry(CurrentTime(), context, matrix)
-
-
     @property
     def _matrix_spec(self):
         """Returns matrix specification in self.paramsCurrent[FUNCTION_PARAMS][MATRIX]

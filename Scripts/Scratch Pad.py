@@ -2342,7 +2342,7 @@ Middle_Weights = pnl.MappingProjection(
     name='Middle Weights',
     sender=Hidden_Layer_1,
     receiver=Hidden_Layer_2,
-    matrix=Middle_Weights_matrix,
+    matrix=Middle_Weights_matrix
 )
 
 # Commented lines in this projection illustrate variety of ways in which matrix and learning signals can be specified
@@ -2382,7 +2382,7 @@ p = pnl.Process(
     },
 )
 
-Middle_Weights.log_items('matrix')
+Middle_Weights.log_items(('matrix',pnl.LogLevel.EXECUTION))
 
 stim_list = {Input_Layer: [[-1, 30]]}
 target_list = {Output_Layer: [[0, 0, 1]]}
@@ -2526,10 +2526,15 @@ expected_log_val = np.array(
 )
 
 for i in range(len(log_val)):
-    np.testing.assert_allclose(log_val[i], expected_log_val[i],
-                               atol=1e-08,
-                               err_msg='Failed on test of logged values')
+    try:
+        np.testing.assert_array_equal(log_val[i], expected_log_val[i])
+    except:
+        for j in range(len(log_val[i])):
+            np.testing.assert_allclose(np.array(log_val[i][j]), np.array(expected_log_val[i][j]),
+                                       atol=1e-08,
+                                       err_msg='Failed on test of logged values')
 
+assert log_val.shape == expected_log_val.shape
 
 # #-----------------------------------------------------------------------------------------------------------------
 

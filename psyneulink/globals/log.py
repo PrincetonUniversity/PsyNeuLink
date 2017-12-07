@@ -109,7 +109,7 @@ The value of a Component is recorded to a Log when the condition assigned to its
 This specified as a `LogLevel`.  The default LogLevel is `OFF`.
 
 .. note::
-   Currently, the only `LogLevels <LogLevel>` supported are `OFF` and and `EXECUTION`.
+   Currently, the only `LogLevels <LogLevel>` supported are `OFF`, `EXECUTION` and `LEARNING`.
 
 Examples
 --------
@@ -306,7 +306,7 @@ class LogLevel(IntEnum):
     """Record all value assignments during any execution of the Component."""
     PROCESSING = 1<<4
     """Record all value assignments during processing phase of Composition execution."""
-    LEARNING = 1<<5
+    LEARNING = (1<<5) + EXECUTION
     """Record all value assignments during learning phase of Composition execution."""
     CONTROL = 1<<6
     """Record all value assignment during control phase of Composition execution."""
@@ -314,12 +314,28 @@ class LogLevel(IntEnum):
     """Record final value assignments during Composition execution."""
     FINAL = 1<<8
     """Synonym of VALUE_ASSIGNMENT."""
-    ALL_ASSIGNMENTS = INITIALIZATION | FINAL | VALIDATION | EXECUTION | LEARNING | CONTROL
-    """Record all value assignments during initialization, validation and execution."""
+    ALL_ASSIGNMENTS = \
+        INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL | VALUE_ASSIGNMENT | FINAL
+    """Record all value assignments."""
 
 LogEntry = namedtuple('LogEntry', 'time, context, value')
 
 ALL_ENTRIES = 'all entries'
+
+
+def _get_log_context(context):
+
+    context_flag = LogLevel.OFF
+    if INITIALIZING in context:
+        context_flag |= LogLevel.INITIALIZATION
+    if VALIDATE in context:
+        context_flag |= LogLevel.VALIDATION
+    if EXECUTING in context:
+        context_flag |= LogLevel.EXECUTION
+    if LEARNING in context:
+        context_flag |= LogLevel.LEARNING
+    return context_flag
+
 
 kpCentralClock = 'CentralClock'
 SystemLogEntries = [kpCentralClock]
@@ -396,19 +412,6 @@ class LogError(Exception):
     def __str__(self):
         return repr(self.error_value)
 #endregion
-
-def _get_log_context(context):
-
-    context_flag = LogLevel.OFF
-    if INITIALIZING in context:
-        context_flag |= LogLevel.INITIALIZATION
-    if VALIDATE in context:
-        context_flag |= LogLevel.VALIDATION
-    if EXECUTING in context:
-        context_flag |= LogLevel.EXECUTION
-    if LEARNING in context:
-        context_flag |= LogLevel.LEARNING
-    return context_flag
 
 
 class Log:
