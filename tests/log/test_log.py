@@ -17,14 +17,17 @@ class TestLog:
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'time_constant': 'OFF'}
+                                     'time_constant': 'OFF',
+                                     'value': 'OFF'}
         assert T_2.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'time_constant': 'OFF'}
-        assert PJ.loggable_items == {'matrix': 'OFF'}
+                                     'time_constant': 'OFF',
+                                     'value': 'OFF'}
+        assert PJ.loggable_items == {'matrix': 'OFF',
+                                     'value': 'OFF'}
 
         T_1.log_items(pnl.NOISE)
         T_1.log_items(pnl.RESULTS)
@@ -35,14 +38,17 @@ class TestLog:
                                      'RESULTS': 'EXECUTION',
                                      'intercept': 'OFF',
                                      'noise': 'EXECUTION',
-                                     'time_constant': 'OFF'}
+                                     'time_constant': 'OFF',
+                                     'value': 'OFF'}
         assert T_2.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'time_constant': 'OFF'}
-        assert PJ.loggable_items == {'matrix': 'EXECUTION'}
+                                     'time_constant': 'OFF',
+                                     'value': 'OFF'}
+        assert PJ.loggable_items == {'matrix': 'EXECUTION',
+                                     'value': 'OFF'}
 
         PS.execute()
         PS.execute()
