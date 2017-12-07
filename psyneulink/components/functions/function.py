@@ -3332,24 +3332,27 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     def get_param_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
-            param_type = ir.LiteralStructType((ctx.float_ty, ctx.float_ty))
+            param_type = ir.LiteralStructType((ctx.float_ty, ctx.float_ty, ctx.float_ty))
         return param_type
 
     def get_param_initializer(self):
-        return tuple([self.gain, self.bias])
+        return tuple([self.gain, self.bias, self.offset])
 
     def __gen_llvm_logistic(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         gain_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         bias_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        offset_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
         gain = builder.load(gain_ptr)
         bias = builder.load(bias_ptr)
+        offset = builder.load(offset_ptr)
 
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         val = builder.load(ptri)
+        val = builder.fsub(val, bias)
         val = builder.fmul(val, gain)
-        val = builder.fsub(bias, val)
+        val = builder.fsub(offset, val)
         val = builder.call(exp_f, [val])
         val = builder.fadd(ctx.float_ty(1), val)
         val = builder.fdiv(ctx.float_ty(1), val)
@@ -3401,10 +3404,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         ret = np.zeros(len(variable))
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
+        offset = self.paramsCurrent[OFFSET]
 
         par_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
-        ct_param = par_struct_ty(gain, bias)
+        ct_param = par_struct_ty(gain, bias, offset)
 
         ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
         ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
