@@ -5514,7 +5514,9 @@ class AdaptiveIntegrator(
         # TODO: port this to LLVM
         noise = self._try_execute_param(self.noise, variable)
         if hasattr(self.noise, "__len__"):
-            noise = tuple(noise)
+            # Arrays need to be initialized using tuple
+            # Take the first input
+            noise = tuple(noise[0])
 
         bf = self._llvmBinFunction
 
