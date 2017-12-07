@@ -1010,6 +1010,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                       context=context)
             if state:
                 owner._parameter_states[function_param_name] = state
+            setattr(owner.function, "mod_"+function_param_name, make_property_mod(function_param_name, owner))
 
     elif _is_legal_param_value(owner, param_value):
         state = _instantiate_state(owner=owner,
@@ -1022,7 +1023,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                   context=context)
         if state:
             owner._parameter_states[param_name] = state
-
+        setattr(owner.__class__, "mod_"+param_name, make_property_mod(param_name, owner))
+        # assign default value
 
 def _is_legal_param_value(owner, value):
 
@@ -1080,3 +1082,40 @@ def _get_parameter_state(sender_owner, sender_type, param_name, component):
             raise ParameterStateError("There is no ParameterState for the parameter ({}) of {} "
                                         "specified in {} for {}".
                                         format(param_name, component.name, sender_type, sender_owner.name))
+def make_property_mod(attr_name, parameter_state_owner):
+
+    def getter(self):
+
+        return parameter_state_owner._parameter_states[attr_name].value
+
+        # try:
+        #     # Get value of function param from ParameterState.value of owner
+        #     #    case: request is for the value of a Function parameter for which the owner has a ParameterState
+        #     #    example: slope or intercept parameter of a Linear Function)
+        #     #    rationale: most common and therefore requires the greatest efficiency
+        #     #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
+        #     from psyneulink.components.functions.function import Function
+        #     if not isinstance(self, Function):
+        #         raise TypeError
+        #     return self.owner._parameter_states[attr_name].value
+        # except (AttributeError, TypeError):
+        #     try:
+        #         # Get value of param from Component's own ParameterState.value
+        #         #    case: request is for value of a parameter of a Mechanism or Projection that has a ParameterState
+        #         #    example: matrix parameter of a MappingProjection)
+        #         #    rationale: next most common case
+        #         #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
+        #         return self._parameter_states[attr_name].value
+        #     except (AttributeError, TypeError):
+        #         raise ComponentError("{} does not have a Parameter State for {}".format(self.name, attr_name))
+
+    def setter(self, val):
+        raise ParameterStateError("Cannot set {}'s mod_{} directly because it is evaluated by the Parameter State."
+                             .format(self.name, attr_name))
+
+    # Create the property
+    prop = property(getter).setter(setter)
+
+    # # Install some documentation
+    # prop.__doc__ = docs[name]
+    return prop
